@@ -1,6 +1,6 @@
 > Doc Class: `governance`
 > Sync Pair: `verification.md`
-> Last Verified: `2026-05-04`
+> Last Verified: `2026-05-21`
 
 # Verification Checklist (Before Merging)
 
@@ -128,6 +128,7 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 - Confirm the PR to `master` passes the release-branch gate only when the head branch matches `release/*`.
 - Confirm the release branch receives a normal preview deployment before merging to `master`.
 - Confirm merging to `master` triggers the prebuilt production workflow instead of relying on a normal Vercel cloud build.
+- Confirm launch readiness separately with the current release and production-readiness checklists: launch smoke, protected launch/perf status, production-candidate backup checkpoint, isolated restore report, and final authenticated `go:no-go`.
 
 ## CI Gate Parity (When Appropriate)
 
@@ -154,23 +155,28 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
   - `npm run test:e2e:individual:strict`
   - `npm run test:e2e:org:strict`
   - `npm run test:e2e:privacy:strict`
-  - `npm run test:e2e:providers:strict`
-  - `BASE_URL=http://localhost:3000 npm run perf:budgets`
-  - `BASE_URL=http://localhost:3000 npm run monitor:launch`
-  - `BASE_URL=http://localhost:3000 npm run launch:status`
-  - `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go`
+  - `npm run test:e2e:providers:advisory` only if connected-provider scheduling is intentionally in scope for the target
+  - `BASE_URL=<production-candidate-url> npm run perf:budgets`
+  - `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch`
+  - `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run launch:status`
+  - `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go`
+- In launch command examples, `INTERNAL_API_SECRET=<secret>` may be used instead of
+  `CRON_SECRET=<secret>`; protected launch probes prefer `INTERNAL_API_SECRET` and fall back to
+  `CRON_SECRET`.
 - The strict gate writes per-command logs and status JSON under `.artifacts/mvp-strict-gates/`.
 - Any timeout is a failed gate and must not be treated as launch-ready.
 - CI also runs perf budgets and go/no-go gates after starting the app. (source: .github/workflows/ci.yml)
-- Perf budgets: `BASE_URL=http://localhost:3000 npm run perf:budgets` (source: scripts/perf-budgets.mjs)
-- Launch smoke artifact: `BASE_URL=http://localhost:3000 npm run test:launch:smoke` (source: package.json, scripts/launch-smoke-runner.ts)
-- Launch synthetic monitors: `BASE_URL=http://localhost:3000 CRON_SECRET=<secret> npm run monitor:launch` (source: package.json, scripts/run-launch-synthetic-monitors.ts)
-- Go/no-go: `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go` (source: scripts/go-no-go-check.ts)
-  - Requires a fresh launch smoke artifact, healthy `/api/monitoring/perf-status`, healthy `/api/monitoring/launch-status`, required evidence files, required safe-mode flags, and restore-drill assets. (source: scripts/go-no-go-check.ts)
+- Perf budgets: `BASE_URL=<production-candidate-url> npm run perf:budgets` (source: scripts/perf-budgets.mjs)
+- Launch smoke artifact: `BASE_URL=<production-candidate-url> npm run test:launch:smoke` (source: package.json, scripts/launch-smoke-runner.ts)
+- Launch synthetic monitors: `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch` (source: package.json, scripts/run-launch-synthetic-monitors.ts)
+- Go/no-go: `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go` (source: scripts/go-no-go-check.ts)
+  - Localhost runs prove local parity only and are not final launch evidence. Production-candidate runs additionally require a fresh passing restore verification report, defaulting to `.artifacts/launch-restore-report.json`, with readable `summary.json` and `row-fingerprint.json` checkpoint evidence. (source: scripts/go-no-go-check.ts, docs/launch-restore-drill.md)
 
 ## Migration and Data Safety (Before Production DDL)
 
 - Create a checkpoint: `npm run db:backup:checkpoint`
+- For final go/no-go evidence, write restore verification output to `.artifacts/launch-restore-report.json`:
+  - `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json`
 - Reconcile canonical migration ledger: `npm run db:audit:migrations`
 - Optional strict legacy baseline parity audit: `npm run db:audit:migrations -- --mode legacy-supabase-baseline --baseline supabase/ledger-baseline/schema_migrations.current-db.json`
 - Diagnostics-only legacy file inventory audit: `npm run db:audit:migrations -- --mode legacy-supabase`
@@ -188,24 +194,25 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 - Individual strict flow contract: `npm run test:e2e:individual:strict` (source: package.json)
 - Organization strict flow contract: `npm run test:e2e:org:strict` (source: package.json)
 - Privacy strict flow contract: `npm run test:e2e:privacy:strict` (source: package.json)
-- Provider strict flow contract: `npm run test:e2e:providers:strict` (source: package.json)
+- Provider advisory flow contract: `npm run test:e2e:providers:advisory` (source: package.json)
 - Playwright env hygiene (practical):
   - Strict suites load `.env.local` by default (override with `STRICT_ENV_FILE=<path>` when needed).
   - Set `PII_HASH_SALT` when running auth/signup flows to avoid GDPR hashing runtime failures.
   - Run Playwright suites sequentially when they share the same `webServer` port to avoid `EADDRINUSE` startup failures.
   - Strict launch-gate runs must keep `NEXT_PUBLIC_USE_MOCK_SUPABASE=false`.
-  - Provider strict gate defaults to `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true` and `STRICT_PROVIDER_E2E_REQUIRE_BOTH=true`.
-  - Provider strict gate requires deterministic provider user env vars: `E2E_PROVIDER_USER_ID`, `E2E_PROVIDER_USER_EMAIL`, `E2E_PROVIDER_USER_PASSWORD`.
-  - Deterministic provider user must have both Zoom and Google connected for launch-gate runs.
+  - Provider advisory gate defaults to `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false`.
+  - Deterministic provider user env vars (`E2E_PROVIDER_USER_ID`, `E2E_PROVIDER_USER_EMAIL`, `E2E_PROVIDER_USER_PASSWORD`) are required only when `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true`.
+  - Connected-provider runs should use only provider flows intentionally in scope for the target; manual-link interview posture remains the locked MVP default.
 - For credential-gated E2E smokes, document required env vars in `project/changes/entries/*.md` and mark command outcome as PASS/SKIPPED with reason.
 
-## Manual Smoke Checks (OAuth Integrations)
+## Manual Smoke Checks (Interview Scheduling)
 
-- Zoom connect:
-  - Visit `/app/i/settings/integrations`
-  - Click "Connect Zoom" and confirm you are redirected to Zoom and then back with `?success=zoom_connected`.
-- Meeting creation:
-  - Schedule an interview with `platform=zoom` and confirm the record has `meeting_link` populated.
+- Manual-link scheduling:
+  - Schedule an interview with a manual meeting link.
+  - Confirm the visible interview and API record show the meeting link without presenting native Zoom/video OAuth as a launch requirement.
+- Provider-connected scheduling:
+  - Run only for provider flows intentionally configured for the target.
+  - If a provider is unavailable, the UI must clearly preserve the manual-link fallback.
 
 ## Manual Smoke Checks (Auth Email via Supabase SMTP)
 
@@ -231,7 +238,7 @@ Before any production Cloud Run OCR call:
 - Confirm production remains disabled until the smoke window starts: `GCP_CV_OCR_ENABLED=false` and no provider route is connected to user-facing CV/import flow.
 - Confirm production is enabled only for synthetic PDFs or approved invite-only Proof Artifact Text Extraction beta accounts, and only after billing, product coverage, budget alert, app-level hard-cap, privacy-review, and cleanup gates are ready.
 - Confirm OCR requires explicit consent per document.
-- Confirm OCR output is draft text only and cannot auto-publish, auto-verify, auto-score, auto-rank, shortlist, recommend, or change match/review/trust/hiring state.
+- Confirm OCR output is draft text only and cannot auto-publish, auto-verify, auto-score, auto-rank, shortlist, recommend, or change match, review, verification, reveal, trust-state, or workflow-decision state.
 - Confirm Cloud Run max instances is `1` initially and no more than `3` during beta.
 - Confirm the disable-or-pay decision is scheduled by `2026-07-24` because credits expire around `2026-08-03`.
 - Confirm Cloud Vision OCR is not enabled.
@@ -268,7 +275,7 @@ Fail condition: any real or pilot data is processed outside invite-only Proof Ar
 - If changes touch launch operations, feature flags, feedback contracts, fallback states, or admin rollout metrics:
   - Run `npx vitest run tests/api/feedback-schema.test.ts`
   - Run `npm run test:launch:smoke`
-  - Run `BASE_URL=http://localhost:3000 CRON_SECRET=<secret> npm run monitor:launch`
+  - Run `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch`
   - Run `npm run docs:freshness`
 - Manual smoke expectations for launch-safe behavior:
   - qualified intro corridor can be disabled without breaking portfolio, browse, export, delete, or unpublish
@@ -285,7 +292,7 @@ Fail condition: any real or pilot data is processed outside invite-only Proof Ar
 - Before launch or high-risk rollback rehearsal:
   - Run `npm run db:backup:checkpoint`
   - Restore into a recovery target using platform restore tooling
-  - Run `npm run db:restore:verify -- --checkpoint <dir>`
+  - Run `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json`
 - Runbook:
   - `docs/launch-restore-drill.md`
 

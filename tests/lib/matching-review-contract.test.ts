@@ -5,7 +5,6 @@ import {
   buildCandidateReviewProjection,
   buildFairnessUiContract,
   buildVisibilitySafeWhy,
-  canRevealExactRank,
   evaluateFairnessCohortAvailability,
   getReviewProjectionPolicy,
   getShortlistProjectionPolicy,
@@ -275,18 +274,15 @@ describe('matching review contract', () => {
     );
     expect(rendered.summary).toContain('Verification requirements are not fully met yet.');
     expect(rendered.sections.manual_override).toContain(
-      'A reviewer manually shortlisted this candidate.'
+      'A reviewer manually shortlisted this proof-review participant.'
     );
     expect(rendered.sections.manual_override).toContain(
       'Reviewer note: Strong proof quality in recent work sample.'
     );
-    expect(rendered.sections.fairness[0]).toContain('Fairness checks are elevated');
+    expect(rendered.sections.fairness[0]).toContain('Policy checks are elevated');
   });
 
-  it('suppresses exact rank unless fairness passes and reviewer role allows it', () => {
-    expect(canRevealExactRank('org_reviewer', 'pass')).toBe(false);
-    expect(canRevealExactRank('org_manager', 'unavailable')).toBe(false);
-    expect(canRevealExactRank('org_manager', 'pass')).toBe(true);
+  it('suppresses exact order when policy checks are stale or elevated', () => {
     expect(
       shouldSuppressExactRank('pass', 'stale', new Date('2026-03-01T00:00:00Z'), new Date())
     ).toBe(true);
@@ -347,16 +343,33 @@ describe('matching review contract', () => {
     );
   });
 
-  it('builds visibility-safe why payloads with rank bands instead of exact ranking', () => {
+  it('builds visibility-safe why payloads with review bands instead of exact ranking', () => {
     const why = buildVisibilitySafeWhy({
       reasonCodes: ['skills_strong', 'verification_ready'],
       fairnessStatus: 'elevated',
       fallbackState: 'fairness_suppressed_ranking',
-      rankBand: 'Top 10',
+      rankBand: 'High-priority proof review',
     });
 
     expect(why.reasonCodes).toContain('fairness_ranking_suppressed');
-    expect(why.summary).toContain('Rank band: Top 10');
+    expect(why.summary).toContain('Review band: High-priority proof review');
+  });
+
+  it('does not present account-side checks as proof verification records or internal flags', () => {
+    const reviewCard = buildProofFirstReviewCard({
+      profileId: 'profile-1',
+      reasonCodes: ['skills_strong'],
+      fairnessStatus: 'pass',
+      verificationCount: 2,
+    });
+    const serialized = JSON.stringify(reviewCard);
+
+    expect(reviewCard.candidateLabel).toMatch(/^Submission [A-Z0-9]{4}$/);
+    expect(reviewCard.verification.summaryLabel).toBe('2 account-side checks recorded');
+    expect(reviewCard.trustLabels).toContain('Account-side checks recorded');
+    expect(serialized).not.toMatch(/scoped verification records present/i);
+    expect(serialized).not.toMatch(/compatibility flag/i);
+    expect(serialized).not.toMatch(/compatibility signal/i);
   });
 
   it('redacts upload-derived filenames from early review cards', () => {

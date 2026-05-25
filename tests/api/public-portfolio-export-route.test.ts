@@ -10,9 +10,16 @@ vi.mock('@/lib/portfolio/pdf', () => ({
   generateTrustPdf: vi.fn(),
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+  },
+}));
+
 import { GET } from '@/app/api/portfolio/public/[handle]/export/route';
 import { generateTrustPdf } from '@/lib/portfolio/pdf';
 import { resolvePublicIndividualPortfolioAccessByHandle } from '@/lib/portfolio/public-projection';
+import { log } from '@/lib/log';
 
 function buildAccessibleAccess() {
   return {
@@ -188,6 +195,63 @@ describe('/api/portfolio/public/[handle]/export', () => {
 
     expect(response.status).toBe(500);
     expect(await response.json()).toEqual({ error: 'Failed to generate export' });
+    expect(log.error).toHaveBeenCalledWith('portfolio.public_export.failed', {
+      error: expect.any(Error),
+    });
+  });
+
+  it('returns the same neutral error when text export generation fails', async () => {
+    const access = buildAccessibleAccess();
+    vi.mocked(resolvePublicIndividualPortfolioAccessByHandle).mockResolvedValue({
+      ...access,
+      projection: {
+        ...access.projection,
+        exportData: {
+          ...access.projection.exportData,
+          profile: undefined,
+        },
+      },
+    } as any);
+
+    const response = await GET(
+      new Request('http://localhost/api/portfolio/public/jane/export?format=text'),
+      {
+        params: Promise.resolve({ handle: 'jane' }),
+      }
+    );
+
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({ error: 'Failed to generate export' });
+    expect(generateTrustPdf).not.toHaveBeenCalled();
+  });
+
+  it('returns the same neutral error when JSON export serialization fails', async () => {
+    const access = buildAccessibleAccess();
+    const circularExportData: any = {
+      ...access.projection.exportData,
+      profile: {
+        ...access.projection.exportData.profile,
+      },
+    };
+    circularExportData.self = circularExportData;
+    vi.mocked(resolvePublicIndividualPortfolioAccessByHandle).mockResolvedValue({
+      ...access,
+      projection: {
+        ...access.projection,
+        exportData: circularExportData,
+      },
+    } as any);
+
+    const response = await GET(
+      new Request('http://localhost/api/portfolio/public/jane/export?format=json'),
+      {
+        params: Promise.resolve({ handle: 'jane' }),
+      }
+    );
+
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({ error: 'Failed to generate export' });
+    expect(generateTrustPdf).not.toHaveBeenCalled();
   });
 
   it.each(['unavailable', 'private', 'draft', 'unpublished', 'blocked'])(

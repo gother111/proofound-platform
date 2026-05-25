@@ -6,6 +6,7 @@ import { db } from '@/db';
 import { requireApiAuthContext, requireAuth } from '@/lib/auth';
 import { verifyExplicitAssignmentMutationAccess } from '@/lib/assignments/access';
 import { isFeatureEnabled } from '@/lib/feature-flags/server';
+import { inArray } from 'drizzle-orm';
 
 vi.mock('@/lib/auth', () => ({
   requireApiAuthContext: vi.fn(),
@@ -22,6 +23,16 @@ vi.mock('@/db', () => ({
     update: vi.fn(),
   },
 }));
+
+vi.mock('drizzle-orm', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('drizzle-orm')>();
+  return {
+    ...actual,
+    and: vi.fn((...args) => ({ op: 'and', args })),
+    eq: vi.fn((left, right) => ({ op: 'eq', left, right })),
+    inArray: vi.fn((left, values) => ({ op: 'inArray', left, values })),
+  };
+});
 
 vi.mock('@/lib/assignments/access', () => ({
   verifyExplicitAssignmentMutationAccess: vi.fn(),
@@ -86,7 +97,7 @@ describe('assignment publish route', () => {
       role: 'Product Designer',
       engagementType: 'full_time',
       businessValue:
-        'Improve candidate quality by turning vague hiring decisions into proof-backed review choices.',
+        'Improve assignment review quality by turning vague goals into proof-backed review choices.',
       description:
         'Lead the assignment review workflow, define concrete deliverables, and keep the team aligned on what strong work actually looks like.',
       expectedImpact:
@@ -153,6 +164,23 @@ describe('assignment publish route', () => {
     }
   );
 
+  it('returns 400 for malformed JSON before assignment access or lookup', async () => {
+    const req = new NextRequest(`http://localhost/api/assignments/${assignmentId}/publish`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: '{"principalContext":',
+    });
+
+    const res = await POST(req, { params: Promise.resolve({ id: assignmentId }) });
+    const payload = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(payload).toEqual({ error: 'Invalid JSON body' });
+    expect(verifyExplicitAssignmentMutationAccess).not.toHaveBeenCalled();
+    expect(db.query.assignments.findFirst).not.toHaveBeenCalled();
+    expect(db.update).not.toHaveBeenCalled();
+  });
+
   it('returns explicit block reasons for missing launch requirements', async () => {
     (db.query.assignments.findFirst as any).mockResolvedValue({
       id: assignmentId,
@@ -216,7 +244,7 @@ describe('assignment publish route', () => {
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: 'Product Designer',
       businessValue:
-        'Improve candidate quality by turning vague hiring decisions into proof-backed review choices.',
+        'Improve assignment review quality by turning vague goals into proof-backed review choices.',
       description:
         'Lead the assignment review workflow, define concrete deliverables, and keep the team aligned on what strong work actually looks like.',
       expectedImpact:
@@ -254,7 +282,7 @@ describe('assignment publish route', () => {
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: 'Product Designer',
       businessValue:
-        'Improve candidate quality by turning vague hiring decisions into proof-backed review choices.',
+        'Improve assignment review quality by turning vague goals into proof-backed review choices.',
       description:
         'Lead the assignment review workflow, define concrete deliverables, and keep the team aligned on what strong work actually looks like.',
       expectedImpact:
@@ -285,6 +313,7 @@ describe('assignment publish route', () => {
     expect(res.status).toBe(409);
     expect(payload.error).toBe('ASSIGNMENT_PUBLISH_STATE_CHANGED');
     expect(updateReturning).toHaveBeenCalled();
+    expect(inArray).toHaveBeenCalledWith(expect.anything(), ['draft', 'active']);
   });
 
   it('blocks vague generic copy at publish time', async () => {
@@ -344,7 +373,7 @@ describe('assignment publish route', () => {
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: 'Product Designer',
       businessValue:
-        'Improve candidate quality by turning vague hiring decisions into proof-backed review choices.',
+        'Improve assignment review quality by turning vague goals into proof-backed review choices.',
       description:
         'Lead the assignment review workflow, define concrete deliverables, and keep the team aligned on what strong work actually looks like.',
       expectedImpact:
@@ -389,7 +418,7 @@ describe('assignment publish route', () => {
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: 'Product Designer',
       businessValue:
-        'Improve candidate quality by turning vague hiring decisions into proof-backed review choices.',
+        'Improve assignment review quality by turning vague goals into proof-backed review choices.',
       description:
         'Lead the assignment review workflow, define concrete deliverables, and keep the team aligned on what strong work actually looks like.',
       expectedImpact:
@@ -441,7 +470,7 @@ describe('assignment publish route', () => {
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: 'Product Designer',
       businessValue:
-        'Improve candidate quality by turning vague hiring decisions into proof-backed review choices.',
+        'Improve assignment review quality by turning vague goals into proof-backed review choices.',
       description:
         'Lead the assignment review workflow, define concrete deliverables, and keep the team aligned on what strong work actually looks like.',
       expectedImpact:
@@ -495,7 +524,7 @@ describe('assignment publish route', () => {
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: 'Product Designer',
       businessValue:
-        'Improve candidate quality by turning vague hiring decisions into proof-backed review choices.',
+        'Improve assignment review quality by turning vague goals into proof-backed review choices.',
       description:
         'Lead the assignment review workflow, define concrete deliverables, and keep the team aligned on what strong work actually looks like.',
       expectedImpact:
@@ -613,7 +642,7 @@ describe('assignment publish route', () => {
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: 'Product Designer',
       businessValue:
-        'Improve candidate quality by turning vague hiring decisions into proof-backed review choices.',
+        'Improve assignment review quality by turning vague goals into proof-backed review choices.',
       description:
         'Lead the assignment review workflow, define concrete deliverables, and keep the team aligned on what strong work actually looks like.',
       expectedImpact:

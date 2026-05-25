@@ -47,24 +47,12 @@ export function PublicPortfolioReadyStep({
 
   const description =
     persona === 'organization'
-      ? 'Day 1 win unlocked. Your public organization link is shareable now, and search engines stay off until you opt in.'
-      : 'Day 1 win unlocked. Preview it, copy it, and share it by direct link. Search engines stay off for the MVP.';
+      ? 'Day 1 proof link ready. Your public organization link is shareable now, and search engines stay off until you opt in.'
+      : 'Day 1 proof link ready. Preview it, copy it, and share it by direct link. Search engines stay off until you opt in.';
 
   async function handleCopy() {
     try {
       await navigator.clipboard.writeText(resolvedUrl);
-      await fetch('/api/analytics/track', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          eventType: 'portfolio_share_link_copied',
-          entityType: 'profile',
-          properties: {
-            source: 'onboarding_success',
-            persona,
-          },
-        }),
-      });
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1600);
     } catch {
@@ -99,25 +87,7 @@ export function PublicPortfolioReadyStep({
             {copied ? 'Copied' : 'Copy link'}
           </Button>
           <Button type="button" variant="outline" asChild className="gap-2">
-            <Link
-              href={resolvedUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => {
-                void fetch('/api/analytics/track', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    eventType: 'portfolio_preview_opened',
-                    entityType: 'profile',
-                    properties: {
-                      source: 'onboarding_success',
-                      persona,
-                    },
-                  }),
-                });
-              }}
-            >
+            <Link href={resolvedUrl} target="_blank" rel="noopener noreferrer">
               <ExternalLink className="h-4 w-4" />
               {persona === 'organization' ? 'Preview portfolio' : 'Preview Public Page'}
             </Link>

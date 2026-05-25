@@ -138,15 +138,15 @@ export function TopBar({
             aria-hidden="true"
           />
 
-          {/* Current page indicator - hide on very small screens */}
-          <h1
+          {/* Current page indicator - the page content owns the document heading. */}
+          <p
             className={cn(
               'text-lg hidden sm:block text-proofound-charcoal font-display',
               isV2 ? 'font-medium' : 'font-normal'
             )}
           >
             {getPageTitle()}
-          </h1>
+          </p>
         </div>
 
         {/* Right: Avatar */}

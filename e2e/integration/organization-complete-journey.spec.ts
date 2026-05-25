@@ -4,7 +4,7 @@
  * Tests complete organization user lifecycle:
  * - O-01 to O-04: Authentication & Setup
  * - O-05 to O-07: Assignment Management
- * - O-08 to O-09: Candidate Discovery
+ * - O-08 to O-09: Proof-Submission Review
  */
 
 import { test, expect } from '@playwright/test';
@@ -24,7 +24,7 @@ import {
   getOrgMatchCards,
   expressOrgInterest,
   openOrgMatchExplainer,
-  viewCandidateProfile,
+  viewProofSubmissionDetail,
 } from '../helpers/organization-helpers';
 
 test.describe('Organization Complete Journey - Authentication & Setup (O-01 to O-04)', () => {
@@ -63,12 +63,10 @@ test.describe('Organization Complete Journey - Authentication & Setup (O-01 to O
   });
 
   test('O-03: Organization profile can be accessed', async ({ page }) => {
-    // This test assumes we have an org slug - would need to set up org first
-    // For now, test page structure
     const testSlug = 'test-org';
     await page.goto(`/app/o/${testSlug}/profile`);
 
-    // Verify profile page loads (may redirect if not authenticated or org doesn't exist)
+    // Verify the private org profile route either loads in an authenticated context or redirects safely.
     const isProfilePage = page.url().includes('/profile') || page.url().includes('/login');
     expect(isProfilePage).toBeTruthy();
   });
@@ -99,7 +97,7 @@ test.describe('Organization Complete Journey - Assignment Management (O-05 to O-
         slug: testOrg.slug,
         type: testOrg.type,
       });
-      
+
       // Extract slug from URL
       const urlMatch = page.url().match(/\/app\/o\/([^/]+)/);
       if (urlMatch) {
@@ -113,43 +111,39 @@ test.describe('Organization Complete Journey - Assignment Management (O-05 to O-
       }
     }
 
-    // Create assignment
-    try {
-      await createAssignmentViaUI(page, orgSlug, {
-        title: 'E2E Test Assignment - Product Designer',
-        description: 'We are looking for an experienced product designer to join our team.',
-        requiredSkills: ['UI/UX Design', 'Figma', 'User Research'],
-        location: 'Remote',
-        workMode: 'remote',
-        compensationMin: 80000,
-        compensationMax: 120000,
-      });
+    await createAssignmentViaUI(page, orgSlug, {
+      title: 'E2E Test Assignment - Product Designer',
+      description: 'We are looking for an experienced product designer to join our team.',
+      requiredSkills: ['UI/UX Design', 'Figma', 'User Research'],
+      location: 'Remote',
+      workMode: 'remote',
+      compensationMin: 80000,
+      compensationMax: 120000,
+    });
 
-      // Verify assignment created (check for success message or redirect)
-      await page.waitForTimeout(3000);
-      
-      // Should be on assignments page or matching page
-      const isAssignmentPage = page.url().includes('/assignments') || 
-                               page.url().includes('/matching');
-      expect(isAssignmentPage).toBeTruthy();
-    } catch (error) {
-      console.log('Could not create assignment:', error);
-      // Don't fail test - assignment creation may have different flow
-    }
+    // Verify assignment creation lands in the active organization corridor.
+    await page.waitForTimeout(3000);
+    const isAssignmentPage =
+      page.url().includes('/assignments') || page.url().includes('/matching');
+    expect(isAssignmentPage).toBeTruthy();
   });
 
-  test('O-06: Can configure matching weights and gates', async ({ page }) => {
-    // This would test setting weights for matching algorithm
-    // For now, verify matching page is accessible
+  test('O-06: Proof-submission review page loads without score-tuning controls', async ({
+    page,
+  }) => {
     const testSlug = 'test-org';
     await navigateToOrgMatching(page, testSlug);
 
-    // Look for weights/settings button
-    const weightsButton = page.locator('button:has-text("Weights"), button:has-text("Settings")').first();
-    const hasWeightsButton = await weightsButton.isVisible().catch(() => false);
+    await expect(page).toHaveURL(/\/app\/o\/.+\/matching|\/login/);
 
-    // Weights configuration may or may not be visible
-    expect(typeof hasWeightsButton === 'boolean').toBeTruthy();
+    if (page.url().includes('/matching')) {
+      const scoreTuningControls = page
+        .locator(
+          'button:has-text("Weights"), button:has-text("Score tuning"), button:has-text("Rank tuning")'
+        )
+        .first();
+      await expect(scoreTuningControls).toBeHidden();
+    }
   });
 
   test('O-07: Can publish assignment', async ({ page }) => {
@@ -160,14 +154,14 @@ test.describe('Organization Complete Journey - Assignment Management (O-05 to O-
 
     // Check if assignments are shown
     await page.waitForTimeout(2000);
-    
+
     // Verify matching page loaded
     await expect(page).toHaveURL(/\/app\/o\/.+\/matching/);
   });
 });
 
-test.describe('Organization Complete Journey - Candidate Discovery (O-08 to O-09)', () => {
-  test('O-08: Can view ranked matches for assignment', async ({ page }) => {
+test.describe('Organization Complete Journey - Proof-Submission Review (O-08 to O-09)', () => {
+  test('O-08: Can view proof-submission matches for assignment', async ({ page }) => {
     const testSlug = 'test-org';
     await navigateToOrgMatching(page, testSlug);
 
@@ -182,7 +176,7 @@ test.describe('Organization Complete Journey - Candidate Discovery (O-08 to O-09
     expect(matchCount >= 0).toBeTruthy();
   });
 
-  test('O-09: Can view match explainer and candidate deep dive', async ({ page }) => {
+  test('O-09: Can view match explainer and proof-submission detail', async ({ page }) => {
     const testSlug = 'test-org';
     await navigateToOrgMatching(page, testSlug);
     await waitForOrgMatches(page);
@@ -197,7 +191,7 @@ test.describe('Organization Complete Journey - Candidate Discovery (O-08 to O-09
 
         // Verify explainer content
         const explainerContent = page.locator(
-          'text=/Why This Match|Match Score|Overall Score/i'
+          'text=/Why This Match|Review band|assignment review evidence/i'
         );
         const hasExplainer = await explainerContent.isVisible().catch(() => false);
 
@@ -206,23 +200,25 @@ test.describe('Organization Complete Journey - Candidate Discovery (O-08 to O-09
         console.log('Could not open org match explainer:', error);
       }
 
-      // Try to view candidate profile
+      // Try to view proof-submission detail
       try {
-        await viewCandidateProfile(page, 0);
+        await viewProofSubmissionDetail(page, 0);
         await page.waitForTimeout(2000);
 
-        // Verify profile page or modal opened
-        const profileContent = page.locator('text=/Profile|Skills|Experience/i');
-        const hasProfile = await profileContent.isVisible().catch(() => false);
+        // Verify proof-submission detail page or modal opened
+        const proofSubmissionDetail = page.locator(
+          'text=/Proof submission|Submission|Skills|Experience/i'
+        );
+        const hasProofSubmissionDetail = await proofSubmissionDetail.isVisible().catch(() => false);
 
-        expect(hasProfile).toBeTruthy();
+        expect(hasProofSubmissionDetail).toBeTruthy();
       } catch (error) {
-        console.log('Could not view candidate profile:', error);
+        console.log('Could not view proof-submission detail:', error);
       }
     }
   });
 
-  test('O-09: Can express interest in candidate', async ({ page }) => {
+  test('O-09: Can express interest in proof-submission review', async ({ page }) => {
     const testSlug = 'test-org';
     await navigateToOrgMatching(page, testSlug);
     await waitForOrgMatches(page);
@@ -237,9 +233,7 @@ test.describe('Organization Complete Journey - Candidate Discovery (O-08 to O-09
         await page.waitForTimeout(2000);
 
         // Verify success message or conversation creation
-        const successMessage = page.locator(
-          'text=/interest|recorded|conversation|mutual/i'
-        );
+        const successMessage = page.locator('text=/interest|recorded|conversation|mutual/i');
         const hasSuccess = await successMessage.isVisible().catch(() => false);
 
         // Or redirect to messages
@@ -288,20 +282,16 @@ test.describe('Organization Complete Journey - End-to-End Flow', () => {
     }
 
     // Step 3: Create an assignment
-    try {
-      await createAssignmentViaUI(page, orgSlug, {
-        title: 'Complete Journey Test - Full-Stack Engineer',
-        description: 'We need a full-stack engineer to help build our platform.',
-        requiredSkills: ['TypeScript', 'React', 'Node.js'],
-        location: 'Remote',
-        workMode: 'remote',
-      });
-      await page.waitForTimeout(3000);
-    } catch (error) {
-      console.log('Assignment creation in complete journey:', error);
-    }
+    await createAssignmentViaUI(page, orgSlug, {
+      title: 'Complete Journey Test - Full-Stack Engineer',
+      description: 'We need a full-stack engineer to help build our platform.',
+      requiredSkills: ['TypeScript', 'React', 'Node.js'],
+      location: 'Remote',
+      workMode: 'remote',
+    });
+    await page.waitForTimeout(3000);
 
-    // Step 4: Navigate to matching and view candidates
+    // Step 4: Navigate to matching and view proof submissions
     await navigateToOrgMatching(page, orgSlug);
     await waitForOrgMatches(page, 20000);
 
@@ -309,4 +299,3 @@ test.describe('Organization Complete Journey - End-to-End Flow', () => {
     await expect(page).toHaveURL(/\/app\/o\/.+\/matching/);
   });
 });
-

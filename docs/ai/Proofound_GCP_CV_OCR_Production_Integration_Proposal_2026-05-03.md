@@ -1,5 +1,5 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-05-04`
+> Last Verified: `2026-05-21`
 
 # GCP Proof Artifact OCR Production-Beta Integration Proposal
 
@@ -22,7 +22,7 @@ The approved beta shape is:
 - Cloud Run scaling: max instances `1` initially, never above `3` during beta;
 - expiry: disable-or-pay decision due by `2026-07-24` because free credits expire around `2026-08-03`.
 
-OCR output must not auto-publish, auto-verify, auto-score, auto-rank, shortlist, recommend, or affect match, review, verification, reveal, trust-state, or hiring-decision state.
+OCR output must not auto-publish, auto-verify, auto-score, auto-rank, shortlist, recommend, or affect match, review, verification, reveal, trust-state, or workflow-decision state.
 
 Google Cloud budgets are alerting tools only. They are not hard caps. Hard caps must be enforced in app/service code before the OCR worker calls Document AI.
 
@@ -40,7 +40,7 @@ The GCP OCR extractor can be represented as an internal production provider path
 **Explicit no-go surfaces:**
 
 - CV import wizard
-- AI candidate scoring, ranking, shortlisting, suitability judgments, hiring recommendations, verification decisions, or trust-state decisions
+- AI proof-review participant scoring, ranking, shortlisting, suitability judgments, workflow recommendations, verification decisions, or trust-state decisions
 - Gemini skill extractor for employer review
 - taxonomy shortlist or reranker
 - Cloud Vision OCR
@@ -54,21 +54,21 @@ Relevant current classifications:
 
 - Active API surfaces include `/api/upload/*`, `/api/expertise/taxonomy`, `/api/expertise/user-skills/*`, `/api/ai/proof-pack/suggest`, verification routes, portfolio routes, assignment routes, and the narrow matching/review corridor.
 - Broad `/api/expertise/*` routes are archived unless they are `/api/expertise/jd-to-l4`, `/api/expertise/taxonomy`, or `/api/expertise/user-skills/*`.
-- The compiled archived allowlist in `tests/api/launch-surface-inventory.test.ts` includes the CV import wizard route files while requiring their classification to remain `archived`.
-- `/app/i/expertise` is classified as an archived page path, and there is no `src/app/app/i/expertise/page.tsx` handler in the active app tree. Some expertise/CV components still exist as code assets, but they are not an approved active page surface.
+- `tests/api/launch-surface-inventory.test.ts` no longer allows compiled CV import wizard route files; the URLs remain archived at the launch surface policy and middleware boundary.
+- `/app/i/expertise` is classified as an archived page path, and there is no active `src/app/app/i/expertise` implementation in the app tree. The old Expertise Atlas UI island now lives under `src/archive/non_launch_pages/app/i/expertise/implementation/` as historical context only.
 
 ## CV Import Wizard Status
 
 The CV import wizard routes remain archived and must not be reactivated in this pass.
 
-Archived route files:
+Archived route URLs:
 
-- `src/app/api/expertise/cv-import/wizard-extract/route.ts`
-- `src/app/api/expertise/cv-import/wizard-extract/status/route.ts`
-- `src/app/api/expertise/cv-import/wizard-suggest/route.ts`
-- `src/app/api/expertise/cv-import/wizard-apply/route.ts`
+- `/api/expertise/cv-import/wizard-extract`
+- `/api/expertise/cv-import/wizard-extract/status`
+- `/api/expertise/cv-import/wizard-suggest`
+- `/api/expertise/cv-import/wizard-apply`
 
-These handlers return `410` legacy/non-launch responses through `legacySurfaceJsonResponse(...)`.
+These URLs return `410` non-launch responses through `src/lib/launch/surface-policy.ts` and middleware before any route handler runs.
 
 Regression coverage:
 
@@ -79,8 +79,9 @@ Regression coverage:
 
 Known mismatch to resolve before any future route work:
 
-- `tests/api/cv-import-wizard-routes.test.ts` still describes active CV wizard behavior and conflicts with the current `410` route handlers. Treat that test as stale/non-launch unless the user explicitly approves a route-surface change.
-- `tests/ui/cv-import-wizard.test.tsx`, `tests/ui/cvjd-auto-suggest.test.tsx`, and `tests/ui/profile-context-cv-import.test.tsx` still cover legacy component behavior and must not be used as evidence that the wizard is launch-active.
+- `tests/api/archived-api-handlers-route.test.ts` asserts launch-safe `410` responses for the legacy CV wizard route handlers.
+- Legacy Expertise Atlas/CV wizard UI tests were moved to `tests/archive/non_mvp_expertise_ui/` and renamed with `.archived` suffixes so they are not active launch evidence.
+- `tests/ui/profile-context-cv-import.test.tsx` remains active because it covers the approved Start from CV private scaffolding entry point, not the archived `/app/i/expertise` wizard page.
 
 ## Would A New Active Route Broaden MVP Scope?
 
@@ -136,8 +137,8 @@ Proposed future integration shape:
 - Return extracted text only to the authenticated owner for review.
 - Require the user to explicitly choose what becomes proof content.
 - Keep `uploadedFileId` as the authority for attachment.
-- Never use OCR output to score, rank, shortlist, recommend, or auto-create hiring decisions.
-- Never use OCR output to update match, review, verification, reveal, trust-state, or hiring-decision state.
+- Never use OCR output to score, rank, shortlist, recommend, or auto-create workflow decisions.
+- Never use OCR output to update match, review, verification, reveal, trust-state, or workflow-decision state.
 - Require explicit user consent per document before the OCR call.
 
 ## Privacy Review Outcome
@@ -265,10 +266,9 @@ Before production consideration:
 
 Tests that must not be treated as launch evidence unless rewritten:
 
-- `tests/api/cv-import-wizard-routes.test.ts`
-- `tests/ui/cv-import-wizard.test.tsx`
-- `tests/ui/cvjd-auto-suggest.test.tsx`
-- `tests/ui/profile-context-cv-import.test.tsx`
+- `tests/archive/non_mvp_expertise_ui/cv-import-wizard.archived.tsx`
+- `tests/archive/non_mvp_expertise_ui/cvjd-auto-suggest.archived.tsx`
+- `tests/archive/non_mvp_expertise_ui/cv-import-wizard-routes.archived.ts`
 
 ## Rollback Path
 

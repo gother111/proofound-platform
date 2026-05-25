@@ -73,16 +73,15 @@ async function applyMigrations() {
     }
   }
   
-  console.log('=' .repeat(60));
-  console.log('\n🪄 MANUAL MIGRATION REQUIRED\n');
-  console.log('Please apply these migrations manually in Supabase Dashboard:\n');
-  console.log('1. Go to your Supabase Dashboard → SQL Editor');
-  console.log('2. Click "New Query"');
-  console.log('3. Copy and paste the SQL from:');
-  console.log('   - drizzle/migrations/20251105195215_add_interviews_table.sql');
-  console.log('   - drizzle/migrations/20251105195839_add_fairness_reports.sql');
-  console.log('4. Run each migration\n');
-  console.log('OR run them all at once with this combined SQL:\n');
+  console.log('='.repeat(60));
+  console.log('\n🪄 MIGRATION RUNNER REQUIRED\n');
+  console.log('Do not paste migration SQL into the Supabase dashboard for launch evidence.\n');
+  console.log('Use the canonical migration runner instead:');
+  console.log('1. Move any retained SQL into src/db/migrations/*.sql');
+  console.log('2. Run npm run db:drift-check');
+  console.log('3. Run npm run db:audit:migrations');
+  console.log('4. Run npm run db:migrate with the intended target env\n');
+  console.log('Combined SQL is printed below for diagnostics only:\n');
   
   // Output combined SQL
   console.log('```sql');
@@ -97,4 +96,3 @@ async function applyMigrations() {
 }
 
 applyMigrations();
-

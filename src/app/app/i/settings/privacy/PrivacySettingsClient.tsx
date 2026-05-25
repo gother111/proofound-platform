@@ -8,6 +8,8 @@ import { AuditLogTable } from '@/components/privacy/AuditLogTable';
 import { DeleteAccountSection } from '@/components/privacy/DeleteAccountSection';
 import { toast } from 'sonner';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { PrivacySettingsLoadingShell } from './PrivacySettingsLoadingShell';
 
 export function PrivacySettingsClient() {
   const [initialVisibility, setInitialVisibility] = useState<any>(null);
@@ -23,7 +25,7 @@ export function PrivacySettingsClient() {
           setInitialVisibility(data);
         }
       } catch (error) {
-        console.error('Failed to fetch visibility settings:', error);
+        dispatchClientErrorDiagnostic('privacy_settings.client.visibility_fetch_failed', error);
         toast.error('Failed to load privacy settings');
       } finally {
         setLoading(false);
@@ -47,48 +49,52 @@ export function PrivacySettingsClient() {
 
       return Promise.resolve();
     } catch (error) {
-      console.error('Failed to save visibility settings:', error);
+      dispatchClientErrorDiagnostic('privacy_settings.client.visibility_save_failed', error);
       return Promise.reject(error);
     }
   };
 
   if (loading) {
-    return (
-      <AppSurface>
-        <div className="flex items-center justify-center">
-          <div className="text-muted-foreground">Loading privacy settings...</div>
-        </div>
-      </AppSurface>
-    );
+    return <PrivacySettingsLoadingShell status="Preparing privacy settings..." />;
   }
 
   return (
     <AppSurface>
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto w-full min-w-0 max-w-4xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-semibold text-foreground mb-2">Privacy Settings</h1>
-          <p className="text-muted-foreground">Control who can see your profile information</p>
+          <h1 className="font-display text-3xl font-semibold text-foreground">Privacy Settings</h1>
+          <p className="mt-1 text-sm leading-6 text-muted-foreground">
+            Control Public Page details, assignment-review visibility, and data controls
+          </p>
         </div>
 
         <div className="space-y-6">
           {/* Privacy Overview */}
-          <PrivacyOverview userId="current" />
+          <PrivacyOverview userId="current" fullPageNavigation />
 
           {/* Data Breakdown */}
-          <DataBreakdown />
+          <section id="privacy-data" className="scroll-mt-24" tabIndex={-1}>
+            <DataBreakdown />
+          </section>
 
           {/* Field Visibility Controls */}
-          <IndividualFieldVisibilityControls
-            userId="current"
-            initialVisibility={initialVisibility || {}}
-            onSave={handleSave}
-          />
+          <section id="privacy-field-visibility" className="scroll-mt-24" tabIndex={-1}>
+            <IndividualFieldVisibilityControls
+              userId="current"
+              initialVisibility={initialVisibility || {}}
+              onSave={handleSave}
+            />
+          </section>
 
           {/* Audit Log */}
-          <AuditLogTable />
+          <section id="privacy-activity" className="scroll-mt-24" tabIndex={-1}>
+            <AuditLogTable />
+          </section>
 
           {/* Delete Account */}
-          <DeleteAccountSection />
+          <section id="privacy-delete" className="scroll-mt-24" tabIndex={-1}>
+            <DeleteAccountSection />
+          </section>
         </div>
       </div>
     </AppSurface>

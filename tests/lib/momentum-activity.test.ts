@@ -74,7 +74,10 @@ vi.mock('@/lib/verification/canonical-bundles', () => ({
   listCanonicalBundlesForOwner: (...args: any[]) => listCanonicalBundlesForOwnerMock(...args),
 }));
 
-import { getIndividualActivityEvents } from '@/lib/momentum/activity';
+import {
+  getIndividualActivityEvents,
+  getOrganizationActivityEvents,
+} from '@/lib/momentum/activity';
 
 function createQuery(result: unknown[]) {
   const query: any = {
@@ -170,6 +173,52 @@ describe('getIndividualActivityEvents', () => {
     expect(
       events.filter((event) => event.text.includes('Custom verification bundle'))
     ).toHaveLength(1);
+    expect(selectMock).toHaveBeenCalledTimes(3);
+  });
+});
+
+describe('getOrganizationActivityEvents', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('uses proof-submission scoped match activity copy', async () => {
+    selectMock
+      .mockImplementationOnce(() =>
+        createQuery([
+          {
+            id: 'assignment-1',
+            role: 'Operations proof review',
+            status: 'published',
+            updatedAt: new Date('2026-03-17T08:00:00.000Z'),
+          },
+        ])
+      )
+      .mockImplementationOnce(() =>
+        createQuery([
+          {
+            id: 'match-1',
+            assignmentId: 'assignment-1',
+            createdAt: new Date('2026-03-18T08:00:00.000Z'),
+          },
+        ])
+      )
+      .mockImplementationOnce(() =>
+        createQuery([
+          {
+            id: 'interview-1',
+            scheduledAt: new Date('2026-03-16T08:00:00.000Z'),
+            status: 'scheduled',
+          },
+        ])
+      );
+
+    const events = await getOrganizationActivityEvents('org-1', 8);
+
+    expect(events.some((event) => event.text === 'New proof-submission match generated')).toBe(
+      true
+    );
+    expect(events.some((event) => event.text === 'New candidate match generated')).toBe(false);
     expect(selectMock).toHaveBeenCalledTimes(3);
   });
 });

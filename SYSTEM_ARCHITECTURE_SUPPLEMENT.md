@@ -413,7 +413,7 @@ graph TD
 - Stakeholder's step becomes active (`pending` → send email)
 - Step not started after 48 hours → reminder
 - Step not completed after 7 days → escalation to org admin
-- Pipeline complete → notify hiring manager for final review
+- Pipeline complete → notify assignment-review owner for final review
 
 ### 2.6 Database Schema Reference
 

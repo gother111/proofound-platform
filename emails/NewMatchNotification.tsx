@@ -13,7 +13,7 @@ import {
 interface NewMatchNotificationProps {
   recipientName: string;
   matchType: 'individual' | 'organization';
-  matchScore: number;
+  proofFitLabel?: string;
   roleTitle?: string;
   organizationName?: string;
   topSkillMatches?: string[];
@@ -23,14 +23,12 @@ interface NewMatchNotificationProps {
 export default function NewMatchNotification({
   recipientName,
   matchType,
-  matchScore,
+  proofFitLabel = 'Proof review ready',
   roleTitle,
   organizationName,
   topSkillMatches = [],
   viewMatchUrl,
 }: NewMatchNotificationProps) {
-  const scorePercentage = Math.round(matchScore * 100);
-
   return (
     <Html>
       <Head />
@@ -42,21 +40,16 @@ export default function NewMatchNotification({
 
           <Section style={content}>
             <Section style={badgeContainer}>
-              <Text style={badge}>New Match</Text>
+              <Text style={badge}>Proof Review</Text>
             </Section>
 
-            <Text style={heading}>You Have a New Match!</Text>
+            <Text style={heading}>A Proof Review Is Ready</Text>
 
             <Text style={paragraph}>Hi {recipientName},</Text>
 
             <Text style={paragraph}>
-              Great news! We&apos;ve found a{' '}
-              {scorePercentage >= 80
-                ? 'highly compatible'
-                : scorePercentage >= 60
-                  ? 'good'
-                  : 'potential'}{' '}
-              match for you.
+              A proof-backed assignment review is ready. Proofound keeps the next step reason-coded
+              and privacy staged, without exposing a numeric match score.
             </Text>
 
             {matchType === 'organization' && roleTitle && organizationName && (
@@ -64,15 +57,15 @@ export default function NewMatchNotification({
                 <Section style={matchBox}>
                   <Text style={matchTitle}>{roleTitle}</Text>
                   <Text style={matchOrg}>{organizationName}</Text>
-                  <Section style={scoreContainer}>
-                    <Text style={scoreLabel}>Match Score</Text>
-                    <Text style={scoreValue}>{scorePercentage}%</Text>
+                  <Section style={reviewContainer}>
+                    <Text style={reviewLabel}>Review state</Text>
+                    <Text style={reviewValue}>{proofFitLabel}</Text>
                   </Section>
                 </Section>
 
                 {topSkillMatches.length > 0 && (
                   <>
-                    <Text style={subHeading}>Top Skill Matches:</Text>
+                    <Text style={subHeading}>Relevant proof signals:</Text>
                     <Section style={skillsContainer}>
                       {topSkillMatches.map((skill, index) => (
                         <Text key={index} style={skillItem}>
@@ -87,28 +80,28 @@ export default function NewMatchNotification({
 
             {matchType === 'individual' && (
               <Section style={matchBox}>
-                <Text style={matchTitle}>Potential Match</Text>
-                <Section style={scoreContainer}>
-                  <Text style={scoreLabel}>Match Score</Text>
-                  <Text style={scoreValue}>{scorePercentage}%</Text>
+                <Text style={matchTitle}>Proof-backed assignment review</Text>
+                <Section style={reviewContainer}>
+                  <Text style={reviewLabel}>Review state</Text>
+                  <Text style={reviewValue}>{proofFitLabel}</Text>
                 </Section>
               </Section>
             )}
 
             <Text style={paragraph}>
-              This match was calculated based on:
+              Review the proof context through the current assignment corridor:
               <br />
-              • Skills alignment
+              • Skills and proof relevance
               <br />
-              • Values compatibility
+              • Required constraints
               <br />
-              • Experience level
+              • Verification support
               <br />• Availability and location
             </Text>
 
             <Section style={buttonContainer}>
               <Button style={button} href={viewMatchUrl}>
-                View Match Details
+                Review in Proofound
               </Button>
             </Section>
 
@@ -119,20 +112,20 @@ export default function NewMatchNotification({
             </Text>
 
             <Text style={infoText}>
-              1. Review the match details and see why you&apos;re compatible
+              1. Review the proof context and reason codes
               <br />
-              2. If interested, express your interest to reveal identities
+              2. If interested, request the next intro step
               <br />
-              3. Both parties must express interest for a mutual match
+              3. Identity reveal still follows the staged consent corridor
               <br />
-              4. Once matched, you can start a conversation
+              4. Conversation opens only after the required review steps
             </Text>
 
             <Hr style={hr} />
 
             <Text style={footerText}>
-              We only send you high-quality matches that align with your profile and preferences. If
-              this isn&apos;t a good fit, you can pass on this match in your dashboard.
+              Proofound keeps review decisions proof-led and privacy-safe. If this is not relevant,
+              you can pass from the matching review surface.
             </Text>
           </Section>
 
@@ -250,11 +243,11 @@ const matchOrg = {
   margin: '0 0 16px 0',
 };
 
-const scoreContainer = {
+const reviewContainer = {
   marginTop: '16px',
 };
 
-const scoreLabel = {
+const reviewLabel = {
   fontSize: '14px',
   color: '#6b7280',
   margin: '0 0 4px 0',
@@ -262,8 +255,8 @@ const scoreLabel = {
   letterSpacing: '0.5px',
 };
 
-const scoreValue = {
-  fontSize: '32px',
+const reviewValue = {
+  fontSize: '24px',
   fontWeight: '700',
   color: '#1c4d3a',
   margin: '0',

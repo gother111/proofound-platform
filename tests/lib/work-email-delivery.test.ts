@@ -1,6 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const resendSendMock = vi.hoisted(() => vi.fn());
+const { originalResendApiKey, resendSendMock } = vi.hoisted(() => {
+  const originalResendApiKey = process.env.RESEND_API_KEY;
+  process.env.RESEND_API_KEY = 'test-resend-key';
+
+  return {
+    originalResendApiKey,
+    resendSendMock: vi.fn(),
+  };
+});
 
 vi.mock('resend', () => ({
   Resend: class Resend {
@@ -27,12 +35,14 @@ function restoreEnv(name: string, value: string | undefined) {
 describe('sendWorkEmailVerification delivery handling', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    process.env.RESEND_API_KEY = 'test-resend-key';
     process.env.NEXT_PUBLIC_SITE_URL = 'https://proofound.io';
     restoreEnv('SITE_URL', ORIGINAL_SITE_URL);
     restoreEnv('VERCEL_ENV', ORIGINAL_VERCEL_ENV);
   });
 
   afterEach(() => {
+    restoreEnv('RESEND_API_KEY', originalResendApiKey);
     restoreEnv('NEXT_PUBLIC_SITE_URL', ORIGINAL_NEXT_PUBLIC_SITE_URL);
     restoreEnv('SITE_URL', ORIGINAL_SITE_URL);
     restoreEnv('VERCEL_ENV', ORIGINAL_VERCEL_ENV);

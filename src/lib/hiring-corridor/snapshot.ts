@@ -286,9 +286,9 @@ export function buildHiringCorridorSnapshot(params: {
       nextAction = {
         id: 'request_intro',
         label: 'Request intro',
-        description: 'Open the corridor by asking the candidate to accept an intro.',
+        description: 'Open the corridor by asking the proof-review participant to accept an intro.',
       };
-      summary = 'The candidate is shortlisted and still in blind review.';
+      summary = 'The proof-review participant is shortlisted and still in blind review.';
     } else {
       nextAction = {
         id: 'wait_for_intro_request',
@@ -311,17 +311,19 @@ export function buildHiringCorridorSnapshot(params: {
         nextAction = {
           id: 'wait_for_intro_response',
           label: 'Wait for intro response',
-          description: 'The candidate needs to accept or decline the intro request.',
+          description: 'The proof-review participant needs to accept or decline the intro request.',
         };
-        summary = 'The intro request is waiting on the candidate.';
+        summary = 'The intro request is waiting on the proof-review participant.';
       }
     } else if (perspective === 'organization') {
       nextAction = {
         id: 'respond_to_intro',
         label: 'Confirm intro',
-        description: 'The candidate expressed interest. Confirm the intro to open the corridor.',
+        description:
+          'The proof-review participant expressed interest. Confirm the intro to open the corridor.',
       };
-      summary = 'The candidate has signaled interest and the organization still needs to confirm.';
+      summary =
+        'The proof-review participant has signaled interest and the organization still needs to confirm.';
     } else {
       nextAction = {
         id: 'wait_for_intro_response',
@@ -445,27 +447,28 @@ export function buildHiringCorridorSnapshot(params: {
           id: 'confirm_engagement',
           label: 'Confirm engagement',
           description:
-            'Record the engagement confirmation so hire stays distinct from trust verification.',
+            'Record the engagement confirmation so the decision stays distinct from trust verification.',
         };
         summary =
-          'The decision is hire. Engagement verification is still waiting on the organization.';
+          'The engagement decision is recorded. Engagement verification is still waiting on the organization.';
       } else if (perspective === 'individual' && !candidateConfirmed) {
         nextAction = {
           id: 'confirm_engagement',
           label: 'Confirm engagement',
           description:
-            'Confirm the engagement so the trust record can move beyond the hire decision.',
+            'Confirm the engagement so the trust record can move beyond the decision stage.',
         };
-        summary = 'The decision is hire. Engagement verification is still waiting on you.';
+        summary =
+          'The engagement decision is recorded. Engagement verification is still waiting on you.';
       } else {
         nextAction = {
           id: 'wait_for_engagement_confirmation',
           label: 'Wait for engagement confirmation',
           description:
-            'The hire decision is recorded. The remaining step is engagement verification.',
+            'The engagement decision is recorded. The remaining step is engagement verification.',
         };
         summary =
-          'The hire decision is recorded and the corridor is waiting for engagement verification.';
+          'The engagement decision is recorded and the corridor is waiting for engagement verification.';
       }
     } else if (source.decisionState === 'advance') {
       if (perspective === 'organization') {
@@ -474,7 +477,8 @@ export function buildHiringCorridorSnapshot(params: {
           label: 'Schedule next interview',
           description: 'Advance keeps the corridor active and requires the next interview step.',
         };
-        summary = 'The candidate advanced and the corridor is waiting for the next interview step.';
+        summary =
+          'The proof-review participant advanced and the corridor is waiting for the next interview step.';
       } else {
         nextAction = {
           id: 'wait_for_next_interview',
@@ -520,10 +524,10 @@ export function buildHiringCorridorSnapshot(params: {
         id: 'confirm_engagement',
         label: 'Confirm engagement',
         description:
-          'Record the engagement details so the candidate can complete the final verification step.',
+          'Record the engagement details so the proof-review participant can complete the final verification step.',
       };
       summary =
-        'The hire decision is recorded and the corridor is waiting for the organization to record the engagement.';
+        'The engagement decision is recorded and the corridor is waiting for the organization to record the engagement.';
     } else if (perspective === 'individual' && !candidateConfirmed) {
       nextAction = {
         id: 'confirm_engagement',
@@ -547,7 +551,7 @@ export function buildHiringCorridorSnapshot(params: {
     nextAction = {
       id: 'corridor_complete',
       label: 'Corridor complete',
-      description: 'The engagement is verified and the hiring corridor is complete.',
+      description: 'The engagement is verified and the assignment-review corridor is complete.',
     };
     summary = 'The engagement has been verified.';
   }

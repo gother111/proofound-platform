@@ -144,6 +144,13 @@ function queueSelectResult(result: unknown[]) {
   }));
 }
 
+function queueEmptyOwnerExportRows() {
+  queueSelectResult([{ deletionRequestedAt: null, deleted: false }]);
+  for (let index = 0; index < 17; index += 1) {
+    queueSelectResult([]);
+  }
+}
+
 describe('/api/user/export', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -382,6 +389,46 @@ describe('/api/user/export', () => {
       'operation-1',
       'Error',
       expect.stringContaining('[REDACTED_DATABASE_ERROR]')
+    );
+    expect(mocks.finalizeLifecycleOperation).toHaveBeenCalledWith('operation-1', {
+      status: 'failed_requires_manual_review',
+      visibleStatus: 'failed',
+      summaryCode: 'Error',
+    });
+  });
+
+  it('marks the export record failed when packaging fails after export creation', async () => {
+    mocks.requireApiAuthContext.mockResolvedValue({
+      user: { id: 'user-1' },
+    });
+    queueEmptyOwnerExportRows();
+    mocks.execute.mockRejectedValueOnce(new Error('uploaded files query failed'));
+
+    const response = await GET();
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body.error).toBe('Failed to generate data export');
+    expect(mocks.updateDataPortabilityExportState).toHaveBeenNthCalledWith(1, {
+      exportId: 'export-1',
+      toState: 'preparing',
+      actorType: 'system',
+      trigger: 'export_packaging_started',
+      metadata: {
+        operationId: 'operation-1',
+      },
+    });
+    expect(mocks.updateDataPortabilityExportState).toHaveBeenCalledWith(
+      expect.objectContaining({
+        exportId: 'export-1',
+        toState: 'failed',
+        actorType: 'system',
+        trigger: 'export_failed',
+        failureCode: 'Error',
+        metadata: expect.objectContaining({
+          error: expect.any(Object),
+        }),
+      })
     );
     expect(mocks.finalizeLifecycleOperation).toHaveBeenCalledWith('operation-1', {
       status: 'failed_requires_manual_review',

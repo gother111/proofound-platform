@@ -83,10 +83,11 @@ describe('LeftNav portfolio gating', () => {
     expect(toastSuccessMock).not.toHaveBeenCalled();
   });
 
-  it('shows Beta testing marker without archived expertise or zen links', () => {
+  it('shows Early access marker without archived expertise or zen links', () => {
     render(<LeftNav basePath="/app/i" isBetaTesting />);
 
-    expect(screen.getByText(/beta testing/i)).toBeInTheDocument();
+    expect(screen.getByText(/early access/i)).toBeInTheDocument();
+    expect(screen.queryByText(/beta testing/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /private check-ins/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /expertise/i })).not.toBeInTheDocument();
   });
@@ -120,7 +121,7 @@ describe('LeftNav portfolio gating', () => {
       'href',
       '/app/i/settings?tab=privacy'
     );
-    expect(screen.getByRole('menuitem', { name: /audit log/i })).toHaveAttribute(
+    expect(screen.getByRole('menuitem', { name: /account history/i })).toHaveAttribute(
       'href',
       '/app/i/settings/audit-log'
     );
@@ -130,10 +131,10 @@ describe('LeftNav portfolio gating', () => {
     );
   });
 
-  it('keeps org account menu inside the organization profile corridor', () => {
+  it('keeps org account menu inside the organization trust page corridor', () => {
     render(<TopBarProfileMenu userName="Acme" basePath="/app/o/acme" onClose={vi.fn()} />);
 
-    expect(screen.getByRole('menuitem', { name: /organization profile/i })).toHaveAttribute(
+    expect(screen.getByRole('menuitem', { name: /organization trust page/i })).toHaveAttribute(
       'href',
       '/app/o/acme/profile'
     );
@@ -147,7 +148,7 @@ describe('LeftNav portfolio gating', () => {
   it('shows only the MVP org navigation corridor', () => {
     usePathnameMock.mockReturnValue('/app/o/acme/home');
 
-    render(<LeftNav basePath="/app/o/acme" />);
+    const { container } = render(<LeftNav basePath="/app/o/acme" />);
 
     expect(screen.getAllByRole('link', { name: /overview/i })[0]).toHaveAttribute(
       'href',
@@ -161,7 +162,7 @@ describe('LeftNav portfolio gating', () => {
       'href',
       '/app/o/acme/communications'
     );
-    expect(screen.getAllByRole('link', { name: /organization profile/i })[0]).toHaveAttribute(
+    expect(screen.getAllByRole('link', { name: /organization trust page/i })[0]).toHaveAttribute(
       'href',
       '/app/o/acme/profile'
     );
@@ -173,5 +174,11 @@ describe('LeftNav portfolio gating', () => {
     expect(screen.queryByRole('link', { name: /shortlist/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /team/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /^settings$/i })).not.toBeInTheDocument();
+    expect(container.querySelector('[data-tour="home-link"]')).not.toBeNull();
+    expect(container.querySelector('[data-tour="assignments-link"]')).not.toBeNull();
+    expect(container.querySelector('[data-tour="communications-link"]')).not.toBeNull();
+    expect(container.querySelector('[data-tour="org-profile"]')).not.toBeNull();
+    expect(container.querySelector('[data-tour="portfolio-link"]')).not.toBeNull();
+    expect(container.querySelector('[data-tour="candidates"]')).toBeNull();
   });
 });

@@ -1179,7 +1179,9 @@ export async function upsertCanonicalProofPackForSnippet(input: SnippetPackInput
           primarySubjectType: anchor.primarySubjectType,
           primarySubjectId: anchor.primarySubjectId,
           title:
-            input.profileType === 'organization' ? 'Organization Profile Export' : 'Profile Export',
+            input.profileType === 'organization'
+              ? 'Organization Trust Page Export'
+              : 'Profile Export',
           summary: null,
           visibility: 'link_only' as const,
           revealGate: 'none' as const,

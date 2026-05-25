@@ -21,9 +21,13 @@ import {
 import { requireApiAuthContext } from '@/lib/auth';
 import { safeApiErrorResponse, safeValidationErrorResponse } from '@/lib/api/errors';
 import { ensureOrganizationPrincipal, PrincipalContextSchema } from '@/lib/authz';
-import { isMockSupabaseEnabled } from '@/lib/env';
 import { log } from '@/lib/log';
 import { sanitizeErrorForLog } from '@/lib/privacy/log-redaction';
+import {
+  buildVisualAssignmentDetailResponse,
+  getVisualAssignmentFixtureById,
+  visualAssignmentFixturesEnabled,
+} from '@/lib/assignments/visual-fixtures';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,8 +37,6 @@ const AssignmentStatusUpdateSchema = z
 const AssignmentCreationStatusSchema = z
   .enum(['draft', 'assignment_ready', 'review_ready', 'pending_review'])
   .transform((value) => (value === 'pending_review' ? 'review_ready' : value));
-const MOCK_ASSIGNMENT_ID = '22222222-2222-4222-8222-222222222222';
-const MOCK_ORG_ID = '99999999-9999-4999-9999-999999999999';
 
 const EngagementTypeSchema = z.enum(canonicalEngagementTypeValues);
 const OptionalDateStringSchema = z.preprocess((value) => {
@@ -134,46 +136,6 @@ function buildAssignmentResponse(
   };
 }
 
-function buildMockAssignment(
-  assignmentId = MOCK_ASSIGNMENT_ID,
-  overrides: Partial<typeof assignments.$inferSelect> = {}
-): typeof assignments.$inferSelect {
-  const now = new Date();
-
-  return {
-    id: assignmentId,
-    orgId: MOCK_ORG_ID,
-    role: 'Partner launch operations lead',
-    engagementType: 'full_time',
-    businessValue:
-      'Create one clear proof-led hiring corridor with privacy-safe review checkpoints.',
-    description:
-      'Define the work outcome, how success will be observed, and which evidence counts.',
-    expectedImpact:
-      'Ask for one proof artifact tied to a real project, with context, ownership, and outcome.',
-    weights: null,
-    compMin: null,
-    compMax: null,
-    currency: 'USD',
-    hoursMin: 20,
-    hoursMax: 40,
-    locationMode: 'hybrid',
-    city: null,
-    country: null,
-    startEarliest: null,
-    startLatest: null,
-    verificationGates: [],
-    status: 'draft',
-    creationStatus: 'draft',
-    builderMode: 'basic',
-    mustHaveSkills: [],
-    niceToHaveSkills: [],
-    createdAt: now,
-    updatedAt: now,
-    ...overrides,
-  } as typeof assignments.$inferSelect;
-}
-
 /**
  * GET /api/assignments/[id]
  */
@@ -189,16 +151,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const resolvedParams = await params;
     assignmentId = resolvedParams.id;
 
-    if (isMockSupabaseEnabled() && assignmentId === MOCK_ASSIGNMENT_ID) {
-      return NextResponse.json({
-        assignment: buildAssignmentResponse(buildMockAssignment(assignmentId), {
-          outcomes: [],
-          requiredSkills: [],
-          niceToHaveSkills: [],
-        }),
-      });
-    }
-
     const orgId = request.nextUrl.searchParams.get('orgId');
     const orgSlug = request.nextUrl.searchParams.get('orgSlug');
     const access = await verifyExplicitAssignmentAccess(user.id, assignmentId, {
@@ -213,6 +165,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
     if (access.status === 'insufficient_role') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    if (visualAssignmentFixturesEnabled() && access.orgId) {
+      const visualAssignment = getVisualAssignmentFixtureById(assignmentId, access.orgId);
+      if (visualAssignment) {
+        return NextResponse.json({
+          assignment: buildVisualAssignmentDetailResponse(visualAssignment),
+        });
+      }
     }
 
     const assignment = await db.query.assignments.findFirst({
@@ -335,44 +296,13 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const resolvedParams = await params;
     assignmentId = resolvedParams.id;
 
-    const body = await request.json();
-    const validatedData = AssignmentUpdateSchema.parse(body);
-
-    if (isMockSupabaseEnabled() && assignmentId === MOCK_ASSIGNMENT_ID) {
-      return NextResponse.json({
-        assignment: buildAssignmentResponse(
-          buildMockAssignment(assignmentId, {
-            orgId: validatedData.orgId ?? MOCK_ORG_ID,
-            role: validatedData.title ?? validatedData.role ?? 'Partner launch operations lead',
-            engagementType: validatedData.engagementType ?? 'full_time',
-            businessValue: validatedData.rolePurpose ?? validatedData.businessValue ?? null,
-            description: validatedData.description ?? '',
-            expectedImpact: validatedData.proofExpectations ?? validatedData.expectedImpact ?? null,
-            status: validatedData.status ?? 'draft',
-            creationStatus: validatedData.creationStatus ?? 'draft',
-            builderMode: validatedData.builderMode ?? 'basic',
-            mustHaveSkills: validatedData.mustHaveSkills ?? [],
-            niceToHaveSkills: validatedData.niceToHaveSkills ?? [],
-            locationMode: validatedData.locationMode ?? 'hybrid',
-            city: validatedData.city ?? null,
-            country: validatedData.country ?? null,
-            compMin: validatedData.compMin ?? null,
-            compMax: validatedData.compMax ?? null,
-            currency: validatedData.currency ?? 'USD',
-            hoursMin: validatedData.hoursMin ?? 20,
-            hoursMax: validatedData.hoursMax ?? 40,
-            startEarliest: validatedData.startEarliest ?? null,
-            startLatest: validatedData.startLatest ?? null,
-            verificationGates: validatedData.verificationGates ?? [],
-          }),
-          {
-            outcomes: [],
-            requiredSkills: validatedData.mustHaveSkills ?? [],
-            niceToHaveSkills: validatedData.niceToHaveSkills ?? [],
-          }
-        ),
-      });
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
+    const validatedData = AssignmentUpdateSchema.parse(body);
 
     const principal = validatedData.principalContext
       ? ensureOrganizationPrincipal(validatedData.principalContext)

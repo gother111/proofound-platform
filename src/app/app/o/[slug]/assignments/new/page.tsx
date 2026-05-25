@@ -1,27 +1,4 @@
-'use client';
-
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { toast } from 'sonner';
-import { AlertTriangle, CheckCircle2, FileText, PencilLine, Wand2 } from 'lucide-react';
-
-import {
-  Step1BusinessValue,
-  Step2TargetOutcomes,
-  Step3WeightMatrix,
-  Step4Practicals,
-} from '@/components/matching/assignment-steps';
-import { AssignmentClarityAssistant } from '@/components/assignments/AssignmentClarityAssistant';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import { AppSurface } from '@/components/ui/v2/AppSurface';
-import { apiFetch } from '@/lib/api/fetch';
-import {
-  extractAssignmentDraftFromJobDescription,
-  type ImportedAssignmentDraft,
-} from '@/lib/assignments/job-description-import';
+import { DeferredAssignmentBuilderClient } from './DeferredAssignmentBuilderClient';
 
 export const dynamic = 'force-dynamic';
 
@@ -866,20 +843,5 @@ export default function AssignmentBuilderPage() {
           onEnsureDraft={ensureClarityDraft}
         />
 
-        <div className="text-center text-sm text-muted-foreground">
-          <p>
-            Drafts auto-save every 30 seconds.
-            {lastSaved ? (
-              <span className="ml-2 text-green-600">
-                • Last saved {lastSaved.toLocaleTimeString()}
-              </span>
-            ) : null}
-            {isSaving ? (
-              <span className="ml-2 text-muted-foreground">• Saving review draft…</span>
-            ) : null}
-          </p>
-        </div>
-      </div>
-    </AppSurface>
-  );
+  return <DeferredAssignmentBuilderClient slug={slug} />;
 }

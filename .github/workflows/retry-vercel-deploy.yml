@@ -3,6 +3,16 @@ name: Retry Vercel Deploy Until Synced
 on:
   push:
     branches: [master]
+    paths-ignore:
+      - 'agent/**'
+      - 'audit/**'
+      - 'docs/**'
+      - 'e2e/**'
+      - 'project/**'
+      - 'tests/**'
+      - 'src/archive/**'
+      - '.artifacts/**'
+      - '*.md'
   workflow_dispatch:
 
 permissions:
@@ -10,12 +20,12 @@ permissions:
 
 concurrency:
   group: retry-vercel-production-deploy
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   retry-deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 60
     env:
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
       SITE_URL: http://localhost:3000
@@ -27,54 +37,105 @@ jobs:
       PLAYWRIGHT_SERVER_MODE: prod
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
       PII_HASH_SALT: ${{ secrets.PII_HASH_SALT || 'ci-playwright-test-salt' }}
       CRON_SECRET: ci-launch-cron-secret
       SUS_STUDY_COMPLETE: 'true'
-      ZOOM_CLIENT_ID: ${{ secrets.ZOOM_CLIENT_ID }}
-      ZOOM_CLIENT_SECRET: ${{ secrets.ZOOM_CLIENT_SECRET }}
-      ZOOM_REDIRECT_URI: ${{ secrets.ZOOM_REDIRECT_URI }}
-      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-      GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
-      LINKEDIN_CLIENT_ID: ${{ secrets.LINKEDIN_CLIENT_ID }}
-      LINKEDIN_CLIENT_SECRET: ${{ secrets.LINKEDIN_CLIENT_SECRET }}
-      LINKEDIN_REDIRECT_URI: ${{ secrets.LINKEDIN_REDIRECT_URI }}
-      E2E_PROVIDER_USER_ID: ${{ secrets.E2E_PROVIDER_USER_ID }}
-      E2E_PROVIDER_USER_EMAIL: ${{ secrets.E2E_PROVIDER_USER_EMAIL }}
-      E2E_PROVIDER_USER_PASSWORD: ${{ secrets.E2E_PROVIDER_USER_PASSWORD }}
       NEXT_PUBLIC_USE_MOCK_SUPABASE: 'false'
-      STRICT_PROVIDER_E2E_REQUIRE_CONNECTED: 'true'
-      STRICT_PROVIDER_E2E_REQUIRE_BOTH: 'true'
+      STRICT_PROVIDER_E2E_REQUIRE_CONNECTED: 'false'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
-          fetch-depth: 1
+          fetch-depth: 2
+
+      - name: Check superseded master run
+        id: freshness
+        shell: bash
+        run: |
+          if [ "${GITHUB_EVENT_NAME}" != "push" ]; then
+            echo "current=true" >> "$GITHUB_OUTPUT"
+            echo "reason=manual-run" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          remote_sha="$(git ls-remote origin refs/heads/master | awk '{print $1}')"
+          echo "remote_sha=${remote_sha}" >> "$GITHUB_OUTPUT"
+
+          if [ "${GITHUB_SHA}" = "${remote_sha}" ]; then
+            echo "current=true" >> "$GITHUB_OUTPUT"
+            echo "reason=current-master" >> "$GITHUB_OUTPUT"
+          else
+            echo "current=false" >> "$GITHUB_OUTPUT"
+            echo "reason=superseded-by-newer-master" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        if: steps.freshness.outputs.current == 'true'
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: '.nvmrc'
           cache: npm
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Decide whether production sync is needed
+        id: changes
+        if: steps.freshness.outputs.current == 'true'
+        env:
+          GITHUB_EVENT_BEFORE: ${{ github.event.before }}
+        shell: bash
+        run: |
+          if [ "${GITHUB_EVENT_NAME}" != "push" ]; then
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+            echo "reason=manual-run" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
 
-      - name: Run strict MVP release gate
-        run: node ./scripts/run-mvp-strict-gates.mjs --artifact-dir .artifacts/mvp-strict-gates/retry-vercel-deploy
+          set +e
+          node ./scripts/vercel-should-build.mjs --verbose
+          should_skip=$?
+          set -e
+
+          if [ "${should_skip}" -eq 0 ]; then
+            echo "should_build=false" >> "$GITHUB_OUTPUT"
+            echo "reason=non-runtime-change" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+            echo "reason=runtime-change-or-safe-default" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install dependencies
+        if: steps.freshness.outputs.current == 'true' && steps.changes.outputs.should_build == 'true'
+        run: npm ci --ignore-scripts
+
+      - name: Run fast deploy preflight
+        if: steps.freshness.outputs.current == 'true' && steps.changes.outputs.should_build == 'true'
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_CANONICAL_PROJECT: proofound-platform
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
+        run: |
+          npm run ci:workflows
+          npm run deploy:readiness:strict
+          npm run vercel:preflight
 
       - name: Install Python package manager
+        if: steps.freshness.outputs.current == 'true' && steps.changes.outputs.should_build == 'true'
         run: |
           python3 -m pip install --user uv
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Read repository head SHA
         id: repo
+        if: steps.freshness.outputs.current == 'true' && steps.changes.outputs.should_build == 'true'
         run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Delete stale production deployments
+        if: steps.freshness.outputs.current == 'true' && steps.changes.outputs.should_build == 'true'
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
@@ -84,6 +145,7 @@ jobs:
 
       - name: Read production deployment SHA
         id: live
+        if: steps.freshness.outputs.current == 'true' && steps.changes.outputs.should_build == 'true'
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
@@ -133,6 +195,7 @@ jobs:
 
       - name: Detect active production deployment for repository SHA
         id: pending
+        if: steps.freshness.outputs.current == 'true' && steps.changes.outputs.should_build == 'true'
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
@@ -185,6 +248,7 @@ jobs:
           NODE
 
       - name: Print sync status
+        if: steps.freshness.outputs.current == 'true' && steps.changes.outputs.should_build == 'true'
         run: |
           echo "Repo SHA: ${{ steps.repo.outputs.sha }}"
           echo "Live SHA: ${{ steps.live.outputs.sha }}"
@@ -192,7 +256,7 @@ jobs:
           echo "Active prebuilt deploy for repo SHA: ${{ steps.pending.outputs.exists }}"
 
       - name: Pull production Vercel environment
-        if: steps.repo.outputs.sha != steps.live.outputs.sha && steps.pending.outputs.exists != 'true'
+        if: steps.freshness.outputs.current == 'true' && steps.changes.outputs.should_build == 'true' && steps.repo.outputs.sha != steps.live.outputs.sha && steps.pending.outputs.exists != 'true'
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -200,7 +264,7 @@ jobs:
         run: npm run vercel:pull:production
 
       - name: Build production deployment output
-        if: steps.repo.outputs.sha != steps.live.outputs.sha && steps.pending.outputs.exists != 'true'
+        if: steps.freshness.outputs.current == 'true' && steps.changes.outputs.should_build == 'true' && steps.repo.outputs.sha != steps.live.outputs.sha && steps.pending.outputs.exists != 'true'
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -208,14 +272,14 @@ jobs:
         run: npm run vercel:build:production
 
       - name: Inspect prebuilt output
-        if: steps.repo.outputs.sha != steps.live.outputs.sha && steps.pending.outputs.exists != 'true'
+        if: steps.freshness.outputs.current == 'true' && steps.changes.outputs.should_build == 'true' && steps.repo.outputs.sha != steps.live.outputs.sha && steps.pending.outputs.exists != 'true'
         run: |
           test -f .vercel/output/config.json
           test -f .vercel/output/builds.json
 
       - name: Deploy production prebuilt output
         id: deploy
-        if: steps.repo.outputs.sha != steps.live.outputs.sha && steps.pending.outputs.exists != 'true'
+        if: steps.freshness.outputs.current == 'true' && steps.changes.outputs.should_build == 'true' && steps.repo.outputs.sha != steps.live.outputs.sha && steps.pending.outputs.exists != 'true'
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -230,6 +294,10 @@ jobs:
           {
             echo "## Production deployment sync"
             echo
+            echo "- Freshness: \`${{ steps.freshness.outputs.reason || 'unknown' }}\`"
+            echo "- Remote master SHA: \`${{ steps.freshness.outputs.remote_sha || 'not-checked' }}\`"
+            echo "- Runtime-impacting change: \`${{ steps.changes.outputs.should_build || 'not-checked' }}\`"
+            echo "- Change decision: \`${{ steps.changes.outputs.reason || 'not-checked' }}\`"
             echo "- Repo SHA: \`${{ steps.repo.outputs.sha }}\`"
             echo "- Live production deployment SHA before workflow: \`${{ steps.live.outputs.sha || 'unknown' }}\`"
             echo "- Live production deployment id before workflow: \`${{ steps.live.outputs.deployment || 'unknown' }}\`"

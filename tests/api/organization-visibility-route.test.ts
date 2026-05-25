@@ -23,11 +23,18 @@ vi.mock('@/lib/portfolio/public-invalidation', () => ({
   revalidatePublicOrganizationPortfolioById: vi.fn(),
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+  },
+}));
+
 import { GET, PUT } from '@/app/api/organizations/[orgId]/visibility/route';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { computePortfolioPublicationState } from '@/lib/proof-trust/snapshots';
 import { revalidatePublicOrganizationPortfolioById } from '@/lib/portfolio/public-invalidation';
+import { log } from '@/lib/log';
 
 const params = { params: Promise.resolve({ orgId: 'org-1' }) };
 
@@ -38,10 +45,21 @@ function buildPutRequest(body: Record<string, unknown>) {
   });
 }
 
+function buildRawPutRequest(body: string) {
+  return new NextRequest('http://localhost/api/organizations/org-1/visibility', {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    body,
+  });
+}
+
 function buildSupabase({
   membershipRole = 'org_owner',
   visibilityRow = null,
   visibilityReadError = null,
+  visibilityUpdateError = null,
+  visibilityInsertError = null,
+  organizationUpdateError = null,
   organizationRow = {
     public_portfolio_state: 'public_link_only',
     search_indexing_enabled_at: null,
@@ -49,7 +67,10 @@ function buildSupabase({
 }: {
   membershipRole?: string;
   visibilityRow?: Record<string, unknown> | null;
-  visibilityReadError?: { code: string } | null;
+  visibilityReadError?: { code?: string; message?: string } | Error | null;
+  visibilityUpdateError?: { code?: string; message?: string } | Error | null;
+  visibilityInsertError?: { code?: string; message?: string } | Error | null;
+  organizationUpdateError?: { code?: string; message?: string } | Error | null;
   organizationRow?: Record<string, unknown> | null;
 } = {}) {
   const members = {
@@ -73,13 +94,19 @@ function buildSupabase({
     update: vi.fn(() => ({
       eq: vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({ data: { id: 'vis-1' }, error: null }),
+          single: vi.fn().mockResolvedValue({
+            data: visibilityUpdateError ? null : { id: 'vis-1' },
+            error: visibilityUpdateError,
+          }),
         }),
       }),
     })),
     insert: vi.fn(() => ({
       select: vi.fn().mockReturnValue({
-        single: vi.fn().mockResolvedValue({ data: { id: 'vis-1' }, error: null }),
+        single: vi.fn().mockResolvedValue({
+          data: visibilityInsertError ? null : { id: 'vis-1' },
+          error: visibilityInsertError,
+        }),
       }),
     })),
   };
@@ -88,7 +115,9 @@ function buildSupabase({
     select: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
     maybeSingle: vi.fn().mockResolvedValue({ data: organizationRow, error: null }),
-    update: vi.fn().mockReturnThis(),
+    update: vi.fn(() => ({
+      eq: vi.fn().mockResolvedValue({ error: organizationUpdateError }),
+    })),
   };
 
   const from = vi.fn((table: string) => {
@@ -181,6 +210,28 @@ describe('organization visibility route', () => {
     });
   });
 
+  it('GET logs visibility read failures with structured diagnostics', async () => {
+    const visibilityError = { code: 'PGRST500', message: 'visibility lookup failed' };
+    vi.mocked(createClient).mockResolvedValue(
+      buildSupabase({
+        visibilityReadError: visibilityError,
+      }) as any
+    );
+
+    const response = await GET(
+      new NextRequest('http://localhost/api/organizations/org-1/visibility'),
+      params
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Failed to fetch visibility settings' });
+    expect(log.error).toHaveBeenCalledWith('organization.visibility.get_failed', {
+      orgId: 'org-1',
+      error: visibilityError,
+    });
+  });
+
   it('PUT rejects invalid visibility values', async () => {
     vi.mocked(createClient).mockResolvedValue(buildSupabase() as any);
 
@@ -189,6 +240,21 @@ describe('organization visibility route', () => {
 
     expect(response.status).toBe(400);
     expect(body.error).toBe('Invalid visibility level for displayName');
+  });
+
+  it('PUT rejects malformed JSON before visibility reads or writes', async () => {
+    const supabase = buildSupabase();
+    vi.mocked(createClient).mockResolvedValue(supabase as any);
+
+    const response = await PUT(buildRawPutRequest('{"displayName":'), params);
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body).toEqual({ error: 'Invalid JSON body' });
+    expect(supabase.__mocks.visibilityWrite.update).not.toHaveBeenCalled();
+    expect(supabase.__mocks.visibilityWrite.insert).not.toHaveBeenCalled();
+    expect(db.query.portfolioPublicationStates.findFirst).not.toHaveBeenCalled();
+    expect(computePortfolioPublicationState).not.toHaveBeenCalled();
   });
 
   it('PUT rejects manager updates because publication controls are owner-only', async () => {
@@ -203,6 +269,27 @@ describe('organization visibility route', () => {
 
     expect(response.status).toBe(403);
     expect(body.error).toBe('Forbidden');
+  });
+
+  it('PUT logs visibility read failures instead of falling through to inserts', async () => {
+    const visibilityError = { code: 'PGRST500', message: 'visibility lookup failed' };
+    const supabase = buildSupabase({
+      visibilityRow: null,
+      visibilityReadError: visibilityError,
+    });
+    vi.mocked(createClient).mockResolvedValue(supabase as any);
+
+    const response = await PUT(buildPutRequest({ displayName: 'internal_only' }), params);
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Failed to fetch visibility settings' });
+    expect(supabase.__mocks.visibilityWrite.update).not.toHaveBeenCalled();
+    expect(supabase.__mocks.visibilityWrite.insert).not.toHaveBeenCalled();
+    expect(log.error).toHaveBeenCalledWith('organization.visibility.read_failed', {
+      orgId: 'org-1',
+      error: visibilityError,
+    });
   });
 
   it('PUT stores publication controls, recomputes publication, and invalidates public paths', async () => {
@@ -250,5 +337,35 @@ describe('organization visibility route', () => {
     expect(body.searchIndexingEnabled).toBe(true);
     expect(body.visibility.displayName).toBe('internal_only');
     expect(body.visibility.mission).toBe('post_conversation_start');
+  });
+
+  it('PUT logs organization publication update failures with structured diagnostics', async () => {
+    const publicationUpdateError = { message: 'publication update failed' };
+    const supabase = buildSupabase({
+      visibilityRow: {
+        display_name: 'public',
+        mission: 'public',
+        vision: 'public',
+        causes: 'public',
+      },
+      organizationUpdateError: publicationUpdateError,
+    });
+    vi.mocked(createClient).mockResolvedValue(supabase as any);
+
+    const response = await PUT(
+      buildPutRequest({
+        displayName: 'internal_only',
+        publicPageEnabled: true,
+      }),
+      params
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Failed to update organization visibility settings' });
+    expect(log.error).toHaveBeenCalledWith('organization.visibility.publication_update_failed', {
+      orgId: 'org-1',
+      error: publicationUpdateError,
+    });
   });
 });

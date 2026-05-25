@@ -17,14 +17,14 @@ export function ComparisonSection({ shouldReduceMotion }: ComparisonSectionProps
 
   const oldWayItems = [
     'CVs and profiles are easy to fake',
-    'Hiring and networking rely on weak signals',
+    'Hiring and networking rely on weak evidence',
     'People repeatedly have to prove credibility from scratch',
   ];
 
   const newWayItems = [
     'One direct-link Public Page',
-    'Portable trust signals and verification',
-    'Better matching based on evidence and alignment, not posture',
+    'Portable verification attached to proof',
+    'Assignment-fit review based on evidence and alignment, not posture',
   ];
 
   return (

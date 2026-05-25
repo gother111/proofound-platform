@@ -129,7 +129,7 @@ export function AssignmentInvitationEmail({
 <body>
   <div class="container">
     <div class="header">
-      <h1>📋 Profile Contribution Invitation</h1>
+      <h1>Trust Page Contribution Invitation</h1>
     </div>
 
     <div class="content">
@@ -138,7 +138,7 @@ export function AssignmentInvitationEmail({
       </div>
 
       <p>
-        <strong>${organizationName}</strong> has invited you to help complete their organization profile on Proofound.
+        <strong>${organizationName}</strong> has invited you to help complete their organization trust page on Proofound.
       </p>
 
       ${
@@ -166,7 +166,7 @@ export function AssignmentInvitationEmail({
 
       <div style="text-align: center;">
         <a href="${invitationUrl}" class="button">
-          Complete Profile Sections
+          Complete Trust Page Sections
         </a>
       </div>
 
@@ -182,7 +182,7 @@ export function AssignmentInvitationEmail({
     <div class="footer">
       <p>
         This invitation was sent by ${organizationName} via Proofound.<br>
-        <a href="https://proofound.com">Learn more about Proofound</a>
+        <a href="https://proofound.io">Learn more about Proofound</a>
       </p>
       <p style="font-size: 12px; margin-top: 20px;">
         If you believe you received this email in error, you can safely ignore it.
@@ -206,11 +206,11 @@ export function AssignmentInvitationEmailText({
   expiryDate,
 }: AssignmentInvitationEmailProps) {
   return `
-Profile Contribution Invitation
+Trust Page Contribution Invitation
 
 ${stakeholderName ? `Hello ${stakeholderName},` : 'Hello,'}
 
-${organizationName} has invited you to help complete their organization profile on Proofound.
+${organizationName} has invited you to help complete their organization trust page on Proofound.
 
 ${message ? `Personal message from ${organizationName}:\n${message}\n\n` : ''}
 
@@ -219,7 +219,7 @@ ${assignedSections.map((s) => `- ${s.charAt(0).toUpperCase() + s.slice(1)}`).joi
 
 Your input will help provide a complete and accurate picture of ${organizationName}'s work and impact. No account is required.
 
-Complete the profile sections here:
+Complete the trust page sections here:
 ${invitationUrl}
 
 This invitation expires on ${expiryDate}
@@ -228,6 +228,6 @@ If you have any questions, please reply to this email or contact ${organizationN
 
 ---
 This invitation was sent by ${organizationName} via Proofound.
-Learn more: https://proofound.com
+Learn more: https://proofound.io
   `.trim();
 }

@@ -21,8 +21,17 @@ vi.mock('@/lib/verification/canonical-requests', () => ({
   updateCanonicalSkillVerificationRequest: vi.fn(),
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+    warn: vi.fn(),
+  },
+}));
+
 import { requireApiAuthContext } from '@/lib/auth';
 import { sendEmail } from '@/lib/email/sender';
+import { emitVerificationRequestedAsync } from '@/lib/analytics/events';
+import { log } from '@/lib/log';
 import {
   createCanonicalSkillVerificationRequest,
   findExistingCanonicalSkillVerificationRequest,
@@ -41,6 +50,16 @@ function createRequest(origin: string, body: Record<string, unknown>) {
       skillId: 'skill-1',
       ...body,
     }),
+  });
+}
+
+function createRawRequest(origin: string, body: string) {
+  return new NextRequest(`${origin}/api/verification/requests/skill`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+    },
+    body,
   });
 }
 
@@ -123,6 +142,7 @@ describe('POST /api/verification/requests/skill', () => {
   const originalSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
   const originalAppUrl = process.env.NEXT_PUBLIC_APP_URL;
   const originalVercelEnv = process.env.VERCEL_ENV;
+  const originalMockSupabase = process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE;
   let authContext: { user: { id: string; email: string }; supabase: any };
 
   beforeEach(() => {
@@ -181,6 +201,7 @@ describe('POST /api/verification/requests/skill', () => {
     process.env.NEXT_PUBLIC_SITE_URL = originalSiteUrl;
     process.env.NEXT_PUBLIC_APP_URL = originalAppUrl;
     process.env.VERCEL_ENV = originalVercelEnv;
+    process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE = originalMockSupabase;
   });
 
   it('normalizes verifier email and sends token link using the configured canonical site url', async () => {
@@ -235,6 +256,33 @@ describe('POST /api/verification/requests/skill', () => {
     expect(sentEmailPayload.html).not.toContain('Please verify my artifact history.');
   });
 
+  it('does not let local mock mode bypass skill ownership validation', async () => {
+    process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE = 'true';
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://proofound.io';
+    process.env.NEXT_PUBLIC_APP_URL = '';
+
+    const { supabase } = createSupabaseMock({
+      skillRow: {
+        id: '33333333-3333-4333-8333-333333333333',
+        profile_id: 'other-user',
+      },
+    });
+    authContext.supabase = supabase;
+
+    const response = await POST(
+      createRequest('https://proofound.io', {
+        skillId: '33333333-3333-4333-8333-333333333333',
+        verifierSource: 'peer',
+        verifierEmail: 'mentor@example.com',
+      })
+    );
+
+    expect(response.status).toBe(404);
+    await expect(response.json()).resolves.toEqual({ error: 'Skill not found' });
+    expect(createCanonicalSkillVerificationRequest).not.toHaveBeenCalled();
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
+
   it('fails closed when no canonical site url is configured in a production-like runtime', async () => {
     process.env.NEXT_PUBLIC_SITE_URL = '';
     process.env.NEXT_PUBLIC_APP_URL = '';
@@ -254,6 +302,19 @@ describe('POST /api/verification/requests/skill', () => {
     await expect(response.json()).resolves.toMatchObject({
       error: 'Verification request email configuration is unavailable.',
     });
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
+
+  it('rejects malformed JSON before skill lookup or request creation', async () => {
+    const { supabase } = createSupabaseMock();
+    authContext.supabase = supabase;
+
+    const response = await POST(createRawRequest('https://proofound.io', '{"skillId":'));
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
+    expect(supabase.from).not.toHaveBeenCalled();
+    expect(createCanonicalSkillVerificationRequest).not.toHaveBeenCalled();
     expect(sendEmail).not.toHaveBeenCalled();
   });
 
@@ -353,6 +414,10 @@ describe('POST /api/verification/requests/skill', () => {
         emailError: 'Email service not configured',
       })
     );
+    expect(log.warn).toHaveBeenCalledWith('verification.skill_request.email_send_failed', {
+      requestId: 'canonical-request-1',
+      error: 'Email service not configured',
+    });
 
     const sentEmailPayload = (sendEmail as any).mock.calls[0][0];
     expect(sentEmailPayload.html).toContain('https://staging.proofound.io/verify/');
@@ -523,8 +588,65 @@ describe('POST /api/verification/requests/skill', () => {
       existingRequestId: 'req-race',
       existingStatus: 'pending',
     });
+    expect(log.error).toHaveBeenCalledWith('verification.skill_request.create_failed', {
+      skillId: 'skill-1',
+      error: 'duplicate key',
+    });
     expect(findExistingCanonicalSkillVerificationRequest).toHaveBeenCalledTimes(2);
     expect(sendEmail).not.toHaveBeenCalled();
+  });
+
+  it('logs email state persistence failures without failing the request', async () => {
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://proofound.io';
+    process.env.NEXT_PUBLIC_APP_URL = '';
+
+    const { supabase } = createSupabaseMock();
+    authContext.supabase = supabase;
+    (sendEmail as any).mockResolvedValue({ success: true, id: 'email-state-fail' });
+    (updateCanonicalSkillVerificationRequest as any).mockRejectedValueOnce(
+      new Error('email state update failed')
+    );
+
+    const response = await POST(
+      createRequest('https://proofound.io', {
+        verifierSource: 'peer',
+        verifierEmail: 'mentor@example.com',
+      })
+    );
+
+    expect(response.status).toBe(201);
+    expect(log.error).toHaveBeenCalledWith(
+      'verification.skill_request.email_state_persist_failed',
+      {
+        requestId: 'canonical-request-1',
+        error: 'email state update failed',
+      }
+    );
+  });
+
+  it('logs analytics failures without failing the request', async () => {
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://proofound.io';
+    process.env.NEXT_PUBLIC_APP_URL = '';
+
+    const { supabase } = createSupabaseMock();
+    authContext.supabase = supabase;
+    (sendEmail as any).mockResolvedValue({ success: true, id: 'email-analytics-fail' });
+    (emitVerificationRequestedAsync as any).mockImplementationOnce(() => {
+      throw new Error('analytics unavailable');
+    });
+
+    const response = await POST(
+      createRequest('https://proofound.io', {
+        verifierSource: 'peer',
+        verifierEmail: 'mentor@example.com',
+      })
+    );
+
+    expect(response.status).toBe(201);
+    expect(log.error).toHaveBeenCalledWith('verification.skill_request.analytics_emit_failed', {
+      requestId: 'canonical-request-1',
+      error: 'analytics unavailable',
+    });
   });
 });
 
@@ -624,6 +746,28 @@ describe('GET /api/verification/requests/skill', () => {
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toMatchObject({
       verification_status: 'verified',
+    });
+  });
+
+  it('logs unexpected GET failures structurally while keeping the public response generic', async () => {
+    const supabase = {
+      from: vi.fn(() => {
+        throw new Error('skill lookup failed');
+      }),
+    };
+    (requireApiAuthContext as any).mockResolvedValue({
+      user: { id: 'user-1' },
+      supabase,
+    });
+
+    const response = await GET(
+      new NextRequest('http://localhost/api/verification/requests/skill?skillId=skill-1')
+    );
+
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toEqual({ error: 'Internal server error' });
+    expect(log.error).toHaveBeenCalledWith('verification.skill_request.get_failed', {
+      error: 'skill lookup failed',
     });
   });
 });

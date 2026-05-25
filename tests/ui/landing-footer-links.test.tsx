@@ -17,6 +17,12 @@ describe('landing footer links', () => {
     expect(screen.getByRole('link', { name: /terms/i })).toHaveAttribute('href', '/terms');
     expect(screen.getByRole('link', { name: /sign in/i })).toHaveAttribute('href', '/login');
 
+    expect(screen.getByRole('link', { name: /cookies/i })).toHaveClass('min-h-11');
+    expect(screen.getByRole('link', { name: /cookie settings/i })).toHaveClass('min-h-11');
+    expect(screen.getByRole('link', { name: /privacy/i })).toHaveClass('min-h-11');
+    expect(screen.getByRole('link', { name: /terms/i })).toHaveClass('min-h-11');
+    expect(screen.getByRole('link', { name: /sign in/i })).toHaveClass('min-h-11');
+
     expect(screen.queryByRole('link', { name: /about/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /contact/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /support/i })).not.toBeInTheDocument();

@@ -135,16 +135,18 @@ export function EmailManager({ currentEmail, onEmailUpdated }: EmailManagerProps
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <p className="text-sm font-medium text-proofound-charcoal dark:text-foreground">Email</p>
-          <p className="text-proofound-charcoal/70 dark:text-muted-foreground">{currentEmail}</p>
+          <p className="break-all text-proofound-charcoal/70 dark:text-muted-foreground">
+            {currentEmail}
+          </p>
         </div>
         <Button
           size="sm"
           variant="outline"
           onClick={handleEdit}
-          className="border-proofound-forest text-proofound-forest hover:bg-proofound-forest/5"
+          className="w-full justify-center border-proofound-forest text-proofound-forest hover:bg-proofound-forest/5 sm:w-auto sm:shrink-0"
         >
           <Pencil className="w-4 h-4 mr-2" />
           Change Email

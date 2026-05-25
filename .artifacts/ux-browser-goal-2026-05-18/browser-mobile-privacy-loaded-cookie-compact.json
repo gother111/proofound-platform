@@ -1,0 +1,54 @@
+{
+  "actions": [
+    {
+      "bottom": 454,
+      "h": 44,
+      "right": 338,
+      "text": "Privacy settings",
+      "w": 297,
+      "x": 41,
+      "y": 410
+    },
+    {
+      "bottom": 510,
+      "h": 44,
+      "right": 338,
+      "text": "Download my data",
+      "w": 297,
+      "x": 41,
+      "y": 466
+    },
+    {
+      "bottom": 566,
+      "h": 44,
+      "right": 338,
+      "text": "Import data",
+      "w": 297,
+      "x": 41,
+      "y": 522
+    },
+    {
+      "bottom": 622,
+      "h": 44,
+      "right": 338,
+      "text": "View account history",
+      "w": 297,
+      "x": 41,
+      "y": 578
+    }
+  ],
+  "clientWidth": 390,
+  "cookie": {
+    "bottom": 768,
+    "cls": "pointer-events-none fixed inset-x-0 z-50 p-2 sm:p-4 bottom-[4.75rem] md:bottom-0",
+    "h": 139,
+    "right": 390,
+    "text": "Privacy choicesEssential cookies keep Proofound working. Optional analytics help us improve the product. We never sell y",
+    "w": 390,
+    "x": 0,
+    "y": 629
+  },
+  "docWidth": 390,
+  "overflow": false,
+  "visibleText": "Skip to main content Overview Profile Inbox Matching Settings U Privacy Settings Control who can see your profile information Your Privacy Controls Proofound is built with privacy at its core. Here's what data we collect and how you control it. Privacy settings Download my data Import data View account history What others can see Visibility summary across Public, Connections, After match, and Private sections Public 0 sections Connections 0 sections After match 0 sections Private 3 sections Preview visibility Quick privacy fixes Three fast actions to review and correct visibility before sharing your profile. Review field visibility Check privacy audit log Export and inspect my data Profile d"
+}

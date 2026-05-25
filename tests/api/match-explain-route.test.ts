@@ -14,7 +14,6 @@ const mocks = vi.hoisted(() => ({
   isActiveOrgMember: vi.fn(),
   getRows: vi.fn((result: unknown) => result),
   buildFairnessUiContract: vi.fn(),
-  canRevealExactRank: vi.fn(),
   getOrgMembershipRole: vi.fn(),
   getRankBand: vi.fn(),
   getReasonLedgerEntries: vi.fn(),
@@ -28,6 +27,8 @@ const mocks = vi.hoisted(() => ({
   ),
   resolveEffectiveScoreState: vi.fn(),
   getReviewCardProofPackMap: vi.fn(),
+  getReviewCardProofPackMapForMatchedOrg: vi.fn(),
+  getReviewCardProofPackMapForOwner: vi.fn(),
   buildProofFirstReviewCard: vi.fn(),
 }));
 
@@ -48,11 +49,12 @@ vi.mock('@/lib/db/rows', () => ({
 
 vi.mock('@/lib/matching/review-contract', () => ({
   buildFairnessUiContract: mocks.buildFairnessUiContract,
-  canRevealExactRank: mocks.canRevealExactRank,
   getOrgMembershipRole: mocks.getOrgMembershipRole,
   getRankBand: mocks.getRankBand,
   getReasonLedgerEntries: mocks.getReasonLedgerEntries,
   getReviewCardProofPackMap: mocks.getReviewCardProofPackMap,
+  getReviewCardProofPackMapForMatchedOrg: mocks.getReviewCardProofPackMapForMatchedOrg,
+  getReviewCardProofPackMapForOwner: mocks.getReviewCardProofPackMapForOwner,
   normalizeFairnessStatus: mocks.normalizeFairnessStatus,
   renderExplanationFromReasonCodes: mocks.renderExplanationFromReasonCodes,
   sanitizeMatchReasonCodes: mocks.sanitizeMatchReasonCodes,
@@ -63,7 +65,14 @@ vi.mock('@/lib/matching/match-score-contract', () => ({
   resolveEffectiveScoreState: mocks.resolveEffectiveScoreState,
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+  },
+}));
+
 import { GET } from '@/app/api/match/explain/[matchId]/route';
+import { log } from '@/lib/log';
 
 const baseMatchRow = {
   id: 'match-1',
@@ -124,13 +133,18 @@ describe('GET /api/match/explain/[matchId]', () => {
       warning: null,
       suppressExactRank: false,
     });
-    mocks.canRevealExactRank.mockImplementation(
-      (role: string | null | undefined) => role !== 'org_reviewer'
-    );
     mocks.getOrgMembershipRole.mockResolvedValue('org_owner');
     mocks.getRankBand.mockReturnValue('Top tier');
     mocks.getReasonLedgerEntries.mockResolvedValue([]);
     mocks.getReviewCardProofPackMap.mockResolvedValue(new Map([['candidate-1', null]]));
+    mocks.getReviewCardProofPackMapForMatchedOrg.mockResolvedValue(
+      new Map([['candidate-1', null]])
+    );
+    mocks.getReviewCardProofPackMapForOwner.mockResolvedValue(new Map([['candidate-1', null]]));
+    mocks.getReviewCardProofPackMapForMatchedOrg.mockResolvedValue(
+      new Map([['candidate-1', null]])
+    );
+    mocks.getReviewCardProofPackMapForOwner.mockResolvedValue(new Map([['candidate-1', null]]));
     mocks.normalizeFairnessStatus.mockImplementation(
       (status: string | null | undefined) => status ?? 'pass'
     );
@@ -145,7 +159,7 @@ describe('GET /api/match/explain/[matchId]', () => {
       },
     });
     mocks.buildProofFirstReviewCard.mockReturnValue({
-      candidateLabel: 'Candidate A7F2',
+      candidateLabel: 'Submission A7F2',
       strongestProof: {
         summary: 'Proof-backed delivery signal.',
         outcome: 'Improved a launch corridor.',
@@ -206,7 +220,7 @@ describe('GET /api/match/explain/[matchId]', () => {
     ]);
   });
 
-  it('returns exact rank for owners when the fairness contract allows it', async () => {
+  it('keeps exact rank hidden for owners even when rankMode=exact is requested', async () => {
     const response = await GET(
       new NextRequest('https://example.com/api/match/explain/match-1?rankMode=exact'),
       {
@@ -216,9 +230,9 @@ describe('GET /api/match/explain/[matchId]', () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body.rank).toBe(1);
-    expect(body.rankMode).toBe('exact');
-    expect(body.exactRankAvailable).toBe(true);
+    expect(body.rank).toBeUndefined();
+    expect(body.rankMode).toBe('band');
+    expect(body.exactRankAvailable).toBe(false);
     expect(body.rankBand).toBe('Top tier');
     expect(body.explainer).toEqual({
       title: MATCH_EXPLAINER_TITLE,
@@ -240,7 +254,7 @@ describe('GET /api/match/explain/[matchId]', () => {
     expect(response.status).toBe(200);
     expect(body.reviewCard).toEqual(
       expect.objectContaining({
-        candidateLabel: 'Candidate A7F2',
+        candidateLabel: 'Submission A7F2',
         strongestProof: expect.objectContaining({
           summary: 'Proof-backed delivery signal.',
           outcome: 'Improved a launch corridor.',
@@ -256,10 +270,38 @@ describe('GET /api/match/explain/[matchId]', () => {
     expect(body.reviewCard).not.toHaveProperty('displayName');
     expect(body.reviewCard).not.toHaveProperty('avatarUrl');
     expect(body).not.toHaveProperty('pac');
-    expect(body.subscores).not.toHaveProperty('pac');
+    expect(body).not.toHaveProperty('compositeScore');
+    expect(body).not.toHaveProperty('scoreTotal');
+    expect(body).not.toHaveProperty('scoreState');
+    expect(body).not.toHaveProperty('scoreVersion');
+    expect(body).not.toHaveProperty('inputsHash');
+    expect(body).not.toHaveProperty('subscores');
+    expect(body.scoreVisibility).toBe('internal_ordering_only');
+    expect(body.proofSignals).toEqual({
+      skills: 'Strong proof support',
+      constraints: 'Strong proof support',
+      recency: 'Clear support',
+      evidence: 'Clear support',
+    });
     expect(JSON.stringify(body.reviewCard)).not.toContain('http');
     expect(body.rank).toBeUndefined();
     expect(body.rankMode).toBe('band');
     expect(body.exactRankAvailable).toBe(false);
+  });
+
+  it('logs unexpected explanation failures with structured diagnostics', async () => {
+    const routeError = new Error('raw match explanation detail');
+    mocks.dbExecute.mockReset();
+    mocks.dbExecute.mockRejectedValueOnce(routeError);
+
+    const response = await GET(new NextRequest('https://example.com/api/match/explain/match-1'), {
+      params: Promise.resolve({ matchId: 'match-1' }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Internal server error' });
+    expect(log.error).toHaveBeenCalledWith('match.explain.get_failed', { error: routeError });
+    expect(JSON.stringify(body)).not.toContain('raw match explanation detail');
   });
 });

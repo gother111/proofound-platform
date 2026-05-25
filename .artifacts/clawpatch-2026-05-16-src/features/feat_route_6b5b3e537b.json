@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "featureId": "feat_route_6b5b3e537b",
+  "title": "Route /(auth)/signup",
+  "summary": "Web route implemented by app/(auth)/signup/page.tsx.",
+  "kind": "route",
+  "source": "next-app-route",
+  "confidence": "high",
+  "entrypoints": [
+    {
+      "path": "app/(auth)/signup/page.tsx",
+      "symbol": null,
+      "route": "/(auth)/signup",
+      "command": null
+    }
+  ],
+  "ownedFiles": [
+    {
+      "path": "app/(auth)/signup/page.tsx",
+      "reason": "entrypoint"
+    }
+  ],
+  "contextFiles": [],
+  "tests": [],
+  "tags": ["next", "web"],
+  "trustBoundaries": ["user-input", "network", "serialization"],
+  "status": "pending",
+  "lock": null,
+  "findingIds": [],
+  "patchAttemptIds": [],
+  "analysisHistory": [],
+  "createdAt": "2026-05-16T16:02:40.128Z",
+  "updatedAt": "2026-05-16T16:02:40.128Z"
+}

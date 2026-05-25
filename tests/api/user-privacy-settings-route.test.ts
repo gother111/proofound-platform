@@ -106,6 +106,20 @@ describe('user privacy settings route', () => {
     expect(mocks.analyticsInsert).toHaveBeenCalledTimes(1);
   });
 
+  it('returns 400 for malformed JSON before updating or logging analytics', async () => {
+    const response = await POST(
+      new NextRequest('http://localhost/api/user/privacy-settings', {
+        method: 'POST',
+        body: '{',
+      })
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
+    expect(db.update).not.toHaveBeenCalled();
+    expect(mocks.analyticsInsert).not.toHaveBeenCalled();
+  });
+
   it('rejects unknown visibility fields instead of persisting arbitrary keys', async () => {
     const response = await POST(
       new NextRequest('http://localhost/api/user/privacy-settings', {

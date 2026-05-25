@@ -1,35 +1,27 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowRight, ClipboardCheck, Eye, ShieldCheck, Users } from 'lucide-react';
+import { ArrowRight, Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
 import {
   OrgCollaboratorInviteCard,
   type OrgInviteFormState,
 } from '@/components/org/OrgCollaboratorInviteCard';
-import { inviteMember } from '@/actions/org';
+import { inviteMemberFormAction } from '@/actions/org';
 import { getActiveOrg, requireAuth } from '@/lib/auth';
 import type { OrgRole } from '@/lib/authz';
 import { getVerifiedOrganizationDomainPath } from '@/lib/organizations/trust-profile';
+import {
+  buildVisualAssignmentFixtures,
+  visualAssignmentFixturesEnabled,
+  VISUAL_ASSIGNMENT_MOCK_ORG_ID,
+} from '@/lib/assignments/visual-fixtures';
+import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
-
-function TrustMeter({ value, label }: { value: number; label: string }) {
-  return (
-    <div
-      role="progressbar"
-      aria-label={label}
-      aria-valuemin={0}
-      aria-valuemax={100}
-      aria-valuenow={value}
-      className="h-2 w-full overflow-hidden rounded-full bg-proofound-stone/45"
-    >
-      <div className="h-full rounded-full bg-proofound-forest" style={{ width: `${value}%` }} />
-    </div>
-  );
-}
 
 function getRoleLabel(role: OrgRole) {
   switch (role) {
@@ -58,334 +50,324 @@ export default async function OrganizationHomePage({
   }
 
   const { org, membership } = result;
-  const roleLabel = getRoleLabel(membership.role);
-  const canEditTrustProfile = ['org_owner', 'org_manager'].includes(membership.role);
   const canInviteCollaborators = membership.role === 'org_owner';
+
+  // Fetch active collaborators/members
+  const supabase = await createClient();
+  const { data: membersRaw } = await supabase
+    .from('organization_members')
+    .select(
+      `
+      id,
+      role,
+      user_id,
+      profiles (
+        id,
+        display_name,
+        avatar_url
+      )
+    `
+    )
+    .eq('org_id', org.id)
+    .eq('state', 'active');
+
+  const collaborators = (membersRaw ?? []).map((m: any) => ({
+    id: m.id ?? m.user_id ?? `${m.role ?? 'member'}-${m.profiles?.display_name ?? 'unknown'}`,
+    role: m.role as OrgRole,
+    userId: m.user_id,
+    displayName: m.profiles?.display_name || 'Collaborator',
+  }));
+
+  // Fetch assignments (visual fixtures override mock org home when enabled)
+  let assignmentsData: Array<{
+    id: string;
+    role: string;
+    status: string;
+    creation_status: string;
+    created_at: string;
+  }> | null = null;
+
+  if (visualAssignmentFixturesEnabled() && org.id === VISUAL_ASSIGNMENT_MOCK_ORG_ID) {
+    assignmentsData = buildVisualAssignmentFixtures(org.id).map((fixture) => ({
+      id: fixture.id,
+      role: fixture.role,
+      status: fixture.status,
+      creation_status: fixture.creationStatus,
+      created_at: fixture.createdAt,
+    }));
+  } else {
+    const { data } = await supabase
+      .from('assignments')
+      .select('id, role, status, creation_status, created_at')
+      .eq('org_id', org.id)
+      .order('created_at', { ascending: false });
+    assignmentsData = data;
+  }
+
+  const activeAssignment =
+    assignmentsData?.find((a) => a.status === 'active') || assignmentsData?.[0];
+
   const verifiedDomainPath = getVerifiedOrganizationDomainPath({
     website: org.website,
     websiteVerifiedAt: org.websiteVerifiedAt ?? null,
     trustStatus: org.trustStatus ?? null,
     verified: org.verified,
   });
+
   const missionReady = Boolean(org.mission?.trim());
   const domainReady = Boolean(verifiedDomainPath || org.verified);
   const contextReady = Boolean(
     org.workingContext?.trim() || org.hiringProcessSummary?.trim() || org.tagline?.trim()
   );
   const trustReadyCount = [missionReady, domainReady, contextReady].filter(Boolean).length;
-  const trustProgress = Math.round((trustReadyCount / 3) * 100);
   const needsTrustWork = trustReadyCount < 3;
-  const assignmentReady = trustReadyCount === 3;
-  const missingTrustEssentials = [
-    !missionReady ? 'mission' : null,
-    !domainReady ? 'verified domain path' : null,
-    !contextReady ? 'operating context' : null,
-  ].filter(Boolean);
-  const primaryActionHref = needsTrustWork
-    ? `/app/o/${slug}/profile`
-    : `/app/o/${slug}/assignments/new`;
-  const primaryActionLabel = needsTrustWork
-    ? canEditTrustProfile
-      ? 'Complete organization profile'
-      : 'Review organization profile'
-    : 'Create assignment';
-  const readinessActionLabel = needsTrustWork
-    ? canEditTrustProfile
-      ? 'Complete organization profile'
-      : 'Review organization profile'
-    : 'Create first assignment';
 
-  const queueItems = [
-    {
-      icon: ShieldCheck,
-      label: 'Organization profile',
-      subject: org.displayName,
-      detail: verifiedDomainPath
-        ? `Verified path: ${verifiedDomainPath}`
-        : 'Add the basics once. Review stays locked until trust is clear.',
-      priority: domainReady ? 'Ready' : 'High',
-      value: `${trustProgress}%`,
-      meter: trustProgress,
-      tone: domainReady ? 'complete' : 'attention',
-      href: `/app/o/${slug}/profile`,
-    },
-    {
-      icon: ClipboardCheck,
-      label: 'One assignment path',
-      subject: 'Proof expectations',
-      detail: assignmentReady
-        ? 'Purpose, real work, constraints, and evidence stay in one builder'
-        : 'This opens after the organization profile has enough context.',
-      priority: assignmentReady ? 'Ready' : 'Next',
-      value: assignmentReady ? 'Can start' : 'Needs trust',
-      tone: assignmentReady ? 'active' : 'pending',
-      href: `/app/o/${slug}/assignments/new`,
-    },
-    {
-      icon: Eye,
-      label: 'Match review',
-      subject: 'Privacy-safe summaries',
-      detail: assignmentReady
-        ? 'Review proof before identity reveal or direct outreach'
-        : 'No candidate review starts until the corridor is ready.',
-      priority: 'Guarded',
-      value: assignmentReady ? 'Needs assignment' : 'Locked',
-      tone: assignmentReady ? 'attention' : 'pending',
-      href: `/app/o/${slug}/assignments`,
-    },
-  ] as const;
-
-  const trustChecks = [
-    {
-      label: 'Mission and operating context',
-      value: missionReady || contextReady ? 'Present' : 'Needed',
-      pass: missionReady || contextReady,
-    },
-    {
-      label: 'Verified organization path',
-      value: domainReady ? 'Verified' : 'Needed',
-      pass: domainReady,
-    },
-    {
-      label: 'Privacy-safe review posture',
-      value: 'Enforced',
-      pass: true,
-    },
-  ];
-
-  const teamRows = [
-    {
-      label: 'Owner',
-      detail: 'Owns organization profile, launch setup, and collaborator access.',
-      current: roleLabel === 'Owner',
-    },
-    {
-      label: 'Manager',
-      detail: 'Maintains the org profile and assignment corridor.',
-      current: roleLabel === 'Manager',
-    },
-    {
-      label: 'Reviewer',
-      detail: 'Reviews proof summaries without broadening access.',
-      current: roleLabel === 'Reviewer',
-    },
-  ];
-
-  const inviteAction = async (
-    _state: OrgInviteFormState,
+  const inviteAction = inviteMemberFormAction.bind(null, org.id) as (
+    state: OrgInviteFormState,
     formData: FormData
-  ): Promise<OrgInviteFormState> => {
-    'use server';
+  ) => Promise<OrgInviteFormState>;
 
-    const result = await inviteMember(org.id, formData);
-
-    if (result.error) {
-      return {
-        status: 'error',
-        message: result.error,
-      };
+  // Determine corridor state
+  let corridorState: 'needs_trust' | 'no_assignments' | 'active_assignment' | 'draft_assignment' =
+    'needs_trust';
+  if (!needsTrustWork) {
+    if (!activeAssignment) {
+      corridorState = 'no_assignments';
+    } else if (activeAssignment.status === 'active') {
+      corridorState = 'active_assignment';
+    } else {
+      corridorState = 'draft_assignment';
     }
-
-    return {
-      status: 'success',
-      message:
-        result.warning ??
-        'Invitation sent. The collaborator must accept their tokenized email invite before access is granted.',
-    };
-  };
+  }
 
   return (
     <AppSurface density="comfortable" className="bg-[#f7f2ea]">
-      <div className="flex flex-col gap-6">
-        <section className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
-          <div className="flex min-w-0 flex-col gap-5">
-            <div className="overflow-hidden rounded-lg border border-proofound-stone/70 bg-white shadow-[0_18px_50px_rgba(45,51,48,0.06)]">
-              <div className="border-b border-proofound-stone/60 bg-[#f3f6ef] px-5 py-3">
-                <Badge
-                  variant="outline"
-                  className="border-proofound-forest/20 bg-white/70 text-proofound-forest"
-                >
-                  Organization review cockpit
-                </Badge>
-              </div>
-              <div className="flex flex-col gap-5 p-5 md:flex-row md:items-center md:justify-between md:p-6">
-                <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center">
-                  <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-[#dfead5] text-proofound-forest">
-                    <Users className="h-8 w-8" />
+      <div className="max-w-5xl mx-auto space-y-8">
+        {/* Header */}
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between border-b border-proofound-stone/50 pb-5">
+          <div>
+            <h1 className="font-display text-3xl font-semibold text-proofound-charcoal dark:text-foreground">
+              {org.displayName}
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">Current review workspace</p>
+          </div>
+          <Badge
+            variant="outline"
+            className="border-proofound-forest/30 bg-proofound-forest/5 text-proofound-forest self-start md:self-auto"
+          >
+            Signed in as {getRoleLabel(membership.role)}
+          </Badge>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-3">
+          {/* Main Active Corridor Card */}
+          <div className="md:col-span-2 space-y-4">
+            <Card
+              variant="bento"
+              className="p-6 md:p-8 flex flex-col justify-between min-h-[300px]"
+            >
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-proofound-forest">
+                    Review status
                   </span>
-                  <div className="min-w-0">
-                    <h1 className="font-display text-2xl font-medium leading-tight text-proofound-charcoal md:text-3xl">
-                      {org.displayName}
-                    </h1>
-                    <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-                      A focused launch desk for one clean hiring corridor: compose the trust
-                      profile, define one proof-led assignment, and review candidates through
-                      privacy-safe summaries.
+                  {corridorState === 'needs_trust' && (
+                    <Badge
+                      variant="outline"
+                      className="border-amber-500 text-amber-500 bg-amber-50"
+                    >
+                      Action needed
+                    </Badge>
+                  )}
+                  {corridorState === 'no_assignments' && (
+                    <Badge
+                      variant="outline"
+                      className="border-emerald-500 text-emerald-500 bg-emerald-50"
+                    >
+                      Ready for assignment
+                    </Badge>
+                  )}
+                  {corridorState === 'active_assignment' && (
+                    <Badge
+                      variant="outline"
+                      className="border-proofound-forest text-proofound-forest bg-[#eef3e8]"
+                    >
+                      Reviewing submissions
+                    </Badge>
+                  )}
+                  {corridorState === 'draft_assignment' && (
+                    <Badge
+                      variant="outline"
+                      className="border-amber-500 text-amber-500 bg-amber-50"
+                    >
+                      Draft assignment
+                    </Badge>
+                  )}
+                </div>
+
+                {corridorState === 'needs_trust' && (
+                  <div className="space-y-3">
+                    <h2 className="text-xl font-semibold text-proofound-charcoal">
+                      Complete the trust page
+                    </h2>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Before you can publish assignments and receive proof-backed matches, complete
+                      the organization trust page. Domain verification, mission, and working context
+                      keep review grounded.
+                    </p>
+                    <div className="text-xs text-muted-foreground font-medium pt-2">
+                      Progress: {trustReadyCount}/3 trust elements completed
+                    </div>
+                  </div>
+                )}
+
+                {corridorState === 'no_assignments' && (
+                  <div className="space-y-3">
+                    <h2 className="text-xl font-semibold text-proofound-charcoal">
+                      Create the first assignment
+                    </h2>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Your organization trust profile is active. Define a proof-led assignment
+                      (real-world context, required evidence, and compensation bounds) to open the
+                      matching corridor.
                     </p>
                   </div>
-                </div>
-                <div className="flex shrink-0 flex-col gap-2 md:items-end">
+                )}
+
+                {corridorState === 'active_assignment' && activeAssignment && (
+                  <div className="space-y-3">
+                    <h2 className="text-xl font-semibold text-proofound-charcoal">
+                      {activeAssignment.role}
+                    </h2>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Submission summaries are organized around proof relevance, verification
+                      readiness, and privacy-safe review context. Review the evidence before opening
+                      any identity reveal request.
+                    </p>
+                    <div className="text-xs text-muted-foreground font-medium pt-2">
+                      Launched on{' '}
+                      {activeAssignment.created_at
+                        ? new Date(activeAssignment.created_at).toLocaleDateString()
+                        : 'N/A'}
+                    </div>
+                  </div>
+                )}
+
+                {corridorState === 'draft_assignment' && activeAssignment && (
+                  <div className="space-y-3">
+                    <h2 className="text-xl font-semibold text-proofound-charcoal">
+                      Resume assignment: {activeAssignment.role}
+                    </h2>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      You have an incomplete assignment corridor. Finish defining the requirements
+                      to open proof-led assignment review.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-8 pt-4 border-t border-proofound-stone/50">
+                {corridorState === 'needs_trust' && (
                   <Button
-                    className="w-full justify-between bg-proofound-forest px-6 text-white sm:w-auto"
                     asChild
+                    className="bg-proofound-forest text-white hover:bg-proofound-forest/90 w-full sm:w-auto"
                   >
-                    <Link href={primaryActionHref}>
-                      {primaryActionLabel}
-                      <ArrowRight className="h-4 w-4" />
+                    <Link href={`/app/o/${slug}/profile`}>
+                      Complete trust page
+                      <ArrowRight className="h-4 w-4 ml-2" />
                     </Link>
                   </Button>
-                </div>
-              </div>
-            </div>
-
-            <div className="overflow-hidden rounded-lg border border-proofound-stone/70 bg-white shadow-sm">
-              <div className="flex flex-col gap-2 border-b border-proofound-stone/70 p-5 sm:flex-row sm:items-center sm:justify-between">
-                <h2 className="font-display text-xl font-medium text-proofound-charcoal">
-                  Corridor Queue
-                </h2>
-                <p className="text-sm text-muted-foreground">Trust, assignment, and review order</p>
-              </div>
-              <div className="divide-y divide-proofound-stone/70">
-                {queueItems.map((item) => {
-                  const Icon = item.icon;
-
-                  return (
-                    <Link
-                      key={item.label}
-                      href={item.href}
-                      className="flex min-h-[92px] flex-col gap-3 p-5 transition-colors hover:bg-[#fbf8f1] sm:flex-row sm:items-center sm:gap-4"
-                    >
-                      <div className="flex min-w-0 flex-1 items-center gap-3">
-                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#eef3e8] text-proofound-forest">
-                          <Icon className="h-5 w-5" />
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <p className="text-sm font-semibold text-proofound-charcoal">
-                              {item.subject}
-                            </p>
-                            <span
-                              className={`rounded-md px-2.5 py-1 text-xs font-medium ${
-                                item.tone === 'attention'
-                                  ? 'bg-[#fff1df] text-[#8a4d1f]'
-                                  : item.tone === 'complete'
-                                    ? 'bg-[#dff0d9] text-proofound-forest'
-                                    : item.tone === 'active'
-                                      ? 'bg-[#eef3e8] text-proofound-forest'
-                                      : 'bg-proofound-stone/35 text-muted-foreground'
-                              }`}
-                            >
-                              {item.priority}
-                            </span>
-                          </div>
-                          <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                            {item.label} · {item.detail}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between gap-3 pl-14 sm:min-w-40 sm:justify-end sm:pl-0">
-                        {'meter' in item ? (
-                          <div className="hidden w-24 shrink-0 sm:block">
-                            <TrustMeter value={item.meter} label={`${item.label} readiness`} />
-                          </div>
-                        ) : null}
-                        <span className="min-w-24 text-right text-sm font-semibold text-proofound-charcoal">
-                          {item.value}
-                        </span>
-                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                      </div>
+                )}
+                {corridorState === 'no_assignments' && (
+                  <Button
+                    asChild
+                    className="bg-proofound-forest text-white hover:bg-proofound-forest/90 w-full sm:w-auto"
+                  >
+                    <Link href={`/app/o/${slug}/assignments/new`}>
+                      Create first assignment
+                      <ArrowRight className="h-4 w-4 ml-2" />
                     </Link>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          <aside className="flex min-w-0 flex-col gap-5">
-            <div className="rounded-lg border border-proofound-stone/70 bg-white p-5 shadow-sm">
-              <div className="flex items-start justify-between gap-3">
-                <h2 className="font-display text-xl font-medium text-proofound-charcoal">
-                  Launch Summary
-                </h2>
-                <span className="rounded-md bg-[#eef3e8] px-2 py-1 text-xs font-medium text-proofound-forest">
-                  /3
-                </span>
-              </div>
-              <div className="mt-6 flex items-end gap-2">
-                <p className="font-display text-5xl text-proofound-forest">{trustReadyCount}</p>
-                <p className="pb-2 text-sm text-muted-foreground">trust essentials ready</p>
-              </div>
-              <div className="mt-4">
-                <TrustMeter value={trustProgress} label="Organization launch readiness" />
-              </div>
-              <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                {missingTrustEssentials.length > 0
-                  ? `Next: add ${missingTrustEssentials[0]}. Nothing is shared or reviewed until these basics are ready.`
-                  : 'Trust essentials are ready. The next useful move is assignment drafting.'}
-              </p>
-              <div className="mt-5 space-y-3">
-                {trustChecks.map((item) => (
-                  <div key={item.label} className="flex items-center justify-between gap-3 text-sm">
-                    <span className="text-muted-foreground">{item.label}</span>
-                    <span
-                      className={`h-2.5 w-2.5 rounded-full ${
-                        item.pass ? 'bg-proofound-forest' : 'bg-[#e59f35]'
-                      }`}
-                    />
+                  </Button>
+                )}
+                {corridorState === 'active_assignment' && (
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Button
+                      asChild
+                      className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
+                    >
+                      <Link href={`/app/o/${slug}/assignments`}>
+                        Review submissions
+                        <ArrowRight className="h-4 w-4 ml-2" />
+                      </Link>
+                    </Button>
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="border-proofound-stone text-proofound-charcoal bg-white"
+                    >
+                      <Link href={`/app/o/${slug}/assignments/new`}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        New assignment
+                      </Link>
+                    </Button>
                   </div>
-                ))}
-              </div>
-              <Link
-                href={primaryActionHref}
-                className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-proofound-forest"
-              >
-                {readinessActionLabel}
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-
-            <div className="rounded-lg border border-proofound-stone/70 bg-white p-5 shadow-sm">
-              <div className="mb-4">
-                <h2 className="font-display text-xl font-medium text-proofound-charcoal">
-                  Minimal Access
-                </h2>
-              </div>
-              <p className="text-sm leading-6 text-muted-foreground">
-                Launch roles are limited to owner, manager, and reviewer.
-              </p>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                You are currently signed in as {roleLabel}.
-              </p>
-              <div className="mt-5 divide-y divide-proofound-stone/60 border-y border-proofound-stone/70">
-                {teamRows.map((row) => (
-                  <div key={row.label} className="py-3">
-                    <div className="flex items-center justify-between gap-3 text-sm">
-                      <span className="font-medium text-proofound-charcoal">{row.label}</span>
-                      {row.current ? (
-                        <span className="rounded-full bg-[#dff0d9] px-2 py-0.5 text-xs font-medium text-proofound-forest">
-                          Current
-                        </span>
-                      ) : null}
-                    </div>
-                    <p className="mt-1 text-xs leading-5 text-muted-foreground">{row.detail}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-5 border-t border-proofound-stone/70 pt-5">
-                {canInviteCollaborators ? (
-                  <OrgCollaboratorInviteCard action={inviteAction} />
-                ) : (
-                  <Button asChild variant="outline" className="w-full justify-between">
-                    <Link href={`/app/o/${slug}/assignments`}>
-                      Open review queue
-                      <ArrowRight className="h-4 w-4" />
+                )}
+                {corridorState === 'draft_assignment' && (
+                  <Button
+                    asChild
+                    className="bg-proofound-forest text-white hover:bg-proofound-forest/90 w-full sm:w-auto"
+                  >
+                    <Link href={`/app/o/${slug}/assignments/new`}>
+                      Resume assignment setup
+                      <ArrowRight className="h-4 w-4 ml-2" />
                     </Link>
                   </Button>
                 )}
               </div>
-            </div>
-          </aside>
-        </section>
+            </Card>
+          </div>
+
+          <div className="space-y-6">
+            <Card variant="bento" className="p-5 space-y-4">
+              <div>
+                <h3 className="font-semibold text-sm text-proofound-charcoal">Team access</h3>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  Members authorized to review matches
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                {collaborators.map((c) => (
+                  <div
+                    key={c.id}
+                    className="flex items-center justify-between py-1.5 border-b border-proofound-stone/30 last:border-0"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="h-7 w-7 rounded-full bg-proofound-stone text-proofound-charcoal flex items-center justify-center text-xs font-semibold shrink-0">
+                        {c.displayName[0].toUpperCase()}
+                      </div>
+                      <span className="text-xs font-medium text-proofound-charcoal truncate">
+                        {c.displayName}
+                      </span>
+                    </div>
+                    <Badge
+                      variant="secondary"
+                      className="text-[10px] px-1.5 py-0.5 bg-proofound-stone/40 text-proofound-charcoal font-medium"
+                    >
+                      {getRoleLabel(c.role)}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+
+              {canInviteCollaborators && (
+                <div className="pt-4 border-t border-proofound-stone/50">
+                  <OrgCollaboratorInviteCard action={inviteAction} />
+                </div>
+              )}
+            </Card>
+          </div>
+        </div>
       </div>
     </AppSurface>
   );

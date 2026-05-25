@@ -75,35 +75,26 @@ describe('ShareProfileDialog', () => {
     vi.clearAllMocks();
   });
 
-  it('builds embed code from the generated snippet URL', async () => {
-    apiFetchMock.mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        snippet: {
-          id: 'snippet-1',
-          shareToken: 'token123',
-          url: 'https://proofound.io/p/token123',
-        },
-      }),
-    });
-
+  it('builds embed code from the launch Public Page URL without calling archived snippet APIs', async () => {
     render(
       <ShareProfileDialog
         isOpen={true}
         onClose={() => {}}
         userName="Jane Doe"
         userHeadline="Impact Builder"
+        publicPagePath="/portfolio/jane-doe"
       />
     );
 
     fireEvent.click(screen.getByRole('button', { name: /generate shareable link/i }));
 
-    await waitFor(() => expect(apiFetchMock).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(screen.getByDisplayValue(/\/portfolio\/jane-doe$/)).toBeVisible());
 
     const embedTextarea = document.querySelector('textarea') as HTMLTextAreaElement | null;
     expect(embedTextarea).not.toBeNull();
-    expect(embedTextarea?.value).toContain('https://proofound.io/p/token123/embed');
+    expect(embedTextarea?.value).toContain('/portfolio/jane-doe/embed');
     expect(embedTextarea?.value).not.toContain('proofound.com');
+    expect(apiFetchMock).not.toHaveBeenCalledWith('/api/profile/snippet', expect.anything());
   });
 
   it('allows continuous typing in expiration input without focus loss', () => {
@@ -113,6 +104,7 @@ describe('ShareProfileDialog', () => {
         onClose={() => {}}
         userName="Jane Doe"
         userHeadline="Impact Builder"
+        publicPagePath="/portfolio/jane-doe"
       />
     );
 
@@ -130,5 +122,47 @@ describe('ShareProfileDialog', () => {
     fireEvent.change(expirationInput, { target: { value: '30' } });
     expect(expirationInput).toHaveValue(30);
     expect(document.activeElement).toBe(expirationInput);
+  });
+
+  it('disables sharing when a Public Page path is not ready', () => {
+    render(
+      <ShareProfileDialog
+        isOpen={true}
+        onClose={() => {}}
+        userName="Jane Doe"
+        userHeadline="Impact Builder"
+      />
+    );
+
+    expect(screen.getByRole('button', { name: /public page not ready/i })).toBeDisabled();
+    expect(apiFetchMock).not.toHaveBeenCalledWith('/api/profile/snippet', expect.anything());
+  });
+
+  it('keeps public-page sharing proof-safe without branded social copy', async () => {
+    render(
+      <ShareProfileDialog
+        isOpen={true}
+        onClose={() => {}}
+        userName="Jane Doe"
+        userHeadline="Proof operations lead"
+        publicPagePath="/portfolio/jane-doe"
+      />
+    );
+
+    expect(screen.getAllByText('Share Your Public Page').length).toBeGreaterThan(0);
+    expect(document.body.textContent ?? '').not.toMatch(/professional profile/i);
+
+    fireEvent.click(screen.getByRole('button', { name: /generate shareable link/i }));
+    await waitFor(() => expect(screen.getByRole('button', { name: /outreach/i })).toBeVisible());
+
+    expect(screen.getByRole('button', { name: /outreach/i })).toBeInTheDocument();
+    expect(screen.getByText('Proof-safe outreach copy')).toBeInTheDocument();
+    expect(
+      screen.getByDisplayValue(
+        "Review Jane Doe's proof-backed Public Page on Proofound - Proof operations lead"
+      )
+    ).toBeInTheDocument();
+    expect(document.body.textContent ?? '').not.toMatch(/LinkedIn|Twitter|social/i);
+    expect(apiFetchMock).not.toHaveBeenCalledWith('/api/profile/snippet', expect.anything());
   });
 });

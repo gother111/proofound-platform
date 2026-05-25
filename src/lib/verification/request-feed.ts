@@ -1,5 +1,6 @@
 import { listCanonicalProofPackAggregatesForOwner } from '@/lib/proofs/canonical-pack';
-import { isMockSupabaseEnabled } from '@/lib/env';
+import { isMockSupabaseEnabled, visualFixturesRuntimeAllowed } from '@/lib/env';
+import { log } from '@/lib/log';
 import {
   listCanonicalBundlesForOwner,
   type CanonicalBundleArtifactType,
@@ -151,6 +152,149 @@ function buildMockComposerProofPackOptions(): VerificationComposerProofPackOptio
       primarySubjectId: MOCK_COMPOSER_SKILL_ID,
     },
   ];
+}
+
+function visualFixturesEnabled() {
+  return (
+    isMockSupabaseEnabled() &&
+    process.env.PROOFOUND_VISUAL_FIXTURES === 'true' &&
+    visualFixturesRuntimeAllowed()
+  );
+}
+
+function buildMockVisualVerificationRequests(): {
+  incomingRequests: VerificationRequestView[];
+  sentRequests: VerificationRequestView[];
+} {
+  const baseSkill: SkillDetailsRecord = {
+    id: 'visual-skill-proof-systems',
+    competency_level: 4,
+    name_i18n: { en: 'Proof systems design with long stakeholder context' },
+    skills_taxonomy: {
+      name_i18n: { en: 'Product evidence systems' },
+      skills_l3: {
+        name_i18n: { en: 'Privacy-safe proof review' },
+        skills_subcategories: {
+          name_i18n: { en: 'Assignment review operations' },
+          skills_categories: { name_i18n: { en: 'Product leadership' } },
+        },
+      },
+    },
+  };
+
+  const requester: ProfileDetailsRecord = {
+    id: 'visual-requester-1',
+    display_name: 'Mira Andersson',
+    handle: 'mira-andersson',
+  };
+
+  return {
+    incomingRequests: [
+      {
+        id: 'visual-incoming-pending-long',
+        subjectType: 'skill',
+        subjectId: baseSkill.id,
+        verificationKind: 'skill_attestation_manager',
+        requestKind: 'human_observed_attestation',
+        requesterProfileId: requester.id,
+        verifierEmail: 'manager-reviewer-with-a-long-address@example-company.com',
+        verifierSource: 'manager',
+        status: 'pending',
+        createdAt: '2026-05-16T09:15:00.000Z',
+        expiresAt: '2026-05-24T09:15:00.000Z',
+        proofLabel: 'Proof-first assignment review readiness review',
+        claimSummary:
+          'Confirm that the proof pack clearly connects private source material, review decisions, and a launch-safe submission story without exposing sensitive details.',
+        confirmationOutcome:
+          'This confirmation strengthens the proof-review signal while keeping identity and private evidence bounded.',
+        message:
+          'Please confirm only the parts you directly saw in the launch-readiness work. Do not include private client names.',
+        canonicalPackTitle: 'Launch-readiness proof pack',
+        canonicalPackSummary:
+          'A compact evidence pack tying product decisions, privacy checks, and review outcomes together.',
+        canonicalOutcomesSummary:
+          'Reduced reviewer confusion, clearer safe-shell readiness, and fewer overloaded next steps.',
+        canonicalVerificationStatus: 'partially_verified',
+        canonicalEvidenceTitles: [
+          'Readiness checklist',
+          'Privacy preflight notes',
+          'Reviewer handoff summary with intentionally long title',
+        ],
+        skills: baseSkill,
+        profiles: requester,
+      },
+      {
+        id: 'visual-incoming-attention',
+        subjectType: 'impact_story',
+        subjectId: 'visual-impact-1',
+        verificationKind: 'impact_attestation',
+        requestKind: 'impact_attestation',
+        requesterProfileId: 'visual-requester-2',
+        verifierEmail: 'external.verifier@example.org',
+        verifierSource: 'external',
+        verifierRelationship: 'External project sponsor',
+        status: 'failed',
+        createdAt: '2026-05-14T11:00:00.000Z',
+        impactStoryTitle: 'Reduced review uncertainty in a sensitive assignment-review workflow',
+        proofLabel: 'Review uncertainty reduction',
+        claimSummary:
+          'The reviewer needs a clearer confirmation path before this outcome can be treated as proof-backed.',
+        confirmationOutcome:
+          'A resolved confirmation would make this outcome usable in the public proof review.',
+        profiles: {
+          id: 'visual-requester-2',
+          display_name: 'Sofia Lind',
+          handle: 'sofia-proof',
+        },
+      },
+    ],
+    sentRequests: [
+      {
+        id: 'visual-sent-pending',
+        subjectType: 'custom_bundle',
+        subjectId: 'visual-bundle-1',
+        verificationKind: 'verification_bundle',
+        requestKind: 'custom_bundle',
+        requesterProfileId: requester.id,
+        verifierEmail: 'alexander.very-long-reviewer-name@example-consulting-partners.com',
+        verifierSource: 'peer',
+        verifierName: 'Alexander Review Partner',
+        verifierRelationship: 'Peer reviewer',
+        status: 'pending',
+        createdAt: '2026-05-15T13:30:00.000Z',
+        expiresAt: '2026-05-29T13:30:00.000Z',
+        bundleItemCount: 4,
+        bundlePreviewLabels: ['Proof Pack summary', 'Assignment brief', 'Privacy decision log'],
+        proofLabel: 'Privacy-safe launch bundle',
+        claimSummary:
+          'A grouped request asking one reviewer to confirm the work, outcome, and privacy boundary together.',
+        confirmationOutcome:
+          'The bundle will show one bounded external signal across the related proof items.',
+        message: 'A short note with one long email should still wrap cleanly on mobile.',
+        profiles: requester,
+      },
+      {
+        id: 'visual-sent-accepted',
+        subjectType: 'skill',
+        subjectId: baseSkill.id,
+        verificationKind: 'skill_attestation_peer',
+        requestKind: 'human_observed_attestation',
+        requesterProfileId: requester.id,
+        verifierEmail: 'lead@example.com',
+        verifierSource: 'peer',
+        status: 'accepted',
+        createdAt: '2026-05-10T08:00:00.000Z',
+        respondedAt: '2026-05-11T08:00:00.000Z',
+        responseMessage:
+          'Confirmed. The evidence was specific, scoped, and easy to review without extra context.',
+        proofLabel: 'Proof review facilitation',
+        claimSummary: 'Confirm this proof submission makes evidence easier to inspect.',
+        confirmationOutcome: 'Adds one accepted signal to the proof pack.',
+        skills: baseSkill,
+        profiles: requester,
+      },
+    ],
+  };
 }
 
 function verificationStatusRank(status: string | null | undefined) {
@@ -390,7 +534,7 @@ function buildConfirmationOutcome(
   }
 
   if (request.subjectType === 'custom_bundle') {
-    return 'If confirmed, each included proof keeps its own scoped verification record. Legacy grouped requests do not create broad trust lift.';
+    return 'If confirmed, each included proof keeps its own scoped verification record. Grouped requests do not create broad trust lift.';
   }
 
   if (request.requestKind === 'human_observed_attestation') {
@@ -499,7 +643,7 @@ function mapBundleRequestToView(
     respondedAt: bundle.responded_at || null,
     responseMessage: bundle.response_message || null,
     expiresAt: bundle.expires_at || null,
-    proofLabel: bundle.items[0]?.display_label || 'Legacy grouped request',
+    proofLabel: bundle.items[0]?.display_label || 'Grouped proof request',
     claimSummary: buildBundleClaimSummary(bundle),
     confirmationOutcome: buildConfirmationOutcome({
       subjectType: 'custom_bundle',
@@ -514,6 +658,13 @@ export async function loadVerificationRequestFeed(params: {
   hasVerifiedEmail: boolean;
   supabase: any;
 }) {
+  if (visualFixturesEnabled()) {
+    return {
+      ...buildMockVisualVerificationRequests(),
+      composerProofPacks: buildMockComposerProofPackOptions(),
+    };
+  }
+
   const [
     canonicalAggregates,
     canonicalBundles,
@@ -625,19 +776,25 @@ export async function loadVerificationRequestFeed(params: {
   ]);
 
   if (skillDetailsResult.error) {
-    console.error('Failed to load canonical verification skill details:', skillDetailsResult.error);
+    log.error('verification.request_feed.skill_details_load_failed', {
+      error: skillDetailsResult.error,
+      userId: params.userId,
+      skillCount: skillIds.length,
+    });
   }
   if (requesterProfilesResult.error) {
-    console.error(
-      'Failed to load requester profiles for canonical verification requests:',
-      requesterProfilesResult.error
-    );
+    log.error('verification.request_feed.requester_profiles_load_failed', {
+      error: requesterProfilesResult.error,
+      userId: params.userId,
+      requesterProfileCount: requesterProfileIds.length,
+    });
   }
   if (impactStoriesResult.error) {
-    console.error(
-      'Failed to load impact story titles for canonical verification requests:',
-      impactStoriesResult.error
-    );
+    log.error('verification.request_feed.impact_stories_load_failed', {
+      error: impactStoriesResult.error,
+      userId: params.userId,
+      impactStoryCount: impactStoryIds.length,
+    });
   }
 
   const skillDetailsById = new Map<string, SkillDetailsRecord>();
@@ -744,9 +901,6 @@ export async function loadVerificationRequestFeed(params: {
   return {
     incomingRequests,
     sentRequests,
-    composerProofPacks:
-      isMockSupabaseEnabled() && canonicalAggregates.length === 0
-        ? buildMockComposerProofPackOptions()
-        : buildComposerProofPackOptions(canonicalAggregates),
+    composerProofPacks: buildComposerProofPackOptions(canonicalAggregates),
   };
 }

@@ -1,0 +1,11 @@
+> proofound@0.1.0 test:e2e:org:strict
+> NEXT_PUBLIC_USE_MOCK_SUPABASE=false PLAYWRIGHT_SERVER_MODE=prod PROOFOUND_SKIP_TRANSACTIONAL_EMAIL_DELIVERY=1 PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK=1 PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE=1 node ./scripts/playwright-node24.mjs test e2e/strict/organization.strict.spec.ts e2e/strict/org-corridor.strict.spec.ts --project=chromium --reporter=line --workers=1
+
+[1A[2K[2m[WebServer] [22m(node:84572) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m[Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]
+
+Error: Process from config.webServer was not able to start. Exit code: 1
+
+[1A[2K

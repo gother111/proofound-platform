@@ -1,12 +1,12 @@
 > Doc Class: `active`
-> Last Verified: `2026-03-25`
+> Last Verified: `2026-05-19`
 
 # Reveal / Privacy Dispute SOP
 
 ## Use this SOP when
 
 - a reveal request times out or is disputed
-- a candidate disputes a reveal state or says consent was not respected
+- a proof-review participant disputes a reveal state or says consent was not respected
 - identity-bearing data appears too early in review
 - a privacy complaint affects a live intro, interview, or decision path
 
@@ -21,13 +21,13 @@
 
 - linked conversation, match, or decision id
 - current reveal stage and the requested reveal action
-- candidate consent record or the lack of one
+- proof-review participant consent record or the lack of one
 - any user complaint, screenshots, or timestamps showing exposure
 
 ## Operator steps
 
 1. Freeze the narrower privacy state first. Do not broaden reveal while the dispute is open.
-2. Confirm the current reveal stage and whether candidate approval exists for any identity-bearing access.
+2. Confirm the current reveal stage and whether proof-review participant approval exists for any identity-bearing access.
 3. Review the conversation or reveal history and identify the exact point where the dispute started.
 4. Decide one of the following:
    - restore the prior non-identity-bearing stage

@@ -29,11 +29,6 @@ const VERIFICATION_GATES = [
     description: 'Use only for roles where domain-backed work identity matters.',
   },
   {
-    id: 'linkedin',
-    label: 'LinkedIn profile verification',
-    description: 'Optional profile cross-check when it supports a narrow trust review.',
-  },
-  {
     id: 'background_check',
     label: 'Background check',
     description: 'For roles with clear compliance or safety requirements.',
@@ -75,12 +70,14 @@ export function Step3WeightMatrix({ form, onNext, onBack, isSubmitting = false }
   return (
     <div className="space-y-6">
       <div>
-        <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Step 3: What proof would convince the org</h2>
+        <div className="mb-2 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-2xl font-bold leading-tight">
+            Step 3: What proof would convince the org
+          </h2>
           <span className="text-sm text-muted-foreground">Step 3 of 5</span>
         </div>
         <p className="text-muted-foreground">
-          Define what evidence, skills, or signals would make the candidate credible for this
+          Define what evidence, skills, or signals would make a proof submission credible for this
           assignment.
         </p>
         <Progress value={60} className="mt-4" />
@@ -101,13 +98,15 @@ export function Step3WeightMatrix({ form, onNext, onBack, isSubmitting = false }
           }
           className="min-h-[160px]"
           maxLength={1200}
-          placeholder="Describe the proof, evidence, or practical signal that would make the org confident this candidate can do the work."
+          placeholder="Describe the proof, evidence, or practical signal that would make the org confident the submitter can do the work."
         />
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-muted-foreground">
             Spell out what would count as credible proof. Generic traits are not enough.
           </p>
-          <span className="text-xs text-muted-foreground">{expectedImpact.length}/1200</span>
+          <span className="shrink-0 text-xs text-muted-foreground">
+            {expectedImpact.length}/1200
+          </span>
         </div>
       </div>
 

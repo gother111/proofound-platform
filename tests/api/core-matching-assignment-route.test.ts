@@ -7,8 +7,10 @@ vi.mock('@/db', () => ({
   db: {
     query: {
       assignments: { findFirst: vi.fn() },
+      matchReviewStates: { findMany: vi.fn() },
       organizationMembers: { findFirst: vi.fn() },
     },
+    insert: vi.fn(),
   },
 }));
 
@@ -50,6 +52,7 @@ vi.mock('@/lib/matching/review-contract', () => ({
   canMutateReview: vi.fn(() => true),
   ensureMatchReviewState: vi.fn(),
   getReviewCardProofPackMap: vi.fn(async () => new Map()),
+  getReviewCardProofPackMapForMatchedOrg: vi.fn(async () => new Map()),
   getRankBand: vi.fn(() => 'top_band'),
   getVisibleIdentityFields: vi.fn(() => []),
   normalizeFairnessStatus: vi.fn(() => 'pass'),
@@ -63,6 +66,7 @@ import { db } from '@/db';
 import { requireApiAuthContext } from '@/lib/auth';
 import { computeAssignmentMatches } from '@/lib/core/matching/assignmentMatcher';
 import { resolveFeatureFlags } from '@/lib/feature-flags/server';
+import { emitLaunchTrace } from '@/lib/launch/trace';
 
 describe('/api/core/matching/assignment', () => {
   beforeEach(() => {
@@ -80,6 +84,44 @@ describe('/api/core/matching/assignment', () => {
       role: 'org_owner',
       status: 'active',
     });
+    (db.query.matchReviewStates.findMany as any).mockResolvedValue([]);
+    (db.insert as any).mockImplementation(() => ({
+      values: vi.fn(() => ({
+        onConflictDoUpdate: vi.fn(() => ({
+          returning: vi.fn(async () => [
+            {
+              id: 'match-1',
+              profileId: 'profile-1',
+              assignmentId: '11111111-1111-1111-1111-111111111111',
+              generatedAt: new Date('2026-05-20T00:00:00.000Z'),
+              reasonCodes: ['proof_pack_relevant'],
+            },
+          ]),
+        })),
+      })),
+    }));
+  });
+
+  it('rejects malformed JSON before assignment lookup or matching work', async () => {
+    const response = await POST(
+      new NextRequest('http://localhost/api/core/matching/assignment', {
+        method: 'POST',
+        body: '{"assignmentId":',
+        headers: { 'content-type': 'application/json' },
+      })
+    );
+
+    await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
+    expect(response.status).toBe(400);
+    expect(db.query.assignments.findFirst).not.toHaveBeenCalled();
+    expect(computeAssignmentMatches).not.toHaveBeenCalled();
+    expect(emitLaunchTrace).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.objectContaining({
+        outcome: 'rejected',
+        failureClass: 'invalid_json_body',
+      })
+    );
   });
 
   it('returns a named fallback state when shortlist output is suppressed', async () => {
@@ -120,5 +162,59 @@ describe('/api/core/matching/assignment', () => {
       introCorridorLive: false,
       exactRankLive: false,
     });
+  });
+
+  it('keeps exact rank suppressed even when the legacy exact-rank flag is enabled', async () => {
+    (computeAssignmentMatches as any).mockResolvedValue({
+      items: [
+        {
+          profileId: 'profile-1',
+          score: 0.91,
+          scoreTotal: 9100,
+          subscoresJson: {},
+          scoreSnapshotJson: {},
+          reasonCodes: ['proof_pack_relevant'],
+          profile: { profileId: 'profile-1', verified: { proofPack: true } },
+          artifact: {
+            scoreNormalized: 0.91,
+            scoreTotal: 9100,
+            subscoresJson: {},
+            scoreSnapshotJson: {},
+            reasonCodes: ['proof_pack_relevant'],
+          },
+        },
+      ],
+      meta: { source: 'test' },
+    });
+    (resolveFeatureFlags as any).mockResolvedValue({
+      FF_QUALIFIED_INTRO_CORRIDOR: true,
+      FF_EXACT_RANK_EXPOSURE: true,
+      FF_KILL_SWITCH_INTROS: false,
+      FF_KILL_SWITCH_EXACT_RANK: false,
+    });
+
+    const response = await POST(
+      new NextRequest('http://localhost/api/core/matching/assignment', {
+        method: 'POST',
+        body: JSON.stringify({
+          assignmentId: '11111111-1111-1111-1111-111111111111',
+          refresh: true,
+        }),
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.items).toHaveLength(1);
+    expect(body.items[0]).not.toHaveProperty('score');
+    expect(body.items[0]).not.toHaveProperty('scoreTotal');
+    expect(body.items[0]).not.toHaveProperty('subscoresJson');
+    expect(body.items[0]).not.toHaveProperty('scoreSnapshotJson');
+    expect(body.items[0].rank).toBeNull();
+    expect(body.items[0].rankBand).toBe('top_band');
+    expect(body.meta.weights).toEqual({});
+    expect(body.meta.scoreVisibility).toBe('internal_ordering_only');
+    expect(body.meta.launchFallback.exactRankLive).toBe(false);
+    expect(body.meta.launchFallback.activeModes).toContain('fairness_suppressed_ranking');
   });
 });

@@ -10,14 +10,13 @@ import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, EyeOff, Loader2, Undo2 } from 'lucide-react';
+import { EyeOff, Loader2, Undo2 } from 'lucide-react';
 import { apiFetch } from '@/lib/api/fetch';
 import { toast } from 'sonner';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 interface HiddenMatch {
   id: string;
-  assignmentId: string;
-  score: number;
   assignment: {
     title?: string;
     locationMode?: string;
@@ -61,7 +60,7 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
         });
       }
     } catch (error) {
-      console.error('Failed to fetch hidden matches:', error);
+      dispatchClientErrorDiagnostic('matching.hidden_matches.load_failed', error);
       setError('Failed to load hidden matches');
       toast.error('Failed to load hidden matches');
     } finally {
@@ -92,7 +91,9 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
-      }).catch((err) => console.error('Warm matches fetch failed after unhide:', err));
+      }).catch((err) =>
+        dispatchClientErrorDiagnostic('matching.hidden_matches.warm_after_unhide_failed', err)
+      );
 
       await Promise.allSettled([
         onRestored?.(),
@@ -100,7 +101,7 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
         Promise.resolve().then(() => router.refresh()),
       ]);
     } catch (error) {
-      console.error('Failed to unhide match:', error);
+      dispatchClientErrorDiagnostic('matching.hidden_matches.unhide_failed', error);
       // Roll back optimistic removal
       setHidden(prevHidden);
       toast.error('Failed to unhide match');
@@ -168,7 +169,7 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">
-                  {match.assignment.title || 'Opportunity'}
+                  {match.assignment.title || 'Assignment'}
                 </p>
                 {match.organization?.name && (
                   <p className="text-xs text-muted-foreground truncate">
@@ -181,7 +182,7 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
                 </p>
               </div>
               <Badge variant="outline" className="text-xs">
-                {Math.round(match.score * 100)}%
+                Hidden
               </Badge>
             </div>
 
@@ -204,13 +205,6 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
                   </>
                 )}
               </Button>
-              <a
-                href={`/app/i/matching/${match.assignmentId}`}
-                className="text-xs text-proofound-forest hover:underline flex items-center gap-1"
-              >
-                <Eye className="w-3 h-3" />
-                View
-              </a>
             </div>
           </div>
         ))}

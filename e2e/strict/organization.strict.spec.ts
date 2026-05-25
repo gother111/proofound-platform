@@ -42,9 +42,9 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
   const strictLifecycleImpact =
     'Convincing proof includes shipped work, clear ownership signals, and thoughtful explanations of delivery tradeoffs from comparable assignments.';
   const strictDraftBusinessValue =
-    'Clarify the role purpose in concrete terms so the organization can review candidates through real proof instead of generic hiring language.';
+    'Clarify the assignment purpose in concrete terms so the organization can review proof submissions instead of generic role language.';
   const strictDraftDescription =
-    'Document the actual work, the constraints, and the candidate proof expectations so internal review can approve a credible public assignment.';
+    'Document the actual work, the constraints, and the proof-submission expectations so internal review can approve a credible public assignment.';
   const strictDraftImpact =
     'Strong submissions should show delivered work, evidence of ownership, and grounded explanations of the decisions behind that work.';
 
@@ -119,29 +119,31 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
     await loginWithUi(page, orgUser);
 
     await gotoWithReadyState(page, `/app/o/${organization.slug}/home`, async () => {
-      await expect(page.getByRole('heading', { name: organization.displayName })).toBeVisible();
+      await expect(
+        page.getByRole('heading', { name: organization.displayName, exact: true })
+      ).toBeVisible();
     });
-    await expect(page.getByText('Organization review cockpit')).toBeVisible();
+    await expect(page.getByText('Current review workspace')).toBeVisible();
+    await expect(page.getByText('Review status')).toBeVisible();
     await expect(
-      page.getByText('A focused launch desk for one clean hiring corridor')
+      page.getByRole('heading', { name: seededAssignment.role, exact: true })
     ).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Corridor Queue' })).toBeVisible();
-    await expect(page.getByText(/Organization profile · Verified path:/)).toBeVisible();
-    await expect(page.getByText(/One assignment path · Purpose, real work/)).toBeVisible();
-    await expect(page.getByRole('link', { name: /Create first assignment/i })).toHaveAttribute(
+    await expect(page.getByText('Reviewing submissions')).toBeVisible();
+    await expect(page.getByRole('link', { name: /Review submissions/i })).toHaveAttribute(
+      'href',
+      `/app/o/${organization.slug}/assignments`
+    );
+    await expect(page.getByRole('link', { name: /New assignment/i })).toHaveAttribute(
       'href',
       `/app/o/${organization.slug}/assignments/new`
     );
-    await expect(page.getByRole('heading', { name: 'Minimal Access' })).toBeVisible();
-    await expect(
-      page.getByText('Launch roles are limited to owner, manager, and reviewer.')
-    ).toBeVisible();
-    await expect(page.getByText('You are currently signed in as Owner.')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Team access' })).toBeVisible();
+    await expect(page.getByText('Signed in as Owner')).toBeVisible();
 
     await gotoWithReadyState(page, `/app/o/${organization.slug}/profile`, async () => {
       await expect(
         page.getByRole('main').getByRole('heading', {
-          name: 'Organization Profile',
+          name: 'Organization Trust Page',
           exact: true,
         })
       ).toBeVisible();
@@ -253,6 +255,7 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
     expect(publishPayload.assignment?.creationStatus).toBe('review_ready');
     if (assignmentForLifecycle) {
       assignmentForLifecycle.status = 'active';
+      await createRuntimeMatch(fixture, assignmentId, candidateUser.id);
     }
 
     const pipelineStepResponse = await apiPostJson(
@@ -298,14 +301,14 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
     ).toBeTruthy();
   });
 
-  test('O-08..O-12 ranked matches, shortlist, messaging, and interview prep are strict', async ({
+  test('O-08..O-12 proof-submission matches, shortlist, messaging, and interview prep are strict', async ({
+    browser,
     page,
   }) => {
     test.setTimeout(300_000);
 
     await loginWithUi(page, orgUser);
-    const assignmentId =
-      assignmentForLifecycle?.status === 'active' ? assignmentForLifecycle.id : seededAssignment.id;
+    const assignmentId = seededAssignment.id;
 
     let rankedMatchesResponse = await apiPostJson(
       page.request,
@@ -351,11 +354,16 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
       expect(orgInterestPayload.error).toBeTruthy();
     }
 
-    await page.context().clearCookies();
-    await loginWithUi(page, candidateUser);
-    const candidateInterestResponse = await apiPostJson(page.request, '/api/match/interest', {
-      assignmentId,
-    });
+    const candidateContext = await browser.newContext();
+    const candidatePage = await candidateContext.newPage();
+    await loginWithUi(candidatePage, candidateUser);
+    const candidateInterestResponse = await apiPostJson(
+      candidatePage.request,
+      '/api/match/interest',
+      {
+        assignmentId,
+      }
+    );
     expect([200, 409]).toContain(candidateInterestResponse.status());
     const candidateInterestPayload = (await candidateInterestResponse.json()) as {
       revealed?: boolean;
@@ -368,9 +376,7 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
       expect(candidateInterestPayload.browseStillAvailable).toBe(true);
       expect(candidateInterestPayload.error).toBeTruthy();
     }
-
-    await page.context().clearCookies();
-    await loginWithUi(page, orgUser);
+    await candidateContext.close();
 
     const shortlistResponse = await page.request.get(`/api/org/${organization.slug}/shortlist`);
     expect(shortlistResponse.ok()).toBeTruthy();

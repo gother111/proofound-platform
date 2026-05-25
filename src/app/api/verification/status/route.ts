@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/log';
 import { createClient } from '@/lib/supabase/server';
 import { buildVerificationStatusContract } from '@/lib/verification/status-contract';
 
@@ -30,8 +31,8 @@ export async function GET(request: NextRequest) {
     // Handle errors - maybeSingle() typically returns null data and no error if not found
     // But if there's an error, log it and only fail on real database errors
     if (profileError) {
-      // Log the full error for debugging
-      console.error('Error fetching individual profile:', {
+      log.error('verification.status.profile_fetch_failed', {
+        userId: user.id,
         code: profileError.code,
         message: profileError.message,
         details: profileError.details,
@@ -77,7 +78,7 @@ export async function GET(request: NextRequest) {
       })
     );
   } catch (error) {
-    console.error('Error in verification status API:', error);
+    log.error('verification.status.get_failed', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

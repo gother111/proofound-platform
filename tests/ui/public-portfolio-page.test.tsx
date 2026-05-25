@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 const { notFoundMock } = vi.hoisted(() => ({
@@ -76,7 +76,7 @@ function buildProjection(overrides: Partial<any> = {}) {
         {
           key: 'context',
           label: 'Context',
-          value: 'Industry: Proof-first hiring',
+          value: 'Industry: Proof-first assignment review',
           state: 'ready',
           sources: [
             { id: 'pack-1', label: 'Proof Pack: Product Strategy', detail: 'Product Strategy' },
@@ -302,7 +302,8 @@ describe('Public individual portfolio page', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('Company size: 11-50')).toBeInTheDocument();
     expect(screen.getByText('Work area: Product strategy')).toBeInTheDocument();
-    expect(screen.getByText('Industry: Proof-first hiring')).toBeInTheDocument();
+    expect(screen.getByText('Industry: Proof-first assignment review')).toBeInTheDocument();
+    expect(screen.queryByText('Industry: Proof-first hiring')).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /proof snapshot/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /selected outcomes/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /skills snapshot/i })).toBeInTheDocument();
@@ -313,12 +314,36 @@ describe('Public individual portfolio page', () => {
       screen.getByText(/skills are not shared publicly on this public page/i)
     ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /request introduction/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /copy recruiter summary/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /copy proof summary/i })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /copy recruiter summary/i })
+    ).not.toBeInTheDocument();
     expect(screen.queryByText(/my next challenge/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/mission & vision/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/stockholm, sweden/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /return to menu/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /return home/i })).not.toBeInTheDocument();
+  });
+
+  it('uses specific names for public evidence links', async () => {
+    vi.mocked(resolvePublicIndividualPortfolioAccessByHandle).mockResolvedValue({
+      status: 'accessible',
+      projection: buildProjection() as any,
+    });
+
+    const element = await PortfolioPage({
+      params: Promise.resolve({ handle: 'jane' }),
+      searchParams: Promise.resolve({}),
+    });
+
+    render(element);
+
+    fireEvent.click(screen.getByRole('button', { name: /show details/i }));
+
+    expect(screen.getByRole('link', { name: /open launch memo/i })).toHaveAttribute(
+      'href',
+      'https://example.com/launch-memo'
+    );
   });
 
   it('renders owner-safe public preview and allows return link when provided', async () => {
@@ -352,7 +377,7 @@ describe('Public individual portfolio page', () => {
       'href',
       expect.stringContaining('summaryRefresh=traceable-profile-summary')
     );
-    expect(screen.getByText(/search engines are off for the MVP/i)).toBeInTheDocument();
+    expect(screen.getByText(/search engines are off until the owner opts in/i)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /manage visibility/i })).toHaveAttribute(
       'href',
       '/app/i/profile?profileView=full&tab=visibility'
@@ -405,6 +430,8 @@ describe('Public individual portfolio page', () => {
     });
 
     render(element);
+
+    fireEvent.click(screen.getByRole('button', { name: /show details/i }));
 
     expect(screen.getAllByText('Hidden asset proof').length).toBeGreaterThan(0);
     expect(screen.queryByRole('link', { name: /open evidence/i })).not.toBeInTheDocument();
@@ -471,20 +498,28 @@ describe('Public individual portfolio page', () => {
 
     render(element);
 
-    expect(screen.getByRole('heading', { name: 'Public Page unavailable' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Public page unavailable' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Return home' })).toHaveAttribute('href', '/');
     expect(screen.getByText(/this public page link is unavailable/i)).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Jane Doe' })).not.toBeInTheDocument();
   });
 
-  it('calls notFound when handle has no public portfolio', async () => {
+  it('renders the generic unavailable state when handle has no public portfolio', async () => {
     vi.mocked(resolvePublicIndividualPortfolioAccessByHandle).mockResolvedValue({
       status: 'missing',
       projection: null,
     });
 
-    await expect(PortfolioPage({ params: Promise.resolve({ handle: 'missing' }) })).rejects.toThrow(
-      'NOT_FOUND'
-    );
-    expect(notFoundMock).toHaveBeenCalledTimes(1);
+    const element = await PortfolioPage({
+      params: Promise.resolve({ handle: 'missing' }),
+      searchParams: Promise.resolve({}),
+    });
+
+    render(element);
+
+    expect(screen.getByRole('heading', { name: 'Public page unavailable' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Return home' })).toHaveAttribute('href', '/');
+    expect(screen.getByText(/this public page link is unavailable/i)).toBeInTheDocument();
+    expect(notFoundMock).not.toHaveBeenCalled();
   });
 });

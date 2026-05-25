@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { requireApiAuthContext } from '@/lib/auth';
+import { log } from '@/lib/log';
 import { normalizeEmail } from '@/lib/verification/integrity';
 import { loadVerificationRequestFeed } from '@/lib/verification/request-feed';
 
@@ -25,7 +26,7 @@ export async function GET(_request: NextRequest) {
 
     return NextResponse.json(feed);
   } catch (error) {
-    console.error('Verification requests route error:', error);
+    log.error('verification.requests.get_failed', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

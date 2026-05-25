@@ -20,14 +20,14 @@ export const HOMEPAGE_STORY_FRAMES: HomepageStoryFrame[] = [
   {
     id: 'hero',
     title: 'Proof behind the claim',
-    body: 'Proofound turns real work into structured Proof Packs for privacy-safe hiring review before identity takes over.',
+    body: 'Proofound turns real work into structured Proof Packs for privacy-safe assignment review before identity takes over.',
     microcopy: 'Proof portfolios for individuals. Evidence-based review for teams.',
   },
   {
     id: 'blind',
     title: 'Blind by default',
     body: 'Photo, name, contact details, prestige markers, and other identity signals are removed first. The goal is not anonymity for its own sake. It is capability before bias.',
-    microcopy: 'Weak signal should leave before judgment begins.',
+    microcopy: 'Weak evidence should not lead the first review.',
   },
   {
     id: 'outcomes',
@@ -38,13 +38,13 @@ export const HOMEPAGE_STORY_FRAMES: HomepageStoryFrame[] = [
   {
     id: 'artifacts',
     title: 'Backed with proof artifacts',
-    body: 'Each outcome can carry links, files, visuals, repositories, certificates, and case fragments. The profile stops asking for belief and starts pointing to proof.',
-    microcopy: 'Claims gain artifacts. Signal gains weight.',
+    body: 'Each outcome can carry links, files, visuals, repositories, certificates, and case fragments. The Public Page stops asking for belief and starts pointing to proof.',
+    microcopy: 'Claims gain artifacts. Review gets clearer.',
   },
   {
     id: 'verification',
     title: 'Verification trust layer',
-    body: 'Artifacts alone are not enough. Proofound adds verification states, method markers, and trust signals so reviewers can see why a proof item deserves confidence.',
+    body: 'Artifacts alone are not enough. Proofound adds verification states, method markers, and reviewer checks so reviewers can see why a proof item deserves confidence.',
     microcopy: 'Evidence becomes auditable, not merely present.',
   },
   {
@@ -55,21 +55,21 @@ export const HOMEPAGE_STORY_FRAMES: HomepageStoryFrame[] = [
   },
   {
     id: 'compatibility',
-    title: 'Universal compatibility',
-    body: 'The proof-backed profile becomes a Proof Pack inside a wider system. Structured assignments enter from one side, proof enters from the other, and a shared assessment layer makes them comparable.',
-    microcopy: 'This is not a prettier CV. It is a compatibility model.',
+    title: 'Assignment-fit context',
+    body: 'A Proof Pack stays anchored to real outcomes while the assignment defines the work, constraints, and proof expectations. Reviewers compare proof to the role instead of guessing from polish.',
+    microcopy: 'This is not a prettier CV. It is a review corridor.',
   },
   {
     id: 'precision',
     title: 'For precise solutions',
-    body: 'Once requirements and proof are both structured, broad possibility can collapse into a more precise fit. Better matching becomes explainable instead of impressionistic.',
-    microcopy: 'Signal sharpens. Fit becomes visible.',
+    body: 'Once requirements and proof are both structured, fit can be explained with reason codes, readiness states, and gaps that still need human review.',
+    microcopy: 'Evidence sharpens. The next review step becomes visible.',
   },
   {
     id: 'challenges',
     title: 'To modern challenges',
-    body: 'Organizations waste time reviewing weak applications. Candidates flatten real ability into bullets or overshare to compensate. Proofound gives both sides a more modern starting point.',
-    microcopy: 'A stronger hiring signal solves real problems on both sides.',
+    body: 'Organizations waste time reviewing weak submissions. Proof-review participants flatten real ability into bullets or overshare to compensate. Proofound gives both sides a more modern starting point.',
+    microcopy: 'Stronger proof solves real problems on both sides.',
   },
 ];
 

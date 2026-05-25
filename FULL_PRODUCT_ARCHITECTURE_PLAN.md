@@ -1,5 +1,10 @@
 # PROOFOUND FULL PRODUCT ARCHITECTURE PLAN
 
+> Doc Class: `reference-spec`
+> Last Verified: `2026-05-19`
+> Reference note: this file is reference or historical full-product architecture material. It is not the canonical MVP launch contract.
+> Current precedence: `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md`, then fresh repo-grounded evidence. This document is reference context only.
+
 **Document Version**: 1.0
 **Scope**: Complete Product Vision (MVP → Production → Scale)
 **Timeline**: 18-24 months
@@ -23,17 +28,17 @@ Phase 4 (Months 19-24)    → Mobile + Advanced Features
 
 ### Architecture Evolution
 
-| Component | MVP | Phase 1 | Phase 2 | Phase 3 | Phase 4 |
-|-----------|-----|---------|---------|---------|---------|
-| **Auth** | Email + OAuth | +MFA | +SSO/SAML | +SCIM | +Biometric |
-| **Matching** | Rule-based | +Embeddings | +Learning weights | +Team matching | +AI scoring |
-| **Database** | Supabase PG | +Indexes | +Partitioning | +Read replicas | +Sharding |
-| **Search** | Keyword | +pgvector | +Typesense | +Elasticsearch | +Hybrid |
-| **Storage** | Supabase | +CDN | +Image optimization | +Video support | +Geo-dist |
-| **Real-time** | Polling | +Supabase RT | +WebSockets | +Kafka | +Edge compute |
-| **Mobile** | Responsive web | +PWA | +React Native | +Native | +Offline-first |
-| **Analytics** | Basic events | +Dashboard | +Funnels | +Cohorts | +ML insights |
-| **AI** | None | +Embeddings | +Recommendations | +Insights | +Co-founder |
+| Component     | MVP            | Phase 1      | Phase 2             | Phase 3        | Phase 4        |
+| ------------- | -------------- | ------------ | ------------------- | -------------- | -------------- |
+| **Auth**      | Email + OAuth  | +MFA         | +SSO/SAML           | +SCIM          | +Biometric     |
+| **Matching**  | Rule-based     | +Embeddings  | +Learning weights   | +Team matching | +AI scoring    |
+| **Database**  | Supabase PG    | +Indexes     | +Partitioning       | +Read replicas | +Sharding      |
+| **Search**    | Keyword        | +pgvector    | +Typesense          | +Elasticsearch | +Hybrid        |
+| **Storage**   | Supabase       | +CDN         | +Image optimization | +Video support | +Geo-dist      |
+| **Real-time** | Polling        | +Supabase RT | +WebSockets         | +Kafka         | +Edge compute  |
+| **Mobile**    | Responsive web | +PWA         | +React Native       | +Native        | +Offline-first |
+| **Analytics** | Basic events   | +Dashboard   | +Funnels            | +Cohorts       | +ML insights   |
+| **AI**        | None           | +Embeddings  | +Recommendations    | +Insights      | +Co-founder    |
 
 ---
 
@@ -56,11 +61,12 @@ Phase 4 (Months 19-24)    → Mobile + Advanced Features
 
 ## 1. MVP ARCHITECTURE (Months 0-2)
 
-*See `MVP_IMPLEMENTATION_PLAN.md` for detailed implementation.*
+_See `MVP_IMPLEMENTATION_PLAN.md` for detailed implementation._
 
 ### 1.1 Tech Stack (MVP)
 
 **Frontend**:
+
 - Next.js 15 (App Router)
 - React 19
 - TypeScript 5
@@ -69,12 +75,14 @@ Phase 4 (Months 19-24)    → Mobile + Advanced Features
 - React Query (optional)
 
 **Backend**:
+
 - Next.js API Routes
 - Supabase (Postgres 15 + Auth + Storage)
 - Drizzle ORM
 - Resend (email)
 
 **Infrastructure**:
+
 - Vercel (hosting)
 - Supabase (database + auth + storage)
 - GitHub (code)
@@ -83,6 +91,7 @@ Phase 4 (Months 19-24)    → Mobile + Advanced Features
 ### 1.2 Database (MVP)
 
 **Tables** (30+):
+
 - Core: profiles, organizations, assignments
 - Matching: matching_profiles, matches, skills
 - Verification: verification_requests, verification_responses
@@ -91,6 +100,7 @@ Phase 4 (Months 19-24)    → Mobile + Advanced Features
 - Analytics: analytics_events
 
 **Features**:
+
 - Row-Level Security (RLS)
 - Foreign key constraints
 - Indexes on primary/foreign keys
@@ -101,6 +111,7 @@ Phase 4 (Months 19-24)    → Mobile + Advanced Features
 **Approach**: Rules-based multi-factor scoring
 
 **Scoring Functions**:
+
 ```typescript
 Total Score =
   0.55 * SkillScore +
@@ -126,6 +137,7 @@ Total Score =
 #### 2.2.1 Advanced Matching
 
 **Semantic Search with pgvector**:
+
 ```sql
 -- Enable extension
 CREATE EXTENSION vector;
@@ -145,20 +157,19 @@ CREATE INDEX idx_matching_profiles_mission_embedding
 ```
 
 **Two-Stage Matching**:
+
 1. Stage 1 (ANN): Fetch Top-500 via vector similarity
 2. Stage 2 (Re-rank): Precise multi-factor scoring
 
 **Implementation**:
+
 ```typescript
 // /src/lib/matching/semantic.ts
 
 import { pipeline } from '@xenova/transformers';
 
 // Load embedding model (run once at startup)
-const embedder = await pipeline(
-  'feature-extraction',
-  'Xenova/all-MiniLM-L6-v2'
-);
+const embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
 
 export async function generateEmbedding(text: string): Promise<number[]> {
   const output = await embedder(text, {
@@ -224,6 +235,7 @@ export async function matchWithSemanticSearch(assignmentId: string) {
 ```
 
 **SQL Function for Vector Search**:
+
 ```sql
 -- /supabase/migrations/20250315_vector_search.sql
 
@@ -251,6 +263,7 @@ $$;
 #### 2.2.2 MFA (Multi-Factor Authentication)
 
 **Implementation**:
+
 ```typescript
 // Use Supabase Auth MFA
 // https://supabase.com/docs/guides/auth/auth-mfa
@@ -371,6 +384,7 @@ export default async function AnalyticsDashboard() {
 ```
 
 **SQL Functions**:
+
 ```sql
 -- Calculate time to first accepted match (median)
 CREATE OR REPLACE FUNCTION calculate_time_to_first_match()
@@ -395,11 +409,13 @@ $$;
 ### 2.3 Infrastructure Upgrades
 
 **Database**:
+
 - Add advanced indexes (see Section 7)
 - Connection pooling (PgBouncer via Supabase)
 - Query optimization
 
 **Caching**:
+
 ```typescript
 // Add React Query for client-side caching
 import { useQuery } from '@tanstack/react-query';
@@ -414,6 +430,7 @@ export function useMatches() {
 ```
 
 **CDN**:
+
 - Enable Vercel Edge Network (automatic)
 - Add `Cache-Control` headers for static assets
 
@@ -499,6 +516,7 @@ def train_ltr_model(data):
 ```
 
 **Integration**:
+
 ```typescript
 // /src/lib/matching/ltr.ts
 
@@ -556,6 +574,7 @@ export function getAdjacentSkills(skillCode: string, maxDistance = 2): string[] 
 ```
 
 **Migration Plan**:
+
 1. Build taxonomy in spreadsheet (weeks)
 2. Convert to JSON/database
 3. Import to database
@@ -581,13 +600,9 @@ export interface TeamRequirement {
   };
 }
 
-export async function matchTeam(
-  requirement: TeamRequirement
-): Promise<Team[]> {
+export async function matchTeam(requirement: TeamRequirement): Promise<Team[]> {
   // 1. Find candidates for each role
-  const roleCandidates = await Promise.all(
-    requirement.roles.map((role) => matchRole(role))
-  );
+  const roleCandidates = await Promise.all(requirement.roles.map((role) => matchRole(role)));
 
   // 2. Generate team combinations
   const teams = generateTeamCombinations(roleCandidates, requirement.teamSize);
@@ -673,16 +688,19 @@ self.addEventListener('fetch', (event) => {
 ### 3.3 Infrastructure Upgrades (Phase 2)
 
 **Database**:
+
 - Add read replicas for reporting queries
 - Partition large tables (analytics_events, messages)
 - Implement archival strategy
 
 **Caching**:
+
 - Add Redis for session storage
 - Cache matching results (5-minute TTL)
 - Cache taxonomy data
 
 **Search**:
+
 - Add Typesense for full-text search
 - Index profiles, assignments, skills
 
@@ -720,6 +738,7 @@ function getShardForUser(userId: string): string {
 #### 4.2.2 Kafka for Event Streaming
 
 **Use Cases**:
+
 - Analytics events
 - Match computations (async)
 - Email notifications
@@ -793,10 +812,7 @@ export async function searchProfiles(query: string, filters: any) {
             },
           },
         ],
-        filter: [
-          { terms: { skills: filters.skills } },
-          { terms: { values: filters.values } },
-        ],
+        filter: [{ terms: { skills: filters.skills } }, { terms: { values: filters.values } }],
       },
     },
   });
@@ -808,16 +824,19 @@ export async function searchProfiles(query: string, filters: any) {
 ### 4.3 Performance Optimizations
 
 **Database**:
+
 - Materialized views for expensive queries
 - Query result caching (Redis)
 - Connection pooling (PgBouncer)
 
 **API**:
+
 - GraphQL for flexible queries (optional)
 - API rate limiting per tier
 - Response compression (gzip)
 
 **Frontend**:
+
 - Code splitting (automatic in Next.js)
 - Image optimization (next/image)
 - Lazy loading
@@ -826,12 +845,14 @@ export async function searchProfiles(query: string, filters: any) {
 ### 4.4 Monitoring & Alerting
 
 **Tools**:
+
 - Datadog (infrastructure monitoring)
 - Sentry (error tracking)
 - PagerDuty (on-call)
 - Custom dashboards (Grafana)
 
 **Alerts**:
+
 ```yaml
 # alerts.yaml
 - name: High API latency
@@ -857,6 +878,7 @@ export async function searchProfiles(query: string, filters: any) {
 ### 5.1 Native Mobile Apps
 
 **Tech Stack**:
+
 - React Native
 - Expo
 - TypeScript
@@ -864,6 +886,7 @@ export async function searchProfiles(query: string, filters: any) {
 - Reanimated
 
 **Features**:
+
 - Push notifications
 - Biometric auth
 - Offline-first architecture
@@ -873,6 +896,7 @@ export async function searchProfiles(query: string, filters: any) {
 ### 5.2 AI Co-founder
 
 **Capabilities**:
+
 - Profile optimization suggestions
 - Match explanation & improvement tips
 - Career path recommendations
@@ -1181,7 +1205,7 @@ export const replica1Db = drizzle(replica1Client);
 
 // Load balancer for reads
 export function getReadDb(): typeof masterDb {
-  const replicas = [replica1Db, /* replica2Db, replica3Db */];
+  const replicas = [replica1Db /* replica2Db, replica3Db */];
   const randomIndex = Math.floor(Math.random() * replicas.length);
   return replicas[randomIndex];
 }
@@ -1213,6 +1237,7 @@ Current structure - continue using for MVP and Phase 1.
 ### 8.2 GraphQL API (Phase 2+)
 
 **Advantages**:
+
 - Flexible queries (fetch exactly what you need)
 - Reduced over-fetching
 - Type-safe with codegen
@@ -1352,13 +1377,13 @@ export { handleRequest as GET, handleRequest as POST };
 
 ### 9.1 Authentication Evolution
 
-| Phase | Features |
-|-------|----------|
-| MVP | Email + Google + LinkedIn OAuth |
-| Phase 1 | +MFA (TOTP) |
+| Phase   | Features                        |
+| ------- | ------------------------------- |
+| MVP     | Email + Google + LinkedIn OAuth |
+| Phase 1 | +MFA (TOTP)                     |
 | Phase 2 | +SSO (SAML/OIDC) for enterprise |
-| Phase 3 | +SCIM provisioning |
-| Phase 4 | +Biometric (mobile apps) |
+| Phase 3 | +SCIM provisioning              |
+| Phase 4 | +Biometric (mobile apps)        |
 
 ### 9.2 Authorization (RLS Evolution)
 
@@ -1400,6 +1425,7 @@ CREATE POLICY "Verified users can create assignments"
 ### 9.3 Data Privacy (GDPR, CCPA)
 
 **Compliance Features**:
+
 - ✅ Data export (JSON)
 - ✅ Data deletion (soft delete + purge)
 - ✅ Consent management
@@ -1429,6 +1455,7 @@ const db = getDatabaseForRegion(user.metadata.region);
 ### 9.4 Security Audits
 
 **Schedule**:
+
 - MVP: Pre-launch security review (1 day)
 - Phase 1: Quarterly penetration testing
 - Phase 2: Annual SOC 2 audit prep
@@ -1440,38 +1467,41 @@ const db = getDatabaseForRegion(user.metadata.region);
 
 ### 10.1 Performance Targets by Phase
 
-| Metric | MVP | Phase 1 | Phase 2 | Phase 3 |
-|--------|-----|---------|---------|---------|
-| **LCP** | <2.5s | <2.0s | <1.5s | <1.0s |
-| **API P95** | <1.2s | <800ms | <500ms | <300ms |
-| **Matching** | <5s | <3s | <2s | <1s |
-| **Uptime** | 99.5% | 99.9% | 99.95% | 99.99% |
-| **Users** | 1K | 10K | 50K | 500K |
+| Metric       | MVP   | Phase 1 | Phase 2 | Phase 3 |
+| ------------ | ----- | ------- | ------- | ------- |
+| **LCP**      | <2.5s | <2.0s   | <1.5s   | <1.0s   |
+| **API P95**  | <1.2s | <800ms  | <500ms  | <300ms  |
+| **Matching** | <5s   | <3s     | <2s     | <1s     |
+| **Uptime**   | 99.5% | 99.9%   | 99.95%  | 99.99%  |
+| **Users**    | 1K    | 10K     | 50K     | 500K    |
 
 ### 10.2 Caching Strategy
 
 **Layer 1: Browser Cache**
+
 ```typescript
 // next.config.js
 module.exports = {
   async headers() {
-    return [{
-      source: '/static/:path*',
-      headers: [
-        { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }
-      ]
-    }];
-  }
+    return [
+      {
+        source: '/static/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
+    ];
+  },
 };
 ```
 
 **Layer 2: CDN Cache (Vercel)**
+
 ```typescript
 // Automatic with ISR
 export const revalidate = 3600; // 1 hour
 ```
 
 **Layer 3: Application Cache (Redis)**
+
 ```typescript
 // /src/lib/cache.ts
 
@@ -1479,11 +1509,7 @@ import Redis from 'ioredis';
 
 const redis = new Redis(process.env.REDIS_URL);
 
-export async function getCached<T>(
-  key: string,
-  fetcher: () => Promise<T>,
-  ttl = 300
-): Promise<T> {
+export async function getCached<T>(key: string, fetcher: () => Promise<T>, ttl = 300): Promise<T> {
   const cached = await redis.get(key);
   if (cached) {
     return JSON.parse(cached);
@@ -1503,6 +1529,7 @@ const profile = await getCached(
 ```
 
 **Layer 4: Database Query Cache**
+
 ```sql
 -- Materialized views for expensive queries
 CREATE MATERIALIZED VIEW user_match_stats AS
@@ -1536,11 +1563,11 @@ export const options = {
     { duration: '5m', target: 100 }, // Stay at 100
     { duration: '2m', target: 200 }, // Ramp to 200
     { duration: '5m', target: 200 }, // Stay at 200
-    { duration: '2m', target: 0 },   // Ramp down
+    { duration: '2m', target: 0 }, // Ramp down
   ],
   thresholds: {
     http_req_duration: ['p(95)<1000'], // 95% < 1s
-    http_req_failed: ['rate<0.01'],    // Error rate < 1%
+    http_req_failed: ['rate<0.01'], // Error rate < 1%
   },
 };
 
@@ -1548,7 +1575,7 @@ export default function () {
   const res = http.post(
     'https://proofound.io/api/match/profile',
     JSON.stringify({ mode: 'balanced', k: 20 }),
-    { headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${__ENV.AUTH_TOKEN}` } }
+    { headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${__ENV.AUTH_TOKEN}` } }
   );
 
   check(res, {
@@ -1642,6 +1669,7 @@ resource "supabase_bucket" "proofs" {
 ### 11.3 Monitoring Stack
 
 **Services**:
+
 - Vercel Analytics (web vitals)
 - Supabase Dashboard (database metrics)
 - Sentry (errors)
@@ -1704,6 +1732,7 @@ log.error({ error: err.message, stack: err.stack }, 'Failed to send email');
 ```
 
 **Log Aggregation** (Phase 3):
+
 - Send logs to Datadog, CloudWatch, or Elasticsearch
 - Set up alerts on error patterns
 
@@ -1723,10 +1752,7 @@ const provider = new NodeTracerProvider();
 provider.register();
 
 registerInstrumentations({
-  instrumentations: [
-    new HttpInstrumentation(),
-    new ExpressInstrumentation(),
-  ],
+  instrumentations: [new HttpInstrumentation(), new ExpressInstrumentation()],
 });
 
 // Traces automatically sent to Datadog, Jaeger, etc.
@@ -1748,26 +1774,31 @@ This Full Product Architecture Plan provides a complete technical roadmap for Pr
 ### Success Metrics by Phase
 
 **MVP (Month 2)**:
+
 - ✅ 1,000 users
 - ✅ Core flows working
 - ✅ 99.5% uptime
 
 **Phase 1 (Month 6)**:
+
 - ✅ 10,000 users
 - ✅ Semantic matching
 - ✅ 99.9% uptime
 
 **Phase 2 (Month 12)**:
+
 - ✅ 50,000 users
 - ✅ All PRD features
 - ✅ PWA launched
 
 **Phase 3 (Month 18)**:
+
 - ✅ 500,000 users
 - ✅ Global deployment
 - ✅ 99.99% uptime
 
 **Phase 4 (Month 24)**:
+
 - ✅ 1M+ users
 - ✅ Native mobile apps
 - ✅ AI Co-founder launched
@@ -1775,6 +1806,7 @@ This Full Product Architecture Plan provides a complete technical roadmap for Pr
 ---
 
 **Next Steps**:
+
 1. Execute MVP (see `MVP_IMPLEMENTATION_PLAN.md`)
 2. Launch beta & gather feedback
 3. Iterate towards Phase 1
@@ -1782,7 +1814,8 @@ This Full Product Architecture Plan provides a complete technical roadmap for Pr
 
 ---
 
-*For immediate action items, see:*
+_For immediate action items, see:_
+
 - `MVP_IMPLEMENTATION_PLAN.md` - 8-week execution plan
 - `CRITICAL_GAPS_IMPLEMENTATION_GUIDE.md` - Step-by-step guides
 - `CODEBASE_AUDIT_REPORT.md` - Current state analysis

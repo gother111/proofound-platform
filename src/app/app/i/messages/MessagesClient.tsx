@@ -18,6 +18,7 @@ import { Lock, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import LoadingIndividualMessages from './loading';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 function MessagesPageContent() {
   const searchParams = useSearchParams();
@@ -75,7 +76,7 @@ function MessagesPageContent() {
         setConversations(transformedConversations);
       }
     } catch (error) {
-      console.error('Failed to load conversations:', error);
+      dispatchClientErrorDiagnostic('messages.individual.conversations_load_failed', error);
     } finally {
       setIsLoadingConversations(false);
     }
@@ -103,7 +104,7 @@ function MessagesPageContent() {
           setMessages(transformedMessages);
         }
       } catch (error) {
-        console.error('Failed to load messages:', error);
+        dispatchClientErrorDiagnostic('messages.individual.thread_load_failed', error);
       } finally {
         setIsLoadingMessages(false);
       }
@@ -166,7 +167,7 @@ function MessagesPageContent() {
         setMessages((prev) => [...prev, normalizedMessage]);
       }
     } catch (error) {
-      console.error('Failed to send message:', error);
+      dispatchClientErrorDiagnostic('messages.individual.send_failed', error);
       throw error;
     }
   };

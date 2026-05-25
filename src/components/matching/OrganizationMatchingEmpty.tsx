@@ -32,7 +32,7 @@ export function OrganizationMatchingEmpty({
       icon: Briefcase,
     },
     {
-      label: 'Candidate signals',
+      label: 'Proof-submission signals',
       detail: 'Review starts after the corridor is ready',
       icon: ArrowRight,
     },
@@ -53,7 +53,7 @@ export function OrganizationMatchingEmpty({
               </h2>
               <p className="max-w-xl text-base leading-relaxed text-muted-foreground">
                 Start with the role context reviewers need: skills, constraints, and proof
-                expectations. Candidate identity stays protected until the corridor is ready.
+                expectations. Identity stays protected until the corridor is ready.
               </p>
             </div>
 

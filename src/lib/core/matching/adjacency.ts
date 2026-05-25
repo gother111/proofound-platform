@@ -13,6 +13,7 @@
 
 import { db } from '@/db';
 import { skillsTaxonomy, skillAdjacency } from '@/db/schema';
+import { log } from '@/lib/log';
 import { eq, or, and, inArray } from 'drizzle-orm';
 import { type Skill } from './scorers';
 
@@ -249,7 +250,10 @@ export async function fetchExplicitAdjacencies(
 
     return result;
   } catch (error) {
-    console.error('[Adjacency] Failed to fetch explicit adjacencies:', error);
+    log.error('matching.adjacency.explicit_fetch_failed', {
+      skillCount: skillCodes.length,
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
     return new Map();
   }
 }

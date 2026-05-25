@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { log } from '@/lib/log';
 import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
 import { sendEmail } from '@/lib/email/sender';
@@ -33,6 +34,11 @@ import {
 } from '@/lib/verification/canonical-impact-requests';
 import { getClaimTemplateLabel } from '@/lib/verification/scoped-contract';
 import { ensureInternalOpsQueueItem } from '@/lib/internal-ops/queue';
+import {
+  buildVisualSkillVerificationResponse,
+  verificationLinkVisualFixturesEnabled,
+  VISUAL_VERIFY_TOKENS,
+} from '@/lib/verification/visual-link-fixtures';
 
 const VerifyResponseSchema = z.object({
   action: z.enum(['accept', 'decline']).optional(),
@@ -190,7 +196,7 @@ async function getCanonicalSkillVerificationWithSkillDetails(
 
 function normalizeBaseUrl(url?: string | null) {
   const base = (url || '').trim();
-  if (!base) return 'https://proofound.com';
+  if (!base) return 'https://proofound.io';
   return base.endsWith('/') ? base.slice(0, -1) : base;
 }
 
@@ -847,6 +853,14 @@ export async function GET(
   try {
     const supabase = await createClient();
     const { token } = await params;
+
+    if (verificationLinkVisualFixturesEnabled()) {
+      const visualResponse = buildVisualSkillVerificationResponse(token);
+      if (visualResponse) {
+        return NextResponse.json(visualResponse);
+      }
+    }
+
     const authIdentity = await getOptionalAuthIdentity(supabase);
     let skillDataClient:
       | ReturnType<typeof createAdminClient>
@@ -878,7 +892,7 @@ export async function GET(
           return toCanonicalLookupErrorResponse(impactVerificationError);
         }
 
-        console.error('Impact verification lookup error:', impactVerificationError);
+        log.error('verify_token.impact.lookup_failed', { error: impactVerificationError });
       }
 
       if (impactVerification) {
@@ -905,7 +919,10 @@ export async function GET(
           impactVerification.impact_story_id
         );
         if (impactStoryError) {
-          console.error('Impact story context lookup error:', impactStoryError);
+          log.error('verify_token.impact.story_context_failed', {
+            error: impactStoryError,
+            requestId: impactVerification.id,
+          });
         }
 
         const { data: requesterProfile, error: requesterProfileError } =
@@ -915,7 +932,10 @@ export async function GET(
             toStringOrNull(impactStory?.user_id)
           );
         if (requesterProfileError) {
-          console.error('Impact requester profile lookup error:', requesterProfileError);
+          log.error('verify_token.impact.requester_profile_failed', {
+            error: requesterProfileError,
+            requestId: impactVerification.id,
+          });
         }
 
         const claims = resolveImpactClaims(impactVerification.claim_snapshot, impactStory || null);
@@ -983,16 +1003,13 @@ export async function GET(
         return response;
       }
     } catch (impactError) {
-      console.error('Impact verification lookup failed, continuing to skill lookup:', impactError);
+      log.warn('verify_token.impact.lookup_fallback_failed', { error: impactError });
     }
 
     try {
       skillDataClient = createAdminClient();
     } catch (adminClientError) {
-      console.error(
-        'Skill verification admin client unavailable; falling back to request-scoped client',
-        adminClientError
-      );
+      log.warn('verify_token.skill.admin_client_unavailable', { error: adminClientError });
     }
 
     // 2) Fallback to existing skill verification flow
@@ -1024,7 +1041,7 @@ export async function GET(
         );
       }
 
-      console.error('Skill verification lookup failed:', verificationError);
+      log.error('verify_token.skill.lookup_failed', { error: verificationError });
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 
@@ -1067,7 +1084,10 @@ export async function GET(
         normalizedVerification.requester_profile_id
       );
     if (requesterProfileError) {
-      console.error('Skill requester profile lookup error:', requesterProfileError);
+      log.error('verify_token.skill.requester_profile_failed', {
+        error: requesterProfileError,
+        requestId: normalizedVerification.id,
+      });
     }
 
     let skillProofs: SkillProofContext[] = [];
@@ -1077,7 +1097,10 @@ export async function GET(
         normalizedVerification.skill_id
       );
     } catch (skillProofsError) {
-      console.error('Skill proof lookup error:', skillProofsError);
+      log.error('verify_token.skill.proofs_lookup_failed', {
+        error: skillProofsError,
+        requestId: normalizedVerification.id,
+      });
     }
 
     const requesterIdentity = resolveSkillRequesterIdentity({
@@ -1145,7 +1168,7 @@ export async function GET(
 
     return response;
   } catch (error) {
-    console.error('Verify GET error:', error);
+    log.error('verify_token.get_failed', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -1160,14 +1183,28 @@ export async function POST(
   { params }: { params: Promise<{ token: string }> }
 ) {
   try {
-    const supabase = await createClient();
     const { token } = await params;
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+
+    const supabase = await createClient();
     let skillDataClient:
       | ReturnType<typeof createAdminClient>
       | Awaited<ReturnType<typeof createClient>> = supabase;
 
     const validated = VerifyResponseSchema.parse(body);
+
+    if (verificationLinkVisualFixturesEnabled() && token === VISUAL_VERIFY_TOKENS.skillObserved) {
+      return NextResponse.json({
+        success: true,
+        status: validated.action === 'decline' ? 'declined' : 'accepted',
+      });
+    }
+
     const explicitAction = validated.action ?? null;
     const impactRedeemSessionNonce =
       request.cookies.get(
@@ -1196,7 +1233,7 @@ export async function POST(
           return toCanonicalLookupErrorResponse(impactVerificationError);
         }
 
-        console.error('Impact verification lookup error:', impactVerificationError);
+        log.error('verify_token.impact.lookup_failed', { error: impactVerificationError });
       }
 
       if (impactVerification) {
@@ -1278,7 +1315,11 @@ export async function POST(
           impactVerification.impact_story_id
         );
         if (impactStoryError) {
-          console.error('Impact story context lookup error (POST):', impactStoryError);
+          log.error('verify_token.impact.story_context_failed', {
+            error: impactStoryError,
+            requestId: impactVerification.id,
+            method: 'POST',
+          });
         }
 
         const claims = resolveImpactClaims(impactVerification.claim_snapshot, impactStory || null);
@@ -1355,7 +1396,10 @@ export async function POST(
           responseAuthMethod: getResponseAuthMethod(authIdentity),
           responseActorEmail: authIdentity.email,
         }).catch((error) => {
-          console.error('Failed to update canonical impact verification request:', error);
+          log.error('verify_token.impact.update_failed', {
+            error,
+            requestId: impactVerification.id,
+          });
           return null;
         });
 
@@ -1380,7 +1424,11 @@ export async function POST(
             .eq('id', impactVerification.impact_story_id);
 
           if (impactStoryUpdateError) {
-            console.error('Failed to mark impact story verified:', impactStoryUpdateError);
+            log.error('verify_token.impact.story_verified_update_failed', {
+              error: impactStoryUpdateError,
+              requestId: impactVerification.id,
+              impactStoryId: impactVerification.impact_story_id,
+            });
           }
         }
 
@@ -1427,7 +1475,10 @@ export async function POST(
             });
           }
         } catch (impactEmailError) {
-          console.error('Failed to send impact verification notification email:', impactEmailError);
+          log.warn('verify_token.impact.notification_email_failed', {
+            error: impactEmailError,
+            requestId: impactVerification.id,
+          });
         }
 
         await writeVerificationAuditLog({
@@ -1467,16 +1518,13 @@ export async function POST(
         });
       }
     } catch (impactError) {
-      console.error('Impact verification submit failed, continuing to skill flow:', impactError);
+      log.warn('verify_token.impact.submit_fallback_failed', { error: impactError });
     }
 
     try {
       skillDataClient = createAdminClient();
     } catch (adminClientError) {
-      console.error(
-        'Skill verification admin client unavailable; falling back to request-scoped client',
-        adminClientError
-      );
+      log.warn('verify_token.skill.admin_client_unavailable', { error: adminClientError });
     }
 
     // 2) Fallback to existing skill verification flow
@@ -1497,7 +1545,7 @@ export async function POST(
         );
       }
 
-      console.error('Skill verification submit lookup failed:', verificationError);
+      log.error('verify_token.skill.submit_lookup_failed', { error: verificationError });
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 
@@ -1706,7 +1754,10 @@ export async function POST(
       responseAuthMethod,
       responseActorEmail,
     }).catch((error) => {
-      console.error('Error updating canonical skill verification:', error);
+      log.error('verify_token.skill.update_failed', {
+        error,
+        requestId: normalizedVerification.id,
+      });
       return null;
     });
 
@@ -1792,7 +1843,10 @@ export async function POST(
         }
       );
     } catch (analyticsError) {
-      console.error('Failed to emit attestation_provided event:', analyticsError);
+      log.warn('verify_token.skill.analytics_emit_failed', {
+        error: analyticsError,
+        requestId: normalizedVerification.id,
+      });
     }
 
     try {
@@ -1802,7 +1856,11 @@ export async function POST(
           normalizedVerification.requester_profile_id
         );
       if (requesterProfileError) {
-        console.error('Skill requester profile lookup error:', requesterProfileError);
+        log.error('verify_token.skill.requester_profile_failed', {
+          error: requesterProfileError,
+          requestId: normalizedVerification.id,
+          method: 'POST',
+        });
       }
 
       if (requesterProfile?.email) {
@@ -1865,16 +1923,19 @@ export async function POST(
               <div style="margin-top: 24px;">
                 <a href="${expertiseUrl}" 
                    style="display: inline-block; background: #1a1a1a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 500;">
-                  View Your Expertise Atlas
+                  View Your Proof Skills
                 </a>
               </div>
             </div>
           `,
-          text: `Your skill verification request was ${resolvedAction === 'accept' ? 'accepted' : attestationVerdict === 'partly' ? 'partly confirmed' : 'declined'}.\n\n${relationshipText} (${normalizedVerification.verifier_email}) has ${actionText} your "${skillName}" skill.${validated.message ? `\n\nTheir message: "${validated.message}"` : ''}\n\nView your Expertise Atlas: ${expertiseUrl}`,
+          text: `Your skill verification request was ${resolvedAction === 'accept' ? 'accepted' : attestationVerdict === 'partly' ? 'partly confirmed' : 'declined'}.\n\n${relationshipText} (${normalizedVerification.verifier_email}) has ${actionText} your "${skillName}" skill.${validated.message ? `\n\nTheir message: "${validated.message}"` : ''}\n\nView your proof skills: ${expertiseUrl}`,
         });
       }
     } catch (emailError) {
-      console.error('Failed to send verification notification email:', emailError);
+      log.warn('verify_token.skill.notification_email_failed', {
+        error: emailError,
+        requestId: normalizedVerification.id,
+      });
     }
 
     await writeVerificationAuditLog({
@@ -1920,7 +1981,7 @@ export async function POST(
         { status: 400 }
       );
     }
-    console.error('Verify POST error:', error);
+    log.error('verify_token.post_failed', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

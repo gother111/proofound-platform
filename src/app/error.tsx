@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { AlertCircle } from 'lucide-react';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 export default function Error({
   error,
@@ -13,8 +14,7 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Log error to monitoring service
-    console.error('Application error:', error);
+    dispatchClientErrorDiagnostic('app.error_boundary.caught', error);
   }, [error]);
 
   return (

@@ -1,4 +1,5 @@
 import { requireApiAuthContext } from '@/lib/auth';
+import { log } from '@/lib/log';
 import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
 
@@ -94,7 +95,7 @@ export async function GET(request: NextRequest) {
     const { data: skills, error } = await query;
 
     if (error) {
-      console.error('Error fetching user skills:', error);
+      log.error('expertise.user_skills.list_failed', { error });
       return NextResponse.json({ error: 'Failed to fetch skills' }, { status: 500 });
     }
 
@@ -151,7 +152,7 @@ export async function GET(request: NextRequest) {
       total_count: filteredSkills.length,
     });
   } catch (error) {
-    console.error('User skills API error:', error);
+    log.error('expertise.user_skills.get_failed', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -169,7 +170,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const { user, supabase } = authContext;
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
 
     // Validate input
     const validated = CreateSkillSchema.parse(body);
@@ -259,7 +265,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Error creating skill:', error);
+      log.error('expertise.user_skills.create_failed', { error });
       return NextResponse.json({ error: 'Failed to create skill' }, { status: 500 });
     }
 
@@ -278,7 +284,7 @@ export async function POST(request: NextRequest) {
       const { syncReadinessMilestones } = await import('@/lib/readiness/analytics');
       await syncReadinessMilestones(user.id, { source: 'skill_added' });
     } catch (activationError) {
-      console.error('Failed to check/emit profile activation:', activationError);
+      log.error('expertise.user_skills.readiness_sync_failed', { error: activationError });
       // Don't fail the request if activation tracking fails
     }
 
@@ -304,7 +310,7 @@ export async function POST(request: NextRequest) {
         total_skills: allSkillsCount?.length || 1,
       });
     } catch (analyticsError) {
-      console.error('Failed to emit skill_added event:', analyticsError);
+      log.error('expertise.user_skills.analytics_emit_failed', { error: analyticsError });
     }
 
     return NextResponse.json(
@@ -322,7 +328,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    console.error('User skills POST error:', error);
+    log.error('expertise.user_skills.post_failed', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -7,6 +7,7 @@
 
 import { kv } from '@vercel/kv';
 import { NextRequest } from 'next/server';
+import { log } from '@/lib/log';
 
 export interface RateLimitConfig {
   /**
@@ -60,8 +61,10 @@ const DEFAULT_CONFIG: RateLimitConfig = {
 };
 
 const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+const LOCAL_RATE_LIMIT_MAX_ENTRIES = 1024;
 
 const RATE_LIMIT_ENV_KEYS = ['KV_REST_API_URL', 'KV_REST_API_TOKEN'] as const;
+const LOCAL_SMOKE_RATE_LIMIT_FALLBACK_ENV_KEY = 'PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK';
 
 interface LocalRateLimitEntry {
   count: number;
@@ -110,13 +113,18 @@ export function isLaunchRateLimitRequired(
   const nodeEnv = env.NODE_ENV?.trim().toLowerCase();
   const vercelEnv = env.VERCEL_ENV?.trim().toLowerCase();
   const appEnv = (env.NEXT_PUBLIC_APP_ENV || env.APP_ENV)?.trim().toLowerCase();
+  const explicitLaunchAppEnv = appEnv === 'production' || appEnv === 'staging';
+  const localSmokeFallbackEnabled = env[LOCAL_SMOKE_RATE_LIMIT_FALLBACK_ENV_KEY] === '1';
+
+  if (localSmokeFallbackEnabled && !vercelEnv && !explicitLaunchAppEnv) {
+    return false;
+  }
 
   return (
     nodeEnv === 'production' ||
     vercelEnv === 'production' ||
     vercelEnv === 'preview' ||
-    appEnv === 'production' ||
-    appEnv === 'staging'
+    explicitLaunchAppEnv
   );
 }
 
@@ -157,6 +165,22 @@ function localRateLimit(key: string, config: RateLimitConfig): RateLimitResult {
   const windowMs = config.windowSeconds * 1000;
   const store = getLocalRateLimitStore();
   const existing = store.get(key);
+
+  for (const [entryKey, entry] of store) {
+    if (entry.reset <= now) {
+      store.delete(entryKey);
+    }
+  }
+
+  if (!existing && store.size >= LOCAL_RATE_LIMIT_MAX_ENTRIES) {
+    return {
+      success: false,
+      limit: config.limit,
+      remaining: 0,
+      reset: now + windowMs,
+    };
+  }
+
   const current =
     existing && existing.reset > now
       ? { count: existing.count + 1, reset: existing.reset }
@@ -224,7 +248,10 @@ export async function rateLimit(
       reset,
     };
   } catch (error) {
-    console.error('[RateLimit] Error checking rate limit for profile:', identifier, error);
+    log.error('rate_limit.provider_check_failed', {
+      identifier,
+      error,
+    });
     return unavailableResult(finalConfig, 'provider_error');
   }
 }
@@ -271,6 +298,16 @@ export const RATE_LIMITS = {
     limit: 10,
     windowSeconds: 60,
     identifier: 'auth',
+    requiresLimiter: true,
+    failClosedOnProviderError: true,
+    allowLocalFallback: true,
+  },
+
+  /** CSRF token issuance: read-heavy setup endpoint, separated from auth brute-force limits */
+  csrf: {
+    limit: 120,
+    windowSeconds: 60,
+    identifier: 'csrf-token',
     requiresLimiter: true,
     failClosedOnProviderError: true,
     allowLocalFallback: true,
@@ -334,7 +371,7 @@ export const RATE_LIMITS = {
     allowLocalFallback: true,
   },
 
-  /** Public profile views: 80 req/min (read-heavy but public) */
+  /** Public Page and trust page views: 80 req/min (read-heavy but public) */
   public: { limit: 80, windowSeconds: 60, identifier: 'public' },
 
   /** Wellbeing check-ins: 5 req/min */
@@ -389,13 +426,15 @@ export function getRateLimitProfileForPathname(
     return RATE_LIMITS.upload;
   }
 
+  if (pathname === '/api/csrf-token') {
+    return RATE_LIMITS.csrf;
+  }
+
   if (
-    pathname === '/api/csrf-token' ||
     pathname.startsWith('/api/auth/') ||
     pathname === '/api/user/email' ||
     pathname === '/api/user/password' ||
-    pathname === '/api/user/account' ||
-    pathname === '/api/user/account/cancel-deletion'
+    pathname === '/api/user/account'
   ) {
     return RATE_LIMITS.auth;
   }

@@ -46,6 +46,12 @@ vi.mock('@/lib/launch/trace', () => ({
   emitLaunchTrace: vi.fn(),
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+  },
+}));
+
 import { POST } from '@/app/api/feedback/submit/route';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -53,6 +59,7 @@ import { markTokenUsed } from '@/lib/feedback/service';
 import { isFeatureEnabled } from '@/lib/feature-flags/server';
 import { emitLaunchTrace } from '@/lib/launch/trace';
 import { inspectCapabilityToken } from '@/lib/security/capability-tokens';
+import { log } from '@/lib/log';
 
 describe('/api/feedback/submit', () => {
   const feedbackTokenId = '22222222-2222-4222-8222-222222222222';
@@ -245,6 +252,193 @@ describe('/api/feedback/submit', () => {
         failureClass: 'invalid_json_body',
       })
     );
+  });
+
+  it('logs route-level failures with structured diagnostics', async () => {
+    const routeError = new Error('session unavailable');
+    (createClient as any).mockRejectedValue(routeError);
+
+    const response = await POST(
+      new NextRequest('http://localhost/api/feedback/submit', {
+        method: 'POST',
+        body: JSON.stringify({
+          interviewId: '11111111-1111-1111-1111-111111111111',
+          direction: 'candidate_to_org',
+          structuredFeedback: {
+            decisionState: 'closed',
+            audienceVariant: 'organization',
+            reasonCode: 'candidate_proof_coverage_insufficient',
+            personalizedNote: 'The available proof did not yet show enough role-specific coverage.',
+            suggestedNextStep: 'Ask for one additional work sample tied to the assignment brief.',
+            authorRole: 'organization_member',
+          },
+        }),
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Unexpected error' });
+    expect(log.error).toHaveBeenCalledWith('feedback.submit.failed', {
+      error: routeError,
+    });
+  });
+
+  it('logs feedback response persistence failures with structured diagnostics', async () => {
+    const insertError = new Error('feedback write failed');
+    (createClient as any).mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: {
+            user: {
+              id: 'user-1',
+              email: 'user@example.com',
+            },
+          },
+          error: null,
+        }),
+      },
+      from: vi.fn((table: string) => {
+        if (table === 'interviews') {
+          return {
+            select: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: {
+                    host_user_id: 'user-1',
+                    participant_user_ids: [],
+                    status: 'completed',
+                    completed_at: '2026-03-10T09:00:00.000Z',
+                  },
+                  error: null,
+                }),
+              })),
+            })),
+          };
+        }
+
+        if (table === 'feedback_responses') {
+          return {
+            insert: vi.fn(() => ({
+              select: vi.fn(() => ({
+                single: vi.fn().mockResolvedValue({
+                  data: null,
+                  error: insertError,
+                }),
+              })),
+            })),
+          };
+        }
+
+        throw new Error(`Unexpected table ${table}`);
+      }),
+    });
+
+    const response = await POST(
+      new NextRequest('http://localhost/api/feedback/submit', {
+        method: 'POST',
+        body: JSON.stringify({
+          interviewId: '11111111-1111-1111-1111-111111111111',
+          direction: 'candidate_to_org',
+          overallScore: 4,
+          structuredFeedback: {
+            decisionState: 'closed',
+            audienceVariant: 'organization',
+            reasonCode: 'candidate_proof_coverage_insufficient',
+            personalizedNote: 'The available proof did not yet show enough role-specific coverage.',
+            suggestedNextStep: 'Ask for one additional work sample tied to the assignment brief.',
+            authorRole: 'organization_member',
+          },
+        }),
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Could not save feedback' });
+    expect(log.error).toHaveBeenCalledWith('feedback.submit.save_failed', {
+      error: insertError,
+    });
+  });
+
+  it('logs feedback answer persistence failures with structured diagnostics', async () => {
+    const answerError = new Error('answer write failed');
+    (createClient as any).mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: {
+            user: {
+              id: 'user-1',
+              email: 'user@example.com',
+            },
+          },
+          error: null,
+        }),
+      },
+      from: vi.fn((table: string) => {
+        if (table === 'interviews') {
+          return {
+            select: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: {
+                    host_user_id: 'user-1',
+                    participant_user_ids: [],
+                    status: 'completed',
+                    completed_at: '2026-03-10T09:00:00.000Z',
+                  },
+                  error: null,
+                }),
+              })),
+            })),
+          };
+        }
+
+        if (table === 'feedback_responses') {
+          return {
+            insert: vi.fn(() => ({
+              select: vi.fn(() => ({
+                single: vi.fn().mockResolvedValue({
+                  data: { id: 'response-1' },
+                  error: null,
+                }),
+              })),
+            })),
+          };
+        }
+
+        if (table === 'feedback_answers') {
+          return {
+            insert: vi.fn().mockResolvedValue({ error: answerError }),
+          };
+        }
+
+        throw new Error(`Unexpected table ${table}`);
+      }),
+    });
+
+    const response = await POST(
+      new NextRequest('http://localhost/api/feedback/submit', {
+        method: 'POST',
+        body: JSON.stringify({
+          interviewId: '11111111-1111-1111-1111-111111111111',
+          direction: 'candidate_to_org',
+          answers: [
+            {
+              questionId: '55555555-5555-4555-8555-555555555555',
+              score: 5,
+            },
+          ],
+        }),
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Could not save answers' });
+    expect(log.error).toHaveBeenCalledWith('feedback.submit.answers_failed', {
+      error: answerError,
+    });
   });
 
   it('requires token redemption before writing token feedback', async () => {

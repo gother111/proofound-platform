@@ -16,6 +16,7 @@ import { EyeOff, Eye } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { toast } from 'sonner';
 
 interface RedactModeToggleProps {
@@ -38,7 +39,7 @@ export function RedactModeToggle({ enabled, onChange, showLabel = true }: Redact
         toast.success('Redact mode disabled. All info is visible.');
       }
     } catch (error) {
-      console.error('Failed to toggle redact mode:', error);
+      dispatchClientErrorDiagnostic('privacy.redact_mode.toggle_failed', error);
       toast.error('Failed to update redact mode');
     } finally {
       setIsLoading(false);

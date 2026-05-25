@@ -1,0 +1,353 @@
+[
+  {
+    "id": "individual-home-after-fix",
+    "requestedUrl": "/app/i/home",
+    "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-plugin-routes/individual-home-after-fix.png",
+    "cookieBannerVisible": false,
+    "finalUrl": "http://127.0.0.1:33123/app/i/home",
+    "h1": "Build your proof-first profile",
+    "horizontalOverflow": 0,
+    "loginVisible": true,
+    "mainTextStart": "Portfolio ReadinessSetup RequiredBuild your proof-first profileWelcome back, there. Start by creating your first proof record. Shaping a single trusted work sample or artifact makes your profile ready.Guided setupYour profile is private by default. Candidates stay hidden until they explicitly authorize discovery or initiate a verification check.",
+    "title": "Proofound - Focus on what matters",
+    "viewport": {
+      "height": 844,
+      "width": 390
+    },
+    "visibleActions": [
+      {
+        "h": 64,
+        "href": "/app/i/home",
+        "text": "Overview",
+        "visible": true,
+        "w": 73,
+        "x": 4,
+        "y": 780
+      },
+      {
+        "h": 64,
+        "href": "/app/i/profile",
+        "text": "Profile",
+        "visible": true,
+        "w": 73,
+        "x": 81,
+        "y": 780
+      },
+      {
+        "h": 64,
+        "href": "/app/i/communications",
+        "text": "Inbox",
+        "visible": true,
+        "w": 73,
+        "x": 158,
+        "y": 780
+      },
+      {
+        "h": 64,
+        "href": "/app/i/matching",
+        "text": "Matching",
+        "visible": true,
+        "w": 73,
+        "x": 236,
+        "y": 780
+      },
+      {
+        "h": 64,
+        "href": "/app/i/settings",
+        "text": "Settings",
+        "visible": true,
+        "w": 73,
+        "x": 313,
+        "y": 780
+      },
+      {
+        "h": 44,
+        "href": null,
+        "text": "U",
+        "visible": true,
+        "w": 44,
+        "x": 330,
+        "y": 8
+      },
+      {
+        "h": 44,
+        "href": "/app/i/profile",
+        "text": "Guided setup",
+        "visible": true,
+        "w": 276,
+        "x": 57,
+        "y": 361
+      }
+    ]
+  },
+  {
+    "id": "individual-onboarding-after-fix",
+    "requestedUrl": "/onboarding",
+    "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-plugin-routes/individual-onboarding-after-fix.png",
+    "cookieBannerVisible": false,
+    "finalUrl": "http://127.0.0.1:33123/onboarding",
+    "h1": "Start with one Proof Pack",
+    "horizontalOverflow": 0,
+    "loginVisible": false,
+    "mainTextStart": "",
+    "title": "Proofound - Focus on what matters",
+    "viewport": {
+      "height": 844,
+      "width": 390
+    },
+    "visibleActions": [
+      {
+        "h": 21,
+        "href": null,
+        "text": "← Back to persona choice",
+        "visible": true,
+        "w": 172,
+        "x": 16,
+        "y": 50
+      },
+      {
+        "h": 48,
+        "href": null,
+        "text": "Continue to proof artifact",
+        "visible": true,
+        "w": 281,
+        "x": 68,
+        "y": 740
+      }
+    ]
+  },
+  {
+    "id": "individual-portfolio-after-fix",
+    "requestedUrl": "/app/i/portfolio",
+    "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-plugin-routes/individual-portfolio-after-fix.png",
+    "cookieBannerVisible": false,
+    "finalUrl": "http://127.0.0.1:33123/app/i/profile?profileView=full&tab=proof_packs&portfolioLocked=1&lockReason=safe_shell&proof=first",
+    "h1": "Start with proof, then choose what to share",
+    "horizontalOverflow": 0,
+    "loginVisible": false,
+    "mainTextStart": "1/4Public Page readinessComplete one clear proof path before publishing.NextFinish your safe shell with the basics people need before they open your proof.Safe shell basicsOne real context is anchoredOne real proof is added and structuredOne non-self verification is acceptedStart with proof, then choose what to shareBuild only the parts that make the first proof credible: safe shell, one real context, one structured Proof Pack, then decide what verification check comes next.",
+    "title": "Proofound - Focus on what matters",
+    "viewport": {
+      "height": 844,
+      "width": 390
+    },
+    "visibleActions": [
+      {
+        "h": 64,
+        "href": "/app/i/home",
+        "text": "Overview",
+        "visible": true,
+        "w": 73,
+        "x": 4,
+        "y": 780
+      },
+      {
+        "h": 64,
+        "href": "/app/i/profile",
+        "text": "Profile",
+        "visible": true,
+        "w": 73,
+        "x": 81,
+        "y": 780
+      },
+      {
+        "h": 64,
+        "href": "/app/i/communications",
+        "text": "Inbox",
+        "visible": true,
+        "w": 73,
+        "x": 158,
+        "y": 780
+      },
+      {
+        "h": 64,
+        "href": "/app/i/matching",
+        "text": "Matching",
+        "visible": true,
+        "w": 73,
+        "x": 236,
+        "y": 780
+      },
+      {
+        "h": 64,
+        "href": "/app/i/settings",
+        "text": "Settings",
+        "visible": true,
+        "w": 73,
+        "x": 313,
+        "y": 780
+      },
+      {
+        "h": 44,
+        "href": null,
+        "text": "U",
+        "visible": true,
+        "w": 44,
+        "x": 330,
+        "y": 8
+      }
+    ]
+  },
+  {
+    "id": "individual-verifications-after-fix",
+    "requestedUrl": "/app/i/verifications",
+    "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-plugin-routes/individual-verifications-after-fix.png",
+    "cookieBannerVisible": false,
+    "finalUrl": "http://127.0.0.1:33123/app/i/verifications",
+    "h1": "Proof verification requests",
+    "horizontalOverflow": 0,
+    "loginVisible": false,
+    "mainTextStart": "Proof verification requestsFollow which proof, claim, verifier, and bounded outcome each request is tied to.Incoming2Sent22 requests need attention.Start here for failed, disputed, contradicted, or soon-expiring confirmations.2Attention1Pending0ActiveShow attentionAll(2)ActivePending(1)Needs attention(2)DeclinedExpired / staleRevoked / correctedNewestScopeMAMira AnderssonVerification subject: Proof-first hiring corridor readiness reviewClaim-Confirm that the proof pack clearly connects private source material, review decisions, and a launch-saf",
+    "title": "Proofound - Focus on what matters",
+    "viewport": {
+      "height": 844,
+      "width": 390
+    },
+    "visibleActions": [
+      {
+        "h": 64,
+        "href": "/app/i/home",
+        "text": "Overview",
+        "visible": true,
+        "w": 73,
+        "x": 4,
+        "y": 780
+      },
+      {
+        "h": 64,
+        "href": "/app/i/profile",
+        "text": "Profile",
+        "visible": true,
+        "w": 73,
+        "x": 81,
+        "y": 780
+      },
+      {
+        "h": 64,
+        "href": "/app/i/communications",
+        "text": "Inbox",
+        "visible": true,
+        "w": 73,
+        "x": 158,
+        "y": 780
+      },
+      {
+        "h": 64,
+        "href": "/app/i/matching",
+        "text": "Matching",
+        "visible": true,
+        "w": 73,
+        "x": 236,
+        "y": 780
+      },
+      {
+        "h": 64,
+        "href": "/app/i/settings",
+        "text": "Settings",
+        "visible": true,
+        "w": 73,
+        "x": 313,
+        "y": 780
+      },
+      {
+        "h": 44,
+        "href": null,
+        "text": "U",
+        "visible": true,
+        "w": 44,
+        "x": 330,
+        "y": 8
+      },
+      {
+        "h": 44,
+        "href": null,
+        "text": "Incoming2",
+        "visible": true,
+        "w": 109,
+        "x": 18,
+        "y": 175
+      },
+      {
+        "h": 44,
+        "href": null,
+        "text": "Sent2",
+        "visible": true,
+        "w": 82,
+        "x": 127,
+        "y": 175
+      },
+      {
+        "h": 44,
+        "href": null,
+        "text": "2Attention",
+        "visible": true,
+        "w": 158,
+        "x": 33,
+        "y": 335
+      },
+      {
+        "h": 44,
+        "href": null,
+        "text": "1Pending",
+        "visible": true,
+        "w": 158,
+        "x": 199,
+        "y": 335
+      },
+      {
+        "h": 44,
+        "href": null,
+        "text": "0Active",
+        "visible": true,
+        "w": 158,
+        "x": 33,
+        "y": 387
+      },
+      {
+        "h": 44,
+        "href": null,
+        "text": "Show attention",
+        "visible": true,
+        "w": 324,
+        "x": 33,
+        "y": 439
+      },
+      {
+        "h": 44,
+        "href": null,
+        "text": "All(2)",
+        "visible": true,
+        "w": 165,
+        "x": 27,
+        "y": 527
+      },
+      {
+        "h": 44,
+        "href": null,
+        "text": "Active",
+        "visible": true,
+        "w": 165,
+        "x": 198,
+        "y": 527
+      },
+      {
+        "h": 44,
+        "href": null,
+        "text": "Pending(1)",
+        "visible": true,
+        "w": 165,
+        "x": 27,
+        "y": 577
+      },
+      {
+        "h": 44,
+        "href": null,
+        "text": "Needs attention(2)",
+        "visible": true,
+        "w": 165,
+        "x": 198,
+        "y": 577
+      }
+    ]
+  }
+]

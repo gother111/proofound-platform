@@ -1,0 +1,42 @@
+> proofound@0.1.0 test:e2e:org:strict
+> NEXT_PUBLIC_USE_MOCK_SUPABASE=false PLAYWRIGHT_SERVER_MODE=prod PROOFOUND_SKIP_TRANSACTIONAL_EMAIL_DELIVERY=1 PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK=1 PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE=1 node ./scripts/playwright-node24.mjs test e2e/strict/organization.strict.spec.ts e2e/strict/org-corridor.strict.spec.ts --project=chromium --reporter=line --workers=1
+
+[1A[2K[2m[WebServer] [22m(node:96565) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m(node:96565) Warning: `--localstorage-file` was provided without a valid path
+
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+Running 7 tests using 1 worker
+
+[1A[2K(node:96572) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K(node:96572) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+[1A[2K[1/7] [chromium] › e2e/strict/org-corridor.strict.spec.ts:231:3 › Strict Authenticated Org Corridor › reruns the launch-binding authenticated org corridor end to end
+[1A[2K[2m[WebServer] [22m(node:96565) TimeoutNegativeWarning: -91540.73946667093 is a negative number.
+[2m[WebServer] [22mTimeout duration was set to 1.
+
+[1A[2K[chromium] › e2e/strict/org-corridor.strict.spec.ts:231:3 › Strict Authenticated Org Corridor › reruns the launch-binding authenticated org corridor end to end
+[strict-fixtures] transient POST /api/match/assignment error on attempt 1/5: apiRequestContext.post: Timeout 120000ms exceeded.
+
+[1A[2K[2/7] [chromium] › e2e/strict/organization.strict.spec.ts:73:3 › Strict MVP Organization Flows (O-01..O-20) › O-02..O-04 org setup, team roles, and profile contracts are verifiable
+[1A[2K[3/7] [chromium] › e2e/strict/organization.strict.spec.ts:107:3 › Strict MVP Organization Flows (O-01..O-20) › O-05..O-07 and O-17 assignment create/publish/manage lifecycle is strict
+[1A[2K[2m[WebServer] [22m{"level":"warn","event":"api.slow","timestamp":"2026-05-16T22:54:13.197Z","requestId":"aqC_htyXTizE","path":"/api/assignments","method":"GET","route":"/api/assignments","durationMs":23149}
+
+[1A[2K[4/7] [chromium] › e2e/strict/organization.strict.spec.ts:202:3 › Strict MVP Organization Flows (O-01..O-20) › O-08..O-12 ranked matches, shortlist, messaging, and interview prep are strict
+[1A[2K[5/7] [chromium] › e2e/strict/organization.strict.spec.ts:274:3 › Strict MVP Organization Flows (O-01..O-20) › O-07b draft autosave/update and resume-to-publish contract is strict
+[1A[2K[2m[WebServer] [22m{"level":"warn","event":"assignment.create.unknown_matrix_skills","timestamp":"2026-05-16T22:54:45.115Z","requestId":"EjFdny08t-75","path":"/api/assignments","method":"POST","userId":"1579ca28-da83-4c55-8211-bc16cbff9fc5","orgId":"5c029769-01f6-49df-899f-4e4537eefa4b","unknownSkillCodes":["strict.resume.skill.1","strict.resume.skill.2","strict.resume.skill.3"]}
+
+[1A[2K[6/7] [chromium] › e2e/strict/organization.strict.spec.ts:376:3 › Strict MVP Organization Flows (O-01..O-20) › O-13..O-16 interview, archived contract gating, and verification surfaces stay aligned
+[1A[2K[7/7] [chromium] › e2e/strict/organization.strict.spec.ts:392:3 › Strict MVP Organization Flows (O-01..O-20) › O-18..O-20 team permissions and compliance settings are strict
+[1A[2K  Slow test file: [chromium] › e2e/strict/org-corridor.strict.spec.ts (6.2m)
+  Consider running tests from slow files in parallel. See: https://playwright.dev/docs/test-parallel
+  7 passed (9.0m)

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireApiAuthContext } from '@/lib/auth';
 import { sendEmail } from '@/lib/email/sender';
 import { resolveCanonicalSiteUrl } from '@/lib/env';
+import { log } from '@/lib/log';
 import { createAdminClient } from '@/lib/supabase/admin';
 import {
   artifactTypeLabel,
@@ -109,7 +110,10 @@ async function fetchRequesterDisplayName(
     .maybeSingle();
 
   if (error) {
-    console.warn('Failed to fetch requester display name for resend:', error);
+    log.warn('verification.sent_requests.requester_name_lookup_failed', {
+      error,
+      userId,
+    });
     return 'A Proofound user';
   }
 
@@ -136,7 +140,10 @@ async function fetchSkillName(
 
   if (error || !data) {
     if (error) {
-      console.warn('Failed to fetch skill name for resend:', error);
+      log.warn('verification.sent_requests.skill_name_lookup_failed', {
+        error,
+        skillId,
+      });
     }
     return 'a skill';
   }
@@ -513,7 +520,12 @@ export async function resendSkillVerificationRequest(
       riskSignals: verificationRequest.risk_signals,
       requiresAuthenticatedVerifier: verificationRequest.requires_authenticated_verifier,
     }).catch((error) => {
-      console.error('Failed to clone canonical skill verification request for resend:', error);
+      log.error('verification.sent_requests.skill_clone_failed', {
+        error,
+        userId: user.id,
+        sourceRequestId: verificationRequest.id,
+        skillId: verificationRequest.skill_id,
+      });
       return null;
     });
 
@@ -632,7 +644,12 @@ export async function deleteSkillVerificationRequest(requestId: string): Promise
     status: 'cancelled',
     respondedAt: new Date().toISOString(),
   }).catch((error) => {
-    console.error('Failed to cancel skill verification request:', error);
+    log.error('verification.sent_requests.skill_cancel_failed', {
+      error,
+      userId: user.id,
+      requestId,
+      skillId: verificationRequest.skill_id,
+    });
     return null;
   });
 
@@ -772,7 +789,12 @@ export async function resendImpactVerificationRequest(
       riskSignals: verificationRequest.risk_signals,
       requiresAuthenticatedVerifier: verificationRequest.requires_authenticated_verifier,
     }).catch((error) => {
-      console.error('Failed to clone canonical impact verification request for resend:', error);
+      log.error('verification.sent_requests.impact_clone_failed', {
+        error,
+        userId: user.id,
+        sourceRequestId: verificationRequest.id,
+        impactStoryId: verificationRequest.impact_story_id,
+      });
       return null;
     });
 
@@ -880,7 +902,12 @@ export async function deleteImpactVerificationRequest(requestId: string): Promis
     status: 'cancelled',
     respondedAt: new Date().toISOString(),
   }).catch((error) => {
-    console.error('Failed to cancel impact verification request:', error);
+    log.error('verification.sent_requests.impact_cancel_failed', {
+      error,
+      userId: user.id,
+      requestId,
+      impactStoryId: verificationRequest.impact_story_id,
+    });
     return null;
   });
 

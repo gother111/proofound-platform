@@ -6,6 +6,7 @@ import { organizationMembers } from '@/db/schema';
 import { requireApiAuthContext } from '@/lib/auth';
 import { resolveGcpCvOcrConfig } from '@/lib/expertise/gcp-cv-ocr-config';
 import { resolveGcpCvOcrSafeStatus } from '@/lib/expertise/gcp-cv-ocr-status';
+import { log } from '@/lib/log';
 import { isProofArtifactOcrEligible } from '@/lib/proof-artifacts/text-extraction';
 
 export const dynamic = 'force-dynamic';
@@ -50,8 +51,10 @@ export async function GET() {
       }
     );
   } catch (error) {
-    console.error('proof_artifact_ocr.status.failed', error);
-    return NextResponse.json({ error: 'Failed to load OCR beta status' }, { status: 500 });
+    log.error('proof_artifact_ocr.status.failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return NextResponse.json({ error: 'Failed to load text extraction status' }, { status: 500 });
   }
 }
 

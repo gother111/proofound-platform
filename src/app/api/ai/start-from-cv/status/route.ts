@@ -6,6 +6,7 @@ import {
   resolveStartFromCvConfig,
   StartFromCvError,
 } from '@/lib/ai/start-from-cv';
+import { log } from '@/lib/log';
 
 import { requireStartFromCvRouteContext } from '../_route-helpers';
 
@@ -66,7 +67,7 @@ export async function GET() {
       );
     }
 
-    console.error('start_from_cv.status.failed', error);
+    log.error('start_from_cv.status.failed', { error });
     return NextResponse.json({ error: 'Failed to load Start from CV status' }, { status: 500 });
   }
 }

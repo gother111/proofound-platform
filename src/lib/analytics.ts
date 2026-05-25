@@ -1,5 +1,6 @@
 import { db } from '@/db';
 import { analyticsEvents } from '@/db/schema';
+import { log } from '@/lib/log';
 import { anonymizeIP, anonymizeUserAgent } from '@/lib/utils/privacy';
 
 /**
@@ -161,19 +162,18 @@ export async function trackEvent(
       createdAt: new Date(),
     });
 
-    // Log to console in development for debugging
     if (process.env.NODE_ENV === 'development') {
-      console.log(`📊 [Analytics] ${eventType}`, {
+      log.debug('analytics.legacy.event_tracked', {
+        eventType,
         userId,
         orgId,
         properties: sanitizedProperties,
-        ipHash: ipHash.substring(0, 8) + '...', // Show first 8 chars only
+        ipHashPrefix: `${ipHash.substring(0, 8)}...`,
       });
     }
   } catch (error) {
     // Don't throw - analytics failures shouldn't break the app
-    // But log the error for monitoring
-    console.error('[Analytics] Failed to track event:', {
+    log.error('analytics.legacy.track_failed', {
       eventType,
       error: error instanceof Error ? error.message : 'Unknown error',
     });

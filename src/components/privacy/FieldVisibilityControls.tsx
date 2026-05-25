@@ -24,6 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Eye, EyeOff, Lock, Globe, Users, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 type VisibilityLevel = 'public' | 'network' | 'private' | 'hidden';
 
@@ -84,13 +85,6 @@ const PROFILE_FIELDS: FieldConfig[] = [
     defaultVisibility: 'private',
     sensitive: true,
   },
-  {
-    name: 'linkedinProfileUrl',
-    label: 'LinkedIn URL',
-    description: 'Your LinkedIn profile',
-    category: 'contact',
-    defaultVisibility: 'network',
-  },
 
   // Professional
   {
@@ -125,9 +119,19 @@ const VISIBILITY_OPTIONS: Array<{
   description: string;
   icon: any;
 }> = [
-  { value: 'public', label: 'Public', description: 'Visible to everyone', icon: Globe },
-  { value: 'network', label: 'Network', description: 'Visible to connections only', icon: Users },
-  { value: 'private', label: 'Private', description: 'Visible to matched orgs', icon: Lock },
+  { value: 'public', label: 'Public', description: 'Visible on your Public Page', icon: Globe },
+  {
+    value: 'network',
+    label: 'Trusted review context',
+    description: 'Visible only in trusted review contexts',
+    icon: Users,
+  },
+  {
+    value: 'private',
+    label: 'Assignment review',
+    description: 'Visible only when assignment-review access and reveal rules allow it',
+    icon: Lock,
+  },
   { value: 'hidden', label: 'Hidden', description: 'Completely hidden', icon: EyeOff },
 ];
 
@@ -156,7 +160,7 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
         setRedactMode(data.redactMode || false);
       }
     } catch (error) {
-      console.error('Failed to fetch privacy settings:', error);
+      dispatchClientErrorDiagnostic('privacy.field_controls.load_failed', error);
       toast.error('Failed to load privacy settings');
     } finally {
       setIsLoading(false);
@@ -201,7 +205,7 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
 
       toast.success('Privacy settings saved successfully');
     } catch (error) {
-      console.error('Failed to save privacy settings:', error);
+      dispatchClientErrorDiagnostic('privacy.field_controls.save_failed', error);
       toast.error('Failed to save privacy settings');
     } finally {
       setIsSaving(false);
@@ -268,9 +272,9 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
       {/* Redact Mode Toggle */}
       <Card className="border-proofound-stone dark:border-border rounded-2xl">
         <CardHeader>
-          <div className="flex items-start justify-between">
-            <div>
-              <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground flex items-center gap-2">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground flex flex-wrap items-center gap-2">
                 <EyeOff className="w-5 h-5" />
                 Redact Mode
                 <Badge variant="secondary" className="ml-2 bg-[#D97706] text-white">
@@ -279,13 +283,14 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
               </CardTitle>
               <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground mt-2">
                 Instantly hide all sensitive information (location, email, org affiliation) with one
-                toggle. Perfect for when you need to share your profile publicly.
+                toggle. Useful when you need to share your Public Page without exposing private
+                context.
               </CardDescription>
             </div>
             <Switch
               checked={redactMode}
               onCheckedChange={handleRedactModeToggle}
-              className="data-[state=checked]:bg-[#D97706]"
+              className="shrink-0 data-[state=checked]:bg-[#D97706]"
             />
           </div>
         </CardHeader>
@@ -309,7 +314,7 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
             Field-Level Privacy Controls
           </CardTitle>
           <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
-            Control who can see each part of your profile
+            Control Public Page fields and assignment-review visibility
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -334,14 +339,14 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
                       return (
                         <div
                           key={field.name}
-                          className={`flex items-center justify-between p-3 rounded-lg border ${
+                          className={`flex flex-col gap-3 p-3 rounded-lg border sm:flex-row sm:items-center sm:justify-between ${
                             isRedacted
                               ? 'bg-[#FEF3C7] dark:bg-yellow-950/20 border-[#FCD34D]'
                               : 'bg-white dark:bg-background border-proofound-stone dark:border-border'
                           }`}
                         >
-                          <div className="flex-1">
-                            <Label className="text-sm font-medium flex items-center gap-2">
+                          <div className="min-w-0 flex-1">
+                            <Label className="text-sm font-medium flex flex-wrap items-center gap-2">
                               {field.label}
                               {field.sensitive && (
                                 <Badge
@@ -363,7 +368,7 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
                             }
                             disabled={isRedacted}
                           >
-                            <SelectTrigger className="w-[160px]">
+                            <SelectTrigger className="w-full sm:w-[160px]">
                               <SelectValue>
                                 <div className="flex items-center gap-2">
                                   {getVisibilityIcon(visibility)}
@@ -397,26 +402,44 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
 
             {/* Audience Preview Tab */}
             <TabsContent value="preview" className="space-y-4 mt-6">
-              <div className="flex gap-2">
-                {(['public', 'network', 'matched'] as const).map((audience) => (
-                  <Button
-                    key={audience}
-                    variant={activePreview === audience ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setActivePreview(audience)}
-                    className={activePreview === audience ? 'bg-proofound-forest text-white' : ''}
-                  >
-                    {audience === 'public' && <Globe className="w-4 h-4 mr-2" />}
-                    {audience === 'network' && <Users className="w-4 h-4 mr-2" />}
-                    {audience === 'matched' && <Lock className="w-4 h-4 mr-2" />}
-                    {audience.charAt(0).toUpperCase() + audience.slice(1)}
-                  </Button>
-                ))}
+              <div className="grid grid-cols-1 gap-2 sm:flex">
+                {(['public', 'network', 'matched'] as const).map((audience) => {
+                  const audienceLabel =
+                    audience === 'public'
+                      ? 'Public Page'
+                      : audience === 'network'
+                        ? 'Trusted review'
+                        : 'Assignment review';
+                  return (
+                    <Button
+                      key={audience}
+                      variant={activePreview === audience ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setActivePreview(audience)}
+                      className={
+                        activePreview === audience
+                          ? 'w-full bg-proofound-forest text-white sm:w-auto'
+                          : 'w-full sm:w-auto'
+                      }
+                    >
+                      {audience === 'public' && <Globe className="w-4 h-4 mr-2" />}
+                      {audience === 'network' && <Users className="w-4 h-4 mr-2" />}
+                      {audience === 'matched' && <Lock className="w-4 h-4 mr-2" />}
+                      {audienceLabel}
+                    </Button>
+                  );
+                })}
               </div>
 
               <div className="border border-proofound-stone dark:border-border rounded-lg p-4 bg-japandi-bg dark:bg-background/50">
                 <h4 className="text-sm font-semibold text-foreground dark:text-foreground mb-3">
-                  Visible to {activePreview} audience:
+                  Visible in{' '}
+                  {activePreview === 'public'
+                    ? 'Public Page'
+                    : activePreview === 'network'
+                      ? 'trusted review'
+                      : 'assignment review'}
+                  :
                 </h4>
                 <div className="space-y-2">
                   {PROFILE_FIELDS.map((field) => {

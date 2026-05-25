@@ -1,5 +1,5 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-05-04`
+> Last Verified: `2026-05-21`
 
 # Temporary GCP Proof Artifact OCR Sandbox Reference
 
@@ -14,7 +14,7 @@
 
 `AGENTS.md` says the repository is the source of truth, requires reading files before assumptions, and sets the MVP authority order starting with the locked MVP source of truth, then PRD, technical requirements, launch runbook, and project specification.
 
-The locked MVP defines Proofound as a proof-first, privacy-first hiring credibility corridor centered on Proof Packs, not generic AI recruiting, not an ATS replacement, and not AI candidate scoring/ranking/hiring recommendation software. It allows optional assistive AI only where it strengthens Proof Pack clarity, assignment clarity, claim-scoped verification requests, or privacy preflight. The PRD repeats the hard rule that AI must be button-click, user-reviewed, non-decisional, and must not receive full private files by default.
+The locked MVP defines Proofound as a proof-first assignment review corridor centered on Proof Packs, not generic AI recruiting, not an ATS replacement, and not AI proof-review participant scoring/ranking/workflow-recommendation software. It allows optional assistive AI only where it strengthens Proof Pack clarity, assignment clarity, claim-scoped verification requests, or privacy preflight. The PRD repeats the hard rule that AI must be button-click, user-reviewed, non-decisional, and must not receive full private files by default.
 
 The launch-binding stack is Next.js/Vercel, Supabase/Postgres/Auth/Storage, Resend, and lightweight telemetry. GCP must not replace any of those. `README.md` confirms the current architecture routes traffic through Vercel/Next.js, Supabase, Resend, Sentry, Vercel Cron, and an optional internal document-intelligence/Python service path.
 
@@ -43,7 +43,7 @@ The credit window is temporary, user-provided as May 3, 2026 through August 3, 2
 Explicitly excluded from this sandbox and beta:
 
 - archived CV import wizard and broad OCR/import flows
-- AI candidate scoring, ranking, shortlisting, suitability judgments, hiring recommendations, verification decisions, or trust-state decisions
+- AI proof-review participant scoring, ranking, shortlisting, suitability judgments, workflow recommendations, verification decisions, or trust-state decisions
 - Gemini skill extractor for employer review
 - taxonomy shortlist or reranker
 - Cloud Vision OCR
@@ -81,9 +81,9 @@ The feature provides an optional extractor for explicit user-uploaded CV/import 
 
 It must not:
 
-- score, rank, shortlist, recommend, screen, or evaluate candidates;
-- generate fit verdicts, hiring recommendations, ATS-style pipeline judgments, or reviewer intelligence;
-- make reveal, verification, trust, intro, interview, or hiring decisions;
+- score, rank, shortlist, recommend, screen, or evaluate proof-review participants;
+- generate fit verdicts, workflow recommendations, ATS-style pipeline judgments, or reviewer intelligence;
+- make reveal, verification, trust, intro, interview, or workflow decisions;
 - run hidden background AI on files;
 - analyze full private files by default outside the explicit upload action;
 - process files not explicitly selected by the user;
@@ -310,7 +310,7 @@ Kill switches:
 
 ## 8. Privacy And Security Requirements
 
-Use the repo privacy rules as the source of truth. The locked MVP requires blind-by-default review, candidate consent before identity-bearing reveal, narrowest-wins visibility, and no PII leaks through metadata, logs, analytics, filenames, or public rendering. The AI technical requirements similarly forbid sending full private files, original filenames, signed/private URLs, tokens, hidden review-stage identity, protected traits, and other sensitive fields to AI by default.
+Use the repo privacy rules as the source of truth. The locked MVP requires blind-by-default review, proof-review participant consent before identity-bearing reveal, narrowest-wins visibility, and no PII leaks through metadata, logs, analytics, filenames, or public rendering. The AI technical requirements similarly forbid sending full private files, original filenames, signed/private URLs, tokens, hidden review-stage identity, protected traits, and other sensitive fields to AI by default.
 
 ### 8.1 Accepted File Types
 

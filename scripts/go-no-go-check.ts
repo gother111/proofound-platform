@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { performance } from 'node:perf_hooks';
 import { config as loadEnv } from 'dotenv';
 
 import {
@@ -21,39 +22,121 @@ loadEnv({ path: '.env.local', quiet: true });
 loadEnv({ quiet: true });
 
 const BASE_URL = normalizeLaunchBaseUrl(process.env.BASE_URL || 'http://localhost:3000');
-const SKIP = process.env.SKIP_GO_NOGO === '1';
 const ARTIFACT_PATH =
   process.env.LAUNCH_SMOKE_ARTIFACT_PATH || '.artifacts/launch-smoke-report.json';
 const RUN_SMOKE_DIRECT = process.env.GO_NO_GO_DIRECT_SMOKE !== '0';
 const RUN_SYNTHETICS = process.env.GO_NO_GO_RUN_SYNTHETICS !== '0';
+const RESTORE_REPORT_PATH =
+  process.env.LAUNCH_RESTORE_REPORT_PATH || '.artifacts/launch-restore-report.json';
+const RESTORE_REPORT_MAX_AGE_HOURS = Number(
+  process.env.LAUNCH_RESTORE_REPORT_MAX_AGE_HOURS || '72'
+);
+const API_LATENCY_BUDGET_MS = 1500;
+const API_LATENCY_SAMPLE_COUNT = 10;
+const REQUIRED_LOCAL_API_LATENCY_PROBES: Array<{
+  route: string;
+  method: 'GET';
+  expectedStatuses: number[];
+}> = [{ route: '/api/assignments', method: 'GET', expectedStatuses: [401, 403] }];
 
 const requiredFiles = ['RLS_DEPLOYMENT_SUMMARY.md', 'ACCESSIBILITY_AUDIT_REPORT.md'];
+
+type PerfStatusPayload = {
+  ok?: unknown;
+  message?: unknown;
+  p95?: unknown;
+  budgetMs?: unknown;
+  source?: unknown;
+  missingRequiredRoutes?: unknown;
+};
 
 function fail(message: string): never {
   console.error(`Go/No-Go check failed: ${message}`);
   process.exit(1);
 }
 
-function getCronSecret() {
-  const cronSecret = process.env.CRON_SECRET?.trim();
-  if (
-    !cronSecret ||
-    cronSecret.toLowerCase() === 'undefined' ||
-    cronSecret.toLowerCase() === 'null'
-  ) {
-    fail('CRON_SECRET is required to query authenticated launch-ops endpoints');
+function normalizeInternalSecret(value: string | undefined) {
+  const secret = value?.trim();
+  if (!secret || secret.toLowerCase() === 'undefined' || secret.toLowerCase() === 'null') {
+    return null;
   }
-  return cronSecret;
+  return secret;
+}
+
+function getInternalLaunchSecret() {
+  const internalSecret =
+    normalizeInternalSecret(process.env.INTERNAL_API_SECRET) ??
+    normalizeInternalSecret(process.env.CRON_SECRET);
+  if (!internalSecret) {
+    fail(
+      'INTERNAL_API_SECRET or CRON_SECRET is required to query authenticated launch-ops endpoints'
+    );
+  }
+  return internalSecret;
+}
+
+function trustedLaunchOrigins() {
+  return [
+    process.env.NEXT_PUBLIC_SITE_URL,
+    process.env.SITE_URL,
+    process.env.LAUNCH_TRUSTED_BASE_URLS,
+  ]
+    .flatMap((value) => (value ? value.split(',') : []))
+    .flatMap((value) => {
+      try {
+        return [normalizeLaunchBaseUrl(value.trim())];
+      } catch {
+        return [];
+      }
+    });
+}
+
+function assertBaseUrlMayReceiveInternalSecret() {
+  let parsed: URL;
+  try {
+    parsed = new URL(BASE_URL);
+  } catch {
+    fail('BASE_URL must be an absolute URL before internal launch secrets are sent');
+  }
+
+  const isLocal = ['localhost', '127.0.0.1', '::1'].includes(parsed.hostname.toLowerCase());
+  if (isLocal || trustedLaunchOrigins().includes(BASE_URL)) {
+    return;
+  }
+
+  fail(
+    'Refusing to send internal launch secrets to untrusted BASE_URL. Add the exact origin to LAUNCH_TRUSTED_BASE_URLS for approved launch checks.'
+  );
 }
 
 function internalOpsHeaders() {
+  assertBaseUrlMayReceiveInternalSecret();
   return {
-    authorization: `Bearer ${getCronSecret()}`,
+    authorization: `Bearer ${getInternalLaunchSecret()}`,
   };
 }
 
 function command(name: string) {
   return process.platform === 'win32' ? `${name}.cmd` : name;
+}
+
+function isLocalLaunchBaseUrl() {
+  try {
+    const url = new URL(BASE_URL);
+    return ['localhost', '127.0.0.1', '::1'].includes(url.hostname);
+  } catch {
+    return false;
+  }
+}
+
+function readJsonFile(filePath: string) {
+  try {
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch (error) {
+    fail(
+      `could not read JSON evidence at ${filePath}: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
 }
 
 function checkFiles() {
@@ -62,12 +145,6 @@ function checkFiles() {
     if (!fs.existsSync(full)) {
       fail(`missing required evidence file: ${file}`);
     }
-  }
-}
-
-function checkSUSFlag() {
-  if (process.env.SUS_STUDY_COMPLETE !== 'true') {
-    fail('SUS_STUDY_COMPLETE env not set to true');
   }
 }
 
@@ -171,12 +248,18 @@ function ensureLaunchSmokeArtifact() {
   }
 
   let artifact = readLaunchSmokeArtifact();
-  let evaluation = evaluateLaunchSmokeArtifact(artifact, { baseUrl: BASE_URL });
+  let evaluation = evaluateLaunchSmokeArtifact(artifact, {
+    baseUrl: BASE_URL,
+    requireTargetBaseUrl: !isLocalLaunchBaseUrl(),
+  });
 
   if (evaluation.state !== 'fresh_passing') {
     runLaunchSmokeRunner(evaluation.message);
     artifact = readLaunchSmokeArtifact();
-    evaluation = evaluateLaunchSmokeArtifact(artifact, { baseUrl: BASE_URL });
+    evaluation = evaluateLaunchSmokeArtifact(artifact, {
+      baseUrl: BASE_URL,
+      requireTargetBaseUrl: !isLocalLaunchBaseUrl(),
+    });
   }
 
   if (evaluation.state !== 'fresh_passing') {
@@ -191,14 +274,117 @@ async function checkPerfStatus() {
   if (!response.ok) {
     fail(`perf-status endpoint returned ${response.status}`);
   }
-  const data = await response.json();
+  const data = (await response.json()) as PerfStatusPayload;
   if (!data.ok) {
-    fail(`API latency budget not met: ${data.message || 'no message'}`);
+    if (await checkLocalPerfStatusFallback(data)) {
+      return;
+    }
+
+    fail(`API latency budget not met: ${String(data.message || 'no message')}`);
   }
 }
 
+function percentile(values: number[], p: number) {
+  if (!values.length) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const rank = (p / 100) * (sorted.length - 1);
+  const lower = Math.floor(rank);
+  const upper = Math.ceil(rank);
+  if (lower === upper) return sorted[lower] ?? 0;
+  const weight = rank - lower;
+  return (sorted[lower] ?? 0) * (1 - weight) + (sorted[upper] ?? 0) * weight;
+}
+
+function getMissingRequiredRoutes(data: PerfStatusPayload) {
+  return Array.isArray(data.missingRequiredRoutes)
+    ? data.missingRequiredRoutes.filter((route): route is string => typeof route === 'string')
+    : [];
+}
+
+function perfStatusLatencyIsWithinBudget(data: PerfStatusPayload) {
+  const p95 = typeof data.p95 === 'number' ? data.p95 : Number(data.p95);
+  const budgetMs =
+    typeof data.budgetMs === 'number' && Number.isFinite(data.budgetMs)
+      ? data.budgetMs
+      : API_LATENCY_BUDGET_MS;
+
+  return Number.isFinite(p95) && p95 <= budgetMs;
+}
+
+async function measureLocalApiLatencyProbe(
+  probe: (typeof REQUIRED_LOCAL_API_LATENCY_PROBES)[number]
+) {
+  const url = new URL(probe.route, BASE_URL);
+  const samples: number[] = [];
+
+  const warmup = await fetch(url, { method: probe.method, cache: 'no-store' });
+  if (!probe.expectedStatuses.includes(warmup.status)) {
+    fail(
+      `local API latency probe ${probe.route} returned ${warmup.status}, expected ${probe.expectedStatuses.join('/')}`
+    );
+  }
+
+  for (let i = 0; i < API_LATENCY_SAMPLE_COUNT; i += 1) {
+    const started = performance.now();
+    const response = await fetch(url, { method: probe.method, cache: 'no-store' });
+    const durationMs = performance.now() - started;
+
+    if (!probe.expectedStatuses.includes(response.status)) {
+      fail(
+        `local API latency probe ${probe.route} returned ${response.status}, expected ${probe.expectedStatuses.join('/')}`
+      );
+    }
+
+    samples.push(durationMs);
+  }
+
+  const p95 = percentile(samples, 95);
+  if (p95 > API_LATENCY_BUDGET_MS) {
+    fail(
+      `local API latency probe ${probe.route} P95=${p95.toFixed(0)}ms exceeds budget ${API_LATENCY_BUDGET_MS}ms`
+    );
+  }
+
+  console.log(
+    `Local API latency probe ${probe.route} P95=${p95.toFixed(0)}ms (budget ${API_LATENCY_BUDGET_MS}ms)`
+  );
+}
+
+async function checkLocalPerfStatusFallback(data: PerfStatusPayload) {
+  if (!isLocalLaunchBaseUrl()) return false;
+
+  const missingRequiredRoutes = getMissingRequiredRoutes(data);
+  if (!missingRequiredRoutes.length || !perfStatusLatencyIsWithinBudget(data)) {
+    return false;
+  }
+
+  const probes = REQUIRED_LOCAL_API_LATENCY_PROBES.filter((probe) =>
+    missingRequiredRoutes.includes(probe.route)
+  );
+  if (probes.length !== missingRequiredRoutes.length) {
+    return false;
+  }
+
+  console.log(
+    'Local go/no-go target has no persisted required API latency samples; running direct route probes for local-only evidence.'
+  );
+  for (const probe of probes) {
+    await measureLocalApiLatencyProbe(probe);
+  }
+
+  return true;
+}
+
 async function maybeRunSynthetics() {
-  if (!RUN_SYNTHETICS) return;
+  if (!RUN_SYNTHETICS) {
+    if (!isLocalLaunchBaseUrl()) {
+      fail(
+        'GO_NO_GO_RUN_SYNTHETICS=0 is only allowed for local go/no-go runs; production-candidate targets must run launch synthetic checks.'
+      );
+    }
+    console.log('Local go/no-go target detected; skipping direct launch synthetic checks.');
+    return;
+  }
 
   const response = await fetch(`${BASE_URL}/api/cron/launch-synthetic-checks`, {
     headers: internalOpsHeaders(),
@@ -265,17 +451,56 @@ function checkRestoreReadiness() {
   if (!fs.existsSync(restoreDrillDoc)) {
     fail('restore readiness missing docs/launch-restore-drill.md');
   }
-}
 
-async function main() {
-  if (SKIP) {
-    console.log('SKIP_GO_NOGO=1 set, skipping gate.');
+  if (isLocalLaunchBaseUrl()) {
+    console.log(
+      'Local go/no-go target detected; restore tooling exists, but production-candidate launch still requires restore evidence.'
+    );
     return;
   }
 
+  if (!fs.existsSync(RESTORE_REPORT_PATH)) {
+    fail(
+      `production-candidate go/no-go requires a restore verification report at ${RESTORE_REPORT_PATH}. Run npm run db:restore:verify -- --checkpoint <dir> --out ${RESTORE_REPORT_PATH} against an isolated recovery target.`
+    );
+  }
+
+  const report = readJsonFile(RESTORE_REPORT_PATH);
+  if (report.ok !== true) {
+    fail(`restore verification report is not passing: ${RESTORE_REPORT_PATH}`);
+  }
+
+  const generatedAt = new Date(String(report.generatedAt || ''));
+  if (Number.isNaN(generatedAt.getTime())) {
+    fail(
+      `restore verification report is missing a valid generatedAt timestamp: ${RESTORE_REPORT_PATH}`
+    );
+  }
+
+  const maxAgeMs = Number.isFinite(RESTORE_REPORT_MAX_AGE_HOURS)
+    ? RESTORE_REPORT_MAX_AGE_HOURS * 60 * 60 * 1000
+    : 72 * 60 * 60 * 1000;
+  if (Date.now() - generatedAt.getTime() > maxAgeMs) {
+    fail(
+      `restore verification report is stale: ${RESTORE_REPORT_PATH}. Regenerate it for the intended production-candidate target.`
+    );
+  }
+
+  const checkpointDir = String(report.checkpointDir || '');
+  if (!checkpointDir) {
+    fail(`restore verification report is missing checkpointDir: ${RESTORE_REPORT_PATH}`);
+  }
+  for (const fileName of ['summary.json', 'row-fingerprint.json']) {
+    const evidencePath = path.join(checkpointDir, fileName);
+    if (!fs.existsSync(evidencePath)) {
+      fail(`restore verification report references missing checkpoint evidence: ${evidencePath}`);
+    }
+  }
+}
+
+async function main() {
   console.log(`Running Go/No-Go gates against ${BASE_URL}`);
   checkFiles();
-  checkSUSFlag();
   checkSafeModeFlags();
   checkAiLaunchNoGoGuards();
   ensureLaunchSmokeArtifact();

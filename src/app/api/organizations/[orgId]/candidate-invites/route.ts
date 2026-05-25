@@ -22,6 +22,7 @@ import {
 } from '@/lib/security/capability-tokens';
 import { resolveCandidateInvitePolicyContext } from '@/lib/candidate-invite-policy';
 import { createClient } from '@/lib/supabase/server';
+import { log } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
 
@@ -180,8 +181,10 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Failed to list candidate invites:', error);
-    return NextResponse.json({ error: 'Failed to load candidate invites' }, { status: 500 });
+    log.error('org_candidate_invites.list_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return NextResponse.json({ error: 'Failed to load submission invites' }, { status: 500 });
   }
 }
 
@@ -234,7 +237,7 @@ export async function POST(
       }
 
       if (!inviterProfile.isBetaTesting) {
-        return NextResponse.json({ error: 'Beta testing access is required.' }, { status: 403 });
+        return NextResponse.json({ error: 'Early access is required.' }, { status: 403 });
       }
     }
 
@@ -408,7 +411,13 @@ export async function POST(
             },
           });
         } catch (error) {
-          console.error('Candidate invite email send failed:', error);
+          log.warn('org_candidate_invites.email_send_failed', {
+            orgId,
+            flowType,
+            assignmentId,
+            recipientDomain: item.email.split('@')[1] ?? null,
+            error: error instanceof Error ? error.message : String(error),
+          });
         }
       })
     );
@@ -421,7 +430,9 @@ export async function POST(
       assignmentId,
     });
   } catch (error) {
-    console.error('Failed to create candidate invites:', error);
-    return NextResponse.json({ error: 'Failed to create candidate invites' }, { status: 500 });
+    log.error('org_candidate_invites.create_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return NextResponse.json({ error: 'Failed to create submission invites' }, { status: 500 });
   }
 }

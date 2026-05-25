@@ -1,7 +1,7 @@
 /**
  * Policy Assistant Component
  *
- * AI-powered chatbot for explaining policies and privacy concepts
+ * Local policy helper for plain-language privacy guidance.
  */
 
 'use client';
@@ -14,7 +14,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { MessageCircle, Send, Sparkles, Shield, Info, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientDiagnostic } from '@/lib/client-diagnostics';
 
 interface Message {
   id: string;
@@ -31,22 +31,78 @@ interface CommonQuestion {
   category: string;
 }
 
+const COMMON_QUESTIONS: CommonQuestion[] = [
+  {
+    question: 'What is visible on my Public Page?',
+    category: 'Public Page',
+  },
+  {
+    question: 'When can an organization see more proof detail?',
+    category: 'Reveal consent',
+  },
+  {
+    question: 'How do I delete or export my data?',
+    category: 'Data rights',
+  },
+];
+
+const explainPolicyQuestion = (question: string): Message => {
+  const normalizedQuestion = question.toLowerCase();
+
+  if (normalizedQuestion.includes('public') || normalizedQuestion.includes('visible')) {
+    return {
+      id: (Date.now() + 1).toString(),
+      type: 'assistant',
+      content:
+        'Your Public Page should show only launch-safe proof context that you have chosen to publish. Private notes, hidden proof, reveal-only fields, and organization review data stay private unless a specific consent flow says otherwise.',
+      keyPoints: [
+        'Public Page visibility is controlled separately from private profile context.',
+        'Reveal details require an active request and proof-review participant consent.',
+        'Private proof and admin review notes must not appear on public pages.',
+      ],
+      relatedSections: ['Privacy', 'Public Page', 'Reveal consent'],
+      timestamp: new Date(),
+    };
+  }
+
+  if (normalizedQuestion.includes('delete') || normalizedQuestion.includes('export')) {
+    return {
+      id: (Date.now() + 1).toString(),
+      type: 'assistant',
+      content:
+        'Export and delete controls live in account privacy settings. Exports should include your own data, while deletion is handled as an account-level action with privacy-safe status handling.',
+      keyPoints: [
+        'Exports are owner-only.',
+        'Deletion status should not leak private account details.',
+        'Admin or organization audit views stay internal and permissioned.',
+      ],
+      relatedSections: ['Export', 'Delete', 'Account privacy'],
+      timestamp: new Date(),
+    };
+  }
+
+  return {
+    id: (Date.now() + 1).toString(),
+    type: 'assistant',
+    content:
+      'Proofound launch privacy is centered on proof ownership, explicit publishing, and consent before deeper review. Use privacy settings for public visibility, verification requests for proof checks, and reveal flows for organization-specific access.',
+    keyPoints: [
+      'Proof stays private unless published or shared through a consented flow.',
+      'Organizations should see only the fields needed for the current assignment stage.',
+      'Launch support tools must avoid exposing private notes or raw diagnostic data.',
+    ],
+    relatedSections: ['Proof privacy', 'Verification', 'Organization review'],
+    timestamp: new Date(),
+  };
+};
+
 export function PolicyAssistant() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [commonQuestions, setCommonQuestions] = useState<CommonQuestion[]>([]);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-
-  // Load common questions on mount
-  useEffect(() => {
-    if (isOpen && commonQuestions.length === 0) {
-      loadCommonQuestions();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -54,20 +110,6 @@ export function PolicyAssistant() {
       scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
     }
   }, [messages]);
-
-  const loadCommonQuestions = async () => {
-    try {
-      const response = await apiFetch('/api/policy/explain');
-      if (response.ok) {
-        const data = await response.json();
-        setCommonQuestions(data.commonQuestions || []);
-      }
-    } catch (error) {
-      console.error('policy.assistant.load_questions.failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-    }
-  };
 
   const handleAskQuestion = async (question: string) => {
     if (!question.trim()) return;
@@ -85,35 +127,11 @@ export function PolicyAssistant() {
     setIsLoading(true);
 
     try {
-      const response = await apiFetch('/api/policy/explain', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ question }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to get explanation');
-      }
-
-      const data = await response.json();
-      const explanation = data.explanation;
-
-      // Add assistant response
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        type: 'assistant',
-        content: explanation.answer,
-        keyPoints: explanation.keyPoints,
-        examples: explanation.examples,
-        relatedSections: explanation.relatedSections,
-        timestamp: new Date(),
-      };
+      const assistantMessage = explainPolicyQuestion(question);
 
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
-      console.error('policy.assistant.ask.failed', {
+      dispatchClientDiagnostic('policy.assistant.ask_failed', {
         error: error instanceof Error ? error.message : 'Unknown error',
       });
 
@@ -195,21 +213,19 @@ export function PolicyAssistant() {
               </div>
 
               {/* Common Questions */}
-              {commonQuestions.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-xs font-medium text-muted-foreground">Common Questions:</p>
-                  {commonQuestions.slice(0, 5).map((q, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleAskQuestion(q.question)}
-                      className="w-full text-left p-2 text-xs rounded border hover:bg-muted/50 transition-colors"
-                      disabled={isLoading}
-                    >
-                      {q.question}
-                    </button>
-                  ))}
-                </div>
-              )}
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground">Common Questions:</p>
+                {COMMON_QUESTIONS.slice(0, 5).map((q, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleAskQuestion(q.question)}
+                    className="w-full text-left p-2 text-xs rounded border hover:bg-muted/50 transition-colors"
+                    disabled={isLoading}
+                  >
+                    {q.question}
+                  </button>
+                ))}
+              </div>
             </div>
           ) : (
             <div className="space-y-4">
@@ -303,7 +319,7 @@ export function PolicyAssistant() {
           </form>
           <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
             <Info className="h-3 w-3" />
-            Powered by AI. May not be 100% accurate.
+            Local launch guidance. Check the policy pages for the full text.
           </p>
         </div>
       </CardContent>

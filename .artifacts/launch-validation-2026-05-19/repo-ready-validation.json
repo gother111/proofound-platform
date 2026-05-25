@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "kind": "repo_ready_validation",
+  "scope": "repo",
+  "generatedAt": "2026-05-19T22:05:55.461Z",
+  "authoritativeBaseUrl": "http://127.0.0.1:54307",
+  "verdict": "READY",
+  "gates": [
+    {
+      "id": "prod_build",
+      "status": "PASS",
+      "summary": "`npm run build` passed under the launch Node/runtime configuration.",
+      "evidence": [".artifacts/launch-validation-2026-05-19/repo-ready-build.log"],
+      "command": "npm run build",
+      "observedAt": "2026-05-19T22:05:55.461Z"
+    },
+    {
+      "id": "prod_boot",
+      "status": "PASS",
+      "summary": "`npm run start` booted successfully and `/api/health` returned ok.",
+      "evidence": [
+        ".artifacts/launch-validation-2026-05-19/repo-ready-prod-start.log",
+        ".artifacts/launch-validation-2026-05-19/repo-ready-prod-health.json"
+      ],
+      "command": "npm run start -- -p <dynamic-port> && curl /api/health",
+      "observedAt": "2026-05-19T22:05:55.461Z"
+    },
+    {
+      "id": "route_surface_and_archived_routes",
+      "status": "PASS",
+      "summary": "Launch route and page inventory tests passed against the current repo state.",
+      "evidence": [".artifacts/launch-validation-2026-05-19/repo-ready-route-surface.log"],
+      "command": "npm run test -- tests/api/launch-surface-inventory.test.ts tests/api/launch-page-inventory.test.ts",
+      "observedAt": "2026-05-19T22:05:55.461Z"
+    },
+    {
+      "id": "launch_status_route_logic",
+      "status": "PASS",
+      "summary": "Launch-status route tests passed with current persisted/live monitor logic.",
+      "evidence": [".artifacts/launch-validation-2026-05-19/repo-ready-launch-status-route.log"],
+      "command": "npm run test -- src/app/api/monitoring/__tests__/launch-status-route.test.ts",
+      "observedAt": "2026-05-19T22:05:55.461Z"
+    },
+    {
+      "id": "public_portfolio_safe",
+      "status": "PASS",
+      "summary": "Public portfolio page, access consistency, and projection tests passed for public-safe direct-link behavior.",
+      "evidence": [".artifacts/launch-validation-2026-05-19/repo-ready-public-portfolio.log"],
+      "command": "npm run test -- tests/ui/public-portfolio-access-consistency.test.tsx tests/ui/public-portfolio-page.test.tsx tests/lib/public-portfolio-projection.test.ts",
+      "observedAt": "2026-05-19T22:05:55.461Z"
+    },
+    {
+      "id": "private_context_scaffolding",
+      "status": "PASS",
+      "summary": "Private work, education, and volunteering context scaffolding tests passed.",
+      "evidence": [".artifacts/launch-validation-2026-05-19/repo-ready-private-context.log"],
+      "command": "npm run test -- tests/ui/profile-dialogs-edit-routing.test.tsx tests/ui/education-form-skill-picker.test.tsx tests/actions/onboarding-private-context-scaffolding.test.ts",
+      "observedAt": "2026-05-19T22:05:55.461Z"
+    },
+    {
+      "id": "workflow_email_privacy",
+      "status": "PASS",
+      "summary": "Workflow email privacy tests passed for masked and pre-reveal flows.",
+      "evidence": [".artifacts/launch-validation-2026-05-19/repo-ready-workflow-email-privacy.log"],
+      "command": "npm run test -- tests/lib/workflow-email-privacy.test.ts",
+      "observedAt": "2026-05-19T22:05:55.461Z"
+    },
+    {
+      "id": "manual_privacy_sweep",
+      "status": "PASS",
+      "summary": "Privacy-sensitive review, uploads, and launch archive protection tests passed.",
+      "evidence": [".artifacts/launch-validation-2026-05-19/repo-ready-manual-privacy.log"],
+      "command": "npm run test -- tests/api/org-match-review-route.test.ts tests/lib/uploads-privacy.test.ts src/lib/__tests__/middleware-launch-archive.test.ts",
+      "observedAt": "2026-05-19T22:05:55.461Z"
+    },
+    {
+      "id": "internal_admin_surfaces",
+      "status": "PASS",
+      "summary": "Internal admin surface tests passed for route protection, queue APIs, and dashboard links.",
+      "evidence": [".artifacts/launch-validation-2026-05-19/repo-ready-internal-admin.log"],
+      "command": "npm run test -- tests/api/admin-internal-ops-queue-route.test.ts tests/ui/admin-dashboard-launch-links.test.tsx src/lib/__tests__/middleware-launch-archive.test.ts",
+      "observedAt": "2026-05-19T22:05:55.461Z"
+    },
+    {
+      "id": "live_launch_smoke_artifact_refresh",
+      "status": "PASS",
+      "summary": "Repo launch smoke runner passed and refreshed fresh repo-scoped smoke evidence.",
+      "evidence": [
+        ".artifacts/launch-validation-2026-05-19/repo-ready-launch-smoke-report.json",
+        ".artifacts/launch-validation-2026-05-19/repo-ready-launch-smoke.log"
+      ],
+      "command": "npm run test:launch:smoke -- --scope repo --base-url http://127.0.0.1:54307 --artifact /Users/yuriibakurov/proofound/.artifacts/launch-validation-2026-05-19/repo-ready-launch-smoke-report.json",
+      "observedAt": "2026-05-19T22:05:55.461Z"
+    },
+    {
+      "id": "public_org_trust_smoke",
+      "status": "PASS",
+      "summary": "Public org trust smoke scenario passed in the fresh launch smoke artifact.",
+      "evidence": [
+        ".artifacts/launch-validation-2026-05-19/repo-ready-launch-smoke-report.json",
+        ".artifacts/launch-validation-2026-05-19/repo-ready-launch-smoke.log"
+      ],
+      "command": "npm run test:launch:smoke -- --scope repo --base-url http://127.0.0.1:54307 --artifact /Users/yuriibakurov/proofound/.artifacts/launch-validation-2026-05-19/repo-ready-launch-smoke-report.json",
+      "observedAt": "2026-05-19T22:05:55.461Z"
+    }
+  ]
+}

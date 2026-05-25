@@ -70,6 +70,7 @@ const commandTimeouts = {
   'prod-dependency-audit': 5 * 60 * 1000,
   'all-dependency-audit': 5 * 60 * 1000,
   'playwright-install': 12 * 60 * 1000,
+  'github-workflows': 2 * 60 * 1000,
   'docs-freshness': 5 * 60 * 1000,
   lint: 10 * 60 * 1000,
   typecheck: 15 * 60 * 1000,
@@ -89,7 +90,7 @@ const commandTimeouts = {
   'individual-strict-e2e': 20 * 60 * 1000,
   'org-strict-e2e': 25 * 60 * 1000,
   'privacy-strict-e2e': 20 * 60 * 1000,
-  'providers-strict-e2e': 20 * 60 * 1000,
+  'providers-advisory-e2e': 20 * 60 * 1000,
   'launch-smoke': 25 * 60 * 1000,
   'start-app': 3 * 60 * 1000,
   'wait-for-health': 2 * 60 * 1000,
@@ -106,7 +107,7 @@ function commandName(name) {
 function redactOutput(value) {
   return String(value)
     .replace(/(Bearer\s+)[A-Za-z0-9._~+/-]+/gi, '$1[REDACTED]')
-    .replace(/(CRON_SECRET=)[^\s]+/gi, '$1[REDACTED]');
+    .replace(/((?:INTERNAL_API_SECRET|CRON_SECRET)=)[^\s]+/gi, '$1[REDACTED]');
 }
 
 function writeStatusFiles() {
@@ -138,6 +139,30 @@ function finishResult(result, updates) {
   result.durationMs = finishedAt.getTime() - new Date(result.startedAt).getTime();
   Object.assign(result, updates);
   writeStatusFiles();
+}
+
+function recordSkippedGate({ id, label, reason, command = 'not run' }) {
+  const logPath = path.join(
+    logDir,
+    `${String(commandResults.length + 1).padStart(2, '0')}-${id}.log`
+  );
+  const result = createResult({
+    id,
+    label,
+    command,
+    timeoutMs: 0,
+    logPath,
+  });
+  commandResults.push(result);
+  fs.writeFileSync(logPath, `${reason}\n`, 'utf8');
+  finishResult(result, {
+    status: 'skipped',
+    exitCode: 0,
+    reason,
+  });
+  console.log(`\n==> ${label}`);
+  console.log(`Skipped: ${reason}`);
+  return result;
 }
 
 function quoteCommand([command, ...commandArgs]) {
@@ -281,27 +306,36 @@ const requiredEnv = [
   'NEXT_PUBLIC_SUPABASE_ANON_KEY',
   'SUPABASE_SERVICE_ROLE_KEY',
   'DATABASE_URL',
-  'CRON_SECRET',
-  'ZOOM_CLIENT_ID',
-  'ZOOM_CLIENT_SECRET',
-  'ZOOM_REDIRECT_URI',
-  'GOOGLE_CLIENT_ID',
-  'GOOGLE_CLIENT_SECRET',
-  'GOOGLE_REDIRECT_URI',
-  'LINKEDIN_CLIENT_ID',
-  'LINKEDIN_CLIENT_SECRET',
-  'E2E_PROVIDER_USER_ID',
-  'E2E_PROVIDER_USER_EMAIL',
-  'E2E_PROVIDER_USER_PASSWORD',
 ];
+
+const providerConnectedRequired =
+  String(process.env.STRICT_PROVIDER_E2E_REQUIRE_CONNECTED ?? '')
+    .trim()
+    .toLowerCase() === 'true';
+
+const providerRequiredEnv = providerConnectedRequired
+  ? [
+      'GOOGLE_CLIENT_ID',
+      'GOOGLE_CLIENT_SECRET',
+      'GOOGLE_REDIRECT_URI',
+      'E2E_PROVIDER_USER_ID',
+      'E2E_PROVIDER_USER_EMAIL',
+      'E2E_PROVIDER_USER_PASSWORD',
+    ]
+  : [];
 
 function enforceEnvironment() {
   const siteUrlPresent = Boolean(
     process.env.NEXT_PUBLIC_SITE_URL?.trim() || process.env.SITE_URL?.trim()
   );
-  const missing = requiredEnv.filter((name) => !process.env[name]?.trim());
+  const missing = [...requiredEnv, ...providerRequiredEnv].filter(
+    (name) => !process.env[name]?.trim()
+  );
   if (!siteUrlPresent) {
     missing.push('NEXT_PUBLIC_SITE_URL/SITE_URL');
+  }
+  if (!process.env.INTERNAL_API_SECRET?.trim() && !process.env.CRON_SECRET?.trim()) {
+    missing.push('INTERNAL_API_SECRET/CRON_SECRET');
   }
 
   const enabledMockModes = [
@@ -321,7 +355,9 @@ function enforceEnvironment() {
   }
 
   if (missing.length > 0) {
-    fail(`Missing required strict release-gate environment variables: ${missing.join(', ')}`);
+    fail(
+      `Missing required strict release-gate environment variables: ${missing.join(', ')}. Connected provider credentials are required only when STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true.`
+    );
   }
 }
 
@@ -335,8 +371,10 @@ const commandEnv = {
   FORCE_STRICT_DEPLOY_CHECK: 'true',
   npm_config_engine_strict: 'true',
   PLAYWRIGHT_SERVER_MODE: process.env.PLAYWRIGHT_SERVER_MODE || 'prod',
-  STRICT_PROVIDER_E2E_REQUIRE_CONNECTED: 'true',
-  STRICT_PROVIDER_E2E_REQUIRE_BOTH: 'true',
+  PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK: '1',
+  PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE: '1',
+  LAUNCH_SMOKE_ARTIFACT_PATH: launchSmokeArtifactPath,
+  STRICT_PROVIDER_E2E_REQUIRE_CONNECTED: providerConnectedRequired ? 'true' : 'false',
   PII_HASH_SALT: process.env.PII_HASH_SALT || 'strict-local-salt',
   NODE_OPTIONS: process.env.NODE_OPTIONS || '--max-old-space-size=6144',
 };
@@ -488,7 +526,7 @@ async function main() {
       id: 'npm-ci',
       label: 'Clean install',
       command: 'npm',
-      commandArgs: ['ci'],
+      commandArgs: ['ci', '--ignore-scripts'],
     });
     await runGateCommand({
       id: 'prod-dependency-audit',
@@ -507,6 +545,12 @@ async function main() {
       label: 'Install Playwright Chromium',
       command: 'npx',
       commandArgs: ['playwright', 'install', '--with-deps', 'chromium'],
+    });
+    await runGateCommand({
+      id: 'github-workflows',
+      label: 'Validate GitHub workflows',
+      command: 'npm',
+      commandArgs: ['run', 'ci:workflows'],
     });
     await runGateCommand({
       id: 'docs-freshness',
@@ -622,12 +666,22 @@ async function main() {
       command: 'npm',
       commandArgs: ['run', 'test:e2e:privacy:strict'],
     });
-    await runGateCommand({
-      id: 'providers-strict-e2e',
-      label: 'Providers strict E2E',
-      command: 'npm',
-      commandArgs: ['run', 'test:e2e:providers:strict'],
-    });
+    if (providerConnectedRequired) {
+      await runGateCommand({
+        id: 'providers-advisory-e2e',
+        label: 'Providers advisory E2E',
+        command: 'npm',
+        commandArgs: ['run', 'test:e2e:providers:advisory'],
+      });
+    } else {
+      recordSkippedGate({
+        id: 'providers-advisory-e2e',
+        label: 'Providers advisory E2E',
+        command: 'npm run test:e2e:providers:advisory',
+        reason:
+          'Connected-provider scheduling is not part of the default locked MVP launch corridor. Set STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true only for targets that intentionally launch this provider path.',
+      });
+    }
     await runGateCommand({
       id: 'launch-smoke',
       label: 'Launch smoke',
@@ -691,7 +745,6 @@ async function main() {
       env: {
         ...commandEnv,
         BASE_URL: baseUrl,
-        SUS_STUDY_COMPLETE: 'true',
         LAUNCH_SMOKE_ARTIFACT_PATH: launchSmokeArtifactPath,
       },
     });

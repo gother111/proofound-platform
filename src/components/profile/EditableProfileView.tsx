@@ -33,7 +33,7 @@ import type {
 function resolvePortfolioGateMessage(lockReason: string | null): string {
   switch (lockReason) {
     case 'safe_shell':
-      return 'Public Page is locked until your safe shell is complete.';
+      return 'Public Page is locked until the safe-shell basics are finished.';
     case 'context':
       return 'Public Page is locked until you add one real context.';
     case 'proof':
@@ -41,17 +41,21 @@ function resolvePortfolioGateMessage(lockReason: string | null): string {
     case 'verification':
       return 'Public Page is locked until one accepted non-self verification is tied to anchored proof.';
     case 'publish':
-      return 'Public Page is locked until you choose one proof-backed signal to publish from the profile Public Page visibility tab.';
+      return 'Public Page is locked until you choose one public-safe proof item from the profile Public Page visibility tab.';
     default:
-      return 'Complete the required profile steps to unlock your Public Page.';
+      return 'Complete the required profile steps before your Public Page is ready.';
   }
 }
 
 export type EditableProfileViewProps = {
   initialProfile?: ProfileData | null;
+  refreshInitialProfile?: boolean;
 };
 
-export function EditableProfileView({ initialProfile = null }: EditableProfileViewProps) {
+export function EditableProfileView({
+  initialProfile = null,
+  refreshInitialProfile = false,
+}: EditableProfileViewProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -77,7 +81,7 @@ export function EditableProfileView({ initialProfile = null }: EditableProfileVi
     deleteVolunteering,
     updateVolunteering,
     toggleRedactMode,
-  } = useProfileData(initialProfile);
+  } = useProfileData(initialProfile, { refreshInitialProfile });
 
   const {
     isEditProfileOpen,
@@ -153,7 +157,7 @@ export function EditableProfileView({ initialProfile = null }: EditableProfileVi
   }, [shouldOpenFirstProof]);
 
   const portfolioGateNotice = showPortfolioGateNotice ? (
-    <Card className="mb-6 p-4 border-amber-300 bg-amber-50/70 text-amber-900">
+    <Card className="mb-5 border-proofound-terracotta/30 bg-proofound-terracotta/10 p-4 text-proofound-charcoal">
       <p className="text-sm">{resolvePortfolioGateMessage(lockReasonFromRoute)}</p>
     </Card>
   ) : null;
@@ -208,18 +212,7 @@ export function EditableProfileView({ initialProfile = null }: EditableProfileVi
       ? `${pathname ?? '/app/i/profile'}?${query}`
       : (pathname ?? '/app/i/profile');
     router.replace(nextUrl);
-
-    void fetch('/api/analytics/events', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        event_type: 'profile_guided_open_full',
-        event_data: {
-          stage: completionState.stage,
-        },
-      }),
-    }).catch(() => undefined);
-  }, [completionState.stage, pathname, router, searchParams]);
+  }, [pathname, router, searchParams]);
 
   const openProfileTab = useCallback(
     (tab: 'proof_packs' | 'verification' | 'visibility') => {
@@ -347,14 +340,14 @@ export function EditableProfileView({ initialProfile = null }: EditableProfileVi
       <div className={`min-h-[calc(100vh-3.5rem)] ${bgClass}`}>
         <div className="max-w-2xl mx-auto px-6 py-16">
           <Card className="p-8 text-center space-y-4" data-testid="profile-load-error">
-            <h1 className="text-2xl font-display">Unable to load your profile</h1>
+            <h1 className="text-2xl font-display">Unable to load your proof workspace</h1>
             <p className="text-sm text-muted-foreground">
-              The profile page did not load successfully. Try again or return to your dashboard.
+              Your proof workspace did not load. Try again or return to individual home.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3">
               <Button onClick={retryLoad}>Try again</Button>
               <Button variant="outline" onClick={() => router.push('/app/i/home')}>
-                Back to dashboard
+                Back to home
               </Button>
             </div>
           </Card>
@@ -406,6 +399,9 @@ export function EditableProfileView({ initialProfile = null }: EditableProfileVi
       data-testid="individual-profile-root"
     >
       {showReadinessBanner && <ProfileReadinessBanner completionState={completionState} />}
+      {portfolioGateNotice && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">{portfolioGateNotice}</div>
+      )}
 
       <MobileProfileHeader
         name={profile.basicInfo.name}
@@ -427,7 +423,6 @@ export function EditableProfileView({ initialProfile = null }: EditableProfileVi
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {portfolioGateNotice}
         {!completionState.isPortfolioReady && (
           <div className="mb-6">
             <PortfolioReadinessChecklist completionState={completionState} />

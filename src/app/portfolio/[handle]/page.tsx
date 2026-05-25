@@ -1,13 +1,14 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { notFound, permanentRedirect } from 'next/navigation';
+import { permanentRedirect } from 'next/navigation';
 import { ArrowLeft, CheckCircle2, CircleDot, ExternalLink, Link2, Mail } from 'lucide-react';
 
 import { Logo } from '@/components/brand/Logo';
 import { PublicProfileEmptyState } from '@/components/public-profile/PublicProfileEmptyState';
 import { PublicProfileSection } from '@/components/public-profile/PublicProfileSection';
 import { PublicProfileShell } from '@/components/public-profile/PublicProfileShell';
+import { PublicProofPackList } from '@/components/public-profile/PublicProofPackList';
 import { JsonLdScripts } from '@/components/seo/JsonLdScripts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -40,12 +41,17 @@ function renderUnavailablePage(handle: string) {
       footer={
         <div className="flex items-center justify-between gap-2">
           <span>proofound.io/portfolio/{handle}</span>
-          <span>Public Page unavailable</span>
+          <span>Public page unavailable</span>
         </div>
       }
     >
-      <PublicProfileSection title="Public Page unavailable">
+      <PublicProfileSection title="Public page unavailable" titleLevel={1}>
         <PublicProfileEmptyState message="This Public Page link is unavailable. It may be hidden, retired, or not ready for launch-safe sharing." />
+        <div className="mt-4">
+          <Button asChild>
+            <Link href="/">Return home</Link>
+          </Button>
+        </div>
       </PublicProfileSection>
     </PublicProfileShell>
   );
@@ -105,7 +111,7 @@ export default async function PortfolioPage({
 
       return renderUnavailablePage(handle);
     }
-    notFound();
+    return renderUnavailablePage(handle);
   }
 
   if (access.status === 'unavailable') {
@@ -182,7 +188,7 @@ export default async function PortfolioPage({
               </Badge>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 lg:justify-end">
               {viewerIsOwner ? (
                 <Button variant="outline" size="sm" asChild>
                   <Link href="/app/i/profile?profileView=full&tab=visibility">
@@ -190,9 +196,13 @@ export default async function PortfolioPage({
                   </Link>
                 </Button>
               ) : null}
-              <ShareLinkButton url={data.shareUrl} />
-              <DownloadPdfButton endpoint={viewerIsOwner ? undefined : publicExportEndpoint} />
-              <CopyTextButton endpoint={viewerIsOwner ? undefined : publicSummaryEndpoint} />
+              <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+                <ShareLinkButton url={data.shareUrl} />
+                <div className="hidden sm:contents">
+                  <DownloadPdfButton endpoint={viewerIsOwner ? undefined : publicExportEndpoint} />
+                  <CopyTextButton endpoint={viewerIsOwner ? undefined : publicSummaryEndpoint} />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -214,12 +224,12 @@ export default async function PortfolioPage({
                   {displayName[0]?.toUpperCase() || 'P'}
                 </div>
                 <div className="space-y-1">
-                  <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                  <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
                     {displayName}
                   </h1>
                   <p className="text-sm text-foreground">{headline}</p>
                   <p className="text-sm text-muted-foreground">
-                    Direct link is live. Search engines are off for the MVP.
+                    Direct link is live. Search engines are off until the owner opts in.
                   </p>
                 </div>
               </div>
@@ -256,15 +266,13 @@ export default async function PortfolioPage({
             </div>
 
             {!viewerIsOwner ? (
-              <div className="flex w-full flex-col gap-2 lg:w-auto lg:min-w-[220px]">
+              <div className="flex w-full flex-col gap-2 border-t border-[#EFECE5] pt-4 lg:w-auto lg:min-w-[220px] lg:border-t-0 lg:pt-0">
                 <Button asChild className="bg-proofound-forest text-white hover:bg-[#163d2f]">
                   <Link href={collaborationHref}>Request introduction</Link>
                 </Button>
-                <Button variant="outline" asChild>
-                  <Link href={requestContactHref}>Request contact</Link>
-                </Button>
-                <p className="text-xs text-muted-foreground">
-                  Private details stay hidden unless the owner explicitly reveals them.
+                <p className="text-xs leading-5 text-muted-foreground">
+                  Private details stay hidden unless the owner explicitly reveals them. More export
+                  and copy options appear on wider screens.
                 </p>
               </div>
             ) : null}
@@ -278,110 +286,7 @@ export default async function PortfolioPage({
               right={<span className="text-xs text-muted-foreground">Public-safe proof only</span>}
             >
               {selectedProofPacks.length > 0 ? (
-                <div className="space-y-3">
-                  {selectedProofPacks.map((pack) => (
-                    <article
-                      key={pack.id}
-                      className="space-y-2 rounded-xl border border-white/40 bg-white/40 p-3 shadow-sm transition-all duration-300 hover:bg-white/60"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <h3 className="text-base font-semibold text-foreground">{pack.title}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            {pack.contextLabel || 'Selected Proof Pack'}
-                          </p>
-                        </div>
-                        <Badge variant="outline" className="border-[#D9D5CC] text-muted-foreground">
-                          {pack.verificationStatus === 'verified'
-                            ? 'Verified evidence'
-                            : pack.verificationStatus === 'partially_verified'
-                              ? 'Partially verified'
-                              : 'Public-safe proof'}
-                        </Badge>
-                      </div>
-
-                      <div className="grid gap-2 sm:grid-cols-2">
-                        <SummaryStat
-                          label="Verification"
-                          value={humanizeVerification(pack.verificationStatus)}
-                        />
-                        <SummaryStat
-                          label="Freshness"
-                          value={humanizeFreshness(pack.freshnessState)}
-                        />
-                      </div>
-
-                      {pack.outcomesSummary ? (
-                        <div className="space-y-1">
-                          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                            Selected outcome
-                          </p>
-                          <p className="text-sm text-foreground">{pack.outcomesSummary}</p>
-                        </div>
-                      ) : null}
-
-                      {pack.verificationSummary ? (
-                        <div className="space-y-1">
-                          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                            Trust summary
-                          </p>
-                          <p className="text-sm text-foreground">{pack.verificationSummary}</p>
-                        </div>
-                      ) : null}
-
-                      {pack.summary && pack.summary !== pack.outcomesSummary ? (
-                        <p className="text-sm text-muted-foreground">{pack.summary}</p>
-                      ) : null}
-
-                      {pack.ownershipStatement ? (
-                        <p className="text-sm text-muted-foreground">
-                          Ownership: {pack.ownershipStatement}
-                        </p>
-                      ) : null}
-
-                      {pack.selectedEvidence.length > 0 ? (
-                        <div className="space-y-2 border-t border-[#EFECE5] pt-2">
-                          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                            Supporting evidence
-                          </p>
-                          <ul className="space-y-2 text-sm text-foreground">
-                            {pack.selectedEvidence.map((item) => (
-                              <li
-                                key={`${pack.id}-${item.title}`}
-                                className="rounded-lg border border-white/50 bg-white/50 px-3 py-2"
-                              >
-                                <div className="flex items-start justify-between gap-2">
-                                  <div>
-                                    <p className="font-medium">{item.title}</p>
-                                    {item.description ? (
-                                      <p className="mt-1 text-xs text-muted-foreground">
-                                        {item.description}
-                                      </p>
-                                    ) : null}
-                                    <p className="mt-1 text-xs text-muted-foreground">
-                                      {item.semanticsNote}
-                                    </p>
-                                  </div>
-                                  {item.href ? (
-                                    <a
-                                      href={item.href}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="inline-flex items-center gap-1 text-xs font-semibold text-proofound-forest hover:text-[#143829]"
-                                    >
-                                      Open
-                                      <ExternalLink className="h-3.5 w-3.5" />
-                                    </a>
-                                  ) : null}
-                                </div>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      ) : null}
-                    </article>
-                  ))}
-                </div>
+                <PublicProofPackList proofPacks={selectedProofPacks} />
               ) : (
                 <PublicProfileEmptyState
                   message={
@@ -420,7 +325,7 @@ export default async function PortfolioPage({
                 </div>
               ) : (
                 <p className="mt-3 text-sm text-muted-foreground">
-                  Trust signals stay narrow and proof-scoped on this public surface.
+                  Verification checks stay narrow and proof-scoped on this public surface.
                 </p>
               )}
             </PublicProfileSection>

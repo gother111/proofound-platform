@@ -1,19 +1,20 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-02-26`
+> Last Verified: `2026-05-20`
+> Reference note: current integration-test orientation only. Archived/post-MVP suites are not launch evidence unless the locked MVP authority stack reactivates them.
 
 # Integration Test Plan
 
 ## Purpose
 
 Define integration-level verification paths aligned with the current test suite and route contracts.
+Current active integration tests are deterministic contract tests, not live-database smoke tests.
 
 ## Canonical Integration Test Locations
 
-- `tests/integration/critical-gaps.test.ts`
 - `tests/integration/matching.test.ts`
 - `tests/integration/data-portability.test.ts`
-- `tests/integration/evidence-pack.test.ts`
-- `tests/integration/cv-import.test.ts`
+- Historical `critical-gaps`, CV import wizard, and donor/investor evidence-pack tests live under
+  `tests/archive/` and are not launch gates.
 
 ## Supporting API Contract Coverage
 
@@ -21,6 +22,8 @@ Define integration-level verification paths aligned with the current test suite 
 
 ## Execution Commands
 
+- Active integration contract slice:
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:integration -- --reporter=verbose`
 - Full baseline:
   - `npm run test`
 - Privacy integration depth:
@@ -36,7 +39,8 @@ Define integration-level verification paths aligned with the current test suite 
 
 ### 2) Matching and Assignment Contracts
 
-- Matching feed and gating routes produce deterministic/valid responses.
+- Matching score artifacts enforce hard gates, deterministic ordering, proof-first reason codes, and no retired purpose-fit scoring.
+- Matching feed and gating routes produce deterministic/valid responses through supporting API coverage.
 - Assignment creation, publish, and match-interest flows behave correctly.
 
 ### 3) Verification and Proofs Contracts
@@ -49,9 +53,19 @@ Define integration-level verification paths aligned with the current test suite 
 - RLS tests prove no cross-user leakage.
 - Visibility controls and redaction semantics stay intact.
 
-### 5) Mobile API Contracts
+### 5) Archived Mobile API Boundary
 
-- `/api/mobile/v1/*` bootstrap and device token routes remain compatible.
+- `/api/mobile/*` remains archived for the locked MVP route surface.
+- Mobile planning docs are post-MVP reference only and must not be treated as launch API evidence.
+- If a future approved route-surface change reactivates mobile routes, add focused contract tests in the same change.
+
+### 6) Archived Evidence-Pack Boundary
+
+- Donor/investor evidence-pack export is outside the locked MVP corridor.
+- Archived implementation/reference tests live under `src/archive/non_launch_evidence_pack/` and
+  `tests/archive/non_mvp_evidence_pack/`.
+- No active integration test should imply an MVP evidence-pack API route exists unless the
+  route-surface policy is updated in the same change.
 
 ## Exit Criteria
 

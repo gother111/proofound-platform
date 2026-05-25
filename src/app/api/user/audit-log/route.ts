@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, notInArray, sql } from 'drizzle-orm';
 import { analyticsEvents, revealEvents } from '@/db/schema';
 import { requireApiAuthContext } from '@/lib/auth';
 import { log } from '@/lib/log';
@@ -13,6 +13,19 @@ const AuditLogQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(200).default(50),
   offset: z.coerce.number().int().min(0).default(0),
 });
+
+const USER_VISIBLE_AUDIT_EVENT_EXCLUSIONS = ['performance_metric', 'web_vital'];
+
+function resolveAuditDeviceLabel(properties: unknown, userAgentHash: string | null): string {
+  if (properties && typeof properties === 'object' && 'device' in properties) {
+    const device = String((properties as Record<string, unknown>).device || '').trim();
+    if (device) return device;
+  }
+
+  return userAgentHash
+    ? `Protected device reference (${userAgentHash.substring(0, 8)}...)`
+    : 'Unknown';
+}
 
 /**
  * GET /api/user/audit-log
@@ -30,7 +43,7 @@ const AuditLogQuerySchema = z.object({
  * - timestamp: When the action occurred
  * - action: Type of event (e.g., "profile_updated", "match_accepted")
  * - ipHash: Abbreviated hashed IP (first 8 chars + "...")
- * - device: Parsed device info from user agent hash
+ * - device: Privacy-preserving device label or protected device reference
  * - metadata: Additional event details
  */
 export async function GET(request: NextRequest) {
@@ -51,7 +64,12 @@ export async function GET(request: NextRequest) {
     const [analyticsCountResult] = await db
       .select({ count: sql<number>`count(*)` })
       .from(analyticsEvents)
-      .where(eq(analyticsEvents.userId, user.id));
+      .where(
+        and(
+          eq(analyticsEvents.userId, user.id),
+          notInArray(analyticsEvents.eventType, USER_VISIBLE_AUDIT_EVENT_EXCLUSIONS)
+        )
+      );
     const [revealCountResult] = await db
       .select({ count: sql<number>`count(*)` })
       .from(revealEvents)
@@ -73,7 +91,12 @@ export async function GET(request: NextRequest) {
         properties: analyticsEvents.properties,
       })
       .from(analyticsEvents)
-      .where(eq(analyticsEvents.userId, user.id))
+      .where(
+        and(
+          eq(analyticsEvents.userId, user.id),
+          notInArray(analyticsEvents.eventType, USER_VISIBLE_AUDIT_EVENT_EXCLUSIONS)
+        )
+      )
       .orderBy(desc(analyticsEvents.createdAt))
       .limit(queryParams.limit)
       .offset(queryParams.offset);
@@ -114,14 +137,7 @@ export async function GET(request: NextRequest) {
       // Abbreviate IP hash for display (first 8 chars + "...")
       const abbreviatedIpHash = event.ipHash ? `${event.ipHash.substring(0, 8)}...` : 'N/A';
 
-      // Parse device from user agent hash (simplified - in production, use a proper UA parser)
-      // For now, we'll extract from properties if available, or show hash
-      const device =
-        event.properties && typeof event.properties === 'object' && 'device' in event.properties
-          ? String(event.properties.device)
-          : event.userAgentHash
-            ? `Device (${event.userAgentHash.substring(0, 8)}...)`
-            : 'Unknown';
+      const device = resolveAuditDeviceLabel(event.properties, event.userAgentHash);
 
       // Convert event type to human-readable action
       const humanReadableAction = convertEventTypeToHumanReadable(event.action);
@@ -191,8 +207,8 @@ function convertEventTypeToHumanReadable(eventType: string): string {
     profile_updated: 'Updated profile',
     profile_viewed: 'Viewed profile',
     public_portfolio_viewed: 'Viewed Public Page',
-    public_snippet_viewed: 'Viewed public snippet',
-    public_snippet_unavailable: 'Attempted unavailable public snippet',
+    public_snippet_viewed: 'Viewed legacy Public Page link',
+    public_snippet_unavailable: 'Attempted unavailable legacy Public Page link',
 
     // Skills & expertise
     skill_added: 'Added skill',

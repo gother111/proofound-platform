@@ -125,20 +125,9 @@ export const EventType = {
   OPERATOR_OVERRIDE_LOGGED: 'operator_override_logged',
   SYNTHETIC_CHECK_FAILED: 'synthetic_check_failed',
 
-  // Well-being (Zen Hub)
-  WELLBEING_OPT_IN: 'wellbeing_opt_in',
-  WELLBEING_CHECKIN: 'wellbeing_checkin',
-  WELLBEING_REFLECTION: 'wellbeing_reflection',
-  WELLBEING_CHECKIN_SUBMITTED: 'wellbeing_checkin_submitted',
-  WELLBEING_OPT_IN_CHANGED: 'wellbeing_opt_in_changed',
-  REFLECTION_ADDED: 'reflection_added',
-
-  // Usability
-  SUS_SURVEY_COMPLETED: 'sus_survey_completed',
   TOUR_STARTED: 'tour_started',
   TOUR_COMPLETED: 'tour_completed',
   TOUR_SKIPPED: 'tour_skipped',
-  PRIVACY_BANNER_ACKNOWLEDGED: 'privacy_banner_acknowledged',
 
   // Verification & attestations
   ATTESTATION_REQUESTED: 'attestation_requested',
@@ -186,28 +175,10 @@ export const TTFQI_TARGET_HOURS = 72;
 export const TTV_TARGET_DAYS = 7;
 
 /**
- * SUS (System Usability Scale)
- * Target: ≥75
- */
-export const SUS_TARGET_SCORE = 75;
-
-/**
- * Well-Being Delta
- * Target: ≥60% show ≥+1 improvement on stress or control
- */
-export const WELLBEING_DELTA_TARGET_PERCENT = 60;
-
-/**
- * Proof Fit Lift
+ * Proof-fit acceptance lift
  * Target: top-decile proof-fit matches show at least 20% higher intro acceptance
  */
-export const PAC_LIFT_TARGET_PERCENT = 20;
-
-/**
- * Fairness Gap
- * Target: No statistically significant negative gap
- */
-export const FAIRNESS_GAP_SIGNIFICANCE_LEVEL = 0.05; // p-value threshold
+export const PROOF_FIT_LIFT_TARGET_PERCENT = 20;
 
 // ============================================================================
 // COHORT DEFINITIONS
@@ -271,15 +242,29 @@ export interface ProfileActivatedProperties {
 }
 
 /**
+ * Qualitative support levels for proof-review match telemetry.
+ * Scores may still exist inside matching internals, but launch analytics should not
+ * expose them as the product contract.
+ */
+export type ProofSignalSupport =
+  | 'primary_reason'
+  | 'clear_support'
+  | 'needs_review'
+  | 'limited_signal';
+
+export interface MatchProofSignalProperty {
+  key: 'skills' | 'proof' | 'constraints' | 'verification' | string;
+  support: ProofSignalSupport;
+}
+
+/**
  * Standard properties for match viewed event
  */
 export interface MatchViewedProperties {
   match_id: string;
-  match_score: number;
-  pac_value: number; // Legacy proof-fit lift value
-  skills_score: number;
-  constraints_score: number;
-  verification_score: number;
+  proof_signals: MatchProofSignalProperty[];
+  review_mode: 'reason_coded';
+  score_visibility: 'internal_ordering_only';
   assignment_id?: string;
 }
 
@@ -290,8 +275,8 @@ export interface MatchActionedProperties {
   match_id: string;
   action: 'introduce' | 'pass' | 'snooze';
   reason?: string; // For pass/snooze
-  match_score: number;
-  pac_value: number;
+  review_mode: 'reason_coded';
+  score_visibility: 'internal_ordering_only';
 }
 
 /**
@@ -302,39 +287,8 @@ export interface InterviewScheduledProperties {
   assignment_id: string;
   match_id?: string;
   duration_minutes: number;
-  platform: 'zoom' | 'google_meet' | 'other';
+  platform: 'manual' | 'google_meet' | 'other';
   days_since_match: number;
-}
-
-/**
- * Standard properties for contract signed event
- */
-export interface ContractSignedProperties {
-  assignment_id: string;
-  match_id?: string;
-  interview_id?: string;
-  contract_type: 'full_time' | 'part_time' | 'contract' | 'internship' | 'volunteer';
-  days_since_activation: number;
-  days_since_first_intro: number;
-}
-
-/**
- * Standard properties for well-being check-in event
- */
-export interface WellbeingCheckinProperties {
-  stress_level: 1 | 2 | 3 | 4 | 5; // 1=low, 5=high
-  control_level: 1 | 2 | 3 | 4 | 5; // 1=low, 5=high
-  milestone?: 'rejection' | 'interview' | 'offer' | 'contract' | null;
-  checkin_number: number; // Sequential count for user
-}
-
-/**
- * Standard properties for SUS survey completion
- */
-export interface SUSSurveyProperties {
-  score: number; // 0-100
-  responses: number[]; // 10 responses, each 1-5
-  trigger_point: 'post_activation' | 'post_match' | 'post_contract' | 'periodic';
 }
 
 // ============================================================================
@@ -349,10 +303,7 @@ export const CacheKey = {
   TTFQI_MEDIAN: 'metrics:ttfqi:median',
   TTV_MEDIAN: 'metrics:ttv:median',
   TTSC_MEDIAN: 'metrics:ttsc:median',
-  WELLBEING_DELTA: 'metrics:wellbeing:delta',
-  PAC_LIFT: 'metrics:pac:lift',
-  FAIRNESS_GAP: 'metrics:fairness:gap',
-  SUS_AVERAGE: 'metrics:sus:average',
+  PROOF_FIT_LIFT: 'metrics:proof-fit:lift',
 } as const;
 
 /**
@@ -433,25 +384,17 @@ export function getEventDisplayName(eventType: EventTypeValue): string {
     [EventType.ASSIGNMENT_PUBLISH_SUCCEEDED]: 'Assignment Publish Succeeded',
     [EventType.ASSIGNMENT_TEMPLATE_APPLIED]: 'Assignment Template Applied',
     [EventType.TTFQI_WARNING_EMITTED]: 'TTFQI Warning Emitted',
-    [EventType.WELLBEING_OPT_IN]: 'Well-being Opt-In',
-    [EventType.WELLBEING_CHECKIN]: 'Well-being Check-In',
-    [EventType.WELLBEING_REFLECTION]: 'Well-being Reflection',
-    [EventType.WELLBEING_CHECKIN_SUBMITTED]: 'Well-being Check-In Submitted',
-    [EventType.WELLBEING_OPT_IN_CHANGED]: 'Well-being Opt-In Changed',
-    [EventType.REFLECTION_ADDED]: 'Reflection Added',
-    [EventType.SUS_SURVEY_COMPLETED]: 'SUS Survey Completed',
     [EventType.TOUR_STARTED]: 'Tour Started',
     [EventType.TOUR_COMPLETED]: 'Tour Completed',
     [EventType.TOUR_SKIPPED]: 'Tour Skipped',
-    [EventType.PRIVACY_BANNER_ACKNOWLEDGED]: 'Privacy Banner Acknowledged',
     [EventType.ATTESTATION_REQUESTED]: 'Attestation Requested',
     [EventType.ATTESTATION_PROVIDED]: 'Attestation Provided',
     [EventType.SKILL_PROOF_ADDED]: 'Skill Proof Added',
     [EventType.SKILL_PROOF_DELETED]: 'Skill Proof Deleted',
-    [EventType.CANDIDATE_INVITE_SENT]: 'Candidate Invite Sent',
-    [EventType.CANDIDATE_INVITE_OPENED]: 'Candidate Invite Opened',
-    [EventType.CANDIDATE_INVITE_CLAIMED]: 'Candidate Invite Claimed',
-    [EventType.CANDIDATE_PROOF_CARD_SUBMITTED]: 'Candidate Proof Card Submitted',
+    [EventType.CANDIDATE_INVITE_SENT]: 'Submission Invite Sent',
+    [EventType.CANDIDATE_INVITE_OPENED]: 'Submission Invite Opened',
+    [EventType.CANDIDATE_INVITE_CLAIMED]: 'Submission Invite Claimed',
+    [EventType.CANDIDATE_PROOF_CARD_SUBMITTED]: 'Submission Proof Card Submitted',
     [EventType.PROOF_ARTIFACT_CREATED]: 'Proof Artifact Created',
     [EventType.PROOF_ARTIFACT_UPDATED]: 'Proof Artifact Updated',
     [EventType.PROOF_ARTIFACT_DELETED]: 'Proof Artifact Deleted',

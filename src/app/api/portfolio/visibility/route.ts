@@ -10,6 +10,7 @@ import { mergeVisibilityFlags } from '@/lib/portfolio/visibility';
 import { resolveRequestedPublicPortfolioState } from '@/lib/portfolio/public-contract';
 import { runPrivacyPreflightCheck } from '@/lib/ai/privacy-preflight';
 import { and, eq } from 'drizzle-orm';
+import { log } from '@/lib/log';
 
 const VisibilitySchema = z.object({
   publicPageEnabled: z.boolean().optional(),
@@ -64,14 +65,19 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error('visibility get failed', error);
+    log.error('portfolio.visibility.get_failed', { error });
     return NextResponse.json({ error: 'Failed to fetch visibility' }, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
     const parsed = VisibilitySchema.parse(body);
 
     const supabase = await createClient();
@@ -105,7 +111,7 @@ export async function POST(request: Request) {
       header: parsed.header ?? merged.header,
       proofBar: parsed.proofBar ?? merged.proofBar,
       workEmail: parsed.workEmail ?? merged.workEmail,
-      linkedin: parsed.linkedin ?? merged.linkedin,
+      linkedin: false,
       identity: parsed.identity ?? merged.identity,
       skills: parsed.skills ?? merged.skills,
       bio: parsed.bio ?? merged.bio,
@@ -174,7 +180,7 @@ export async function POST(request: Request) {
       .eq('user_id', user.id);
 
     if (error) {
-      console.error('visibility update failed', error);
+      log.error('portfolio.visibility.update_failed', { error });
       return NextResponse.json({ error: 'Failed to save visibility' }, { status: 500 });
     }
 
@@ -188,7 +194,9 @@ export async function POST(request: Request) {
       .eq('id', user.id);
 
     if (profileUpdate.error) {
-      console.error('portfolio state update failed', profileUpdate.error);
+      log.error('portfolio.visibility.profile_state_update_failed', {
+        error: profileUpdate.error,
+      });
       return NextResponse.json({ error: 'Failed to save visibility' }, { status: 500 });
     }
 
@@ -266,7 +274,7 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-    console.error('visibility post failed', error);
+    log.error('portfolio.visibility.post_failed', { error });
     return NextResponse.json({ error: 'Failed to save visibility' }, { status: 500 });
   }
 }

@@ -1,5 +1,5 @@
 > Doc Class: `active`
-> Last Verified: `2026-02-26`
+> Last Verified: `2026-05-21`
 
 # Performance Testing Guide
 
@@ -11,7 +11,7 @@ This guide covers the enforced performance gates used for release readiness.
 
 ### Budget Gate (required)
 
-- `BASE_URL=http://localhost:3000 npm run perf:budgets`
+- `BASE_URL=<production-candidate-url> npm run perf:budgets`
 
 What it checks (`scripts/perf-budgets.mjs`):
 
@@ -22,25 +22,35 @@ What it checks (`scripts/perf-budgets.mjs`):
 
 ### Go / No-Go Gate (required)
 
-- `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go`
+- `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go`
 
-What it checks (`scripts/go-no-go-check.mjs`):
+For protected launch-status and go/no-go checks, `INTERNAL_API_SECRET=<secret>` may be used instead
+of `CRON_SECRET=<secret>`.
 
-- `/api/monitoring/perf-status` returns `ok`
-- `SUS_STUDY_COMPLETE=true`
+What it checks (`scripts/go-no-go-check.ts`):
+
+- `/api/monitoring/perf-status` returns `ok`, including the required `/api/assignments` latency sample gate.
 - Evidence files exist:
   - `RLS_DEPLOYMENT_SUMMARY.md`
   - `ACCESSIBILITY_AUDIT_REPORT.md`
+- Current launch smoke evidence is fresh for the target.
+- Production-candidate restore report evidence exists and is fresh for non-local targets.
+- Authenticated `/api/monitoring/launch-status` reports the full launch monitor contract as ready.
 
-## Local Runbook
+## Target Runbook
 
-1. Ensure app is healthy:
+1. Ensure the intended production-candidate app is healthy:
    - `npm run build`
    - `npm run start`
 2. Run budgets:
-   - `BASE_URL=http://localhost:3000 npm run perf:budgets`
-3. Run go/no-go:
-   - `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go`
+   - `BASE_URL=<production-candidate-url> npm run perf:budgets`
+3. Capture restore evidence for the same production-candidate data checkpoint:
+   - `npm run db:backup:checkpoint`
+   - `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json`
+4. Run go/no-go:
+   - `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go`
+   - `INTERNAL_API_SECRET=<secret>` may replace `CRON_SECRET=<secret>` for protected launch-status
+     and go/no-go auth.
 
 ## Optional Deeper Analysis
 

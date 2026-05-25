@@ -1,5 +1,5 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-05-04`
+> Last Verified: `2026-05-21`
 
 # Proofound AI Assistive Layer Launch Runbook Addendum
 
@@ -30,7 +30,7 @@ The AI layer is not launch-critical for the MVP. The core Proofound corridor mus
 | Proof Artifact Text Extraction with Google Cloud Document AI OCR | Authenticated-user production beta | Explicit consent per document, authentication, feature flag, page/file/spend caps, expiry gate, safe disable path.      |
 | CV import wizard and broad OCR/import flows                      | Excluded                           | Must remain inactive/non-launch unless the locked MVP authority stack is explicitly changed.                            |
 
-OCR draft text is never authoritative. It must not auto-publish, auto-verify, auto-score, auto-rank, shortlist, recommend, or update match, review, verification, reveal, trust-state, or hiring-decision state.
+OCR draft text is never authoritative. It must not auto-publish, auto-verify, auto-score, auto-rank, shortlist, recommend, or update match, review, verification, reveal, trust-state, or workflow-decision state.
 
 Proof Artifact OCR beta availability may be opened to all authenticated users after the same privacy, billing, budget, retention, consent, provider-smoke, and kill-switch gates pass. Start from CV beta may be opened to all authenticated individual users through `START_FROM_CV_OPEN_BETA_ENABLED=true` after the same consent, limit, provider-smoke, raw-prompt logging, and cost-control gates pass. User-facing copy should describe these surfaces as beta, but must not expose internal budget balances or the August 3, 2026 credit cutoff.
 
@@ -67,7 +67,7 @@ AI assistance must not be enabled in production unless all gates pass.
 - AI is not mentioned as the core product promise.
 - UI labels use practical language such as Improve this proof, Clarify assignment, Draft verification request, and Check privacy before publishing.
 - No UI copy says AI-powered hiring intelligence.
-- No UI copy implies AI scoring, ranking, or candidate recommendation.
+- No UI copy implies AI scoring, ranking, or proof-review participant recommendation.
 - Review Summary / Reason-Code Explanation Assistant is not enabled for MVP v1.
 
 ### 2.2 Privacy gates
@@ -202,7 +202,7 @@ Do not expose hidden user content, raw prompts, raw model responses, or provider
 
 Examples:
 
-- hidden candidate identity sent to provider
+- hidden proof-review participant identity sent to provider
 - full file content sent to provider
 - original filename sent to provider
 - signed URL sent to provider
@@ -241,8 +241,8 @@ Immediate action:
 Examples:
 
 - AI output invents claims
-- AI output suggests candidate ranking
-- AI output implies hiring recommendation
+- AI output suggests proof-review participant ranking
+- AI output implies workflow recommendation
 - AI output adds unverifiable outcomes
 - AI output changes proof meaning too aggressively
 
@@ -273,7 +273,7 @@ Before enabling AI in a pilot account, manually verify:
 
 - button says Clarify assignment
 - suggestion focuses on outcomes, constraints, capabilities, and proof expectations
-- no candidate score, rank, or fit language appears
+- no proof-review participant score, rank, or fit language appears
 - org reviewer without edit rights cannot run edit-level AI action if policy requires manager or owner
 
 ### Verification Request Composer
@@ -328,7 +328,7 @@ Track these qualitative and quantitative signals:
 - privacy flags catch real issues before publishing
 - users accept or edit suggestions, not blindly accept everything
 - no user believes AI scored or evaluated them
-- no organization believes AI ranked candidates
+- no organization believes AI ranked proof-review participants
 
 Suggested early targets:
 

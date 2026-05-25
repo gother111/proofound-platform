@@ -26,10 +26,13 @@ import {
   buildMatrixRowsFromRequirements,
   deriveRequirementsFromMatrix,
 } from '@/lib/assignments/expertise-matrix';
-import { triggerFirstAssignmentSurvey } from '@/lib/surveys/sus-triggers';
 import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
 import { isFeatureEnabled } from '@/lib/feature-flags/server';
-import { isMockSupabaseEnabled } from '@/lib/env';
+import {
+  buildVisualAssignmentFixtures,
+  visualAssignmentFixturesEnabled,
+} from '@/lib/assignments/visual-fixtures';
+import { getMatchingVisualState } from '@/lib/matching/visual-fixtures';
 
 export const dynamic = 'force-dynamic';
 
@@ -160,25 +163,6 @@ async function runAssignmentCreationSideEffects({
   assignment: any;
 }) {
   try {
-    const existingAssignments = await db
-      .select({ id: assignments.id })
-      .from(assignments)
-      .where(eq(assignments.orgId, orgId))
-      .limit(2);
-
-    if (existingAssignments.length === 1) {
-      await triggerFirstAssignmentSurvey(userId);
-    }
-  } catch (error) {
-    log.error('sus_survey.first_assignment_check_failed', {
-      requestId,
-      error: sanitizeErrorForLog(error),
-      userId,
-      orgId,
-    });
-  }
-
-  try {
     if (assignment.status === 'active') {
       const evaluation = evaluateAssignmentActivationCriteria(assignment);
       if (evaluation.canActivate) {
@@ -246,6 +230,15 @@ export async function GET(request: NextRequest) {
         );
       }
 
+      if (visualAssignmentFixturesEnabled()) {
+        const visualState = getMatchingVisualState(request.nextUrl);
+        return NextResponse.json({
+          items: visualState === 'empty' ? [] : buildVisualAssignmentFixtures(orgId),
+          hasMore: false,
+          nextOffset: null,
+        });
+      }
+
       // Get pagination parameters
       const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);
       const offset = parseInt(searchParams.get('offset') || '0', 10);
@@ -290,34 +283,6 @@ export async function GET(request: NextRequest) {
       // PRD safeguard: TTFQI 72h warning if <5 matches after 72 hours
       // -----------------------------------------------------------------------
       const now = Date.now();
-      const staleActiveAssignments = assignmentsToReturn.filter((assignment: any) => {
-        if (assignment.status !== 'active') return false;
-        const ageHours = (now - new Date(assignment.createdAt).getTime()) / (1000 * 60 * 60);
-        return ageHours >= 72;
-      });
-      const assignmentIds = staleActiveAssignments.map((a: any) => a.id);
-
-      let matchCounts: Record<string, number> = {};
-
-      if (assignmentIds.length > 0) {
-        const rows = await db
-          .select({
-            assignmentId: matches.assignmentId,
-            count: sql<number>`count(*)::int`,
-          })
-          .from(matches)
-          .where(inArray(matches.assignmentId, assignmentIds))
-          .groupBy(matches.assignmentId);
-
-        matchCounts = rows.reduce(
-          (acc, row) => {
-            acc[row.assignmentId] = row.count;
-            return acc;
-          },
-          {} as Record<string, number>
-        );
-      }
-
       const matchingSummaries: Record<
         string,
         {
@@ -385,7 +350,14 @@ export async function GET(request: NextRequest) {
 
       const itemsWithWarnings = assignmentsToReturn.map((assignment: any) => {
         const ageHours = (now - new Date(assignment.createdAt).getTime()) / (1000 * 60 * 60);
-        const count = matchCounts[assignment.id] ?? 0;
+        const matchingSummary = matchingSummaries[assignment.id] ?? {
+          candidateCount: 0,
+          reviewChangeCount: 0,
+          lastCandidateAt: null,
+          lastReviewChangeAt: null,
+          lastActivityAt: null,
+        };
+        const count = matchingSummary.candidateCount;
         const warn =
           assignment.status === 'active' && ageHours >= 72 && count < 5
             ? {
@@ -416,13 +388,7 @@ export async function GET(request: NextRequest) {
         return {
           ...assignment,
           ttfqiWarning: warn,
-          matchingSummary: matchingSummaries[assignment.id] ?? {
-            candidateCount: 0,
-            reviewChangeCount: 0,
-            lastCandidateAt: null,
-            lastReviewChangeAt: null,
-            lastActivityAt: null,
-          },
+          matchingSummary,
         };
       });
 
@@ -465,42 +431,15 @@ export async function POST(request: NextRequest) {
       const { user } = authContext;
       userId = user.id;
 
-      const body = await request.json();
+      let body: unknown;
+      try {
+        body = await request.json();
+      } catch {
+        return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+      }
 
       // Validate input
       const validatedData = AssignmentCreateSchema.parse(body);
-
-      if (isMockSupabaseEnabled()) {
-        const resolvedRole = validatedData.title ?? validatedData.role ?? 'Mock assignment';
-        const mockOrgId =
-          validatedData.orgId ||
-          validatedData.principalContext?.orgId ||
-          '99999999-9999-4999-9999-999999999999';
-        const now = new Date().toISOString();
-
-        return NextResponse.json(
-          {
-            assignment: {
-              id: '22222222-2222-4222-8222-222222222222',
-              orgId: mockOrgId,
-              role: resolvedRole,
-              title: resolvedRole,
-              engagementType: validatedData.engagementType ?? 'full_time',
-              businessValue: validatedData.rolePurpose ?? validatedData.businessValue ?? null,
-              expectedImpact:
-                validatedData.proofExpectations ?? validatedData.expectedImpact ?? null,
-              status: validatedData.status ?? 'draft',
-              creationStatus: validatedData.creationStatus ?? 'draft',
-              builderMode: validatedData.builderMode ?? 'basic',
-              mustHaveSkills: validatedData.mustHaveSkills ?? [],
-              niceToHaveSkills: validatedData.niceToHaveSkills ?? [],
-              createdAt: now,
-              updatedAt: now,
-            },
-          },
-          { status: 201 }
-        );
-      }
 
       const principal = validatedData.principalContext
         ? ensureOrganizationPrincipal(validatedData.principalContext)

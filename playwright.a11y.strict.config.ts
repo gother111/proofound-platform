@@ -15,6 +15,9 @@ const parsedBaseURL = (() => {
 const baseURLPort = parsedBaseURL?.port ? Number.parseInt(parsedBaseURL.port, 10) : NaN;
 const webServerPort = Number.isFinite(baseURLPort) ? baseURLPort : configuredPort;
 const playwrightBaseURL = configuredBaseURL || `http://127.0.0.1:${webServerPort}`;
+const configuredBaseURLIsExternal = Boolean(
+  parsedBaseURL && !['localhost', '127.0.0.1', '::1'].includes(parsedBaseURL.hostname)
+);
 const playwrightServerMode = process.env.PLAYWRIGHT_SERVER_MODE?.trim().toLowerCase();
 const strictEnvPrefix =
   'PII_HASH_SALT=${PII_HASH_SALT:-playwright-test-salt} NEXT_PUBLIC_USE_MOCK_SUPABASE=false ';
@@ -51,7 +54,7 @@ export default defineConfig({
   webServer: {
     command: webServerCommand,
     url: playwrightBaseURL,
-    reuseExistingServer: false,
+    reuseExistingServer: configuredBaseURLIsExternal,
     timeout: 120000,
   },
 });

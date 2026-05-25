@@ -1,6 +1,10 @@
-import { notFound } from 'next/navigation';
+import Link from 'next/link';
 import FeedbackForm from '@/components/feedback/FeedbackForm';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import {
+  buildVisualFeedbackTokenResponse,
+  feedbackVisualFixturesEnabled,
+} from '@/lib/feedback/visual-fixtures';
 
 type TokenData = {
   token: string;
@@ -13,6 +17,13 @@ type TokenData = {
 };
 
 async function loadTokenData(token: string): Promise<TokenData | null> {
+  if (feedbackVisualFixturesEnabled()) {
+    const visualResponse = buildVisualFeedbackTokenResponse(token);
+    if (visualResponse) {
+      return visualResponse;
+    }
+  }
+
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
   const response = await fetch(`${baseUrl}/api/feedback/token/${token}`, { cache: 'no-store' });
   if (!response.ok) return null;
@@ -28,7 +39,31 @@ export default async function FeedbackTokenPage({
   const tokenData = await loadTokenData(token);
 
   if (!tokenData) {
-    notFound();
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-proofound-parchment px-4 py-10">
+        <Card className="w-full max-w-md rounded-[24px] border-proofound-stone bg-white/95 shadow-[0_4px_24px_rgba(29,51,48,0.08)]">
+          <CardHeader className="space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-proofound-forest">
+              Feedback link
+            </p>
+            <h1 className="font-display text-2xl font-semibold leading-tight tracking-tight text-proofound-charcoal">
+              Unable to load feedback request
+            </h1>
+            <p className="text-sm leading-6 text-muted-foreground">
+              This feedback link is invalid, expired, or no longer available.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <Link
+              href="/"
+              className="inline-flex min-h-11 items-center justify-center rounded-lg border border-proofound-stone bg-white px-4 py-2 text-sm font-semibold text-proofound-charcoal shadow-sm transition-colors hover:border-proofound-forest/40 hover:text-proofound-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+            >
+              Return home
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   const template = tokenData?.template
@@ -42,25 +77,32 @@ export default async function FeedbackTokenPage({
   const alreadyUsed = Boolean(tokenData?.usedAt);
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-10">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl">Interview feedback</CardTitle>
-          <p className="text-sm text-muted-foreground">
+    <div className="flex min-h-screen items-center justify-center bg-proofound-parchment px-4 py-10">
+      <Card className="w-full max-w-3xl rounded-[24px] border-proofound-stone bg-white/95 shadow-[0_4px_24px_rgba(29,51,48,0.08)]">
+        <CardHeader className="space-y-2">
+          <h1 className="font-display text-2xl font-semibold leading-none tracking-tight text-proofound-charcoal">
+            Interview feedback
+          </h1>
+          <p className="text-sm leading-6 text-muted-foreground">
             Share quick feedback. Your name will be hidden from the other side.
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
           {expired ? (
-            <p className="text-sm text-destructive">This feedback link has expired.</p>
+            <p className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm leading-6 text-destructive">
+              This feedback link has expired.
+            </p>
           ) : alreadyUsed ? (
-            <p className="text-sm text-emerald-700">Feedback already submitted. Thank you!</p>
+            <p className="rounded-xl border border-[#D7E8DE] bg-[#F3FAF6] p-4 text-sm leading-6 text-proofound-forest">
+              Feedback already submitted. Thank you.
+            </p>
           ) : template ? (
             <FeedbackForm
               template={template}
               interviewId={tokenData?.interview?.id}
               token={tokenData?.token}
               alreadySubmitted={alreadyUsed}
+              surface="embedded"
             />
           ) : (
             <p className="text-sm text-destructive">Could not load the feedback form.</p>

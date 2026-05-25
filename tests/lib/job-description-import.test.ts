@@ -40,7 +40,8 @@ describe('job description assignment import', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.error).toMatch(/too short/i);
-      expect(result.guidance.join(' ')).toMatch(/full job description/i);
+      expect(result.guidance.join(' ')).toMatch(/full assignment brief/i);
+      expect(result.guidance.join(' ')).not.toMatch(/full job description/i);
     }
   });
 

@@ -1,0 +1,326 @@
+[
+  {
+    "id": "org-home-current",
+    "requestedUrl": "/app/o/test-org/home",
+    "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-plugin-routes/org-home-current.png",
+    "cookieBannerVisible": false,
+    "finalUrl": "http://127.0.0.1:33123/app/i/home",
+    "h1": "Build your proof-first profile",
+    "horizontalOverflow": 0,
+    "loginVisible": true,
+    "mainTextStart": "Portfolio ReadinessSetup RequiredBuild your proof-first profileWelcome back, there. Start by creating your first proof record. Shaping a single trusted work sample or artifact makes your profile ready.Guided setupYour profile is private by default. Candidates stay hidden until they explicitly authorize discovery or initiate a verification check.",
+    "title": "Proofound - Focus on what matters",
+    "viewport": {
+      "height": 844,
+      "width": 390
+    },
+    "visibleActions": [
+      {
+        "h": 64,
+        "href": "/app/i/home",
+        "text": "Overview",
+        "visible": true,
+        "w": 73,
+        "x": 4,
+        "y": 780
+      },
+      {
+        "h": 64,
+        "href": "/app/i/profile",
+        "text": "Profile",
+        "visible": true,
+        "w": 73,
+        "x": 81,
+        "y": 780
+      },
+      {
+        "h": 64,
+        "href": "/app/i/communications",
+        "text": "Inbox",
+        "visible": true,
+        "w": 73,
+        "x": 158,
+        "y": 780
+      },
+      {
+        "h": 64,
+        "href": "/app/i/matching",
+        "text": "Matching",
+        "visible": true,
+        "w": 73,
+        "x": 236,
+        "y": 780
+      },
+      {
+        "h": 64,
+        "href": "/app/i/settings",
+        "text": "Settings",
+        "visible": true,
+        "w": 73,
+        "x": 313,
+        "y": 780
+      },
+      {
+        "h": 44,
+        "href": null,
+        "text": "U",
+        "visible": true,
+        "w": 44,
+        "x": 330,
+        "y": 8
+      },
+      {
+        "h": 44,
+        "href": "/app/i/profile",
+        "text": "Guided setup",
+        "visible": true,
+        "w": 276,
+        "x": 57,
+        "y": 361
+      }
+    ]
+  },
+  {
+    "id": "org-assignments-current",
+    "requestedUrl": "/app/o/test-org/assignments",
+    "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-plugin-routes/org-assignments-current.png",
+    "cookieBannerVisible": false,
+    "finalUrl": "http://127.0.0.1:33123/app/i/home",
+    "h1": "Build your proof-first profile",
+    "horizontalOverflow": 0,
+    "loginVisible": true,
+    "mainTextStart": "Portfolio ReadinessSetup RequiredBuild your proof-first profileWelcome back, there. Start by creating your first proof record. Shaping a single trusted work sample or artifact makes your profile ready.Guided setupYour profile is private by default. Candidates stay hidden until they explicitly authorize discovery or initiate a verification check.",
+    "title": "Proofound - Focus on what matters",
+    "viewport": {
+      "height": 844,
+      "width": 390
+    },
+    "visibleActions": [
+      {
+        "h": 64,
+        "href": "/app/i/home",
+        "text": "Overview",
+        "visible": true,
+        "w": 73,
+        "x": 4,
+        "y": 780
+      },
+      {
+        "h": 64,
+        "href": "/app/i/profile",
+        "text": "Profile",
+        "visible": true,
+        "w": 73,
+        "x": 81,
+        "y": 780
+      },
+      {
+        "h": 64,
+        "href": "/app/i/communications",
+        "text": "Inbox",
+        "visible": true,
+        "w": 73,
+        "x": 158,
+        "y": 780
+      },
+      {
+        "h": 64,
+        "href": "/app/i/matching",
+        "text": "Matching",
+        "visible": true,
+        "w": 73,
+        "x": 236,
+        "y": 780
+      },
+      {
+        "h": 64,
+        "href": "/app/i/settings",
+        "text": "Settings",
+        "visible": true,
+        "w": 73,
+        "x": 313,
+        "y": 780
+      },
+      {
+        "h": 44,
+        "href": null,
+        "text": "U",
+        "visible": true,
+        "w": 44,
+        "x": 330,
+        "y": 8
+      },
+      {
+        "h": 44,
+        "href": "/app/i/profile",
+        "text": "Guided setup",
+        "visible": true,
+        "w": 276,
+        "x": 57,
+        "y": 361
+      }
+    ]
+  },
+  {
+    "id": "org-communications-current",
+    "requestedUrl": "/app/o/test-org/communications",
+    "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-plugin-routes/org-communications-current.png",
+    "cookieBannerVisible": false,
+    "finalUrl": "http://127.0.0.1:33123/app/i/home",
+    "h1": "Build your proof-first profile",
+    "horizontalOverflow": 0,
+    "loginVisible": true,
+    "mainTextStart": "Portfolio ReadinessSetup RequiredBuild your proof-first profileWelcome back, there. Start by creating your first proof record. Shaping a single trusted work sample or artifact makes your profile ready.Guided setupYour profile is private by default. Candidates stay hidden until they explicitly authorize discovery or initiate a verification check.",
+    "title": "Proofound - Focus on what matters",
+    "viewport": {
+      "height": 844,
+      "width": 390
+    },
+    "visibleActions": [
+      {
+        "h": 64,
+        "href": "/app/i/home",
+        "text": "Overview",
+        "visible": true,
+        "w": 73,
+        "x": 4,
+        "y": 780
+      },
+      {
+        "h": 64,
+        "href": "/app/i/profile",
+        "text": "Profile",
+        "visible": true,
+        "w": 73,
+        "x": 81,
+        "y": 780
+      },
+      {
+        "h": 64,
+        "href": "/app/i/communications",
+        "text": "Inbox",
+        "visible": true,
+        "w": 73,
+        "x": 158,
+        "y": 780
+      },
+      {
+        "h": 64,
+        "href": "/app/i/matching",
+        "text": "Matching",
+        "visible": true,
+        "w": 73,
+        "x": 236,
+        "y": 780
+      },
+      {
+        "h": 64,
+        "href": "/app/i/settings",
+        "text": "Settings",
+        "visible": true,
+        "w": 73,
+        "x": 313,
+        "y": 780
+      },
+      {
+        "h": 44,
+        "href": null,
+        "text": "U",
+        "visible": true,
+        "w": 44,
+        "x": 330,
+        "y": 8
+      },
+      {
+        "h": 44,
+        "href": "/app/i/profile",
+        "text": "Guided setup",
+        "visible": true,
+        "w": 276,
+        "x": 57,
+        "y": 361
+      }
+    ]
+  },
+  {
+    "id": "org-shortlist-current",
+    "requestedUrl": "/app/o/test-org/shortlist",
+    "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-plugin-routes/org-shortlist-current.png",
+    "cookieBannerVisible": false,
+    "finalUrl": "http://127.0.0.1:33123/app/i/home",
+    "h1": "Build your proof-first profile",
+    "horizontalOverflow": 0,
+    "loginVisible": true,
+    "mainTextStart": "Portfolio ReadinessSetup RequiredBuild your proof-first profileWelcome back, there. Start by creating your first proof record. Shaping a single trusted work sample or artifact makes your profile ready.Guided setupYour profile is private by default. Candidates stay hidden until they explicitly authorize discovery or initiate a verification check.",
+    "title": "Proofound - Focus on what matters",
+    "viewport": {
+      "height": 844,
+      "width": 390
+    },
+    "visibleActions": [
+      {
+        "h": 64,
+        "href": "/app/i/home",
+        "text": "Overview",
+        "visible": true,
+        "w": 73,
+        "x": 4,
+        "y": 780
+      },
+      {
+        "h": 64,
+        "href": "/app/i/profile",
+        "text": "Profile",
+        "visible": true,
+        "w": 73,
+        "x": 81,
+        "y": 780
+      },
+      {
+        "h": 64,
+        "href": "/app/i/communications",
+        "text": "Inbox",
+        "visible": true,
+        "w": 73,
+        "x": 158,
+        "y": 780
+      },
+      {
+        "h": 64,
+        "href": "/app/i/matching",
+        "text": "Matching",
+        "visible": true,
+        "w": 73,
+        "x": 236,
+        "y": 780
+      },
+      {
+        "h": 64,
+        "href": "/app/i/settings",
+        "text": "Settings",
+        "visible": true,
+        "w": 73,
+        "x": 313,
+        "y": 780
+      },
+      {
+        "h": 44,
+        "href": null,
+        "text": "U",
+        "visible": true,
+        "w": 44,
+        "x": 330,
+        "y": 8
+      },
+      {
+        "h": 44,
+        "href": "/app/i/profile",
+        "text": "Guided setup",
+        "visible": true,
+        "w": 276,
+        "x": 57,
+        "y": 361
+      }
+    ]
+  }
+]

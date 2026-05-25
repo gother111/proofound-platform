@@ -19,20 +19,20 @@ export function IndividualMatchingEmpty({ onSetup }: IndividualMatchingEmptyProp
     {
       id: 'setup-matching',
       title: 'Set up matching profile',
-      description: 'Add constraints and preferences to unlock matching.',
+      description: 'Add constraints and preferences to make matching ready.',
       onClick: onSetup,
     },
     {
       id: 'strengthen-portfolio',
-      title: 'Strengthen Public Page proof',
+      title: 'Review proof readiness',
       description: 'Refresh proof-backed work examples before opening matching further.',
       onClick: () => router.push('/app/i/profile?profileView=full&tab=proof_packs'),
     },
     {
-      id: 'proof-readiness',
-      title: 'Strengthen proof readiness',
-      description: 'Connect recent proof and constraints before opening introductions.',
-      onClick: () => router.push('/app/i/profile?profileView=full&tab=proof_packs'),
+      id: 'review-privacy',
+      title: 'Review privacy first',
+      description: 'Confirm what is public, private, and only visible after a match.',
+      onClick: () => router.push('/app/i/settings/privacy'),
     },
   ] as const;
 

@@ -4,7 +4,7 @@ const PLAIN_VOCABULARY = {
   pacLabel: 'Proof fit',
   pacTooltip: 'Proof fit reflects skills, evidence, freshness, verification, and constraints.',
   skillsLabel: 'skills',
-  expertiseSystemLabel: 'Expertise Atlas',
+  expertiseSystemLabel: 'Proof skills',
   ttfqiLabel: 'Time to first good match',
   ttscLabel: 'Time to successful hire',
 } as const;
@@ -13,7 +13,7 @@ const CANONICAL_VOCABULARY = {
   pacLabel: 'Proof fit',
   pacTooltip: 'Proof fit reflects skills, evidence, freshness, verification, and constraints.',
   skillsLabel: 'skills',
-  expertiseSystemLabel: 'Expertise Atlas',
+  expertiseSystemLabel: 'Proof skills',
   ttfqiLabel: 'TTFQI',
   ttscLabel: 'TTSC',
 } as const;

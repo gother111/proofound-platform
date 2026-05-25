@@ -20,13 +20,6 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
 }));
 
-vi.mock('@/lib/security/capability-tokens', () => ({
-  CAPABILITY_TOKEN_CLASSES: {
-    PROFILE_SNIPPET_SHARE: 'profile_snippet_share',
-  },
-  inspectCapabilityToken: vi.fn(),
-}));
-
 import { db } from '@/db';
 import { getRows } from '@/lib/db/rows';
 import { isViewerMatchedWithProfile } from '@/lib/privacy/profile-fetcher';

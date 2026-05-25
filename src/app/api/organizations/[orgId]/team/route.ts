@@ -2,8 +2,7 @@
  * Organization Team API
  * GET /api/organizations/[orgId]/team
  *
- * Fetches team members for an organization
- * Used by TeamRolesCard dashboard widget
+ * Fetches launch-safe team members for organization access surfaces.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -54,7 +53,7 @@ export async function GET(
     log.error('org.team.fetch.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
     });
-    // Degrade gracefully to keep dashboard widget stable
+    // Degrade gracefully to keep organization access surfaces stable.
     return NextResponse.json(
       {
         members: [],

@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
 import { AssignmentSchema, type AssignmentData, createAssignment } from '@/actions/assignment';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import {
   Step1BusinessValue,
   Step2TargetOutcomes,
@@ -28,7 +29,7 @@ const STEPS = [
   'Target Outcomes',
   'Weight Matrix',
   'Practicals',
-  'Expertise Mapping',
+  'Proof Requirements',
 ];
 
 export function AssignmentBuilder({ orgId, orgSlug }: AssignmentBuilderProps) {
@@ -100,7 +101,9 @@ export function AssignmentBuilder({ orgId, orgSlug }: AssignmentBuilderProps) {
 
       if (result.error) {
         toast.error(result.error);
-        console.error(result.details);
+        dispatchClientDiagnostic('assignment_builder.legacy.create_rejected', {
+          detailType: typeof result.details,
+        });
         return;
       }
 
@@ -108,7 +111,7 @@ export function AssignmentBuilder({ orgId, orgSlug }: AssignmentBuilderProps) {
       router.push(`/app/o/${orgSlug}/assignments`);
     } catch (error) {
       toast.error('Something went wrong. Please try again.');
-      console.error(error);
+      dispatchClientErrorDiagnostic('assignment_builder.legacy.create_failed', error);
     } finally {
       setIsSubmitting(false);
     }

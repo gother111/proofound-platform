@@ -4,6 +4,7 @@ import path from 'node:path';
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
 
 import { REPO_READY_LAUNCH_SMOKE_SCENARIO_IDS } from '@/lib/launch/contracts';
+import { getLaunchDateSlug } from '@/lib/launch/date-slug';
 
 export const REPO_READY_VALIDATION_SCHEMA_VERSION = 1;
 export const REPO_READY_VALIDATION_FILE_NAME = 'repo-ready-validation.json';
@@ -53,12 +54,7 @@ function commandBinary(name: string) {
 }
 
 function getCurrentDate(now: Date) {
-  return new Intl.DateTimeFormat('en-CA', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    timeZone: process.env.TZ || 'UTC',
-  }).format(now);
+  return getLaunchDateSlug(now);
 }
 
 function buildCommandString(command: string[]) {
@@ -409,10 +405,28 @@ export async function runRepoReadyValidationBundle(options: RepoReadyValidationO
     );
 
     if (gates.find((gate) => gate.id === 'prod_build')?.status === 'PASS') {
-      const started = await startProductionServer(workspaceRoot, outputDir, now);
-      server = started.child;
-      baseUrl = started.baseUrl;
-      gates.push(started.gate);
+      try {
+        const started = await startProductionServer(workspaceRoot, outputDir, now);
+        server = started.child;
+        baseUrl = started.baseUrl;
+        gates.push(started.gate);
+      } catch (error) {
+        const bootErrorPath = path.join(outputDir, 'repo-ready-prod-boot-error.log');
+        await fs.writeFile(
+          bootErrorPath,
+          `${error instanceof Error ? error.stack || error.message : String(error)}\n`,
+          'utf8'
+        );
+        gates.push({
+          id: 'prod_boot',
+          status: 'FAIL',
+          summary:
+            'Production boot could not start in this environment; review the captured boot error and rerun on a host that can bind localhost.',
+          evidence: [path.relative(workspaceRoot, bootErrorPath).replace(/\\/g, '/')],
+          command: 'npm run start -- -p <dynamic-port> && curl /api/health',
+          observedAt: now.toISOString(),
+        });
+      }
     } else {
       gates.push({
         id: 'prod_boot',
@@ -452,6 +466,23 @@ export async function runRepoReadyValidationBundle(options: RepoReadyValidationO
         passSummary: 'Launch-status route tests passed with current persisted/live monitor logic.',
         failSummary:
           'Launch-status route tests failed for the current persisted/live monitor logic.',
+      },
+      {
+        gateId: 'public_portfolio_safe',
+        command: [
+          'npm',
+          'run',
+          'test',
+          '--',
+          'tests/ui/public-portfolio-access-consistency.test.tsx',
+          'tests/ui/public-portfolio-page.test.tsx',
+          'tests/lib/public-portfolio-projection.test.ts',
+        ],
+        logFileName: 'repo-ready-public-portfolio.log',
+        passSummary:
+          'Public portfolio page, access consistency, and projection tests passed for public-safe direct-link behavior.',
+        failSummary:
+          'Public portfolio page, access consistency, or projection tests failed for public-safe direct-link behavior.',
       },
       {
         gateId: 'private_context_scaffolding',

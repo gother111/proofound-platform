@@ -1,6 +1,6 @@
 > Doc Class: `governance`
 > Sync Pair: `preflight.md`
-> Last Verified: `2026-02-26`
+> Last Verified: `2026-05-19`
 
 # Preflight Checklist (Before Making Changes)
 
@@ -30,6 +30,18 @@ Repo Truth items include citations like `(source: README.md)`. Everything else i
     - GitHub secrets exist: `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`
     - Health URL in workflow matches the production domain (`https://proofound.io/api/health` unless intentionally changed).
   - If Vercel Git auto-deploys remain enabled for production, expect duplicate deployment activity until they are intentionally disabled in project settings.
+- If you touch launch docs, route policy, archived behavior, or operator guidance:
+  - Check `docs/DOCS_REGISTRY.md` and `.artifacts/mvp-surface-sweep-2026-05-19/SURFACE_SWEEP.md`.
+  - Keep active docs dated and classified against the locked MVP corridor, internal launch-ops, archive, or post-MVP.
+- If you touch UI, landing, public pages, navigation, or visual hierarchy:
+  - Read `DESIGN.md` before editing.
+  - Use Browser for representative desktop/mobile route checks when rendered behavior matters.
+- If you touch public, privacy, reveal, export/delete, upload, admin, internal-ops, or API route surfaces:
+  - Run focused route-surface, privacy/no-leak, and permission tests for the affected surface.
+- If you touch database, migrations, storage policies, or production-candidate data:
+  - Confirm the target and operator approval before mutation.
+  - Run drift, backup/checkpoint, migration audit, repo-owned migrate, and isolated restore verification where production-candidate or production data is involved.
+  - Never use `npm run db:push` against production. Use canonical SQL migrations under `src/db/migrations/` and apply via `npm run db:migrate` (prefer `DIRECT_URL` for DDL).
 - Confirm env var hygiene:
   - Use `.env.example` and `docs/ENV_VARIABLES.md`; never commit `.env.local` or `.env`. (source: .env.example, docs/ENV_VARIABLES.md, .gitignore)
 - Confirm hooks behavior:
@@ -37,4 +49,3 @@ Repo Truth items include citations like `(source: README.md)`. Everything else i
 - Safety (policy):
   - Do not attempt dependency installs for docs-only work.
   - Do not paste secrets into tracked files.
-  - Never use `npm run db:push` against production. Use canonical SQL migrations under `src/db/migrations/` and apply via `npm run db:migrate` (prefer `DIRECT_URL` for DDL).

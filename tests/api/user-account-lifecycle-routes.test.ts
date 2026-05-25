@@ -92,7 +92,7 @@ vi.mock('@/lib/log', () => ({
 
 import { GET as getAccountStatus } from '@/app/api/user/account/route';
 import { DELETE as deleteAccount } from '@/app/api/user/account/route';
-import { POST as cancelDeletion } from '@/app/api/user/account/cancel-deletion/route';
+import { middleware } from '@/middleware';
 
 function mockProfileLookup(profile: Record<string, unknown> | undefined) {
   const limit = vi.fn().mockResolvedValue(profile ? [profile] : []);
@@ -148,18 +148,15 @@ describe('/api/user/account lifecycle routes', () => {
   });
 
   it('returns 410 for cancel deletion because scheduled deletion is not supported', async () => {
-    mocks.requireApiAuthContext.mockResolvedValue({
-      user: { id: 'user-1' },
-    });
-
-    const response = await cancelDeletion();
+    const response = await middleware(
+      new NextRequest('http://localhost/api/user/account/cancel-deletion', { method: 'POST' })
+    );
     const body = await response.json();
 
     expect(response.status).toBe(410);
-    expect(body).toEqual({
-      error: 'Cancellation unavailable',
-      message:
-        'Account deletion is immediate and irreversible. There is no scheduled deletion state to cancel.',
+    expect(body).toMatchObject({
+      surface: 'User API',
+      launchState: 'non_launch',
     });
   });
 
@@ -403,6 +400,35 @@ describe('/api/user/account lifecycle routes', () => {
     expect(mocks.adminDeleteUser).not.toHaveBeenCalled();
   });
 
+  it('returns 400 for invalid deletion confirmation without creating a deletion request', async () => {
+    mocks.requireApiAuthContext.mockResolvedValue({
+      user: { id: 'user-1' },
+    });
+
+    const response = await deleteAccount(
+      new NextRequest('http://localhost/api/user/account', {
+        method: 'DELETE',
+        body: JSON.stringify({
+          password: 'TestPassword123!',
+          confirmPhrase: 'delete my account',
+        }),
+        headers: {
+          'content-type': 'application/json',
+        },
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe('Invalid deletion request');
+    expect(body.details.fieldErrors.confirmPhrase).toEqual([
+      'You must type the confirmation phrase exactly: DELETE MY ACCOUNT',
+    ]);
+    expect(mocks.createLifecycleOperation).not.toHaveBeenCalled();
+    expect(mocks.createProfileDeletionRequest).not.toHaveBeenCalled();
+    expect(mocks.adminDeleteUser).not.toHaveBeenCalled();
+  });
+
   it('minimizes free-text deletion reasons before retention', async () => {
     mocks.requireApiAuthContext.mockResolvedValue({
       user: { id: 'user-1' },
@@ -484,6 +510,69 @@ describe('/api/user/account lifecycle routes', () => {
       status: 'failed_requires_manual_review',
       visibleStatus: 'failed',
       summaryCode: 'anonymize_failed',
+    });
+  });
+
+  it('marks manual review when auth revocation fails after data deletion succeeds', async () => {
+    mocks.requireApiAuthContext.mockResolvedValue({
+      user: { id: 'user-1' },
+    });
+    mockProfileLookup({
+      id: 'user-1',
+      lifecycleState: 'active',
+      deletionRequestedAt: null,
+      deleted: false,
+    });
+    mocks.adminDeleteUser.mockResolvedValueOnce({
+      error: { message: 'auth service unavailable' },
+    });
+
+    const response = await deleteAccount(
+      new NextRequest('http://localhost/api/user/account', {
+        method: 'DELETE',
+        body: JSON.stringify({
+          password: 'TestPassword123!',
+          confirmPhrase: 'DELETE MY ACCOUNT',
+        }),
+        headers: {
+          'content-type': 'application/json',
+        },
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({
+      error: 'Failed to delete account',
+      message: 'Could not revoke account access. Please try again shortly.',
+    });
+    expect(mocks.execute).toHaveBeenCalled();
+    expect(mocks.executeAccountDeletionLifecycle).toHaveBeenCalledWith({
+      userId: 'user-1',
+      reason: null,
+      operationId: 'operation-1',
+    });
+    expect(mocks.execute.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.adminDeleteUser.mock.invocationCallOrder[0]
+    );
+    expect(mocks.executeAccountDeletionLifecycle.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.adminDeleteUser.mock.invocationCallOrder[0]
+    );
+    expect(mocks.updateProfileDeletionRequestState).toHaveBeenCalledWith(
+      expect.objectContaining({
+        deletionRequestId: 'deletion-1',
+        toState: 'failed_requires_manual_review',
+        failureCode: 'auth_delete_failed',
+        metadata: expect.objectContaining({
+          message: 'auth service unavailable',
+          dataDeletionCompletedBeforeAuthFailure: true,
+        }),
+      })
+    );
+    expect(mocks.finalizeLifecycleOperation).toHaveBeenCalledWith('operation-1', {
+      status: 'failed_requires_manual_review',
+      visibleStatus: 'failed',
+      summaryCode: 'auth_delete_failed',
     });
   });
 });

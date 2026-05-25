@@ -1,0 +1,504 @@
+{
+  "createdAt": "2026-05-20T01:43:29.823Z",
+  "tool": "Codex Browser in-app browser",
+  "results": [
+    {
+      "route": "/",
+      "viewport": "desktop",
+      "actions": [
+        {
+          "disabled": false,
+          "href": "/signup/organization",
+          "text": "Request a pilot"
+        },
+        {
+          "disabled": false,
+          "href": "/signup/individual",
+          "text": "Create your proof portfolio"
+        },
+        {
+          "disabled": false,
+          "href": "/signup/organization",
+          "text": "Request a pilot"
+        },
+        {
+          "disabled": false,
+          "href": "/signup/individual",
+          "text": "Create your proof portfolio"
+        },
+        {
+          "disabled": false,
+          "href": null,
+          "text": "FOR INDIVIDUALS Create your proof portfolio Start with a cleaner proof portfolio, then add proof, ve"
+        },
+        {
+          "disabled": false,
+          "href": null,
+          "text": "FOR ORGANIZATIONS Explore evidence-based hiring Review work through structured proof, clearer trust "
+        },
+        {
+          "disabled": false,
+          "href": "/",
+          "text": "PROOFOUND"
+        },
+        {
+          "disabled": false,
+          "href": "/cookies",
+          "text": "Cookies"
+        },
+        {
+          "disabled": false,
+          "href": "/cookies/settings",
+          "text": "Cookie settings"
+        },
+        {
+          "disabled": false,
+          "href": "/privacy",
+          "text": "Privacy"
+        },
+        {
+          "disabled": false,
+          "href": "/terms",
+          "text": "Terms"
+        },
+        {
+          "disabled": false,
+          "href": "/login",
+          "text": "Sign in"
+        }
+      ],
+      "bodyOverflowX": false,
+      "h1": "Proof behind the claim",
+      "hasMain": true,
+      "hasSkipLink": true,
+      "hasSkipTarget": true,
+      "mainCount": 1,
+      "path": "/",
+      "title": "Proofound | Proof Behind the Claim",
+      "consoleErrorCount": 0
+    },
+    {
+      "route": "/",
+      "viewport": "mobile",
+      "actions": [
+        {
+          "disabled": false,
+          "href": "/signup/organization",
+          "text": "Request a pilot"
+        },
+        {
+          "disabled": false,
+          "href": "/signup/individual",
+          "text": "Create your proof portfolio"
+        },
+        {
+          "disabled": false,
+          "href": "/signup/organization",
+          "text": "Request a pilot"
+        },
+        {
+          "disabled": false,
+          "href": "/signup/individual",
+          "text": "Create your proof portfolio"
+        },
+        {
+          "disabled": false,
+          "href": null,
+          "text": "FOR INDIVIDUALS Create your proof portfolio Start with a cleaner proof portfolio, then add proof, ve"
+        },
+        {
+          "disabled": false,
+          "href": null,
+          "text": "FOR ORGANIZATIONS Explore evidence-based hiring Review work through structured proof, clearer trust "
+        },
+        {
+          "disabled": false,
+          "href": "/",
+          "text": "PROOFOUND"
+        },
+        {
+          "disabled": false,
+          "href": "/cookies",
+          "text": "Cookies"
+        },
+        {
+          "disabled": false,
+          "href": "/cookies/settings",
+          "text": "Cookie settings"
+        },
+        {
+          "disabled": false,
+          "href": "/privacy",
+          "text": "Privacy"
+        },
+        {
+          "disabled": false,
+          "href": "/terms",
+          "text": "Terms"
+        },
+        {
+          "disabled": false,
+          "href": "/login",
+          "text": "Sign in"
+        }
+      ],
+      "bodyOverflowX": false,
+      "h1": "Proof behind the claim",
+      "hasMain": true,
+      "hasSkipLink": true,
+      "hasSkipTarget": true,
+      "mainCount": 1,
+      "path": "/",
+      "title": "Proofound | Proof Behind the Claim",
+      "consoleErrorCount": 0
+    },
+    {
+      "route": "/signup",
+      "viewport": "desktop",
+      "actions": [
+        {
+          "disabled": false,
+          "href": null,
+          "text": "Back"
+        },
+        {
+          "disabled": false,
+          "href": null,
+          "text": "Individual For professionals who want a clean proof-based portfolio link they can share today, plus "
+        },
+        {
+          "disabled": false,
+          "href": null,
+          "text": "Organization For organizations that need a credible trust page on day 1, then one assignment and a p"
+        },
+        {
+          "disabled": false,
+          "href": null,
+          "text": "Sign in"
+        },
+        {
+          "disabled": false,
+          "href": "/terms",
+          "text": "Terms of Service"
+        },
+        {
+          "disabled": false,
+          "href": "/privacy",
+          "text": "Privacy Policy"
+        }
+      ],
+      "bodyOverflowX": false,
+      "h1": "Join Proofound",
+      "hasMain": true,
+      "hasSkipLink": true,
+      "hasSkipTarget": true,
+      "mainCount": 1,
+      "path": "/signup",
+      "title": "Sign Up | Proofound",
+      "consoleErrorCount": 0
+    },
+    {
+      "route": "/signup",
+      "viewport": "mobile",
+      "actions": [
+        {
+          "disabled": false,
+          "href": null,
+          "text": "Back"
+        },
+        {
+          "disabled": false,
+          "href": null,
+          "text": "Individual For professionals who want a clean proof-based portfolio link they can share today, plus "
+        },
+        {
+          "disabled": false,
+          "href": null,
+          "text": "Organization For organizations that need a credible trust page on day 1, then one assignment and a p"
+        },
+        {
+          "disabled": false,
+          "href": null,
+          "text": "Sign in"
+        },
+        {
+          "disabled": false,
+          "href": "/terms",
+          "text": "Terms of Service"
+        },
+        {
+          "disabled": false,
+          "href": "/privacy",
+          "text": "Privacy Policy"
+        }
+      ],
+      "bodyOverflowX": false,
+      "h1": "Join Proofound",
+      "hasMain": true,
+      "hasSkipLink": true,
+      "hasSkipTarget": true,
+      "mainCount": 1,
+      "path": "/signup",
+      "title": "Sign Up | Proofound",
+      "consoleErrorCount": 0
+    },
+    {
+      "route": "/login",
+      "viewport": "desktop",
+      "actions": [
+        {
+          "disabled": false,
+          "href": null,
+          "text": "Show password"
+        },
+        {
+          "disabled": false,
+          "href": null,
+          "text": "Remember me"
+        },
+        {
+          "disabled": false,
+          "href": "/reset-password",
+          "text": "Forgot password?"
+        },
+        {
+          "disabled": false,
+          "href": null,
+          "text": "Sign in"
+        },
+        {
+          "disabled": false,
+          "href": null,
+          "text": "Google"
+        },
+        {
+          "disabled": false,
+          "href": null,
+          "text": "LinkedIn"
+        },
+        {
+          "disabled": false,
+          "href": "/signup",
+          "text": "Create account"
+        },
+        {
+          "disabled": false,
+          "href": "/terms",
+          "text": "Terms of Service"
+        },
+        {
+          "disabled": false,
+          "href": "/privacy",
+          "text": "Privacy Policy"
+        }
+      ],
+      "bodyOverflowX": false,
+      "h1": "Welcome back",
+      "hasMain": true,
+      "hasSkipLink": true,
+      "hasSkipTarget": true,
+      "mainCount": 1,
+      "path": "/login",
+      "title": "Sign In | Proofound",
+      "consoleErrorCount": 0
+    },
+    {
+      "route": "/login",
+      "viewport": "mobile",
+      "actions": [
+        {
+          "disabled": false,
+          "href": null,
+          "text": "Show password"
+        },
+        {
+          "disabled": false,
+          "href": null,
+          "text": "Remember me"
+        },
+        {
+          "disabled": false,
+          "href": "/reset-password",
+          "text": "Forgot password?"
+        },
+        {
+          "disabled": false,
+          "href": null,
+          "text": "Sign in"
+        },
+        {
+          "disabled": false,
+          "href": null,
+          "text": "Google"
+        },
+        {
+          "disabled": false,
+          "href": null,
+          "text": "LinkedIn"
+        },
+        {
+          "disabled": false,
+          "href": "/signup",
+          "text": "Create account"
+        },
+        {
+          "disabled": false,
+          "href": "/terms",
+          "text": "Terms of Service"
+        },
+        {
+          "disabled": false,
+          "href": "/privacy",
+          "text": "Privacy Policy"
+        }
+      ],
+      "bodyOverflowX": false,
+      "h1": "Welcome back",
+      "hasMain": true,
+      "hasSkipLink": true,
+      "hasSkipTarget": true,
+      "mainCount": 1,
+      "path": "/login",
+      "title": "Sign In | Proofound",
+      "consoleErrorCount": 0
+    },
+    {
+      "route": "/portfolio/demo",
+      "viewport": "desktop",
+      "actions": [],
+      "bodyOverflowX": false,
+      "h1": "PUBLIC PAGE UNAVAILABLE",
+      "hasMain": true,
+      "hasSkipLink": true,
+      "hasSkipTarget": true,
+      "mainCount": 1,
+      "path": "/portfolio/demo",
+      "title": "Public Page Unavailable | Proofound",
+      "consoleErrorCount": 0
+    },
+    {
+      "route": "/portfolio/demo",
+      "viewport": "mobile",
+      "actions": [],
+      "bodyOverflowX": false,
+      "h1": "PUBLIC PAGE UNAVAILABLE",
+      "hasMain": true,
+      "hasSkipLink": true,
+      "hasSkipTarget": true,
+      "mainCount": 1,
+      "path": "/portfolio/demo",
+      "title": "Public Page Unavailable | Proofound",
+      "consoleErrorCount": 0
+    },
+    {
+      "route": "/portfolio/org/proofound-labs",
+      "viewport": "desktop",
+      "actions": [
+        {
+          "disabled": false,
+          "href": "/",
+          "text": "Return home"
+        },
+        {
+          "disabled": false,
+          "href": null,
+          "text": "Copy share link"
+        },
+        {
+          "disabled": false,
+          "href": "https://proofound.io",
+          "text": "Website"
+        }
+      ],
+      "bodyOverflowX": false,
+      "h1": "Proofound Labs",
+      "hasMain": true,
+      "hasSkipLink": true,
+      "hasSkipTarget": true,
+      "mainCount": 1,
+      "path": "/portfolio/org/proofound-labs",
+      "title": "Proofound organization portfolio",
+      "consoleErrorCount": 0
+    },
+    {
+      "route": "/portfolio/org/proofound-labs",
+      "viewport": "mobile",
+      "actions": [
+        {
+          "disabled": false,
+          "href": "/",
+          "text": "Return home"
+        },
+        {
+          "disabled": false,
+          "href": null,
+          "text": "Copy share link"
+        },
+        {
+          "disabled": false,
+          "href": "https://proofound.io",
+          "text": "Website"
+        }
+      ],
+      "bodyOverflowX": false,
+      "h1": "Proofound Labs",
+      "hasMain": true,
+      "hasSkipLink": true,
+      "hasSkipTarget": true,
+      "mainCount": 1,
+      "path": "/portfolio/org/proofound-labs",
+      "title": "Proofound organization portfolio",
+      "consoleErrorCount": 0
+    },
+    {
+      "route": "/admin",
+      "viewport": "desktop",
+      "actions": [
+        {
+          "disabled": false,
+          "href": "/app/i/home",
+          "text": "Go to Overview"
+        },
+        {
+          "disabled": false,
+          "href": "/",
+          "text": "Go to Home"
+        }
+      ],
+      "bodyOverflowX": false,
+      "h1": "403",
+      "hasMain": true,
+      "hasSkipLink": true,
+      "hasSkipTarget": true,
+      "mainCount": 1,
+      "path": "/403",
+      "title": "Proofound - Focus on what matters",
+      "consoleErrorCount": 0
+    },
+    {
+      "route": "/admin",
+      "viewport": "mobile",
+      "actions": [
+        {
+          "disabled": false,
+          "href": "/app/i/home",
+          "text": "Go to Overview"
+        },
+        {
+          "disabled": false,
+          "href": "/",
+          "text": "Go to Home"
+        }
+      ],
+      "bodyOverflowX": false,
+      "h1": "403",
+      "hasMain": true,
+      "hasSkipLink": true,
+      "hasSkipTarget": true,
+      "mainCount": 1,
+      "path": "/403",
+      "title": "Proofound - Focus on what matters",
+      "consoleErrorCount": 0
+    }
+  ]
+}

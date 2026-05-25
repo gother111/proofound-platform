@@ -135,12 +135,13 @@ export function PasswordChangeForm() {
             onChange={(e) => setCurrentPassword(e.target.value)}
             placeholder="Enter current password"
             disabled={isLoading}
-            className="pr-10"
+            className="pr-14"
           />
           <button
             type="button"
             onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-proofound-charcoal/50 hover:text-proofound-charcoal"
+            aria-label={showCurrentPassword ? 'Hide current password' : 'Show current password'}
+            className="absolute right-0 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-lg text-proofound-charcoal/50 transition-colors hover:bg-muted hover:text-proofound-charcoal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest"
           >
             {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
@@ -158,12 +159,13 @@ export function PasswordChangeForm() {
             onChange={(e) => setNewPassword(e.target.value)}
             placeholder="Enter new password (min. 8 characters)"
             disabled={isLoading}
-            className="pr-10"
+            className="pr-14"
           />
           <button
             type="button"
             onClick={() => setShowNewPassword(!showNewPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-proofound-charcoal/50 hover:text-proofound-charcoal"
+            aria-label={showNewPassword ? 'Hide new password' : 'Show new password'}
+            className="absolute right-0 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-lg text-proofound-charcoal/50 transition-colors hover:bg-muted hover:text-proofound-charcoal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest"
           >
             {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
@@ -197,12 +199,13 @@ export function PasswordChangeForm() {
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="Re-enter new password"
             disabled={isLoading}
-            className="pr-10"
+            className="pr-14"
           />
           <button
             type="button"
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-proofound-charcoal/50 hover:text-proofound-charcoal"
+            aria-label={showConfirmPassword ? 'Hide confirmed password' : 'Show confirmed password'}
+            className="absolute right-0 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-lg text-proofound-charcoal/50 transition-colors hover:bg-muted hover:text-proofound-charcoal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest"
           >
             {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
@@ -244,11 +247,11 @@ export function PasswordChangeForm() {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex items-center gap-2 pt-2">
+      <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:items-center">
         <Button
           type="submit"
           disabled={isLoading}
-          className="bg-proofound-forest hover:bg-proofound-forest/90"
+          className="w-full bg-proofound-forest hover:bg-proofound-forest/90 sm:w-auto"
         >
           {isLoading ? (
             <>
@@ -273,6 +276,7 @@ export function PasswordChangeForm() {
             setError(null);
           }}
           disabled={isLoading}
+          className="w-full sm:w-auto"
         >
           Cancel
         </Button>

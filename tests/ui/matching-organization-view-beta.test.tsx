@@ -45,6 +45,10 @@ describe('MatchingOrganizationView launch corridor', () => {
     vi.clearAllMocks();
     searchParamAssignment = '';
     window.localStorage.clear();
+    (global as any).fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({}),
+    });
   });
 
   it('does not render the archived beta test initiation CTA', async () => {
@@ -55,10 +59,16 @@ describe('MatchingOrganizationView launch corridor', () => {
 
     render(<MatchingOrganizationView assignments={assignments as any} onCreateNew={vi.fn()} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /matching for designer/i }));
+    expect(screen.getByText('Assignment review queue')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Review proof-backed submissions, keep workflow stages clear, and request intros when ready.'
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText('Active Assignments')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByText(/no matches yet/i)).toBeInTheDocument();
+      expect(screen.getByText('No proof submissions yet')).toBeInTheDocument();
     });
 
     expect(screen.queryByRole('button', { name: /initiate test/i })).not.toBeInTheDocument();
@@ -66,6 +76,7 @@ describe('MatchingOrganizationView launch corridor', () => {
     expect(screen.queryByText(/skills-first/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/balanced/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /weights & filters/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/shortlist fits/i)).not.toBeInTheDocument();
   });
 
   it('stays on the assignment match API and never calls archived test-match endpoints', async () => {
@@ -81,10 +92,6 @@ describe('MatchingOrganizationView launch corridor', () => {
     });
 
     render(<MatchingOrganizationView assignments={assignments as any} onCreateNew={vi.fn()} />);
-
-    expect(apiFetchMock).not.toHaveBeenCalled();
-
-    fireEvent.click(screen.getByRole('button', { name: /matching for designer/i }));
 
     await waitFor(() => {
       expect(apiFetchMock).toHaveBeenCalledWith(
@@ -124,9 +131,16 @@ describe('MatchingOrganizationView launch corridor', () => {
       />
     );
 
-    expect(apiFetchMock).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(apiFetchMock).toHaveBeenCalledWith(
+        '/api/match/assignment',
+        expect.objectContaining({
+          body: expect.stringContaining('"assignmentId":"assignment-1"'),
+        })
+      );
+    });
 
-    fireEvent.click(screen.getByRole('button', { name: /matching for research lead/i }));
+    fireEvent.click(screen.getByRole('button', { name: /research lead/i }));
 
     await waitFor(() => {
       expect(apiFetchMock).toHaveBeenCalledWith(
@@ -137,8 +151,7 @@ describe('MatchingOrganizationView launch corridor', () => {
       );
     });
     expect(pushMock).toHaveBeenCalledWith('/app/o/acme/assignments?matching=assignment-2');
-    expect(screen.getByTestId('assignment-matching-grid')).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: 'View / Edit' })[1]).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Edit assignment context' })).toHaveAttribute(
       'href',
       '/app/o/acme/assignments/assignment-2/review'
     );
@@ -170,12 +183,90 @@ describe('MatchingOrganizationView launch corridor', () => {
       />
     );
 
-    expect(screen.getByText('New candidates')).toBeInTheDocument();
+    expect(screen.getByText('New submissions')).toBeInTheDocument();
+    expect(screen.getAllByText('2 submissions').length).toBeGreaterThan(0);
+    expect(screen.queryByText('2 matches')).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /matching for designer/i }));
+    fireEvent.click(screen.getByRole('button', { name: /designer/i }));
 
     await waitFor(() => {
-      expect(screen.queryByText('New candidates')).not.toBeInTheDocument();
+      expect(screen.queryByText('New submissions')).not.toBeInTheDocument();
     });
+  });
+
+  it('uses proof-submission fallback labels when review card labels are missing', async () => {
+    apiFetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        items: [
+          {
+            id: 'match-1',
+            assignmentId: 'assignment-1',
+            score: 0.76,
+            reviewStage: 'blind_review',
+            revealScope: 'blind',
+            reviewCard: null,
+            profile: {
+              skills: {},
+            },
+          },
+        ],
+      }),
+    });
+
+    render(<MatchingOrganizationView assignments={assignments as any} onCreateNew={vi.fn()} />);
+
+    expect(await screen.findByText('Submission #1')).toBeInTheDocument();
+    expect(screen.queryByText('Candidate #1')).not.toBeInTheDocument();
+  });
+
+  it('keeps required-skill explanation labels proof-submission scoped', async () => {
+    apiFetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        items: [
+          {
+            id: 'match-skills',
+            assignmentId: 'assignment-1',
+            reviewStage: 'blind_review',
+            revealScope: 'blind',
+            reviewCard: {
+              candidateLabel: 'Submission A7F2',
+              fitSummary: {
+                headline: 'Relevant proof signals are attached.',
+                bullets: [],
+                reasonCodes: [],
+              },
+            },
+          },
+        ],
+      }),
+    });
+    (global as any).fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        proofSignals: {
+          skills: 'Clear support',
+        },
+        skillsMatch: {
+          required: [
+            {
+              skillName: 'Evidence operations',
+              requiredLevel: 3,
+              yourLevel: 4,
+              met: true,
+            },
+          ],
+          nice: [],
+        },
+      }),
+    });
+
+    render(<MatchingOrganizationView assignments={assignments as any} onCreateNew={vi.fn()} />);
+
+    expect(await screen.findByText('Submission A7F2')).toBeInTheDocument();
+    expect(await screen.findByText('Evidence operations')).toBeInTheDocument();
+    expect(screen.getByText(/Required: Lvl 3 .* Submission has: Lvl 4/)).toBeInTheDocument();
+    expect(screen.queryByText(/Candidate has: Lvl 4/)).not.toBeInTheDocument();
   });
 });

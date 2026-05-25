@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { requireAuth } from '@/lib/auth';
+import { log } from '@/lib/log';
 import { normalizeVerifierEmail } from '@/lib/verification/custom-verification';
 
 const EmailHintQuerySchema = z.object({
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest) {
       kind: 'verifier_email_ready',
     });
   } catch (error) {
-    console.error('Email hint GET error:', error);
+    log.error('verification.email_hint.get_failed', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

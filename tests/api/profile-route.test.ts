@@ -34,7 +34,14 @@ vi.mock('drizzle-orm', () => ({
   eq: vi.fn(() => 'eq'),
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+  },
+}));
+
 import { GET } from '@/app/api/profile/route';
+import { log } from '@/lib/log';
 
 describe('/api/profile', () => {
   beforeEach(() => {
@@ -77,6 +84,24 @@ describe('/api/profile', () => {
     expect(body).toMatchObject({
       displayName: 'Proofound Flow Tester',
       experiences: [{ id: 'exp-1', title: 'Senior Product Engineer' }],
+    });
+  });
+
+  it('logs load failures structurally while keeping the public response generic', async () => {
+    mocks.requireApiAuthContext.mockResolvedValue({
+      user: { id: 'user-1', displayName: 'Proofound Flow Tester' },
+    });
+    mocks.select.mockImplementationOnce(() => {
+      throw new Error('profile query unavailable');
+    });
+
+    const response = await GET();
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Failed to fetch profile' });
+    expect(log.error).toHaveBeenCalledWith('profile.payload.fetch_failed', {
+      error: 'profile query unavailable',
     });
   });
 });

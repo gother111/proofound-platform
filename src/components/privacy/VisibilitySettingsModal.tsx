@@ -1,11 +1,24 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer';
 import { useResponsiveModalMode } from '@/hooks/use-responsive-modal-mode';
 import { FieldVisibilityControls } from './FieldVisibilityControls';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 interface VisibilitySettingsModalProps {
   open: boolean;
@@ -27,7 +40,9 @@ export function VisibilitySettingsModal({
       apiFetch('/api/user/me')
         .then((res) => res.json())
         .then((data) => setCurrentUserId(data.id))
-        .catch(console.error);
+        .catch((error) => {
+          dispatchClientErrorDiagnostic('privacy.visibility_modal.user_load_failed', error);
+        });
     } else if (userId) {
       setCurrentUserId(userId);
     }
@@ -36,8 +51,8 @@ export function VisibilitySettingsModal({
   const contentBody = currentUserId ? (
     <FieldVisibilityControls userId={currentUserId} />
   ) : (
-    <div className="flex items-center justify-center py-8">
-      <p className="text-muted-foreground">Loading...</p>
+    <div className="flex items-center justify-center py-8" role="status" aria-live="polite">
+      <p className="text-muted-foreground">Loading privacy visibility controls...</p>
     </div>
   );
 
@@ -49,6 +64,10 @@ export function VisibilitySettingsModal({
             <DialogTitle className="text-2xl font-['Crimson_Pro']">
               Field-Level Privacy Controls
             </DialogTitle>
+            <DialogDescription>
+              Choose which profile fields are public, shared with your network, matched privately,
+              or hidden.
+            </DialogDescription>
           </DialogHeader>
           {contentBody}
         </DialogContent>
@@ -63,6 +82,10 @@ export function VisibilitySettingsModal({
           <DrawerTitle className="text-2xl font-['Crimson_Pro']">
             Field-Level Privacy Controls
           </DrawerTitle>
+          <DrawerDescription>
+            Choose which profile fields are public, shared with your network, matched privately, or
+            hidden.
+          </DrawerDescription>
         </DrawerHeader>
         <div className="max-h-[70vh] overflow-y-auto px-4 pb-4">{contentBody}</div>
       </DrawerContent>

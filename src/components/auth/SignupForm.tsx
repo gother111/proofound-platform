@@ -1,14 +1,14 @@
 'use client';
 
-import { useActionState, useMemo, useState } from 'react';
+import { useActionState, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import SocialSignInButtons from '@/components/auth/social-sign-in-buttons';
 import { NetworkBackground } from '@/components/NetworkBackground';
@@ -49,6 +49,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [gdprConsent, setGdprConsent] = useState(false);
   const [marketingOptIn, setMarketingOptIn] = useState(false);
+  const errorRef = useRef<HTMLDivElement>(null);
 
   const personaValue = useMemo(
     () => (accountType === 'organization' ? 'org_member' : 'individual'),
@@ -58,6 +59,25 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
   const [formState, formAction] = useActionState(signUp, INITIAL_STATE);
   const state = formState ?? INITIAL_STATE;
   const errorMessage = clientError ?? state.error;
+
+  const focusErrorMessage = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: 'auto' });
+    errorRef.current?.scrollIntoView({ block: 'center', behavior: 'auto' });
+    errorRef.current?.focus({ preventScroll: true });
+  }, []);
+
+  useEffect(() => {
+    if (!errorMessage) return;
+
+    requestAnimationFrame(() => {
+      focusErrorMessage();
+    });
+  }, [errorMessage, focusErrorMessage]);
+
+  const setValidationError = (message: string) => {
+    setClientError(message);
+    setTimeout(focusErrorMessage, 0);
+  };
 
   const validateEmail = (value: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -70,32 +90,32 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
     const normalizedEmail = email.trim();
     if (!normalizedEmail) {
       event.preventDefault();
-      setClientError('Please enter your email address.');
+      setValidationError('Please enter your email address.');
       return;
     }
 
     if (!validateEmail(normalizedEmail)) {
       event.preventDefault();
-      setClientError('Enter a valid email address.');
+      setValidationError('Enter a valid email address.');
       return;
     }
 
     if (!password) {
       event.preventDefault();
-      setClientError('Please enter a password.');
+      setValidationError('Please enter a password.');
       return;
     }
 
     if (password.length < 8) {
       event.preventDefault();
-      setClientError('Password must be at least 8 characters');
+      setValidationError('Password must be at least 8 characters');
       return;
     }
 
     // Validate GDPR consent (required)
     if (!gdprConsent) {
       event.preventDefault();
-      setClientError(
+      setValidationError(
         'You must agree to the Privacy Policy and Terms of Service to create an account'
       );
       return;
@@ -104,30 +124,22 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
     // Keep password fields in sync
     if (password !== confirmPassword) {
       event.preventDefault();
-      setClientError('Passwords do not match');
+      setValidationError('Passwords do not match');
       return;
     }
   };
 
   if (state.success) {
     return (
-      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-japandi-bg px-6 py-16 text-foreground">
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-japandi-bg px-4 py-10 text-foreground sm:px-6 sm:py-16">
         <div className="pointer-events-none absolute inset-0 opacity-60">
           <NetworkBackground />
         </div>
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(28,77,58,0.08),transparent_55%),radial-gradient(circle_at_85%_80%,rgba(199,107,74,0.07),transparent_65%)]" />
 
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="relative z-10 w-full max-w-md px-4"
-          data-testid="signup-success"
-        >
-          <Card className="mx-auto rounded-[24px] border border-proofound-stone bg-white/95 p-10 text-center shadow-[0_4px_24px_rgba(29,51,48,0.08)]">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: 'spring' }}
+        <div className="relative z-10 w-full max-w-md px-0 sm:px-4" data-testid="signup-success">
+          <Card className="mx-auto rounded-[24px] border border-proofound-stone bg-white/95 p-6 text-center shadow-[0_4px_24px_rgba(29,51,48,0.08)] sm:p-10">
+            <div
               className={`mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full ${
                 accountType === 'organization'
                   ? 'bg-proofound-terracotta shadow-[0_8px_18px_rgba(199,107,74,0.32)]'
@@ -135,7 +147,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
               }`}
             >
               <CheckCircle2 className="h-8 w-8 text-white" />
-            </motion.div>
+            </div>
             <h2 className="font-display text-2xl font-semibold tracking-tight text-foreground">
               Check your email
             </h2>
@@ -166,13 +178,13 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
               <Link href="/login">Return to login</Link>
             </Button>
           </Card>
-        </motion.div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-japandi-bg px-6 py-16 text-foreground">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-japandi-bg px-4 py-6 text-foreground sm:px-6 sm:py-16">
       <div className="pointer-events-none absolute inset-0 opacity-60">
         <NetworkBackground />
       </div>
@@ -180,75 +192,62 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
 
       {/* Back Button */}
       {onBack && (
-        <motion.button
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
+        <button
           onClick={onBack}
-          className="absolute left-6 top-6 flex min-h-[44px] items-center gap-2 px-2 -mx-2 text-muted-foreground transition-colors hover:text-proofound-charcoal"
+          className="absolute left-4 top-6 flex min-h-[44px] items-center gap-2 rounded-sm px-3 text-muted-foreground transition-colors hover:text-proofound-charcoal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 sm:left-6"
         >
           <ArrowLeft className="w-4 h-4" />
           <span className="text-sm">Back</span>
-        </motion.button>
+        </button>
       )}
 
       {/* Signup Form Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="relative z-10 w-full max-w-md px-4"
-        data-testid="signup-form-shell"
-      >
-        <Card className="mx-auto rounded-[24px] border border-proofound-stone bg-white/95 p-10 shadow-[0_4px_24px_rgba(29,51,48,0.08)] backdrop-blur">
+      <div className="relative z-10 w-full max-w-md px-0 sm:px-4" data-testid="signup-form-shell">
+        <Card className="mx-auto rounded-[24px] border border-proofound-stone bg-white/95 p-4 shadow-[0_4px_24px_rgba(29,51,48,0.08)] backdrop-blur sm:p-10">
           {/* Logo/Title */}
-          <div className="text-center mb-8">
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="mb-4"
-            >
+          <div className="mb-5 text-center sm:mb-8">
+            <div className="mb-3 sm:mb-4">
               <div
-                className={`mx-auto flex h-16 w-16 items-center justify-center rounded-2xl ${
+                className={`mx-auto flex h-14 w-14 items-center justify-center rounded-2xl sm:h-16 sm:w-16 ${
                   accountType === 'organization'
                     ? 'bg-proofound-terracotta shadow-[0_8px_18px_rgba(199,107,74,0.32)]'
                     : 'bg-proofound-forest shadow-[0_8px_18px_rgba(28,77,58,0.28)]'
                 }`}
               >
                 {accountType === 'individual' ? (
-                  <User className="h-8 w-8 text-white" />
+                  <User className="h-7 w-7 text-white sm:h-8 sm:w-8" />
                 ) : (
-                  <Building2 className="h-8 w-8 text-white" />
+                  <Building2 className="h-7 w-7 text-white sm:h-8 sm:w-8" />
                 )}
               </div>
-            </motion.div>
-            <h1 className="font-display text-[28px] font-semibold leading-9 tracking-[-0.01em] text-foreground">
+            </div>
+            <h1 className="font-display text-[25px] font-semibold leading-8 tracking-[-0.01em] text-foreground sm:text-[28px] sm:leading-9">
               Create your {accountType} account
             </h1>
-            <p className="mt-3 text-sm leading-6 text-muted-foreground">
-              Join Proofound and start building credibility.
+            <p className="mt-2 text-sm leading-6 text-muted-foreground sm:mt-3">
+              Start with email and password. Add details after sign-up.
             </p>
           </div>
 
           {/* Error Message */}
           {errorMessage && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
+            <div
+              ref={errorRef}
               className="mb-6 rounded-2xl border border-[#B5542D]/25 bg-[#B5542D]/10 px-4 py-3"
               data-testid="signup-error"
+              tabIndex={-1}
             >
               <p className="text-sm font-medium text-[#8A3F21]" role="alert" aria-live="polite">
                 {errorMessage}
               </p>
-            </motion.div>
+            </div>
           )}
 
           {/* Signup Form */}
           <form
             action={formAction}
             onSubmit={handleSubmit}
-            className="space-y-6"
+            className="space-y-4 sm:space-y-6"
             noValidate
             data-testid="signup-form"
           >
@@ -362,28 +361,32 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
             </div>
 
             {/* GDPR Consent Checkboxes */}
-            <div className="space-y-4 pt-2">
+            <div className="space-y-3 pt-1 sm:space-y-4 sm:pt-2">
               {/* Required: Privacy Policy & Terms of Service */}
-              <label className="flex items-start gap-3 cursor-pointer group min-h-[44px] py-1">
-                <input
-                  type="checkbox"
+              <div className="flex min-h-[44px] items-start gap-3 py-1">
+                <Checkbox
+                  id="signup-gdpr-consent"
                   data-testid="gdpr-consent"
+                  aria-label="I agree to the Privacy Policy and Terms of Service"
                   checked={gdprConsent}
-                  onChange={(e) => setGdprConsent(e.target.checked)}
+                  onCheckedChange={(checked) => setGdprConsent(checked === true)}
                   required
-                  className={`mt-0.5 h-5 w-5 cursor-pointer rounded border-proofound-stone transition-colors ${
+                  className={`mt-0.5 h-6 w-6 cursor-pointer rounded-md border-proofound-stone bg-white ${
                     accountType === 'organization'
-                      ? 'text-proofound-terracotta focus:ring-proofound-terracotta/20'
-                      : 'text-proofound-forest focus:ring-proofound-forest/20'
+                      ? 'data-[state=checked]:bg-proofound-terracotta data-[state=checked]:text-white focus-visible:ring-proofound-terracotta/20'
+                      : 'data-[state=checked]:bg-proofound-forest data-[state=checked]:text-white focus-visible:ring-proofound-forest/20'
                   }`}
                 />
-                <span className="text-sm leading-5 text-foreground">
+                <label
+                  htmlFor="signup-gdpr-consent"
+                  className="cursor-pointer text-sm leading-6 text-foreground"
+                >
                   I agree to the{' '}
                   <a
                     href="/privacy"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`font-medium underline underline-offset-2 transition-colors inline-flex min-h-[44px] items-center ${
+                    className={`inline-flex min-h-11 items-center rounded-sm px-1 font-medium underline underline-offset-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-offset-2 ${
                       accountType === 'organization'
                         ? 'text-proofound-terracotta hover:text-[#B5673F]'
                         : 'text-proofound-forest hover:text-[#2D5D4A]'
@@ -396,7 +399,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                     href="/terms"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`font-medium underline underline-offset-2 transition-colors inline-flex min-h-[44px] items-center ${
+                    className={`inline-flex min-h-11 items-center rounded-sm px-1 font-medium underline underline-offset-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-offset-2 ${
                       accountType === 'organization'
                         ? 'text-proofound-terracotta hover:text-[#B5673F]'
                         : 'text-proofound-forest hover:text-[#2D5D4A]'
@@ -405,26 +408,30 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                     Terms of Service
                   </a>
                   <span className="ml-1 text-[#B5542D]">*</span>
-                </span>
-              </label>
+                </label>
+              </div>
 
               {/* Optional: Marketing emails */}
-              <label className="flex items-start gap-3 cursor-pointer group min-h-[44px] py-1">
-                <input
-                  type="checkbox"
+              <div className="flex min-h-[44px] items-start gap-3 py-1">
+                <Checkbox
+                  id="signup-marketing-opt-in"
                   data-testid="marketing-opt-in"
+                  aria-label="Send me updates about new features and proof-review workflow improvements"
                   checked={marketingOptIn}
-                  onChange={(e) => setMarketingOptIn(e.target.checked)}
-                  className={`mt-0.5 h-5 w-5 cursor-pointer rounded border-proofound-stone transition-colors ${
+                  onCheckedChange={(checked) => setMarketingOptIn(checked === true)}
+                  className={`mt-0.5 h-6 w-6 cursor-pointer rounded-md border-proofound-stone bg-white ${
                     accountType === 'organization'
-                      ? 'text-proofound-terracotta focus:ring-proofound-terracotta/20'
-                      : 'text-proofound-forest focus:ring-proofound-forest/20'
+                      ? 'data-[state=checked]:bg-proofound-terracotta data-[state=checked]:text-white focus-visible:ring-proofound-terracotta/20'
+                      : 'data-[state=checked]:bg-proofound-forest data-[state=checked]:text-white focus-visible:ring-proofound-forest/20'
                   }`}
                 />
-                <span className="text-sm leading-5 text-muted-foreground">
-                  Send me updates about new features and matching opportunities
-                </span>
-              </label>
+                <label
+                  htmlFor="signup-marketing-opt-in"
+                  className="cursor-pointer text-sm leading-5 text-muted-foreground"
+                >
+                  Send me updates about new features and proof-review workflow improvements
+                </label>
+              </div>
             </div>
 
             <SignupSubmitButton>
@@ -433,15 +440,16 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
           </form>
 
           {/* Divider */}
-          <div className="relative my-6">
-            <Separator className="bg-proofound-stone" />
-            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-4 text-center overline">
+          <div className="my-6 flex items-center gap-3">
+            <Separator className="flex-1 bg-proofound-stone" />
+            <span className="shrink-0 whitespace-nowrap bg-white text-center overline">
               Or continue with
             </span>
+            <Separator className="flex-1 bg-proofound-stone" />
           </div>
 
           {/* Social Sign In - Using existing configured component */}
-          <SocialSignInButtons />
+          <SocialSignInButtons nextPath={nextPath} />
 
           {/* Sign In Link */}
           <div className="mt-6 text-center">
@@ -450,7 +458,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
               <button
                 type="button"
                 onClick={() => router.push('/login')}
-                className={`font-medium hover:underline ${
+                className={`inline-flex min-h-[44px] items-center rounded-sm px-2 font-medium hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-offset-2 ${
                   accountType === 'organization'
                     ? 'text-proofound-terracotta hover:text-[#B5673F]'
                     : 'text-proofound-forest hover:text-[#2D5D4A]'
@@ -461,33 +469,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
             </p>
           </div>
         </Card>
-
-        {/* Footer Text */}
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          By creating an account, you agree to our{' '}
-          <a
-            href="/terms"
-            className={`font-medium underline underline-offset-2 ${
-              accountType === 'organization'
-                ? 'text-proofound-terracotta hover:text-[#B5673F]'
-                : 'text-proofound-forest hover:text-[#2D5D4A]'
-            }`}
-          >
-            Terms of Service
-          </a>{' '}
-          and{' '}
-          <a
-            href="/privacy"
-            className={`font-medium underline underline-offset-2 ${
-              accountType === 'organization'
-                ? 'text-proofound-terracotta hover:text-[#B5673F]'
-                : 'text-proofound-forest hover:text-[#2D5D4A]'
-            }`}
-          >
-            Privacy Policy
-          </a>
-        </p>
-      </motion.div>
+      </div>
     </div>
   );
 }

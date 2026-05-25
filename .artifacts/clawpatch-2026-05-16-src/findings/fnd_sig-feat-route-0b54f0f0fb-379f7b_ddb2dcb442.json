@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "findingId": "fnd_sig-feat-route-0b54f0f0fb-379f7b_ddb2dcb442",
+  "featureId": "feat_route_0b54f0f0fb",
+  "title": "Readiness validation is not atomic with the publish update",
+  "category": "concurrency",
+  "severity": "medium",
+  "confidence": "medium",
+  "triage": "risk",
+  "evidence": [
+    {
+      "path": "app/api/assignments/[id]/publish/route.ts",
+      "startLine": 64,
+      "endLine": 134,
+      "symbol": "POST",
+      "quote": "const assignment = await db.query.assignments.findFirst"
+    },
+    {
+      "path": "app/api/assignments/[id]/publish/route.ts",
+      "startLine": 179,
+      "endLine": 187,
+      "symbol": "POST",
+      "quote": ".where(eq(assignments.id, assignmentId))"
+    }
+  ],
+  "reasoning": "The route reads assignment, organization, outcomes, and feature-flag-dependent readiness before the final update, but the update only matches by assignment id. A concurrent request can remove required outcomes, downgrade org readiness, change creationStatus, or otherwise invalidate publish readiness after validation and before the update; this request will still publish the stale snapshot.",
+  "reproduction": "While one request is between readiness validation and the update, run a second request that removes the last outcome or changes the assignment out of review_ready; the first request can still update the assignment to active.",
+  "recommendation": "Perform publish in a transaction with row locking or use a guarded conditional update that rechecks the publish-critical predicates at write time. If any predicate no longer matches, return a 409 and ask the client to refresh.",
+  "whyTestsDoNotAlreadyCoverThis": "The feature metadata lists no linked tests, and there is no concurrency or stale-read test around publish readiness.",
+  "suggestedRegressionTest": "Add a publish test that simulates a stale readiness snapshot and verifies the final update does not activate the assignment when outcomes or creationStatus have changed before write.",
+  "minimumFixScope": "Guard the final update in app/api/assignments/[id]/publish/route.ts and handle zero-row updates as a 409 or 404 instead of proceeding.",
+  "status": "fixed",
+  "history": [
+    {
+      "runId": null,
+      "kind": "triage",
+      "status": "fixed",
+      "note": "Fixed manually: guarded final publish update now checks review_ready plus publishable workflow status and returns 409 on zero-row stale writes; covered by tests/api/assignments-publish-route.test.ts.",
+      "reasoning": null,
+      "commands": [],
+      "createdAt": "2026-05-16T17:17:37.758Z"
+    }
+  ],
+  "signature": "sig_feat-route-0b54f0f0fb_379f7bbe37",
+  "linkedPatchAttemptIds": [],
+  "createdByRunId": "20260516T164325-52e1d0",
+  "createdAt": "2026-05-16T16:46:26.329Z",
+  "updatedAt": "2026-05-16T17:17:37.757Z"
+}

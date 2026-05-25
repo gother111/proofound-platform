@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "featureId": "feat_route_09eea7fcfb",
+  "title": "Route /api/user/export",
+  "summary": "Web route implemented by app/api/user/export/route.ts.",
+  "kind": "route",
+  "source": "next-app-route",
+  "confidence": "high",
+  "entrypoints": [
+    {
+      "path": "app/api/user/export/route.ts",
+      "symbol": null,
+      "route": "/api/user/export",
+      "command": null
+    }
+  ],
+  "ownedFiles": [
+    {
+      "path": "app/api/user/export/route.ts",
+      "reason": "entrypoint"
+    }
+  ],
+  "contextFiles": [],
+  "tests": [],
+  "tags": ["next", "web"],
+  "trustBoundaries": ["user-input", "network", "serialization"],
+  "status": "fixed",
+  "lock": null,
+  "findingIds": ["fnd_sig-feat-route-09eea7fcfb-d87057_baa4fad72a"],
+  "patchAttemptIds": [],
+  "analysisHistory": [
+    {
+      "runId": "20260516T161141-38a836",
+      "kind": "review",
+      "summary": "1 finding(s)",
+      "provider": "codex",
+      "model": null,
+      "createdAt": "2026-05-16T16:17:47.418Z"
+    }
+  ],
+  "createdAt": "2026-05-16T16:02:40.128Z",
+  "updatedAt": "2026-05-16T16:41:45.720Z"
+}

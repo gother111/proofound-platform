@@ -6,6 +6,7 @@
  */
 
 import { kv } from '@vercel/kv';
+import { log } from '@/lib/log';
 
 // In-memory cache for development (when KV is not available)
 const memoryCache = new Map<string, { value: unknown; expires: number }>();
@@ -29,6 +30,15 @@ export const CACHE_TTL = {
   MATCH_RESULTS: 2 * 60, // 2 minutes (frequently updated)
   USER_SKILLS: 10 * 60, // 10 minutes
 } as const;
+
+function cacheKeyFamily(key: string): string {
+  const matchedPrefix = Object.values(CACHE_KEYS).find((prefix) => key.startsWith(prefix));
+  return matchedPrefix ? matchedPrefix.replace(/:$/, '') : 'unknown';
+}
+
+function cacheErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
 
 /**
  * Check if we're in a Vercel environment with KV configured
@@ -60,7 +70,10 @@ export async function getCached<T>(key: string): Promise<T | null> {
       return null;
     }
   } catch (error) {
-    console.error(`Cache get error for key ${key}:`, error);
+    log.error('cache.get_failed', {
+      keyFamily: cacheKeyFamily(key),
+      errorMessage: cacheErrorMessage(error),
+    });
     return null;
   }
 }
@@ -80,7 +93,10 @@ export async function setCached<T>(key: string, value: T, ttlSeconds: number): P
       });
     }
   } catch (error) {
-    console.error(`Cache set error for key ${key}:`, error);
+    log.error('cache.set_failed', {
+      keyFamily: cacheKeyFamily(key),
+      errorMessage: cacheErrorMessage(error),
+    });
   }
 }
 
@@ -95,7 +111,10 @@ export async function deleteCached(key: string): Promise<void> {
       memoryCache.delete(key);
     }
   } catch (error) {
-    console.error(`Cache delete error for key ${key}:`, error);
+    log.error('cache.delete_failed', {
+      keyFamily: cacheKeyFamily(key),
+      errorMessage: cacheErrorMessage(error),
+    });
   }
 }
 
@@ -129,7 +148,10 @@ export async function deleteCachedPattern(pattern: string): Promise<void> {
       keysToDelete.forEach((key) => memoryCache.delete(key));
     }
   } catch (error) {
-    console.error(`Cache pattern delete error for pattern ${pattern}:`, error);
+    log.error('cache.pattern_delete_failed', {
+      patternFamily: cacheKeyFamily(pattern.replace('*', '')),
+      errorMessage: cacheErrorMessage(error),
+    });
   }
 }
 
@@ -240,7 +262,7 @@ export async function invalidateMatchResults(assignmentId: string): Promise<void
  */
 export async function clearAllCaches(): Promise<void> {
   if (hasKVConfigured()) {
-    console.warn('Clearing all caches - this may impact performance');
+    log.warn('cache.clear_all_requested');
     await kv.flushdb();
   } else {
     memoryCache.clear();
@@ -256,13 +278,8 @@ export async function getCacheStats(): Promise<{
   keys?: number;
 }> {
   if (hasKVConfigured()) {
-    try {
-      // Note: dbsize is not available in Vercel KV REST API
-      // This is a placeholder for future implementation
-      return { type: 'redis' };
-    } catch {
-      return { type: 'redis' };
-    }
+    // Vercel KV REST does not expose DB-wide key counts; report backend type only.
+    return { type: 'redis' };
   } else {
     return {
       type: 'memory',

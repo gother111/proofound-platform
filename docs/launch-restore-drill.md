@@ -1,5 +1,5 @@
 > Doc Class: `active`
-> Last Verified: `2026-03-10`
+> Last Verified: `2026-05-21`
 
 # Launch Restore Drill
 
@@ -12,16 +12,34 @@ This drill validates that Proofound launch rollback readiness is backed by a rep
 - Fingerprint helper: `scripts/lib/db-checkpoint-utils.mjs`
 - Critical tables covered by fingerprinting:
   - `profiles`
+  - `individual_profiles`
   - `organizations`
+  - `organization_members`
+  - `proof_artifacts`
+  - `proof_packs`
+  - `proof_pack_items`
+  - `verification_records`
+  - `capability_tokens`
+  - `capability_token_events`
+  - `portfolio_publication_states`
   - `assignments`
+  - `matches`
+  - `match_review_states`
+  - `intro_workflows`
+  - `reveal_events`
   - `interviews`
+  - `decisions`
+  - `engagement_verifications`
   - `conversations`
   - `messages`
+  - `data_portability_exports`
+  - `profile_deletion_requests`
+  - `uploaded_files`
+  - `internal_ops_queue_items`
+  - `audit_logs`
   - `analytics_events`
-  - `fairness_notes`
-  - `verification_requests`
-  - `user_video_integrations`
-  - `decision_reminders`
+
+The checkpoint table list is intentionally limited to active MVP, internal launch-ops, privacy/export/delete, and audit-trail state. Retired compatibility tables such as legacy verification requests, native video integrations, fairness notes, and decision reminders are not launch restore gates unless the locked MVP scope changes.
 
 ## What Is Repo-Proven
 
@@ -33,7 +51,9 @@ This drill validates that Proofound launch rollback readiness is backed by a rep
   - latest timestamp fingerprints
   - schema and data dumps when `pg_dump` is available
 - `npm run db:restore:verify -- --checkpoint <dir>` compares a restored database against the checkpoint fingerprint and fails on drift.
-- `npm run go:no-go` requires both scripts and this runbook to exist before the launch gate can pass.
+- Local `npm run go:no-go` requires the restore scripts and this runbook to exist.
+- Production-candidate `npm run go:no-go` additionally requires a fresh passing restore verification report, defaulting to `.artifacts/launch-restore-report.json`.
+- `tests/scripts/db-checkpoint-critical-tables.test.ts` keeps the fingerprint table list aligned with the current MVP corridor and rejects retired compatibility tables as launch restore gates.
 
 ## What Is Still Manual
 
@@ -71,11 +91,20 @@ npm run db:backup:checkpoint
 npm run db:restore:verify -- --checkpoint /tmp/proofound-db-checkpoints/2026-03-10T17-00-00-000Z
 ```
 
-6. Optional: write a machine-readable report for evidence capture.
+6. Write a machine-readable report for final go/no-go evidence capture.
 
 ```bash
-npm run db:restore:verify -- --checkpoint /tmp/proofound-db-checkpoints/2026-03-10T17-00-00-000Z --out /tmp/proofound-restore-report.json
+npm run db:restore:verify -- --checkpoint /tmp/proofound-db-checkpoints/2026-03-10T17-00-00-000Z --out .artifacts/launch-restore-report.json
 ```
+
+7. Run final go/no-go against the production-candidate target from an environment that can still read the checkpoint directory referenced by the restore report.
+
+```bash
+BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go
+```
+
+`INTERNAL_API_SECRET=<secret>` may replace `CRON_SECRET=<secret>` for the protected launch-status
+and go/no-go checks.
 
 ## Pass Criteria
 
@@ -83,6 +112,7 @@ npm run db:restore:verify -- --checkpoint /tmp/proofound-db-checkpoints/2026-03-
 - Every table comparison reports `ok: true`.
 - Migration ledger row count matches the checkpoint.
 - The restored database identity matches the intended recovery target.
+- `.artifacts/launch-restore-report.json` exists, has `ok: true`, is fresh, and still points to readable `summary.json` and `row-fingerprint.json` checkpoint evidence.
 
 ## Failure Handling
 
@@ -96,4 +126,4 @@ npm run db:restore:verify -- --checkpoint /tmp/proofound-db-checkpoints/2026-03-
 - `summary.json`
 - `row-fingerprint.json`
 - Optional `pg_dump` artifacts
-- Optional restore verification report JSON
+- Restore verification report JSON, normally `.artifacts/launch-restore-report.json`

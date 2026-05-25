@@ -125,6 +125,20 @@ describe('profile privacy settings route', () => {
     expect(db.update).toHaveBeenCalledTimes(1);
   });
 
+  it('returns 400 for malformed JSON before loading or updating privacy settings', async () => {
+    const response = await POST(
+      new NextRequest('http://localhost/api/profile/privacy-settings', {
+        method: 'POST',
+        body: '{',
+      })
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
+    expect(mocks.findFirst).not.toHaveBeenCalled();
+    expect(db.update).not.toHaveBeenCalled();
+  });
+
   it('rejects unknown visibility fields instead of persisting arbitrary keys', async () => {
     const response = await POST(
       new NextRequest('http://localhost/api/profile/privacy-settings', {

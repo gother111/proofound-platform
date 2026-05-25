@@ -40,6 +40,14 @@ function request(body: unknown) {
   });
 }
 
+function rawRequest(body: string) {
+  return new NextRequest('http://localhost/api/expertise/jd-to-l4', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body,
+  });
+}
+
 describe('POST /api/expertise/jd-to-l4', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -88,6 +96,16 @@ describe('POST /api/expertise/jd-to-l4', () => {
 
     expect(missingResponse.status).toBe(400);
     expect(shortResponse.status).toBe(400);
+    expect(mocks.parseJobDescription).not.toHaveBeenCalled();
+    expect(mocks.validateSkillSuggestions).not.toHaveBeenCalled();
+  });
+
+  it('rejects malformed JSON before parser access', async () => {
+    const response = await POST(rawRequest('{"jdText":'));
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload).toEqual({ error: 'Invalid JSON body' });
     expect(mocks.parseJobDescription).not.toHaveBeenCalled();
     expect(mocks.validateSkillSuggestions).not.toHaveBeenCalled();
   });

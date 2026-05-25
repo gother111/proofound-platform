@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/select';
 import { CheckCircle2, Mail, Loader2, AlertCircle } from 'lucide-react';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 interface WorkEmailVerificationFormProps {
   onSuccess: () => void;
@@ -60,7 +61,7 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
 
       setOrganizations(normalizedOrganizations);
     } catch (err) {
-      console.error('Error fetching organizations:', err);
+      dispatchClientErrorDiagnostic('settings.work_email.organizations_fetch_failed', err);
       // Don't show error, just allow optional org selection
     } finally {
       setLoadingOrgs(false);
@@ -159,7 +160,7 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
           <strong>Confirmation email sent.</strong>
           <br />
           Please check your inbox at <strong>{workEmail}</strong> and click the confirmation link.
-          This keeps your work email compatibility signal current for 24 hours.
+          This keeps your work email account check current for 24 hours.
         </AlertDescription>
       </Alert>
     );
@@ -188,7 +189,7 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
         {emailError && <p className="text-sm text-red-600 dark:text-red-400">{emailError}</p>}
         <p className="text-xs text-muted-foreground">
           Use your company or organization email address, not a personal email. This supports
-          account compatibility and organization linking only.
+          account-side organization linking only.
         </p>
       </div>
 
@@ -262,7 +263,7 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
           <br />
           2. Click the link to confirm you control that inbox
           <br />
-          3. Proofound records a work email compatibility signal for account-side use
+          3. Proofound records a work email account check for organization-linking support
         </p>
       </div>
     </form>

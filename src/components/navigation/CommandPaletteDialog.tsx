@@ -21,11 +21,49 @@ interface CommandPaletteDialogProps {
 
 export function CommandPaletteDialog({ open, onOpenChange }: CommandPaletteDialogProps) {
   const router = useRouter();
+  const dialogRef = React.useRef<HTMLDivElement>(null);
 
   const runCommand = React.useCallback(
     (command: () => unknown) => {
       onOpenChange(false);
       command();
+    },
+    [onOpenChange]
+  );
+
+  const handleDialogKeyDown = React.useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onOpenChange(false);
+        return;
+      }
+
+      if (event.key !== 'Tab') {
+        return;
+      }
+
+      const focusable = Array.from(
+        dialogRef.current?.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        ) ?? []
+      ).filter((element) => element.offsetParent !== null);
+
+      if (focusable.length === 0) {
+        event.preventDefault();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     },
     [onOpenChange]
   );
@@ -43,11 +81,15 @@ export function CommandPaletteDialog({ open, onOpenChange }: CommandPaletteDialo
       }}
       role="presentation"
     >
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
       <div
+        ref={dialogRef}
         className="fixed left-[50%] top-[20%] z-50 w-full max-w-lg translate-x-[-50%] p-4"
         role="dialog"
         aria-modal="true"
         aria-label="Command palette"
+        tabIndex={-1}
+        onKeyDown={handleDialogKeyDown}
       >
         <Command
           className="flex h-full w-full flex-col overflow-hidden rounded-xl bg-background shadow-2xl border border-border"

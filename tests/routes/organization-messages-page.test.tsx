@@ -4,7 +4,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const replaceMock = vi.fn();
 let searchParamsValue = '';
-let authState = { userId: 'user-1' as string | null, isLoading: false };
 
 vi.mock('next/navigation', () => ({
   usePathname: () => '/app/o/acme/messages',
@@ -12,10 +11,6 @@ vi.mock('next/navigation', () => ({
     replace: replaceMock,
   }),
   useSearchParams: () => new URLSearchParams(searchParamsValue),
-}));
-
-vi.mock('@/hooks/useAuth', () => ({
-  useAuth: () => authState,
 }));
 
 vi.mock('@/components/messaging/ConversationList', () => ({
@@ -41,13 +36,19 @@ vi.mock('@/components/messaging/RealtimeMessageThread', () => ({
   ),
 }));
 
+vi.mock('@/lib/auth', () => ({
+  requirePersona: vi.fn(),
+}));
+
 import OrganizationMessagesPage from '@/app/app/o/[slug]/messages/page';
+import { OrgMessagesClient } from '@/app/app/o/[slug]/messages/OrgMessagesClient';
+import { LoadingOrganizationMessages } from '@/app/app/o/[slug]/messages/DeferredOrgMessagesClient';
+import { requirePersona } from '@/lib/auth';
 
 describe('organization messages page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     searchParamsValue = '';
-    authState = { userId: 'user-1', isLoading: false };
     vi.stubGlobal(
       'fetch',
       vi.fn(async (url: string) => {
@@ -58,14 +59,14 @@ describe('organization messages page', () => {
               conversations: [
                 {
                   id: 'conversation-a',
-                  otherParty: { displayName: 'Candidate A', displayAvatar: null },
+                  otherParty: { displayName: 'Submission A', displayAvatar: null },
                   createdAt: '2026-01-01T00:00:00.000Z',
                   matchId: 'match-a',
                   stage: 'masked',
                 },
                 {
                   id: 'conversation-b',
-                  otherParty: { displayName: 'Candidate B', displayAvatar: null },
+                  otherParty: { displayName: 'Submission B', displayAvatar: null },
                   createdAt: '2026-01-02T00:00:00.000Z',
                   matchId: 'match-b',
                   stage: 'masked',
@@ -87,25 +88,50 @@ describe('organization messages page', () => {
     );
   });
 
-  it('does not show the loading placeholder after auth resolves without a user', () => {
-    authState = { userId: null, isLoading: false };
+  it('loads conversations with the server-provided current user', async () => {
+    render(<OrgMessagesClient currentUserId="user-1" />);
 
-    render(<OrganizationMessagesPage />);
+    expect(
+      screen.getByText(/Identity remains protected until a consented reveal/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText('Identity remains protected before reveal')).toBeInTheDocument();
+    expect(screen.queryByText(/Candidate identity remains protected/i)).not.toBeInTheDocument();
 
-    expect(screen.getByText(/sign in to view organization conversations/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Submission A')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText(/^loading\.\.\.$/i)).not.toBeInTheDocument();
+  });
+
+  it('uses the server org-member persona as the current user source', async () => {
+    vi.mocked(requirePersona).mockResolvedValue({ id: 'org-user-1' } as any);
+
+    const element = (await OrganizationMessagesPage()) as React.ReactElement<{
+      currentUserId: string;
+    }>;
+
+    expect(requirePersona).toHaveBeenCalledWith('org_member');
+    expect(element.props.currentUserId).toBe('org-user-1');
+  });
+
+  it('uses a contextual loading state for organization messages', () => {
+    render(<LoadingOrganizationMessages />);
+
+    expect(screen.getByRole('status')).toHaveTextContent('Preparing organization messages');
     expect(screen.queryByText(/^loading\.\.\.$/i)).not.toBeInTheDocument();
   });
 
   it('tracks conversation query parameter changes after initial selection', async () => {
     searchParamsValue = 'conversation=conversation-a';
-    const { rerender } = render(<OrganizationMessagesPage />);
+    const { rerender } = render(<OrgMessagesClient currentUserId="user-1" />);
 
     await waitFor(() => {
       expect(screen.getByTestId('selected-conversation')).toHaveTextContent('conversation-a');
     });
 
     searchParamsValue = 'conversation=conversation-b';
-    rerender(<OrganizationMessagesPage />);
+    rerender(<OrgMessagesClient currentUserId="user-1" />);
 
     await waitFor(() => {
       expect(screen.getByTestId('selected-conversation')).toHaveTextContent('conversation-b');

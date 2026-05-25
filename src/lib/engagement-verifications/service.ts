@@ -217,7 +217,8 @@ export async function ensureEngagementVerificationForDecision(params: {
     queueType: 'pilot_ops',
     linkedEntityType: 'engagement_verification',
     linkedEntityId: inserted.id,
-    summary: 'Hire recorded. Engagement confirmation still needs pilot follow-through.',
+    summary:
+      'Workflow decision recorded. Engagement confirmation still needs pilot follow-through.',
     priority: 'normal',
     actorType: params.actorType,
     actorId: params.actorId ?? null,

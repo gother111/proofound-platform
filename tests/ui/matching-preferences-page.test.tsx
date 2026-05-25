@@ -41,8 +41,10 @@ describe('MatchingPreferencesPage', () => {
     render(element);
 
     expect(screen.getByRole('heading', { name: 'Matching Preferences' })).toBeInTheDocument();
+    expect(screen.getByText(/proof-led assignment reviews/i)).toBeInTheDocument();
     expect(screen.getByText('individual matching setup')).toBeInTheDocument();
     expect(screen.queryByText(/must-have requirements/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/relevant opportunities/i)).not.toBeInTheDocument();
   });
 
   it('redirects to /login when user is unauthenticated', async () => {

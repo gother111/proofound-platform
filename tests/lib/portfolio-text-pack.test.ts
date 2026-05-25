@@ -1,8 +1,31 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildTextPack } from '@/lib/portfolio/text-pack';
+import { buildOrganizationTextPack, buildTextPack } from '@/lib/portfolio/text-pack';
 
 describe('buildTextPack', () => {
+  it('uses organization trust-page fallback language when domain verification is absent', () => {
+    const text = buildOrganizationTextPack({
+      schemaVersion: 'proofound.portfolio-export.v1',
+      surface: 'organization_public',
+      exportedAt: '2026-03-21T10:00:00.000Z',
+      shareUrl: 'https://proofound.io/portfolio/org/acme',
+      organization: {
+        id: 'org-1',
+        slug: 'acme',
+        displayName: 'Acme',
+        verifiedDomainPath: null,
+        mission: null,
+        whyWorkMatters: null,
+        operatingContext: null,
+        website: null,
+      },
+      assignments: [],
+    });
+
+    expect(text).toContain('Trust page published without domain verification');
+    expect(text).not.toContain('Public profile');
+  });
+
   it('leads with proof-backed summary details before proof-linked skills', () => {
     const text = buildTextPack({
       schemaVersion: 'proofound.portfolio-export.v1',

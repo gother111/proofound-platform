@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/db', () => ({
   db: {
@@ -191,9 +191,16 @@ function publicReadyAggregate(overrides: Record<string, any> = {}) {
 describe('public portfolio projection', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    delete process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE;
+    delete process.env.PROOFOUND_VISUAL_FIXTURES;
     vi.mocked(summarizeVerificationPolicy as any).mockReturnValue(mockVerificationSummary());
     vi.mocked(listVerificationRecordsForOwner as any).mockResolvedValue([]);
     vi.mocked(listCanonicalProofPackAggregatesForOwner as any).mockResolvedValue([]);
+  });
+
+  afterEach(() => {
+    delete process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE;
+    delete process.env.PROOFOUND_VISUAL_FIXTURES;
   });
 
   it('projects only anchored public proof and its supported skills', async () => {
@@ -369,7 +376,7 @@ describe('public portfolio projection', () => {
           contextJson: {
             contextCompanySize: '11-50',
             contextFocusArea: 'Proof systems',
-            contextIndustryDomain: 'Proof-first hiring',
+            contextIndustryDomain: 'Proof-first assignment review',
             contextScope: 'global',
             contextOperatingEnvironment: 'Remote launch team',
           },
@@ -409,7 +416,7 @@ describe('public portfolio projection', () => {
           key: 'context',
           state: 'ready',
           value:
-            'Industry: Proof-first hiring · Operating environment: Remote launch team · Scope: global',
+            'Industry: Proof-first assignment review · Operating environment: Remote launch team · Scope: global',
         }),
       ],
     });
@@ -421,21 +428,99 @@ describe('public portfolio projection', () => {
     );
   });
 
-  it('serves the local mock organization public trust page in mock Supabase mode', async () => {
+  it('serves the local mock organization public trust page only in visual fixture mode', async () => {
     process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE = 'true';
+    process.env.PROOFOUND_VISUAL_FIXTURES = 'true';
 
-    try {
-      const projection = await getPublicOrganizationPortfolioProjectionBySlug('test-org');
+    const projection = await getPublicOrganizationPortfolioProjectionBySlug('test-org');
 
-      expect(projection).not.toBeNull();
-      expect(projection?.effectiveState).toBe('public_link_only');
-      expect(projection?.publicDisplayName).toBe('Test Organization');
-      expect(projection?.minimumContentMet).toBe(true);
-      expect(projection?.assignmentSnapshot?.role).toBe('Proof-first product reviewer');
-      expect(db.execute).not.toHaveBeenCalled();
-    } finally {
-      delete process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE;
-    }
+    expect(projection).not.toBeNull();
+    expect(projection?.effectiveState).toBe('public_link_only');
+    expect(projection?.publicDisplayName).toBe('Test Organization');
+    expect(projection?.minimumContentMet).toBe(true);
+    expect(projection?.assignmentSnapshot?.role).toBe('Proof-first product reviewer');
+    expect(db.execute).not.toHaveBeenCalled();
+  });
+
+  it('does not serve mock organization public trust pages in plain mock Supabase mode', async () => {
+    process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE = 'true';
+    vi.mocked(db.execute as any).mockResolvedValueOnce({ rows: [] });
+
+    const projection = await getPublicOrganizationPortfolioProjectionBySlug('test-org');
+
+    expect(projection).toBeNull();
+    expect(db.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not make a generic organization fallback summary enough for a public trust page', async () => {
+    vi.mocked(db.execute as any)
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            id: 'org-1',
+            slug: 'thin-org',
+            display_name: 'Thin Org',
+            public_portfolio_state: 'public_link_only',
+            search_indexing_enabled_at: null,
+            trust_status: 'unverified',
+            trust_status_updated_at: null,
+            website_verified_at: null,
+            operating_region: null,
+            verified: false,
+            website: null,
+            tagline: null,
+            mission: null,
+            working_context: null,
+            type: null,
+          },
+        ],
+      })
+      .mockResolvedValueOnce({ rows: [{ display_name: 'public', mission: 'public' }] })
+      .mockResolvedValueOnce({ rows: [] });
+
+    const projection = await getPublicOrganizationPortfolioProjectionBySlug('thin-org');
+
+    expect(projection).not.toBeNull();
+    expect(projection?.publicSummary).toBe('Public organization trust page on Proofound.');
+    expect(projection?.minimumContentMet).toBe(false);
+    expect(projection?.effectiveState).toBe('unavailable');
+  });
+
+  it('serves the local mock individual public page only in visual fixture mode', async () => {
+    process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE = 'true';
+    process.env.PROOFOUND_VISUAL_FIXTURES = 'true';
+
+    const projection = await getPublicIndividualPortfolioProjectionByHandle('demo-proofound');
+
+    expect(projection).not.toBeNull();
+    expect(projection?.effectiveState).toBe('public_link_only');
+    expect(projection?.publicDisplayName).toBe('Mika Andersson');
+    expect(projection?.minimumContentMet).toBe(true);
+    expect(projection?.exportData.proofPacks).toHaveLength(2);
+    expect(projection?.publicSkills.length).toBeGreaterThan(3);
+    expect(db.execute).not.toHaveBeenCalled();
+  });
+
+  it('accepts the mock individual handle alias in visual fixture mode', async () => {
+    process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE = 'true';
+    process.env.PROOFOUND_VISUAL_FIXTURES = 'true';
+
+    const projection = await getPublicIndividualPortfolioProjectionByHandle('mock-individual');
+
+    expect(projection).not.toBeNull();
+    expect(projection?.handle).toBe('demo-proofound');
+    expect(projection?.publicDisplayName).toBe('Mika Andersson');
+    expect(db.execute).not.toHaveBeenCalled();
+  });
+
+  it('does not serve mock individual public pages in plain mock Supabase mode', async () => {
+    process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE = 'true';
+    vi.mocked(db.execute as any).mockResolvedValueOnce({ rows: [] });
+
+    const projection = await getPublicIndividualPortfolioProjectionByHandle('demo-proofound');
+
+    expect(projection).toBeNull();
+    expect(db.execute).toHaveBeenCalledTimes(1);
   });
 
   it('does not let orphan packs or floating skills raise public trust projections', async () => {

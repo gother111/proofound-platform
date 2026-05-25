@@ -1,11 +1,10 @@
 'use server';
 
 import { requireAuth, assertOrgRole } from '@/lib/auth';
+import { log } from '@/lib/log';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
-import { assignments } from '@/db/schema';
-import { eq } from 'drizzle-orm';
 
 // Validation schemas
 const SkillRequirementSchema = z.object({
@@ -70,6 +69,44 @@ export const AssignmentSchema = z.object({
 
 export type AssignmentData = z.infer<typeof AssignmentSchema>;
 
+function mapAssignmentDataToDb(data: Partial<AssignmentData>, orgId?: string) {
+  const dbData = {
+    ...(orgId ? { org_id: orgId } : {}),
+    role: data.role,
+    description: data.description,
+    status: data.status,
+    business_value: data.businessValue,
+    expected_impact: data.expectedImpact,
+    values_required: data.valuesRequired,
+    cause_tags: data.causeTags,
+    outcomes: data.outcomes,
+    must_have_skills: data.mustHaveSkills,
+    nice_to_have_skills: data.niceToHaveSkills,
+    verification_gates: data.verificationGates,
+    min_language: data.minLanguage,
+    weights: data.weights,
+    location_mode: data.locationMode,
+    radius_km: data.radiusKm,
+    country: data.country,
+    city: data.city,
+    comp_min: data.compMin,
+    comp_max: data.compMax,
+    currency: data.currency,
+    hours_min: data.hoursMin,
+    hours_max: data.hoursMax,
+    start_earliest: data.startEarliest,
+    start_latest: data.startLatest,
+  };
+
+  Object.keys(dbData).forEach((key) => {
+    if ((dbData as Record<string, unknown>)[key] === undefined) {
+      delete (dbData as Record<string, unknown>)[key];
+    }
+  });
+
+  return dbData;
+}
+
 export async function createAssignment(orgId: string, data: AssignmentData) {
   const user = await requireAuth();
   await assertOrgRole(orgId, user.id, ['org_owner', 'org_manager', 'org_reviewer']);
@@ -81,35 +118,7 @@ export async function createAssignment(orgId: string, data: AssignmentData) {
 
   try {
     const supabase = await createClient();
-
-    // Prepare data for insertion
-    const insertData = {
-      orgId,
-      role: result.data.role,
-      description: result.data.description,
-      status: result.data.status,
-      businessValue: result.data.businessValue,
-      expectedImpact: result.data.expectedImpact,
-      valuesRequired: result.data.valuesRequired,
-      causeTags: result.data.causeTags,
-      outcomes: result.data.outcomes,
-      mustHaveSkills: result.data.mustHaveSkills,
-      niceToHaveSkills: result.data.niceToHaveSkills,
-      verificationGates: result.data.verificationGates,
-      minLanguage: result.data.minLanguage,
-      weights: result.data.weights,
-      locationMode: result.data.locationMode,
-      radiusKm: result.data.radiusKm,
-      country: result.data.country,
-      city: result.data.city,
-      compMin: result.data.compMin,
-      compMax: result.data.compMax,
-      currency: result.data.currency,
-      hoursMin: result.data.hoursMin,
-      hoursMax: result.data.hoursMax,
-      startEarliest: result.data.startEarliest,
-      startLatest: result.data.startLatest,
-    };
+    const insertData = mapAssignmentDataToDb(result.data, orgId);
 
     const { data: newAssignment, error } = await supabase
       .from('assignments')
@@ -118,7 +127,7 @@ export async function createAssignment(orgId: string, data: AssignmentData) {
       .single();
 
     if (error) {
-      console.error('Failed to create assignment:', error);
+      log.error('assignment.action.create_failed', { orgId, error });
       return { error: 'Failed to create assignment' };
     }
 
@@ -135,7 +144,7 @@ export async function createAssignment(orgId: string, data: AssignmentData) {
 
     return { success: true, assignmentId: newAssignment.id };
   } catch (error) {
-    console.error('Unexpected error creating assignment:', error);
+    log.error('assignment.action.create_unexpected_failed', { orgId, error });
     return { error: 'An unexpected error occurred' };
   }
 }
@@ -156,54 +165,10 @@ export async function updateAssignment(
 
   try {
     const supabase = await createClient();
-
-    // Snake_case conversion happens automatically by Supabase client if configured,
-    // but Drizzle schema uses camelCase.
-    // Since we are using Supabase client directly here (not Drizzle), we might need to be careful.
-    // However, the `createAssignment` above used camelCase keys which Supabase client usually maps if setup correctly,
-    // OR we should map them manually to snake_case if the Supabase client is "raw".
-    // Looking at `src/actions/org.ts`, it uses `display_name` (snake_case) in `.update()`.
-    // So I should probably map to snake_case here to be safe, or check if there's a mapper.
-    // The `createAssignment` above used camelCase keys in `insertData`.
-    // If the Supabase client is typed with Drizzle schema or similar, it might expect snake_case in the DB.
-    // Let's check `src/db/schema.ts` again. The columns are defined as `role: text('role')`, `businessValue: text('business_value')`.
-    // The Supabase client `from('assignments')` interacts with the DB columns directly.
-    // So I MUST use snake_case keys for the Supabase query.
-
-    // Let's fix `createAssignment` and `updateAssignment` to use snake_case keys.
-
     const dbData = {
-      role: result.data.role,
-      description: result.data.description,
-      status: result.data.status,
-      business_value: result.data.businessValue,
-      expected_impact: result.data.expectedImpact,
-      values_required: result.data.valuesRequired,
-      cause_tags: result.data.causeTags,
-      outcomes: result.data.outcomes,
-      must_have_skills: result.data.mustHaveSkills,
-      nice_to_have_skills: result.data.niceToHaveSkills,
-      verification_gates: result.data.verificationGates,
-      min_language: result.data.minLanguage,
-      weights: result.data.weights,
-      location_mode: result.data.locationMode,
-      radius_km: result.data.radiusKm,
-      country: result.data.country,
-      city: result.data.city,
-      comp_min: result.data.compMin,
-      comp_max: result.data.compMax,
-      currency: result.data.currency,
-      hours_min: result.data.hoursMin,
-      hours_max: result.data.hoursMax,
-      start_earliest: result.data.startEarliest,
-      start_latest: result.data.startLatest,
+      ...mapAssignmentDataToDb(result.data),
       updated_at: new Date().toISOString(),
     };
-
-    // Remove undefined values
-    Object.keys(dbData).forEach(
-      (key) => (dbData as any)[key] === undefined && delete (dbData as any)[key]
-    );
 
     const { error } = await supabase
       .from('assignments')
@@ -212,7 +177,7 @@ export async function updateAssignment(
       .eq('org_id', orgId); // Security check
 
     if (error) {
-      console.error('Failed to update assignment:', error);
+      log.error('assignment.action.update_failed', { assignmentId, orgId, error });
       return { error: 'Failed to update assignment' };
     }
 
@@ -229,7 +194,7 @@ export async function updateAssignment(
 
     return { success: true };
   } catch (error) {
-    console.error('Unexpected error updating assignment:', error);
+    log.error('assignment.action.update_unexpected_failed', { assignmentId, orgId, error });
     return { error: 'An unexpected error occurred' };
   }
 }

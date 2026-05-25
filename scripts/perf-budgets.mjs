@@ -3,7 +3,7 @@
  *
  * - Lighthouse run (desktop + mobile) on public home page
  *   Budgets: TTI ≤ 12000ms desktop, ≤ 6500ms mobile; CLS ≤ 0.95 both.
- * - API latency smoke (p95 ≤ 1500ms) against /api/health
+ * - API latency smoke (p95 ≤ 1500ms) against /api/health and /api/assignments
  *
  * Usage:
  *   BASE_URL=http://localhost:3000 node ./scripts/perf-budgets.mjs
@@ -34,6 +34,18 @@ const BUDGETS = {
   cls: 0.95,
   apiP95: apiP95Budget,
 };
+const API_LATENCY_TARGETS = [
+  {
+    label: 'health',
+    path: '/api/health',
+    expectedStatuses: [200],
+  },
+  {
+    label: 'assignments',
+    path: '/api/assignments',
+    expectedStatuses: [401, 403],
+  },
+];
 
 async function runLighthouse(url, formFactor) {
   const chrome = await launch({ chromeFlags: ['--headless', '--no-sandbox'] });
@@ -104,20 +116,26 @@ function percentile(values, p) {
   return sorted[lower] * (1 - weight) + sorted[upper] * weight;
 }
 
-async function measureApiLatency(endpoint) {
+async function measureApiLatency({ label, path, expectedStatuses }) {
+  const endpoint = `${BASE_URL}${path}`;
   const samples = [];
   for (let i = 0; i < 10; i++) {
     const start = performance.now();
     const res = await fetch(endpoint, { cache: 'no-store' });
     const duration = performance.now() - start;
     samples.push(duration);
-    if (!res.ok) {
-      throw new Error(`API ${endpoint} returned ${res.status}`);
+    if (!expectedStatuses.includes(res.status)) {
+      throw new Error(
+        `API ${endpoint} returned ${res.status}, expected ${expectedStatuses.join('/')}`
+      );
     }
   }
   const p95 = percentile(samples, 95);
-  const failures = p95 > BUDGETS.apiP95 ? [`API p95 ${p95.toFixed(0)}ms > budget ${BUDGETS.apiP95}ms`] : [];
-  return { p95, failures, samples };
+  const failures =
+    p95 > BUDGETS.apiP95
+      ? [`API ${path} p95 ${p95.toFixed(0)}ms > budget ${BUDGETS.apiP95}ms`]
+      : [];
+  return { label, path, expectedStatuses, p95, failures, samples };
 }
 
 async function waitForHealthy(url, timeoutMs = 20000) {
@@ -141,9 +159,12 @@ async function main() {
   // Lighthouse uses process-level performance marks internally, so run audits serially.
   const desktop = await runLighthouse(TARGET_PAGE, 'desktop');
   const mobile = await runLighthouse(TARGET_PAGE, 'mobile');
-  const api = await measureApiLatency(`${BASE_URL}/api/health`);
+  const api = [];
+  for (const target of API_LATENCY_TARGETS) {
+    api.push(await measureApiLatency(target));
+  }
 
-  const failures = [...desktop.failures, ...mobile.failures, ...api.failures];
+  const failures = [...desktop.failures, ...mobile.failures, ...api.flatMap((item) => item.failures)];
 
   console.log(
     JSON.stringify(
@@ -161,7 +182,7 @@ async function main() {
           warmupTti: mobile.warmupTti,
           warmupCls: mobile.warmupCls,
         },
-        api: { p95: api.p95, samples: api.samples },
+        api,
         budgets: BUDGETS,
         failures,
       },

@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "featureId": "feat_route_ff36f0662c",
+  "title": "Route /api/user/account/cancel-deletion",
+  "summary": "Web route implemented by app/api/user/account/cancel-deletion/route.ts.",
+  "kind": "route",
+  "source": "next-app-route",
+  "confidence": "high",
+  "entrypoints": [
+    {
+      "path": "app/api/user/account/cancel-deletion/route.ts",
+      "symbol": null,
+      "route": "/api/user/account/cancel-deletion",
+      "command": null
+    }
+  ],
+  "ownedFiles": [
+    {
+      "path": "app/api/user/account/cancel-deletion/route.ts",
+      "reason": "entrypoint"
+    }
+  ],
+  "contextFiles": [],
+  "tests": [],
+  "tags": ["next", "web"],
+  "trustBoundaries": ["user-input", "network", "serialization"],
+  "status": "pending",
+  "lock": null,
+  "findingIds": [],
+  "patchAttemptIds": [],
+  "analysisHistory": [],
+  "createdAt": "2026-05-16T16:02:40.128Z",
+  "updatedAt": "2026-05-16T16:02:40.128Z"
+}

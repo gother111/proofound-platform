@@ -62,6 +62,21 @@ describe('core matching profile route', () => {
     (db.query.skills.findMany as any).mockResolvedValue([]);
   });
 
+  it('rejects malformed JSON before matching profile writes', async () => {
+    const req = new NextRequest('http://localhost/api/core/matching/matching-profile', {
+      method: 'PUT',
+      body: '{"desiredRoles":',
+      headers: { 'content-type': 'application/json' },
+    });
+
+    const res = await PUT(req);
+
+    expect(res.status).toBe(400);
+    await expect(res.json()).resolves.toEqual({ error: 'Invalid JSON body' });
+    expect(db.insert).not.toHaveBeenCalled();
+    expect(evaluateIndividualMatchability).not.toHaveBeenCalled();
+  });
+
   it('persists and returns focus fields from PUT payload', async () => {
     const updatedProfile = {
       profileId: userId,

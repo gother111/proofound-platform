@@ -22,7 +22,6 @@ const REQUIRED_ACTIVE_ROUTES = [
   '/api/assignments/[id]',
   '/api/assignments/[id]/expertise-matrix',
   '/api/assignments/[id]/outcomes',
-  '/api/assignments/[id]/pipeline',
   '/api/assignments/[id]/publish',
   '/api/candidate-invites/[token]',
   '/api/candidate-invites/[token]/claim',
@@ -92,11 +91,10 @@ const REQUIRED_ACTIVE_ROUTES = [
   '/api/upload/document',
   '/api/upload/status/[fileId]',
   '/api/user/account',
-  '/api/user/account/cancel-deletion',
   '/api/user/audit-log',
-  '/api/user/audit-log/purpose',
   '/api/user/consent',
   '/api/user/consent/check',
+  '/api/user/data-inventory',
   '/api/user/email',
   '/api/user/export',
   '/api/user/me',
@@ -174,6 +172,7 @@ const REQUIRED_ARCHIVED_COMPAT_PATHS = [
   '/api/matching/profile/[id]',
   '/api/match/test',
   '/api/performance/track',
+  '/api/profile/completeness',
   '/api/profile/snippet',
   '/api/data-export',
   '/api/expertise/profile',
@@ -197,6 +196,8 @@ const REQUIRED_ARCHIVED_COMPAT_PATHS = [
   '/api/portfolio/view',
   '/api/feedback/sus',
   '/api/surveys/sus',
+  '/api/user/account/cancel-deletion',
+  '/api/user/audit-log/purpose',
   '/api/organizations/[orgId]/causes',
   '/api/organizations/[orgId]/culture',
   '/api/organizations/[orgId]/goals',
@@ -209,24 +210,10 @@ const REQUIRED_ARCHIVED_COMPAT_PATHS = [
   '/api/organizations/[orgId]/projects',
   '/api/organizations/[orgId]/structure',
   '/api/organizations/[orgId]/test-matches',
+  '/api/assignments/[id]/pipeline',
 ] as const;
 
-const ALLOWED_ARCHIVED_COMPILED_ROUTES = [
-  '/api/analytics/events',
-  '/api/analytics/tour-event',
-  '/api/analytics/track',
-  '/api/analytics/web-vitals',
-  '/api/cron/account-deletion-workflow',
-  '/api/cron/process-deletions',
-  '/api/cron/send-deletion-reminders',
-  '/api/expertise/cv-import/wizard-apply',
-  '/api/expertise/cv-import/wizard-extract',
-  '/api/expertise/cv-import/wizard-extract/status',
-  '/api/expertise/cv-import/wizard-suggest',
-  '/api/match/test',
-  '/api/performance/track',
-  '/api/profile/completeness',
-] as const;
+const ALLOWED_ARCHIVED_COMPILED_ROUTES = ['/api/assignments/[id]/pipeline'] as const;
 
 async function collectRoutePaths(dir: string): Promise<string[]> {
   const entries = await readdir(dir, { withFileTypes: true });

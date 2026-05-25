@@ -20,7 +20,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Download, User, Briefcase, MessageSquare, BarChart3, Shield } from 'lucide-react';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { buildUserExportDownloadFilename } from '@/lib/privacy/export-download';
+
+interface DataInventoryPayload {
+  counts?: Partial<Record<'profile' | 'professional' | 'proof' | 'matching' | 'activity', number>>;
+}
 
 interface DataCategory {
   id: string;
@@ -35,90 +40,34 @@ interface DataCategory {
 export function DataBreakdown() {
   const [categories, setCategories] = useState<DataCategory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
+    const fetchDataBreakdown = async () => {
+      try {
+        setError(null);
+
+        const response = await fetch('/api/user/data-inventory');
+        if (!response.ok) {
+          throw new Error('Data inventory unavailable');
+        }
+
+        const payload = (await response.json()) as DataInventoryPayload;
+        const categories = buildDataCategories(payload.counts);
+
+        setCategories(categories);
+      } catch (error) {
+        dispatchClientErrorDiagnostic('privacy.data_breakdown.load_failed', error);
+        setError('Your data inventory could not load. You can still try downloading your data.');
+        setCategories(buildDataCategories());
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchDataBreakdown();
   }, []);
-
-  const fetchDataBreakdown = async () => {
-    try {
-      // TODO: Create API endpoint to fetch data counts
-      // For now, using mock data structure
-      const mockCategories: DataCategory[] = [
-        {
-          id: 'profile',
-          name: 'Profile information',
-          description: 'Your personal profile data and settings',
-          icon: <User className="h-5 w-5" />,
-          count: 1,
-          tier: 'PII',
-          items: [
-            'Display name',
-            'Email address',
-            'Avatar image',
-            'Profile link name',
-            'Location (if provided)',
-            'Bio/description',
-          ],
-        },
-        {
-          id: 'professional',
-          name: 'Professional information',
-          description: 'Skills, experience, projects, and education',
-          icon: <Briefcase className="h-5 w-5" />,
-          count: 0, // Will be fetched from API
-          tier: 'Semi-Public',
-          items: [
-            'Skills and capabilities',
-            'Work experience',
-            'Projects',
-            'Education history',
-            'Volunteering activities',
-            'Impact stories',
-          ],
-        },
-        {
-          id: 'messages',
-          name: 'Conversations',
-          description: 'Message history and conversation data',
-          icon: <MessageSquare className="h-5 w-5" />,
-          count: 0,
-          tier: 'Sensitive',
-          items: ['Conversation threads', 'Message content', 'Identity reveal history'],
-        },
-        {
-          id: 'analytics',
-          name: 'Product usage',
-          description: 'Your activity logs and usage patterns',
-          icon: <BarChart3 className="h-5 w-5" />,
-          count: 0,
-          tier: 'Semi-Public',
-          items: [
-            'Login history (anonymized)',
-            'Feature usage statistics',
-            'Match history',
-            'Search queries',
-          ],
-        },
-        {
-          id: 'verification',
-          name: 'Verification and trust',
-          description: 'Verification requests and badges',
-          icon: <Shield className="h-5 w-5" />,
-          count: 0,
-          tier: 'Public',
-          items: ['Verification requests', 'Verified claims', 'Trust badges'],
-        },
-      ];
-
-      setCategories(mockCategories);
-    } catch (error) {
-      console.error('Failed to fetch data breakdown:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleExportData = async () => {
     try {
@@ -137,7 +86,7 @@ export function DataBreakdown() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
-      console.error('Export failed:', error);
+      dispatchClientErrorDiagnostic('privacy.data_breakdown.export_failed', error);
       alert('Failed to export data. Please try again.');
     } finally {
       setExporting(false);
@@ -185,20 +134,25 @@ export function DataBreakdown() {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <CardTitle>Your data</CardTitle>
             <CardDescription>
               A detailed view of what Proofound stores for your account
             </CardDescription>
           </div>
-          <Button onClick={handleExportData} disabled={exporting}>
+          <Button onClick={handleExportData} disabled={exporting} className="w-full sm:w-auto">
             <Download className="mr-2 h-4 w-4" />
             {exporting ? 'Preparing...' : 'Download my data'}
           </Button>
         </div>
       </CardHeader>
       <CardContent>
+        {error && (
+          <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-100">
+            {error}
+          </div>
+        )}
         <Accordion type="single" collapsible className="w-full">
           {categories.map((category) => (
             <AccordionItem key={category.id} value={category.id}>
@@ -213,6 +167,7 @@ export function DataBreakdown() {
                       <Badge className={getTierColor(category.tier)} variant="secondary">
                         {getTierLabel(category.tier)}
                       </Badge>
+                      <Badge variant="outline">{formatCount(category.count)}</Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">{category.description}</p>
                   </div>
@@ -261,4 +216,78 @@ export function DataBreakdown() {
       </CardContent>
     </Card>
   );
+}
+
+function formatCount(count: number): string {
+  return `${count} ${count === 1 ? 'record' : 'records'}`;
+}
+
+function buildDataCategories(counts: DataInventoryPayload['counts'] = {}): DataCategory[] {
+  return [
+    {
+      id: 'profile',
+      name: 'Profile information',
+      description: 'Your personal profile data and settings',
+      icon: <User className="h-5 w-5" />,
+      count: counts.profile ?? 0,
+      tier: 'PII',
+      items: [
+        'Display name',
+        'Email address',
+        'Avatar image',
+        'Profile link name',
+        'Location (if provided)',
+        'Bio/description',
+      ],
+    },
+    {
+      id: 'professional',
+      name: 'Proof context information',
+      description: 'Skills, experience, projects, and education used as Proof Pack context',
+      icon: <Briefcase className="h-5 w-5" />,
+      count: counts.professional ?? 0,
+      tier: 'Semi-Public',
+      items: [
+        'Skills and capabilities',
+        'Work experience',
+        'Projects',
+        'Education history',
+        'Volunteering activities',
+        'Impact stories',
+      ],
+    },
+    {
+      id: 'proof',
+      name: 'Proof and verification',
+      description: 'Proof Packs, uploaded proof, submissions, and verification records',
+      icon: <MessageSquare className="h-5 w-5" />,
+      count: counts.proof ?? 0,
+      tier: 'Sensitive',
+      items: [
+        'Proof Packs',
+        'Proof artifacts',
+        'Assignment submissions',
+        'Verification records',
+        'Owner-safe verification log entries',
+      ],
+    },
+    {
+      id: 'matching',
+      name: 'Assignment-review activity',
+      description: 'Review records and interest signals connected to assignment workflows',
+      icon: <BarChart3 className="h-5 w-5" />,
+      count: counts.matching ?? 0,
+      tier: 'Semi-Public',
+      items: ['Assignment review records', 'Interest signals', 'Assignment-related activity'],
+    },
+    {
+      id: 'activity',
+      name: 'Product activity',
+      description: 'Account activity events retained for operations and security',
+      icon: <Shield className="h-5 w-5" />,
+      count: counts.activity ?? 0,
+      tier: 'Sensitive',
+      items: ['Activity events', 'Pseudonymized technical metadata', 'Export lifecycle records'],
+    },
+  ];
 }

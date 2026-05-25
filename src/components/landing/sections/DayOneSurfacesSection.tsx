@@ -55,7 +55,7 @@ function PortfolioSurface() {
             </div>
             <div className="mt-3 text-base font-medium">Peer reviewed</div>
             <div className="mt-3 text-sm leading-7 text-[var(--landing-action)]">
-              One visible proof item, one outcome, one scoped signal.
+              One visible proof item, one outcome, one scoped verification.
             </div>
           </div>
         </div>
@@ -87,7 +87,7 @@ function CorridorSurface() {
             Operations lead for onboarding redesign
           </div>
           <div className="mt-3 text-sm leading-6 text-[var(--landing-text)]">
-            Define expected outcomes, useful evidence, and review sequence before applications open.
+            Define expected outcomes, useful evidence, and review sequence before submissions open.
           </div>
         </div>
         <div className="grid gap-3 sm:grid-cols-3">
@@ -117,7 +117,7 @@ export function DayOneSurfacesSection() {
             One clear starting point for each side.
           </h2>
           <p className="mt-5 max-w-[46rem] text-[1.1rem] leading-8 text-[var(--landing-text)]">
-            The MVP starts with a Public Page proof snapshot for individuals and a trust page plus
+            Proofound starts with a Public Page proof snapshot for individuals and a trust page plus
             assignment corridor for organizations.
           </p>
         </div>
@@ -133,7 +133,7 @@ export function DayOneSurfacesSection() {
               </h3>
               <p className="mt-4 text-[1.04rem] leading-7 text-[var(--landing-text)]">
                 Turn real work, volunteering, or learning into a calm Public Page with 1 to 3 proof
-                items, role context, outcomes, and scoped trust signals.
+                items, role context, outcomes, and scoped verification checks.
               </p>
             </div>
 
@@ -158,7 +158,7 @@ export function DayOneSurfacesSection() {
               </h3>
               <p className="mt-4 text-[1.04rem] leading-7 text-[var(--landing-text)]">
                 Publish a credible team surface, define the work clearly, and review proof-backed
-                candidates through a privacy-safe shortlist before interview time is wasted.
+                submissions through a privacy-safe shortlist before interview time is wasted.
               </p>
             </div>
 

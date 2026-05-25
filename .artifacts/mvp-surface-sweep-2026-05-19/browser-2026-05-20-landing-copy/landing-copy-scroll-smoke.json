@@ -1,0 +1,62 @@
+{
+  "checkedAt": "2026-05-19T23:49:49.807Z",
+  "baseUrl": "http://localhost:3000",
+  "results": [
+    {
+      "excerpt": null,
+      "fresh": [],
+      "overflow": false,
+      "stale": [],
+      "step": 0
+    },
+    {
+      "excerpt": null,
+      "fresh": [],
+      "overflow": false,
+      "stale": [],
+      "step": 1
+    },
+    {
+      "excerpt": null,
+      "fresh": [],
+      "overflow": false,
+      "stale": [],
+      "step": 2
+    },
+    {
+      "excerpt": null,
+      "fresh": [],
+      "overflow": false,
+      "stale": [],
+      "step": 3
+    },
+    {
+      "excerpt": null,
+      "fresh": [],
+      "overflow": false,
+      "stale": [],
+      "step": 4
+    },
+    {
+      "excerpt": null,
+      "fresh": [],
+      "overflow": false,
+      "stale": [],
+      "step": 5
+    },
+    {
+      "excerpt": null,
+      "fresh": [],
+      "overflow": false,
+      "stale": [],
+      "step": 6
+    },
+    {
+      "excerpt": null,
+      "fresh": [],
+      "overflow": false,
+      "stale": [],
+      "step": 7
+    }
+  ]
+}

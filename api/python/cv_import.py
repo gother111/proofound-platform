@@ -11,23 +11,20 @@ from pydantic import ValidationError
 
 from python_cv.contracts import (
     CvImportSuggestRequest,
-    CvImportWizardSuggestRequest,
-    PYTHON_INTERNAL_CONTRACT_VERSION,
-    PYTHON_INTERNAL_SERVICE_NAME,
-    PythonInternalJobRequest,
-    PythonInternalJobResponse,
 )
 from python_cv.pdf_extract import PdfEmptyTextError, PdfParseError, extract_text_from_pdf_bytes
-from python_cv.service import ImportLimits, default_limits, process_skill_documents, process_wizard_documents
+from python_cv.service import ImportLimits, default_limits, process_skill_documents
 from python_cv.skill_db import SkillDbUnavailableError, load_skill_db
 
 LOCAL_DEV_PYTHON_SERVICE_SECRET = "proofound-local-python-service"
 
 app = FastAPI(title="Proofound Python Internal Service")
 
-GENERIC_WIZARD_ERROR = "Failed to process CV wizard suggestions"
 GENERIC_SUGGEST_ERROR = "Failed to process CV documents"
 GENERIC_EXTRACT_ERROR = "Failed to extract CV text"
+ARCHIVED_CV_WIZARD_ENDPOINT_MESSAGE = (
+    "The CV import wizard and Python internal job endpoints are archived and are not part of the MVP launch surface."
+)
 
 ERROR_CODE_PDF_PARSE_FAILED = "PDF_PARSE_FAILED"
 ERROR_CODE_PDF_EMPTY_TEXT = "PDF_EMPTY_TEXT"
@@ -82,27 +79,6 @@ def _document_from_error(
         "parsed_text": "",
         "parse_error": parse_error,
         "parse_error_code": parse_error_code,
-    }
-
-
-def _wizard_error_document(
-    document_id: str,
-    file_name: str,
-    parse_error: str,
-    parse_error_code: str | None = None,
-) -> dict[str, Any]:
-    return {
-        "document_id": document_id,
-        "file_name": file_name,
-        "context": "cv",
-        "parsed_text": "",
-        "parse_error": parse_error,
-        "parse_error_code": parse_error_code,
-        "work_experiences": [],
-        "learning_experiences": [],
-        "volunteering": [],
-        "languages": [],
-        "skill_candidates": [],
     }
 
 
@@ -269,87 +245,6 @@ def _unique_top_skill_ids(candidate_documents: list[dict[str, Any]], key: str) -
     return ordered_ids
 
 
-def _build_skill_report(result: dict[str, Any]) -> dict[str, Any]:
-    documents = result.get("documents", [])
-    candidate_count = sum(len(document.get("candidates", [])) for document in documents)
-
-    return {
-        "documents_total": len(documents),
-        "documents_with_parse_errors": sum(1 for document in documents if document.get("parse_error")),
-        "candidates_total": candidate_count,
-        "mapped_candidates": sum(
-            1
-            for document in documents
-            for candidate in document.get("candidates", [])
-            if candidate.get("suggestions")
-        ),
-        "unmapped_candidates": result.get("metadata", {}).get("unmapped_candidates_count", 0),
-        "top_skill_ids": _unique_top_skill_ids(documents, "candidates"),
-    }
-
-
-def _build_wizard_report(result: dict[str, Any]) -> dict[str, Any]:
-    documents = result.get("documents", [])
-
-    return {
-        "documents_total": len(documents),
-        "documents_with_parse_errors": sum(1 for document in documents if document.get("parse_error")),
-        "work_experiences_total": sum(len(document.get("work_experiences", [])) for document in documents),
-        "learning_experiences_total": sum(
-            len(document.get("learning_experiences", [])) for document in documents
-        ),
-        "volunteering_total": sum(len(document.get("volunteering", [])) for document in documents),
-        "languages_total": sum(len(document.get("languages", [])) for document in documents),
-        "mapped_skill_candidates": sum(
-            1
-            for document in documents
-            for candidate in document.get("skill_candidates", [])
-            if candidate.get("suggestions")
-        ),
-        "top_skill_ids": _unique_top_skill_ids(documents, "skill_candidates"),
-    }
-
-
-def _build_quality_report(result: dict[str, Any]) -> dict[str, Any]:
-    documents = result.get("documents", [])
-    candidates = [
-        candidate
-        for document in documents
-        for candidate in document.get("candidates", [])
-    ]
-    total_candidates = len(candidates)
-
-    return {
-        "documents_total": len(documents),
-        "parse_success_ratio": (
-            round(
-                sum(1 for document in documents if not document.get("parse_error")) / len(documents),
-                4,
-            )
-            if documents
-            else 0.0
-        ),
-        "candidates_total": total_candidates,
-        "mapped_ratio": (
-            round(sum(1 for candidate in candidates if candidate.get("suggestions")) / total_candidates, 4)
-            if total_candidates
-            else 0.0
-        ),
-        "average_confidence": (
-            round(
-                sum(float(candidate.get("confidence", 0.0)) for candidate in candidates) / total_candidates,
-                4,
-            )
-            if total_candidates
-            else 0.0
-        ),
-        "high_confidence_candidates": sum(
-            1 for candidate in candidates if float(candidate.get("confidence", 0.0)) >= 0.85
-        ),
-        "top_skill_ids": _unique_top_skill_ids(documents, "candidates"),
-    }
-
-
 async def _parse_multipart_documents(
     request: Request, *, default_context: str, limits: ImportLimits
 ) -> tuple[list[dict[str, str]], list[dict[str, Any]]]:
@@ -485,83 +380,13 @@ def health() -> dict[str, str]:
 
 @app.post("/wizard-suggest")
 async def wizard_suggest(request: Request):
-    limits = _load_limits()
-    content_type = request.headers.get("content-type", "")
-    unauthorized = _validate_internal_service_secret(request)
-    if unauthorized:
-        return unauthorized
-
-    try:
-        suggestions_limit: int | None = None
-        if content_type.startswith("multipart/form-data"):
-            parsed_documents, failed_documents = await _parse_multipart_documents(
-                request,
-                default_context="cv",
-                limits=limits,
-            )
-            suggestions_limit_raw = request.query_params.get("suggestions_limit")
-            if suggestions_limit_raw and suggestions_limit_raw.isdigit():
-                suggestions_limit = int(suggestions_limit_raw)
-        else:
-            parsed_documents, suggestions_limit = await _parse_json_documents(request)
-            failed_documents = []
-
-        if not parsed_documents and failed_documents:
-            return JSONResponse(
-                {
-                    "documents": [
-                        _wizard_error_document(
-                            document_id=item["document_id"],
-                            file_name=item["file_name"],
-                            parse_error=item["parse_error"],
-                            parse_error_code=item.get("parse_error_code"),
-                        )
-                        for item in failed_documents
-                    ],
-                    "metadata": _metadata(limits, 0),
-                }
-            )
-
-        skill_db, error_response = _load_skill_db_or_response()
-        if error_response:
-            return error_response
-        result = process_wizard_documents(
-            parsed_documents,
-            skill_db,
-            limits=limits,
-            suggestions_limit=suggestions_limit,
-        )
-
-        failed_result_docs = [
-            _wizard_error_document(
-                document_id=item["document_id"],
-                file_name=item["file_name"],
-                parse_error=item["parse_error"],
-                parse_error_code=item.get("parse_error_code"),
-            )
-            for item in failed_documents
-        ]
-
-        result["documents"] = failed_result_docs + result["documents"]
-        return JSONResponse(result)
-
-    except ValueError as exc:
-        message = str(exc)
-        status = 413 if "max size" in message or "payload" in message or "Too many documents" in message else 400
-        return JSONResponse(_value_error_payload(message), status_code=status)
-    except ValidationError as exc:
-        return JSONResponse({"error": "Invalid request payload", "message": str(exc)}, status_code=400)
-    except json.JSONDecodeError:
-        return JSONResponse({"error": "Invalid request payload"}, status_code=400)
-    except Exception as exc:  # pragma: no cover
-        return JSONResponse(
-            {
-                "error": GENERIC_WIZARD_ERROR,
-                "message": f"CV wizard processing failed: {exc}",
-                "code": ERROR_CODE_MATCHING_FAILED,
-            },
-            status_code=500,
-        )
+    return JSONResponse(
+        {
+            "error": "Archived endpoint",
+            "message": ARCHIVED_CV_WIZARD_ENDPOINT_MESSAGE,
+        },
+        status_code=410,
+    )
 
 
 @app.post("/suggest")
@@ -731,81 +556,13 @@ async def extract(request: Request):
 
 @app.post("/internal-job")
 async def internal_job(request: Request):
-    unauthorized = _validate_internal_service_secret(request)
-    if unauthorized:
-        return unauthorized
-
-    try:
-        job = PythonInternalJobRequest.model_validate(await request.json())
-    except ValidationError as exc:
-        return JSONResponse({"error": "Invalid request payload", "message": str(exc)}, status_code=400)
-    except json.JSONDecodeError:
-        return JSONResponse({"error": "Invalid request payload"}, status_code=400)
-
-    try:
-        skill_db, error_response = _load_skill_db_or_response()
-        if error_response:
-            return error_response
-
-        if job.job_type == "document_intelligence_skill_report":
-            parsed = CvImportSuggestRequest.model_validate(job.payload)
-            result = process_skill_documents(
-                [doc.model_dump() for doc in parsed.documents],
-                skill_db,
-                limits=_load_limits(),
-                suggestions_limit=parsed.suggestions_limit,
-            )
-            response_payload = PythonInternalJobResponse(
-                job_id=job.job_id,
-                job_type=job.job_type,
-                result=_build_skill_report(result),
-            )
-            return JSONResponse(response_payload.model_dump())
-
-        if job.job_type == "document_intelligence_wizard_report":
-            parsed = CvImportWizardSuggestRequest.model_validate(job.payload)
-            result = process_wizard_documents(
-                [doc.model_dump() for doc in parsed.documents],
-                skill_db,
-                limits=_load_limits(),
-                suggestions_limit=parsed.suggestions_limit,
-            )
-            response_payload = PythonInternalJobResponse(
-                job_id=job.job_id,
-                job_type=job.job_type,
-                result=_build_wizard_report(result),
-            )
-            return JSONResponse(response_payload.model_dump())
-
-        parsed = CvImportSuggestRequest.model_validate(job.payload)
-        result = process_skill_documents(
-            [doc.model_dump() for doc in parsed.documents],
-            skill_db,
-            limits=_load_limits(),
-            suggestions_limit=parsed.suggestions_limit,
-        )
-        response_payload = PythonInternalJobResponse(
-            job_id=job.job_id,
-            job_type=job.job_type,
-            result=_build_quality_report(result),
-        )
-        return JSONResponse(response_payload.model_dump())
-    except ValueError as exc:
-        message = str(exc)
-        status = 413 if "payload" in message or "Too many documents" in message else 400
-        return JSONResponse(_value_error_payload(message), status_code=status)
-    except ValidationError as exc:
-        return JSONResponse({"error": "Invalid request payload", "message": str(exc)}, status_code=400)
-    except Exception as exc:  # pragma: no cover
-        return JSONResponse(
-            {
-                "error": "Failed to process internal Python job",
-                "message": str(exc),
-                "service": PYTHON_INTERNAL_SERVICE_NAME,
-                "contract_version": PYTHON_INTERNAL_CONTRACT_VERSION,
-            },
-            status_code=500,
-        )
+    return JSONResponse(
+        {
+            "error": "Archived endpoint",
+            "message": ARCHIVED_CV_WIZARD_ENDPOINT_MESSAGE,
+        },
+        status_code=410,
+    )
 
 
 def _resolve_dispatch_endpoint(request: Request) -> str | None:
@@ -831,7 +588,7 @@ async def dispatch_import(request: Request):
     return JSONResponse(
         {
             "error": "Invalid endpoint parameter",
-            "message": "Use endpoint=wizard-suggest, endpoint=suggest, endpoint=extract, or endpoint=internal-job.",
+            "message": "Use endpoint=suggest or endpoint=extract.",
         },
         status_code=400,
     )

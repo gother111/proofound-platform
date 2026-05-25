@@ -234,68 +234,69 @@ const REASON_DICTIONARY: Record<MatchReasonCode, ReasonDictionaryEntry> = {
   },
   focus_role: {
     category: 'positive_match',
-    orgCopy: 'This role aligns with the candidate’s stated focus.',
+    orgCopy: 'This role aligns with the proof-review participant’s stated focus.',
     candidateCopy: 'This role aligns with your stated focus.',
     importance: 60,
   },
   focus_industry: {
     category: 'positive_match',
-    orgCopy: 'This industry aligns with the candidate’s stated focus.',
+    orgCopy: 'This industry aligns with the proof-review participant’s stated focus.',
     candidateCopy: 'This industry aligns with your stated focus.',
     importance: 58,
   },
   focus_org_type: {
     category: 'positive_match',
-    orgCopy: 'This organization type aligns with the candidate’s stated focus.',
+    orgCopy: 'This organization type aligns with the proof-review participant’s stated focus.',
     candidateCopy: 'This organization type aligns with your stated focus.',
     importance: 56,
   },
   shortlist_selected: {
     category: 'workflow_decision',
-    orgCopy: 'The candidate was shortlisted for deeper review.',
+    orgCopy: 'The proof-review participant was shortlisted for deeper review.',
     candidateCopy: 'You have been shortlisted for deeper review.',
     importance: 60,
   },
   passed_for_now: {
     category: 'workflow_decision',
-    orgCopy: 'The candidate remains under review but is not shortlisted right now.',
+    orgCopy: 'The proof-review participant remains under review but is not shortlisted right now.',
     candidateCopy: 'You are still under review, but not shortlisted right now.',
     importance: 55,
   },
   rejected_constraints: {
     category: 'workflow_decision',
-    orgCopy: 'The candidate was not advanced because core constraints did not line up.',
+    orgCopy:
+      'The proof-review participant was not advanced because core constraints did not line up.',
     candidateCopy: 'You were not advanced because core constraints did not line up.',
     importance: 70,
   },
   override_keep_under_review: {
     category: 'manual_override',
-    orgCopy: 'A reviewer kept this candidate under review with a manual override.',
+    orgCopy: 'A reviewer kept this proof-review participant under review with a manual override.',
     candidateCopy: 'A reviewer kept your profile under review with a manual override.',
     importance: 68,
   },
   override_shortlist_manual: {
     category: 'manual_override',
-    orgCopy: 'A reviewer manually shortlisted this candidate.',
+    orgCopy: 'A reviewer manually shortlisted this proof-review participant.',
     candidateCopy: 'A reviewer manually shortlisted your profile.',
     importance: 75,
   },
   override_reject_manual: {
     category: 'manual_override',
-    orgCopy: 'A reviewer manually closed this candidate out.',
+    orgCopy: 'A reviewer manually closed this proof-review participant out.',
     candidateCopy: 'A reviewer manually closed your profile out.',
     importance: 75,
   },
   fairness_warning_active: {
     category: 'fairness',
-    orgCopy: 'Fairness checks are elevated, so comparative detail is limited.',
-    candidateCopy: 'Comparative detail is limited while fairness checks are reviewed.',
+    orgCopy: 'Policy checks are elevated, so comparative detail is limited.',
+    candidateCopy: 'Comparative detail is limited while policy checks are reviewed.',
     importance: 88,
   },
   fairness_ranking_suppressed: {
     category: 'fairness',
-    orgCopy: 'Exact ranking detail is suppressed while fairness remediation is active.',
-    candidateCopy: 'Exact ranking detail is suppressed while fairness remediation is active.',
+    orgCopy: 'Exact ordering detail is suppressed while policy review is active.',
+    candidateCopy: 'Exact ordering detail is suppressed while policy review is active.',
     importance: 92,
   },
   reveal_shortlist_identity: {
@@ -315,7 +316,7 @@ const REASON_DICTIONARY: Record<MatchReasonCode, ReasonDictionaryEntry> = {
   org_reveal_request_pending: {
     category: 'workflow_decision',
     orgCopy:
-      'A reveal request is pending candidate approval. Identity-bearing fields stay hidden until consent is granted.',
+      'A reveal request is pending proof-review participant approval. Identity-bearing fields stay hidden until consent is granted.',
     candidateCopy:
       'The organization has requested reveal. Identity-bearing fields stay hidden until you approve.',
     importance: 66,
@@ -374,7 +375,7 @@ export function sanitizeMatchReasonCodes(reasonCodes: string[]): string[] {
 
 function getStableCandidateLabel(profileId: string) {
   const suffix = profileId.replace(/-/g, '').slice(-4).toUpperCase();
-  return `Candidate ${suffix || 'ANON'}`;
+  return `Submission ${suffix || 'ANON'}`;
 }
 
 function getFreshnessLabel(state: string | null | undefined) {
@@ -405,13 +406,13 @@ function buildTrustLabels(input: {
   } else if (input.proofPack?.verificationStatus === 'partially_verified') {
     labels.push('Verification partially complete');
   } else if ((input.verificationCount ?? 0) > 0) {
-    labels.push('Compatibility signals present');
+    labels.push('Account-side checks recorded');
   } else {
     labels.push('Verification still narrow');
   }
 
   if (input.fairnessStatus !== 'pass') {
-    labels.push('Fairness protected');
+    labels.push('Policy protected');
   }
 
   return Array.from(new Set(labels.filter(Boolean)));
@@ -792,7 +793,30 @@ function getBestReviewProofPackSnapshot(
   })[0];
 }
 
-export async function getReviewCardProofPackMap(profileIds: string[]) {
+type ReviewCardProofPackAggregate = Awaited<
+  ReturnType<typeof listCanonicalProofPackAggregatesForOwner>
+>[number];
+
+function isProofPackVisibleToMatchedOrg(aggregate: ReviewCardProofPackAggregate) {
+  return (
+    aggregate.pack.packKind === 'verification_bundle' &&
+    aggregate.pack.lifecycleState === 'published' &&
+    (aggregate.pack.visibility === 'public' || aggregate.pack.visibility === 'matched_org') &&
+    (aggregate.pack.revealGate === 'none' || aggregate.pack.revealGate === 'match_exists') &&
+    hasPrimaryAnchorContext(aggregate.pack)
+  );
+}
+
+function isProofPackVisibleToOwnerReviewCard(aggregate: ReviewCardProofPackAggregate) {
+  return (
+    aggregate.pack.packKind === 'verification_bundle' && hasPrimaryAnchorContext(aggregate.pack)
+  );
+}
+
+async function getReviewCardProofPackMapWithFilter(
+  profileIds: string[],
+  isVisible: (aggregate: ReviewCardProofPackAggregate) => boolean
+) {
   const uniqueProfileIds = [...new Set(profileIds.filter(Boolean))];
   if (uniqueProfileIds.length === 0) {
     return new Map<string, ReviewCardProofPackSnapshot | null>();
@@ -807,40 +831,46 @@ export async function getReviewCardProofPackMap(profileIds: string[]) {
   );
 
   for (const { profileId, aggregates } of aggregatesByProfile) {
-    const snapshots = aggregates
-      .filter(
-        (aggregate) =>
-          aggregate.pack.packKind === 'verification_bundle' &&
-          hasPrimaryAnchorContext(aggregate.pack)
-      )
-      .map((aggregate) => ({
-        ownerId: aggregate.pack.ownerId,
-        primarySubjectType: aggregate.pack.primarySubjectType,
-        lifecycleState: aggregate.ownerFull.contract.status,
-        title: resolveReviewSafePackTitle(aggregate),
-        summary: aggregate.ownerFull.contract.primaryClaim.statement,
-        contextJson:
-          aggregate.pack.contextJson &&
-          typeof aggregate.pack.contextJson === 'object' &&
-          !Array.isArray(aggregate.pack.contextJson)
-            ? (aggregate.pack.contextJson as Record<string, unknown>)
-            : {},
-        ownershipStatement: aggregate.ownerFull.contract.ownershipStatement,
-        evidenceSummary: aggregate.pack.evidenceSummary,
-        outcomesSummary: aggregate.ownerFull.contract.outcomeSummary,
-        verificationSummary: aggregate.ownerFull.contract.verificationSummary.summary,
-        verificationStatus: aggregate.verificationStatus,
-        freshnessState: aggregate.freshnessState,
-        proofQualityScore: aggregate.ownerFull.contract.proofQualityScore,
-        contract: aggregate.ownerFull.contract,
-        updatedAt: aggregate.pack.updatedAt,
-        publishedAt: aggregate.pack.publishedAt,
-      }));
+    const snapshots = aggregates.filter(isVisible).map((aggregate) => ({
+      ownerId: aggregate.pack.ownerId,
+      primarySubjectType: aggregate.pack.primarySubjectType,
+      lifecycleState: aggregate.ownerFull.contract.status,
+      title: resolveReviewSafePackTitle(aggregate),
+      summary: aggregate.ownerFull.contract.primaryClaim.statement,
+      contextJson:
+        aggregate.pack.contextJson &&
+        typeof aggregate.pack.contextJson === 'object' &&
+        !Array.isArray(aggregate.pack.contextJson)
+          ? (aggregate.pack.contextJson as Record<string, unknown>)
+          : {},
+      ownershipStatement: aggregate.ownerFull.contract.ownershipStatement,
+      evidenceSummary: aggregate.pack.evidenceSummary,
+      outcomesSummary: aggregate.ownerFull.contract.outcomeSummary,
+      verificationSummary: aggregate.ownerFull.contract.verificationSummary.summary,
+      verificationStatus: aggregate.verificationStatus,
+      freshnessState: aggregate.freshnessState,
+      proofQualityScore: aggregate.ownerFull.contract.proofQualityScore,
+      contract: aggregate.ownerFull.contract,
+      updatedAt: aggregate.pack.updatedAt,
+      publishedAt: aggregate.pack.publishedAt,
+    }));
 
     snapshotMap.set(profileId, getBestReviewProofPackSnapshot(snapshots));
   }
 
   return snapshotMap;
+}
+
+export async function getReviewCardProofPackMapForMatchedOrg(profileIds: string[]) {
+  return getReviewCardProofPackMapWithFilter(profileIds, isProofPackVisibleToMatchedOrg);
+}
+
+export async function getReviewCardProofPackMapForOwner(profileIds: string[]) {
+  return getReviewCardProofPackMapWithFilter(profileIds, isProofPackVisibleToOwnerReviewCard);
+}
+
+export async function getReviewCardProofPackMap(profileIds: string[]) {
+  return getReviewCardProofPackMapForOwner(profileIds);
 }
 
 function mapRevealActorTypeToLifecycleActorType(
@@ -989,7 +1019,7 @@ export function buildVisibilitySafeWhy(input: {
   const summary = [...rendered.summary];
 
   if (input.rankBand) {
-    summary.push(`Rank band: ${input.rankBand}`);
+    summary.push(`Review band: ${input.rankBand}`);
   }
 
   if (input.fallbackState === 'low_supply') {
@@ -1357,24 +1387,13 @@ export function canMutateReview(role: OrgReviewRole | null): boolean {
   }).allowed;
 }
 
-export function canRevealExactRank(
-  role: OrgReviewRole | null,
-  fairnessStatus: FairnessStatus
-): boolean {
-  const normalizedRole = normalizeAuthorizedOrgRole(role);
-  return (
-    fairnessStatus === 'pass' &&
-    (normalizedRole === 'org_owner' || normalizedRole === 'org_manager')
-  );
-}
-
 export function getRankBand(rank: number, totalCandidates: number): string {
-  if (rank <= 5) return 'Top 5';
-  if (rank <= 10) return 'Top 10';
-  if (rank <= 20) return 'Top 20';
-  if (rank <= Math.ceil(totalCandidates * 0.3)) return 'Top 30%';
-  if (rank <= Math.ceil(totalCandidates * 0.5)) return 'Top 50%';
-  return 'Competitive';
+  if (rank <= 5) return 'Highest-priority proof review';
+  if (rank <= 10) return 'High-priority proof review';
+  if (rank <= 20) return 'Priority proof review';
+  if (rank <= Math.ceil(totalCandidates * 0.3)) return 'Strong proof review';
+  if (rank <= Math.ceil(totalCandidates * 0.5)) return 'Clear proof review';
+  return 'Contextual proof review';
 }
 
 export function buildCandidateReviewProjection(
@@ -1872,7 +1891,7 @@ export function buildFairnessUiContract(status: FairnessStatus) {
       showWarning: true,
       suppressExactRank: true,
       warning:
-        'Fairness checks are elevated. Rank detail is limited while this snapshot is reviewed.',
+        'Policy checks are elevated. Ordering detail is limited while this snapshot is reviewed.',
     };
   }
 
@@ -1881,7 +1900,7 @@ export function buildFairnessUiContract(status: FairnessStatus) {
       showWarning: true,
       suppressExactRank: true,
       warning:
-        'Fairness remediation is active. Exact ranking detail is temporarily suppressed for this snapshot.',
+        'Policy review is active. Exact ordering detail is temporarily suppressed for this snapshot.',
     };
   }
 
@@ -1889,7 +1908,7 @@ export function buildFairnessUiContract(status: FairnessStatus) {
     showWarning: true,
     suppressExactRank: true,
     warning:
-      'Exact ranking detail is unavailable because fairness evidence is not strong enough yet.',
+      'Exact ordering detail is unavailable because policy evidence is not strong enough yet.',
   };
 }
 
@@ -2015,11 +2034,11 @@ export function buildProofFirstReviewCard(input: {
   const verificationSummaryLabel =
     applyBlindSafeText(proofPack?.contract.verificationSummary.summary) ??
     (proofPack?.verificationStatus === 'verified'
-      ? 'Verified proof signal present'
+      ? 'Verified Proof Pack review present'
       : proofPack?.verificationStatus === 'partially_verified'
-        ? 'Partial verification signal present'
+        ? 'Partial Proof Pack review present'
         : verificationCount && verificationCount > 0
-          ? `${verificationCount} compatibility signal${verificationCount === 1 ? '' : 's'} present`
+          ? `${verificationCount} account-side check${verificationCount === 1 ? '' : 's'} recorded`
           : 'No verification signal recorded yet');
   const trustLabels = buildTrustLabels({
     fairnessStatus: input.fairnessStatus,
@@ -2062,7 +2081,9 @@ export function buildProofFirstReviewCard(input: {
       bullets:
         fitBullets.length > 0
           ? fitBullets
-          : ['Review the strongest proof summary and corridor state for this candidate.'],
+          : [
+              'Review the strongest proof summary and corridor state for this proof-review participant.',
+            ],
       reasonCodes,
     },
     privacy: {

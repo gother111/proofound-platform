@@ -1,0 +1,325 @@
+[
+  {
+    "route": "individual-home",
+    "expectedPath": "/app/i/home",
+    "bodyStart": "Skip to main content Overview Profile Communications Matching Settings Proofound Overview U Proof-first home Add your first proof record Welcome back, there. Start with one work sample, credential, or case study that can be trusted. Start proof record Your Proof Wallet 3 checks Evidence, trust, and sharing state Proof Packs No proof yet. Start with one private record. Pending Trust anchors No trust anchor yet. You can add this after the first proof. Needed Public Page visibility Private by default until you choose to share Locked Add new record Readiness Checklist 3 to resolve First proof artifact Needed Start with one useful artifact. It stays private while you shape it. Start proof Trust a",
+    "clientWidth": 1280,
+    "h1": ["Add your first proof record"],
+    "overflowEls": [],
+    "overflowX": false,
+    "scrollWidth": 1280,
+    "smallTargets": [
+      {
+        "h": 21,
+        "tag": "a",
+        "text": "Add new record",
+        "w": 130,
+        "x": 289,
+        "y": 736
+      },
+      {
+        "h": 21,
+        "tag": "a",
+        "text": "Start proof readiness",
+        "w": 165,
+        "x": 918,
+        "y": 343
+      }
+    ],
+    "url": "http://localhost:3000/app/i/home",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/individual-mode/desktop1280-individual-home.png"
+  },
+  {
+    "route": "individual-messages",
+    "expectedPath": "/app/i/messages",
+    "bodyStart": "Skip to main content Overview Profile Communications Matching Settings Proofound Messages U Loading proof-safe conversations...",
+    "clientWidth": 1280,
+    "h1": [],
+    "overflowEls": [],
+    "overflowX": false,
+    "scrollWidth": 1280,
+    "smallTargets": [],
+    "url": "http://localhost:3000/app/i/messages",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/individual-mode/desktop1280-individual-messages.png"
+  },
+  {
+    "route": "individual-communications",
+    "expectedPath": "/app/i/communications",
+    "bodyStart": "Skip to main content Overview Profile Communications Matching Settings Proofound Communications U HIRING CORRIDOR Communications Messages and interviews stay together, with reveal and decision steps inside the live corridor where they belong. Proof-safe process center Reveal and interview actions stay visible inside their live corridor surfaces. Messages Conversation threads, introductions, and reveal requests. Interviews Scheduling, decision windows, feedback, and handoff. Messages Use the individual conversation thread for messages, intros, and reveal requests. Switch to interviews Loading proof-safe conversations...",
+    "clientWidth": 1280,
+    "h1": ["Communications"],
+    "overflowEls": [],
+    "overflowX": false,
+    "scrollWidth": 1280,
+    "smallTargets": [],
+    "url": "http://localhost:3000/app/i/communications",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/individual-mode/desktop1280-individual-communications.png"
+  },
+  {
+    "route": "individual-matching",
+    "expectedPath": "/app/i/matching",
+    "bodyStart": "Skip to main content Overview Profile Communications Matching Settings Proofound Matching U MATCHING Matching workspace Preparing privacy-safe opportunities, readiness signals, and next actions. Preparing matching workspace...",
+    "clientWidth": 1280,
+    "h1": ["Matching workspace"],
+    "overflowEls": [],
+    "overflowX": false,
+    "scrollWidth": 1280,
+    "smallTargets": [],
+    "url": "http://localhost:3000/app/i/matching",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/individual-mode/desktop1280-individual-matching.png"
+  },
+  {
+    "route": "individual-profile",
+    "expectedPath": "/app/i/profile",
+    "bodyStart": "Skip to main content Overview Profile Communications Matching Settings Proofound Profile U 1/4 Public Page readiness Complete one clear proof path before publishing. NEXT Finish your safe shell with the basics people need before they open your proof. Safe shell basics One real context is anchored One real proof is added and structured One non-self verification is accepted Start with proof, not profile polish Build only the parts that make the first proof credible: safe shell, one real context, one structured Proof Pack, then decide what trust signal comes next.",
+    "clientWidth": 1280,
+    "h1": ["Start with proof, not profile polish"],
+    "overflowEls": [],
+    "overflowX": false,
+    "scrollWidth": 1280,
+    "smallTargets": [],
+    "url": "http://localhost:3000/app/i/profile",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/individual-mode/desktop1280-individual-profile.png"
+  },
+  {
+    "route": "individual-portfolio",
+    "expectedPath": "/app/i/portfolio",
+    "bodyStart": "Skip to main content Overview Profile Communications Matching Settings Proofound Profile U Loading profile Preparing your proof, visibility, and readiness details.",
+    "clientWidth": 1280,
+    "h1": [],
+    "overflowEls": [],
+    "overflowX": false,
+    "scrollWidth": 1280,
+    "smallTargets": [],
+    "url": "http://localhost:3000/app/i/profile?profileView=full&tab=proof_packs&portfolioLocked=1&lockReason=safe_shell&proof=first",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/individual-mode/desktop1280-individual-portfolio.png"
+  },
+  {
+    "route": "individual-verifications",
+    "expectedPath": "/app/i/verifications",
+    "bodyStart": "Skip to main content Overview Profile Communications Matching Settings Proofound Verifications U Loading verification center...",
+    "clientWidth": 1280,
+    "h1": [],
+    "overflowEls": [],
+    "overflowX": false,
+    "scrollWidth": 1280,
+    "smallTargets": [],
+    "url": "http://localhost:3000/app/i/verifications",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/individual-mode/desktop1280-individual-verifications.png"
+  },
+  {
+    "route": "individual-settings",
+    "expectedPath": "/app/i/settings",
+    "bodyStart": "Skip to main content Overview Profile Communications Matching Settings Proofound Settings U Loading settings...",
+    "clientWidth": 1280,
+    "h1": [],
+    "overflowEls": [],
+    "overflowX": false,
+    "scrollWidth": 1280,
+    "smallTargets": [],
+    "url": "http://localhost:3000/app/i/settings",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/individual-mode/desktop1280-individual-settings.png"
+  },
+  {
+    "route": "individual-home",
+    "expectedPath": "/app/i/home",
+    "bodyStart": "Skip to main content Overview Profile Inbox Matching Settings U Proof-first home Add your first proof record Welcome back, there. Start with one work sample, credential, or case study that can be trusted. Start proof record Your Proof Wallet 3 checks Evidence, trust, and sharing state Proof Packs No proof yet. Start with one private record. Pending Trust anchors No trust anchor yet. You can add this after the first proof. Needed Public Page visibility Private by default until you choose to share Locked Add new record Readiness Checklist 3 to resolve First proof artifact Needed Start with one useful artifact. It stays private while you shape it. Start proof Trust anchor missing Needed Nothing",
+    "clientWidth": 390,
+    "h1": ["Add your first proof record"],
+    "overflowEls": [],
+    "overflowX": false,
+    "scrollWidth": 390,
+    "smallTargets": [
+      {
+        "h": 21,
+        "tag": "a",
+        "text": "Add new record",
+        "w": 130,
+        "x": 33,
+        "y": 949
+      },
+      {
+        "h": 21,
+        "tag": "a",
+        "text": "Start proof readiness",
+        "w": 165,
+        "x": 37,
+        "y": 1929
+      }
+    ],
+    "url": "http://localhost:3000/app/i/home",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/individual-mode/mobile390-individual-home.png"
+  },
+  {
+    "route": "individual-messages",
+    "expectedPath": "/app/i/messages",
+    "bodyStart": "Skip to main content Overview Profile Inbox Matching Settings U Loading proof-safe conversations...",
+    "clientWidth": 390,
+    "h1": [],
+    "overflowEls": [],
+    "overflowX": false,
+    "scrollWidth": 390,
+    "smallTargets": [],
+    "url": "http://localhost:3000/app/i/messages",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/individual-mode/mobile390-individual-messages.png"
+  },
+  {
+    "route": "individual-communications",
+    "expectedPath": "/app/i/communications",
+    "bodyStart": "Skip to main content Overview Profile Inbox Matching Settings U HIRING CORRIDOR Communications Messages and interviews stay together, with reveal and decision steps inside the live corridor where they belong. Proof-safe process center Reveal and interview actions stay visible inside their live corridor surfaces. Messages Conversation threads, introductions, and reveal requests. Interviews Scheduling, decision windows, feedback, and handoff. Messages Use the individual conversation thread for messages, intros, and reveal requests. Switch to interviews Loading proof-safe conversations...",
+    "clientWidth": 390,
+    "h1": ["Communications"],
+    "overflowEls": [],
+    "overflowX": false,
+    "scrollWidth": 390,
+    "smallTargets": [],
+    "url": "http://localhost:3000/app/i/communications",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/individual-mode/mobile390-individual-communications.png"
+  },
+  {
+    "route": "individual-matching",
+    "expectedPath": "/app/i/matching",
+    "bodyStart": "Skip to main content Overview Profile Inbox Matching Settings U MATCHING Matching workspace Preparing privacy-safe opportunities, readiness signals, and next actions. Preparing matching workspace...",
+    "clientWidth": 390,
+    "h1": ["Matching workspace"],
+    "overflowEls": [],
+    "overflowX": false,
+    "scrollWidth": 390,
+    "smallTargets": [],
+    "url": "http://localhost:3000/app/i/matching",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/individual-mode/mobile390-individual-matching.png"
+  },
+  {
+    "route": "individual-profile",
+    "expectedPath": "/app/i/profile",
+    "bodyStart": "Skip to main content Overview Profile Inbox Matching Settings U 1/4 Public Page readiness Complete one clear proof path before publishing. NEXT Finish your safe shell with the basics people need before they open your proof. Safe shell basics One real context is anchored One real proof is added and structured One non-self verification is accepted Start with proof, not profile polish Build only the parts that make the first proof credible: safe shell, one real context, one structured Proof Pack, then decide what trust signal comes next.",
+    "clientWidth": 390,
+    "h1": ["Start with proof, not profile polish"],
+    "overflowEls": [],
+    "overflowX": false,
+    "scrollWidth": 390,
+    "smallTargets": [],
+    "url": "http://localhost:3000/app/i/profile",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/individual-mode/mobile390-individual-profile.png"
+  },
+  {
+    "route": "individual-portfolio",
+    "expectedPath": "/app/i/portfolio",
+    "bodyStart": "Skip to main content Overview Profile Inbox Matching Settings U Loading profile Preparing your proof, visibility, and readiness details.",
+    "clientWidth": 390,
+    "h1": [],
+    "overflowEls": [],
+    "overflowX": false,
+    "scrollWidth": 390,
+    "smallTargets": [],
+    "url": "http://localhost:3000/app/i/profile?profileView=full&tab=proof_packs&portfolioLocked=1&lockReason=safe_shell&proof=first",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/individual-mode/mobile390-individual-portfolio.png"
+  },
+  {
+    "route": "individual-verifications",
+    "expectedPath": "/app/i/verifications",
+    "bodyStart": "Skip to main content Overview Profile Inbox Matching Settings U Loading verification center...",
+    "clientWidth": 390,
+    "h1": [],
+    "overflowEls": [],
+    "overflowX": false,
+    "scrollWidth": 390,
+    "smallTargets": [],
+    "url": "http://localhost:3000/app/i/verifications",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/individual-mode/mobile390-individual-verifications.png"
+  },
+  {
+    "route": "individual-settings",
+    "expectedPath": "/app/i/settings",
+    "bodyStart": "Skip to main content Overview Profile Inbox Matching Settings U Loading settings...",
+    "clientWidth": 390,
+    "h1": [],
+    "overflowEls": [
+      {
+        "cls": "mx-auto max-w-4xl space-y-6",
+        "left": 16,
+        "right": 512,
+        "tag": "div",
+        "text": "Loading settings...",
+        "width": 496
+      },
+      {
+        "cls": "text-sm text-muted-foreground",
+        "left": 16,
+        "right": 512,
+        "tag": "p",
+        "text": "Loading settings...",
+        "width": 496
+      },
+      {
+        "cls": "flex items-center justify-between gap-4",
+        "left": 16,
+        "right": 512,
+        "tag": "div",
+        "text": "",
+        "width": 496
+      },
+      {
+        "cls": "animate-pulse bg-muted dark:bg-muted motion-safe:animate-shimmer h-10 rounded-md w-40",
+        "left": 352,
+        "right": 512,
+        "tag": "div",
+        "text": "",
+        "width": 160
+      },
+      {
+        "cls": "h-11 w-full max-w-lg rounded-lg bg-muted/60",
+        "left": 16,
+        "right": 512,
+        "tag": "div",
+        "text": "",
+        "width": 496
+      },
+      {
+        "cls": "space-y-4",
+        "left": 16,
+        "right": 512,
+        "tag": "div",
+        "text": "",
+        "width": 496
+      },
+      {
+        "cls": "h-40 rounded-2xl bg-muted/60",
+        "left": 16,
+        "right": 512,
+        "tag": "div",
+        "text": "",
+        "width": 496
+      },
+      {
+        "cls": "h-40 rounded-2xl bg-muted/60",
+        "left": 16,
+        "right": 512,
+        "tag": "div",
+        "text": "",
+        "width": 496
+      }
+    ],
+    "overflowX": true,
+    "scrollWidth": 390,
+    "smallTargets": [],
+    "url": "http://localhost:3000/app/i/settings",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/individual-mode/mobile390-individual-settings.png"
+  }
+]

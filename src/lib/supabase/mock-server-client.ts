@@ -1,12 +1,29 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { cookies } from 'next/headers';
+import { visualFixturesRuntimeAllowed } from '@/lib/env';
 
 const MOCK_USER_ID = '88888888-8888-4888-8888-888888888888';
 const ORG_ID = '99999999-9999-4999-9999-999999999999';
 
-// Determine if mock should return org_member persona (for testing org features)
-const getMockPersona = () => (process.env.MOCK_ORG_MODE === 'true' ? 'org_member' : 'individual');
+// Determine if mock should return org_member persona for local visual/testing surfaces.
+const getMockPersona = async () => {
+  try {
+    const cookieStore = await cookies();
+    const personaCookie = cookieStore.get('proofound-mock-persona')?.value;
+    if (personaCookie === 'org_member' || personaCookie === 'individual') {
+      return personaCookie;
+    }
+  } catch {
+    // Fall back to process.env outside request-bound mock server contexts.
+  }
+  return process.env.MOCK_ORG_MODE === 'true' ? 'org_member' : 'individual';
+};
 const isMockAdminTestContext = () =>
   process.env.NODE_ENV === 'test' || process.env.PLAYWRIGHT === 'true';
+const visualFixturesEnabled = () =>
+  process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true' &&
+  process.env.PROOFOUND_VISUAL_FIXTURES === 'true' &&
+  visualFixturesRuntimeAllowed();
 const getMockPlatformRole = (): 'platform_admin' | 'super_admin' | null => {
   if (!isMockAdminTestContext()) return null;
 
@@ -93,6 +110,33 @@ const mockVerificationFeedProfiles = [
   },
 ];
 
+const mockProfileRecord = {
+  id: MOCK_USER_ID,
+  handle: 'mock-individual',
+  displayName: 'Mock Individual',
+  display_name: 'Mock Individual',
+  avatarUrl: null,
+  avatar_url: null,
+  locale: 'en',
+  persona: 'individual' as const,
+  isBetaTesting: false,
+  is_beta_testing: false,
+  tour_completed: true,
+  platform_role: null as 'platform_admin' | 'super_admin' | null,
+  createdAt: new Date().toISOString(),
+  created_at: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+};
+
+async function buildMockProfileRecord() {
+  return {
+    ...mockProfileRecord,
+    persona: await getMockPersona(),
+    platform_role: getMockPlatformRole(),
+  };
+}
+
 const mockSupabaseClient = {
   auth: {
     getSession: async () => ({
@@ -131,6 +175,28 @@ const mockSupabaseClient = {
 
       return {
         data: { user: { id: MOCK_USER_ID }, session: {} },
+        error: null,
+      };
+    },
+    signInWithOAuth: async (payload: {
+      provider?: string;
+      options?: { redirectTo?: string | undefined };
+    }) => {
+      const provider = (payload?.provider ?? '').trim();
+      if (provider !== 'google' && provider !== 'linkedin_oidc') {
+        return {
+          data: { provider, url: null },
+          error: { message: 'Unsupported OAuth provider', status: 400 },
+        };
+      }
+
+      const redirectTo = payload?.options?.redirectTo || 'http://localhost/auth/callback';
+      const authorizeUrl = new URL('/auth/v1/authorize', redirectTo);
+      authorizeUrl.searchParams.set('provider', provider);
+      authorizeUrl.searchParams.set('redirect_to', redirectTo);
+
+      return {
+        data: { provider, url: authorizeUrl.toString() },
         error: null,
       };
     },
@@ -273,7 +339,6 @@ const mockSupabaseClient = {
       }
 
       if (table === 'skills_taxonomy') {
-        console.log('Mock Supabase: Hit skills_taxonomy table');
         const mockSkills = [
           {
             code: 'python',
@@ -339,7 +404,6 @@ const mockSupabaseClient = {
           }),
         };
 
-        console.log('Mock Supabase: select called for skills_taxonomy');
         return chain;
       }
 
@@ -533,30 +597,45 @@ const mockSupabaseClient = {
         maybeSingle: async () => {
           if (table === 'profiles') {
             return {
-              data: {
-                id: MOCK_USER_ID,
-                platform_role: getMockPlatformRole(),
-                tour_completed: true,
-                persona: getMockPersona(),
-              },
+              data: await buildMockProfileRecord(),
               error: null,
             };
           }
           if (table === 'organizations') {
             // For getActiveOrg
+            const now = new Date().toISOString();
+            const visualOrg = visualFixturesEnabled();
+
             return {
               data: {
                 id: ORG_ID,
                 slug: 'test-org',
-                displayName: 'Test Organization',
+                displayName: visualOrg ? 'Nordic Field Systems' : 'Test Organization',
                 type: 'company',
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
+                verified: visualOrg,
+                tagline: visualOrg
+                  ? 'Field crews can finish safer infrastructure work when planning tools match the real site conditions.'
+                  : null,
+                mission: visualOrg
+                  ? 'Equip distributed infrastructure teams with proof-led planning, field handoff, and safety review workflows that reduce rework before the first site visit.'
+                  : null,
+                workingContext: visualOrg
+                  ? 'Teams coordinate across municipal partners, subcontractors, and night-shift field crews. Candidates should understand calm stakeholder updates, practical risk logs, and decisions made from incomplete site data.'
+                  : null,
+                hiringProcessSummary: visualOrg
+                  ? 'One written proof assignment, privacy-safe summary review, then a focused reveal conversation for shortlisted proof-review participants.'
+                  : null,
+                trustStatus: visualOrg ? 'domain_verified' : null,
+                websiteVerifiedAt: visualOrg ? now : null,
+                website: visualOrg ? 'https://nordic-field.example/team/proofound' : null,
+                createdAt: now,
+                updatedAt: now,
                 membership: [
                   {
                     orgId: ORG_ID,
                     userId: MOCK_USER_ID,
                     role: 'org_manager',
+                    state: 'active',
                     status: 'active',
                     joinedAt: new Date().toISOString(),
                   },
@@ -572,6 +651,7 @@ const mockSupabaseClient = {
                 orgId: ORG_ID,
                 userId: MOCK_USER_ID,
                 role: 'org_manager',
+                state: 'active',
                 status: 'active',
                 joinedAt: new Date().toISOString(),
               },
@@ -583,12 +663,7 @@ const mockSupabaseClient = {
         single: async () => {
           if (table === 'profiles') {
             return {
-              data: {
-                id: MOCK_USER_ID,
-                platform_role: getMockPlatformRole(),
-                tour_completed: true,
-                persona: getMockPersona(),
-              },
+              data: await buildMockProfileRecord(),
               error: null,
             };
           }
@@ -601,7 +676,7 @@ const mockSupabaseClient = {
     update: async () => ({ data: [], error: null }),
   }),
   // Return error for RPC to trigger fallback
-  rpc: async () => ({ data: null, error: { message: 'Mock RPC not implemented' } }),
+  rpc: async () => ({ data: null, error: { message: 'Mock RPC unavailable in local mode' } }),
   storage: {
     from: () => ({
       upload: async () => ({ data: null, error: null }),

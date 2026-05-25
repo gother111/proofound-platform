@@ -1,0 +1,31 @@
+> proofound@0.1.0 test:launch:routes
+> npm run test -- tests/api/launch-surface-inventory.test.ts tests/api/launch-page-inventory.test.ts tests/api/archived-api-handlers-route.test.ts src/lib/__tests__/middleware-launch-archive.test.ts
+
+
+> proofound@0.1.0 test
+> node ./scripts/run-vitest-with-timeout.mjs tests/api/launch-surface-inventory.test.ts tests/api/launch-page-inventory.test.ts tests/api/archived-api-handlers-route.test.ts src/lib/__tests__/middleware-launch-archive.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+ ✓ tests/api/launch-surface-inventory.test.ts  (4 tests) 42ms
+ ✓ tests/api/launch-page-inventory.test.ts  (6 tests) 117ms
+ ✓ src/lib/__tests__/middleware-launch-archive.test.ts  (6 tests) 66ms
+ ✓ tests/api/archived-api-handlers-route.test.ts  (11 tests) 6ms
+
+ Test Files  4 passed (4)
+      Tests  27 passed (27)
+   Start at  04:46:24
+   Duration  1.19s (transform 232ms, setup 439ms, collect 650ms, tests 231ms, environment 868ms, prepare 164ms)

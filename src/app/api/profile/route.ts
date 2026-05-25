@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { experiences, profiles } from '@/db/schema';
 import { requireApiAuthContext } from '@/lib/auth';
+import { log } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,7 +43,9 @@ export async function GET() {
       experiences: experienceRows,
     });
   } catch (error) {
-    console.error('Failed to fetch profile payload:', error);
+    log.error('profile.payload.fetch_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json({ error: 'Failed to fetch profile' }, { status: 500 });
   }
 }

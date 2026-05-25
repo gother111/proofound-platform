@@ -367,13 +367,13 @@ export type ResidualLifecycleMachineName = keyof typeof RESIDUAL_LIFECYCLE_APPEN
 export const APPLICATION_VS_INTRO_CONTRACT = {
   areSeparateObjects: true,
   relationship:
-    'Match is a scored eligibility record. Intro is the bilateral workflow that begins when a scored match or candidate invite is actively pursued. Application is explicit candidate intent submitted through an application surface and may create at most one intro for a candidate-assignment pair.',
+    'Match is an eligibility record. Intro is the bilateral workflow that begins when a scored match or submission invite is actively pursued. A future self-serve application object would represent explicit proof-review participant intent and may create at most one intro for a participant-assignment pair.',
   currentMvpPolicy:
-    'Intro remains the canonical pursuit workflow until a first-class self-serve application object ships. Launch-safe lifecycle behavior is defined by the canonical relationship lifecycle contract below.',
+    'Intro remains the canonical pursuit workflow until a first-class self-serve application object ships outside the active MVP corridor. Launch-safe lifecycle behavior is defined by the canonical relationship lifecycle contract below.',
   duplicationRules: [
-    'At most one active intro may exist per candidate_profile_id and assignment_id.',
-    'Duplicate applications may only exist as resubmissions after a terminal outcome.',
-    'A duplicate application must never create a second active intro.',
+    'At most one active intro may exist per participant profile and assignment.',
+    'Future duplicate application records may only exist as resubmissions after a terminal outcome.',
+    'A duplicate future application record must never create a second active intro.',
   ],
   reopenRules: [
     'Withdrawn intros do not reopen in place. Re-entry requires a new intro attempt after a terminal loss state.',
@@ -543,7 +543,7 @@ export const WORKFLOW_LABELS = {
   },
   engagement_verification: {
     pending_both_confirmations: 'Awaiting both confirmations',
-    pending_candidate_confirmation: 'Awaiting candidate confirmation',
+    pending_candidate_confirmation: 'Awaiting proof-review participant confirmation',
     pending_organization_confirmation: 'Awaiting organization confirmation',
     verified: 'Engagement verified',
   },

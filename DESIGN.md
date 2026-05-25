@@ -1,8 +1,8 @@
 # Proofound Design Contract
 
 > Doc Class: `working-design`
-> Last Verified: `2026-05-14`
-> Last Updated: `2026-05-14`
+> Last Verified: `2026-05-21`
+> Last Updated: `2026-05-21`
 > Purpose: Give humans and agents one repo-native visual source of truth for UI work without overriding the locked MVP product authority.
 
 ## 1. How to use this document
@@ -15,6 +15,7 @@ Use it when:
 - deciding between multiple visual directions
 - reviewing whether a new interface fits Proofound
 - guiding agents so they do not invent a generic SaaS aesthetic
+- checking whether an active MVP surface makes its primary object, primary next action, privacy state, trust state, proof state, and readiness state clear
 
 Do not use this file to widen product scope. Product behavior and MVP boundaries still come from:
 
@@ -51,7 +52,7 @@ The core emotional target is: "I can see real work clearly, and I can trust what
 
 ## 3. Core visual thesis
 
-Proofound is a proof-first, privacy-first hiring corridor. The design should communicate that before the user reads detailed copy.
+Proofound is a proof-first, privacy-first assignment review corridor. The design should communicate that before the user reads detailed copy.
 
 That means:
 
@@ -60,6 +61,8 @@ That means:
 - public portfolio surfaces should feel calm and composed, not self-promotional
 - organization surfaces should feel credible and structured, not corporate or bloated
 - product UI should privilege clarity, sequence, and trust over density
+- every active surface should make the primary object obvious: Proof Pack, assignment, proof-submission review, reveal request, interview, decision, verification, export, or deletion
+- every active surface should make the primary next action obvious and safe
 
 Design rule:
 
@@ -123,12 +126,13 @@ Proofound uses rounded forms, warm spacing, and soft depth.
 Prefer:
 
 - generous whitespace
-- soft radii
+- soft but restrained radii
 - layered surfaces
 - light borders
 - restrained shadows
 
-Cards should feel like quiet containers for evidence and meaning, not generic widgets.
+Cards should feel like quiet containers for evidence and meaning, not generic widgets. Avoid nested
+card stacks and generic dashboard mosaics unless the surface is explicitly internal operations.
 
 ## 5. Motion principles
 
@@ -199,6 +203,7 @@ When showing proof:
 - show enough framing for a reviewer to understand relevance
 - use labels and metadata to support interpretation, not to replace substance
 - preserve calm visual hierarchy around evidence
+- show proof state, anchor/context state, readiness state, and verification state where they affect the next action
 
 Avoid:
 
@@ -206,6 +211,7 @@ Avoid:
 - badge overload
 - decorative charts where raw evidence would be stronger
 - CV-like bullet dumps presented as proof
+- score-first, rank-first, or automated-verdict presentation
 
 ### Privacy and trust states
 
@@ -217,6 +223,7 @@ Use:
 - clear labels
 - visible status language
 - orderly reveal patterns
+- gated, archived, disabled, empty, loading, error, and success states that explain what is safe to do next
 
 Do not make privacy states feel:
 
@@ -274,6 +281,7 @@ Avoid:
 - engagement bait
 - dense social metadata
 - decorative profile chrome
+- public directory behavior or browse/search cues that imply broad people discovery
 
 ### Organization trust pages
 
@@ -291,6 +299,7 @@ Avoid turning them into:
 - culture-marketing microsites
 - KPI dashboards
 - broad employer-brand showcases outside MVP need
+- public employer directory pages
 
 ### Product app surfaces
 
@@ -302,6 +311,7 @@ Use:
 - clear next steps
 - strong empty states
 - straightforward form flows
+- visible privacy stage, trust state, proof state, readiness state, and role/permission limits where relevant
 
 Avoid:
 
@@ -386,8 +396,10 @@ Avoid overusing:
 - "talent marketplace"
 - "revolutionary"
 - "optimize your funnel"
-- "engagement"
 - "community"
+- "dashboard"
+- "rank"
+- "score"
 
 The UI should speak as if it respects the user's work, time, and uncertainty.
 
@@ -409,7 +421,7 @@ The UI should speak as if it respects the user's work, time, and uncertainty.
 - use gradients, glows, and animation as a substitute for hierarchy
 - overload surfaces with metrics, pills, and badges
 - make every page look like the landing page
-- let admin visual density leak into public or candidate-facing surfaces
+- let admin visual density leak into public or participant-facing surfaces
 
 ## 11. Agent instructions
 
@@ -424,6 +436,8 @@ When editing UI in this repo:
    - authenticated app
 4. Match the existing visual family for that surface.
 5. If a proposed UI feels more like a generic dashboard, social app, or ATS than a proof-first corridor, revise it before implementation.
+6. Before major UI edits, write a short visual thesis, content plan, and interaction thesis.
+7. After meaningful UI edits, verify representative desktop and mobile behavior with Browser or Playwright, and record route, viewport, role/mode, and finding.
 
 If in doubt, optimize for:
 
@@ -446,5 +460,6 @@ Use these files as implementation anchors:
 - `src/components/landing/**`
 - `src/components/public-profile/**`
 - `src/components/brand/Logo.tsx`
+- `.artifacts/mvp-surface-sweep-2026-05-19/SURFACE_SWEEP.md`
 
 This file should evolve when the real UI system evolves. It should not become a disconnected style manifesto.

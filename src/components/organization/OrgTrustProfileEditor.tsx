@@ -62,6 +62,11 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
     { label: 'Domain path', ready: Boolean(website.trim()) },
   ];
   const readyFieldCount = fieldReadiness.filter((item) => item.ready).length;
+  const saveButtonLabel = isPending
+    ? 'Saving...'
+    : hasUnsavedChanges
+      ? 'Save trust page'
+      : 'No changes to save';
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -98,17 +103,17 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
 
       if (!response.ok) {
         const error = await response.json().catch(() => ({}));
-        throw new Error(error.error || error.message || 'Failed to update organization profile');
+        throw new Error(error.error || error.message || 'Failed to update organization trust page');
       }
 
       toast({
-        title: 'Organization profile updated',
-        description: 'The launch-facing organization profile has been saved.',
+        title: 'Organization trust page updated',
+        description: 'The launch-facing organization trust page has been saved.',
       });
       router.refresh();
     } catch (error) {
       toast({
-        title: 'Unable to save organization profile',
+        title: 'Unable to save organization trust page',
         description: error instanceof Error ? error.message : 'Unknown error',
         variant: 'destructive',
       });
@@ -122,7 +127,7 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
       <CardHeader>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <CardTitle>Organization profile</CardTitle>
+            <CardTitle>Organization trust page</CardTitle>
             <CardDescription className="max-w-2xl leading-6">
               Keep the launch story narrow and credible: org name, verified domain path, mission,
               why the work matters, and the essential operating context.
@@ -153,7 +158,7 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
                 value={whyWorkMatters}
                 onChange={(event) => setWhyWorkMatters(event.target.value)}
                 disabled={!canEdit || isPending}
-                rows={3}
+                rows={4}
                 placeholder="Explain why the work matters in practical terms."
               />
             </div>
@@ -165,7 +170,7 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
                 value={mission}
                 onChange={(event) => setMission(event.target.value)}
                 disabled={!canEdit || isPending}
-                rows={4}
+                rows={6}
                 placeholder="Explain the mission this assignment path supports."
               />
             </div>
@@ -177,8 +182,8 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
                 value={operatingContext}
                 onChange={(event) => setOperatingContext(event.target.value)}
                 disabled={!canEdit || isPending}
-                rows={4}
-                placeholder="Describe the real operating environment candidates should understand."
+                rows={8}
+                placeholder="Describe the real operating environment proof submitters should understand."
               />
             </div>
 
@@ -218,9 +223,16 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
               </p>
             </div>
             {canEdit ? (
-              <Button type="submit" className="w-full" disabled={isPending || !hasUnsavedChanges}>
-                {isPending ? 'Saving...' : 'Save organization profile'}
-              </Button>
+              <div className="space-y-2">
+                <Button type="submit" className="w-full" disabled={isPending || !hasUnsavedChanges}>
+                  {saveButtonLabel}
+                </Button>
+                {!hasUnsavedChanges ? (
+                  <p className="text-center text-xs text-muted-foreground">
+                    Edit a field to enable saving.
+                  </p>
+                ) : null}
+              </div>
             ) : null}
           </div>
         </form>

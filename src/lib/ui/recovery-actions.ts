@@ -32,14 +32,13 @@ const INDIVIDUAL_BASE_ACTIONS: RecoveryAction[] = [
   {
     id: 'add-skill',
     title: 'Strengthen your Public Page proof',
-    description:
-      'Refresh proof-backed signals so matching can evaluate fit without legacy Atlas flows.',
+    description: 'Refresh proof items so matching can evaluate fit without legacy Atlas flows.',
     actionUrl: '/app/i/profile',
   },
   {
     id: 'turn-on-matchable',
     title: 'Turn on matchable',
-    description: 'Complete matching preferences to unlock and improve opportunities.',
+    description: 'Complete matching preferences to make better-fit assignment reviews available.',
     actionUrl: '/app/i/matching/preferences',
   },
 ];
@@ -52,16 +51,16 @@ const INDIVIDUAL_DESCRIPTION_OVERRIDES: Record<
     'turn-on-matchable': 'Complete work mode, availability, and compensation to become matchable.',
   },
   'matching-empty': {
-    'add-proof': 'Boost trust signals by attaching proof to one of your strongest skills.',
+    'add-proof': 'Strengthen verification by attaching proof to one of your strongest skills.',
   },
   'dashboard-empty': {
-    'add-skill': 'Add a skill so your dashboard can generate better next actions.',
+    'add-skill': 'Add a skill so your Proof home can suggest the next useful action.',
   },
   'expertise-empty': {
-    'add-skill': 'Start your Expertise Atlas with a skill you actively use.',
+    'add-skill': 'Start with a skill you can connect to real proof.',
   },
   'proofs-empty': {
-    'add-proof': 'Add your first proof artifact to increase credibility and ranking quality.',
+    'add-proof': 'Add your first proof artifact to strengthen credibility and readiness.',
   },
   'profile-incomplete': {
     'turn-on-matchable': 'Finish matching preferences so your profile can start receiving matches.',
@@ -161,19 +160,20 @@ export function getOrganizationRecoveryActions(
       {
         id: 'publish-assignment',
         title: 'Publish assignment',
-        description: 'Create and publish an assignment to start attracting candidate signals.',
+        description:
+          'Create and publish an assignment to start receiving proof-backed submissions.',
         actionUrl: `${basePath}/assignments/new`,
       },
       {
         id: 'add-skill-requirements',
         title: 'Add skill requirements',
-        description: 'Define required skills so matching can rank candidates accurately.',
+        description: 'Define required skills so matching can surface proof-backed submissions.',
         actionUrl: `${basePath}/assignments/new?focus=skills`,
       },
       {
         id: 'turn-on-candidate-matching',
-        title: 'Turn on candidate matching',
-        description: 'Open matching and activate candidate pipeline recovery actions.',
+        title: 'Turn on proof matching',
+        description: 'Open matching and activate assignment-review recovery actions.',
         actionUrl: `${basePath}/assignments?focus=matchable`,
       },
     ],
@@ -181,19 +181,19 @@ export function getOrganizationRecoveryActions(
       {
         id: 'publish-assignment',
         title: 'Publish assignment updates',
-        description: 'Update and publish this assignment so new candidates can be evaluated.',
+        description: 'Update and publish this assignment so new submissions can be reviewed.',
         actionUrl: assignmentReviewPath,
       },
       {
         id: 'add-skill-requirements',
         title: 'Add skill requirements',
-        description: 'Adjust required skills and levels to improve candidate discovery.',
+        description: 'Adjust required skills and levels to improve proof-submission discovery.',
         actionUrl: `${assignmentReviewPath}?focus=skills`,
       },
       {
         id: 'turn-on-candidate-matching',
-        title: 'Turn on candidate matching',
-        description: 'Re-open matching and re-run candidate discovery for this assignment.',
+        title: 'Turn on proof matching',
+        description: 'Re-open matching and re-run proof-submission discovery for this assignment.',
         actionUrl: assignmentId
           ? `${basePath}/assignments?matching=${encodeURIComponent(assignmentId)}`
           : `${basePath}/assignments?focus=matchable`,

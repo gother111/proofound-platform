@@ -1,0 +1,23 @@
+> proofound@0.1.0 test
+> node ./scripts/run-vitest-with-timeout.mjs tests/api/admin-internal-ops-queue-route.test.ts tests/ui/admin-dashboard-launch-links.test.tsx src/lib/__tests__/middleware-launch-archive.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+ ✓ tests/api/admin-internal-ops-queue-route.test.ts  (7 tests) 14ms
+ ✓ src/lib/__tests__/middleware-launch-archive.test.ts  (6 tests) 43ms
+ ✓ tests/ui/admin-dashboard-launch-links.test.tsx  (2 tests) 94ms
+
+ Test Files  3 passed (3)
+      Tests  15 passed (15)
+   Start at  04:58:05
+   Duration  932ms (transform 167ms, setup 322ms, collect 290ms, tests 151ms, environment 630ms, prepare 129ms)

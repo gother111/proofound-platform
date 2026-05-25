@@ -13,7 +13,32 @@ const COLORS = {
   white: '#FFFFFF',
 };
 
-type PdfDoc = PDFKit.PDFDocument;
+type PdfTextOptions = Record<string, unknown>;
+
+type PdfDoc = {
+  on(event: string, listener: (...args: any[]) => void): PdfDoc;
+  end(): void;
+  page: { width: number; height: number };
+  y: number;
+  rect(x: number, y: number, width: number, height: number): PdfDoc;
+  roundedRect(x: number, y: number, width: number, height: number, radius: number): PdfDoc;
+  fill(color?: string): PdfDoc;
+  fillAndStroke(fillColor: string, strokeColor: string): PdfDoc;
+  fillColor(color: string): PdfDoc;
+  fontSize(size: number): PdfDoc;
+  font(name: string): PdfDoc;
+  text(text: string, options?: PdfTextOptions): PdfDoc;
+  text(text: string, x: number, y: number, options?: PdfTextOptions): PdfDoc;
+  moveDown(lines?: number): PdfDoc;
+  moveTo(x: number, y: number): PdfDoc;
+  lineTo(x: number, y: number): PdfDoc;
+  stroke(): PdfDoc;
+  widthOfString(text: string): number;
+};
+
+type PdfDocumentConstructor = new (options?: Record<string, unknown>) => PdfDoc;
+
+const StandalonePDFDocument = PDFDocument as unknown as PdfDocumentConstructor;
 
 type SheetLayout = {
   pageWidth: number;
@@ -29,7 +54,7 @@ type SheetLayout = {
 
 function createBuffer(render: (doc: PdfDoc) => void): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ size: 'A4', margin: 0, bufferPages: true });
+    const doc = new StandalonePDFDocument({ size: 'A4', margin: 0, bufferPages: true });
     const chunks: Buffer[] = [];
 
     doc.on('data', (chunk: Buffer) => chunks.push(chunk));
@@ -195,7 +220,7 @@ export async function generateTrustPdf(input: TrustPdfInput): Promise<Buffer> {
 
     drawHeaderSubtitle(
       doc,
-      'Reusable template for individual and organization profile exports',
+      'Reusable template for individual Public Page and organization trust page exports',
       layout.contentX,
       layout.contentY + 30,
       layout.contentWidth
@@ -297,9 +322,9 @@ export async function generateTrustPdf(input: TrustPdfInput): Promise<Buffer> {
       });
     }
 
-    drawCard(doc, leftX, sectionTop + 236, leftWidth, 74, 'Profile narrative');
+    drawCard(doc, leftX, sectionTop + 236, leftWidth, 74, 'Proof context');
     const narrative = input.visibility.bio
-      ? input.profile.bio || 'Add your profile narrative to strengthen this export.'
+      ? input.profile.bio || 'Add proof context to strengthen this export.'
       : 'Narrative is hidden by current visibility settings.';
     doc
       .fillColor(COLORS.narrative)
@@ -373,7 +398,7 @@ export async function generateOrganizationProfilePdf(
       .fillColor(COLORS.charcoal)
       .font('Times-Bold')
       .fontSize(20)
-      .text('Organization Public Profile PDF', layout.contentX, layout.contentY, {
+      .text('Organization Trust Page PDF', layout.contentX, layout.contentY, {
         width: layout.contentWidth,
       });
 
@@ -404,7 +429,7 @@ export async function generateOrganizationProfilePdf(
       });
     const orgNarrative =
       input.organization.whyWorkMatters ||
-      'Public organization profile with only the minimum credible launch fields.';
+      'Public organization trust page with only the minimum credible launch fields.';
     doc
       .fillColor('#4D5A55')
       .fontSize(8)

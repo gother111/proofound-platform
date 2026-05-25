@@ -124,7 +124,11 @@ function mockSelectWithLimit(result: unknown[]) {
 }
 
 function mockSelectWithWhere(result: unknown[]) {
-  const where = vi.fn().mockResolvedValue(result);
+  const where = vi.fn().mockImplementation(() =>
+    Object.assign(Promise.resolve(result), {
+      limit: vi.fn().mockResolvedValue(result),
+    })
+  );
   const chain = {
     leftJoin: vi.fn(),
     where,
@@ -245,8 +249,7 @@ describe('profile purpose actions', () => {
     const insertValues = vi.fn().mockReturnValue({ onConflictDoNothing });
     mockDb.insert.mockReturnValue({ values: insertValues });
 
-    mockSelectWithLimit([profileRow]); // initial profile row check
-    mockSelectWithLimit([profileRow]); // profile fetch
+    mockSelectWithLimit([profileRow]); // individual profile row
     mockSelectWithLimit([
       {
         displayName: 'Test User',
@@ -259,7 +262,7 @@ describe('profile purpose actions', () => {
     mockSelectWithWhere([]); // education
     mockSelectWithWhere([]); // volunteering
     mockSelectWithWhere([]); // skills
-    mockSelectWithWhere([]); // impact verification summaries
+    mockSelectWithLimit([]); // portfolio publication state
     mockSelectWithWhere([]); // proofs
     mockSelectWithWhere([]); // accepted verifications
 
@@ -312,8 +315,7 @@ describe('profile purpose actions', () => {
         .mockReturnValue({ onConflictDoNothing: vi.fn().mockResolvedValue(undefined) }),
     });
 
-    mockSelectWithLimit([profileRow]); // initial profile row check
-    mockSelectWithLimit([profileRow]); // profile fetch
+    mockSelectWithLimit([profileRow]); // individual profile row
     mockSelectWithLimit([
       {
         displayName: 'Test User',
@@ -364,6 +366,7 @@ describe('profile purpose actions', () => {
         email_error: null,
       },
     ]);
+    mockSelectWithLimit([]); // portfolio publication state
     mockSelectWithWhere([]); // proofs
     mockSelectWithWhere([]); // accepted verifications
 

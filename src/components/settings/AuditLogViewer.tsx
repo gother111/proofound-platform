@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { internalValueLabel, isMachineIdentifier } from '@/lib/copy/labels';
 
 interface AuditEvent {
@@ -106,9 +107,7 @@ export function AuditLogViewer() {
       setTotal(data.total);
       setHasMore(data.hasMore);
     } catch (error) {
-      console.error('audit_log.load.failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      dispatchClientErrorDiagnostic('settings.audit_log.load_failed', error);
       toast({
         title: 'Failed to load account history',
         description: 'Could not fetch your activity history',
@@ -148,9 +147,7 @@ export function AuditLogViewer() {
         description: 'Your activity history has been downloaded',
       });
     } catch (error) {
-      console.error('audit_log.export.failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      dispatchClientErrorDiagnostic('settings.audit_log.export_failed', error);
       toast({
         title: 'Download failed',
         description: 'Could not download your account history',

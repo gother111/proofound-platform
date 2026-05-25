@@ -8,6 +8,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { log } from '@/lib/log';
 
 interface DashboardLoadMetrics {
@@ -66,35 +67,18 @@ async function reportDashboardLoadTime(metrics: DashboardLoadMetrics & { loadTim
       });
     }
 
-    // Send to backend
-    await fetch('/api/analytics/dashboard-load-time', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        dashboardType: metrics.dashboardType,
-        loadTimeMs: metrics.loadTimeMs,
-        tileCount: metrics.tileCount,
-        dataFetchTimeMs: metrics.dataFetchTimeMs,
-        renderTimeMs: metrics.renderTimeMs,
-        pagePath: window.location.pathname,
-      }),
-      keepalive: true,
-    });
-
-    // Log in development
+    // Emit local diagnostics in development without writing to the console.
     if (process.env.NODE_ENV === 'development') {
-      console.log('[Dashboard Load Time]', {
+      dispatchClientDiagnostic('dashboard.load_time.measured', {
         type: metrics.dashboardType,
-        total: `${metrics.loadTimeMs}ms`,
-        dataFetch: metrics.dataFetchTimeMs ? `${metrics.dataFetchTimeMs}ms` : 'N/A',
-        render: metrics.renderTimeMs ? `${metrics.renderTimeMs}ms` : 'N/A',
-        withinSLA: metrics.loadTimeMs <= 2000 ? '✓' : '✗',
+        totalMs: metrics.loadTimeMs,
+        dataFetchTimeMs: metrics.dataFetchTimeMs ?? null,
+        renderTimeMs: metrics.renderTimeMs ?? null,
+        withinSLA: metrics.loadTimeMs <= 2000,
       });
     }
   } catch (error) {
     // Silently fail - metrics shouldn't break user experience
-    console.error('Failed to report dashboard load time:', error);
+    dispatchClientErrorDiagnostic('dashboard.load_time.report_failed', error);
   }
 }

@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   findMany: vi.fn(),
   update: vi.fn(),
   insert: vi.fn(),
+  logWarn: vi.fn(),
 }));
 
 vi.mock('@/db', () => ({
@@ -61,8 +62,15 @@ vi.mock('@/db/schema', () => ({
   },
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    warn: mocks.logWarn,
+  },
+}));
+
 import {
   ensureInternalOpsQueueItem,
+  INTERNAL_OPS_QUEUE_META,
   listInternalOpsQueueItems,
   transitionInternalOpsQueueItem,
 } from '@/lib/internal-ops/queue';
@@ -72,8 +80,64 @@ describe('internal ops queue compatibility fallback', () => {
     vi.clearAllMocks();
   });
 
+  it('keeps pilot ops queue copy scoped to assignment-review workflow operations', () => {
+    const description = INTERNAL_OPS_QUEUE_META.pilot_ops.description;
+
+    expect(description).toContain('assignment-review workflow');
+    expect(description).not.toContain('hiring corridor');
+  });
+
+  it('keeps operator guidance identity-scoped instead of candidate-copy scoped', async () => {
+    mocks.findMany.mockResolvedValue([
+      {
+        id: 'queue-match-1',
+        queueType: 'privacy_reveal_exception',
+        linkedEntityType: 'match',
+        linkedEntityId: 'match-1',
+        status: 'open',
+        priority: 'high',
+        summary: 'Reveal state needs review.',
+        metadata: {
+          revealStage: 'consent_pending',
+          candidateConsentStatus: 'pending',
+          organizationConsentStatus: 'approved',
+        },
+        createdAt: new Date('2026-05-01T10:00:00Z'),
+        updatedAt: new Date('2026-05-01T10:00:00Z'),
+        resolvedAt: null,
+      },
+      {
+        id: 'queue-engagement-1',
+        queueType: 'pilot_ops',
+        linkedEntityType: 'engagement_verification',
+        linkedEntityId: 'engagement-1',
+        status: 'open',
+        priority: 'normal',
+        summary: 'Engagement verification is pending.',
+        metadata: {
+          workflowStatus: 'pending',
+          pendingParty: 'organization',
+        },
+        createdAt: new Date('2026-05-01T11:00:00Z'),
+        updatedAt: new Date('2026-05-01T11:00:00Z'),
+        resolvedAt: null,
+      },
+    ]);
+
+    const groups = await listInternalOpsQueueItems();
+    const serialized = JSON.stringify(groups);
+
+    expect(serialized).toContain(
+      'Inspect reveal or consent workflow state without exposing participant identity details.'
+    );
+    expect(serialized).toContain('Proof-review participant consent');
+    expect(serialized).toContain('Keep participant private context out of notes.');
+    expect(serialized).not.toContain('without exposing candidate identity');
+    expect(serialized).not.toContain('Candidate consent');
+    expect(serialized).not.toContain('organization and candidate private context');
+  });
+
   it('returns a synthetic queue item when the runtime queue table is unavailable', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     mocks.findFirst.mockRejectedValue({
       code: '42P01',
       message: 'relation "internal_ops_queue_items" does not exist',
@@ -108,17 +172,29 @@ describe('internal ops queue compatibility fallback', () => {
     );
     expect(mocks.insert).not.toHaveBeenCalled();
     expect(mocks.update).not.toHaveBeenCalled();
-    expect(warnSpy).toHaveBeenCalledWith(
-      'internal_ops_queue.ensure.compatibility_fallback',
-      expect.objectContaining({
+    expect(mocks.logWarn).toHaveBeenCalledWith('internal_ops_queue.ensure.compatibility_fallback', {
+      error: expect.objectContaining({
         code: '42P01',
-      })
-    );
-    warnSpy.mockRestore();
+      }),
+    });
+  });
+
+  it('keeps compatibility fallback diagnostics on structured server logging', async () => {
+    mocks.findMany.mockRejectedValue({
+      code: '42703',
+      message: 'column internal_ops_queue_items.priority does not exist',
+    });
+
+    await listInternalOpsQueueItems();
+
+    expect(mocks.logWarn).toHaveBeenCalledWith('internal_ops_queue.list.compatibility_fallback', {
+      error: expect.objectContaining({
+        code: '42703',
+      }),
+    });
   });
 
   it('returns empty queue groups when the runtime queue table is unavailable', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     mocks.findMany.mockRejectedValue({
       code: '42P01',
       message: 'relation "internal_ops_queue_items" does not exist',
@@ -132,13 +208,11 @@ describe('internal ops queue compatibility fallback', () => {
       expect.objectContaining({ id: 'correction_revocation', items: [], openCount: 0 }),
       expect.objectContaining({ id: 'pilot_ops', items: [], openCount: 0 }),
     ]);
-    expect(warnSpy).toHaveBeenCalledWith(
-      'internal_ops_queue.list.compatibility_fallback',
-      expect.objectContaining({
+    expect(mocks.logWarn).toHaveBeenCalledWith('internal_ops_queue.list.compatibility_fallback', {
+      error: expect.objectContaining({
         code: '42P01',
-      })
-    );
-    warnSpy.mockRestore();
+      }),
+    });
   });
 
   it('projects only privacy-safe metadata and operator detail for listed queue items', async () => {
@@ -211,7 +285,6 @@ describe('internal ops queue compatibility fallback', () => {
   });
 
   it('falls back cleanly when uploaded_file is rejected by a pre-migration DB constraint', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     mocks.findFirst.mockResolvedValue(null);
 
     const returning = vi.fn().mockRejectedValue({
@@ -246,13 +319,11 @@ describe('internal ops queue compatibility fallback', () => {
       })
     );
     expect(JSON.stringify(result)).not.toContain('Jane_Doe_Resume.pdf');
-    expect(warnSpy).toHaveBeenCalledWith(
-      'internal_ops_queue.ensure.compatibility_fallback',
-      expect.objectContaining({
+    expect(mocks.logWarn).toHaveBeenCalledWith('internal_ops_queue.ensure.compatibility_fallback', {
+      error: expect.objectContaining({
         code: '23514',
-      })
-    );
-    warnSpy.mockRestore();
+      }),
+    });
   });
 
   it('updates queue item status, resolution fields, and latest operator note', async () => {

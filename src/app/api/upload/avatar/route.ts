@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { safeApiErrorResponse } from '@/lib/api/errors';
 import { deleteUploadedFile, ingestUploadedFile, UPLOAD_KINDS } from '@/lib/uploads/lifecycle';
+import { rejectOversizedUploadRequest } from '@/lib/uploads/request-size';
+
+const AVATAR_UPLOAD_MAX_FILE_BYTES = 5 * 1024 * 1024;
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,7 +14,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const formData = await request.formData();
+    const oversizedResponse = rejectOversizedUploadRequest(request, AVATAR_UPLOAD_MAX_FILE_BYTES);
+    if (oversizedResponse) {
+      return oversizedResponse;
+    }
+
+    let formData: FormData;
+    try {
+      formData = await request.formData();
+    } catch {
+      return NextResponse.json({ error: 'Invalid form data' }, { status: 400 });
+    }
     const file = formData.get('file') as File | null;
 
     if (!file) {

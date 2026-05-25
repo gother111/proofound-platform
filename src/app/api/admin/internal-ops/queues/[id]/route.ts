@@ -2,11 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { jsonError, requirePlatformAdminJson } from '@/lib/api/route-helpers';
+import { adminListGuard } from '@/app/api/admin/_utils';
 import {
+  getInternalOpsQueueItem,
   InternalOpsQueueMutationError,
   transitionInternalOpsQueueItem,
 } from '@/lib/internal-ops/queue';
 import { logAdminAction } from '@/lib/audit/admin-logger';
+import { log } from '@/lib/log';
 import { reviewUploadedFileQueueItem, UploadReviewError } from '@/lib/uploads/review';
 
 const paramsSchema = z.object({
@@ -23,6 +26,42 @@ const patchBodySchema = z
     message: 'Upload review actions must resolve the queue item.',
     path: ['uploadReviewAction'],
   });
+
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const guardResult = await adminListGuard(request);
+    if (guardResult instanceof NextResponse) {
+      return guardResult;
+    }
+
+    const parsedParams = paramsSchema.safeParse(await params);
+    if (!parsedParams.success) {
+      return jsonError('Invalid queue id', 400, parsedParams.error.flatten());
+    }
+
+    const item = await getInternalOpsQueueItem(parsedParams.data.id);
+    if (!item) {
+      return jsonError('Queue item not found', 404);
+    }
+
+    return NextResponse.json({
+      success: true,
+      item,
+    });
+  } catch (error) {
+    if (
+      error instanceof InternalOpsQueueMutationError &&
+      error.code === 'compatibility_fallback_unavailable'
+    ) {
+      return jsonError(error.message, 503);
+    }
+
+    log.error('admin.internal_ops_queue_item.get_failed', {
+      errorName: error instanceof Error ? error.name : typeof error,
+    });
+    return jsonError('Failed to fetch operations queue item', 500);
+  }
+}
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -45,6 +84,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const payload = patchBodySchema.safeParse(rawBody);
     if (!payload.success) {
       return jsonError('Invalid queue update payload', 400, payload.error.flatten());
+    }
+
+    if (payload.data.uploadReviewAction && adminUser.adminLevel !== 'super_admin') {
+      return jsonError('Upload review requires super admin access', 403);
     }
 
     const transition = payload.data.uploadReviewAction
@@ -115,11 +158,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return jsonError(error.message, status);
     }
 
-    console.error('Error updating operations queue item:', error);
-    return jsonError(
-      'Failed to update operations queue item',
-      500,
-      error instanceof Error ? error.message : 'Unknown error'
-    );
+    log.error('admin.internal_ops_queue_item.update_failed', {
+      errorName: error instanceof Error ? error.name : typeof error,
+    });
+    return jsonError('Failed to update operations queue item', 500);
   }
 }

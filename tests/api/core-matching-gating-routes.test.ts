@@ -80,7 +80,7 @@ const baseEligibility = {
   unmetCriteria: ['skillsWithRecency', 'proofs'],
   nextTierTarget: {
     tier: 'lite',
-    message: 'Add recent skills and one preference to unlock personalized browse results.',
+    message: 'Add recent skills and one preference to make personalized browse results available.',
     remaining: { skillsWithRecency: 1, proofCount: 1, intentSignal: 1, constraints: 1 },
   },
   criteria: {
@@ -90,7 +90,7 @@ const baseEligibility = {
     {
       id: 'update-public-portfolio',
       title: 'Strengthen Public Page proof',
-      description: 'Refresh proof-backed work examples and trust signals.',
+      description: 'Refresh proof-backed work examples and verification checks.',
       actionUrl: '/app/i/profile?profileView=full&tab=proof_packs',
     },
   ],
@@ -144,6 +144,20 @@ describe('core matching gating routes', () => {
     expect(payload.meta.softGated).toBe(true);
     expect(payload.eligibility.unmetCriteria).toEqual(baseEligibility.unmetCriteria);
     expect(Array.isArray(payload.topActions)).toBe(true);
+  });
+
+  it('/api/core/matching/near-matches rejects malformed JSON before matchability checks', async () => {
+    const req = new NextRequest('http://localhost/api/core/matching/near-matches', {
+      method: 'POST',
+      body: '{"k":',
+      headers: { 'content-type': 'application/json' },
+    });
+
+    const res = await postNearMatches(req);
+
+    expect(res.status).toBe(400);
+    await expect(res.json()).resolves.toEqual({ error: 'Invalid JSON body' });
+    expect(evaluateIndividualMatchability).not.toHaveBeenCalled();
   });
 
   it('/api/core/matching/near-matches does not expose backend error details', async () => {

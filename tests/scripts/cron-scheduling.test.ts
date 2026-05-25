@@ -79,4 +79,25 @@ describe('cron scheduling ownership', () => {
       ]);
     }
   });
+
+  it('keeps cron setup documented as current active launch guidance', () => {
+    const cronSetupPath = path.join(process.cwd(), 'docs/CRON_SETUP.md');
+    const docsRegistryPath = path.join(process.cwd(), 'docs/DOCS_REGISTRY.md');
+    const cronSetup = fs.readFileSync(cronSetupPath, 'utf8');
+    const docsRegistry = fs.readFileSync(docsRegistryPath, 'utf8');
+
+    expect(cronSetup).toContain('Doc Class: `active`');
+    expect(cronSetup).toContain('Last Verified: `2026-05-21`');
+    expect(cronSetup).toContain('npm run cron:sync');
+    expect(cronSetup).toContain(
+      'Maintains launch-critical SLA state for the assignment-review workflow.'
+    );
+    expect(cronSetup).not.toContain('Maintains launch-critical SLA state for the hiring workflow.');
+    expect(cronSetup).toContain('/api/cron/health-check');
+    expect(cronSetup).toContain('/api/cron/performance-check');
+    expect(cronSetup).toContain('/api/cron/weekly-digest');
+    expect(docsRegistry).toContain(
+      '| `docs/CRON_SETUP.md`                                                                                    | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
+    );
+  });
 });

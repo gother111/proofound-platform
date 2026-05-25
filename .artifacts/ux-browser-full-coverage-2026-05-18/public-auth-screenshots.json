@@ -1,0 +1,102 @@
+[
+  {
+    "name": "desktop1440-landing.png",
+    "ok": false,
+    "error": "TypeError: tab.playwright.screenshot is not a function"
+  },
+  {
+    "name": "desktop1440-login.png",
+    "ok": false,
+    "error": "TypeError: tab.playwright.screenshot is not a function"
+  },
+  {
+    "name": "desktop1440-signup.png",
+    "ok": false,
+    "error": "TypeError: tab.playwright.screenshot is not a function"
+  },
+  {
+    "name": "desktop1440-signup-individual.png",
+    "ok": false,
+    "error": "TypeError: tab.playwright.screenshot is not a function"
+  },
+  {
+    "name": "desktop1440-signup-organization.png",
+    "ok": false,
+    "error": "TypeError: tab.playwright.screenshot is not a function"
+  },
+  {
+    "name": "desktop1440-reset-password.png",
+    "ok": false,
+    "error": "TypeError: tab.playwright.screenshot is not a function"
+  },
+  {
+    "name": "desktop1440-public-individual-demo.png",
+    "ok": false,
+    "error": "TypeError: tab.playwright.screenshot is not a function"
+  },
+  {
+    "name": "desktop1440-public-org-demo.png",
+    "ok": false,
+    "error": "TypeError: tab.playwright.screenshot is not a function"
+  },
+  {
+    "name": "desktop1440-candidate-invite-invalid.png",
+    "ok": false,
+    "error": "TypeError: tab.playwright.screenshot is not a function"
+  },
+  {
+    "name": "desktop1440-not-found.png",
+    "ok": false,
+    "error": "TypeError: tab.playwright.screenshot is not a function"
+  },
+  {
+    "name": "mobile390-landing.png",
+    "ok": false,
+    "error": "TypeError: tab.playwright.screenshot is not a function"
+  },
+  {
+    "name": "mobile390-login.png",
+    "ok": false,
+    "error": "TypeError: tab.playwright.screenshot is not a function"
+  },
+  {
+    "name": "mobile390-signup.png",
+    "ok": false,
+    "error": "TypeError: tab.playwright.screenshot is not a function"
+  },
+  {
+    "name": "mobile390-signup-individual.png",
+    "ok": false,
+    "error": "TypeError: tab.playwright.screenshot is not a function"
+  },
+  {
+    "name": "mobile390-signup-organization.png",
+    "ok": false,
+    "error": "TypeError: tab.playwright.screenshot is not a function"
+  },
+  {
+    "name": "mobile390-reset-password.png",
+    "ok": false,
+    "error": "TypeError: tab.playwright.screenshot is not a function"
+  },
+  {
+    "name": "mobile390-public-individual-demo.png",
+    "ok": false,
+    "error": "TypeError: tab.playwright.screenshot is not a function"
+  },
+  {
+    "name": "mobile390-public-org-demo.png",
+    "ok": false,
+    "error": "TypeError: tab.playwright.screenshot is not a function"
+  },
+  {
+    "name": "mobile390-candidate-invite-invalid.png",
+    "ok": false,
+    "error": "TypeError: tab.playwright.screenshot is not a function"
+  },
+  {
+    "name": "mobile390-not-found.png",
+    "ok": false,
+    "error": "TypeError: tab.playwright.screenshot is not a function"
+  }
+]

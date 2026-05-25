@@ -31,7 +31,7 @@ describe('PortfolioVisibilityCard AI privacy preflight', () => {
               header: true,
               proofBar: true,
               workEmail: false,
-              linkedin: true,
+              linkedin: false,
               identity: true,
               skills: false,
               bio: false,
@@ -55,7 +55,59 @@ describe('PortfolioVisibilityCard AI privacy preflight', () => {
     });
   });
 
-  it('shows Check privacy before publishing and reports deterministic safe-mode result', async () => {
+  it('names the visibility loading state while controls are loading', async () => {
+    let resolveVisibility: (response: Response) => void = () => {};
+    const visibilityPromise = new Promise<Response>((resolve) => {
+      resolveVisibility = resolve;
+    });
+
+    global.fetch = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+
+      if (url === '/api/feature-flags') {
+        return {
+          ok: true,
+          json: async () => ({ flags: { assistiveAiUi: true } }),
+        } as Response;
+      }
+
+      if (url === '/api/portfolio/visibility') {
+        return visibilityPromise;
+      }
+
+      throw new Error(`Unexpected fetch call: ${url}`);
+    }) as any;
+
+    render(<PortfolioVisibilityCard />);
+
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      /Loading Public Page visibility controls/i
+    );
+
+    resolveVisibility({
+      ok: true,
+      json: async () => ({
+        visibility: {
+          header: true,
+          proofBar: true,
+          workEmail: false,
+          linkedin: false,
+          identity: true,
+          skills: false,
+          bio: false,
+          contact: false,
+        },
+        publicPageEnabled: true,
+        searchIndexingEnabled: false,
+      }),
+    } as Response);
+
+    expect(
+      await screen.findByRole('button', { name: /check privacy before publishing/i })
+    ).toBeInTheDocument();
+  });
+
+  it('shows Check privacy before publishing and reports a clear safe-mode result', async () => {
     render(<PortfolioVisibilityCard />);
 
     const button = await screen.findByRole('button', {
@@ -64,7 +116,7 @@ describe('PortfolioVisibilityCard AI privacy preflight', () => {
     fireEvent.click(button);
 
     await waitFor(() => {
-      expect(screen.getByText(/No high-risk deterministic flags were found/i)).toBeInTheDocument();
+      expect(screen.getByText(/No high-risk privacy concerns were found/i)).toBeInTheDocument();
     });
     expect(apiFetchMock).toHaveBeenCalledWith(
       '/api/ai/privacy-preflight/check',
@@ -93,7 +145,7 @@ describe('PortfolioVisibilityCard AI privacy preflight', () => {
               header: true,
               proofBar: true,
               workEmail: false,
-              linkedin: true,
+              linkedin: false,
               identity: true,
               skills: false,
               bio: false,
@@ -115,7 +167,16 @@ describe('PortfolioVisibilityCard AI privacy preflight', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('reports precise high-risk deterministic flags without claiming safety', async () => {
+  it('names each visibility switch so mobile controls remain clear', async () => {
+    render(<PortfolioVisibilityCard />);
+
+    expect(await screen.findByRole('switch', { name: /public page enabled/i })).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: /proof bar block/i })).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: /contact section/i })).toBeInTheDocument();
+    expect(screen.queryByRole('switch', { name: /LinkedIn/i })).not.toBeInTheDocument();
+  });
+
+  it('reports precise high-risk privacy concerns without claiming safety', async () => {
     apiFetchMock.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
@@ -138,7 +199,7 @@ describe('PortfolioVisibilityCard AI privacy preflight', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/1 deterministic flag found/i)).toBeInTheDocument();
+      expect(screen.getByText(/1 privacy concern found/i)).toBeInTheDocument();
     });
     expect(screen.getByText(/public bio: Email-like contact information/i)).toBeInTheDocument();
     expect(screen.queryByText(/\bsafe\b/i)).not.toBeInTheDocument();
@@ -161,7 +222,7 @@ describe('PortfolioVisibilityCard AI privacy preflight', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/Privacy preflight is temporarily unavailable/i)).toBeInTheDocument();
+      expect(screen.getByText(/Privacy check is temporarily unavailable/i)).toBeInTheDocument();
     });
     expect(screen.getByText(/Manual checklist:/i)).toBeInTheDocument();
   });

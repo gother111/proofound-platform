@@ -304,10 +304,10 @@ export async function createRuntimeOrganization(
       type: 'company',
       created_by: ownerUserId,
       mission: readyForPublish
-        ? 'Run a narrow, proof-first hiring corridor with explicit reveal consent.'
+        ? 'Run a focused proof-first assignment review path with explicit reveal consent.'
         : null,
       tagline: readyForPublish
-        ? 'We review candidates through proof quality, outcomes, and clear ownership.'
+        ? 'We review proof submissions through quality, outcomes, and clear ownership.'
         : null,
       working_context: readyForPublish
         ? 'Small launch team with tight async review loops and explicit privacy boundaries.'
@@ -435,6 +435,7 @@ export async function createRuntimeMatch(
   profileId: string
 ): Promise<StrictRuntimeMatch> {
   const supabase = adminClient();
+  const nowIso = new Date().toISOString();
   const { data: assignmentRecord, error: assignmentLookupError } = await supabase
     .from('assignments')
     .select('org_id')
@@ -450,7 +451,11 @@ export async function createRuntimeMatch(
   const matchPayload = {
     assignment_id: assignmentId,
     profile_id: profileId,
-    score: '0.82',
+    score: '0.99',
+    score_total: 100,
+    is_test_match: true,
+    generated_at: nowIso,
+    updated_at: nowIso,
     vector: {
       subscores: {
         skills: 0.9,
@@ -624,7 +629,7 @@ export async function seedPortfolioReadyCandidate(
     .insert({
       user_id: user.id,
       title: 'Strict matching context',
-      organization_name: 'Strict Candidate Org',
+      organization_name: 'Strict Proof Review Org',
       organization_type: 'company',
       org_description: 'A seeded context to verify the MVP shortlist corridor.',
       duration: '2024-2026',
@@ -642,7 +647,7 @@ export async function seedPortfolioReadyCandidate(
 
   if (experienceError || !experienceRow?.id) {
     throw new Error(
-      `Failed to seed strict candidate experience context: ${experienceError?.message ?? 'unknown error'}`
+      `Failed to seed strict proof-review experience context: ${experienceError?.message ?? 'unknown error'}`
     );
   }
 
@@ -666,7 +671,7 @@ export async function seedPortfolioReadyCandidate(
 
   if (matchingProfileError) {
     throw new Error(
-      `Failed to seed strict candidate matching profile: ${matchingProfileError.message}`
+      `Failed to seed strict proof-submission matching profile: ${matchingProfileError.message}`
     );
   }
 
@@ -690,7 +695,7 @@ export async function seedPortfolioReadyCandidate(
 
   if (skillError || !skillRows || skillRows.length !== skillRequirements.length) {
     throw new Error(
-      `Failed to seed strict candidate skills: ${skillError?.message ?? 'unknown error'}`
+      `Failed to seed strict proof-submission skills: ${skillError?.message ?? 'unknown error'}`
     );
   }
 
@@ -728,7 +733,7 @@ export async function seedPortfolioReadyCandidate(
     insertedArtifacts.length !== skillRequirements.length
   ) {
     throw new Error(
-      `Failed to seed strict candidate proof artifacts: ${artifactError?.message ?? 'unknown error'}`
+      `Failed to seed strict proof-submission artifacts: ${artifactError?.message ?? 'unknown error'}`
     );
   }
 
@@ -749,7 +754,8 @@ export async function seedPortfolioReadyCandidate(
       contextId: experienceRow.id,
     },
     evidence_summary: 'Three recent skill-linked proof artifacts.',
-    outcomes_summary: 'Portfolio-ready candidate seed for strict org lifecycle verification.',
+    outcomes_summary:
+      'Portfolio-ready proof-submission seed for strict org lifecycle verification.',
     visibility: 'public',
     reveal_gate: 'none',
     created_by: user.id,
@@ -773,7 +779,7 @@ export async function seedPortfolioReadyCandidate(
   });
 
   if (proofPackError) {
-    throw new Error(`Failed to seed strict candidate proof pack: ${proofPackError.message}`);
+    throw new Error(`Failed to seed strict proof-submission pack: ${proofPackError.message}`);
   }
 
   const { error: proofPackItemError } = await supabase.from('proof_pack_items').insert(
@@ -789,7 +795,7 @@ export async function seedPortfolioReadyCandidate(
 
   if (proofPackItemError) {
     throw new Error(
-      `Failed to seed strict candidate proof pack items: ${proofPackItemError.message}`
+      `Failed to seed strict proof-submission pack items: ${proofPackItemError.message}`
     );
   }
 
@@ -820,7 +826,7 @@ export async function seedPortfolioReadyCandidate(
 
     if (verificationError) {
       throw new Error(
-        `Failed to seed strict candidate verification record: ${verificationError.message}`
+        `Failed to seed strict proof-submission verification record: ${verificationError.message}`
       );
     }
   }
@@ -839,7 +845,7 @@ export async function seedPortfolioReadyCandidate(
 
   if (consentError) {
     throw new Error(
-      `Failed to seed strict candidate matching consent obligation: ${consentError.message}`
+      `Failed to seed strict proof-submission matching consent obligation: ${consentError.message}`
     );
   }
 
@@ -852,7 +858,9 @@ export async function seedPortfolioReadyCandidate(
     .eq('id', user.id);
 
   if (profileError) {
-    throw new Error(`Failed to update strict candidate profile shell: ${profileError.message}`);
+    throw new Error(
+      `Failed to update strict proof-submission profile shell: ${profileError.message}`
+    );
   }
 
   const { error: publicationError } = await supabase.from('portfolio_publication_states').upsert(
@@ -901,7 +909,7 @@ export async function createRuntimeConversation(
       participant_one_id: participantOneId,
       participant_two_id: participantTwoId,
       stage: 'masked',
-      masked_handle_one: `Candidate #${randomUUID().slice(0, 6).toUpperCase()}`,
+      masked_handle_one: `Submission #${randomUUID().slice(0, 6).toUpperCase()}`,
       masked_handle_two: `Organization #${randomUUID().slice(0, 6).toUpperCase()}`,
       last_message_at: new Date().toISOString(),
     })

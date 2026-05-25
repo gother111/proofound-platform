@@ -4,6 +4,8 @@ import {
   assertMockDatabaseAllowed,
   getEnabledMockDatabaseModes,
   resolveCanonicalSiteUrl,
+  resolveSiteUrlFromHeaders,
+  visualFixturesRuntimeAllowed,
 } from '@/lib/env';
 
 const originalEnv = { ...process.env };
@@ -41,6 +43,30 @@ describe('resolveCanonicalSiteUrl', () => {
   });
 });
 
+describe('resolveSiteUrlFromHeaders', () => {
+  afterEach(() => {
+    process.env = { ...originalEnv };
+  });
+
+  it('uses localhost request origin before configured production URL', () => {
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://proofound.io';
+    process.env.SITE_URL = 'https://proofound.io';
+
+    expect(resolveSiteUrlFromHeaders(new Headers({ origin: 'http://localhost:3001' }))).toBe(
+      'http://localhost:3001'
+    );
+  });
+
+  it('uses configured production URL for non-local request origins', () => {
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://proofound.io';
+    process.env.SITE_URL = 'https://proofound.io';
+
+    expect(resolveSiteUrlFromHeaders(new Headers({ origin: 'https://attacker.example' }))).toBe(
+      'https://proofound.io'
+    );
+  });
+});
+
 describe('production mock database guard', () => {
   afterEach(() => {
     process.env = { ...originalEnv };
@@ -68,6 +94,30 @@ describe('production mock database guard', () => {
     expect(() => assertMockDatabaseAllowed('test')).toThrow(/MOCK_ADMIN_MODE/);
   });
 
+  it('rejects mock modes in Vercel preview deployments', () => {
+    process.env['NODE_ENV'] = 'test';
+    process.env.VERCEL_ENV = 'preview';
+    process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE = 'true';
+    process.env.MOBILE_MOCK_AUTH = 'true';
+
+    expect(getEnabledMockDatabaseModes()).toEqual([
+      'NEXT_PUBLIC_USE_MOCK_SUPABASE',
+      'MOBILE_MOCK_AUTH',
+    ]);
+    expect(() => assertMockDatabaseAllowed('preview deploy')).toThrow(
+      /NEXT_PUBLIC_USE_MOCK_SUPABASE/
+    );
+  });
+
+  it('rejects mock modes in explicit staging app environments', () => {
+    process.env['NODE_ENV'] = 'test';
+    process.env.VERCEL_ENV = '';
+    process.env.NEXT_PUBLIC_APP_ENV = 'staging';
+    process.env.MOCK_ADMIN_MODE = 'true';
+
+    expect(() => assertMockDatabaseAllowed('staging deploy')).toThrow(/MOCK_ADMIN_MODE/);
+  });
+
   it('allows mock Supabase in development and test runtimes', () => {
     process.env['NODE_ENV'] = 'development';
     process.env.VERCEL_ENV = '';
@@ -78,5 +128,25 @@ describe('production mock database guard', () => {
     process.env['NODE_ENV'] = 'test';
 
     expect(() => assertMockDatabaseAllowed('test')).not.toThrow();
+  });
+
+  it('blocks visual fixtures in preview and staging deploy contexts', () => {
+    process.env['NODE_ENV'] = 'test';
+    process.env.VERCEL_ENV = 'preview';
+    expect(visualFixturesRuntimeAllowed()).toBe(false);
+
+    process.env.VERCEL_ENV = '';
+    process.env.NEXT_PUBLIC_APP_ENV = 'staging';
+    expect(visualFixturesRuntimeAllowed()).toBe(false);
+  });
+
+  it('allows visual fixtures only in local development and test contexts', () => {
+    process.env['NODE_ENV'] = 'development';
+    process.env.VERCEL_ENV = '';
+    process.env.NEXT_PUBLIC_APP_ENV = '';
+    expect(visualFixturesRuntimeAllowed()).toBe(true);
+
+    process.env['NODE_ENV'] = 'test';
+    expect(visualFixturesRuntimeAllowed()).toBe(true);
   });
 });

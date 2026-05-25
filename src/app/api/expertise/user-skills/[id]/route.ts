@@ -1,4 +1,5 @@
 import { requireApiAuthContext } from '@/lib/auth';
+import { log } from '@/lib/log';
 import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
 
@@ -71,7 +72,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
     const { user, supabase } = authContext;
     const { id } = await params;
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
 
     // Validate input
     const validated = UpdateSkillSchema.parse(body);
@@ -113,7 +119,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       .single();
 
     if (error) {
-      console.error('Error updating skill:', error);
+      log.error('expertise.user_skill.update_failed', { error });
       return NextResponse.json({ error: 'Failed to update skill' }, { status: 500 });
     }
 
@@ -130,7 +136,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         changes,
       });
     } catch (analyticsError) {
-      console.error('Failed to emit skill_updated event:', analyticsError);
+      log.error('expertise.user_skill.update_analytics_failed', { error: analyticsError });
     }
 
     return NextResponse.json({
@@ -144,7 +150,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         { status: 400 }
       );
     }
-    console.error('User skill PATCH error:', error);
+    log.error('expertise.user_skill.patch_failed', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -186,7 +192,7 @@ export async function DELETE(
     const { error } = await supabase.from('skills').delete().eq('id', id).eq('profile_id', user.id);
 
     if (error) {
-      console.error('Error deleting skill:', error);
+      log.error('expertise.user_skill.delete_failed', { error });
       return NextResponse.json({ error: 'Failed to delete skill' }, { status: 500 });
     }
 
@@ -222,14 +228,14 @@ export async function DELETE(
         remaining_skills: remainingSkills?.length || 0,
       });
     } catch (analyticsError) {
-      console.error('Failed to emit skill_deleted event:', analyticsError);
+      log.error('expertise.user_skill.delete_analytics_failed', { error: analyticsError });
     }
 
     return NextResponse.json({
       message: 'Skill deleted successfully',
     });
   } catch (error) {
-    console.error('User skill DELETE error:', error);
+    log.error('expertise.user_skill.delete_route_failed', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

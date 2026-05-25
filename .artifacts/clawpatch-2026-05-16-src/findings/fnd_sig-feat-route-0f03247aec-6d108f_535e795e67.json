@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "findingId": "fnd_sig-feat-route-0f03247aec-6d108f_535e795e67",
+  "featureId": "feat_route_0f03247aec",
+  "title": "Route never loads conversations when auth completes without a user",
+  "category": "bug",
+  "severity": "medium",
+  "confidence": "high",
+  "triage": "confirmed-bug",
+  "evidence": [
+    {
+      "path": "app/app/o/[slug]/messages/page.tsx",
+      "startLine": 39,
+      "endLine": 43,
+      "symbol": "OrganizationMessagesPageContent",
+      "quote": "if (!isAuthLoading && currentUserId) {\n      loadConversations();\n    }"
+    },
+    {
+      "path": "app/app/o/[slug]/messages/page.tsx",
+      "startLine": 172,
+      "endLine": 178,
+      "symbol": "OrganizationMessagesPageContent",
+      "quote": "if (isAuthLoading || !currentUserId) {\n    return (\n      <div className=\"h-full flex items-center justify-center\">\n        <p className=\"text-muted-foreground\">Loading...</p>\n      </div>\n    );\n  }"
+    }
+  ],
+  "reasoning": "After authentication finishes with no current user, the component returns the same loading UI forever. The conversations effect also only runs when currentUserId exists, so unauthenticated or expired-session users never get a redirect, forbidden state, or actionable error. For a protected organization route, this is a correctness and access-flow bug because the page can hang indefinitely instead of following the app's auth contract.",
+  "reproduction": "Open /app/o/<slug>/messages in a browser state where useAuth resolves isAuthLoading=false and userId is null. The rendered page remains \"Loading...\" indefinitely.",
+  "recommendation": "Handle the resolved unauthenticated state explicitly: redirect to sign-in, render the app's unauthorized state, or delegate to the route guard used by sibling protected pages. Keep the loading state only for isAuthLoading=true.",
+  "whyTestsDoNotAlreadyCoverThis": "No linked tests were included for this route, and the file has no test evidence covering the isAuthLoading=false/currentUserId=null branch.",
+  "suggestedRegressionTest": "Add a route/component test that mocks useAuth returning { isLoading: false, userId: null } and asserts the protected-route behavior is not the loading placeholder.",
+  "minimumFixScope": "Update app/app/o/[slug]/messages/page.tsx auth-state rendering and add a focused test for the unauthenticated resolved state.",
+  "status": "fixed",
+  "history": [
+    {
+      "runId": null,
+      "kind": "triage",
+      "status": "fixed",
+      "note": "Fixed manually: resolved unauthenticated auth state now renders sign-in guidance instead of loading forever; covered by tests/routes/organization-messages-page.test.tsx.",
+      "reasoning": null,
+      "commands": [],
+      "createdAt": "2026-05-16T17:18:10.741Z"
+    }
+  ],
+  "signature": "sig_feat-route-0f03247aec_6d108fcb17",
+  "linkedPatchAttemptIds": [],
+  "createdByRunId": "20260516T164325-52e1d0",
+  "createdAt": "2026-05-16T16:52:21.934Z",
+  "updatedAt": "2026-05-16T17:18:10.739Z"
+}

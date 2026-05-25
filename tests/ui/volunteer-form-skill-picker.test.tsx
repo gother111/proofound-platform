@@ -60,7 +60,7 @@ vi.mock('@/components/ui/badge', () => ({
 }));
 
 describe('VolunteerForm skill picker', () => {
-  it('requires selected Expertise Atlas skills and serializes selected values on save', async () => {
+  it('requires selected proof skills and serializes selected values on save', async () => {
     const onSave = vi.fn();
     const volunteering = {
       id: 'vol-1',

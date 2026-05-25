@@ -65,7 +65,7 @@ function buildProjection(overrides: Partial<any> = {}) {
       operating_region: 'EU',
       verified: true,
       website: 'https://acme.org/',
-      tagline: 'This work matters because trustworthy hiring is still too rare.',
+      tagline: 'This work matters because proof-first assignment review still needs trust.',
       mission: 'Ship impact',
       working_context: 'Small distributed team across Europe with weekly async check-ins.',
       type: 'company',
@@ -79,9 +79,9 @@ function buildProjection(overrides: Partial<any> = {}) {
     metadata: {
       path: '/portfolio/org/acme',
       title: 'Proofound organization portfolio',
-      description: 'Shareable organization profile on Proofound.',
+      description: 'Shareable organization trust page on Proofound.',
       ogTitle: 'Proofound organization portfolio',
-      ogDescription: 'Shareable organization profile on Proofound.',
+      ogDescription: 'Shareable organization trust page on Proofound.',
       useGenericPreview: true,
     },
     jsonLd: {
@@ -158,8 +158,9 @@ describe('Organization public portfolio page', () => {
     render(element);
 
     expect(screen.getByRole('heading', { name: 'Acme' })).toBeInTheDocument();
-    expect(screen.getByText(/public organization profile/i)).toBeInTheDocument();
+    expect(screen.getByText(/public organization trust page/i)).toBeInTheDocument();
     expect(screen.getByText('Shareable by direct link')).toBeInTheDocument();
+    expect(screen.getByText('Minimal trust page')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /mission \/ purpose/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /what work is offered/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /assignment clarity/i })).toBeInTheDocument();
@@ -180,6 +181,9 @@ describe('Organization public portfolio page', () => {
     expect(screen.queryByRole('heading', { name: /goals/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/team members/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/owner@|reviewer@|member@/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/public organization profile/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/minimal public profile/i)).not.toBeInTheDocument();
+    expect(screen.queryByText('Searchable')).not.toBeInTheDocument();
   });
 
   it('falls back to return-home link when returnTo is unsafe', async () => {
@@ -195,11 +199,11 @@ describe('Organization public portfolio page', () => {
           display_name: 'Acme',
           public_portfolio_state: 'public_link_only',
           search_indexing_enabled_at: null,
-          trust_status: 'pending',
-          trust_status_updated_at: null,
-          website_verified_at: null,
+          trust_status: 'domain_verified',
+          trust_status_updated_at: '2026-05-18T00:00:00.000Z',
+          website_verified_at: '2026-05-18T00:00:00.000Z',
           operating_region: null,
-          verified: false,
+          verified: true,
           website: 'https://acme.org/',
           tagline: 'Build trust',
           mission: null,
@@ -236,6 +240,56 @@ describe('Organization public portfolio page', () => {
     expect(screen.getAllByText('Build trust').length).toBeGreaterThan(0);
     expect(
       screen.getByText(/assignment detail will appear here once the organization publishes it/i)
+    ).toBeInTheDocument();
+  });
+
+  it('keeps sparse long organization data readable on narrow public portfolio layouts', async () => {
+    const longName =
+      'Nordic Distributed Proof Operations Research Collective For Very Long Public Names';
+    const longWebsite =
+      'https://proof-operations-research-collective.example.com/teams/very-long-public-profile-path';
+
+    vi.mocked(getPublicOrganizationPortfolioProjectionBySlug).mockResolvedValue(
+      buildProjection({
+        publicDisplayName: longName,
+        publicSummary: '',
+        verifiedDomainPath:
+          'proof-operations-research-collective.example.com/verified/organization/domain/path',
+        organization: {
+          id: 'org-1',
+          slug: 'acme',
+          display_name: longName,
+          public_portfolio_state: 'public_link_only',
+          search_indexing_enabled_at: null,
+          trust_status: 'pending',
+          trust_status_updated_at: null,
+          website_verified_at: null,
+          operating_region: null,
+          verified: false,
+          website: longWebsite,
+          tagline: null,
+          mission: null,
+          working_context: null,
+          type: 'company',
+        },
+        assignmentSnapshot: null,
+      }) as any
+    );
+
+    const element = await OrganizationPortfolioPublicPage({
+      params: Promise.resolve({ slug: 'acme' }),
+      searchParams: Promise.resolve({ returnTo: '/app/o/acme/home' }),
+    });
+
+    render(element);
+
+    expect(screen.getByRole('heading', { name: longName })).toHaveClass('break-words');
+    expect(screen.getByRole('link', { name: /return to menu/i })).toHaveClass('w-full');
+    expect(screen.getByRole('button', { name: /copy share link/i })).toHaveClass('w-full');
+    expect(screen.getByRole('link', { name: /website/i })).toHaveClass('w-full');
+    expect(screen.getByText(longWebsite)).toHaveClass('break-words');
+    expect(
+      screen.getByText(/a short purpose statement has not been published yet/i)
     ).toBeInTheDocument();
   });
 
@@ -277,12 +331,22 @@ describe('Organization public portfolio page', () => {
     expect(metadata.openGraph?.title).toBe('Acme Labs on Proofound');
   });
 
-  it('calls notFound when slug has no public portfolio', async () => {
+  it('renders the generic unavailable state when slug has no public portfolio', async () => {
     vi.mocked(getPublicOrganizationPortfolioProjectionBySlug).mockResolvedValue(null);
 
-    await expect(
-      OrganizationPortfolioPublicPage({ params: Promise.resolve({ slug: 'missing' }) })
-    ).rejects.toThrow('NOT_FOUND');
-    expect(notFoundMock).toHaveBeenCalledTimes(1);
+    const element = await OrganizationPortfolioPublicPage({
+      params: Promise.resolve({ slug: 'missing' }),
+      searchParams: Promise.resolve({}),
+    });
+
+    const { container } = render(element);
+
+    expect(container.querySelectorAll('main')).toHaveLength(1);
+    expect(
+      screen.getByRole('heading', { name: 'Organization portfolio unavailable' })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/this organization link is unavailable/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Return home' })).toHaveAttribute('href', '/');
+    expect(notFoundMock).not.toHaveBeenCalled();
   });
 });

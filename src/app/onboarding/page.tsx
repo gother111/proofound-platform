@@ -4,6 +4,7 @@ import { resolveUserHomePath, getPersona, getUserOrganizations, getCurrentUser }
 import { OnboardingClient } from '@/components/onboarding/OnboardingClient';
 import { getIndividualProfileCompletionState } from '@/lib/profile/completion-flow.server';
 import { START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE } from '@/lib/ai/start-from-cv-contract';
+import { log } from '@/lib/log';
 
 type OnboardingPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -44,7 +45,7 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
   } = await supabase.auth.getUser();
 
   if (userError && !isExpectedMissingAuthSession(userError)) {
-    console.error('Failed to load authenticated user for onboarding:', userError);
+    log.warn('onboarding.page.auth_user_load_failed', { error: userError });
   }
 
   if (!user) {

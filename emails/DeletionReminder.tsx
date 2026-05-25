@@ -15,13 +15,13 @@ import * as React from 'react';
 interface DeletionReminderProps {
   scheduledDate: Date;
   daysRemaining: number;
-  cancellationUrl: string;
+  settingsUrl: string;
 }
 
 export const DeletionReminder = ({
   scheduledDate,
-  daysRemaining,
-  cancellationUrl,
+  daysRemaining: _daysRemaining,
+  settingsUrl,
 }: DeletionReminderProps) => {
   const formattedDate = new Intl.DateTimeFormat('en-US', {
     dateStyle: 'full',
@@ -31,68 +31,68 @@ export const DeletionReminder = ({
   return (
     <Html>
       <Head />
-      <Preview>{daysRemaining.toString()} days until your Proofound account is deleted</Preview>
+      <Preview>Your Proofound account deletion request is in progress</Preview>
       <Body style={main}>
         <Container style={container}>
           <Section style={urgentBox}>
-            <Heading style={urgentHeading}>⏰ {daysRemaining} Days Remaining</Heading>
+            <Heading style={urgentHeading}>Deletion Request In Progress</Heading>
             <Text style={urgentText}>
-              Your Proofound account will be permanently deleted on{' '}
-              <strong>{formattedDate}</strong>
+              Your Proofound account deletion request was recorded for processing on{' '}
+              <strong>{formattedDate}</strong>.
             </Text>
           </Section>
 
-          <Heading style={h1}>Final Reminder: Account Deletion</Heading>
+          <Heading style={h1}>Account Deletion Update</Heading>
 
           <Text style={text}>
-            This is a friendly reminder that you requested to delete your Proofound account. In{' '}
-            <strong>{daysRemaining} days</strong>, your account and all associated data will be
-            permanently anonymized.
+            This is an account deletion status email. Proofound processes account deletion as an
+            immediate, irreversible lifecycle request, so there is no scheduled cancellation window.
           </Text>
 
           <Text style={text}>
             <strong>What happens next:</strong>
           </Text>
           <Text style={listText}>
-            • All your profile information will be removed
+            • Profile and account identity fields are removed or anonymized
             <br />
-            • Your matches and connections will be deleted
+            • Proof Packs, proof items, and public portfolio projections are removed
             <br />
-            • Your messages will be anonymized
+            • Matching, intro, reveal, interview, and decision records are minimized where they
+            identify you
             <br />• This action cannot be undone after the deletion date
           </Text>
 
           <Section style={actionBox}>
             <Text style={actionText}>
-              <strong>Want to keep your account?</strong>
+              <strong>Need to check privacy settings?</strong>
             </Text>
             <Text style={actionSubtext}>
-              You can still cancel this deletion request. Just click the button below.
+              Use the authenticated settings page while your session is still available.
             </Text>
             <Section style={buttonContainer}>
-              <Button style={button} href={cancellationUrl}>
-                Cancel Deletion & Keep My Account
+              <Button style={button} href={settingsUrl}>
+                Review Privacy Settings
               </Button>
             </Section>
           </Section>
 
           <Text style={text}>
             Or copy and paste this link in your browser:{' '}
-            <Link href={cancellationUrl} style={link}>
-              {cancellationUrl}
+            <Link href={settingsUrl} style={link}>
+              {settingsUrl}
             </Link>
           </Text>
 
           <Text style={supportText}>
             <strong>Need help?</strong> Contact our support team at{' '}
-            <Link href="mailto:privacy@proofound.com" style={link}>
-              privacy@proofound.com
+            <Link href="mailto:privacy@proofound.io" style={link}>
+              privacy@proofound.io
             </Link>
           </Text>
 
           <Text style={footer}>
-            If you intended to delete your account, no action is needed. Your account will be
-            automatically deleted on the scheduled date.
+            If you intended to delete your account, no action is needed. For privacy questions,
+            contact privacy@proofound.io.
           </Text>
         </Container>
       </Body>
@@ -219,4 +219,3 @@ const footer = {
   lineHeight: '1.5',
   marginTop: '32px',
 };
-

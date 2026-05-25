@@ -9,7 +9,7 @@ test.describe('Landing Page', () => {
     const header = page.getByTestId('landing-header');
     await expect(header).toBeVisible();
     await expect(header.getByText(/How it works/i)).toBeVisible();
-    await expect(header.getByRole('button', { name: /Request a pilot/i })).toBeVisible();
+    await expect(header.getByRole('link', { name: /Request a pilot/i })).toBeVisible();
 
     const heading = page.getByRole('heading', { name: /Proof behind the claim/i, level: 1 });
     await expect(heading).toBeVisible();
@@ -17,9 +17,9 @@ test.describe('Landing Page', () => {
     const story = page.getByTestId('landing-story-section');
     await expect(story).toBeVisible();
 
-    await expect(page.getByRole('button', { name: /Request a pilot/i }).first()).toBeVisible();
+    await expect(page.getByRole('link', { name: /Request a pilot/i }).first()).toBeVisible();
     await expect(
-      page.getByRole('button', { name: /Create your proof portfolio/i }).first()
+      page.getByRole('link', { name: /Create your proof portfolio/i }).first()
     ).toBeVisible();
   });
 
@@ -74,20 +74,20 @@ test.describe('Landing Page', () => {
     const ctaSection = page.getByTestId('landing-final-cta-section');
     await ctaSection.scrollIntoViewIfNeeded();
     await expect(
-      ctaSection.getByRole('heading', { name: /Build hiring on stronger proof/i })
+      ctaSection.getByRole('heading', { name: /Build proof-first review/i })
     ).toBeVisible();
     await expect(
       ctaSection.getByRole('button', { name: /Create your proof portfolio/i }).last()
     ).toBeVisible();
     await expect(
-      ctaSection.getByRole('button', { name: /Explore evidence-based hiring/i })
+      ctaSection.getByRole('button', { name: /Explore proof-first review/i })
     ).toBeVisible();
 
     const footer = page.getByTestId('landing-footer-section');
     await footer.scrollIntoViewIfNeeded();
     await expect(footer).toBeVisible();
     await expect(
-      footer.getByText(/Evidence-based hiring for a world with too much polished signal/i)
+      footer.getByText(/Evidence-based assignment review for a world with too much polish/i)
     ).toBeVisible();
     await expect(footer.getByRole('link', { name: /Cookies/i })).toBeVisible();
     await expect(footer.getByRole('link', { name: /Cookie settings/i })).toBeVisible();
@@ -111,7 +111,7 @@ test.describe('Landing Page', () => {
 
     await page.goto('/');
     await page
-      .getByRole('button', { name: /Request a pilot/i })
+      .getByRole('link', { name: /Request a pilot/i })
       .first()
       .click();
     await expect(page.getByTestId('signup-form-shell')).toBeVisible();
@@ -121,7 +121,7 @@ test.describe('Landing Page', () => {
 
     await page.goto('/');
     await page
-      .getByRole('button', { name: /Create your proof portfolio/i })
+      .getByRole('link', { name: /Create your proof portfolio/i })
       .first()
       .click();
     await expect(page.getByTestId('signup-form-shell')).toBeVisible();
@@ -189,7 +189,7 @@ test.describe('Landing Page', () => {
       mobileStory.getByRole('heading', { name: /Real outcomes, not bullet points/i })
     ).toBeVisible();
     await expect(
-      mobileStory.getByRole('heading', { name: /Universal compatibility/i }).first()
+      mobileStory.getByRole('heading', { name: /Assignment-fit context/i }).first()
     ).toBeVisible();
   });
 });

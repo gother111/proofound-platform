@@ -1,483 +1,148 @@
-# Resend Email Service Setup Guide
+> Doc Class: `active`
+> Last Verified: `2026-05-19`
 
-> **✅ STATUS: RESEND CONFIGURED**
->
-> RESEND_API_KEY is configured in:
->
-> - ✅ Vercel environment variables (production)
-> - ✅ .env.local (local development)
->
-> Test your setup: `node scripts/test-email.mjs your-email@example.com`
->
-> This guide is for reference. Skip to [Test Your Setup](#test-your-setup-quick-verification) to verify email functionality.
+# Resend Transactional Email Setup
 
----
+This guide covers Proofound's Resend setup for launch-safe transactional email. It does not prove that a specific production, preview, or local target is configured. Confirm the target environment before treating email as ready.
 
-This guide walks you through setting up Resend, the transactional email service used by Proofound for sending emails to users.
+Use this with:
 
-## Why Resend?
+- [ENV_VARIABLES.md](./ENV_VARIABLES.md)
+- [DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)
+- [CRON_SETUP.md](./CRON_SETUP.md)
+- [API_REFERENCE.md](./API_REFERENCE.md)
 
-Resend is used to send all transactional emails in the Proofound platform, including:
+## Launch Posture
 
-- Email verification during signup
-- Password reset emails
-- Organization invitations
-- Skill verification requests
-- Match notifications
-- Account deletion notifications
-- Work email verification
+Resend is the configured provider for transactional email. The current code reads:
 
-## Pricing
+- `RESEND_API_KEY` as the required provider secret
+- `EMAIL_FROM` as the sender override
+- `EMAIL_REPLY_TO` as the reply-to override
+- `PROOFOUND_SKIP_TRANSACTIONAL_EMAIL_DELIVERY` as a test/local skip switch when explicitly enabled
 
-- **Free Tier**: 3,000 emails per month
-- **No Credit Card Required** to start
-- **Paid Plans**: Start at $20/month for 50,000 emails
+`src/lib/email/config.ts` normalizes sender addresses to the approved Proofound sender domain and falls back to `Proofound <no-reply@proofound.io>`. Keep sender and reply-to addresses on approved Proofound-controlled domains.
 
-For early-stage production, the free tier should be sufficient for hundreds of active users.
+Do not record or publish `RESEND_API_KEY` values in docs, screenshots, logs, tickets, or support messages.
 
----
+## Active Email Families
 
-## Step 1: Create Resend Account
+Treat these as transactional workflow email, not marketing or digest traffic:
 
-1. Go to [https://resend.com](https://resend.com)
-2. Click **"Sign Up"**
-3. Enter your email address and create a password
-4. Verify your email address
-5. Complete the onboarding questionnaire (optional)
+- Auth email verification and password reset
+- Work-email verification
+- Organization/team invitation where active
+- Proof-submission/assignment invitation where active
+- Verification request, approval, rejection, and feedback messages where active
+- Reveal, interview, decision, and engagement-verification workflow messages where active
+- Account deletion lifecycle messages where active in the product flow
+- Internal launch-ops failure visibility through protected monitoring, not public email diagnostics
 
----
+Emails must support the locked MVP corridor: proof first, privacy staged, explicit consent before reveal, manual-link interviews by default, clear decisions, and no public directory behavior.
 
-## Step 2: Add and Verify Your Domain
+## Privacy Guardrails
 
-### Why Verify a Domain?
+Transactional emails may identify the action the user needs to take, but they must not include private proof content, raw evidence text, hidden identity details before reveal consent, internal queue IDs, private storage paths, signed URLs, service-role data, secrets, diagnostic payloads, or broad profile/match-score claims.
 
-- Improves email deliverability
-- Allows custom "From" addresses (e.g., `no-reply@yourdomain.com`)
-- Required for production use
-- Builds sender reputation
+Email links should route through existing app surfaces that enforce auth, role, consent, archive, and readiness gates. Public email links may only target intentionally public surfaces such as published portfolios, public organization trust pages, or public assignment/share pages that are active under route-surface policy.
 
-### Add Your Domain
+For reveal, verification, export, delete, assignment, and admin/internal paths, the email copy should explain the next action in plain language and let the app surface show the detailed state.
 
-1. In the Resend dashboard, go to **"Domains"**
-2. Click **"Add Domain"**
-3. Enter your domain (e.g., `proofound.io`)
-4. Click **"Add"**
+## Provider Setup
 
-### Configure DNS Records
+1. Create or confirm a Resend account for the intended Proofound sending domain.
+2. Add the sending domain in Resend.
+3. Add the DNS records Resend provides for SPF and DKIM.
+4. Add a DMARC record for the domain before production launch.
+5. Wait for DNS propagation and confirm the domain is verified in Resend.
+6. Create a sending-access API key for the intended target.
+7. Store the key only in the target environment's secret manager.
 
-Resend will provide you with DNS records to add to your domain. You'll need to add:
+Use a separate key per production, preview, and local/operator target where feasible so credentials can be rotated without broad blast radius.
 
-#### 1. SPF Record (TXT)
+## Environment Variables
 
-```
-Type: TXT
-Name: @
-Value: v=spf1 include:resend.com ~all
-```
-
-#### 2. DKIM Records (3 CNAME records)
-
-Resend will provide three CNAME records like:
-
-```
-Type: CNAME
-Name: resend._domainkey
-Value: resend1.resend.com
-
-Type: CNAME
-Name: resend2._domainkey
-Value: resend2.resend.com
-
-Type: CNAME
-Name: resend3._domainkey
-Value: resend3.resend.com
-```
-
-#### 3. DMARC Record (TXT) - Optional but Recommended
-
-```
-Type: TXT
-Name: _dmarc
-Value: v=DMARC1; p=none; rua=mailto:dmarc@yourdomain.com
-```
-
-### Where to Add DNS Records
-
-- **Vercel Domains**: Vercel Dashboard → Your Project → Domains → DNS
-- **Cloudflare**: Dashboard → DNS → Add Record
-- **Namecheap**: Dashboard → Domain List → Manage → Advanced DNS
-- **GoDaddy**: Domain Settings → DNS Management
-
-### Verify Domain Status
-
-1. After adding DNS records, return to Resend dashboard
-2. Click **"Verify"** next to your domain
-3. DNS propagation can take 5-60 minutes
-4. Status will change to **"Verified"** once successful
-
----
-
-## Step 3: Get Your API Key
-
-1. In Resend dashboard, go to **"API Keys"**
-2. Click **"Create API Key"**
-3. Name it (e.g., "Proofound Production")
-4. Select permissions: **"Sending access"**
-5. Click **"Create"**
-6. **IMPORTANT**: Copy the API key immediately (shown only once)
-   - Format: `re_xxxxxxxxxxxxxxxxxxxxxxxxxx`
-
----
-
-## Step 4: Configure Environment Variables
-
-### In Vercel (Production)
-
-1. Go to your Vercel project dashboard
-2. Navigate to **Settings** → **Environment Variables**
-3. Add two variables:
-
-#### RESEND_API_KEY
-
-- **Name**: `RESEND_API_KEY`
-- **Value**: `re_xxxxxxxxxxxxxxxxxxxxxxxxxx` (your API key)
-- **Environment**: Production, Preview, Development (select all)
-
-#### EMAIL_FROM
-
-- **Name**: `EMAIL_FROM`
-- **Value**: `Proofound <no-reply@yourdomain.com>`
-- **Environment**: Production, Preview, Development (select all)
-- **Format**: `Display Name <email@domain.com>`
-
-4. Click **"Save"**
-5. Redeploy your application for changes to take effect
-
-### In Local Development
-
-Add to your `.env.local` file:
+Production and preview targets must set:
 
 ```env
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxxxx
-EMAIL_FROM="Proofound <no-reply@yourdomain.com>"
+EMAIL_FROM="Proofound <no-reply@proofound.io>"
+EMAIL_REPLY_TO="Proofound <hello@proofound.io>"
 ```
 
----
+Local development may omit `RESEND_API_KEY`; in development, missing provider configuration returns a mock success from `src/lib/email/sender.ts`. Do not treat that mock path as production delivery evidence.
 
-## Test Your Setup (Quick Verification)
+Use `PROOFOUND_SKIP_TRANSACTIONAL_EMAIL_DELIVERY=true` only for explicit test or dry-run targets. It intentionally skips provider delivery and therefore cannot count as a successful email launch check.
 
-Since your RESEND_API_KEY is already configured, verify it's working:
+## Route And Cron Alignment
 
-### Option 1: Use Test Script (Recommended)
+The active launch cron email route is:
 
-Run the included test script to send a test email:
+- `/api/cron/decision-reminders`
+
+Archived standalone deletion cron routes are not active launch infrastructure:
+
+- `/api/cron/send-deletion-reminders`
+- `/api/cron/process-deletions`
+
+Follow [CRON_SETUP.md](./CRON_SETUP.md) and [API_REFERENCE.md](./API_REFERENCE.md) for the current route-surface classification. Do not create cron-job.org jobs or Vercel cron entries from older historical docs.
+
+## Verification
+
+Run static checks before any live send:
 
 ```bash
-# From your project root
-node scripts/test-email.mjs your-email@example.com
+npm run lint
+npm run typecheck
+npm run docs:freshness
+npm run test -- tests/lib/workflow-email-privacy.test.ts
+npm run test -- src/app/api/cron/decision-reminders/__tests__/route.test.ts
 ```
 
-**What it does:**
+For target-specific launch evidence:
 
-- Loads your RESEND_API_KEY from .env.local
-- Sends a beautifully formatted test email
-- Verifies your configuration is working
-- Provides troubleshooting tips if it fails
+1. Confirm `RESEND_API_KEY`, `EMAIL_FROM`, and `EMAIL_REPLY_TO` are present for the intended target without printing their values.
+2. Confirm the Resend domain is verified in the provider dashboard.
+3. Trigger one low-risk transactional flow on the intended target, such as a controlled password reset or work-email verification.
+4. Confirm the message arrives, the link opens the correct gated app surface, and the Resend dashboard shows successful delivery.
+5. Confirm the email body contains no private proof content, hidden identity details, secrets, signed URLs, queue IDs, or diagnostic payloads.
+6. Confirm `/api/cron/decision-reminders` is protected by cron auth and sends only the expected decision-reminder workflow when eligible records exist.
 
-**Expected output:**
-
-```
-✅ SUCCESS! Email sent successfully
-
-📧 Email Details:
-   Email ID: abc123...
-   From: Proofound <no-reply@proofound.io>
-   To: your-email@example.com
-   Status: Sent
-
-🔍 Next Steps:
-   1. Check your inbox
-   2. Check spam folder if not in inbox
-   3. Verify Resend dashboard: https://resend.com/logs
-```
-
-### Option 2: Check Resend Dashboard
-
-1. Login to [Resend Dashboard](https://resend.com/logs)
-2. Check if any emails have been sent
-3. Verify delivery status
-
-### Option 3: Test in Application
-
-1. Start your development server: `npm run dev`
-2. Sign up for a new account
-3. Check if verification email arrives
-4. Check Resend dashboard for logs
-
----
-
-## Step 5: Test Email Sending
-
-### Test Locally
-
-1. Start your development server: `npm run dev`
-2. Trigger an email action (e.g., sign up for an account)
-3. Check the terminal for email sending logs
-4. Check Resend dashboard → **"Logs"** to see sent emails
-
-### Test in Production
-
-1. After deploying with environment variables set
-2. Trigger an email action (e.g., request password reset)
-3. Check Resend dashboard → **"Logs"** for delivery status
-4. Verify email arrives in inbox (check spam folder too)
-
----
-
-## Email Templates in Proofound
-
-Your application includes 11 email templates:
-
-### Authentication & Verification
-
-1. **VerifyEmail** - Generic email verification
-2. **VerifyEmailIndividual** - Individual user verification
-3. **VerifyEmailOrganization** - Organization user verification
-4. **ResetPassword** - Password reset emails
-5. **WorkEmailVerification** - Work email domain verification
-
-### Organization Management
-
-6. **OrgInvite** - Team member invitation emails
-
-### Skill & Matching System
-
-7. **SkillVerificationRequest** - Peer skill verification requests
-8. **NewMatchNotification** - New match alerts
-
-### GDPR & Privacy
-
-9. **DeletionScheduled** - Account deletion scheduled notification
-10. **DeletionReminder** - 7-day reminder before deletion
-11. **DeletionComplete** - Deletion completed confirmation
-
----
-
-## Email Endpoints Using Resend
-
-These API endpoints send emails:
-
-| Endpoint                                 | Email Type              | Trigger                         |
-| ---------------------------------------- | ----------------------- | ------------------------------- |
-| `POST /api/auth/signup`                  | Verification            | User signs up                   |
-| `POST /api/auth/reset-password`          | Password Reset          | User requests password reset    |
-| `POST /api/org/invite`                   | Org Invitation          | Admin invites team member       |
-| `POST /api/verification/work-email/send` | Work Email Verification | User adds work email            |
-| `POST /api/verification/skill/request`   | Skill Verification      | User requests peer verification |
-| `DELETE /api/user/account`               | Deletion Scheduled      | User requests account deletion  |
-| `GET /api/cron/send-deletion-reminders`  | Deletion Reminder       | Cron job (7 days before)        |
-| `GET /api/cron/process-deletions`        | Deletion Complete       | Cron job (after 30 days)        |
-
----
-
-## Monitoring & Analytics
-
-### Resend Dashboard
-
-1. Go to **"Logs"** to see all sent emails
-2. View delivery status: Delivered, Bounced, Complained
-3. Click individual emails to see full details
-4. Monitor open rates and click rates (if tracking enabled)
-
-### Check Email Quota
-
-1. Dashboard → **"Usage"**
-2. See current month's email count
-3. Monitor daily sending volume
-4. Get alerts when approaching limits
-
----
+Do not run live email sends from this guide without an explicit target, recipient, and operator approval.
 
 ## Troubleshooting
 
-### Emails Not Sending
+If emails do not send:
 
-**Check 1: API Key is Set**
+- Confirm `RESEND_API_KEY` exists in the target environment without printing the value.
+- Confirm the deployed target was restarted or redeployed after secret changes.
+- Confirm the Resend domain is verified and DNS has propagated.
+- Check protected application logs for provider errors without exposing secret values.
+- Check Resend logs for invalid key, unverified domain, rate-limit, bounce, or complaint errors.
+- Confirm `PROOFOUND_SKIP_TRANSACTIONAL_EMAIL_DELIVERY` is not enabled on a target where live delivery is expected.
 
-```bash
-# In your deployment, verify environment variable exists
-echo $RESEND_API_KEY
-```
+If emails arrive but links fail:
 
-**Check 2: Domain is Verified**
+- Confirm `NEXT_PUBLIC_SITE_URL` and canonical URL helpers point to the intended target.
+- Confirm return paths are sanitized and do not leak internal URLs.
+- Confirm archived, gated, and role-protected routes return the expected 404/410/redirect/auth behavior.
 
-- Resend Dashboard → Domains → Status should be "Verified"
-- If not verified, emails will fail to send
+If emails reveal too much:
 
-**Check 3: DNS Records are Correct**
+- Treat it as a privacy bug.
+- Remove private proof content, hidden identity details, queue IDs, private storage links, signed URLs, and diagnostic payloads from the template.
+- Keep detailed state inside the authenticated app surface instead of the email.
 
-```bash
-# Check SPF record
-dig TXT yourdomain.com
+## Launch Evidence To Save
 
-# Check DKIM records
-dig CNAME resend._domainkey.yourdomain.com
-```
+Record launch evidence in the current sweep or launch artifact, not in this setup guide:
 
-**Check 4: Check Resend Logs**
+- Target name and URL
+- Confirmation that required email variables exist, without values
+- Resend domain verification status
+- Static check command results
+- One representative delivery result per active launch workflow family where feasible
+- Privacy/no-leak notes for sampled email bodies
+- Any skipped or unverified workflow with the reason
 
-- Dashboard → Logs → Look for errors
-- Common errors: Invalid API key, unverified domain, rate limits
-
-### Emails Going to Spam
-
-**Solution 1: Verify Domain Fully**
-
-- Ensure all DNS records (SPF, DKIM, DMARC) are configured
-- Wait for DNS propagation (up to 48 hours)
-
-**Solution 2: Warm Up Your Domain**
-
-- Start with low volume (10-20 emails/day)
-- Gradually increase over 2-4 weeks
-- Monitor bounce and complaint rates
-
-**Solution 3: Follow Email Best Practices**
-
-- Use clear, descriptive subject lines
-- Include unsubscribe links (required for marketing emails)
-- Maintain clean email list (remove bounces)
-- Authenticate your sending domain
-
-### Rate Limiting
-
-**Free Tier Limits:**
-
-- 3,000 emails per month
-- No per-second rate limits (reasonable use)
-
-**What Happens When You Hit Limits:**
-
-- Emails will fail with 429 error
-- Upgrade to paid plan for higher limits
-- Monitor usage in dashboard
-
-### API Key Issues
-
-**API Key Not Working:**
-
-1. Verify it's copied correctly (starts with `re_`)
-2. Check it has "Sending access" permission
-3. Regenerate key if compromised
-4. Update environment variables after regeneration
-
----
-
-## Best Practices
-
-### Security
-
-- ✅ Never commit API keys to Git
-- ✅ Use environment variables for all credentials
-- ✅ Rotate API keys periodically (every 6 months)
-- ✅ Use different keys for production/staging
-
-### Deliverability
-
-- ✅ Verify your domain before sending production emails
-- ✅ Configure SPF, DKIM, and DMARC records
-- ✅ Use professional "From" addresses (avoid gmail/yahoo)
-- ✅ Include clear unsubscribe links
-- ✅ Monitor bounce and complaint rates
-
-### Development
-
-- ✅ Test emails in development before production
-- ✅ Use real email addresses for testing (not fake ones)
-- ✅ Check spam folders during testing
-- ✅ Log email errors for debugging
-
-### Compliance
-
-- ✅ Include physical mailing address in footer (CAN-SPAM)
-- ✅ Honor unsubscribe requests within 10 days
-- ✅ Don't send marketing emails without consent
-- ✅ Maintain email preference center
-
----
-
-## Cost Management
-
-### Free Tier (Current)
-
-- 3,000 emails/month
-- Sufficient for ~300-500 active users
-- All features included
-
-### When to Upgrade
-
-- Approaching 3,000 emails/month
-- Need higher sending rate
-- Want advanced analytics
-
-### Paid Plans
-
-- **$20/month**: 50,000 emails
-- **$75/month**: 100,000 emails
-- Custom plans for higher volumes
-
-### Optimization Tips
-
-- Batch similar emails together
-- Avoid sending duplicate notifications
-- Implement smart notification preferences
-- Use email digests instead of individual alerts
-
----
-
-## Support & Resources
-
-### Resend Documentation
-
-- [Official Docs](https://resend.com/docs)
-- [API Reference](https://resend.com/docs/api-reference)
-- [React Email Guide](https://resend.com/docs/send-with-react)
-
-### Getting Help
-
-- [Resend Discord](https://resend.com/discord)
-- [GitHub Issues](https://github.com/resend/resend-node/issues)
-- Email: support@resend.com
-
-### Additional Resources
-
-- [Email Templates](https://react.email/examples)
-- [Deliverability Guide](https://resend.com/docs/knowledge-base/deliverability)
-- [SPF/DKIM Setup](https://resend.com/docs/knowledge-base/dns)
-
----
-
-## Next Steps
-
-After setting up Resend:
-
-1. ✅ Configure Cron Jobs → See [CRON_SETUP.md](./CRON_SETUP.md)
-2. ✅ Review Environment Variables → See [ENV_VARIABLES.md](./ENV_VARIABLES.md)
-3. ✅ Complete Deployment Checklist → See [DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)
-4. ✅ Test all email flows in production
-
----
-
-## Quick Reference
-
-```env
-# Add these to Vercel Environment Variables
-RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxxxx
-EMAIL_FROM="Proofound <no-reply@yourdomain.com>"
-```
-
-**Total Setup Time:** ~20 minutes (plus DNS propagation)
-
-**Cost:** Free (up to 3,000 emails/month)
-
-**Status Check:** Dashboard → Logs → See delivery status
+Keep screenshots redacted if they show recipient addresses, message IDs, private names, proof content, or provider metadata.

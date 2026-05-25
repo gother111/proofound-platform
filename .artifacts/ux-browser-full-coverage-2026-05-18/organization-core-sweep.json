@@ -1,0 +1,966 @@
+[
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Assignments Communications Organization Profile Public Preview Proofound Overview NF Organization review cockpit Nordic Field Systems A focused launch desk for one clean hiring corridor: compose the trust profile, define one proof-led assignment, and review candidates through privacy-safe summaries. Create assignment Corridor Queue Trust, assignment, and review order Nordic Field Systems Ready Organization profile · Verified path: nordic-field.example/team/proofound 100% Proof expectations Ready One assignment path · Purpose, real work, constraints, and evidence stay in one builder Can start Privacy-safe summarie",
+    "clientHeight": 900,
+    "clientWidth": 1440,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Overview"
+      },
+      {
+        "size": "32px",
+        "tag": "h1",
+        "text": "Nordic Field Systems"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Corridor Queue"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Launch Summary"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Minimal Access"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "o-home",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 900,
+    "scrollWidth": 1440,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/home",
+    "viewportName": "desktop1440"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Assignments Communications Organization Profile Public Preview Proofound Organization Profile NF Organization Profile This is the launch-facing organization profile used to support one assignment path and a clean review queue. Editable Keep this page limited to the calm organization story that supports one clear assignment corridor. Culture hubs, governance showcases, and other org-suite surfaces stay outside this launch path. Organization name Nordic Field Systems Why work matters Field crews can finish safer infrastructure work when planning tools match the real site conditions. Mission Equip distributed infras",
+    "clientHeight": 900,
+    "clientWidth": 1440,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Organization Profile"
+      },
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Organization Profile"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Launch corridor"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Organization profile"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "o-profile",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 900,
+    "scrollWidth": 1440,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/profile",
+    "viewportName": "desktop1440"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Assignments Communications Organization Profile Public Preview Proofound Assignments NF Organization / Assignments Assignments Assignment cards own their matching corridor, candidate review, and pipeline context. Assignments Keep candidate review attached to the assignment corridor it belongs to New assignment Field operations launch lead for municipal infrastructure handoffs Review updates Created: 5/14/2026 Open 7 candidates Matching View / Edit Partner readiness analyst Created: 5/17/2026 Draft Matching View / Edit",
+    "clientHeight": 900,
+    "clientWidth": 1440,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Assignments"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Assignments"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Assignments"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Field operations launch lead for municipal infrastructure handoffs"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Partner readiness analyst"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "o-assignments",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 900,
+    "scrollWidth": 1440,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/assignments",
+    "viewportName": "desktop1440"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Assignments Communications Organization Profile Public Preview Proofound Assignments NF Organization / Assignments Assignments Assignment cards own their matching corridor, candidate review, and pipeline context. Assignments Keep candidate review attached to the assignment corridor it belongs to New assignment Field operations launch lead for municipal infrastructure handoffs Review updates Created: 5/14/2026 Open 7 candidates Matching View / Edit Partner readiness analyst Created: 5/17/2026 Draft Matching View / Edit",
+    "clientHeight": 900,
+    "clientWidth": 1440,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Assignments"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Assignments"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Assignments"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Field operations launch lead for municipal infrastructure handoffs"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Partner readiness analyst"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "o-shortlist",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 900,
+    "scrollWidth": 1440,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/assignments",
+    "viewportName": "desktop1440"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Assignments Communications Organization Profile Public Preview Proofound Interviews NF",
+    "clientHeight": 900,
+    "clientWidth": 1440,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Interviews"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "o-interviews",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 900,
+    "scrollWidth": 1440,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/interviews",
+    "viewportName": "desktop1440"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Test Organization Shareable by direct link Public organization profile Help teams review candidates through concrete work evidence instead of polished claims. Return to menu Copy share link Website MISSION / PURPOSE Help teams review candidates through concrete work evidence instead of polished claims. WHAT WORK IS OFFERED WORK OFFERED Proof-first product reviewer ENGAGEMENT Full time Improve review quality through clearer proof expectations. ASSIGNMENT CLARITY Review candidate work through structured evidence and launch-safe summaries. PROOF EXPECTATIONS Shortlists become more explainable, privacy-safe, and grounded in r",
+    "clientHeight": 900,
+    "clientWidth": 1429,
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Test Organization"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "MISSION / PURPOSE"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "WHAT WORK IS OFFERED"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "ASSIGNMENT CLARITY"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "SERIOUSNESS OF REVIEW"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "ORGANIZATION BASICS"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "o-portfolio",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 971,
+    "scrollWidth": 1429,
+    "tinyTargets": [],
+    "title": "Proofound organization portfolio",
+    "url": "http://localhost:33100/portfolio/org/test-org?returnTo=%2Fapp%2Fo%2Ftest-org%2Fhome",
+    "viewportName": "desktop1440"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Assignments Communications Organization Profile Public Preview Proofound Overview NF Organization review cockpit Nordic Field Systems A focused launch desk for one clean hiring corridor: compose the trust profile, define one proof-led assignment, and review candidates through privacy-safe summaries. Create assignment Corridor Queue Trust, assignment, and review order Nordic Field Systems Ready Organization profile · Verified path: nordic-field.example/team/proofound 100% Proof expectations Ready One assignment path · Purpose, real work, constraints, and evidence stay in one builder Can start Privacy-safe summarie",
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Overview"
+      },
+      {
+        "size": "32px",
+        "tag": "h1",
+        "text": "Nordic Field Systems"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Corridor Queue"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Launch Summary"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Minimal Access"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "o-home",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/home",
+    "viewportName": "desktop1280"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Assignments Communications Organization Profile Public Preview Proofound Organization Profile NF Organization Profile This is the launch-facing organization profile used to support one assignment path and a clean review queue. Editable Keep this page limited to the calm organization story that supports one clear assignment corridor. Culture hubs, governance showcases, and other org-suite surfaces stay outside this launch path. Organization name Nordic Field Systems Why work matters Field crews can finish safer infrastructure work when planning tools match the real site conditions. Mission Equip distributed infras",
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Organization Profile"
+      },
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Organization Profile"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Launch corridor"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Organization profile"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "o-profile",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/profile",
+    "viewportName": "desktop1280"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Assignments Communications Organization Profile Public Preview Proofound Assignments NF Organization / Assignments Assignments Assignment cards own their matching corridor, candidate review, and pipeline context. Assignments Keep candidate review attached to the assignment corridor it belongs to New assignment Field operations launch lead for municipal infrastructure handoffs Review updates Created: 5/14/2026 Open 7 candidates Matching View / Edit Partner readiness analyst Created: 5/17/2026 Draft Matching View / Edit",
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Assignments"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Assignments"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Assignments"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Field operations launch lead for municipal infrastructure handoffs"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Partner readiness analyst"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "o-assignments",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/assignments",
+    "viewportName": "desktop1280"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Assignments Communications Organization Profile Public Preview Proofound Assignments NF Organization / Assignments Assignments Assignment cards own their matching corridor, candidate review, and pipeline context.",
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Assignments"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Assignments"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "o-shortlist",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/assignments",
+    "viewportName": "desktop1280"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Assignments Communications Organization Profile Public Preview Proofound Interviews NF",
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Interviews"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "o-interviews",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/interviews",
+    "viewportName": "desktop1280"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Test Organization Shareable by direct link Public organization profile Help teams review candidates through concrete work evidence instead of polished claims. Return to menu Copy share link Website MISSION / PURPOSE Help teams review candidates through concrete work evidence instead of polished claims. WHAT WORK IS OFFERED WORK OFFERED Proof-first product reviewer ENGAGEMENT Full time Improve review quality through clearer proof expectations. ASSIGNMENT CLARITY Review candidate work through structured evidence and launch-safe summaries. PROOF EXPECTATIONS Shortlists become more explainable, privacy-safe, and grounded in r",
+    "clientHeight": 800,
+    "clientWidth": 1269,
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Test Organization"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "MISSION / PURPOSE"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "WHAT WORK IS OFFERED"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "ASSIGNMENT CLARITY"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "SERIOUSNESS OF REVIEW"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "ORGANIZATION BASICS"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "o-portfolio",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 971,
+    "scrollWidth": 1269,
+    "tinyTargets": [],
+    "title": "Proofound organization portfolio",
+    "url": "http://localhost:33100/portfolio/org/test-org?returnTo=%2Fapp%2Fo%2Ftest-org%2Fhome",
+    "viewportName": "desktop1280"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF Organization review cockpit Nordic Field Systems A focused launch desk for one clean hiring corridor: compose the trust profile, define one proof-led assignment, and review candidates through privacy-safe summaries. Create assignment Corridor Queue Trust, assignment, and review order Nordic Field Systems Ready Organization profile · Verified path: nordic-field.example/team/proofound 100% Proof expectations Ready One assignment path · Purpose, real work, constraints, and evidence stay in one builder Can start Privacy-safe summaries Guarded Match review · Review proof before identity r",
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Overview"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Nordic Field Systems"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Corridor Queue"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Launch Summary"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Minimal Access"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "o-home",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/home",
+    "viewportName": "mobile390"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF Organization Profile This is the launch-facing organization profile used to support one assignment path and a clean review queue. Editable Keep this page limited to the calm organization story that supports one clear assignment corridor. Culture hubs, governance showcases, and other org-suite surfaces stay outside this launch path. Organization name Nordic Field Systems Why work matters Field crews can finish safer infrastructure work when planning tools match the real site conditions. Mission Equip distributed infrastructure teams with proof-led planning, field handoff, and safety r",
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Organization Profile"
+      },
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Organization Profile"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Launch corridor"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Organization profile"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "o-profile",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/profile",
+    "viewportName": "mobile390"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF Organization / Assignments Assignments Assignment cards own their matching corridor, candidate review, and pipeline context. Assignments Keep candidate review attached to the assignment corridor it belongs to New assignment Field operations launch lead for municipal infrastructure handoffs Review updates Created: 5/14/2026 Open 7 candidates Matching View / Edit Partner readiness analyst Created: 5/17/2026 Draft Matching View / Edit",
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Assignments"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Assignments"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Assignments"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Field operations launch lead for municipal infrastructure handoffs"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Partner readiness analyst"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "o-assignments",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/assignments",
+    "viewportName": "mobile390"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF Organization / Assignments Assignments Assignment cards own their matching corridor, candidate review, and pipeline context. Assignments Keep candidate review attached to the assignment corridor it belongs to New assignment Field operations launch lead for municipal infrastructure handoffs Review updates Created: 5/14/2026 Open 7 candidates Matching View / Edit Partner readiness analyst Created: 5/17/2026 Draft Matching View / Edit",
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Assignments"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Assignments"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Assignments"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Field operations launch lead for municipal infrastructure handoffs"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Partner readiness analyst"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "o-shortlist",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/assignments",
+    "viewportName": "mobile390"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF",
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Interviews"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "o-interviews",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/interviews",
+    "viewportName": "mobile390"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Test Organization Shareable by direct link Public organization profile Help teams review candidates through concrete work evidence instead of polished claims. Return to menu Copy share link Website MISSION / PURPOSE Help teams review candidates through concrete work evidence instead of polished claims. WHAT WORK IS OFFERED WORK OFFERED Proof-first product reviewer ENGAGEMENT Full time Improve review quality through clearer proof expectations. ASSIGNMENT CLARITY Review candidate work through structured evidence and launch-safe summaries. PROOF EXPECTATIONS Shortlists become more explainable, privacy-safe, and grounded in r",
+    "clientHeight": 844,
+    "clientWidth": 379,
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Test Organization"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "MISSION / PURPOSE"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "WHAT WORK IS OFFERED"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "ASSIGNMENT CLARITY"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "SERIOUSNESS OF REVIEW"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "ORGANIZATION BASICS"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "o-portfolio",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 1902,
+    "scrollWidth": 379,
+    "tinyTargets": [],
+    "title": "Proofound organization portfolio",
+    "url": "http://localhost:33100/portfolio/org/test-org?returnTo=%2Fapp%2Fo%2Ftest-org%2Fhome",
+    "viewportName": "mobile390"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF Organization review cockpit Nordic Field Systems A focused launch desk for one clean hiring corridor: compose the trust profile, define one proof-led assignment, and review candidates through privacy-safe summaries. Create assignment Corridor Queue Trust, assignment, and review order Nordic Field Systems Ready Organization profile · Verified path: nordic-field.example/team/proofound 100% Proof expectations Ready One assignment path · Purpose, real work, constraints, and evidence stay in one builder Can start Privacy-safe summaries Guarded Match review · Review proof before identity r",
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Overview"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Nordic Field Systems"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Corridor Queue"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Launch Summary"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Minimal Access"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "o-home",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/home",
+    "viewportName": "mobile375"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF Organization Profile This is the launch-facing organization profile used to support one assignment path and a clean review queue. Editable Keep this page limited to the calm organization story that supports one clear assignment corridor. Culture hubs, governance showcases, and other org-suite surfaces stay outside this launch path. Organization name Nordic Field Systems Why work matters Field crews can finish safer infrastructure work when planning tools match the real site conditions. Mission Equip distributed infrastructure teams with proof-led planning, field handoff, and safety r",
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Organization Profile"
+      },
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Organization Profile"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Launch corridor"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Organization profile"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "o-profile",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/profile",
+    "viewportName": "mobile375"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF Organization / Assignments Assignments Assignment cards own their matching corridor, candidate review, and pipeline context.",
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Assignments"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Assignments"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "o-assignments",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/assignments",
+    "viewportName": "mobile375"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF Organization / Assignments Assignments Assignment cards own their matching corridor, candidate review, and pipeline context.",
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Assignments"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Assignments"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "o-shortlist",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/assignments",
+    "viewportName": "mobile375"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF Organization / Assignments Assignments Assignment cards own their matching corridor, candidate review, and pipeline context.",
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Assignments"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Assignments"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "o-interviews",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/assignments",
+    "viewportName": "mobile375"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF Organization / Assignments Assignments Assignment cards own their matching corridor, candidate review, and pipeline context.",
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Assignments"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Assignments"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "o-portfolio",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/assignments",
+    "viewportName": "mobile375"
+  }
+]

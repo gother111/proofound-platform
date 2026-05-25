@@ -92,6 +92,21 @@ describe('/api/matches/[id]/snooze', () => {
     });
   });
 
+  it('returns 400 for malformed JSON before match lookup or update', async () => {
+    const response = await POST(
+      new NextRequest('http://localhost/api/matches/match-1/snooze', {
+        method: 'POST',
+        body: '{',
+      }),
+      { params: Promise.resolve({ id: 'match-1' }) }
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
+    expect(mocks.findMatch).not.toHaveBeenCalled();
+    expect(db.update).not.toHaveBeenCalled();
+  });
+
   it('keeps the owner predicate on the unsnooze update itself', async () => {
     const response = await DELETE(
       new NextRequest('http://localhost/api/matches/match-1/snooze', {

@@ -30,6 +30,14 @@ function request(body: unknown) {
   });
 }
 
+function rawRequest(body: string) {
+  return new NextRequest('http://localhost/api/ai/privacy-preflight/check', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body,
+  });
+}
+
 describe('POST /api/ai/privacy-preflight/check', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -75,6 +83,23 @@ describe('POST /api/ai/privacy-preflight/check', () => {
 
     expect(response.status).toBe(503);
     expect(payload.code).toBe('ai_feature_kill_switch');
+    expect(mocks.runPrivacyPreflightCheck).not.toHaveBeenCalled();
+  });
+
+  it('rejects malformed JSON before enrichment or privacy preflight service access', async () => {
+    const authContext = {
+      user: { id: 'user-1' },
+      supabase: {
+        from: vi.fn(),
+      },
+    };
+    mocks.requireApiAuthContext.mockResolvedValueOnce(authContext);
+
+    const response = await POST(rawRequest('{"surface":'));
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
+    expect(authContext.supabase.from).not.toHaveBeenCalled();
     expect(mocks.runPrivacyPreflightCheck).not.toHaveBeenCalled();
   });
 

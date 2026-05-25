@@ -63,6 +63,14 @@ function request(body: Record<string, unknown>) {
   });
 }
 
+function rawRequest(body: string) {
+  return new NextRequest('http://localhost/api/ai/assignments/clarify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body,
+  });
+}
+
 function baseBody(overrides: Record<string, unknown> = {}) {
   return {
     assignmentId,
@@ -150,6 +158,15 @@ describe('assignment clarity assistant route', () => {
     expect(generateJson).not.toHaveBeenCalled();
   });
 
+  it('rejects malformed JSON before assignment access or model calls', async () => {
+    const res = await POST(rawRequest('{"assignmentId":'));
+
+    expect(res.status).toBe(400);
+    await expect(res.json()).resolves.toEqual({ error: 'Invalid JSON body' });
+    expect(verifyExplicitAssignmentMutationAccess).not.toHaveBeenCalled();
+    expect(generateJson).not.toHaveBeenCalled();
+  });
+
   it('returns 403 for non-members', async () => {
     (verifyExplicitAssignmentMutationAccess as any).mockResolvedValue({
       status: 'membership_not_found',
@@ -158,6 +175,22 @@ describe('assignment clarity assistant route', () => {
     const res = await POST(request(baseBody()));
 
     expect(res.status).toBe(403);
+    expect(generateJson).not.toHaveBeenCalled();
+  });
+
+  it('does not let local mock mode bypass assignment access checks', async () => {
+    vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'true');
+    (verifyExplicitAssignmentMutationAccess as any).mockResolvedValue({
+      status: 'membership_not_found',
+    });
+
+    const res = await POST(request(baseBody()));
+
+    expect(res.status).toBe(403);
+    expect(verifyExplicitAssignmentMutationAccess).toHaveBeenCalledWith(userId, assignmentId, {
+      orgId,
+      orgSlug: undefined,
+    });
     expect(generateJson).not.toHaveBeenCalled();
   });
 
@@ -298,6 +331,12 @@ describe('assignment clarity assistant route', () => {
 
     expect(res.status).toBe(200);
     expect(prompt).toContain('[redacted protected trait]');
+    expect(prompt).toContain('proof-review participant evaluation rubrics');
+    expect(prompt).toContain(
+      'Do not refer to private proof-review participants or proof-review participant data.'
+    );
+    expect(prompt).not.toContain('candidate evaluation rubrics');
+    expect(prompt).not.toContain('private candidates or candidate data');
     expect(prompt).not.toContain('native speaker');
     expect(prompt).not.toContain('visa status');
     expect(prompt).not.toContain('disability');

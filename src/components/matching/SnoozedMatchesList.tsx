@@ -15,10 +15,11 @@ import { Badge } from '@/components/ui/badge';
 import { Clock, Bell, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 interface SnoozedMatch {
   id: string;
-  matchScore: number;
+  proofFitLabel?: string;
   snoozedUntil: string;
   assignment: {
     id: string;
@@ -55,7 +56,7 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
         setMatches(data.matches || []);
       }
     } catch (error) {
-      console.error('Failed to fetch snoozed matches:', error);
+      dispatchClientErrorDiagnostic('matching.snoozed_matches.load_failed', error);
     } finally {
       setLoading(false);
     }
@@ -86,7 +87,9 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
-      }).catch((err) => console.error('Warm matches fetch failed after unsnooze', err));
+      }).catch((err) =>
+        dispatchClientErrorDiagnostic('matching.snoozed_matches.warm_after_unsnooze_failed', err)
+      );
 
       await Promise.allSettled([
         onRestored?.(),
@@ -94,7 +97,7 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
         Promise.resolve().then(() => router.refresh()),
       ]);
     } catch (error) {
-      console.error('Error unsnoozing match:', error);
+      dispatchClientErrorDiagnostic('matching.snoozed_matches.unsnooze_failed', error);
       // Rollback optimistic removal if API failed
       setMatches(prevMatches);
       toast.error('Failed to unsnooze match', {
@@ -137,9 +140,9 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
     return (
       <Card variant="bento" className="p-12 text-center">
         <Clock className="h-16 w-16 mx-auto mb-4 text-[#A8B69D]" />
-        <h3 className="text-lg font-semibold text-foreground mb-2">No Snoozed Matches</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-2">No Paused Matches</h3>
         <p className="text-sm text-muted-foreground mb-6">
-          Matches you snooze will appear here until they're unsnoozed or the snooze period ends.
+          Matches you pause will appear here until they are restored or the pause period ends.
         </p>
         <Button
           variant="outline"
@@ -184,13 +187,12 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
                   </h3>
                   <p className="text-sm text-muted-foreground mb-2">{match.organization.name}</p>
 
-                  {/* Match Score */}
                   <div className="flex items-center gap-3 mb-3">
                     <Badge
                       variant="secondary"
                       className="bg-proofound-forest/10 text-proofound-forest border-proofound-forest/20"
                     >
-                      {Math.round(match.matchScore * 100)}% Match
+                      {match.proofFitLabel ?? 'Proof review needed'}
                     </Badge>
 
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -218,15 +220,7 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
                 className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
               >
                 <Bell className="w-3.5 h-3.5 mr-1.5" />
-                {unsnoozing === match.id ? 'Unsnoozing...' : 'Unsnooze'}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => (window.location.href = `/app/i/matching/${match.assignment.id}`)}
-                className="border-border text-muted-foreground"
-              >
-                View Details
+                {unsnoozing === match.id ? 'Restoring...' : 'Restore'}
               </Button>
             </div>
           </div>

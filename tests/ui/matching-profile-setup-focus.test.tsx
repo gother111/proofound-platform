@@ -168,4 +168,31 @@ describe('MatchingProfileSetup single-page form', () => {
       )
     ).toBe(false);
   });
+
+  it('blocks submit when the desired hours range is inverted', async () => {
+    render(<MatchingProfileSetup onComplete={vi.fn()} onCancel={vi.fn()} />);
+
+    fireEvent.change(screen.getByLabelText('Minimum desired'), { target: { value: '40' } });
+    fireEvent.change(screen.getByLabelText('Maximum desired'), { target: { value: '10' } });
+    fireEvent.click(screen.getByRole('button', { name: /save and continue/i }));
+
+    expect(
+      screen.getByText('Minimum desired hours must be lower than maximum desired hours.')
+    ).toBeInTheDocument();
+
+    expect(
+      apiFetchMock.mock.calls.some(
+        ([url, options]) => url === '/api/matching-profile' && options?.method === 'PUT'
+      )
+    ).toBe(false);
+  });
+
+  it('uses truthful continue-later copy for the secondary setup action', () => {
+    render(<MatchingProfileSetup onComplete={vi.fn()} onCancel={vi.fn()} />);
+
+    expect(screen.getByRole('button', { name: 'Continue later' })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /save .* continue later/i })
+    ).not.toBeInTheDocument();
+  });
 });

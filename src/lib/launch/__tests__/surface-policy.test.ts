@@ -56,6 +56,9 @@ describe('launch surface policy', () => {
     expect(getArchivedApiPolicy('/api/assignments/invite')).toMatchObject({
       surfaceLabel: 'Assignments API',
     });
+    expect(getArchivedApiPolicy('/api/assignments/assignment-1/pipeline')).toMatchObject({
+      surfaceLabel: 'Assignment Pipeline API',
+    });
     expect(getArchivedApiPolicy('/api/messages')).toMatchObject({
       surfaceLabel: 'Messages API',
     });
@@ -66,6 +69,9 @@ describe('launch surface policy', () => {
       surfaceLabel: 'Moderation API',
     });
     expect(getArchivedApiPolicy('/api/profile/snippet')).toMatchObject({
+      surfaceLabel: 'Profiles API',
+    });
+    expect(getArchivedApiPolicy('/api/profile/completeness')).toMatchObject({
       surfaceLabel: 'Profiles API',
     });
     expect(classifyLaunchApiPath('/api/people')).toBe('archived');
@@ -147,6 +153,10 @@ describe('launch surface policy', () => {
   it('keeps representative corridor APIs active', () => {
     const activePaths = [
       '/api/assignments',
+      '/api/assignments/assignment-1',
+      '/api/assignments/assignment-1/expertise-matrix',
+      '/api/assignments/assignment-1/outcomes',
+      '/api/assignments/assignment-1/publish',
       '/api/candidate-invites/token',
       '/api/conversations',
       '/api/decisions',
@@ -164,6 +174,7 @@ describe('launch surface policy', () => {
       '/api/profile',
       '/api/profile/privacy-settings',
       '/api/upload/document',
+      '/api/user/data-inventory',
       '/api/user/export',
       '/api/verification/requests/skill',
       '/api/verify/token-1',
@@ -173,6 +184,20 @@ describe('launch surface policy', () => {
       expect(classifyLaunchApiPath(path)).toBe('active_launch_path');
       expect(getArchivedApiPolicy(path)).toBeNull();
     }
+  });
+
+  it('keeps active invite surface labels proof-submission scoped', () => {
+    const invitePolicy = LAUNCH_API_SURFACE_POLICIES.find((policy) =>
+      policy.matches('/api/candidate-invites/token')
+    );
+
+    expect(invitePolicy).toMatchObject({
+      classification: 'active_launch_path',
+      surfaceLabel: 'Submission Invite API',
+      detail: 'Submission invite and claim flows remain active in the launch corridor.',
+    });
+    expect(invitePolicy?.surfaceLabel).not.toContain('Candidate Invite');
+    expect(invitePolicy?.detail).not.toContain('Candidate invite');
   });
 
   it('classifies archived and active page surfaces explicitly', () => {
@@ -218,6 +243,7 @@ describe('launch surface policy', () => {
     expect(classifyLaunchPagePath('/p/token')).toBe('archived');
     expect(classifyLaunchPagePath('/assign/token')).toBe('archived');
     expect(classifyLaunchPagePath('/admin/users')).toBe('archived');
+    expect(classifyLaunchPagePath('/dev/resolve-home')).toBe('archived');
   });
 
   it('returns archived metadata for representative page surfaces', () => {
@@ -248,6 +274,9 @@ describe('launch surface policy', () => {
     expect(getArchivedPagePolicy('/admin/users')).toMatchObject({
       surfaceLabel: 'Internal Ops Pages',
     });
+    expect(getArchivedPagePolicy('/dev/resolve-home')).toMatchObject({
+      surfaceLabel: 'Development Route Handler',
+    });
     expect(getArchivedPagePolicy('/auth/callback')).toBeNull();
     expect(getArchivedPagePolicy('/app/i/home')).toBeNull();
   });
@@ -263,5 +292,39 @@ describe('launch surface policy', () => {
       '/admin/verification',
       '/admin/audit',
     ]);
+  });
+
+  it('does not let retained launch-ops routes match archived policy classes', () => {
+    const retainedApiPaths = [
+      '/api/admin/audit',
+      '/api/admin/internal-ops/queues',
+      '/api/admin/internal-ops/queues/11111111-1111-1111-1111-111111111111',
+      '/api/admin/organizations/org-1/audit',
+      '/api/admin/organizations/org-1/verify',
+      '/api/cron/decision-reminders',
+      '/api/cron/health-check',
+      '/api/cron/launch-synthetic-checks',
+      '/api/cron/performance-check',
+      '/api/cron/refresh-matches',
+      '/api/cron/refresh-matches-worker',
+      '/api/cron/sla-enforcement',
+      '/api/monitoring/launch-status',
+      '/api/organizations/org-1/audit/export',
+    ];
+    const retainedPagePaths = ['/admin', '/admin/verification', '/admin/audit'];
+
+    for (const path of retainedApiPaths) {
+      const matchedClasses = LAUNCH_API_SURFACE_POLICIES.filter((policy) =>
+        policy.matches(path)
+      ).map((policy) => policy.classification);
+      expect(matchedClasses).toEqual(['internal_only_launch_ops']);
+    }
+
+    for (const path of retainedPagePaths) {
+      const matchedClasses = LAUNCH_PAGE_SURFACE_POLICIES.filter((policy) =>
+        policy.matches(path)
+      ).map((policy) => policy.classification);
+      expect(matchedClasses).toEqual(['internal_only_launch_ops']);
+    }
   });
 });

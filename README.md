@@ -1,13 +1,13 @@
 # Proofound MVP
 
 > Doc Class: `active`
-> Last Verified: `2026-05-14`
+> Last Verified: `2026-05-21`
 
-Production-ready scaffold for a proof-first, privacy-first hiring corridor centered on Proof Packs, with one individual side and one organization side.
+Launch-candidate scaffold for a proof-first, privacy-first assignment review corridor centered on Proof Packs, with one individual side and one organization side. Final launch readiness still depends on the target-specific gates below.
 
 ## Overview
 
-Proofound is a narrow proof-first hiring corridor. It centers the product on Proof Packs and keeps the public portfolio as a derived trust surface. Core launch scope:
+Proofound is a narrow proof-first assignment review corridor. It centers the product on Proof Packs and keeps the public portfolio as a derived trust surface. Core launch scope:
 
 - **Two MVP Corridors**: One clean Individual corridor and one clean Organization corridor
 - **Proof Packs First**: Structured proof of real work, selected public portfolio output, and clear trust anchors
@@ -50,7 +50,7 @@ flowchart LR
   U[Sign up / Login] --> V{Email verified?}
   V -- No --> X[Send magic link / verify email]
   V -- Yes --> W{Persona chosen?}
-  W -- Individual --> I[(Individual profile + matches)]
+  W -- Individual --> I[(Individual profile + Proof Packs)]
   W -- Organization --> O[(Organization + members + roles)]
   I --> S[App Shell /app/i/*]
   O --> T[App Shell /app/o/[slug]/*]
@@ -67,7 +67,7 @@ flowchart LR
 - Repo-grounded implementation snapshots and readiness aids: `project/Architecture.md`, `project/Plans.md`, `project/Implement.md`, `PRODUCTION_CHECKLIST.md`.
 - Historical architecture context only: `SYSTEM_ARCHITECTURE_COMPREHENSIVE.md`, `SYSTEM_ARCHITECTURE_SUPPLEMENT.md`, `PRD_for_a_web_platform_MVP.md`.
 - APIs: `docs/API_REFERENCE.md` (generated from `src/app/api/**/route.ts` via `node scripts/generate-api-reference.mjs`; historical API specs remain archived under `docs/archive/legacy-platform/api-reference-history/`).
-- Runbooks: `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, `PRODUCTION_CHECKLIST.md`, `APPLY_MIGRATIONS_MANUAL.md`, `RUN_MIGRATIONS_GUIDE.md`, `OAUTH_SETUP_GUIDE.md`, `SETUP_SUPABASE.md`.
+- Runbooks: `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, `PRODUCTION_CHECKLIST.md`, `APPLY_MIGRATIONS_MANUAL.md`, `RUN_MIGRATIONS_GUIDE.md`, `SETUP_SUPABASE.md`. Provider setup context lives in `OAUTH_SETUP_GUIDE.md` as a reference, not a launch gate.
 - Archives: historical docs are grouped under `docs/archive/legacy-platform/`, status reports under `docs/archive/status-reports/`, demo artifacts under `docs/archive/demos/`.
 - Public/legal pages and metadata surfaces: `/`, `/login`, `/auth/login`, `/signup/**`, `/onboarding`, `/privacy`, `/terms`, `/cookies`, `/cookies/settings`, `/portfolio/[handle]`, `/portfolio/org/[slug]`, `src/lib/seo/public-metadata.ts`, `src/app/sitemap.ts`, `src/app/layout.tsx`, and `public/favicon.svg`.
 
@@ -158,16 +158,10 @@ SENTRY_DEBUG=false
 
 # Cron jobs
 CRON_SECRET=your-cron-bearer-token
-PYTHON_INTERNAL_SERVICE_SECRET=your-python-internal-secret
-
-# Optional Python compute routing
-PYTHON_CV_IMPORT_BASE_URL=http://127.0.0.1:3000
-PYTHON_INTERNAL_JOBS_ENABLED=true
-PYTHON_INTERNAL_WORKER_BATCH_SIZE=10
-PYTHON_INTERNAL_WORKER_CONCURRENCY=2
-PYTHON_INTERNAL_WORKER_LEASE_SECONDS=180
-PYTHON_INTERNAL_MAX_ATTEMPTS=3
+INTERNAL_API_SECRET=your-internal-launch-ops-token
 ```
+
+Archived Python document-intelligence helper variables are documented in `docs/ENV_VARIABLES.md`; they are not default MVP launch requirements.
 
 > **Heads up:** Once this works locally, open your Vercel project, go to **Settings → Environment Variables**, and add each of the keys above (Production, Preview, and Development tabs). For `DATABASE_URL`, copy the Supabase value from **Project Settings → Database → Connection string → Node.js**.
 
@@ -179,7 +173,7 @@ Run migrations and triggers:
 # Apply ordered SQL migrations + policy/trigger supplements
 PATH=/opt/homebrew/opt/node@24/bin:$PATH npm run db:migrate
 
-# Optional but recommended for matching
+# Optional but recommended for assignment-fit review
 PATH=/opt/homebrew/opt/node@24/bin:$PATH npm run db:seed-taxonomy
 ```
 
@@ -194,7 +188,7 @@ PATH=/opt/homebrew/opt/node@24/bin:$PATH npm run db:seed-taxonomy
   - Strict legacy baseline audit: `npm run db:audit:migrations -- --mode legacy-supabase-baseline --baseline supabase/ledger-baseline/schema_migrations.current-db.json`.
   - Optional diagnostics-only file inventory audit: `npm run db:audit:migrations -- --mode legacy-supabase`.
 - `npm run db:seed` — Seed feature flags (and demo data when enabled).
-- `npm run db:seed-taxonomy` — Seed the expertise taxonomy slice used by matching.
+- `npm run db:seed-taxonomy` — Seed the expertise taxonomy slice used by assignment-fit review.
 
 ### 5. Seed Database (Optional)
 
@@ -211,7 +205,7 @@ This creates feature flags. Demo users should be created via the signup flow.
 3. Configure DNS records (SPF, DKIM, DMARC):
    - **SPF**: Add TXT record: `v=spf1 include:_spf.resend.com ~all`
    - **DKIM**: Add CNAME records provided by Resend
-   - **DMARC**: Add TXT record: `v=DMARC1; p=none; rua=mailto:dmarc@yourdomain.com`
+   - **DMARC**: Add TXT record: `v=DMARC1; p=none; rua=mailto:dmarc@proofound.io`
 4. Get your API key from the dashboard
 5. Update `RESEND_API_KEY` and `EMAIL_FROM` in `.env.local`
 
@@ -301,12 +295,13 @@ npm run test             # Run unit tests (Vitest)
 npm run test:privacy     # Core Supabase RLS/privacy suite
 npm run test:privacy:extended # Extended privacy and workflow isolation suite
 npm run test:launch:smoke # Launch smoke matrix; writes .artifacts/launch-smoke-report.json
-npm run monitor:launch   # Synthetic launch monitors; requires BASE_URL and CRON_SECRET for protected cron checks
+npm run monitor:launch   # Synthetic launch monitors; pass BASE_URL for target checks
+npm run launch:status    # Authenticated launch-status probe; requires BASE_URL and CRON_SECRET/INTERNAL_API_SECRET for protected runtimes
 npm run test:archived:non-launch # Archived/removed non-MVP tests kept out of npm test
 npm run test:e2e         # Run E2E tests (Playwright)
 npm run test:e2e:ui      # Run E2E tests with UI
 npm run perf:budgets     # Perf budgets (Lighthouse TTI/CLS + API p95)
-npm run go:no-go         # Go/No-Go gating (perf + SUS flag + RLS/a11y evidence)
+npm run go:no-go         # Go/No-Go gating (smoke + protected perf/launch status + restore evidence)
 ```
 
 > **Troubleshooting:** If `npm run lint` reports that `next` cannot be found, follow the steps in [`docs/TROUBLESHOOTING_LINT.md`](docs/TROUBLESHOOTING_LINT.md).
@@ -322,26 +317,27 @@ npm run go:no-go         # Go/No-Go gating (perf + SUS flag + RLS/a11y evidence)
   - `/api/cron/sla-enforcement` — 08:00 (expire stale matches and flag overdue interview decisions)
   - `/api/cron/python-internal-worker` — archived/non-MVP compatibility route; not scheduled
   - `/api/cron/cv-import-temp-cleanup` — removed from active launch infrastructure; not scheduled
-- Env requirements:
+- Active launch env requirements:
   - `CRON_SECRET` (for inbound cron calls)
   - `CRON_API_KEY` (optional, for syncing cron-job.org jobs from the repo)
-  - `PYTHON_INTERNAL_SERVICE_SECRET` (preferred secret for internal TypeScript-to-Python calls; falls back to `INTERNAL_API_SECRET` or `CRON_SECRET`)
-  - `PYTHON_CV_IMPORT_BASE_URL` (optional base URL when document intelligence moves out of the monolith into a separate Python service)
   - `SUPABASE_SERVICE_ROLE_KEY` (required for queue worker + matching internals)
   - `MATCHING_REFRESH_QUEUE_ENABLED` (default `true`)
   - `MATCHING_REFRESH_WORKER_BATCH_SIZE` (default `100`)
   - `MATCHING_REFRESH_WORKER_CONCURRENCY` (default `4`)
   - `MATCHING_REFRESH_MAX_ATTEMPTS` (default `3`)
-  - `PYTHON_INTERNAL_JOBS_ENABLED` (default `true`)
-  - `PYTHON_INTERNAL_WORKER_BATCH_SIZE` (default `10`)
-  - `PYTHON_INTERNAL_WORKER_CONCURRENCY` (default `2`)
-  - `PYTHON_INTERNAL_WORKER_LEASE_SECONDS` (default `180`)
-  - `PYTHON_INTERNAL_MAX_ATTEMPTS` (default `3`)
   - `MATCHING_TWO_STAGE_ENABLED` (default `true`)
   - `MATCHING_NEAR_SCAN_LIMIT` (default `300`)
-  - `CV_IMPORT_ENGINE_MODE` (default `auto`)
-  - `CV_IMPORT_TEMP_TTL_HOURS` (default `24`, controls private temp CV upload retention)
   - `PERF_API_P95_BUDGET_MS` (default `1500`)
+- Archived compatibility/helper env, not default launch requirements:
+  - `PYTHON_INTERNAL_SERVICE_SECRET`
+  - `PYTHON_CV_IMPORT_BASE_URL`
+  - `PYTHON_INTERNAL_JOBS_ENABLED`
+  - `PYTHON_INTERNAL_WORKER_BATCH_SIZE`
+  - `PYTHON_INTERNAL_WORKER_CONCURRENCY`
+  - `PYTHON_INTERNAL_WORKER_LEASE_SECONDS`
+  - `PYTHON_INTERNAL_MAX_ATTEMPTS`
+  - `CV_IMPORT_ENGINE_MODE`
+  - `CV_IMPORT_TEMP_TTL_HOURS`
 - Observability routes managed through cron-job.org:
   - `/api/cron/performance-check` — daily at 06:00 Europe/Stockholm
   - `/api/cron/health-check` — every 3 hours (no auth required by the route)
@@ -356,11 +352,10 @@ npm run go:no-go         # Go/No-Go gating (perf + SUS flag + RLS/a11y evidence)
   - Vercel function logs for detailed errors.
   - DB tables: `fairnessNotes`, `fairnessReports` for outputs; other crons rely on logs/status JSON.
   - Success = 200 JSON; 401 = bad/missing bearer; 500 = code/data/env issue (check logs).
-- Legacy CV import PDF analyze is archived/non-launch. These routes remain historical context and must not be treated as active MVP launch evidence:
-  1. `POST /api/expertise/cv-import/wizard-extract` uploads PDFs into private temp storage and enqueues `document_intelligence_extract_only`
-  2. `GET /api/expertise/cv-import/wizard-extract/status?job_id=...` polls until extraction completes or fails
-  3. the client submits extracted text to the existing JSON `POST /api/expertise/cv-import/wizard-suggest`
-  4. browser-side PDF extraction remains the automatic fallback if the async extract job cannot be accepted or completed
+- Legacy CV import PDF analyze is archived/non-launch.
+  - `/api/expertise/cv-import/wizard-*` routes are retained only as archived compatibility handlers and must return launch-safe `410` responses.
+  - Do not use the legacy CV wizard as MVP launch evidence or as approval for broad OCR/import behavior.
+  - Active assisted import/proof work belongs to the approved Start from CV private scaffolding and Proof Artifact Text Extraction corridors.
 - Manual test (example):
   ```bash
   curl -i -H "Authorization: Bearer $CRON_SECRET" https://proofound.io/api/cron/refresh-matches
@@ -459,11 +454,13 @@ E2E tests include `@axe-core/playwright` for WCAG AA compliance checks on key pa
 
 - `npm run test:privacy` (and `:extended`, `:coverage`, `:watch`) — Supabase RLS/Privacy suites.
 - `npm run test:launch:smoke` — launch smoke matrix for the locked MVP corridor.
-- `npm run monitor:launch` — synthetic launch monitor runner; pass `BASE_URL` and `CRON_SECRET` when checking a protected runtime.
+- `npm run monitor:launch` — synthetic launch monitor runner; pass `BASE_URL` when checking a specific runtime.
+- `npm run launch:status` — authenticated launch-status probe; pass `BASE_URL` and `CRON_SECRET` or `INTERNAL_API_SECRET` for protected runtimes.
 - `npm run test:archived:non-launch` — archived/removed non-MVP regression tests that are preserved but do not block the default launch gate.
+- `npm run test:python` — Python document-intelligence package regression tests; not default MVP launch evidence. See `tests/python/README.md`.
 - `npm run test:a11y` — Playwright accessibility-only suite.
 - `npm run perf:budgets` — Lighthouse-based performance budget check.
-- `npm run go:no-go` — Composite gate (perf + a11y + readiness signals).
+- `npm run go:no-go` — Composite gate for fresh smoke, protected perf/launch status, safe-mode flags, required evidence files, and production-candidate restore evidence.
 
 ## Deployment
 
@@ -507,7 +504,9 @@ npm run vercel:deploy:prebuilt:production
 - Apply database migrations explicitly via `npm run db:migrate` (do not use `db:push` for production)
 - Verify email sending works
 - Test auth flows end-to-end
-- Verify `https://proofound.io/api/health` returns the deployed commit SHA
+- Verify `https://proofound.io/api/health` returns the minimal public contract with
+  `status:"ok"`. Confirm the deployed commit SHA through Vercel deployment metadata or the
+  prebuilt workflow summary, not the public health payload.
 
 ### Database Migrations on Deploy
 
@@ -639,8 +638,7 @@ MIT License - see LICENSE file for details
 ### For Platform Users
 
 - **Email:** hello@proofound.io (Response within 24 hours, Monday-Friday)
-- **In-App Chat:** Available Monday-Friday, 9 AM - 6 PM UTC
-- **Help Center:** [proofound.io/help](https://proofound.io/help) (coming soon)
+- **Support window:** Monday-Friday, 9 AM - 6 PM UTC
 - **User Support Guide:** See [`SUPPORT.md`](SUPPORT.md) for FAQs and troubleshooting
 
 ### For Development Issues
@@ -660,7 +658,7 @@ MIT License - see LICENSE file for details
 
 ---
 
-Built for proof-first, privacy-safe hiring.
+Built for proof-first, privacy-safe assignment review.
 
 ### Lint in restricted CI
 

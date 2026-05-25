@@ -105,10 +105,6 @@ vi.mock('@/lib/notifications', () => ({
   notifyAssignmentPublished: vi.fn(),
 }));
 
-vi.mock('@/lib/surveys/sus-triggers', () => ({
-  triggerFirstAssignmentSurvey: vi.fn(),
-}));
-
 describe('Assignment API', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -136,6 +132,20 @@ describe('Assignment API', () => {
 
       const res = await POST(req);
       expect(res.status).toBe(400);
+    });
+
+    it('returns 400 for malformed JSON before organization lookup', async () => {
+      const req = new NextRequest('http://localhost/api/assignments', {
+        method: 'POST',
+        body: '{',
+      });
+
+      const res = await POST(req);
+      const data = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(data).toEqual({ error: 'Invalid JSON body' });
+      expect(db.query.organizationMembers.findFirst).not.toHaveBeenCalled();
     });
 
     it('should create an assignment successfully', async () => {
@@ -342,6 +352,27 @@ describe('Assignment API', () => {
       const res = await POST(req);
 
       expect(res.status).toBe(403);
+    });
+
+    it('does not let mock mode bypass organization membership for assignment creation', async () => {
+      vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'true');
+      (db.query.organizationMembers.findFirst as any).mockResolvedValue(null);
+
+      const req = new NextRequest('http://localhost/api/assignments', {
+        method: 'POST',
+        body: JSON.stringify({
+          orgId: TEST_ORG_ID,
+          role: 'Software Engineer',
+          status: 'draft',
+        }),
+      });
+
+      const res = await POST(req);
+      const data = await res.json();
+
+      expect(res.status).toBe(403);
+      expect(data.error).toBe('Organization not found or access denied');
+      expect(db.transaction).not.toHaveBeenCalled();
     });
 
     it('should return 400 for invalid input', async () => {

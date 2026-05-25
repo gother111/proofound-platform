@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "featureId": "feat_route_0f03247aec",
+  "title": "Route /app/o/:slug/messages",
+  "summary": "Web route implemented by app/app/o/[slug]/messages/page.tsx.",
+  "kind": "route",
+  "source": "next-app-route",
+  "confidence": "high",
+  "entrypoints": [
+    {
+      "path": "app/app/o/[slug]/messages/page.tsx",
+      "symbol": null,
+      "route": "/app/o/:slug/messages",
+      "command": null
+    }
+  ],
+  "ownedFiles": [
+    {
+      "path": "app/app/o/[slug]/messages/page.tsx",
+      "reason": "entrypoint"
+    }
+  ],
+  "contextFiles": [],
+  "tests": [],
+  "tags": ["next", "web"],
+  "trustBoundaries": ["user-input", "network", "serialization"],
+  "status": "fixed",
+  "lock": null,
+  "findingIds": [
+    "fnd_sig-feat-route-0f03247aec-6d108f_535e795e67",
+    "fnd_sig-feat-route-0f03247aec-b96920_a885726d84"
+  ],
+  "patchAttemptIds": [],
+  "analysisHistory": [
+    {
+      "runId": "20260516T164325-52e1d0",
+      "kind": "review",
+      "summary": "2 finding(s)",
+      "provider": "codex",
+      "model": null,
+      "createdAt": "2026-05-16T16:52:21.936Z"
+    }
+  ],
+  "createdAt": "2026-05-16T16:02:40.128Z",
+  "updatedAt": "2026-05-16T17:18:11.083Z"
+}

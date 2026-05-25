@@ -51,6 +51,14 @@ function buildRequest(body: Record<string, unknown>) {
   });
 }
 
+function buildRawRequest(body: string) {
+  return new NextRequest('https://example.com/api/decisions', {
+    method: 'POST',
+    body,
+    headers: { 'content-type': 'application/json' },
+  });
+}
+
 function buildSupabase({
   user = { id: 'user-1' },
 }: {
@@ -78,8 +86,8 @@ describe('POST /api/decisions', () => {
       candidateId: 'candidate-1',
       status: 'completed',
       scheduledAt: new Date('2026-03-15T00:00:00.000Z'),
-      platform: 'zoom',
-      meetingUrl: 'https://zoom.us/j/meeting',
+      platform: 'manual',
+      meetingUrl: 'https://example.com/manual-room',
       timezone: 'UTC',
       rescheduleCount: 1,
     });
@@ -108,6 +116,18 @@ describe('POST /api/decisions', () => {
         handler: () => Promise<Response>
       ) => handler()
     );
+  });
+
+  it('rejects malformed JSON before decision workflow lookups', async () => {
+    const response = await POST(buildRawRequest('{"interviewId":'));
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body).toEqual({ error: 'Invalid JSON body' });
+    expect(mocks.getInterviewAccessContext).not.toHaveBeenCalled();
+    expect(mocks.isActiveOrgMember).not.toHaveBeenCalled();
+    expect(mocks.withWorkflowMutationIdempotency).not.toHaveBeenCalled();
+    expect(mocks.recordDecisionTransition).not.toHaveBeenCalled();
   });
 
   it('allows org owners to record final decisions', async () => {
@@ -239,8 +259,8 @@ describe('POST /api/decisions', () => {
       candidateId: 'candidate-1',
       status: 'scheduled',
       scheduledAt: new Date('2026-03-15T00:00:00.000Z'),
-      platform: 'zoom',
-      meetingUrl: 'https://zoom.us/j/meeting',
+      platform: 'manual',
+      meetingUrl: 'https://example.com/manual-room',
       timezone: 'UTC',
       rescheduleCount: 1,
     });

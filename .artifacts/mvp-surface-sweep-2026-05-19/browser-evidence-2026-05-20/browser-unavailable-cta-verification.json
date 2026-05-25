@@ -1,0 +1,70 @@
+{
+  "createdAt": "2026-05-20T01:44:15.663Z",
+  "tool": "Codex Browser in-app browser",
+  "results": [
+    {
+      "route": "/portfolio/demo",
+      "viewport": "desktop",
+      "actions": [
+        {
+          "href": "/",
+          "text": "Return home"
+        }
+      ],
+      "bodyOverflowX": false,
+      "h1": "PUBLIC PAGE UNAVAILABLE",
+      "mainCount": 1,
+      "path": "/portfolio/demo",
+      "title": "Public Page Unavailable | Proofound",
+      "consoleErrorCount": 0
+    },
+    {
+      "route": "/portfolio/demo",
+      "viewport": "mobile",
+      "actions": [
+        {
+          "href": "/",
+          "text": "Return home"
+        }
+      ],
+      "bodyOverflowX": false,
+      "h1": "PUBLIC PAGE UNAVAILABLE",
+      "mainCount": 1,
+      "path": "/portfolio/demo",
+      "title": "Public Page Unavailable | Proofound",
+      "consoleErrorCount": 0
+    },
+    {
+      "route": "/portfolio/org/missing-proofound-org",
+      "viewport": "desktop",
+      "actions": [
+        {
+          "href": "/",
+          "text": "Return home"
+        }
+      ],
+      "bodyOverflowX": false,
+      "h1": "ORGANIZATION PORTFOLIO UNAVAILABLE",
+      "mainCount": 1,
+      "path": "/portfolio/org/missing-proofound-org",
+      "title": "Public Page Unavailable | Proofound",
+      "consoleErrorCount": 0
+    },
+    {
+      "route": "/portfolio/org/missing-proofound-org",
+      "viewport": "mobile",
+      "actions": [
+        {
+          "href": "/",
+          "text": "Return home"
+        }
+      ],
+      "bodyOverflowX": false,
+      "h1": "ORGANIZATION PORTFOLIO UNAVAILABLE",
+      "mainCount": 1,
+      "path": "/portfolio/org/missing-proofound-org",
+      "title": "Public Page Unavailable | Proofound",
+      "consoleErrorCount": 0
+    }
+  ]
+}

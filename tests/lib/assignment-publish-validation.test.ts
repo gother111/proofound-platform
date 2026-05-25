@@ -6,7 +6,7 @@ const baseAssignment = {
   builderMode: 'basic',
   role: 'Product Designer',
   businessValue:
-    'Improve candidate quality by turning vague hiring goals into specific proof-backed review decisions.',
+    'Improve assignment review quality by turning vague goals into specific proof-backed review decisions.',
   description:
     'Own the end-to-end assignment review loop, clarify what work is expected, and keep the team aligned on what delivery actually matters.',
   expectedImpact:
@@ -108,6 +108,31 @@ describe('validateAssignmentPublishReadiness', () => {
 
     expect(result.blocks).toEqual(
       expect.arrayContaining([expect.objectContaining({ blockCode: 'invalid_trust_requirements' })])
+    );
+  });
+
+  it('blocks LinkedIn employment checks as non-launch assignment trust gates', () => {
+    const result = validateAssignmentPublishReadiness({
+      assignment: {
+        ...baseAssignment,
+        verificationGates: ['linkedin'],
+      },
+      outcomesCount: 1,
+      assignmentBasicModeEnabled: true,
+      organization: {
+        trustStatus: 'verified',
+        orgTrustTier: 'trusted',
+        verified: true,
+      } as any,
+    });
+
+    expect(result.blocks).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          blockCode: 'invalid_trust_requirements',
+          details: { invalidGates: ['linkedin'] },
+        }),
+      ])
     );
   });
 

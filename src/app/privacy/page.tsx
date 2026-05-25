@@ -12,7 +12,7 @@ import { buildPublicMetadata } from '@/lib/seo/public-metadata';
 export const metadata: Metadata = buildPublicMetadata({
   title: 'Privacy Policy | Proofound privacy and consent controls',
   description:
-    'Read how Proofound collects and processes personal information, applies consent controls, secures platform records, and supports user rights requests.',
+    'Read how Proofound collects and processes personal information, applies consent controls, secures account and proof records, and supports user rights requests.',
   path: '/privacy',
 });
 
@@ -25,7 +25,7 @@ export default function PrivacyPolicyPage() {
     path: '/privacy',
     title: 'Privacy Policy | Proofound privacy and consent controls',
     description:
-      'Read how Proofound collects and processes personal information, applies consent controls, secures platform records, and supports user rights requests.',
+      'Read how Proofound collects and processes personal information, applies consent controls, secures account and proof records, and supports user rights requests.',
   });
 
   return (
@@ -155,10 +155,10 @@ export default function PrivacyPolicyPage() {
                 <p className="mt-3 leading-7">
                   For privacy requests or questions, contact{' '}
                   <a
-                    href="mailto:privacy@proofound.com"
+                    href="mailto:privacy@proofound.io"
                     className="font-medium text-proofound-forest hover:underline"
                   >
-                    privacy@proofound.com
+                    privacy@proofound.io
                   </a>
                   .
                 </p>
@@ -190,7 +190,7 @@ export default function PrivacyPolicyPage() {
               <Link href="/cookies">View Cookie Policy</Link>
             </Button>
             <a
-              href="mailto:privacy@proofound.com"
+              href="mailto:privacy@proofound.io"
               className="inline-flex items-center justify-center rounded-md border border-proofound-stone px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-proofound-forest hover:bg-proofound-forest/5"
             >
               Email privacy

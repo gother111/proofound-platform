@@ -1,5 +1,10 @@
 # Sprint 1 Planning Document
 
+> Doc Class: `reference-spec`
+> Last Verified: `2026-05-19`
+> Reference note: this file is reference or historical sprint-planning material. It is not the canonical MVP launch contract.
+> Current precedence: `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md`, then fresh repo-grounded evidence. This document is reference context only.
+
 **Epic:** E1 - Skills Taxonomy System
 **Sprint Duration:** 2 weeks (10 working days)
 **Sprint Capacity:** 40 story points (2 developers × 10 points/week × 2 weeks)

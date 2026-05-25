@@ -16,6 +16,11 @@ import {
   resolveCandidateInvitePolicyContext,
 } from '@/lib/candidate-invite-policy';
 import { createClient } from '@/lib/supabase/server';
+import {
+  buildVisualCandidateInviteResponse,
+  candidateInviteVisualFixturesEnabled,
+} from '@/lib/candidate-invites/visual-fixtures';
+import { log } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,6 +30,14 @@ export async function GET(
 ) {
   try {
     const { token } = await params;
+
+    if (candidateInviteVisualFixturesEnabled()) {
+      const visualInvite = buildVisualCandidateInviteResponse(token);
+      if (visualInvite) {
+        return NextResponse.json(visualInvite);
+      }
+    }
+
     const existingRedeemSessionNonce =
       request.cookies.get(
         getCapabilityRedeemSessionCookieName(CAPABILITY_TOKEN_CLASSES.CANDIDATE_INVITE_CLAIM)
@@ -237,7 +250,9 @@ export async function GET(
 
     return response;
   } catch (error) {
-    console.error('Failed to fetch candidate invite:', error);
+    log.error('candidate_invite.preview.fetch_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json({ error: 'Failed to fetch invite' }, { status: 500 });
   }
 }

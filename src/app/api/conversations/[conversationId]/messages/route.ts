@@ -10,9 +10,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { db, conversations, messages, profiles } from '@/db';
-import { eq, and, desc, or, inArray } from 'drizzle-orm';
+import { eq, and, desc, or, inArray, lt } from 'drizzle-orm';
 import { detectPII, shouldBlockMessage } from '@/lib/privacy/pii-detection';
 import { log } from '@/lib/log';
+import {
+  buildVisualMessages,
+  visualMessagingFixturesEnabled,
+} from '@/lib/messaging/visual-fixtures';
 
 interface RouteParams {
   params: Promise<{
@@ -47,6 +51,17 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    if (visualMessagingFixturesEnabled()) {
+      const visualMessages = buildVisualMessages(conversationId, user.id);
+      if (visualMessages.length > 0) {
+        return NextResponse.json({
+          messages: visualMessages,
+          hasMore: false,
+          conversationStage: conversationId.includes('revealed') ? 'revealed' : 'masked',
+        });
+      }
+    }
+
     // Verify user is a participant
     const conversation = await db.query.conversations.findFirst({
       where: eq(conversations.id, conversationId),
@@ -63,15 +78,33 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
+    let messageWhere = eq(messages.conversationId, conversationId);
+
+    if (beforeId) {
+      const [cursorMessage] = await db
+        .select({ sentAt: messages.sentAt })
+        .from(messages)
+        .where(and(eq(messages.id, beforeId), eq(messages.conversationId, conversationId)))
+        .limit(1);
+
+      if (!cursorMessage) {
+        return NextResponse.json({
+          messages: [],
+          hasMore: false,
+          conversationStage: conversation.stage,
+        });
+      }
+
+      messageWhere = and(messageWhere, lt(messages.sentAt, cursorMessage.sentAt)) ?? messageWhere;
+    }
+
     // Fetch messages with RLS protection
-    let query = db
+    const query = db
       .select()
       .from(messages)
-      .where(eq(messages.conversationId, conversationId))
+      .where(messageWhere)
       .orderBy(desc(messages.sentAt))
       .limit(limit);
-
-    // TODO: Add pagination with beforeId if needed
 
     const messageList = await query;
 
@@ -134,7 +167,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       conversationStage: conversation.stage,
     });
   } catch (error) {
-    console.error('Error fetching messages:', error);
+    log.error('conversation.messages.get_failed', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -277,9 +310,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('Error sending message:', error);
     log.error('message.send_failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error,
       conversationId: (await params).conversationId,
     });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

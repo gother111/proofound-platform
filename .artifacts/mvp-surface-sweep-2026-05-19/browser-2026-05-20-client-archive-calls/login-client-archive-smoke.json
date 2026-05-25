@@ -1,0 +1,16 @@
+{
+  "route": "http://127.0.0.1:33180/login",
+  "title": "Sign In | Proofound",
+  "signals": {
+    "bodyLength": 272,
+    "h1": "Welcome back",
+    "hasArchivedApiUnavailableText": false,
+    "hasMain": true,
+    "hasRuntimeErrorText": false,
+    "overflowX": false,
+    "title": "Sign In | Proofound",
+    "url": "http://127.0.0.1:33180/login"
+  },
+  "warningsOrErrors": [],
+  "note": "Codex in-app Browser smoke after removing retained client calls to archived projects, Veriff, and policy explain APIs."
+}

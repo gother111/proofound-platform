@@ -1,0 +1,7643 @@
+{
+  "generatedAt": "2026-05-18T09:43:09.629Z",
+  "mobileRows": [
+    {
+      "label": "landing",
+      "route": "/",
+      "clientWidth": 379,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "16px",
+          "h": 36,
+          "tag": "A",
+          "text": "Proofound",
+          "w": 36,
+          "weight": "400",
+          "x": 16,
+          "y": 12
+        },
+        {
+          "font": "12.8px",
+          "h": 19,
+          "tag": "A",
+          "text": "Sign in",
+          "w": 57,
+          "weight": "500",
+          "x": 236,
+          "y": 20
+        },
+        {
+          "font": "12.8px",
+          "h": 39,
+          "tag": "BUTTON",
+          "text": "Start",
+          "w": 57,
+          "weight": "500",
+          "x": 306,
+          "y": 10
+        },
+        {
+          "font": "44px",
+          "h": 76,
+          "tag": "H1",
+          "text": "Proof behind the claim",
+          "w": 313,
+          "weight": "600",
+          "x": 33,
+          "y": 97
+        },
+        {
+          "font": "16px",
+          "h": 84,
+          "tag": "P",
+          "text": "Proofound turns real work into structured Proof Packs for privacy-safe hiring review before identity takes over.",
+          "w": 313,
+          "weight": "400",
+          "x": 33,
+          "y": 185
+        },
+        {
+          "font": "14px",
+          "h": 48,
+          "tag": "BUTTON",
+          "text": "Request a pilot",
+          "w": 313,
+          "weight": "500",
+          "x": 33,
+          "y": 711
+        },
+        {
+          "font": "14px",
+          "h": 48,
+          "tag": "BUTTON",
+          "text": "Create your proof portfolio",
+          "w": 313,
+          "weight": "500",
+          "x": 33,
+          "y": 769
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 4760,
+          "tag": "DIV",
+          "text": "{\"@context\":\"https://schema.org\",\"@type\":\"Organization\",\"name\":\"Proofound\",\"url\"",
+          "w": 379,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 4760,
+          "tag": "DIV",
+          "text": "{\"@context\":\"https://schema.org\",\"@type\":\"Organization\",\"name\":\"Proofound\",\"url\"",
+          "w": 379,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "relative min-h-screen overflow-x-clip bg-background text-foreground",
+          "h": 4760,
+          "tag": "DIV",
+          "text": "ProofoundHow it worksFor individualsFor organizationsSign inSign inStartRequest ",
+          "w": 379,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "",
+          "h": 4760,
+          "tag": "MAIN",
+          "text": "Proof behind the claimProofound turns real work into structured Proof Packs for ",
+          "w": 379,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 379,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        },
+        {
+          "h": 19,
+          "text": "Sign in",
+          "w": 57,
+          "x": 236,
+          "y": 20
+        },
+        {
+          "h": 21,
+          "text": "Cookies",
+          "w": 54,
+          "x": 45,
+          "y": 4546
+        },
+        {
+          "h": 21,
+          "text": "Cookie settings",
+          "w": 103,
+          "x": 123,
+          "y": 4546
+        },
+        {
+          "h": 21,
+          "text": "Privacy",
+          "w": 49,
+          "x": 249,
+          "y": 4546
+        },
+        {
+          "h": 21,
+          "text": "Terms",
+          "w": 41,
+          "x": 45,
+          "y": 4575
+        },
+        {
+          "h": 21,
+          "text": "Sign in",
+          "w": 45,
+          "x": 110,
+          "y": 4575
+        }
+      ],
+      "title": "Proofound | Proof Behind the Claim",
+      "url": "http://localhost:33100/",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "label": "login",
+      "route": "/login",
+      "clientWidth": 379,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "28px",
+          "h": 36,
+          "tag": "H1",
+          "text": "Welcome back",
+          "w": 281,
+          "weight": "600",
+          "x": 49,
+          "y": 145
+        },
+        {
+          "font": "15px",
+          "h": 22,
+          "tag": "P",
+          "text": "Sign in to continue to Proofound",
+          "w": 281,
+          "weight": "400",
+          "x": 49,
+          "y": 193
+        },
+        {
+          "font": "13px",
+          "h": 24,
+          "tag": "LABEL",
+          "text": "Email address*",
+          "w": 281,
+          "weight": "500",
+          "x": 49,
+          "y": 255
+        },
+        {
+          "font": "15px",
+          "h": 44,
+          "tag": "INPUT",
+          "text": "",
+          "w": 281,
+          "weight": "400",
+          "x": 49,
+          "y": 287
+        },
+        {
+          "font": "13px",
+          "h": 24,
+          "tag": "LABEL",
+          "text": "Password*",
+          "w": 281,
+          "weight": "500",
+          "x": 49,
+          "y": 361
+        },
+        {
+          "font": "15px",
+          "h": 44,
+          "tag": "INPUT",
+          "text": "",
+          "w": 281,
+          "weight": "400",
+          "x": 49,
+          "y": 393
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "Show password",
+          "w": 44,
+          "weight": "400",
+          "x": 282,
+          "y": 396
+        },
+        {
+          "font": "14px",
+          "h": 44,
+          "tag": "LABEL",
+          "text": "Remember me",
+          "w": 120,
+          "weight": "400",
+          "x": 49,
+          "y": 475
+        },
+        {
+          "font": "14px",
+          "h": 16,
+          "tag": "BUTTON",
+          "text": "on",
+          "w": 16,
+          "weight": "400",
+          "x": 49,
+          "y": 489
+        },
+        {
+          "font": "14px",
+          "h": 44,
+          "tag": "A",
+          "text": "Forgot password?",
+          "w": 136,
+          "weight": "500",
+          "x": 202,
+          "y": 475
+        },
+        {
+          "font": "15px",
+          "h": 48,
+          "tag": "BUTTON",
+          "text": "Sign in",
+          "w": 281,
+          "weight": "600",
+          "x": 49,
+          "y": 543
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "Google",
+          "w": 281,
+          "weight": "500",
+          "x": 49,
+          "y": 648
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "LinkedIn",
+          "w": 281,
+          "weight": "500",
+          "x": 49,
+          "y": 704
+        },
+        {
+          "font": "14px",
+          "h": 44,
+          "tag": "A",
+          "text": "Create account",
+          "w": 118,
+          "weight": "500",
+          "x": 210,
+          "y": 776
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 921,
+          "tag": "DIV",
+          "text": "Welcome backSign in to continue to ProofoundEmail address*Password*Remember meFo",
+          "w": 379,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 921,
+          "tag": "DIV",
+          "text": "Welcome backSign in to continue to ProofoundEmail address*Password*Remember meFo",
+          "w": 379,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "relative flex min-h-screen items-center justify-center overflow-hidden bg-japand",
+          "h": 921,
+          "tag": "DIV",
+          "text": "Welcome backSign in to continue to ProofoundEmail address*Password*Remember meFo",
+          "w": 379,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 379,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        },
+        {
+          "h": 15,
+          "text": "Terms of Service",
+          "w": 98,
+          "x": 216,
+          "y": 878
+        },
+        {
+          "h": 15,
+          "text": "Privacy Policy",
+          "w": 80,
+          "x": 149,
+          "y": 896
+        }
+      ],
+      "title": "Sign In | Proofound",
+      "url": "http://localhost:33100/login",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "label": "signup",
+      "route": "/signup",
+      "clientWidth": 379,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "Back",
+          "w": 73,
+          "weight": "400",
+          "x": -4,
+          "y": 24
+        },
+        {
+          "font": "32px",
+          "h": 40,
+          "tag": "H1",
+          "text": "Join Proofound",
+          "w": 249,
+          "weight": "600",
+          "x": 65,
+          "y": 173
+        },
+        {
+          "font": "15px",
+          "h": 44,
+          "tag": "P",
+          "text": "Choose the account type that fits how you'll use Proofound.",
+          "w": 249,
+          "weight": "400",
+          "x": 65,
+          "y": 225
+        },
+        {
+          "font": "16px",
+          "h": 344,
+          "tag": "BUTTON",
+          "text": "IndividualFor professionals who want a clean proof-based portfolio link they can share today, plus matching as they grow",
+          "w": 249,
+          "weight": "400",
+          "x": 45,
+          "y": 301
+        },
+        {
+          "font": "20px",
+          "h": 30,
+          "tag": "H3",
+          "text": "Individual",
+          "w": 183,
+          "weight": "600",
+          "x": 78,
+          "y": 414
+        },
+        {
+          "font": "14px",
+          "h": 120,
+          "tag": "P",
+          "text": "For professionals who want a clean proof-based portfolio link they can share today, plus matching as they grow.",
+          "w": 183,
+          "weight": "400",
+          "x": 78,
+          "y": 452
+        },
+        {
+          "font": "16px",
+          "h": 368,
+          "tag": "BUTTON",
+          "text": "OrganizationFor organizations that need a credible trust page on day 1, then one assignment and a privacy-safe shortlist",
+          "w": 249,
+          "weight": "400",
+          "x": 85,
+          "y": 669
+        },
+        {
+          "font": "20px",
+          "h": 30,
+          "tag": "H3",
+          "text": "Organization",
+          "w": 183,
+          "weight": "600",
+          "x": 118,
+          "y": 782
+        },
+        {
+          "font": "14px",
+          "h": 120,
+          "tag": "P",
+          "text": "For organizations that need a credible trust page on day 1, then one assignment and a privacy-safe shortlist.",
+          "w": 183,
+          "weight": "400",
+          "x": 118,
+          "y": 820
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 1250,
+          "tag": "DIV",
+          "text": "BackJoin ProofoundChoose the account type that fits how you'll use Proofound.Ind",
+          "w": 379,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 1250,
+          "tag": "DIV",
+          "text": "BackJoin ProofoundChoose the account type that fits how you'll use Proofound.Ind",
+          "w": 379,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "relative flex min-h-screen items-center justify-center overflow-hidden bg-japand",
+          "h": 1250,
+          "tag": "DIV",
+          "text": "BackJoin ProofoundChoose the account type that fits how you'll use Proofound.Ind",
+          "w": 379,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [
+        {
+          "bottom": 68,
+          "cls": "absolute left-6 top-6 flex min-h-[44px] items-center gap-2 px-2 -mx-2 text-[#44504B] transition-colors hover:text-foreground",
+          "height": 44,
+          "left": -4,
+          "right": 69,
+          "tag": "BUTTON",
+          "text": "Back",
+          "top": 24,
+          "width": 73
+        }
+      ],
+      "overflow": false,
+      "scrollWidth": 379,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        },
+        {
+          "h": 15,
+          "text": "Privacy Policy",
+          "w": 80,
+          "x": 185,
+          "y": 1190
+        }
+      ],
+      "title": "Sign Up | Proofound",
+      "url": "http://localhost:33100/signup",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "label": "signup-individual",
+      "route": "/signup/individual",
+      "clientWidth": 379,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "28px",
+          "h": 72,
+          "tag": "H1",
+          "text": "Create your individual account",
+          "w": 249,
+          "weight": "600",
+          "x": 65,
+          "y": 189
+        },
+        {
+          "font": "14px",
+          "h": 48,
+          "tag": "P",
+          "text": "Start with a calm proof-first account. You can add details after sign-up.",
+          "w": 249,
+          "weight": "400",
+          "x": 65,
+          "y": 273
+        },
+        {
+          "font": "13px",
+          "h": 20,
+          "tag": "LABEL",
+          "text": "Email address",
+          "w": 249,
+          "weight": "500",
+          "x": 65,
+          "y": 345
+        },
+        {
+          "font": "15px",
+          "h": 44,
+          "tag": "INPUT",
+          "text": "",
+          "w": 249,
+          "weight": "400",
+          "x": 65,
+          "y": 373
+        },
+        {
+          "font": "13px",
+          "h": 20,
+          "tag": "LABEL",
+          "text": "Password",
+          "w": 249,
+          "weight": "500",
+          "x": 65,
+          "y": 447
+        },
+        {
+          "font": "15px",
+          "h": 44,
+          "tag": "INPUT",
+          "text": "",
+          "w": 249,
+          "weight": "400",
+          "x": 65,
+          "y": 474
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "Show password",
+          "w": 44,
+          "weight": "400",
+          "x": 266,
+          "y": 477
+        },
+        {
+          "font": "13px",
+          "h": 20,
+          "tag": "LABEL",
+          "text": "Confirm password",
+          "w": 249,
+          "weight": "500",
+          "x": 65,
+          "y": 548
+        },
+        {
+          "font": "15px",
+          "h": 44,
+          "tag": "INPUT",
+          "text": "",
+          "w": 249,
+          "weight": "400",
+          "x": 65,
+          "y": 576
+        },
+        {
+          "font": "16px",
+          "h": 96,
+          "tag": "LABEL",
+          "text": "I agree to the Privacy Policy and Terms of Service*",
+          "w": 249,
+          "weight": "400",
+          "x": 65,
+          "y": 658
+        },
+        {
+          "font": "16px",
+          "h": 20,
+          "tag": "INPUT",
+          "text": "on",
+          "w": 13,
+          "weight": "400",
+          "x": 65,
+          "y": 664
+        },
+        {
+          "font": "14px",
+          "h": 44,
+          "tag": "A",
+          "text": "Privacy Policy",
+          "w": 94,
+          "weight": "500",
+          "x": 181,
+          "y": 662
+        },
+        {
+          "font": "14px",
+          "h": 44,
+          "tag": "A",
+          "text": "Terms of Service",
+          "w": 114,
+          "weight": "500",
+          "x": 90,
+          "y": 706
+        },
+        {
+          "font": "16px",
+          "h": 68,
+          "tag": "LABEL",
+          "text": "Send me updates about new features and matching opportunities",
+          "w": 249,
+          "weight": "400",
+          "x": 65,
+          "y": 770
+        },
+        {
+          "font": "16px",
+          "h": 20,
+          "tag": "INPUT",
+          "text": "on",
+          "w": 13,
+          "weight": "400",
+          "x": 65,
+          "y": 776
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 1233,
+          "tag": "DIV",
+          "text": "Create your individual accountStart with a calm proof-first account. You can add",
+          "w": 379,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 1233,
+          "tag": "DIV",
+          "text": "Create your individual accountStart with a calm proof-first account. You can add",
+          "w": 379,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "relative flex min-h-screen items-center justify-center overflow-hidden bg-japand",
+          "h": 1233,
+          "tag": "DIV",
+          "text": "Create your individual accountStart with a calm proof-first account. You can add",
+          "w": 379,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 379,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        },
+        {
+          "h": 21,
+          "text": "Sign in",
+          "w": 45,
+          "x": 254,
+          "y": 1083
+        },
+        {
+          "h": 15,
+          "text": "Privacy Policy",
+          "w": 80,
+          "x": 185,
+          "y": 1172
+        }
+      ],
+      "title": "Individual Sign Up | Proofound",
+      "url": "http://localhost:33100/signup/individual",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "label": "signup-organization",
+      "route": "/signup/organization",
+      "clientWidth": 379,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "28px",
+          "h": 72,
+          "tag": "H1",
+          "text": "Create your organization account",
+          "w": 249,
+          "weight": "600",
+          "x": 65,
+          "y": 189
+        },
+        {
+          "font": "14px",
+          "h": 48,
+          "tag": "P",
+          "text": "Start with a calm proof-first account. You can add details after sign-up.",
+          "w": 249,
+          "weight": "400",
+          "x": 65,
+          "y": 273
+        },
+        {
+          "font": "13px",
+          "h": 20,
+          "tag": "LABEL",
+          "text": "Email address",
+          "w": 249,
+          "weight": "500",
+          "x": 65,
+          "y": 345
+        },
+        {
+          "font": "15px",
+          "h": 44,
+          "tag": "INPUT",
+          "text": "",
+          "w": 249,
+          "weight": "400",
+          "x": 65,
+          "y": 373
+        },
+        {
+          "font": "13px",
+          "h": 20,
+          "tag": "LABEL",
+          "text": "Password",
+          "w": 249,
+          "weight": "500",
+          "x": 65,
+          "y": 447
+        },
+        {
+          "font": "15px",
+          "h": 44,
+          "tag": "INPUT",
+          "text": "",
+          "w": 249,
+          "weight": "400",
+          "x": 65,
+          "y": 474
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "Show password",
+          "w": 44,
+          "weight": "400",
+          "x": 266,
+          "y": 477
+        },
+        {
+          "font": "13px",
+          "h": 20,
+          "tag": "LABEL",
+          "text": "Confirm password",
+          "w": 249,
+          "weight": "500",
+          "x": 65,
+          "y": 548
+        },
+        {
+          "font": "15px",
+          "h": 44,
+          "tag": "INPUT",
+          "text": "",
+          "w": 249,
+          "weight": "400",
+          "x": 65,
+          "y": 576
+        },
+        {
+          "font": "16px",
+          "h": 96,
+          "tag": "LABEL",
+          "text": "I agree to the Privacy Policy and Terms of Service*",
+          "w": 249,
+          "weight": "400",
+          "x": 65,
+          "y": 658
+        },
+        {
+          "font": "16px",
+          "h": 20,
+          "tag": "INPUT",
+          "text": "on",
+          "w": 13,
+          "weight": "400",
+          "x": 65,
+          "y": 664
+        },
+        {
+          "font": "14px",
+          "h": 44,
+          "tag": "A",
+          "text": "Privacy Policy",
+          "w": 94,
+          "weight": "500",
+          "x": 181,
+          "y": 662
+        },
+        {
+          "font": "14px",
+          "h": 44,
+          "tag": "A",
+          "text": "Terms of Service",
+          "w": 114,
+          "weight": "500",
+          "x": 90,
+          "y": 706
+        },
+        {
+          "font": "16px",
+          "h": 68,
+          "tag": "LABEL",
+          "text": "Send me updates about new features and matching opportunities",
+          "w": 249,
+          "weight": "400",
+          "x": 65,
+          "y": 770
+        },
+        {
+          "font": "16px",
+          "h": 20,
+          "tag": "INPUT",
+          "text": "on",
+          "w": 13,
+          "weight": "400",
+          "x": 65,
+          "y": 776
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 1233,
+          "tag": "DIV",
+          "text": "Create your organization accountStart with a calm proof-first account. You can a",
+          "w": 379,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 1233,
+          "tag": "DIV",
+          "text": "Create your organization accountStart with a calm proof-first account. You can a",
+          "w": 379,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "relative flex min-h-screen items-center justify-center overflow-hidden bg-japand",
+          "h": 1233,
+          "tag": "DIV",
+          "text": "Create your organization accountStart with a calm proof-first account. You can a",
+          "w": 379,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 379,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        },
+        {
+          "h": 21,
+          "text": "Sign in",
+          "w": 45,
+          "x": 254,
+          "y": 1083
+        },
+        {
+          "h": 15,
+          "text": "Privacy Policy",
+          "w": 80,
+          "x": 185,
+          "y": 1172
+        }
+      ],
+      "title": "Organization Sign Up | Proofound",
+      "url": "http://localhost:33100/signup/organization",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "label": "reset-password",
+      "route": "/reset-password",
+      "clientWidth": 390,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "24px",
+          "h": 36,
+          "tag": "H3",
+          "text": "Reset your password",
+          "w": 308,
+          "weight": "600",
+          "x": 41,
+          "y": 247
+        },
+        {
+          "font": "14px",
+          "h": 72,
+          "tag": "P",
+          "text": "Enter your email and we'll send one secure reset link. Nothing else changes until you use it.",
+          "w": 308,
+          "weight": "400",
+          "x": 41,
+          "y": 291
+        },
+        {
+          "font": "14px",
+          "h": 17,
+          "tag": "LABEL",
+          "text": "Email",
+          "w": 36,
+          "weight": "500",
+          "x": 41,
+          "y": 391
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "INPUT",
+          "text": "",
+          "w": 308,
+          "weight": "400",
+          "x": 41,
+          "y": 411
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "Send reset link",
+          "w": 308,
+          "weight": "500",
+          "x": 41,
+          "y": 485
+        },
+        {
+          "font": "14px",
+          "h": 44,
+          "tag": "A",
+          "text": "← Back to login",
+          "w": 118,
+          "weight": "400",
+          "x": 136,
+          "y": 553
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 844,
+          "tag": "DIV",
+          "text": "Reset your passwordEnter your email and we'll send one secure reset link. Nothin",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 844,
+          "tag": "DIV",
+          "text": "Reset your passwordEnter your email and we'll send one secure reset link. Nothin",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex min-h-screen items-center justify-center bg-proofound-parchment px-4 py-10 ",
+          "h": 844,
+          "tag": "DIV",
+          "text": "Reset your passwordEnter your email and we'll send one secure reset link. Nothin",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 390,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        }
+      ],
+      "title": "Reset Password | Proofound",
+      "url": "http://localhost:33100/reset-password",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "label": "verify-email",
+      "route": "/verify-email",
+      "clientWidth": 390,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "24px",
+          "h": 36,
+          "tag": "H3",
+          "text": "Verifying your email",
+          "w": 308,
+          "weight": "600",
+          "x": 41,
+          "y": 412
+        },
+        {
+          "font": "14px",
+          "h": 48,
+          "tag": "P",
+          "text": "Please wait while we verify your email address.",
+          "w": 308,
+          "weight": "400",
+          "x": 41,
+          "y": 456
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 844,
+          "tag": "DIV",
+          "text": "Verifying your emailPlease wait while we verify your email address.",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 844,
+          "tag": "DIV",
+          "text": "Verifying your emailPlease wait while we verify your email address.",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex min-h-screen items-center justify-center bg-proofound-parchment px-4 py-10 ",
+          "h": 844,
+          "tag": "DIV",
+          "text": "Verifying your emailPlease wait while we verify your email address.",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 390,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        }
+      ],
+      "title": "Verify Email | Proofound",
+      "url": "http://localhost:33100/verify-email",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "label": "verify-work-email",
+      "route": "/verify-work-email",
+      "clientWidth": 390,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "24px",
+          "h": 36,
+          "tag": "H3",
+          "text": "Verifying work email",
+          "w": 308,
+          "weight": "600",
+          "x": 41,
+          "y": 388
+        },
+        {
+          "font": "14px",
+          "h": 48,
+          "tag": "P",
+          "text": "Please wait while we verify the workplace signal.",
+          "w": 308,
+          "weight": "400",
+          "x": 41,
+          "y": 432
+        },
+        {
+          "font": "14px",
+          "h": 24,
+          "tag": "P",
+          "text": "This usually takes only a moment.",
+          "w": 308,
+          "weight": "400",
+          "x": 41,
+          "y": 504
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 844,
+          "tag": "DIV",
+          "text": "Verifying work emailPlease wait while we verify the workplace signal.This usuall",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 844,
+          "tag": "DIV",
+          "text": "Verifying work emailPlease wait while we verify the workplace signal.This usuall",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex min-h-screen items-center justify-center bg-proofound-parchment p-4 py-10 d",
+          "h": 844,
+          "tag": "DIV",
+          "text": "Verifying work emailPlease wait while we verify the workplace signal.This usuall",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 390,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        }
+      ],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/verify-work-email",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "label": "public-portfolio-demo",
+      "route": "/portfolio/demo",
+      "clientWidth": 390,
+      "firstViewportItems": [],
+      "largeFirstViewport": [],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 390,
+      "statusText": "ok",
+      "tinyButtons": [],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/portfolio/demo",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "label": "public-org-demo",
+      "route": "/portfolio/org/demo",
+      "clientWidth": 390,
+      "firstViewportItems": [],
+      "largeFirstViewport": [],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 390,
+      "statusText": "ok",
+      "tinyButtons": [],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/portfolio/org/demo",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "label": "candidate-invite-invalid",
+      "route": "/candidate-invite/not-a-real-token",
+      "clientWidth": 390,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "24px",
+          "h": 36,
+          "tag": "H3",
+          "text": "Loading invitation",
+          "w": 292,
+          "weight": "600",
+          "x": 49,
+          "y": 404
+        },
+        {
+          "font": "14px",
+          "h": 48,
+          "tag": "P",
+          "text": "We're checking the invite and your current account state.",
+          "w": 292,
+          "weight": "400",
+          "x": 49,
+          "y": 464
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 844,
+          "tag": "DIV",
+          "text": "Loading invitationWe're checking the invite and your current account state.",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 844,
+          "tag": "DIV",
+          "text": "Loading invitationWe're checking the invite and your current account state.",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex min-h-screen items-center justify-center bg-japandi-bg p-6",
+          "h": 844,
+          "tag": "DIV",
+          "text": "Loading invitationWe're checking the invite and your current account state.",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 390,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        }
+      ],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/candidate-invite/not-a-real-token",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "label": "accept-invite",
+      "route": "/accept-invite",
+      "clientWidth": 390,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "24px",
+          "h": 36,
+          "tag": "H3",
+          "text": "Invite link is invalid",
+          "w": 292,
+          "weight": "600",
+          "x": 49,
+          "y": 378
+        },
+        {
+          "font": "14px",
+          "h": 48,
+          "tag": "P",
+          "text": "This invite link is missing a token. Ask the organization to resend it.",
+          "w": 292,
+          "weight": "400",
+          "x": 49,
+          "y": 422
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "A",
+          "text": "Return home",
+          "w": 292,
+          "weight": "500",
+          "x": 49,
+          "y": 494
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 844,
+          "tag": "DIV",
+          "text": "Invite link is invalidThis invite link is missing a token. Ask the organization ",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 844,
+          "tag": "DIV",
+          "text": "Invite link is invalidThis invite link is missing a token. Ask the organization ",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex min-h-screen items-center justify-center bg-japandi-bg p-6",
+          "h": 844,
+          "tag": "DIV",
+          "text": "Invite link is invalidThis invite link is missing a token. Ask the organization ",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 390,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        }
+      ],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/accept-invite",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "label": "verify-token-invalid",
+      "route": "/verify/not-a-real-token",
+      "clientWidth": 390,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "14px",
+          "h": 24,
+          "tag": "P",
+          "text": "Loading verification request.",
+          "w": 308,
+          "weight": "400",
+          "x": 41,
+          "y": 442
+        }
+      ],
+      "largeFirstViewport": [],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 390,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        }
+      ],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/verify/not-a-real-token",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "label": "custom-verify-invalid",
+      "route": "/verify/custom/not-a-real-token",
+      "clientWidth": 390,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "14px",
+          "h": 24,
+          "tag": "P",
+          "text": "Loading verification request.",
+          "w": 308,
+          "weight": "400",
+          "x": 41,
+          "y": 442
+        }
+      ],
+      "largeFirstViewport": [],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 390,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        }
+      ],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/verify/custom/not-a-real-token",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "label": "feedback-invalid",
+      "route": "/feedback/not-a-real-token",
+      "clientWidth": 390,
+      "firstViewportItems": [],
+      "largeFirstViewport": [],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 390,
+      "statusText": "ok",
+      "tinyButtons": [],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/feedback/not-a-real-token",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "label": "individual-home",
+      "route": "/app/i/home",
+      "clientWidth": 390,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Overview",
+          "w": 73,
+          "weight": "400",
+          "x": 4,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Profile",
+          "w": 73,
+          "weight": "400",
+          "x": 81,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Inbox",
+          "w": 73,
+          "weight": "400",
+          "x": 158,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Matching",
+          "w": 73,
+          "weight": "400",
+          "x": 236,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Settings",
+          "w": 73,
+          "weight": "400",
+          "x": 313,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "U",
+          "w": 44,
+          "weight": "400",
+          "x": 330,
+          "y": 8
+        },
+        {
+          "font": "24px",
+          "h": 30,
+          "tag": "H1",
+          "text": "Add your first proof record",
+          "w": 305,
+          "weight": "500",
+          "x": 37,
+          "y": 229
+        },
+        {
+          "font": "14px",
+          "h": 72,
+          "tag": "P",
+          "text": "Welcome back, there. Start with one work sample, credential, or case study that can be trusted.",
+          "w": 305,
+          "weight": "400",
+          "x": 37,
+          "y": 267
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "A",
+          "text": "Start proof record",
+          "w": 305,
+          "weight": "500",
+          "x": 37,
+          "y": 359
+        },
+        {
+          "font": "20px",
+          "h": 30,
+          "tag": "H2",
+          "text": "Your Proof Wallet",
+          "w": 135,
+          "weight": "500",
+          "x": 37,
+          "y": 465
+        },
+        {
+          "font": "14px",
+          "h": 21,
+          "tag": "P",
+          "text": "Evidence, trust, and sharing state",
+          "w": 305,
+          "weight": "400",
+          "x": 37,
+          "y": 503
+        },
+        {
+          "font": "16px",
+          "h": 122,
+          "tag": "A",
+          "text": "Proof PacksNo proof yet. Start with one private record.Pending",
+          "w": 345,
+          "weight": "400",
+          "x": 17,
+          "y": 545
+        },
+        {
+          "font": "14px",
+          "h": 21,
+          "tag": "P",
+          "text": "Proof Packs",
+          "w": 249,
+          "weight": "600",
+          "x": 93,
+          "y": 566
+        },
+        {
+          "font": "12px",
+          "h": 20,
+          "tag": "P",
+          "text": "No proof yet. Start with one private record.",
+          "w": 249,
+          "weight": "400",
+          "x": 93,
+          "y": 587
+        },
+        {
+          "font": "16px",
+          "h": 140,
+          "tag": "A",
+          "text": "Trust anchorsNo trust anchor yet. You can add this after the first proof.Needed",
+          "w": 345,
+          "weight": "400",
+          "x": 17,
+          "y": 667
+        },
+        {
+          "font": "14px",
+          "h": 21,
+          "tag": "P",
+          "text": "Trust anchors",
+          "w": 249,
+          "weight": "600",
+          "x": 93,
+          "y": 688
+        },
+        {
+          "font": "12px",
+          "h": 40,
+          "tag": "P",
+          "text": "No trust anchor yet. You can add this after the first proof.",
+          "w": 249,
+          "weight": "400",
+          "x": 93,
+          "y": 709
+        },
+        {
+          "font": "16px",
+          "h": 123,
+          "tag": "A",
+          "text": "Public Page visibilityPrivate by default until you choose to shareLocked",
+          "w": 345,
+          "weight": "400",
+          "x": 17,
+          "y": 807
+        },
+        {
+          "font": "14px",
+          "h": 21,
+          "tag": "P",
+          "text": "Public Page visibility",
+          "w": 249,
+          "weight": "600",
+          "x": 93,
+          "y": 829
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 844,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 844,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex h-screen bg-japandi-bg",
+          "h": 844,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex-1 flex flex-col min-w-0",
+          "h": 844,
+          "tag": "DIV",
+          "text": "ProofoundOverviewUProof-first homeAdd your first proof recordWelcome back, there",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 390,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        },
+        {
+          "h": 21,
+          "text": "Add new record",
+          "w": 130,
+          "x": 33,
+          "y": 949
+        },
+        {
+          "h": 21,
+          "text": "Start proof readiness",
+          "w": 165,
+          "x": 37,
+          "y": 1929
+        }
+      ],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/i/home",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "label": "individual-profile",
+      "route": "/app/i/profile?profileView=full&tab=proof_packs",
+      "clientWidth": 390,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Overview",
+          "w": 73,
+          "weight": "400",
+          "x": 4,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Profile",
+          "w": 73,
+          "weight": "400",
+          "x": 81,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Inbox",
+          "w": 73,
+          "weight": "400",
+          "x": 158,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Matching",
+          "w": 73,
+          "weight": "400",
+          "x": 236,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Settings",
+          "w": 73,
+          "weight": "400",
+          "x": 313,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "U",
+          "w": 44,
+          "weight": "400",
+          "x": 330,
+          "y": 8
+        },
+        {
+          "font": "14px",
+          "h": 21,
+          "tag": "P",
+          "text": "Loading profile",
+          "w": 313,
+          "weight": "500",
+          "x": 33,
+          "y": 94
+        },
+        {
+          "font": "14px",
+          "h": 42,
+          "tag": "P",
+          "text": "Preparing your proof, visibility, and readiness details.",
+          "w": 313,
+          "weight": "400",
+          "x": 33,
+          "y": 119
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 844,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 844,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex h-screen bg-japandi-bg",
+          "h": 844,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex-1 flex flex-col min-w-0",
+          "h": 844,
+          "tag": "DIV",
+          "text": "ProofoundProfileULoading profilePreparing your proof, visibility, and readiness ",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 390,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        }
+      ],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/i/profile?profileView=full&tab=proof_packs",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "label": "individual-portfolio",
+      "route": "/app/i/portfolio",
+      "clientWidth": 390,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Overview",
+          "w": 73,
+          "weight": "400",
+          "x": 4,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Profile",
+          "w": 73,
+          "weight": "400",
+          "x": 81,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Inbox",
+          "w": 73,
+          "weight": "400",
+          "x": 158,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Matching",
+          "w": 73,
+          "weight": "400",
+          "x": 236,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Settings",
+          "w": 73,
+          "weight": "400",
+          "x": 313,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "U",
+          "w": 44,
+          "weight": "400",
+          "x": 330,
+          "y": 8
+        },
+        {
+          "font": "14px",
+          "h": 21,
+          "tag": "P",
+          "text": "Loading profile",
+          "w": 313,
+          "weight": "500",
+          "x": 33,
+          "y": 94
+        },
+        {
+          "font": "14px",
+          "h": 42,
+          "tag": "P",
+          "text": "Preparing your proof, visibility, and readiness details.",
+          "w": 313,
+          "weight": "400",
+          "x": 33,
+          "y": 119
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 844,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 844,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex h-screen bg-japandi-bg",
+          "h": 844,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex-1 flex flex-col min-w-0",
+          "h": 844,
+          "tag": "DIV",
+          "text": "ProofoundProfileULoading profilePreparing your proof, visibility, and readiness ",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 390,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        }
+      ],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/i/profile?profileView=full&tab=proof_packs&portfolioLocked=1&lockReason=safe_shell&proof=first",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "label": "individual-matching",
+      "route": "/app/i/matching",
+      "clientWidth": 390,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Overview",
+          "w": 73,
+          "weight": "400",
+          "x": 4,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Profile",
+          "w": 73,
+          "weight": "400",
+          "x": 81,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Inbox",
+          "w": 73,
+          "weight": "400",
+          "x": 158,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Matching",
+          "w": 73,
+          "weight": "400",
+          "x": 236,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Settings",
+          "w": 73,
+          "weight": "400",
+          "x": 313,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "U",
+          "w": 44,
+          "weight": "400",
+          "x": 330,
+          "y": 8
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 844,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 844,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex h-screen bg-japandi-bg",
+          "h": 844,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 390,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        }
+      ],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/i/matching",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "label": "individual-verifications",
+      "route": "/app/i/verifications",
+      "clientWidth": 390,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Overview",
+          "w": 73,
+          "weight": "400",
+          "x": 4,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Profile",
+          "w": 73,
+          "weight": "400",
+          "x": 81,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Inbox",
+          "w": 73,
+          "weight": "400",
+          "x": 158,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Matching",
+          "w": 73,
+          "weight": "400",
+          "x": 236,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Settings",
+          "w": 73,
+          "weight": "400",
+          "x": 313,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "U",
+          "w": 44,
+          "weight": "400",
+          "x": 330,
+          "y": 8
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 844,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 844,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex h-screen bg-japandi-bg",
+          "h": 844,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 390,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        }
+      ],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/i/verifications",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "label": "individual-messages",
+      "route": "/app/i/messages",
+      "clientWidth": 390,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Overview",
+          "w": 73,
+          "weight": "400",
+          "x": 4,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Profile",
+          "w": 73,
+          "weight": "400",
+          "x": 81,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Inbox",
+          "w": 73,
+          "weight": "400",
+          "x": 158,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Matching",
+          "w": 73,
+          "weight": "400",
+          "x": 236,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Settings",
+          "w": 73,
+          "weight": "400",
+          "x": 313,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "U",
+          "w": 44,
+          "weight": "400",
+          "x": 330,
+          "y": 8
+        },
+        {
+          "font": "14px",
+          "h": 21,
+          "tag": "P",
+          "text": "Loading conversations...",
+          "w": 346,
+          "weight": "400",
+          "x": 16,
+          "y": 77
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 844,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 844,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex h-screen bg-japandi-bg",
+          "h": 844,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex-1 flex flex-col min-w-0",
+          "h": 844,
+          "tag": "DIV",
+          "text": "ProofoundMessagesULoading conversations...",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 390,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        }
+      ],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/i/messages",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "label": "individual-communications",
+      "route": "/app/i/communications",
+      "clientWidth": 390,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Overview",
+          "w": 73,
+          "weight": "400",
+          "x": 4,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Profile",
+          "w": 73,
+          "weight": "400",
+          "x": 81,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Inbox",
+          "w": 73,
+          "weight": "400",
+          "x": 158,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Matching",
+          "w": 73,
+          "weight": "400",
+          "x": 236,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Settings",
+          "w": 73,
+          "weight": "400",
+          "x": 313,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "U",
+          "w": 44,
+          "weight": "400",
+          "x": 330,
+          "y": 8
+        },
+        {
+          "font": "12px",
+          "h": 18,
+          "tag": "P",
+          "text": "Hiring corridor",
+          "w": 347,
+          "weight": "600",
+          "x": 16,
+          "y": 81
+        },
+        {
+          "font": "32px",
+          "h": 48,
+          "tag": "H1",
+          "text": "Communications",
+          "w": 347,
+          "weight": "600",
+          "x": 16,
+          "y": 107
+        },
+        {
+          "font": "14px",
+          "h": 72,
+          "tag": "P",
+          "text": "Messages and interviews stay together, with reveal and decision steps inside the live corridor where they belong.",
+          "w": 347,
+          "weight": "400",
+          "x": 16,
+          "y": 163
+        },
+        {
+          "font": "12px",
+          "h": 40,
+          "tag": "P",
+          "text": "Reveal and interview actions stay visible inside their live corridor surfaces.",
+          "w": 313,
+          "weight": "400",
+          "x": 33,
+          "y": 289
+        },
+        {
+          "font": "16px",
+          "h": 96,
+          "tag": "A",
+          "text": "MessagesConversation threads, introductions, and reveal requests.",
+          "w": 347,
+          "weight": "400",
+          "x": 16,
+          "y": 362
+        },
+        {
+          "font": "16px",
+          "h": 96,
+          "tag": "A",
+          "text": "InterviewsScheduling, decision windows, feedback, and handoff.",
+          "w": 347,
+          "weight": "400",
+          "x": 16,
+          "y": 466
+        },
+        {
+          "font": "14px",
+          "h": 21,
+          "tag": "H2",
+          "text": "Messages",
+          "w": 311,
+          "weight": "600",
+          "x": 52,
+          "y": 595
+        },
+        {
+          "font": "12px",
+          "h": 40,
+          "tag": "P",
+          "text": "Use the individual conversation thread for messages, intros, and reveal requests.",
+          "w": 311,
+          "weight": "400",
+          "x": 52,
+          "y": 616
+        },
+        {
+          "font": "12px",
+          "h": 18,
+          "tag": "A",
+          "text": "Switch to interviews",
+          "w": 347,
+          "weight": "600",
+          "x": 16,
+          "y": 664
+        },
+        {
+          "font": "14px",
+          "h": 21,
+          "tag": "P",
+          "text": "Loading conversations...",
+          "w": 346,
+          "weight": "400",
+          "x": 16,
+          "y": 711
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 844,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 844,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex h-screen bg-japandi-bg",
+          "h": 844,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex-1 flex flex-col min-w-0",
+          "h": 844,
+          "tag": "DIV",
+          "text": "ProofoundCommunicationsUHiring corridorCommunicationsMessages and interviews sta",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 390,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        },
+        {
+          "h": 18,
+          "text": "Switch to interviews",
+          "w": 347,
+          "x": 16,
+          "y": 664
+        }
+      ],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/i/communications",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "label": "individual-communications-interviews",
+      "route": "/app/i/communications?section=interviews",
+      "clientWidth": 390,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Overview",
+          "w": 73,
+          "weight": "400",
+          "x": 4,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Profile",
+          "w": 73,
+          "weight": "400",
+          "x": 81,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Inbox",
+          "w": 73,
+          "weight": "400",
+          "x": 158,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Matching",
+          "w": 73,
+          "weight": "400",
+          "x": 236,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Settings",
+          "w": 73,
+          "weight": "400",
+          "x": 313,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "U",
+          "w": 44,
+          "weight": "400",
+          "x": 330,
+          "y": 8
+        },
+        {
+          "font": "12px",
+          "h": 18,
+          "tag": "P",
+          "text": "Hiring corridor",
+          "w": 347,
+          "weight": "600",
+          "x": 16,
+          "y": 81
+        },
+        {
+          "font": "32px",
+          "h": 48,
+          "tag": "H1",
+          "text": "Communications",
+          "w": 347,
+          "weight": "600",
+          "x": 16,
+          "y": 107
+        },
+        {
+          "font": "14px",
+          "h": 72,
+          "tag": "P",
+          "text": "Messages and interviews stay together, with reveal and decision steps inside the live corridor where they belong.",
+          "w": 347,
+          "weight": "400",
+          "x": 16,
+          "y": 163
+        },
+        {
+          "font": "12px",
+          "h": 40,
+          "tag": "P",
+          "text": "Reveal and interview actions stay visible inside their live corridor surfaces.",
+          "w": 313,
+          "weight": "400",
+          "x": 33,
+          "y": 289
+        },
+        {
+          "font": "16px",
+          "h": 96,
+          "tag": "A",
+          "text": "MessagesConversation threads, introductions, and reveal requests.",
+          "w": 347,
+          "weight": "400",
+          "x": 16,
+          "y": 362
+        },
+        {
+          "font": "16px",
+          "h": 96,
+          "tag": "A",
+          "text": "InterviewsScheduling, decision windows, feedback, and handoff.",
+          "w": 347,
+          "weight": "400",
+          "x": 16,
+          "y": 466
+        },
+        {
+          "font": "14px",
+          "h": 21,
+          "tag": "H2",
+          "text": "Interviews",
+          "w": 309,
+          "weight": "600",
+          "x": 54,
+          "y": 595
+        },
+        {
+          "font": "12px",
+          "h": 40,
+          "tag": "P",
+          "text": "Use the individual corridor cards for interview, decision, and feedback steps.",
+          "w": 309,
+          "weight": "400",
+          "x": 54,
+          "y": 616
+        },
+        {
+          "font": "12px",
+          "h": 18,
+          "tag": "A",
+          "text": "Switch to messages",
+          "w": 347,
+          "weight": "600",
+          "x": 16,
+          "y": 664
+        },
+        {
+          "font": "14px",
+          "h": 21,
+          "tag": "P",
+          "text": "Loading interview corridor...",
+          "w": 346,
+          "weight": "400",
+          "x": 17,
+          "y": 711
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 844,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 844,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex h-screen bg-japandi-bg",
+          "h": 844,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex-1 flex flex-col min-w-0",
+          "h": 844,
+          "tag": "DIV",
+          "text": "ProofoundCommunicationsUHiring corridorCommunicationsMessages and interviews sta",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 390,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        },
+        {
+          "h": 18,
+          "text": "Switch to messages",
+          "w": 347,
+          "x": 16,
+          "y": 664
+        }
+      ],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/i/communications?section=interviews",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "label": "individual-settings",
+      "route": "/app/i/settings",
+      "clientWidth": 390,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Overview",
+          "w": 73,
+          "weight": "400",
+          "x": 4,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Profile",
+          "w": 73,
+          "weight": "400",
+          "x": 81,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Inbox",
+          "w": 73,
+          "weight": "400",
+          "x": 158,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Matching",
+          "w": 73,
+          "weight": "400",
+          "x": 236,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Settings",
+          "w": 73,
+          "weight": "400",
+          "x": 313,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "U",
+          "w": 44,
+          "weight": "400",
+          "x": 330,
+          "y": 8
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 844,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 844,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex h-screen bg-japandi-bg",
+          "h": 844,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [
+        {
+          "bottom": 737,
+          "cls": "mx-auto max-w-4xl space-y-6",
+          "height": 660,
+          "left": 16,
+          "right": 512,
+          "tag": "DIV",
+          "text": "",
+          "top": 77,
+          "width": 496
+        },
+        {
+          "bottom": 133,
+          "cls": "flex items-center justify-between gap-4",
+          "height": 56,
+          "left": 16,
+          "right": 512,
+          "tag": "DIV",
+          "text": "",
+          "top": 77,
+          "width": 496
+        },
+        {
+          "bottom": 125,
+          "cls": "animate-pulse bg-muted dark:bg-muted motion-safe:animate-shimmer h-10 rounded-md w-40",
+          "height": 40,
+          "left": 352,
+          "right": 512,
+          "tag": "DIV",
+          "text": "",
+          "top": 85,
+          "width": 160
+        },
+        {
+          "bottom": 201,
+          "cls": "h-11 w-full max-w-lg rounded-lg bg-muted/60",
+          "height": 44,
+          "left": 16,
+          "right": 512,
+          "tag": "DIV",
+          "text": "",
+          "top": 157,
+          "width": 496
+        },
+        {
+          "bottom": 737,
+          "cls": "space-y-4",
+          "height": 512,
+          "left": 16,
+          "right": 512,
+          "tag": "DIV",
+          "text": "",
+          "top": 225,
+          "width": 496
+        },
+        {
+          "bottom": 385,
+          "cls": "h-40 rounded-2xl bg-muted/60",
+          "height": 160,
+          "left": 16,
+          "right": 512,
+          "tag": "DIV",
+          "text": "",
+          "top": 225,
+          "width": 496
+        },
+        {
+          "bottom": 561,
+          "cls": "h-40 rounded-2xl bg-muted/60",
+          "height": 160,
+          "left": 16,
+          "right": 512,
+          "tag": "DIV",
+          "text": "",
+          "top": 401,
+          "width": 496
+        },
+        {
+          "bottom": 737,
+          "cls": "h-40 rounded-2xl bg-muted/60",
+          "height": 160,
+          "left": 16,
+          "right": 512,
+          "tag": "DIV",
+          "text": "",
+          "top": 577,
+          "width": 496
+        }
+      ],
+      "overflow": false,
+      "scrollWidth": 390,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        }
+      ],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/i/settings",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "label": "individual-privacy",
+      "route": "/app/i/settings/privacy",
+      "clientWidth": 390,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Overview",
+          "w": 73,
+          "weight": "400",
+          "x": 4,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Profile",
+          "w": 73,
+          "weight": "400",
+          "x": 81,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Inbox",
+          "w": 73,
+          "weight": "400",
+          "x": 158,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Matching",
+          "w": 73,
+          "weight": "400",
+          "x": 236,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 64,
+          "tag": "A",
+          "text": "Settings",
+          "w": 73,
+          "weight": "400",
+          "x": 313,
+          "y": 780
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "U",
+          "w": 44,
+          "weight": "400",
+          "x": 330,
+          "y": 8
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 844,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 844,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex h-screen bg-japandi-bg",
+          "h": 844,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [
+        {
+          "bottom": 741,
+          "cls": "mx-auto max-w-4xl space-y-6",
+          "height": 664,
+          "left": 16,
+          "right": 400,
+          "tag": "DIV",
+          "text": "",
+          "top": 77,
+          "width": 384
+        },
+        {
+          "bottom": 141,
+          "cls": "space-y-2",
+          "height": 64,
+          "left": 16,
+          "right": 400,
+          "tag": "DIV",
+          "text": "",
+          "top": 77,
+          "width": 384
+        },
+        {
+          "bottom": 141,
+          "cls": "h-5 w-96 max-w-full rounded bg-muted/60",
+          "height": 20,
+          "left": 16,
+          "right": 400,
+          "tag": "DIV",
+          "text": "",
+          "top": 121,
+          "width": 384
+        },
+        {
+          "bottom": 309,
+          "cls": "h-36 rounded-2xl bg-muted/60",
+          "height": 144,
+          "left": 16,
+          "right": 400,
+          "tag": "DIV",
+          "text": "",
+          "top": 165,
+          "width": 384
+        },
+        {
+          "bottom": 525,
+          "cls": "h-48 rounded-2xl bg-muted/60",
+          "height": 192,
+          "left": 16,
+          "right": 400,
+          "tag": "DIV",
+          "text": "",
+          "top": 333,
+          "width": 384
+        },
+        {
+          "bottom": 741,
+          "cls": "h-48 rounded-2xl bg-muted/60",
+          "height": 192,
+          "left": 16,
+          "right": 400,
+          "tag": "DIV",
+          "text": "",
+          "top": 549,
+          "width": 384
+        }
+      ],
+      "overflow": false,
+      "scrollWidth": 390,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        }
+      ],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/i/settings/privacy",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "label": "forbidden",
+      "route": "/403",
+      "clientWidth": 390,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "40px",
+          "h": 60,
+          "tag": "H1",
+          "text": "403",
+          "w": 358,
+          "weight": "700",
+          "x": 16,
+          "y": 277
+        },
+        {
+          "font": "24px",
+          "h": 36,
+          "tag": "H2",
+          "text": "You do not have access to this page",
+          "w": 358,
+          "weight": "600",
+          "x": 16,
+          "y": 353
+        },
+        {
+          "font": "16px",
+          "h": 72,
+          "tag": "P",
+          "text": "You don't have permission to access this page. This area is restricted to authorized personnel only.",
+          "w": 358,
+          "weight": "400",
+          "x": 16,
+          "y": 405
+        },
+        {
+          "font": "16px",
+          "h": 20,
+          "tag": "A",
+          "text": "Go to Overview",
+          "w": 358,
+          "weight": "400",
+          "x": 16,
+          "y": 521
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "Go to Overview",
+          "w": 358,
+          "weight": "500",
+          "x": 16,
+          "y": 509
+        },
+        {
+          "font": "16px",
+          "h": 20,
+          "tag": "A",
+          "text": "Go to Home",
+          "w": 358,
+          "weight": "400",
+          "x": 16,
+          "y": 565
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "Go to Home",
+          "w": 358,
+          "weight": "500",
+          "x": 16,
+          "y": 553
+        },
+        {
+          "font": "14px",
+          "h": 42,
+          "tag": "P",
+          "text": "If you believe you should have access to this page, please contact your administrator.",
+          "w": 358,
+          "weight": "400",
+          "x": 16,
+          "y": 629
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 844,
+          "tag": "DIV",
+          "text": "403You do not have access to this pageYou don't have permission to access this p",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 844,
+          "tag": "DIV",
+          "text": "403You do not have access to this pageYou don't have permission to access this p",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "min-h-screen flex items-center justify-center bg-japandi-bg",
+          "h": 844,
+          "tag": "DIV",
+          "text": "403You do not have access to this pageYou don't have permission to access this p",
+          "w": 390,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 390,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        },
+        {
+          "h": 20,
+          "text": "Go to Overview",
+          "w": 358,
+          "x": 16,
+          "y": 521
+        },
+        {
+          "h": 20,
+          "text": "Go to Home",
+          "w": 358,
+          "x": 16,
+          "y": 565
+        }
+      ],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/403",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "label": "not-foundish",
+      "route": "/this-route-should-not-exist-visual-check",
+      "clientWidth": 390,
+      "firstViewportItems": [
+        {
+          "font": "28px",
+          "h": 31,
+          "tag": "H1",
+          "text": "Not found",
+          "w": 309,
+          "weight": "700",
+          "x": 41,
+          "y": 316
+        },
+        {
+          "font": "16px",
+          "h": 51,
+          "tag": "P",
+          "text": "This page is outside the locked launch MVP corridor.",
+          "w": 309,
+          "weight": "400",
+          "x": 41,
+          "y": 359
+        },
+        {
+          "font": "16px",
+          "h": 102,
+          "tag": "P",
+          "text": "Archived Page: /this-route-should-not-exist-visual-check is outside the locked launch MVP corridor and is not reachable ",
+          "w": 309,
+          "weight": "600",
+          "x": 41,
+          "y": 426
+        }
+      ],
+      "largeFirstViewport": [],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 390,
+      "statusText": "ok",
+      "tinyButtons": [],
+      "title": "Not found | Proofound",
+      "url": "http://localhost:33100/this-route-should-not-exist-visual-check",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    }
+  ],
+  "desktopRows": [
+    {
+      "label": "landing",
+      "route": "/",
+      "clientWidth": 1269,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "A",
+          "text": "Proofound",
+          "w": 167,
+          "weight": "400",
+          "x": 48,
+          "y": 17
+        },
+        {
+          "font": "16.32px",
+          "h": 24,
+          "tag": "A",
+          "text": "How it works",
+          "w": 100,
+          "weight": "400",
+          "x": 381,
+          "y": 26
+        },
+        {
+          "font": "16.32px",
+          "h": 24,
+          "tag": "A",
+          "text": "For individuals",
+          "w": 112,
+          "weight": "400",
+          "x": 522,
+          "y": 26
+        },
+        {
+          "font": "16.32px",
+          "h": 24,
+          "tag": "A",
+          "text": "For organizations",
+          "w": 133,
+          "weight": "400",
+          "x": 673,
+          "y": 26
+        },
+        {
+          "font": "16.32px",
+          "h": 24,
+          "tag": "A",
+          "text": "Sign in",
+          "w": 52,
+          "weight": "400",
+          "x": 986,
+          "y": 26
+        },
+        {
+          "font": "14px",
+          "h": 45,
+          "tag": "BUTTON",
+          "text": "Request a pilot",
+          "w": 171,
+          "weight": "500",
+          "x": 1050,
+          "y": 16
+        },
+        {
+          "font": "149.6px",
+          "h": 368,
+          "tag": "H1",
+          "text": "Proof behindthe claim",
+          "w": 661,
+          "weight": "600",
+          "x": 56,
+          "y": 97
+        },
+        {
+          "font": "18.88px",
+          "h": 64,
+          "tag": "P",
+          "text": "Proofound turns real work into structured Proof Packs for privacy-safe hiring review before identity takes over.",
+          "w": 544,
+          "weight": "400",
+          "x": 56,
+          "y": 497
+        },
+        {
+          "font": "14px",
+          "h": 24,
+          "tag": "P",
+          "text": "Proof portfolios for individuals. Evidence-based review for teams.",
+          "w": 544,
+          "weight": "400",
+          "x": 56,
+          "y": 581
+        },
+        {
+          "font": "16px",
+          "h": 58,
+          "tag": "BUTTON",
+          "text": "Request a pilot",
+          "w": 193,
+          "weight": "500",
+          "x": 56,
+          "y": 645
+        },
+        {
+          "font": "16px",
+          "h": 58,
+          "tag": "BUTTON",
+          "text": "Create your proof portfolio",
+          "w": 261,
+          "weight": "500",
+          "x": 265,
+          "y": 645
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 7396,
+          "tag": "DIV",
+          "text": "{\"@context\":\"https://schema.org\",\"@type\":\"Organization\",\"name\":\"Proofound\",\"url\"",
+          "w": 1269,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 7396,
+          "tag": "DIV",
+          "text": "{\"@context\":\"https://schema.org\",\"@type\":\"Organization\",\"name\":\"Proofound\",\"url\"",
+          "w": 1269,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "relative min-h-screen overflow-x-clip bg-background text-foreground",
+          "h": 7396,
+          "tag": "DIV",
+          "text": "ProofoundHow it worksFor individualsFor organizationsSign inSign inStartRequest ",
+          "w": 1269,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "",
+          "h": 7396,
+          "tag": "MAIN",
+          "text": "Proof behind the claimProofound turns real work into structured Proof Packs for ",
+          "w": 1269,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 1269,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        },
+        {
+          "h": 24,
+          "text": "How it works",
+          "w": 100,
+          "x": 381,
+          "y": 26
+        },
+        {
+          "h": 24,
+          "text": "For individuals",
+          "w": 112,
+          "x": 522,
+          "y": 26
+        },
+        {
+          "h": 24,
+          "text": "For organizations",
+          "w": 133,
+          "x": 673,
+          "y": 26
+        },
+        {
+          "h": 24,
+          "text": "Sign in",
+          "w": 52,
+          "x": 986,
+          "y": 26
+        },
+        {
+          "h": 21,
+          "text": "Cookies",
+          "w": 54,
+          "x": 809,
+          "y": 7236
+        },
+        {
+          "h": 21,
+          "text": "Cookie settings",
+          "w": 103,
+          "x": 886,
+          "y": 7236
+        },
+        {
+          "h": 21,
+          "text": "Privacy",
+          "w": 49,
+          "x": 1013,
+          "y": 7236
+        }
+      ],
+      "title": "Proofound | Proof Behind the Claim",
+      "url": "http://localhost:33100/",
+      "viewport": {
+        "height": 800,
+        "width": 1280
+      }
+    },
+    {
+      "label": "login",
+      "route": "/login",
+      "clientWidth": 1269,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "28px",
+          "h": 36,
+          "tag": "H1",
+          "text": "Welcome back",
+          "w": 350,
+          "weight": "600",
+          "x": 460,
+          "y": 205
+        },
+        {
+          "font": "15px",
+          "h": 22,
+          "tag": "P",
+          "text": "Sign in to continue to Proofound",
+          "w": 350,
+          "weight": "400",
+          "x": 460,
+          "y": 253
+        },
+        {
+          "font": "13px",
+          "h": 24,
+          "tag": "LABEL",
+          "text": "Email address*",
+          "w": 350,
+          "weight": "500",
+          "x": 460,
+          "y": 315
+        },
+        {
+          "font": "15px",
+          "h": 44,
+          "tag": "INPUT",
+          "text": "",
+          "w": 350,
+          "weight": "400",
+          "x": 460,
+          "y": 347
+        },
+        {
+          "font": "13px",
+          "h": 24,
+          "tag": "LABEL",
+          "text": "Password*",
+          "w": 350,
+          "weight": "500",
+          "x": 460,
+          "y": 421
+        },
+        {
+          "font": "15px",
+          "h": 44,
+          "tag": "INPUT",
+          "text": "",
+          "w": 350,
+          "weight": "400",
+          "x": 460,
+          "y": 453
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "Show password",
+          "w": 44,
+          "weight": "400",
+          "x": 762,
+          "y": 456
+        },
+        {
+          "font": "14px",
+          "h": 44,
+          "tag": "LABEL",
+          "text": "Remember me",
+          "w": 120,
+          "weight": "400",
+          "x": 460,
+          "y": 535
+        },
+        {
+          "font": "14px",
+          "h": 16,
+          "tag": "BUTTON",
+          "text": "on",
+          "w": 16,
+          "weight": "400",
+          "x": 460,
+          "y": 549
+        },
+        {
+          "font": "14px",
+          "h": 44,
+          "tag": "A",
+          "text": "Forgot password?",
+          "w": 136,
+          "weight": "500",
+          "x": 682,
+          "y": 535
+        },
+        {
+          "font": "15px",
+          "h": 48,
+          "tag": "BUTTON",
+          "text": "Sign in",
+          "w": 350,
+          "weight": "600",
+          "x": 460,
+          "y": 603
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "Google",
+          "w": 350,
+          "weight": "500",
+          "x": 460,
+          "y": 708
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "LinkedIn",
+          "w": 350,
+          "weight": "500",
+          "x": 460,
+          "y": 764
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 1015,
+          "tag": "DIV",
+          "text": "Welcome backSign in to continue to ProofoundEmail address*Password*Remember meFo",
+          "w": 1269,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 1015,
+          "tag": "DIV",
+          "text": "Welcome backSign in to continue to ProofoundEmail address*Password*Remember meFo",
+          "w": 1269,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "relative flex min-h-screen items-center justify-center overflow-hidden bg-japand",
+          "h": 1015,
+          "tag": "DIV",
+          "text": "Welcome backSign in to continue to ProofoundEmail address*Password*Remember meFo",
+          "w": 1269,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 1269,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        },
+        {
+          "h": 15,
+          "text": "Terms of Service",
+          "w": 98,
+          "x": 619,
+          "y": 963
+        },
+        {
+          "h": 15,
+          "text": "Privacy Policy",
+          "w": 80,
+          "x": 745,
+          "y": 963
+        }
+      ],
+      "title": "Sign In | Proofound",
+      "url": "http://localhost:33100/login",
+      "viewport": {
+        "height": 800,
+        "width": 1280
+      }
+    },
+    {
+      "label": "signup",
+      "route": "/signup",
+      "clientWidth": 1269,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "Back",
+          "w": 73,
+          "weight": "400",
+          "x": -4,
+          "y": 24
+        },
+        {
+          "font": "32px",
+          "h": 40,
+          "tag": "H1",
+          "text": "Join Proofound",
+          "w": 830,
+          "weight": "600",
+          "x": 220,
+          "y": 197
+        },
+        {
+          "font": "15px",
+          "h": 22,
+          "tag": "P",
+          "text": "Choose the account type that fits how you'll use Proofound.",
+          "w": 448,
+          "weight": "400",
+          "x": 411,
+          "y": 249
+        },
+        {
+          "font": "16px",
+          "h": 296,
+          "tag": "BUTTON",
+          "text": "IndividualFor professionals who want a clean proof-based portfolio link they can share today, plus matching as they grow",
+          "w": 372,
+          "weight": "400",
+          "x": 231,
+          "y": 319
+        },
+        {
+          "font": "20px",
+          "h": 30,
+          "tag": "H3",
+          "text": "Individual",
+          "w": 306,
+          "weight": "600",
+          "x": 264,
+          "y": 432
+        },
+        {
+          "font": "14px",
+          "h": 72,
+          "tag": "P",
+          "text": "For professionals who want a clean proof-based portfolio link they can share today, plus matching as they grow.",
+          "w": 306,
+          "weight": "400",
+          "x": 264,
+          "y": 470
+        },
+        {
+          "font": "16px",
+          "h": 296,
+          "tag": "BUTTON",
+          "text": "OrganizationFor organizations that need a credible trust page on day 1, then one assignment and a privacy-safe shortlist",
+          "w": 372,
+          "weight": "400",
+          "x": 667,
+          "y": 319
+        },
+        {
+          "font": "20px",
+          "h": 30,
+          "tag": "H3",
+          "text": "Organization",
+          "w": 306,
+          "weight": "600",
+          "x": 700,
+          "y": 432
+        },
+        {
+          "font": "14px",
+          "h": 72,
+          "tag": "P",
+          "text": "For organizations that need a credible trust page on day 1, then one assignment and a privacy-safe shortlist.",
+          "w": 306,
+          "weight": "400",
+          "x": 700,
+          "y": 470
+        },
+        {
+          "font": "14px",
+          "h": 44,
+          "tag": "P",
+          "text": "Already have an account? Sign in",
+          "w": 830,
+          "weight": "400",
+          "x": 220,
+          "y": 655
+        },
+        {
+          "font": "14px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "Sign in",
+          "w": 61,
+          "weight": "500",
+          "x": 691,
+          "y": 655
+        },
+        {
+          "font": "12px",
+          "h": 18,
+          "tag": "P",
+          "text": "By creating an account, you agree to our Terms of Service and Privacy Policy",
+          "w": 928,
+          "weight": "400",
+          "x": 171,
+          "y": 772
+        },
+        {
+          "font": "12px",
+          "h": 15,
+          "tag": "A",
+          "text": "Terms of Service",
+          "w": 98,
+          "weight": "500",
+          "x": 649,
+          "y": 774
+        },
+        {
+          "font": "12px",
+          "h": 15,
+          "tag": "A",
+          "text": "Privacy Policy",
+          "w": 80,
+          "weight": "500",
+          "x": 774,
+          "y": 774
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 834,
+          "tag": "DIV",
+          "text": "BackJoin ProofoundChoose the account type that fits how you'll use Proofound.Ind",
+          "w": 1269,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 834,
+          "tag": "DIV",
+          "text": "BackJoin ProofoundChoose the account type that fits how you'll use Proofound.Ind",
+          "w": 1269,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "relative flex min-h-screen items-center justify-center overflow-hidden bg-japand",
+          "h": 834,
+          "tag": "DIV",
+          "text": "BackJoin ProofoundChoose the account type that fits how you'll use Proofound.Ind",
+          "w": 1269,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [
+        {
+          "bottom": 68,
+          "cls": "absolute left-6 top-6 flex min-h-[44px] items-center gap-2 px-2 -mx-2 text-[#44504B] transition-colors hover:text-foreground",
+          "height": 44,
+          "left": -4,
+          "right": 69,
+          "tag": "BUTTON",
+          "text": "Back",
+          "top": 24,
+          "width": 73
+        }
+      ],
+      "overflow": false,
+      "scrollWidth": 1269,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        },
+        {
+          "h": 15,
+          "text": "Terms of Service",
+          "w": 98,
+          "x": 649,
+          "y": 774
+        },
+        {
+          "h": 15,
+          "text": "Privacy Policy",
+          "w": 80,
+          "x": 774,
+          "y": 774
+        }
+      ],
+      "title": "Sign Up | Proofound",
+      "url": "http://localhost:33100/signup",
+      "viewport": {
+        "height": 800,
+        "width": 1280
+      }
+    },
+    {
+      "label": "signup-individual",
+      "route": "/signup/individual",
+      "clientWidth": 1269,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "28px",
+          "h": 72,
+          "tag": "H1",
+          "text": "Create your individual account",
+          "w": 334,
+          "weight": "600",
+          "x": 468,
+          "y": 205
+        },
+        {
+          "font": "14px",
+          "h": 48,
+          "tag": "P",
+          "text": "Start with a calm proof-first account. You can add details after sign-up.",
+          "w": 334,
+          "weight": "400",
+          "x": 468,
+          "y": 289
+        },
+        {
+          "font": "13px",
+          "h": 20,
+          "tag": "LABEL",
+          "text": "Email address",
+          "w": 334,
+          "weight": "500",
+          "x": 468,
+          "y": 369
+        },
+        {
+          "font": "15px",
+          "h": 44,
+          "tag": "INPUT",
+          "text": "",
+          "w": 334,
+          "weight": "400",
+          "x": 468,
+          "y": 397
+        },
+        {
+          "font": "13px",
+          "h": 20,
+          "tag": "LABEL",
+          "text": "Password",
+          "w": 334,
+          "weight": "500",
+          "x": 468,
+          "y": 471
+        },
+        {
+          "font": "15px",
+          "h": 44,
+          "tag": "INPUT",
+          "text": "",
+          "w": 334,
+          "weight": "400",
+          "x": 468,
+          "y": 498
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "Show password",
+          "w": 44,
+          "weight": "400",
+          "x": 754,
+          "y": 501
+        },
+        {
+          "font": "13px",
+          "h": 20,
+          "tag": "LABEL",
+          "text": "Confirm password",
+          "w": 334,
+          "weight": "500",
+          "x": 468,
+          "y": 572
+        },
+        {
+          "font": "15px",
+          "h": 44,
+          "tag": "INPUT",
+          "text": "",
+          "w": 334,
+          "weight": "400",
+          "x": 468,
+          "y": 600
+        },
+        {
+          "font": "16px",
+          "h": 96,
+          "tag": "LABEL",
+          "text": "I agree to the Privacy Policy and Terms of Service*",
+          "w": 334,
+          "weight": "400",
+          "x": 468,
+          "y": 682
+        },
+        {
+          "font": "16px",
+          "h": 20,
+          "tag": "INPUT",
+          "text": "on",
+          "w": 18,
+          "weight": "400",
+          "x": 468,
+          "y": 688
+        },
+        {
+          "font": "14px",
+          "h": 44,
+          "tag": "A",
+          "text": "Privacy Policy",
+          "w": 94,
+          "weight": "500",
+          "x": 588,
+          "y": 686
+        },
+        {
+          "font": "14px",
+          "h": 44,
+          "tag": "A",
+          "text": "Terms of Service",
+          "w": 114,
+          "weight": "500",
+          "x": 497,
+          "y": 730
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "LABEL",
+          "text": "Send me updates about new features and matching opportunities",
+          "w": 334,
+          "weight": "400",
+          "x": 468,
+          "y": 794
+        },
+        {
+          "font": "16px",
+          "h": 20,
+          "tag": "INPUT",
+          "text": "on",
+          "w": 14,
+          "weight": "400",
+          "x": 468,
+          "y": 800
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 1253,
+          "tag": "DIV",
+          "text": "Create your individual accountStart with a calm proof-first account. You can add",
+          "w": 1269,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 1253,
+          "tag": "DIV",
+          "text": "Create your individual accountStart with a calm proof-first account. You can add",
+          "w": 1269,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "relative flex min-h-screen items-center justify-center overflow-hidden bg-japand",
+          "h": 1253,
+          "tag": "DIV",
+          "text": "Create your individual accountStart with a calm proof-first account. You can add",
+          "w": 1269,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 1269,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        },
+        {
+          "h": 21,
+          "text": "Sign in",
+          "w": 45,
+          "x": 699,
+          "y": 1087
+        },
+        {
+          "h": 15,
+          "text": "Terms of Service",
+          "w": 98,
+          "x": 667,
+          "y": 1174
+        }
+      ],
+      "title": "Individual Sign Up | Proofound",
+      "url": "http://localhost:33100/signup/individual",
+      "viewport": {
+        "height": 800,
+        "width": 1280
+      }
+    },
+    {
+      "label": "signup-organization",
+      "route": "/signup/organization",
+      "clientWidth": 1269,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "28px",
+          "h": 72,
+          "tag": "H1",
+          "text": "Create your organization account",
+          "w": 334,
+          "weight": "600",
+          "x": 468,
+          "y": 205
+        },
+        {
+          "font": "14px",
+          "h": 48,
+          "tag": "P",
+          "text": "Start with a calm proof-first account. You can add details after sign-up.",
+          "w": 334,
+          "weight": "400",
+          "x": 468,
+          "y": 289
+        },
+        {
+          "font": "13px",
+          "h": 20,
+          "tag": "LABEL",
+          "text": "Email address",
+          "w": 334,
+          "weight": "500",
+          "x": 468,
+          "y": 369
+        },
+        {
+          "font": "15px",
+          "h": 44,
+          "tag": "INPUT",
+          "text": "",
+          "w": 334,
+          "weight": "400",
+          "x": 468,
+          "y": 397
+        },
+        {
+          "font": "13px",
+          "h": 20,
+          "tag": "LABEL",
+          "text": "Password",
+          "w": 334,
+          "weight": "500",
+          "x": 468,
+          "y": 471
+        },
+        {
+          "font": "15px",
+          "h": 44,
+          "tag": "INPUT",
+          "text": "",
+          "w": 334,
+          "weight": "400",
+          "x": 468,
+          "y": 498
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "Show password",
+          "w": 44,
+          "weight": "400",
+          "x": 754,
+          "y": 501
+        },
+        {
+          "font": "13px",
+          "h": 20,
+          "tag": "LABEL",
+          "text": "Confirm password",
+          "w": 334,
+          "weight": "500",
+          "x": 468,
+          "y": 572
+        },
+        {
+          "font": "15px",
+          "h": 44,
+          "tag": "INPUT",
+          "text": "",
+          "w": 334,
+          "weight": "400",
+          "x": 468,
+          "y": 600
+        },
+        {
+          "font": "16px",
+          "h": 96,
+          "tag": "LABEL",
+          "text": "I agree to the Privacy Policy and Terms of Service*",
+          "w": 334,
+          "weight": "400",
+          "x": 468,
+          "y": 682
+        },
+        {
+          "font": "16px",
+          "h": 20,
+          "tag": "INPUT",
+          "text": "on",
+          "w": 18,
+          "weight": "400",
+          "x": 468,
+          "y": 688
+        },
+        {
+          "font": "14px",
+          "h": 44,
+          "tag": "A",
+          "text": "Privacy Policy",
+          "w": 94,
+          "weight": "500",
+          "x": 588,
+          "y": 686
+        },
+        {
+          "font": "14px",
+          "h": 44,
+          "tag": "A",
+          "text": "Terms of Service",
+          "w": 114,
+          "weight": "500",
+          "x": 497,
+          "y": 730
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "LABEL",
+          "text": "Send me updates about new features and matching opportunities",
+          "w": 334,
+          "weight": "400",
+          "x": 468,
+          "y": 794
+        },
+        {
+          "font": "16px",
+          "h": 20,
+          "tag": "INPUT",
+          "text": "on",
+          "w": 14,
+          "weight": "400",
+          "x": 468,
+          "y": 800
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 1253,
+          "tag": "DIV",
+          "text": "Create your organization accountStart with a calm proof-first account. You can a",
+          "w": 1269,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 1253,
+          "tag": "DIV",
+          "text": "Create your organization accountStart with a calm proof-first account. You can a",
+          "w": 1269,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "relative flex min-h-screen items-center justify-center overflow-hidden bg-japand",
+          "h": 1253,
+          "tag": "DIV",
+          "text": "Create your organization accountStart with a calm proof-first account. You can a",
+          "w": 1269,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 1269,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        },
+        {
+          "h": 21,
+          "text": "Sign in",
+          "w": 45,
+          "x": 699,
+          "y": 1087
+        },
+        {
+          "h": 15,
+          "text": "Terms of Service",
+          "w": 98,
+          "x": 667,
+          "y": 1174
+        }
+      ],
+      "title": "Organization Sign Up | Proofound",
+      "url": "http://localhost:33100/signup/organization",
+      "viewport": {
+        "height": 800,
+        "width": 1280
+      }
+    },
+    {
+      "label": "reset-password",
+      "route": "/reset-password",
+      "clientWidth": 1280,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "24px",
+          "h": 36,
+          "tag": "H3",
+          "text": "Reset your password",
+          "w": 382,
+          "weight": "600",
+          "x": 449,
+          "y": 237
+        },
+        {
+          "font": "14px",
+          "h": 48,
+          "tag": "P",
+          "text": "Enter your email and we'll send one secure reset link. Nothing else changes until you use it.",
+          "w": 382,
+          "weight": "400",
+          "x": 449,
+          "y": 281
+        },
+        {
+          "font": "14px",
+          "h": 17,
+          "tag": "LABEL",
+          "text": "Email",
+          "w": 36,
+          "weight": "500",
+          "x": 449,
+          "y": 357
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "INPUT",
+          "text": "",
+          "w": 382,
+          "weight": "400",
+          "x": 449,
+          "y": 377
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "Send reset link",
+          "w": 382,
+          "weight": "500",
+          "x": 449,
+          "y": 451
+        },
+        {
+          "font": "14px",
+          "h": 44,
+          "tag": "A",
+          "text": "← Back to login",
+          "w": 118,
+          "weight": "400",
+          "x": 581,
+          "y": 519
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 800,
+          "tag": "DIV",
+          "text": "Reset your passwordEnter your email and we'll send one secure reset link. Nothin",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 800,
+          "tag": "DIV",
+          "text": "Reset your passwordEnter your email and we'll send one secure reset link. Nothin",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex min-h-screen items-center justify-center bg-proofound-parchment px-4 py-10 ",
+          "h": 800,
+          "tag": "DIV",
+          "text": "Reset your passwordEnter your email and we'll send one secure reset link. Nothin",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 1280,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        }
+      ],
+      "title": "Reset Password | Proofound",
+      "url": "http://localhost:33100/reset-password",
+      "viewport": {
+        "height": 800,
+        "width": 1280
+      }
+    },
+    {
+      "label": "verify-email",
+      "route": "/verify-email",
+      "clientWidth": 1280,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "24px",
+          "h": 36,
+          "tag": "H3",
+          "text": "Verifying your email",
+          "w": 382,
+          "weight": "600",
+          "x": 449,
+          "y": 406
+        },
+        {
+          "font": "14px",
+          "h": 24,
+          "tag": "P",
+          "text": "Please wait while we verify your email address.",
+          "w": 382,
+          "weight": "400",
+          "x": 449,
+          "y": 450
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 800,
+          "tag": "DIV",
+          "text": "Verifying your emailPlease wait while we verify your email address.",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 800,
+          "tag": "DIV",
+          "text": "Verifying your emailPlease wait while we verify your email address.",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex min-h-screen items-center justify-center bg-proofound-parchment px-4 py-10 ",
+          "h": 800,
+          "tag": "DIV",
+          "text": "Verifying your emailPlease wait while we verify your email address.",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 1280,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        }
+      ],
+      "title": "Verify Email | Proofound",
+      "url": "http://localhost:33100/verify-email",
+      "viewport": {
+        "height": 800,
+        "width": 1280
+      }
+    },
+    {
+      "label": "verify-work-email",
+      "route": "/verify-work-email",
+      "clientWidth": 1280,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "24px",
+          "h": 36,
+          "tag": "H3",
+          "text": "Verifying work email",
+          "w": 382,
+          "weight": "600",
+          "x": 449,
+          "y": 378
+        },
+        {
+          "font": "14px",
+          "h": 24,
+          "tag": "P",
+          "text": "Please wait while we verify the workplace signal.",
+          "w": 382,
+          "weight": "400",
+          "x": 449,
+          "y": 422
+        },
+        {
+          "font": "14px",
+          "h": 24,
+          "tag": "P",
+          "text": "This usually takes only a moment.",
+          "w": 382,
+          "weight": "400",
+          "x": 449,
+          "y": 470
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 800,
+          "tag": "DIV",
+          "text": "Verifying work emailPlease wait while we verify the workplace signal.This usuall",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 800,
+          "tag": "DIV",
+          "text": "Verifying work emailPlease wait while we verify the workplace signal.This usuall",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex min-h-screen items-center justify-center bg-proofound-parchment p-4 py-10 d",
+          "h": 800,
+          "tag": "DIV",
+          "text": "Verifying work emailPlease wait while we verify the workplace signal.This usuall",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 1280,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        }
+      ],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/verify-work-email",
+      "viewport": {
+        "height": 800,
+        "width": 1280
+      }
+    },
+    {
+      "label": "public-portfolio-demo",
+      "route": "/portfolio/demo",
+      "clientWidth": 1280,
+      "firstViewportItems": [],
+      "largeFirstViewport": [],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 1280,
+      "statusText": "ok",
+      "tinyButtons": [],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/portfolio/demo",
+      "viewport": {
+        "height": 800,
+        "width": 1280
+      }
+    },
+    {
+      "label": "public-org-demo",
+      "route": "/portfolio/org/demo",
+      "clientWidth": 1280,
+      "firstViewportItems": [],
+      "largeFirstViewport": [],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 1280,
+      "statusText": "ok",
+      "tinyButtons": [],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/portfolio/org/demo",
+      "viewport": {
+        "height": 800,
+        "width": 1280
+      }
+    },
+    {
+      "label": "candidate-invite-invalid",
+      "route": "/candidate-invite/not-a-real-token",
+      "clientWidth": 1280,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "24px",
+          "h": 36,
+          "tag": "H3",
+          "text": "Loading invitation",
+          "w": 382,
+          "weight": "600",
+          "x": 449,
+          "y": 394
+        },
+        {
+          "font": "14px",
+          "h": 24,
+          "tag": "P",
+          "text": "We're checking the invite and your current account state.",
+          "w": 382,
+          "weight": "400",
+          "x": 449,
+          "y": 454
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 800,
+          "tag": "DIV",
+          "text": "Loading invitationWe're checking the invite and your current account state.",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 800,
+          "tag": "DIV",
+          "text": "Loading invitationWe're checking the invite and your current account state.",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex min-h-screen items-center justify-center bg-japandi-bg p-6",
+          "h": 800,
+          "tag": "DIV",
+          "text": "Loading invitationWe're checking the invite and your current account state.",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 1280,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        }
+      ],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/candidate-invite/not-a-real-token",
+      "viewport": {
+        "height": 800,
+        "width": 1280
+      }
+    },
+    {
+      "label": "accept-invite",
+      "route": "/accept-invite",
+      "clientWidth": 1280,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "24px",
+          "h": 36,
+          "tag": "H3",
+          "text": "Invite link is invalid",
+          "w": 446,
+          "weight": "600",
+          "x": 417,
+          "y": 368
+        },
+        {
+          "font": "14px",
+          "h": 24,
+          "tag": "P",
+          "text": "This invite link is missing a token. Ask the organization to resend it.",
+          "w": 446,
+          "weight": "400",
+          "x": 417,
+          "y": 412
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "A",
+          "text": "Return home",
+          "w": 446,
+          "weight": "500",
+          "x": 417,
+          "y": 460
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 800,
+          "tag": "DIV",
+          "text": "Invite link is invalidThis invite link is missing a token. Ask the organization ",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 800,
+          "tag": "DIV",
+          "text": "Invite link is invalidThis invite link is missing a token. Ask the organization ",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex min-h-screen items-center justify-center bg-japandi-bg p-6",
+          "h": 800,
+          "tag": "DIV",
+          "text": "Invite link is invalidThis invite link is missing a token. Ask the organization ",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 1280,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        }
+      ],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/accept-invite",
+      "viewport": {
+        "height": 800,
+        "width": 1280
+      }
+    },
+    {
+      "label": "verify-token-invalid",
+      "route": "/verify/not-a-real-token",
+      "clientWidth": 1280,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "14px",
+          "h": 24,
+          "tag": "P",
+          "text": "Loading verification request.",
+          "w": 446,
+          "weight": "400",
+          "x": 417,
+          "y": 404
+        }
+      ],
+      "largeFirstViewport": [],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 1280,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        }
+      ],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/verify/not-a-real-token",
+      "viewport": {
+        "height": 800,
+        "width": 1280
+      }
+    },
+    {
+      "label": "custom-verify-invalid",
+      "route": "/verify/custom/not-a-real-token",
+      "clientWidth": 1280,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "14px",
+          "h": 24,
+          "tag": "P",
+          "text": "Loading verification request.",
+          "w": 510,
+          "weight": "400",
+          "x": 385,
+          "y": 404
+        }
+      ],
+      "largeFirstViewport": [],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 1280,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        }
+      ],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/verify/custom/not-a-real-token",
+      "viewport": {
+        "height": 800,
+        "width": 1280
+      }
+    },
+    {
+      "label": "feedback-invalid",
+      "route": "/feedback/not-a-real-token",
+      "clientWidth": 1280,
+      "firstViewportItems": [],
+      "largeFirstViewport": [],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 1280,
+      "statusText": "ok",
+      "tinyButtons": [],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/feedback/not-a-real-token",
+      "viewport": {
+        "height": 800,
+        "width": 1280
+      }
+    },
+    {
+      "label": "individual-home",
+      "route": "/app/i/home",
+      "clientWidth": 1280,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Overview",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 12
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Profile",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 62
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Communications",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 112
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Matching",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 162
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Settings",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 212
+        },
+        {
+          "font": "14px",
+          "h": 32,
+          "tag": "BUTTON",
+          "text": "Collapse sidebar",
+          "w": 223,
+          "weight": "500",
+          "x": 8,
+          "y": 760
+        },
+        {
+          "font": "18px",
+          "h": 27,
+          "tag": "H1",
+          "text": "Overview",
+          "w": 67,
+          "weight": "500",
+          "x": 396,
+          "y": 14
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "U",
+          "w": 44,
+          "weight": "400",
+          "x": 1220,
+          "y": 6
+        },
+        {
+          "font": "32px",
+          "h": 80,
+          "tag": "H1",
+          "text": "Add your first proof record",
+          "w": 243,
+          "weight": "500",
+          "x": 377,
+          "y": 164
+        },
+        {
+          "font": "14px",
+          "h": 72,
+          "tag": "P",
+          "text": "Welcome back, there. Start with one work sample, credential, or case study that can be trusted.",
+          "w": 243,
+          "weight": "400",
+          "x": 377,
+          "y": 252
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "A",
+          "text": "Start proof record",
+          "w": 209,
+          "weight": "500",
+          "x": 640,
+          "y": 222
+        },
+        {
+          "font": "20px",
+          "h": 30,
+          "tag": "H2",
+          "text": "Your Proof Wallet",
+          "w": 135,
+          "weight": "500",
+          "x": 293,
+          "y": 390
+        },
+        {
+          "font": "14px",
+          "h": 21,
+          "tag": "P",
+          "text": "Evidence, trust, and sharing state",
+          "w": 221,
+          "weight": "400",
+          "x": 631,
+          "y": 394
+        },
+        {
+          "font": "16px",
+          "h": 92,
+          "tag": "A",
+          "text": "Proof PacksNo proof yet. Start with one private record.Pending",
+          "w": 599,
+          "weight": "400",
+          "x": 273,
+          "y": 441
+        },
+        {
+          "font": "14px",
+          "h": 21,
+          "tag": "P",
+          "text": "Proof Packs",
+          "w": 359,
+          "weight": "600",
+          "x": 349,
+          "y": 466
+        },
+        {
+          "font": "12px",
+          "h": 20,
+          "tag": "P",
+          "text": "No proof yet. Start with one private record.",
+          "w": 359,
+          "weight": "400",
+          "x": 349,
+          "y": 487
+        },
+        {
+          "font": "16px",
+          "h": 92,
+          "tag": "A",
+          "text": "Trust anchorsNo trust anchor yet. You can add this after the first proof.Needed",
+          "w": 599,
+          "weight": "400",
+          "x": 273,
+          "y": 533
+        },
+        {
+          "font": "14px",
+          "h": 21,
+          "tag": "P",
+          "text": "Trust anchors",
+          "w": 359,
+          "weight": "600",
+          "x": 349,
+          "y": 559
+        },
+        {
+          "font": "12px",
+          "h": 20,
+          "tag": "P",
+          "text": "No trust anchor yet. You can add this after the first proof.",
+          "w": 359,
+          "weight": "400",
+          "x": 349,
+          "y": 580
+        },
+        {
+          "font": "16px",
+          "h": 92,
+          "tag": "A",
+          "text": "Public Page visibilityPrivate by default until you choose to shareLocked",
+          "w": 599,
+          "weight": "400",
+          "x": 273,
+          "y": 625
+        },
+        {
+          "font": "14px",
+          "h": 21,
+          "tag": "P",
+          "text": "Public Page visibility",
+          "w": 359,
+          "weight": "600",
+          "x": 349,
+          "y": 651
+        },
+        {
+          "font": "12px",
+          "h": 20,
+          "tag": "P",
+          "text": "Private by default until you choose to share",
+          "w": 359,
+          "weight": "400",
+          "x": 349,
+          "y": 672
+        },
+        {
+          "font": "14px",
+          "h": 21,
+          "tag": "A",
+          "text": "Add new record",
+          "w": 130,
+          "weight": "500",
+          "x": 289,
+          "y": 736
+        },
+        {
+          "font": "20px",
+          "h": 30,
+          "tag": "H2",
+          "text": "Proof Readiness",
+          "w": 122,
+          "weight": "500",
+          "x": 918,
+          "y": 109
+        },
+        {
+          "font": "14px",
+          "h": 24,
+          "tag": "P",
+          "text": "Start with one proof record",
+          "w": 298,
+          "weight": "400",
+          "x": 918,
+          "y": 159
+        },
+        {
+          "font": "14px",
+          "h": 21,
+          "tag": "A",
+          "text": "Start proof readiness",
+          "w": 165,
+          "weight": "500",
+          "x": 918,
+          "y": 343
+        },
+        {
+          "font": "20px",
+          "h": 30,
+          "tag": "H2",
+          "text": "Trust Controls",
+          "w": 112,
+          "weight": "500",
+          "x": 918,
+          "y": 427
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 800,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 800,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex h-screen bg-japandi-bg",
+          "h": 800,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 1280,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        },
+        {
+          "h": 21,
+          "text": "Add new record",
+          "w": 130,
+          "x": 289,
+          "y": 736
+        },
+        {
+          "h": 21,
+          "text": "Start proof readiness",
+          "w": 165,
+          "x": 918,
+          "y": 343
+        }
+      ],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/i/home",
+      "viewport": {
+        "height": 800,
+        "width": 1280
+      }
+    },
+    {
+      "label": "individual-profile",
+      "route": "/app/i/profile?profileView=full&tab=proof_packs",
+      "clientWidth": 1280,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Overview",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 12
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Profile",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 62
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Communications",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 112
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Matching",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 162
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Settings",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 212
+        },
+        {
+          "font": "14px",
+          "h": 32,
+          "tag": "BUTTON",
+          "text": "Collapse sidebar",
+          "w": 223,
+          "weight": "500",
+          "x": 8,
+          "y": 760
+        },
+        {
+          "font": "18px",
+          "h": 27,
+          "tag": "H1",
+          "text": "Profile",
+          "w": 45,
+          "weight": "500",
+          "x": 396,
+          "y": 14
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "U",
+          "w": 44,
+          "weight": "400",
+          "x": 1220,
+          "y": 6
+        },
+        {
+          "font": "14px",
+          "h": 21,
+          "tag": "P",
+          "text": "Loading profile",
+          "w": 958,
+          "weight": "500",
+          "x": 281,
+          "y": 97
+        },
+        {
+          "font": "14px",
+          "h": 21,
+          "tag": "P",
+          "text": "Preparing your proof, visibility, and readiness details.",
+          "w": 958,
+          "weight": "400",
+          "x": 281,
+          "y": 122
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 800,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 800,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex h-screen bg-japandi-bg",
+          "h": 800,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 1280,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        }
+      ],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/i/profile?profileView=full&tab=proof_packs",
+      "viewport": {
+        "height": 800,
+        "width": 1280
+      }
+    },
+    {
+      "label": "individual-portfolio",
+      "route": "/app/i/portfolio",
+      "clientWidth": 1280,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Overview",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 12
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Profile",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 62
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Communications",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 112
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Matching",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 162
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Settings",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 212
+        },
+        {
+          "font": "14px",
+          "h": 32,
+          "tag": "BUTTON",
+          "text": "Collapse sidebar",
+          "w": 223,
+          "weight": "500",
+          "x": 8,
+          "y": 760
+        },
+        {
+          "font": "18px",
+          "h": 27,
+          "tag": "H1",
+          "text": "Profile",
+          "w": 45,
+          "weight": "500",
+          "x": 396,
+          "y": 14
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "U",
+          "w": 44,
+          "weight": "400",
+          "x": 1220,
+          "y": 6
+        },
+        {
+          "font": "14px",
+          "h": 21,
+          "tag": "P",
+          "text": "Loading profile",
+          "w": 958,
+          "weight": "500",
+          "x": 281,
+          "y": 97
+        },
+        {
+          "font": "14px",
+          "h": 21,
+          "tag": "P",
+          "text": "Preparing your proof, visibility, and readiness details.",
+          "w": 958,
+          "weight": "400",
+          "x": 281,
+          "y": 122
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 800,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 800,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex h-screen bg-japandi-bg",
+          "h": 800,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 1280,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        }
+      ],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/i/profile?profileView=full&tab=proof_packs&portfolioLocked=1&lockReason=safe_shell&proof=first",
+      "viewport": {
+        "height": 800,
+        "width": 1280
+      }
+    },
+    {
+      "label": "individual-matching",
+      "route": "/app/i/matching",
+      "clientWidth": 1280,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Overview",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 12
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Profile",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 62
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Communications",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 112
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Matching",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 162
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Settings",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 212
+        },
+        {
+          "font": "14px",
+          "h": 32,
+          "tag": "BUTTON",
+          "text": "Collapse sidebar",
+          "w": 223,
+          "weight": "500",
+          "x": 8,
+          "y": 760
+        },
+        {
+          "font": "18px",
+          "h": 27,
+          "tag": "H1",
+          "text": "Matching",
+          "w": 68,
+          "weight": "500",
+          "x": 396,
+          "y": 14
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "U",
+          "w": 44,
+          "weight": "400",
+          "x": 1220,
+          "y": 6
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 800,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 800,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex h-screen bg-japandi-bg",
+          "h": 800,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 1280,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        }
+      ],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/i/matching",
+      "viewport": {
+        "height": 800,
+        "width": 1280
+      }
+    },
+    {
+      "label": "individual-verifications",
+      "route": "/app/i/verifications",
+      "clientWidth": 1280,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Overview",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 12
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Profile",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 62
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Communications",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 112
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Matching",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 162
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Settings",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 212
+        },
+        {
+          "font": "14px",
+          "h": 32,
+          "tag": "BUTTON",
+          "text": "Collapse sidebar",
+          "w": 223,
+          "weight": "500",
+          "x": 8,
+          "y": 760
+        },
+        {
+          "font": "18px",
+          "h": 27,
+          "tag": "H1",
+          "text": "Verifications",
+          "w": 88,
+          "weight": "500",
+          "x": 396,
+          "y": 14
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "U",
+          "w": 44,
+          "weight": "400",
+          "x": 1220,
+          "y": 6
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 800,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 800,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex h-screen bg-japandi-bg",
+          "h": 800,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 1280,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        }
+      ],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/i/verifications",
+      "viewport": {
+        "height": 800,
+        "width": 1280
+      }
+    },
+    {
+      "label": "individual-messages",
+      "route": "/app/i/messages",
+      "clientWidth": 1280,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Overview",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 12
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Profile",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 62
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Communications",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 112
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Matching",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 162
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Settings",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 212
+        },
+        {
+          "font": "14px",
+          "h": 32,
+          "tag": "BUTTON",
+          "text": "Collapse sidebar",
+          "w": 223,
+          "weight": "500",
+          "x": 8,
+          "y": 760
+        },
+        {
+          "font": "18px",
+          "h": 27,
+          "tag": "H1",
+          "text": "Messages",
+          "w": 67,
+          "weight": "500",
+          "x": 396,
+          "y": 14
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "U",
+          "w": 44,
+          "weight": "400",
+          "x": 1220,
+          "y": 6
+        },
+        {
+          "font": "14px",
+          "h": 21,
+          "tag": "P",
+          "text": "Loading conversations...",
+          "w": 287,
+          "weight": "400",
+          "x": 256,
+          "y": 72
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 800,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 800,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex h-screen bg-japandi-bg",
+          "h": 800,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 1280,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        }
+      ],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/i/messages",
+      "viewport": {
+        "height": 800,
+        "width": 1280
+      }
+    },
+    {
+      "label": "individual-communications",
+      "route": "/app/i/communications",
+      "clientWidth": 1280,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Overview",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 12
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Profile",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 62
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Communications",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 112
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Matching",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 162
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Settings",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 212
+        },
+        {
+          "font": "14px",
+          "h": 32,
+          "tag": "BUTTON",
+          "text": "Collapse sidebar",
+          "w": 223,
+          "weight": "500",
+          "x": 8,
+          "y": 760
+        },
+        {
+          "font": "18px",
+          "h": 27,
+          "tag": "H1",
+          "text": "Communications",
+          "w": 122,
+          "weight": "500",
+          "x": 396,
+          "y": 14
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "U",
+          "w": 44,
+          "weight": "400",
+          "x": 1220,
+          "y": 6
+        },
+        {
+          "font": "12px",
+          "h": 18,
+          "tag": "P",
+          "text": "Hiring corridor",
+          "w": 562,
+          "weight": "600",
+          "x": 272,
+          "y": 76
+        },
+        {
+          "font": "32px",
+          "h": 48,
+          "tag": "H1",
+          "text": "Communications",
+          "w": 562,
+          "weight": "600",
+          "x": 272,
+          "y": 102
+        },
+        {
+          "font": "14px",
+          "h": 48,
+          "tag": "P",
+          "text": "Messages and interviews stay together, with reveal and decision steps inside the live corridor where they belong.",
+          "w": 562,
+          "weight": "400",
+          "x": 272,
+          "y": 158
+        },
+        {
+          "font": "12px",
+          "h": 40,
+          "tag": "P",
+          "text": "Reveal and interview actions stay visible inside their live corridor surfaces.",
+          "w": 353,
+          "weight": "400",
+          "x": 867,
+          "y": 153
+        },
+        {
+          "font": "16px",
+          "h": 96,
+          "tag": "A",
+          "text": "MessagesConversation threads, introductions, and reveal requests.",
+          "w": 479,
+          "weight": "400",
+          "x": 272,
+          "y": 226
+        },
+        {
+          "font": "16px",
+          "h": 96,
+          "tag": "A",
+          "text": "InterviewsScheduling, decision windows, feedback, and handoff.",
+          "w": 479,
+          "weight": "400",
+          "x": 759,
+          "y": 226
+        },
+        {
+          "font": "14px",
+          "h": 21,
+          "tag": "H2",
+          "text": "Messages",
+          "w": 458,
+          "weight": "600",
+          "x": 320,
+          "y": 355
+        },
+        {
+          "font": "12px",
+          "h": 20,
+          "tag": "P",
+          "text": "Use the individual conversation thread for messages, intros, and reveal requests.",
+          "w": 458,
+          "weight": "400",
+          "x": 320,
+          "y": 376
+        },
+        {
+          "font": "12px",
+          "h": 18,
+          "tag": "A",
+          "text": "Switch to interviews",
+          "w": 139,
+          "weight": "600",
+          "x": 1098,
+          "y": 367
+        },
+        {
+          "font": "14px",
+          "h": 21,
+          "tag": "P",
+          "text": "Loading conversations...",
+          "w": 287,
+          "weight": "400",
+          "x": 256,
+          "y": 425
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 800,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 800,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex h-screen bg-japandi-bg",
+          "h": 800,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 1280,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        },
+        {
+          "h": 18,
+          "text": "Switch to interviews",
+          "w": 139,
+          "x": 1098,
+          "y": 367
+        }
+      ],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/i/communications",
+      "viewport": {
+        "height": 800,
+        "width": 1280
+      }
+    },
+    {
+      "label": "individual-communications-interviews",
+      "route": "/app/i/communications?section=interviews",
+      "clientWidth": 1280,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Overview",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 12
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Profile",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 62
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Communications",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 112
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Matching",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 162
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Settings",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 212
+        },
+        {
+          "font": "14px",
+          "h": 32,
+          "tag": "BUTTON",
+          "text": "Collapse sidebar",
+          "w": 223,
+          "weight": "500",
+          "x": 8,
+          "y": 760
+        },
+        {
+          "font": "18px",
+          "h": 27,
+          "tag": "H1",
+          "text": "Communications",
+          "w": 122,
+          "weight": "500",
+          "x": 396,
+          "y": 14
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "U",
+          "w": 44,
+          "weight": "400",
+          "x": 1220,
+          "y": 6
+        },
+        {
+          "font": "12px",
+          "h": 18,
+          "tag": "P",
+          "text": "Hiring corridor",
+          "w": 562,
+          "weight": "600",
+          "x": 272,
+          "y": 76
+        },
+        {
+          "font": "32px",
+          "h": 48,
+          "tag": "H1",
+          "text": "Communications",
+          "w": 562,
+          "weight": "600",
+          "x": 272,
+          "y": 102
+        },
+        {
+          "font": "14px",
+          "h": 48,
+          "tag": "P",
+          "text": "Messages and interviews stay together, with reveal and decision steps inside the live corridor where they belong.",
+          "w": 562,
+          "weight": "400",
+          "x": 272,
+          "y": 158
+        },
+        {
+          "font": "12px",
+          "h": 40,
+          "tag": "P",
+          "text": "Reveal and interview actions stay visible inside their live corridor surfaces.",
+          "w": 353,
+          "weight": "400",
+          "x": 867,
+          "y": 153
+        },
+        {
+          "font": "16px",
+          "h": 96,
+          "tag": "A",
+          "text": "MessagesConversation threads, introductions, and reveal requests.",
+          "w": 479,
+          "weight": "400",
+          "x": 272,
+          "y": 226
+        },
+        {
+          "font": "16px",
+          "h": 96,
+          "tag": "A",
+          "text": "InterviewsScheduling, decision windows, feedback, and handoff.",
+          "w": 479,
+          "weight": "400",
+          "x": 759,
+          "y": 226
+        },
+        {
+          "font": "14px",
+          "h": 21,
+          "tag": "H2",
+          "text": "Interviews",
+          "w": 435,
+          "weight": "600",
+          "x": 320,
+          "y": 355
+        },
+        {
+          "font": "12px",
+          "h": 20,
+          "tag": "P",
+          "text": "Use the individual corridor cards for interview, decision, and feedback steps.",
+          "w": 435,
+          "weight": "400",
+          "x": 320,
+          "y": 376
+        },
+        {
+          "font": "12px",
+          "h": 18,
+          "tag": "A",
+          "text": "Switch to messages",
+          "w": 138,
+          "weight": "600",
+          "x": 1099,
+          "y": 367
+        },
+        {
+          "font": "14px",
+          "h": 21,
+          "tag": "P",
+          "text": "Loading interview corridor...",
+          "w": 346,
+          "weight": "400",
+          "x": 582,
+          "y": 441
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 800,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 800,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex h-screen bg-japandi-bg",
+          "h": 800,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 1280,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        },
+        {
+          "h": 18,
+          "text": "Switch to messages",
+          "w": 138,
+          "x": 1099,
+          "y": 367
+        }
+      ],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/i/communications?section=interviews",
+      "viewport": {
+        "height": 800,
+        "width": 1280
+      }
+    },
+    {
+      "label": "individual-settings",
+      "route": "/app/i/settings",
+      "clientWidth": 1280,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Overview",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 12
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Profile",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 62
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Communications",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 112
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Matching",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 162
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Settings",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 212
+        },
+        {
+          "font": "14px",
+          "h": 32,
+          "tag": "BUTTON",
+          "text": "Collapse sidebar",
+          "w": 223,
+          "weight": "500",
+          "x": 8,
+          "y": 760
+        },
+        {
+          "font": "18px",
+          "h": 27,
+          "tag": "H1",
+          "text": "Settings",
+          "w": 57,
+          "weight": "500",
+          "x": 396,
+          "y": 14
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "U",
+          "w": 44,
+          "weight": "400",
+          "x": 1220,
+          "y": 6
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 800,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 800,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex h-screen bg-japandi-bg",
+          "h": 800,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 1280,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        }
+      ],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/i/settings",
+      "viewport": {
+        "height": 800,
+        "width": 1280
+      }
+    },
+    {
+      "label": "individual-privacy",
+      "route": "/app/i/settings/privacy",
+      "clientWidth": 1280,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Overview",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 12
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Profile",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 62
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Communications",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 112
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Matching",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 162
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "A",
+          "text": "Settings",
+          "w": 223,
+          "weight": "400",
+          "x": 8,
+          "y": 212
+        },
+        {
+          "font": "14px",
+          "h": 32,
+          "tag": "BUTTON",
+          "text": "Collapse sidebar",
+          "w": 223,
+          "weight": "500",
+          "x": 8,
+          "y": 760
+        },
+        {
+          "font": "18px",
+          "h": 27,
+          "tag": "H1",
+          "text": "Settings",
+          "w": 57,
+          "weight": "500",
+          "x": 396,
+          "y": 14
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "U",
+          "w": 44,
+          "weight": "400",
+          "x": 1220,
+          "y": 6
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 800,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 800,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "flex h-screen bg-japandi-bg",
+          "h": 800,
+          "tag": "DIV",
+          "text": "OverviewProfileCommunicationsMatchingSettingsOverviewProfileInboxMatchingSetting",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 1280,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        }
+      ],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/i/settings/privacy",
+      "viewport": {
+        "height": 800,
+        "width": 1280
+      }
+    },
+    {
+      "label": "forbidden",
+      "route": "/403",
+      "clientWidth": 1280,
+      "firstViewportItems": [
+        {
+          "font": "16px",
+          "h": 1,
+          "tag": "A",
+          "text": "Skip to main content",
+          "w": 1,
+          "weight": "400",
+          "x": -1,
+          "y": -1
+        },
+        {
+          "font": "40px",
+          "h": 60,
+          "tag": "H1",
+          "text": "403",
+          "w": 416,
+          "weight": "700",
+          "x": 432,
+          "y": 267
+        },
+        {
+          "font": "24px",
+          "h": 36,
+          "tag": "H2",
+          "text": "You do not have access to this page",
+          "w": 416,
+          "weight": "600",
+          "x": 432,
+          "y": 343
+        },
+        {
+          "font": "16px",
+          "h": 48,
+          "tag": "P",
+          "text": "You don't have permission to access this page. This area is restricted to authorized personnel only.",
+          "w": 416,
+          "weight": "400",
+          "x": 432,
+          "y": 395
+        },
+        {
+          "font": "16px",
+          "h": 20,
+          "tag": "A",
+          "text": "Go to Overview",
+          "w": 416,
+          "weight": "400",
+          "x": 432,
+          "y": 487
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "Go to Overview",
+          "w": 416,
+          "weight": "500",
+          "x": 432,
+          "y": 475
+        },
+        {
+          "font": "16px",
+          "h": 20,
+          "tag": "A",
+          "text": "Go to Home",
+          "w": 416,
+          "weight": "400",
+          "x": 432,
+          "y": 531
+        },
+        {
+          "font": "16px",
+          "h": 44,
+          "tag": "BUTTON",
+          "text": "Go to Home",
+          "w": 416,
+          "weight": "500",
+          "x": 432,
+          "y": 519
+        },
+        {
+          "font": "14px",
+          "h": 42,
+          "tag": "P",
+          "text": "If you believe you should have access to this page, please contact your administrator.",
+          "w": 416,
+          "weight": "400",
+          "x": 432,
+          "y": 595
+        }
+      ],
+      "largeFirstViewport": [
+        {
+          "cls": "",
+          "h": 800,
+          "tag": "DIV",
+          "text": "403You do not have access to this pageYou don't have permission to access this p",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "w-full min-h-screen",
+          "h": 800,
+          "tag": "DIV",
+          "text": "403You do not have access to this pageYou don't have permission to access this p",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "cls": "min-h-screen flex items-center justify-center bg-japandi-bg",
+          "h": 800,
+          "tag": "DIV",
+          "text": "403You do not have access to this pageYou don't have permission to access this p",
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 1280,
+      "statusText": "ok",
+      "tinyButtons": [
+        {
+          "h": 1,
+          "text": "Skip to main content",
+          "w": 1,
+          "x": -1,
+          "y": -1
+        },
+        {
+          "h": 20,
+          "text": "Go to Overview",
+          "w": 416,
+          "x": 432,
+          "y": 487
+        },
+        {
+          "h": 20,
+          "text": "Go to Home",
+          "w": 416,
+          "x": 432,
+          "y": 531
+        }
+      ],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/403",
+      "viewport": {
+        "height": 800,
+        "width": 1280
+      }
+    },
+    {
+      "label": "not-foundish",
+      "route": "/this-route-should-not-exist-visual-check",
+      "clientWidth": 1280,
+      "firstViewportItems": [
+        {
+          "font": "36px",
+          "h": 40,
+          "tag": "H1",
+          "text": "Not found",
+          "w": 478,
+          "weight": "700",
+          "x": 401,
+          "y": 315
+        },
+        {
+          "font": "16px",
+          "h": 26,
+          "tag": "P",
+          "text": "This page is outside the locked launch MVP corridor.",
+          "w": 478,
+          "weight": "400",
+          "x": 401,
+          "y": 367
+        },
+        {
+          "font": "16px",
+          "h": 77,
+          "tag": "P",
+          "text": "Archived Page: /this-route-should-not-exist-visual-check is outside the locked launch MVP corridor and is not reachable ",
+          "w": 478,
+          "weight": "600",
+          "x": 401,
+          "y": 408
+        }
+      ],
+      "largeFirstViewport": [],
+      "offenders": [],
+      "overflow": false,
+      "scrollWidth": 1280,
+      "statusText": "ok",
+      "tinyButtons": [],
+      "title": "Not found | Proofound",
+      "url": "http://localhost:33100/this-route-should-not-exist-visual-check",
+      "viewport": {
+        "height": 800,
+        "width": 1280
+      }
+    }
+  ]
+}

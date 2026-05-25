@@ -9,6 +9,7 @@ import { VerificationStatus } from './VerificationStatus';
 import { EmailManager } from './EmailManager';
 import { PasswordChangeForm } from './PasswordChangeForm';
 import { resetTour } from '@/actions/tour';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { RotateCcw, Loader2, Calendar, Shield } from 'lucide-react';
@@ -40,7 +41,7 @@ export function SettingsContent({ userId }: SettingsContentProps) {
           setUserEmail(data.email);
         }
       } catch (error) {
-        console.error('Failed to fetch user email:', error);
+        dispatchClientErrorDiagnostic('settings.user_email.fetch_failed', error);
       } finally {
         setIsLoadingEmail(false);
       }
@@ -71,12 +72,14 @@ export function SettingsContent({ userId }: SettingsContentProps) {
         }, 1000);
       } else {
         const errorMessage = result.error || 'Failed to reset tour. Please try again.';
-        console.error('Tour reset error:', errorMessage);
+        dispatchClientDiagnostic('settings.tour_reset_failed', {
+          error: errorMessage,
+        });
         toast.error(errorMessage);
         setIsResettingTour(false);
       }
     } catch (error) {
-      console.error('Failed to reset tour:', error);
+      dispatchClientErrorDiagnostic('settings.tour_reset_unexpected_failed', error);
       const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
       toast.error('Failed to reset tour', {
         description: errorMessage,
@@ -87,7 +90,7 @@ export function SettingsContent({ userId }: SettingsContentProps) {
 
   return (
     <AppSurface>
-      <div className="max-w-4xl mx-auto">
+      <div className="mx-auto w-full max-w-full min-w-0 md:max-w-4xl">
         <div className="mb-8">
           <h1 className="text-4xl font-['Crimson_Pro'] font-semibold text-proofound-forest dark:text-primary mb-2">
             Settings
@@ -98,11 +101,29 @@ export function SettingsContent({ userId }: SettingsContentProps) {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="bg-white dark:bg-card border border-proofound-stone dark:border-border">
-            <TabsTrigger value="account">Account</TabsTrigger>
-            <TabsTrigger value="interviews">Interview Scheduling</TabsTrigger>
-            <TabsTrigger value="privacy">Privacy & Data</TabsTrigger>
-          </TabsList>
+          <div className="-mx-1 overflow-x-auto px-1 pb-1 sm:mx-0 sm:overflow-visible sm:px-0">
+            <TabsList className="h-auto min-h-[3.25rem] min-w-max gap-1 bg-white p-1 dark:bg-card border border-proofound-stone dark:border-border">
+              <TabsTrigger value="account" className="min-h-11 px-4 py-2.5">
+                Account
+              </TabsTrigger>
+              <TabsTrigger
+                value="interviews"
+                aria-label="Interview Scheduling"
+                className="min-h-11 px-4 py-2.5"
+              >
+                <span className="sm:hidden">Interviews</span>
+                <span className="hidden sm:inline">Interview Scheduling</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="privacy"
+                aria-label="Privacy & Data"
+                className="min-h-11 px-4 py-2.5"
+              >
+                <span className="sm:hidden">Privacy</span>
+                <span className="hidden sm:inline">Privacy & Data</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* Account Tab */}
           <TabsContent value="account" className="space-y-6">
@@ -128,7 +149,12 @@ export function SettingsContent({ userId }: SettingsContentProps) {
                       fetch('/api/user/email')
                         .then((res) => res.json())
                         .then((data) => setUserEmail(data.email))
-                        .catch(console.error);
+                        .catch((error) => {
+                          dispatchClientErrorDiagnostic(
+                            'settings.user_email.refresh_failed',
+                            error
+                          );
+                        });
                     }}
                   />
                 )}
@@ -141,7 +167,7 @@ export function SettingsContent({ userId }: SettingsContentProps) {
                   Identity Verification
                 </CardTitle>
                 <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
-                  Add identity and workplace trust signals with precise badge meanings
+                  Manage identity and workplace account checks with precise badge meanings
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -189,13 +215,13 @@ export function SettingsContent({ userId }: SettingsContentProps) {
                   Help & Support
                 </CardTitle>
                 <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
-                  Get help and learn about platform features
+                  Get help and learn about key Proofound features
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
                   <p className="text-sm font-medium text-proofound-charcoal dark:text-foreground mb-2">
-                    Platform Tour
+                    Product tour
                   </p>
                   <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground mb-3">
                     Want a refresher? Restart the guided tour to learn about key features again.
@@ -229,7 +255,7 @@ export function SettingsContent({ userId }: SettingsContentProps) {
               <CardContent className="space-y-6">
                 <div className="rounded-2xl border border-proofound-stone dark:border-border bg-muted/20 p-5">
                   <div className="flex items-start gap-3">
-                    <Calendar className="mt-0.5 h-5 w-5 text-proofound-forest" />
+                    <Calendar className="mt-0.5 h-5 w-5 shrink-0 text-proofound-forest" />
                     <div className="space-y-2">
                       <p className="font-medium text-foreground">
                         Manual meeting links are the launch default
@@ -244,7 +270,7 @@ export function SettingsContent({ userId }: SettingsContentProps) {
                 </div>
                 <div className="rounded-2xl border border-proofound-stone dark:border-border bg-proofound-success-tint/30 p-5">
                   <div className="flex items-start gap-3">
-                    <Shield className="mt-0.5 h-5 w-5 text-proofound-forest" />
+                    <Shield className="mt-0.5 h-5 w-5 shrink-0 text-proofound-forest" />
                     <div className="space-y-2">
                       <p className="font-medium text-foreground">Why this changed</p>
                       <p className="text-sm text-muted-foreground">

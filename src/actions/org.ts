@@ -7,6 +7,7 @@ import { isActiveMembershipState, normalizeAuthorizedOrgRole } from '@/lib/authz
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { sendOrgInviteEmail } from '@/lib/email';
+import { log } from '@/lib/log';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { revalidatePublicOrganizationPortfolioSlug } from '@/lib/portfolio/public-invalidation';
@@ -33,6 +34,11 @@ const inviteMemberSchema = z.object({
 });
 const INVITE_EMAIL_TIMEOUT_MS = 5000;
 const PROOFOUND_SYNTHETIC_TEST_EMAIL_DOMAIN = '@test.proofound.com';
+
+export type InviteMemberFormState = {
+  status: 'idle' | 'success' | 'error';
+  message: string | null;
+};
 
 function isProofoundSyntheticTestEmail(email: string) {
   return email.trim().toLowerCase().endsWith(PROOFOUND_SYNTHETIC_TEST_EMAIL_DOMAIN);
@@ -78,9 +84,10 @@ function buildOrgAuditMeta(params: {
 
 /** @deprecated Use PUT /api/organizations/[orgId] via apiFetch. */
 export async function updateOrganization(orgId: string, formData: FormData) {
-  console.warn(
-    'Deprecated: updateOrganization server action is legacy. Use PUT /api/organizations/[orgId] via apiFetch instead.'
-  );
+  log.warn('organization.action.update.deprecated', {
+    orgId,
+    replacement: 'PUT /api/organizations/[orgId]',
+  });
   const user = await requireAuth();
   const membership = await getOrgMembershipForUser(orgId, user.id);
   const orgRole = membership.role;
@@ -140,7 +147,10 @@ export async function updateOrganization(orgId: string, formData: FormData) {
       .eq('id', orgId);
 
     if (updateResult.error) {
-      console.error('Failed to update organization:', updateResult.error);
+      log.error('organization.action.update_failed', {
+        orgId,
+        error: updateResult.error,
+      });
       return { error: 'Failed to update organization' };
     }
 
@@ -151,7 +161,10 @@ export async function updateOrganization(orgId: string, formData: FormData) {
       .maybeSingle();
 
     if (orgQuery.error || !orgQuery.data) {
-      console.error('Failed to load organization after update:', orgQuery.error);
+      log.error('organization.action.reload_after_update_failed', {
+        orgId,
+        error: orgQuery.error,
+      });
       return { error: 'Failed to update organization' };
     }
 
@@ -173,7 +186,7 @@ export async function updateOrganization(orgId: string, formData: FormData) {
     revalidatePublicOrganizationPortfolioSlug(orgQuery.data.slug);
     return { success: true };
   } catch (error) {
-    console.error('Unexpected organization update error:', error);
+    log.error('organization.action.update_unexpected_failed', { orgId, error });
     return { error: 'Failed to update organization' };
   }
 }
@@ -211,7 +224,10 @@ export async function inviteMember(orgId: string, formData: FormData) {
       .maybeSingle();
 
     if (existingInviteQuery.error) {
-      console.error('Failed to check existing invitation:', existingInviteQuery.error);
+      log.error('organization.invite.existing_check_failed', {
+        orgId,
+        error: existingInviteQuery.error,
+      });
       return { error: 'Failed to send invitation' };
     }
 
@@ -256,7 +272,12 @@ export async function inviteMember(orgId: string, formData: FormData) {
     });
 
     if (invitationInsert.error) {
-      console.error('Failed to create invitation:', invitationInsert.error);
+      log.error('organization.invite.create_failed', {
+        orgId,
+        invitationId,
+        role: result.data.role,
+        error: invitationInsert.error,
+      });
       return { error: 'Failed to send invitation' };
     }
     const orgQuery = await supabase
@@ -266,7 +287,11 @@ export async function inviteMember(orgId: string, formData: FormData) {
       .maybeSingle();
 
     if (orgQuery.error || !orgQuery.data) {
-      console.error('Failed to load organization for invite:', orgQuery.error);
+      log.error('organization.invite.organization_load_failed', {
+        orgId,
+        invitationId,
+        error: orgQuery.error,
+      });
       return { error: 'Failed to send invitation' };
     }
     let warning: string | undefined;
@@ -289,7 +314,12 @@ export async function inviteMember(orgId: string, formData: FormData) {
           }),
         ]);
       } catch (error) {
-        console.error('Org invite email delivery could not be confirmed:', error);
+        log.warn('organization.invite.email_delivery_unconfirmed', {
+          orgId,
+          invitationId,
+          role: result.data.role,
+          error,
+        });
         warning =
           'Invitation saved, but email delivery could not be confirmed. Ask the collaborator to use the latest invite link before expecting access.';
       }
@@ -313,9 +343,31 @@ export async function inviteMember(orgId: string, formData: FormData) {
     revalidatePath(`/app/o/${orgQuery.data.slug}/members`);
     return warning ? { success: true, warning } : { success: true };
   } catch (error) {
-    console.error('Unexpected invite member error:', error);
+    log.error('organization.invite.unexpected_failed', { orgId, error });
     return { error: 'Failed to send invitation' };
   }
+}
+
+export async function inviteMemberFormAction(
+  orgId: string,
+  _state: InviteMemberFormState,
+  formData: FormData
+): Promise<InviteMemberFormState> {
+  const result = await inviteMember(orgId, formData);
+
+  if (result.error) {
+    return {
+      status: 'error',
+      message: result.error,
+    };
+  }
+
+  return {
+    status: 'success',
+    message:
+      result.warning ??
+      'Invitation sent. The collaborator must accept their tokenized email invite before access is granted.',
+  };
 }
 
 export async function acceptInvitation(token: string) {
@@ -387,7 +439,11 @@ export async function acceptInvitation(token: string) {
     let membershipId = invitation.membership_id as string | null;
     const invitationRole = normalizeAuthorizedOrgRole(invitation.role);
     if (!invitationRole) {
-      console.error('Invitation contains non-canonical role:', invitation.role);
+      log.error('organization.invitation_accept.non_canonical_role', {
+        invitationId: invitation.id,
+        orgId: invitation.org_id,
+        role: invitation.role,
+      });
       return { error: 'Invitation role is invalid' };
     }
 
@@ -408,7 +464,12 @@ export async function acceptInvitation(token: string) {
         .eq('org_id', invitation.org_id);
 
       if (membershipUpdate.error) {
-        console.error('Failed to activate invited membership:', membershipUpdate.error);
+        log.error('organization.invitation_accept.membership_activate_failed', {
+          invitationId: invitation.id,
+          orgId: invitation.org_id,
+          membershipId,
+          error: membershipUpdate.error,
+        });
         return { error: 'Failed to accept invitation' };
       }
     } else {
@@ -427,7 +488,11 @@ export async function acceptInvitation(token: string) {
         if (memberInsert.error?.code === '23505') {
           return { error: 'You are already a member of this organization' };
         }
-        console.error('Failed to add member:', memberInsert.error);
+        log.error('organization.invitation_accept.member_insert_failed', {
+          invitationId: invitation.id,
+          orgId: invitation.org_id,
+          error: memberInsert.error,
+        });
         return { error: 'Failed to accept invitation' };
       }
 
@@ -446,7 +511,12 @@ export async function acceptInvitation(token: string) {
       .eq('id', invitation.id);
 
     if (inviteUpdate.error) {
-      console.error('Failed to update invitation status:', inviteUpdate.error);
+      log.error('organization.invitation_accept.status_update_failed', {
+        invitationId: invitation.id,
+        orgId: invitation.org_id,
+        membershipId,
+        error: inviteUpdate.error,
+      });
       return { error: 'Failed to accept invitation' };
     }
 
@@ -469,7 +539,7 @@ export async function acceptInvitation(token: string) {
     revalidatePath(`/app/o/${orgQuery.data.slug}`);
     return { success: true, orgSlug: orgQuery.data.slug };
   } catch (error: any) {
-    console.error('Unexpected invitation acceptance error:', error);
+    log.error('organization.invitation_accept.unexpected_failed', { error });
     return { error: 'Failed to accept invitation' };
   }
 }
@@ -496,7 +566,11 @@ export async function removeMember(orgId: string, userId: string) {
       .eq('user_id', userId);
 
     if (removal.error) {
-      console.error('Failed to remove member:', removal.error);
+      log.error('organization.member.remove_failed', {
+        orgId,
+        targetUserId: userId,
+        error: removal.error,
+      });
       return { error: 'Failed to remove member' };
     }
 
@@ -525,7 +599,11 @@ export async function removeMember(orgId: string, userId: string) {
     }
     return { success: true };
   } catch (error) {
-    console.error('Unexpected remove member error:', error);
+    log.error('organization.member.remove_unexpected_failed', {
+      orgId,
+      targetUserId: userId,
+      error,
+    });
     return { error: 'Failed to remove member' };
   }
 }
@@ -546,7 +624,11 @@ export async function initiateOwnershipTransfer(orgId: string, targetUserId: str
     .in('user_id', [user.id, targetUserId]);
 
   if (error) {
-    console.error('Failed to load memberships for ownership transfer:', error);
+    log.error('organization.ownership_transfer.memberships_load_failed', {
+      orgId,
+      targetUserId,
+      error,
+    });
     return { error: 'Failed to initiate ownership transfer' };
   }
 
@@ -579,7 +661,12 @@ export async function initiateOwnershipTransfer(orgId: string, targetUserId: str
     .eq('id', targetMembership.id);
 
   if (transferUpdate.error) {
-    console.error('Failed to update target ownership transfer record:', transferUpdate.error);
+    log.error('organization.ownership_transfer.initiate_update_failed', {
+      orgId,
+      targetUserId,
+      targetMembershipId: targetMembership.id,
+      error: transferUpdate.error,
+    });
     return { error: 'Failed to initiate ownership transfer' };
   }
 
@@ -618,7 +705,11 @@ export async function acceptOwnershipTransfer(orgId: string) {
     .maybeSingle();
 
   if (error || !targetMembership) {
-    console.error('Failed to load target ownership transfer membership:', error);
+    log.error('organization.ownership_transfer.target_load_failed', {
+      orgId,
+      userId: user.id,
+      error,
+    });
     return { error: 'Failed to accept ownership transfer' };
   }
 
@@ -646,7 +737,11 @@ export async function acceptOwnershipTransfer(orgId: string) {
     .eq('org_id', orgId);
 
   if (demotePrevious.error) {
-    console.error('Failed to demote previous owner:', demotePrevious.error);
+    log.error('organization.ownership_transfer.previous_owner_demote_failed', {
+      orgId,
+      previousMembershipId,
+      error: demotePrevious.error,
+    });
     return { error: 'Failed to accept ownership transfer' };
   }
 
@@ -663,7 +758,11 @@ export async function acceptOwnershipTransfer(orgId: string) {
     .eq('org_id', orgId);
 
   if (activateTarget.error) {
-    console.error('Failed to activate new owner membership:', activateTarget.error);
+    log.error('organization.ownership_transfer.target_activate_failed', {
+      orgId,
+      targetMembershipId: targetMembership.id,
+      error: activateTarget.error,
+    });
     return { error: 'Failed to accept ownership transfer' };
   }
 

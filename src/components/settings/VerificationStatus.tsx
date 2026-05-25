@@ -89,7 +89,7 @@ function getLinkedInStatusText(status: VerificationStatusData) {
     return {
       label: 'Check in progress',
       helper:
-        'Proofound is checking LinkedIn for official account-side signals. This does not create public trust, org review lift, or intro eligibility by itself.',
+        'Proofound is checking LinkedIn for account history only. This does not create public trust, org review lift, or intro eligibility by itself.',
       tone: 'warning' as SignalTone,
     };
   }
@@ -97,8 +97,7 @@ function getLinkedInStatusText(status: VerificationStatusData) {
   if (status.channels.linkedin.signalLevel === 'identity') {
     return {
       label: 'Identity signal detected',
-      helper:
-        'LinkedIn returned an identity signal. It remains an account-side compatibility signal only.',
+      helper: 'LinkedIn returned an identity signal. It stays account-side only.',
       tone: 'positive' as SignalTone,
     };
   }
@@ -106,8 +105,7 @@ function getLinkedInStatusText(status: VerificationStatusData) {
   if (status.channels.linkedin.signalLevel === 'workplace') {
     return {
       label: 'Workplace signal detected',
-      helper:
-        'LinkedIn workplace verification was detected. It supports account-side compatibility only.',
+      helper: 'LinkedIn workplace verification was detected. It stays account-side only.',
       tone: 'positive' as SignalTone,
     };
   }
@@ -116,8 +114,7 @@ function getLinkedInStatusText(status: VerificationStatusData) {
     if (status.channels.linkedin.hasIdentitySignal) {
       return {
         label: 'Identity signal detected',
-        helper:
-          'LinkedIn returned an identity signal. It remains an account-side compatibility signal only.',
+        helper: 'LinkedIn returned an identity signal. It stays account-side only.',
         tone: 'positive' as SignalTone,
       };
     }
@@ -134,7 +131,7 @@ function getLinkedInStatusText(status: VerificationStatusData) {
     return {
       label: 'Check failed',
       helper:
-        'A legacy LinkedIn check did not complete before this surface was archived from the launch corridor.',
+        'An older LinkedIn check did not complete before LinkedIn checks were removed from the launch corridor.',
       tone: 'negative' as SignalTone,
     };
   }
@@ -142,7 +139,7 @@ function getLinkedInStatusText(status: VerificationStatusData) {
   return {
     label: 'Archived for launch',
     helper:
-      'LinkedIn compatibility checks are outside the launch corridor. Any earlier LinkedIn signal remains read-only and never creates proof trust.',
+      'LinkedIn checks are outside the launch corridor. Any earlier LinkedIn signal remains read-only and never creates proof trust.',
     tone: 'neutral' as SignalTone,
   };
 }
@@ -154,7 +151,7 @@ function getWorkEmailStatusText(status: VerificationStatusData) {
     return {
       label: 'Check your inbox',
       helper:
-        'A work email link is waiting for confirmation. This keeps an account-side compatibility signal current and can help with organization linking.',
+        'A work email link is waiting for confirmation. This keeps an account-side organization link current.',
       tone: 'warning' as SignalTone,
     };
   }
@@ -163,7 +160,7 @@ function getWorkEmailStatusText(status: VerificationStatusData) {
     return {
       label: 'Needs recheck',
       helper:
-        'Reconfirm this work email to keep the account-side compatibility signal current. It still does not create public trust on its own.',
+        'Reconfirm this work email to keep the account-side organization link current. It still does not create public trust on its own.',
       tone: 'warning' as SignalTone,
     };
   }
@@ -172,7 +169,7 @@ function getWorkEmailStatusText(status: VerificationStatusData) {
     return {
       label: 'Confirmed',
       helper:
-        'This account has a workplace-linked compatibility signal. It can help with organization linking, but not with public trust or intro eligibility by itself.',
+        'This account has a confirmed workplace email. It can help with organization linking, but not with public trust or intro eligibility by itself.',
       tone: 'positive' as SignalTone,
     };
   }
@@ -186,7 +183,7 @@ function getWorkEmailStatusText(status: VerificationStatusData) {
     return {
       label: 'Needs attention',
       helper:
-        'This work email signal is not current. Retry only if you still need account-side compatibility or organization-linking support.',
+        'This work email is not current. Retry only if you still need organization-linking support.',
       tone: 'negative' as SignalTone,
     };
   }
@@ -194,7 +191,7 @@ function getWorkEmailStatusText(status: VerificationStatusData) {
   return {
     label: 'Not added',
     helper:
-      'Add a work email only if you want account-side compatibility and organization-linking support. It does not create public trust on its own.',
+      'Add a work email only if you want organization-linking support. It does not create public trust on its own.',
     tone: 'neutral' as SignalTone,
   };
 }
@@ -215,7 +212,7 @@ function LinkedInStatusPanel({ status }: { status: VerificationStatusData }) {
       <div className="flex items-start gap-3">
         <Linkedin className="mt-0.5 h-5 w-5 text-[#0A66C2]" />
         <div className="space-y-1">
-          <p className="text-sm font-medium">LinkedIn compatibility signal</p>
+          <p className="text-sm font-medium">LinkedIn account check</p>
           <p className="text-sm">{linkedInStatus.label}</p>
           <p className="text-xs text-muted-foreground">{linkedInStatus.helper}</p>
           {status.channels.linkedin.verifiedAt && (
@@ -245,7 +242,7 @@ function WorkEmailStatusPanel({ status }: { status: VerificationStatusData }) {
       <div className="flex items-start gap-3">
         <Mail className="mt-0.5 h-5 w-5 text-proofound-terracotta" />
         <div className="space-y-1">
-          <p className="text-sm font-medium">Work email compatibility signal</p>
+          <p className="text-sm font-medium">Work email account check</p>
           <p className="text-sm">{workEmailStatus.label}</p>
           <p className="text-xs text-muted-foreground">{workEmailStatus.helper}</p>
           {status.channels.workEmail.email && (
@@ -301,8 +298,7 @@ function AccountSignalAlerts({ status }: { status: VerificationStatusData }) {
         <Alert>
           <Loader2 className="h-4 w-4 animate-spin" />
           <AlertDescription>
-            An account-side compatibility check is in progress. It will not create proof trust by
-            itself.
+            An account-side check is in progress. It will not create proof trust by itself.
           </AlertDescription>
         </Alert>
       )}
@@ -310,8 +306,8 @@ function AccountSignalAlerts({ status }: { status: VerificationStatusData }) {
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            The LinkedIn compatibility check failed. Retry only if you still want that account-side
-            signal.
+            An older LinkedIn account-history check failed before LinkedIn checks were removed from
+            the launch corridor.
           </AlertDescription>
         </Alert>
       )}
@@ -347,20 +343,20 @@ function AccountSignalActions({
         className="border-2 transition-colors hover:border-proofound-terracotta/30"
       >
         <CardContent className="p-6">
-          <div className="flex items-start gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
             <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-proofound-terracotta/10">
               <Mail className="h-6 w-6 text-proofound-terracotta" />
             </div>
-            <div className="flex-1">
+            <div className="min-w-0 flex-1">
               <h4 className="font-semibold">Work email</h4>
               <p className="mb-4 mt-1 text-sm text-muted-foreground">
-                Keep a workplace-linked account signal current for compatibility and organization
-                linking. This is optional and never a public trust badge.
+                Keep a workplace-linked account check current for organization linking. This is
+                optional and never a public trust badge.
               </p>
               <Button
                 onClick={onWorkEmail}
                 variant="outline"
-                className="border-proofound-terracotta text-proofound-terracotta hover:bg-proofound-terracotta/10"
+                className="w-full border-proofound-terracotta text-proofound-terracotta hover:bg-proofound-terracotta/10 sm:w-auto"
               >
                 {workEmailConfirmed ? 'Recheck work email' : 'Add work email'}
               </Button>
@@ -392,11 +388,11 @@ function VerificationOverview({
         body="Proof-backed trust belongs on specific Proof Packs and claim snapshots. Use the verification requests area to see which proof, claim, verifier, and outcome each request is tied to."
       >
         <div className="space-y-4">
-          <div className="flex flex-wrap gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:flex sm:flex-wrap">
             <Button
               variant="outline"
               onClick={() => window.location.assign('/app/i/verifications')}
-              className="border-proofound-forest text-proofound-forest hover:bg-proofound-forest/5"
+              className="w-full border-proofound-forest text-proofound-forest hover:bg-proofound-forest/5 sm:w-auto"
             >
               Open proof verification requests
             </Button>
@@ -445,24 +441,24 @@ function VerificationOverview({
       </VerificationGroupCard>
 
       <VerificationGroupCard
-        eyebrow="Intro-readiness trust anchors"
+        eyebrow="Intro-readiness verification"
         title="Optional for portfolio-ready, harder for intros"
-        body="Skipping verification is fine while getting portfolio-ready. It can still block intro-eligible status and some gated intros until you have at least one non-self trust anchor attached to real proof."
+        body="Skipping verification is fine while getting portfolio-ready. It can still block intro-eligible status and some gated intros until you have at least one non-self verification attached to real proof."
       >
         <Alert>
           <CheckCircle2 className="h-4 w-4" />
           <AlertDescription>
             {hasTrustAnchor
-              ? 'You already have at least one trust anchor on the account. Keep future requests scoped to proof and claim.'
-              : 'No non-self trust anchor is active yet. That is okay for portfolio-ready, but it can still hold back intro-readiness.'}
+              ? 'You already have at least one non-self verification on the account. Keep future requests scoped to proof and claim.'
+              : 'No non-self verification is active yet. That is okay for portfolio-ready, but it can still hold back intro-readiness.'}
           </AlertDescription>
         </Alert>
       </VerificationGroupCard>
 
       <VerificationGroupCard
-        eyebrow="Account compatibility signals"
+        eyebrow="Account-side checks"
         title="Keep account-side checks narrow and honest"
-        body="Work email remains the only launch-active account-side compatibility signal here. Any LinkedIn state is read-only legacy history and never counts as proof trust or public reputation."
+        body="Work email is the only launch-active account-side check here. Any LinkedIn state is read-only history and never counts as proof trust or public reputation."
       >
         <div className="space-y-4">
           <AccountSignalAlerts status={status} />

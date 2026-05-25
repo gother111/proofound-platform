@@ -111,10 +111,23 @@ export function isProductionDeployRuntime(env: EnvSource = process.env): boolean
   const vercelEnv = env.VERCEL_ENV?.trim().toLowerCase();
   const appEnv = (env.NEXT_PUBLIC_APP_ENV || env.APP_ENV)?.trim().toLowerCase();
 
-  return nodeEnv === 'production' || vercelEnv === 'production' || appEnv === 'production';
+  return (
+    nodeEnv === 'production' ||
+    vercelEnv === 'production' ||
+    vercelEnv === 'preview' ||
+    appEnv === 'production' ||
+    appEnv === 'staging'
+  );
+}
+
+export function visualFixturesRuntimeAllowed(env: EnvSource = process.env): boolean {
+  return !isProductionDeployRuntime(env);
 }
 
 export function isMockSupabaseEnabled(env: EnvSource = process.env): boolean {
+  if (typeof window !== 'undefined') {
+    return isEnabledFlag(process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE);
+  }
   return isEnabledFlag(env.NEXT_PUBLIC_USE_MOCK_SUPABASE);
 }
 
@@ -263,6 +276,31 @@ export function getEnv(
 export function resolveSiteUrlFromHeaders(
   h: Headers | Record<string, string | string[] | undefined>
 ): string {
+  const localOrigin = normalizeSiteUrl(getHeaderValue(h, 'origin'), { allowPreviewHosts: true });
+  if (localOrigin && isLocalUrl(localOrigin)) {
+    return stripTrailingSlash(localOrigin);
+  }
+
+  const localForwardedHost = getHeaderValue(h, 'x-forwarded-host');
+  if (localForwardedHost) {
+    const forwardedProto = getHeaderValue(h, 'x-forwarded-proto') || 'https';
+    const forwardedUrl = normalizeSiteUrl(`${forwardedProto}://${localForwardedHost}`, {
+      allowPreviewHosts: true,
+    });
+    if (forwardedUrl && isLocalUrl(forwardedUrl)) {
+      return stripTrailingSlash(forwardedUrl);
+    }
+  }
+
+  const localHost = getHeaderValue(h, 'host');
+  if (localHost) {
+    const proto = resolveProtocol(localHost, getHeaderValue(h, 'x-forwarded-proto'));
+    const hostUrl = normalizeSiteUrl(`${proto}://${localHost}`, { allowPreviewHosts: true });
+    if (hostUrl && isLocalUrl(hostUrl)) {
+      return stripTrailingSlash(hostUrl);
+    }
+  }
+
   const { SITE_URL: configuredSiteUrl } = aggregateEnv();
   if (configuredSiteUrl) {
     return stripTrailingSlash(configuredSiteUrl);
@@ -330,4 +368,12 @@ export function resolveCanonicalSiteUrl(): string {
   }
 
   return '';
+}
+
+function isLocalUrl(value: string): boolean {
+  try {
+    return isLocalHostname(new URL(value).hostname);
+  } catch {
+    return false;
+  }
 }

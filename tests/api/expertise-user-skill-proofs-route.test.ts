@@ -1,13 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
-import { POST } from '@/app/api/expertise/user-skills/[id]/proofs/route';
+import { GET, POST } from '@/app/api/expertise/user-skills/[id]/proofs/route';
 import { requireApiAuthContext } from '@/lib/auth';
 import { emitSkillProofAddedAsync } from '@/lib/analytics/events';
 import { upsertCanonicalSkillProof } from '@/lib/canonical/repository';
 import { revalidatePublicPortfolioByProfileId } from '@/lib/portfolio/public-invalidation';
 import { attachUploadedFile } from '@/lib/uploads/lifecycle';
 import { listCanonicalSkillProofRowsForOwnerSkill } from '@/lib/proofs/canonical-pack';
+import { log } from '@/lib/log';
 
 vi.mock('@/lib/auth', () => ({
   requireApiAuthContext: vi.fn(),
@@ -31,6 +32,12 @@ vi.mock('@/lib/canonical/repository', () => ({
 
 vi.mock('@/lib/proofs/canonical-pack', () => ({
   listCanonicalSkillProofRowsForOwnerSkill: vi.fn(),
+}));
+
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+  },
 }));
 
 function createSupabaseMock({ anchorExists = true }: { anchorExists?: boolean } = {}) {
@@ -108,6 +115,22 @@ describe('expertise user-skill proofs route', () => {
 
     expect(response.status).toBe(400);
     expect(payload.error).toBe('Validation failed');
+    expect(vi.mocked(upsertCanonicalSkillProof)).not.toHaveBeenCalled();
+  });
+
+  it('rejects malformed JSON before skill params, anchor checks, or proof creation', async () => {
+    const request = new NextRequest('http://localhost/api/expertise/user-skills/skill-1/proofs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{"proofType":',
+    });
+
+    const response = await POST(request, { params: Promise.resolve({ id: 'skill-1' }) });
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload).toEqual({ error: 'Invalid JSON body' });
+    expect((authContext.supabase as any).from).not.toHaveBeenCalled();
     expect(vi.mocked(upsertCanonicalSkillProof)).not.toHaveBeenCalled();
   });
 
@@ -213,9 +236,9 @@ describe('expertise user-skill proofs route', () => {
     expect(payload?.metadata).not.toHaveProperty('importedFrom');
   });
 
-  it('returns a mock proof in local mock Supabase mode without touching canonical storage', async () => {
+  it('keeps local mock Supabase mode on the canonical anchored proof path', async () => {
     process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE = 'true';
-    authContext.supabase = createSupabaseMock({ anchorExists: false });
+    authContext.supabase = createSupabaseMock();
 
     const request = new NextRequest('http://localhost/api/expertise/user-skills/skill-1/proofs', {
       method: 'POST',
@@ -235,10 +258,19 @@ describe('expertise user-skill proofs route', () => {
     const payload = await response.json();
 
     expect(response.status).toBe(201);
-    expect(payload.proof.canonicalPackId).toBe('mock-pack-skill-1');
-    expect(payload.proof.title).toBe('Mock proof');
-    expect(vi.mocked(upsertCanonicalSkillProof)).not.toHaveBeenCalled();
-    expect(revalidatePublicPortfolioByProfileId).not.toHaveBeenCalled();
+    expect(payload.proof.canonicalPackId).toBe('pack-1');
+    expect(vi.mocked(upsertCanonicalSkillProof)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        skillId: 'skill-1',
+        profileId: 'user-1',
+        title: 'Mock proof',
+        primaryAnchor: {
+          type: 'experience',
+          id: '11111111-1111-4111-8111-111111111111',
+        },
+      })
+    );
+    expect(revalidatePublicPortfolioByProfileId).toHaveBeenCalledWith('user-1');
   });
 
   it('uses a neutral fallback title for uploaded files and surfaces privacy-review holds', async () => {
@@ -293,5 +325,76 @@ describe('expertise user-skill proofs route', () => {
 
     expect(heldResponse.status).toBe(409);
     expect(heldPayload.message).toContain('privacy review');
+  });
+
+  it('logs canonical proof creation failures with structured diagnostics', async () => {
+    const proofError = new Error('canonical proof unavailable');
+    vi.mocked(upsertCanonicalSkillProof).mockRejectedValueOnce(proofError);
+
+    const request = new NextRequest('http://localhost/api/expertise/user-skills/skill-1/proofs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        proofType: 'link',
+        url: 'https://example.com/project-alpha',
+        primaryAnchor: {
+          type: 'experience',
+          id: '11111111-1111-4111-8111-111111111111',
+        },
+      }),
+    });
+
+    const response = await POST(request, { params: Promise.resolve({ id: 'skill-1' }) });
+    const payload = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(payload).toEqual({ error: 'Failed to create proof' });
+    expect(log.error).toHaveBeenCalledWith('expertise.user_skill_proofs.canonical_create_failed', {
+      error: proofError,
+    });
+  });
+
+  it('logs route-level proof creation failures with structured diagnostics', async () => {
+    const routeError = new Error('auth context unavailable');
+    vi.mocked(requireApiAuthContext).mockRejectedValueOnce(routeError);
+
+    const request = new NextRequest('http://localhost/api/expertise/user-skills/skill-1/proofs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        proofType: 'link',
+        url: 'https://example.com/project-alpha',
+        primaryAnchor: {
+          type: 'experience',
+          id: '11111111-1111-4111-8111-111111111111',
+        },
+      }),
+    });
+
+    const response = await POST(request, { params: Promise.resolve({ id: 'skill-1' }) });
+    const payload = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(payload).toEqual({ error: 'Internal server error' });
+    expect(log.error).toHaveBeenCalledWith('expertise.user_skill_proofs.post_failed', {
+      error: routeError,
+    });
+  });
+
+  it('logs route-level proof list failures with structured diagnostics', async () => {
+    const routeError = new Error('auth context unavailable');
+    vi.mocked(requireApiAuthContext).mockRejectedValueOnce(routeError);
+
+    const response = await GET(
+      new NextRequest('http://localhost/api/expertise/user-skills/skill-1/proofs'),
+      { params: Promise.resolve({ id: 'skill-1' }) }
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(payload).toEqual({ error: 'Internal server error' });
+    expect(log.error).toHaveBeenCalledWith('expertise.user_skill_proofs.get_failed', {
+      error: routeError,
+    });
   });
 });

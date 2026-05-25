@@ -104,6 +104,47 @@ const actionableQueuePayload = {
   ),
 };
 
+const pilotWorkflowPayload = {
+  queues: [
+    {
+      id: 'pilot_ops',
+      label: 'Pilot ops',
+      description: 'Pilot follow-through.',
+      openCount: 1,
+      items: [
+        {
+          id: '55555555-5555-4555-8555-555555555555',
+          queueType: 'pilot_ops',
+          status: 'open',
+          priority: 'high',
+          linkedEntityType: 'engagement_verification',
+          linkedEntityId: '66666666-6666-4666-8666-666666666666',
+          summary: 'Pilot workflow is stuck after engagement decision.',
+          metadata: {
+            assignmentStatus: 'published',
+            trustTier: 'verified',
+            organizationTrustPageStatus: 'published',
+            revealStage: 'candidate_consented',
+            candidateConsentStatus: 'granted',
+            decisionState: 'hire',
+            workflowStatus: 'pending_both_confirmations',
+            pendingParty: 'candidate',
+            privateCandidateEmail: 'candidate@example.com',
+            rawInterviewNotes: 'Candidate private notes',
+          },
+          createdAt: '2026-03-21T10:00:00.000Z',
+          updatedAt: '2026-03-21T11:00:00.000Z',
+          resolvedAt: null,
+        },
+      ],
+    },
+  ],
+  stats: {
+    total: 1,
+    open: 1,
+  },
+};
+
 describe('AdminVerificationDashboard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -119,9 +160,53 @@ describe('AdminVerificationDashboard', () => {
     expect(apiFetchMock).toHaveBeenCalledWith('/api/admin/internal-ops/queues');
     expect(screen.getByText('Privacy / reveal disputes')).toBeInTheDocument();
     expect(screen.getByText('Pilot ops')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /verification review sop/i })).toHaveAttribute(
+      'href',
+      expect.stringContaining('/docs/internal-ops/verification-review-sop.md')
+    );
+  });
+
+  it.each([
+    [
+      'privacy_reveal_exception',
+      /reveal privacy dispute sop/i,
+      '/docs/internal-ops/reveal-privacy-dispute-sop.md',
+    ],
+    [
+      'correction_revocation',
+      /redaction and risky upload sop/i,
+      '/docs/internal-ops/redaction-risky-upload-sop.md',
+    ],
+    [
+      'pilot_ops',
+      /pilot assignment quality checklist/i,
+      '/docs/internal-ops/assignment-quality-checklist.md',
+    ],
+  ])('renders the current SOP link for %s queues', async (queueId, linkName, expectedPath) => {
+    const queue = queuePayload.queues.find((entry) => entry.id === queueId);
+    expect(queue).toBeDefined();
+    apiFetchMock.mockResolvedValue(
+      buildJsonResponse({
+        queues: [queue],
+        stats: {
+          total: queue?.items.length ?? 0,
+          open: queue?.openCount ?? 0,
+        },
+      })
+    );
+
+    render(<AdminVerificationDashboard />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('link', { name: linkName })).toHaveAttribute(
+        'href',
+        expect.stringContaining(expectedPath)
+      );
+    });
   });
 
   it('requires a note for resolve actions and patches the generic queue endpoint once provided', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
     apiFetchMock
       .mockResolvedValueOnce(buildJsonResponse(actionableQueuePayload))
       .mockResolvedValueOnce(
@@ -185,6 +270,84 @@ describe('AdminVerificationDashboard', () => {
     await waitFor(() => {
       expect(toastSuccessMock).toHaveBeenCalledWith('Queue item moved to Resolved.');
     });
+    expect(confirmSpy).toHaveBeenCalledWith(expect.stringContaining('Resolve this queue item'));
+
+    confirmSpy.mockRestore();
+  });
+
+  it('lets operators filter queue items by active status and priority', async () => {
+    apiFetchMock.mockResolvedValue(
+      buildJsonResponse({
+        queues: [
+          {
+            ...actionableQueuePayload.queues[0],
+            items: [
+              actionableQueuePayload.queues[0].items[0],
+              {
+                ...actionableQueuePayload.queues[0].items[0],
+                id: '44444444-4444-4444-8444-444444444444',
+                status: 'resolved',
+                priority: 'low',
+                summary: 'Resolved pilot evidence check.',
+                resolvedAt: '2026-03-21T12:00:00.000Z',
+              },
+            ],
+          },
+        ],
+        stats: {
+          total: 2,
+          open: 1,
+        },
+      })
+    );
+
+    render(<AdminVerificationDashboard />);
+
+    await screen.findByText('Risky evidence upload held for privacy-safe review.');
+
+    expect(screen.getByText(/Age /)).toBeInTheDocument();
+    expect(screen.queryByText('Resolved pilot evidence check.')).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'all' } });
+    expect(await screen.findByText('Resolved pilot evidence check.')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Priority'), { target: { value: 'high_urgent' } });
+    expect(screen.queryByText('Resolved pilot evidence check.')).not.toBeInTheDocument();
+    expect(
+      screen.getByText('Risky evidence upload held for privacy-safe review.')
+    ).toBeInTheDocument();
+  });
+
+  it('renders a narrow pilot corridor drilldown without private workflow notes', async () => {
+    apiFetchMock.mockResolvedValue(buildJsonResponse(pilotWorkflowPayload));
+
+    render(<AdminVerificationDashboard />);
+
+    await screen.findByText('Pilot workflow is stuck after engagement decision.');
+    expect(
+      screen.queryByText('Pilot workflow is stuck after hire decision.')
+    ).not.toBeInTheDocument();
+
+    expect(screen.getByText('Pilot corridor')).toBeInTheDocument();
+    expect(screen.getByText('Assignment:')).toBeInTheDocument();
+    expect(screen.getAllByText('Published')).toHaveLength(2);
+    expect(screen.getByText('Org trust:')).toBeInTheDocument();
+    expect(screen.getByText('Verified')).toBeInTheDocument();
+    expect(screen.getByText('Decision:')).toBeInTheDocument();
+    expect(screen.getByText('Hire')).toBeInTheDocument();
+    expect(screen.getByText('Engagement:')).toBeInTheDocument();
+    expect(screen.getByText('Pending Both Confirmations')).toBeInTheDocument();
+    expect(screen.getByText('Proof-review participant consent:')).toBeInTheDocument();
+    expect(screen.getByText('Proof-review participant consent status:')).toBeInTheDocument();
+    expect(screen.getAllByText('Proof-review participant consented').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Candidate consent:')).not.toBeInTheDocument();
+    expect(screen.queryByText('Candidate Consent Status:')).not.toBeInTheDocument();
+    expect(screen.getByText('Pending party:')).toBeInTheDocument();
+    expect(screen.getAllByText('Proof-review participant').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Candidate')).not.toBeInTheDocument();
+    expect(screen.queryByText('Candidate Consented')).not.toBeInTheDocument();
+    expect(screen.queryByText('candidate@example.com')).not.toBeInTheDocument();
+    expect(screen.queryByText('Candidate private notes')).not.toBeInTheDocument();
   });
 
   it('uses explicit approve and reject actions for uploaded-file queue items', async () => {

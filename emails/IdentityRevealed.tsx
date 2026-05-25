@@ -27,9 +27,9 @@ export default function IdentityRevealed({
   viewConversationUrl,
   viewProfileUrl,
 }: IdentityRevealedProps) {
-  const roleLabel = role === 'organization' ? 'organization' : 'candidate';
+  const roleLabel = role === 'organization' ? 'organization' : 'participant';
   const visiblePartyLabel =
-    role === 'organization' ? 'Candidate now visible' : 'Organization now visible';
+    role === 'organization' ? 'Proof-review participant now visible' : 'Organization now visible';
 
   return (
     <Html>

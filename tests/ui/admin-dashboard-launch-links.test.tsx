@@ -8,6 +8,7 @@ import { AdminSidebar } from '@/components/admin/AdminSidebar';
 const requirePlatformAdminMock = vi.fn();
 const usePathnameMock = vi.fn();
 const resolveGcpCvOcrSafeStatusMock = vi.fn();
+const getAdminLaunchHealthSummaryMock = vi.fn();
 
 vi.mock('@/lib/auth/admin', () => ({
   requirePlatformAdmin: () => requirePlatformAdminMock(),
@@ -15,6 +16,10 @@ vi.mock('@/lib/auth/admin', () => ({
 
 vi.mock('@/lib/expertise/gcp-cv-ocr-status', () => ({
   resolveGcpCvOcrSafeStatus: () => resolveGcpCvOcrSafeStatusMock(),
+}));
+
+vi.mock('@/lib/launch/admin-health-summary', () => ({
+  getAdminLaunchHealthSummary: () => getAdminLaunchHealthSummaryMock(),
 }));
 
 vi.mock('next/navigation', async () => {
@@ -35,6 +40,25 @@ describe('admin launch links', () => {
       adminLevel: 'platform_admin',
     });
     resolveGcpCvOcrSafeStatusMock.mockResolvedValue({ status: 'disabled' });
+    getAdminLaunchHealthSummaryMock.mockResolvedValue({
+      status: 'ready',
+      verdict: 'READY',
+      generatedAt: '2026-05-20T02:58:33.442Z',
+      artifactPath: '.artifacts/launch-validation-2026-05-20/final-launch-checklist-status.json',
+      counts: {
+        pass: 36,
+        fail: 0,
+        blocked: 0,
+        unverified: 4,
+      },
+      trueBlockers: [],
+      externalPrerequisites: [
+        'Incident owner / support lead roles are assigned',
+        'Critical alerts are configured',
+        'Backups and restore discipline are verified',
+        'Go/no-go is signed only after fresh evidence is green',
+      ],
+    });
     usePathnameMock.mockReturnValue('/admin');
   });
 
@@ -54,7 +78,14 @@ describe('admin launch links', () => {
     expect(screen.queryByRole('link', { name: /organizations/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /fairness/i })).not.toBeInTheDocument();
     expect(screen.getByText(/cv ocr production/i)).toBeInTheDocument();
-    expect(screen.getByRole('status')).toHaveTextContent(/^disabled$/i);
+    expect(screen.getByText(/launch health/i)).toBeInTheDocument();
+    expect(screen.getByText(/^READY$/)).toBeInTheDocument();
+    expect(screen.getByText(/^36$/)).toBeInTheDocument();
+    expect(screen.getByText(/^Pass$/)).toBeInTheDocument();
+    expect(screen.getByText(/^4$/)).toBeInTheDocument();
+    expect(screen.getByText(/^Open$/)).toBeInTheDocument();
+    expect(screen.getByText(/still needs 4 external proof items/i)).toBeInTheDocument();
+    expect(screen.getByText(/^disabled$/i)).toBeInTheDocument();
     expect(screen.queryByText(/processor|secret|extracted text/i)).not.toBeInTheDocument();
   });
 

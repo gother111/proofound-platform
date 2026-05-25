@@ -1,0 +1,267 @@
+{
+  "targeted": [
+    {
+      "actualViewport": {},
+      "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF Organization / Assignments Assignments Assignment cards own their matching corridor, candidate review, and pipeline context.",
+      "clientHeight": 844,
+      "clientWidth": 390,
+      "headings": [
+        {
+          "size": "18px",
+          "tag": "h1",
+          "text": "Assignments"
+        },
+        {
+          "size": "24px",
+          "tag": "h1",
+          "text": "Assignments"
+        }
+      ],
+      "horizontalOverflow": false,
+      "label": "assignment-new-mobile-initial",
+      "offenders": [],
+      "requestedViewport": {
+        "height": 844,
+        "width": 390
+      },
+      "scrollHeight": 844,
+      "scrollWidth": 390,
+      "tinyTargets": [],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/o/test-org/assignments",
+      "viewportName": "mobile390"
+    },
+    {
+      "actualViewport": {},
+      "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF Organization / Assignments Assignments Assignment cards own their matching corridor, candidate review, and pipeline context.",
+      "clientHeight": 844,
+      "clientWidth": 390,
+      "headings": [
+        {
+          "size": "18px",
+          "tag": "h1",
+          "text": "Assignments"
+        },
+        {
+          "size": "24px",
+          "tag": "h1",
+          "text": "Assignments"
+        }
+      ],
+      "horizontalOverflow": false,
+      "label": "assignment-import-mobile",
+      "offenders": [],
+      "requestedViewport": {
+        "height": 844,
+        "width": 390
+      },
+      "scrollHeight": 844,
+      "scrollWidth": 390,
+      "tinyTargets": [],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/o/test-org/assignments",
+      "viewportName": "mobile390"
+    },
+    {
+      "actualViewport": {},
+      "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF Organization / Assignments Assignments Assignment cards own their matching corridor, candidate review, and pipeline context.",
+      "clientHeight": 844,
+      "clientWidth": 390,
+      "headings": [
+        {
+          "size": "18px",
+          "tag": "h1",
+          "text": "Assignments"
+        },
+        {
+          "size": "24px",
+          "tag": "h1",
+          "text": "Assignments"
+        }
+      ],
+      "horizontalOverflow": false,
+      "label": "assignment-import-validation-mobile",
+      "offenders": [],
+      "requestedViewport": {
+        "height": 844,
+        "width": 390
+      },
+      "scrollHeight": 844,
+      "scrollWidth": 390,
+      "tinyTargets": [],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/o/test-org/assignments",
+      "viewportName": "mobile390"
+    },
+    {
+      "actualViewport": {},
+      "bodyTextStart": "Skip to main content Overview Assignments Communications Organization Profile Public Preview Proofound Assignments NF Organization / Assignments Assignments Assignment cards own their matching corridor, candidate review, and pipeline context.",
+      "clientHeight": 800,
+      "clientWidth": 1280,
+      "headings": [
+        {
+          "size": "18px",
+          "tag": "h1",
+          "text": "Assignments"
+        },
+        {
+          "size": "24px",
+          "tag": "h1",
+          "text": "Assignments"
+        }
+      ],
+      "horizontalOverflow": false,
+      "label": "assignment-new-desktop-initial",
+      "offenders": [],
+      "requestedViewport": {
+        "height": 800,
+        "width": 1280
+      },
+      "scrollHeight": 800,
+      "scrollWidth": 1280,
+      "tinyTargets": [],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/o/test-org/assignments",
+      "viewportName": "desktop1280"
+    },
+    {
+      "actualViewport": {},
+      "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF Organization / Assignments Assignments Assignment cards own their matching corridor, candidate review, and pipeline context.",
+      "clientHeight": 844,
+      "clientWidth": 390,
+      "headings": [
+        {
+          "size": "18px",
+          "tag": "h1",
+          "text": "Assignments"
+        },
+        {
+          "size": "24px",
+          "tag": "h1",
+          "text": "Assignments"
+        }
+      ],
+      "horizontalOverflow": false,
+      "label": "assignment-review-mobile-initial",
+      "offenders": [],
+      "requestedViewport": {
+        "height": 844,
+        "width": 390
+      },
+      "scrollHeight": 844,
+      "scrollWidth": 390,
+      "tinyTargets": [],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/o/test-org/assignments",
+      "viewportName": "mobile390"
+    },
+    {
+      "actualViewport": {},
+      "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF Organization / Assignments Assignments Assignment cards own their matching corridor, candidate review, and pipeline context.",
+      "clientHeight": 844,
+      "clientWidth": 390,
+      "headings": [
+        {
+          "size": "18px",
+          "tag": "h1",
+          "text": "Assignments"
+        },
+        {
+          "size": "24px",
+          "tag": "h1",
+          "text": "Assignments"
+        }
+      ],
+      "horizontalOverflow": false,
+      "label": "org-profile-mobile-initial",
+      "offenders": [],
+      "requestedViewport": {
+        "height": 844,
+        "width": 390
+      },
+      "scrollHeight": 844,
+      "scrollWidth": 390,
+      "tinyTargets": [],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/o/test-org/assignments",
+      "viewportName": "mobile390"
+    },
+    {
+      "actualViewport": {},
+      "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF Organization / Assignments Assignments Assignment cards own their matching corridor, candidate review, and pipeline context.",
+      "clientHeight": 844,
+      "clientWidth": 390,
+      "headings": [
+        {
+          "size": "18px",
+          "tag": "h1",
+          "text": "Assignments"
+        },
+        {
+          "size": "24px",
+          "tag": "h1",
+          "text": "Assignments"
+        }
+      ],
+      "horizontalOverflow": false,
+      "label": "org-message-masked-mobile-initial",
+      "offenders": [],
+      "requestedViewport": {
+        "height": 844,
+        "width": 390
+      },
+      "scrollHeight": 844,
+      "scrollWidth": 390,
+      "tinyTargets": [],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/o/test-org/assignments",
+      "viewportName": "mobile390"
+    },
+    {
+      "actualViewport": {},
+      "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF Organization / Assignments Assignments Assignment cards own their matching corridor, candidate review, and pipeline context.",
+      "clientHeight": 844,
+      "clientWidth": 390,
+      "headings": [
+        {
+          "size": "18px",
+          "tag": "h1",
+          "text": "Assignments"
+        },
+        {
+          "size": "24px",
+          "tag": "h1",
+          "text": "Assignments"
+        }
+      ],
+      "horizontalOverflow": false,
+      "label": "org-message-revealed-mobile-initial",
+      "offenders": [],
+      "requestedViewport": {
+        "height": 844,
+        "width": 390
+      },
+      "scrollHeight": 844,
+      "scrollWidth": 390,
+      "tinyTargets": [],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/o/test-org/assignments",
+      "viewportName": "mobile390"
+    }
+  ],
+  "clearance": {
+    "hiddenByNav": [],
+    "main": {
+      "bottom": 768,
+      "h": 707,
+      "marginBottom": "76px",
+      "paddingBottom": "16px",
+      "y": 61
+    },
+    "nav": {
+      "bottom": 844,
+      "h": 73,
+      "top": 771
+    }
+  }
+}

@@ -52,7 +52,9 @@ async function applyFix() {
   
   if (error) {
     console.error('❌ Error applying fix:', error.message);
-    console.log('\n📋 Please run this SQL manually in your Supabase Dashboard → SQL Editor:\n');
+    console.log(
+      '\n📋 Do not paste this SQL into the Supabase dashboard for launch evidence. Move the fix into a canonical migration under src/db/migrations/ and rerun npm run db:migrate.\n'
+    );
     console.log(sqlFix);
     process.exit(1);
   }
@@ -62,4 +64,3 @@ async function applyFix() {
 }
 
 applyFix();
-

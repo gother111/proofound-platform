@@ -1,0 +1,20 @@
+{
+  "checkedAt": "2026-05-20T08:17:13.348Z",
+  "login": {
+    "url": "http://localhost:3000/login",
+    "title": "Sign In | Proofound",
+    "hasGoogle": true,
+    "hasLinkedIn": true
+  },
+  "signupIndividual": {
+    "url": "http://localhost:3000/signup/individual",
+    "title": "Individual Sign Up | Proofound",
+    "hasGoogle": true,
+    "hasLinkedIn": true
+  },
+  "artifacts": {
+    "json": "/Users/yuriibakurov/proofound/.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-auth-providers-current/auth-provider-current-smoke.json",
+    "loginScreenshot": "/Users/yuriibakurov/proofound/.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-auth-providers-current/login-google-linkedin-current.png",
+    "signupScreenshot": "/Users/yuriibakurov/proofound/.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-auth-providers-current/signup-google-linkedin-current.png"
+  }
+}

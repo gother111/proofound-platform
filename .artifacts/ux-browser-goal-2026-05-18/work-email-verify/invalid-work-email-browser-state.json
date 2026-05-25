@@ -1,0 +1,426 @@
+{
+  "mobile": {
+    "bodyText": "Skip to main content\nVerification failed\n\nThe link could not be verified. Request a fresh work-email link from settings.\n\nVerification token is missing. Please check your email for the correct link.\n\nCommon issues:\n\nThe verification link has expired (links expire after 24 hours)\nThe link has already been used\nThe link is invalid or incomplete\nOpen work-email settings\nReturn to profile",
+    "controls": [
+      {
+        "h": 1,
+        "href": "#main-content",
+        "tag": "A",
+        "text": "Skip to main content",
+        "w": 1,
+        "x": -1,
+        "y": -1
+      },
+      {
+        "h": 44,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "Open work-email settings",
+        "w": 308,
+        "x": 41,
+        "y": 602
+      },
+      {
+        "h": 44,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "Return to profile",
+        "w": 308,
+        "x": 41,
+        "y": 654
+      }
+    ],
+    "hasFreshCopy": true,
+    "hasOldCopy": false,
+    "hasOpenSettings": true,
+    "hasReturnProfile": true,
+    "overflow": {
+      "bodyScrollWidth": 390,
+      "clientWidth": 390,
+      "innerWidth": 390,
+      "scrollWidth": 390
+    },
+    "url": "http://localhost:3000/verify-work-email",
+    "wide": []
+  },
+  "desktop": {
+    "bodyText": "Skip to main content\nVerification failed\n\nThe link could not be verified. Request a fresh work-email link from settings.\n\nVerification token is missing. Please check your email for the correct link.\n\nCommon issues:\n\nThe verification link has expired (links expire after 24 hours)\nThe link has already been used\nThe link is invalid or incomplete\nOpen work-email settings\nReturn to profile",
+    "controls": [
+      {
+        "h": 1,
+        "href": "#main-content",
+        "tag": "A",
+        "text": "Skip to main content",
+        "w": 1,
+        "x": -1,
+        "y": -1
+      },
+      {
+        "h": 44,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "Open work-email settings",
+        "w": 382,
+        "x": 449,
+        "y": 630
+      },
+      {
+        "h": 44,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "Return to profile",
+        "w": 382,
+        "x": 449,
+        "y": 682
+      }
+    ],
+    "hasFreshCopy": true,
+    "hasOldCopy": false,
+    "hasOpenSettings": true,
+    "hasReturnProfile": true,
+    "overflow": {
+      "bodyScrollWidth": 1280,
+      "clientWidth": 1280,
+      "innerWidth": 1280,
+      "scrollWidth": 1280
+    },
+    "url": "http://localhost:3000/verify-work-email",
+    "wide": []
+  },
+  "organizationSignupMobile": {
+    "bodyText": "Skip to main content\nCreate your organization account\n\nStart with a calm proof-first account. You can add details after sign-up.\n\nEMAIL ADDRESS\nPASSWORD\nCONFIRM PASSWORD\nI agree to the Privacy Policy and Terms of Service*\nSend me updates about new features and matching opportunities\nCreate organization account\nOR CONTINUE WITH\nGoogle\nLinkedIn\n\nAlready have an account? Sign in\n\nBy creating an account, you agree to our Terms of Service and Privacy Policy",
+    "controls": [
+      {
+        "aria": null,
+        "h": 1,
+        "href": "#main-content",
+        "role": null,
+        "tag": "A",
+        "testid": null,
+        "text": "Skip to main content",
+        "type": null,
+        "w": 1,
+        "x": -1,
+        "y": -1
+      },
+      {
+        "aria": null,
+        "h": 44,
+        "href": null,
+        "role": null,
+        "tag": "INPUT",
+        "testid": "signup-email",
+        "text": "",
+        "type": "email",
+        "w": 316,
+        "x": 37,
+        "y": 325
+      },
+      {
+        "aria": null,
+        "h": 44,
+        "href": null,
+        "role": null,
+        "tag": "INPUT",
+        "testid": "signup-password",
+        "text": "",
+        "type": "password",
+        "w": 316,
+        "x": 37,
+        "y": 426
+      },
+      {
+        "aria": "Show password",
+        "h": 44,
+        "href": null,
+        "role": null,
+        "tag": "BUTTON",
+        "testid": null,
+        "text": "",
+        "type": "button",
+        "w": 44,
+        "x": 305,
+        "y": 429
+      },
+      {
+        "aria": null,
+        "h": 44,
+        "href": null,
+        "role": null,
+        "tag": "INPUT",
+        "testid": "signup-confirm-password",
+        "text": "",
+        "type": "password",
+        "w": 316,
+        "x": 37,
+        "y": 528
+      },
+      {
+        "aria": null,
+        "h": 24,
+        "href": null,
+        "role": "checkbox",
+        "tag": "BUTTON",
+        "testid": "gdpr-consent",
+        "text": "",
+        "type": "button",
+        "w": 24,
+        "x": 37,
+        "y": 616
+      },
+      {
+        "aria": null,
+        "h": 24,
+        "href": null,
+        "role": null,
+        "tag": "INPUT",
+        "testid": null,
+        "text": "",
+        "type": "checkbox",
+        "w": 24,
+        "x": 13,
+        "y": 614
+      },
+      {
+        "aria": null,
+        "h": 44,
+        "href": "/privacy",
+        "role": null,
+        "tag": "A",
+        "testid": null,
+        "text": "Privacy Policy",
+        "type": null,
+        "w": 94,
+        "x": 164,
+        "y": 614
+      },
+      {
+        "aria": null,
+        "h": 44,
+        "href": "/terms",
+        "role": null,
+        "tag": "A",
+        "testid": null,
+        "text": "Terms of Service",
+        "type": null,
+        "w": 114,
+        "x": 73,
+        "y": 658
+      },
+      {
+        "aria": null,
+        "h": 24,
+        "href": null,
+        "role": "checkbox",
+        "tag": "BUTTON",
+        "testid": "marketing-opt-in",
+        "text": "",
+        "type": "button",
+        "w": 24,
+        "x": 37,
+        "y": 728
+      },
+      {
+        "aria": null,
+        "h": 24,
+        "href": null,
+        "role": null,
+        "tag": "INPUT",
+        "testid": null,
+        "text": "",
+        "type": "checkbox",
+        "w": 24,
+        "x": 13,
+        "y": 726
+      },
+      {
+        "aria": null,
+        "h": 48,
+        "href": null,
+        "role": null,
+        "tag": "BUTTON",
+        "testid": "signup-submit",
+        "text": "Create organization account",
+        "type": "submit",
+        "w": 316,
+        "x": 37,
+        "y": 794
+      },
+      {
+        "aria": null,
+        "h": 44,
+        "href": null,
+        "role": null,
+        "tag": "BUTTON",
+        "testid": "oauth-google-submit",
+        "text": "Google",
+        "type": "submit",
+        "w": 316,
+        "x": 37,
+        "y": 908
+      },
+      {
+        "aria": null,
+        "h": 44,
+        "href": null,
+        "role": null,
+        "tag": "BUTTON",
+        "testid": "oauth-linkedin-submit",
+        "text": "LinkedIn",
+        "type": "submit",
+        "w": 316,
+        "x": 37,
+        "y": 964
+      },
+      {
+        "aria": null,
+        "h": 21,
+        "href": null,
+        "role": null,
+        "tag": "BUTTON",
+        "testid": null,
+        "text": "Sign in",
+        "type": "button",
+        "w": 45,
+        "x": 260,
+        "y": 1032
+      },
+      {
+        "aria": null,
+        "h": 15,
+        "href": "/terms",
+        "role": null,
+        "tag": "A",
+        "testid": null,
+        "text": "Terms of Service",
+        "type": null,
+        "w": 98,
+        "x": 251,
+        "y": 1099
+      },
+      {
+        "aria": null,
+        "h": 15,
+        "href": "/privacy",
+        "role": null,
+        "tag": "A",
+        "testid": null,
+        "text": "Privacy Policy",
+        "type": null,
+        "w": 80,
+        "x": 155,
+        "y": 1117
+      }
+    ],
+    "h1": "Create your organization account",
+    "overflow": {
+      "bodyScrollWidth": 390,
+      "clientWidth": 390,
+      "innerWidth": 390,
+      "scrollWidth": 390
+    },
+    "url": "http://localhost:3000/signup/organization",
+    "wide": [
+      {
+        "bottom": 256,
+        "h": 384,
+        "right": 256,
+        "tag": "DIV",
+        "text": "",
+        "w": 384,
+        "x": -128,
+        "y": -128
+      },
+      {
+        "bottom": 488,
+        "h": 448,
+        "right": 486,
+        "tag": "DIV",
+        "text": "",
+        "w": 448,
+        "x": 38,
+        "y": 40
+      },
+      {
+        "bottom": 844,
+        "h": 480,
+        "right": 609.9921875,
+        "tag": "DIV",
+        "text": "",
+        "w": 480,
+        "x": 129.9921875,
+        "y": 364
+      }
+    ]
+  },
+  "organizationSignupValidation": {
+    "bodyText": "Skip to main content\nCreate your organization account\n\nStart with a calm proof-first account. You can add details after sign-up.\n\nPlease enter your email address.\n\nEMAIL ADDRESS\nPASSWORD\nCONFIRM PASSWORD\nI agree to the Privacy Policy and Terms of Service*\nSend me updates about new features and matching opportunities\nCreate organization account\nOR CONTINUE WITH\nGoogle\nLinkedIn\n\nAlready have an account? Sign in\n\nBy creating an account, you agree to our Terms of Service and Privacy Policy",
+    "errorRect": {
+      "h": 47,
+      "w": 316,
+      "x": 37,
+      "y": 297
+    },
+    "errorText": "Please enter your email address.",
+    "focusedRect": {
+      "h": 47,
+      "w": 316,
+      "x": 37,
+      "y": 297
+    },
+    "focusedTag": "DIV",
+    "focusedTestId": "signup-error",
+    "focusedText": "Please enter your email address.",
+    "overflow": {
+      "bodyScrollWidth": 390,
+      "clientWidth": 390,
+      "innerWidth": 390,
+      "scrollWidth": 390
+    },
+    "url": "http://localhost:3000/signup/organization"
+  },
+  "organizationSignupCheckbox": {
+    "bodyText": "Skip to main content\nCreate your organization account\n\nStart with a calm proof-first account. You can add details after sign-up.\n\nPlease enter your email address.\n\nEMAIL ADDRESS\nPASSWORD\nCONFIRM PASSWORD\nI agree to the Privacy Policy and Terms of Service*\nSend me updates about new features and matching opportunities\nCreate organization account\nOR CONTINUE WITH\nGoogle\nLinkedIn\n\nAlready have an account? Sign in\n\nBy creating an account, you agree to our Terms of Service and Privacy Policy",
+    "hiddenValue": "true",
+    "visualChecked": "checked"
+  },
+  "organizationSignupDesktop": {
+    "bodyText": "Skip to main content\nCreate your organization account\n\nStart with a calm proof-first account. You can add details after sign-up.\n\nEMAIL ADDRESS\nPASSWORD\nCONFIRM PASSWORD\nI agree to the Privacy Policy and Terms of Service*\nSend me updates about new features and matching opportunities\nCreate organization account\nOR CONTINUE WITH\nGoogle\nLinkedIn\n\nAlready have an account? Sign in\n\nBy creating an account, you agree to our Terms of Service and Privacy Policy",
+    "h1": "Create your organization account",
+    "overflow": {
+      "bodyScrollWidth": 1280,
+      "clientWidth": 1280,
+      "innerWidth": 1280,
+      "scrollWidth": 1280
+    },
+    "submitRect": {
+      "h": 48,
+      "w": 334,
+      "x": 473,
+      "y": 846
+    },
+    "url": "http://localhost:3000/signup/organization",
+    "wide": [
+      {
+        "bottom": 256,
+        "h": 384,
+        "right": 256,
+        "tag": "DIV",
+        "text": "",
+        "w": 384,
+        "x": -128,
+        "y": -128
+      },
+      {
+        "bottom": 488,
+        "h": 448,
+        "right": 1376,
+        "tag": "DIV",
+        "text": "",
+        "w": 448,
+        "x": 928,
+        "y": 40
+      }
+    ]
+  }
+}

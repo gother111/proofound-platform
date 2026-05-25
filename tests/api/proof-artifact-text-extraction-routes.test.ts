@@ -79,9 +79,16 @@ vi.mock('@/lib/proof-artifacts/text-extraction', () => ({
   isProofArtifactOcrEligible: (...args: unknown[]) => mocks.isProofArtifactOcrEligible(...args),
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+  },
+}));
+
 import { POST as extractText } from '@/app/api/proof-artifacts/[artifactId]/text-extraction/route';
 import { POST as applyTextDraft } from '@/app/api/proof-artifacts/[artifactId]/text-extraction/apply/route';
 import { GET as getTextExtractionStatus } from '@/app/api/proof-artifacts/text-extraction/status/route';
+import { log } from '@/lib/log';
 
 const USER_ID = '11111111-1111-4111-8111-111111111111';
 const ARTIFACT_ID = '22222222-2222-4222-8222-222222222222';
@@ -364,5 +371,20 @@ describe('Proof artifact OCR API routes', () => {
       unavailableReason: null,
     });
     expect(JSON.stringify(payload)).not.toContain('missing_shared_secret');
+  });
+
+  it('logs status failures structurally while returning the safe public error', async () => {
+    mocks.isProofArtifactOcrEligible.mockRejectedValueOnce(
+      new Error('text extraction status context failed')
+    );
+
+    const response = await getTextExtractionStatus();
+    const payload = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(payload).toEqual({ error: 'Failed to load text extraction status' });
+    expect(log.error).toHaveBeenCalledWith('proof_artifact_ocr.status.failed', {
+      error: 'text extraction status context failed',
+    });
   });
 });

@@ -5,6 +5,12 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+  },
+}));
+
 vi.mock('@/lib/verification/policy', async () => {
   const actual = await vi.importActual<typeof import('@/lib/verification/policy')>(
     '@/lib/verification/policy'
@@ -17,6 +23,7 @@ vi.mock('@/lib/verification/policy', async () => {
 });
 
 import { createClient } from '@/lib/supabase/server';
+import { log } from '@/lib/log';
 import { listVerificationRecordsForOwner } from '@/lib/verification/policy';
 import { GET } from '@/app/api/verification/status/route';
 
@@ -371,6 +378,26 @@ describe('GET /api/verification/status', () => {
     const body = await response.json();
     expect(body.error).toBe('Failed to fetch verification status');
     expect(body.details).toContain('does not exist');
+    expect(log.error).toHaveBeenCalledWith('verification.status.profile_fetch_failed', {
+      userId: 'user-1',
+      code: '42703',
+      message: 'column individual_profiles.work_email_verified_at does not exist',
+      details: undefined,
+      hint: undefined,
+    });
+  });
+
+  it('logs unexpected status route failures with structured diagnostics', async () => {
+    const statusError = new Error('status unavailable');
+    vi.mocked(createClient).mockRejectedValueOnce(statusError);
+
+    const response = await GET(makeRequest());
+
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toEqual({ error: 'Internal server error' });
+    expect(log.error).toHaveBeenCalledWith('verification.status.get_failed', {
+      error: statusError,
+    });
   });
 
   it('keeps LinkedIn signals channel-scoped without global trust inflation', async () => {

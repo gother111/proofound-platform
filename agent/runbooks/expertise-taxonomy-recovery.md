@@ -1,11 +1,11 @@
 > Doc Class: `active`
-> Last Verified: `2026-02-26`
+> Last Verified: `2026-05-19`
 
 # Expertise Taxonomy Recovery Runbook
 
 ## Purpose
 
-Recover Expertise Atlas taxonomy data when Add Skill search/browse is empty or dashboard taxonomy context is missing.
+Recover retained taxonomy data when proof-skill selection, assignment expertise helpers, or retained taxonomy APIs are empty. This is not a runbook for restoring the archived `/app/i/expertise` UI or broad Expertise Atlas dashboard.
 
 ## Scope
 
@@ -18,14 +18,18 @@ Recover Expertise Atlas taxonomy data when Add Skill search/browse is empty or d
 
 ## Preconditions
 
-- `.env.local` contains:
+- A target is explicit and approved.
+- Required environment variables exist in the selected operator context, without printing values:
   - `DATABASE_URL`
   - `NEXT_PUBLIC_SUPABASE_URL`
   - `SUPABASE_SERVICE_ROLE_KEY`
+- For production-candidate or production targets, capture the current backup/checkpoint and confirm the isolated restore rehearsal path before applying recovery.
 - Source files exist:
   - `src/db/migrations/20250131_seed_taxonomy_l1_l2_l3.sql`
   - `data/expertise-atlas-20k-l4-final.json`
   - `Expertise_Atlas_Taxonomy_L1_L2_L3_Expanded.md` or `docs/archive/legacy-platform/Expertise_Atlas_Taxonomy_L1_L2_L3_Expanded.md`
+
+Do not use this runbook to run `db:push`, paste ad-hoc SQL into production, or revive archived Expertise Atlas UI routes.
 
 ## Recovery Steps
 
@@ -72,6 +76,7 @@ Expected:
 
 - L2 list for `l1=U` is non-empty.
 - L4 search list for `search=python` is non-empty.
+- `/app/i/expertise` remains archived/unavailable under route-surface policy.
 
 ## Snapshots and Rollback
 
@@ -85,6 +90,7 @@ Rollback approach:
 - Use snapshot files as restore source for affected tables.
 - Revert `skills.skill_code` updates using backfill report files:
   - `output/skill-code-backfill-report-<timestamp>.json`
+- For production-candidate or production targets, preserve the recovery evidence with the launch artifact and do not treat taxonomy API recovery as final go/no-go evidence by itself.
 
 ## Common Pitfalls
 

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Clipboard, ClipboardCheck, Loader2 } from 'lucide-react';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 type CopyTextButtonProps = {
   endpoint?: string;
@@ -22,7 +23,7 @@ export function CopyTextButton({ endpoint = '/api/portfolio/text-pack' }: CopyTe
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (e) {
-      console.error(e);
+      dispatchClientErrorDiagnostic('portfolio.public_text_pack.copy_failed', e);
       alert('Could not copy text pack. Please try again.');
     } finally {
       setLoading(false);
@@ -38,7 +39,7 @@ export function CopyTextButton({ endpoint = '/api/portfolio/text-pack' }: CopyTe
       ) : (
         <Clipboard className="h-4 w-4" />
       )}
-      {loading ? 'Preparing...' : copied ? 'Copied' : 'Copy recruiter summary'}
+      {loading ? 'Preparing...' : copied ? 'Copied' : 'Copy proof summary'}
     </Button>
   );
 }

@@ -1,0 +1,35 @@
+[
+  {
+    "id": "org-assignments-33122-recheck",
+    "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-plugin-routes/org-assignments-33122-recheck.png",
+    "candidateVisible": false,
+    "finalUrl": "http://localhost:33122/app/o/test-org/assignments",
+    "h1": "Assignments",
+    "hasLoading": true,
+    "horizontalOverflow": 0,
+    "messagesVisible": false,
+    "textStart": "Skip to main content Overview Work Inbox Profile Preview NF Assignment corridor Organization / Assignments Assignments Assignment cards own their matching corridor, candidate review, and pipeline context. ASSIGNMENTS Assignment workspace is loading We are preparing the assignment cards, proof matches, and review context for this workspace. Loading assignments and matches... Create assignment"
+  },
+  {
+    "id": "org-communications-33122-recheck",
+    "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-plugin-routes/org-communications-33122-recheck.png",
+    "candidateVisible": false,
+    "finalUrl": "http://localhost:33122/app/o/test-org/communications",
+    "h1": "",
+    "hasLoading": true,
+    "horizontalOverflow": 0,
+    "messagesVisible": true,
+    "textStart": "Skip to main content Overview Work Inbox Profile Preview NF HIRING CORRIDOR Communications Messages Threads, intros, and reveal requests. Interviews Scheduling, feedback, and handoff. Preparing organization messages Loading the team conversation context before showing threads, intros, and reveal requests."
+  },
+  {
+    "id": "org-shortlist-33122-recheck",
+    "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-plugin-routes/org-shortlist-33122-recheck.png",
+    "candidateVisible": false,
+    "finalUrl": "http://localhost:33122/app/o/test-org/assignments",
+    "h1": "Assignments",
+    "hasLoading": true,
+    "horizontalOverflow": 0,
+    "messagesVisible": false,
+    "textStart": "Skip to main content Overview Work Inbox Profile Preview NF Assignment corridor Organization / Assignments Assignments Assignment cards own their matching corridor, candidate review, and pipeline context. ASSIGNMENTS Assignment workspace is loading We are preparing the assignment cards, proof matches, and review context for this workspace. Loading assignments and matches... Create assignment"
+  }
+]

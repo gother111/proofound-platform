@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { createClient } from '@/lib/supabase/server';
+import { log } from '@/lib/log';
 import {
   canManageInterviewAsOrgAdmin,
   postInterviewUpdateMessageBestEffort,
@@ -33,7 +34,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
     const { interviewId, scheduledAt, timezone, reason } = EditInterviewSchema.parse(body);
 
     const { allowed, context } = await canManageInterviewAsOrgAdmin(supabase, user.id, interviewId);
@@ -194,7 +200,7 @@ export async function POST(request: NextRequest) {
       }
     );
   } catch (error: any) {
-    console.error('Interview edit error:', error);
+    log.error('interviews.edit.failed', { error });
 
     if (error.name === 'ZodError') {
       return NextResponse.json(

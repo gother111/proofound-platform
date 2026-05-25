@@ -1,7 +1,18 @@
 import { Page, BrowserContext, expect } from '@playwright/test';
-import { generateTestUser, generateTestOrganization, loginUser, signupUser, signupOrganization, completeOrganizationOnboarding } from './auth';
+import {
+  generateTestUser,
+  generateTestOrganization,
+  loginUser,
+  signupUser,
+  signupOrganization,
+  completeOrganizationOnboarding,
+} from './auth';
 import { navigateToMatching, clickInterested, waitForMatches } from './matching-helpers';
-import { navigateToOrgMatching, expressOrgInterest, waitForOrgMatches } from './organization-helpers';
+import {
+  navigateToOrgMatching,
+  expressOrgInterest,
+  waitForOrgMatches,
+} from './organization-helpers';
 
 /**
  * E2E Test Helpers for Cross-User Interactions
@@ -48,13 +59,13 @@ export async function createTwoUserContexts(
 export async function setupTwoUsers(context: TwoUserContext) {
   // Sign up individual
   await signupUser(context.individualPage, context.individualUser, 'individual');
-  
+
   // Wait for any onboarding or email verification
   await context.individualPage.waitForTimeout(2000);
-  
+
   // Sign up organization
   await signupOrganization(context.orgPage, context.orgUser);
-  
+
   // Wait for org setup to complete
   await context.orgPage.waitForTimeout(2000);
 }
@@ -70,7 +81,7 @@ export async function waitForMutualInterest(
   timeout = 30000
 ): Promise<string | null> {
   const startTime = Date.now();
-  
+
   while (Date.now() - startTime < timeout) {
     // Check individual's side for conversation
     try {
@@ -79,7 +90,7 @@ export async function waitForMutualInterest(
         const data = await individualResponse.json();
         const conversations = data.conversations || [];
         const matchingConv = conversations.find((c: any) => c.assignmentId === assignmentId);
-        
+
         if (matchingConv) {
           return matchingConv.id;
         }
@@ -95,7 +106,7 @@ export async function waitForMutualInterest(
         const data = await orgResponse.json();
         const conversations = data.conversations || [];
         const matchingConv = conversations.find((c: any) => c.assignmentId === assignmentId);
-        
+
         if (matchingConv) {
           return matchingConv.id;
         }
@@ -121,7 +132,7 @@ export async function verifyStage1Masking(page: Page, conversationId: string): P
 
   // Check for masked identifiers
   const maskedIndicator = page.locator(
-    'text=/Candidate #[A-Z0-9]+|Organization #[A-Z0-9]+|masked|Stage 1/i'
+    'text=/Submission #[A-Z0-9]+|Organization #[A-Z0-9]+|masked|Stage 1/i'
   );
 
   const hasMasked = await maskedIndicator.isVisible().catch(() => false);
@@ -129,7 +140,7 @@ export async function verifyStage1Masking(page: Page, conversationId: string): P
   // Verify full names are NOT shown
   const fullNamePattern = /[A-Z][a-z]+ [A-Z][a-z]+/; // Pattern for full names
   const fullNameElements = page.locator('text=/^[A-Z][a-z]+ [A-Z][a-z]+$/');
-  const hasFullName = await fullNameElements.count() > 0;
+  const hasFullName = (await fullNameElements.count()) > 0;
 
   return hasMasked && !hasFullName;
 }
@@ -155,7 +166,7 @@ export async function moveToStage2(
     if (await revealButton.isVisible()) {
       await revealButton.click();
       await page.waitForTimeout(1000);
-      
+
       // Confirm in dialog if it appears
       const confirmButton = page.getByRole('button', { name: /confirm|yes|reveal/i }).first();
       if (await confirmButton.isVisible()) {
@@ -193,7 +204,7 @@ export async function verifyStage2Revealed(page: Page, conversationId: string): 
   const hasRevealed = await revealedIndicator.isVisible().catch(() => false);
 
   // Verify full names are shown (not masked handles)
-  const maskedHandlePattern = /Candidate #[A-Z0-9]+|Organization #[A-Z0-9]+/;
+  const maskedHandlePattern = /Submission #[A-Z0-9]+|Organization #[A-Z0-9]+/;
   const maskedElements = page.locator(`text=/${maskedHandlePattern}/`);
   const hasMasked = (await maskedElements.count()) > 0;
 
@@ -311,11 +322,7 @@ export async function completeMutualMatchingFlow(
 /**
  * Navigate to messages page (works for both individual and org)
  */
-export async function navigateToMessages(
-  page: Page,
-  orgSlug?: string,
-  conversationId?: string
-) {
+export async function navigateToMessages(page: Page, orgSlug?: string, conversationId?: string) {
   const messagesUrl = orgSlug
     ? `/app/o/${orgSlug}/messages${conversationId ? `?conversation=${conversationId}` : ''}`
     : `/app/i/messages${conversationId ? `?conversation=${conversationId}` : ''}`;
@@ -327,9 +334,7 @@ export async function navigateToMessages(
 /**
  * Get conversation ID from match interest response
  */
-export async function getConversationIdFromInterest(
-  page: Page
-): Promise<string | null> {
+export async function getConversationIdFromInterest(page: Page): Promise<string | null> {
   // Listen for API responses after clicking interested
   return new Promise((resolve) => {
     const timeout = setTimeout(() => resolve(null), 5000);
@@ -358,4 +363,3 @@ export async function cleanupTwoUserContexts(context: TwoUserContext) {
   await context.individualPage.close();
   await context.orgPage.close();
 }
-

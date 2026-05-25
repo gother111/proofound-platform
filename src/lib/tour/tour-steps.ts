@@ -1,5 +1,4 @@
 import { Step } from 'react-joyride';
-import { UI_VOCABULARY } from '@/lib/copy/vocabulary';
 
 export const individualTourSteps: Step[] = [
   {
@@ -10,48 +9,49 @@ export const individualTourSteps: Step[] = [
     disableBeacon: true,
   },
   {
-    target: '[data-tour="profile-section"]',
+    target: '[data-tour="profile-link"]',
     content:
-      'This is your profile hub. Start with one artifact-backed Proof Pack before broad profile polish.',
+      'This is your profile hub. Start with one artifact-backed Proof Pack before expanding public details.',
     placement: 'bottom',
   },
   {
-    target: '[data-tour="expertise-section"]',
+    target: '[data-tour="profile-link"]',
     content:
-      'Build your Expertise Atlas here. Add skills from our 20,000+ skill taxonomy, specify your experience level, and upload proof of expertise.',
+      'Add proof-linked skills here. Start with skills you can anchor to real work, education, volunteering, or a proof artifact.',
     placement: 'bottom',
   },
   {
-    target: '[data-tour="import-cv-tab"]',
+    target: '[data-tour="profile-link"]',
     content:
-      'Quick start: Import skills directly from your CV or resume. Our AI will extract and suggest relevant skills from the taxonomy.',
+      'Quick start: use your CV only as private context for suggested proof work. Review everything before it becomes part of your profile.',
     placement: 'bottom',
   },
   {
-    target: '[data-tour="gap-analysis-tab"]',
+    target: '[data-tour="profile-link"]',
     content:
-      'Use Gap Analysis to identify skill gaps for your target roles. Get personalized recommendations on which skills to develop next.',
+      'Use readiness gaps to decide which Proof Pack or proof item to strengthen next for your target work.',
     placement: 'bottom',
   },
   {
-    target: '[data-tour="matching-section"]',
+    target: '[data-tour="matching-link"]',
     content:
       "Set up your matching preferences - what kind of work you're looking for, your availability, location preferences, and compensation expectations.",
     placement: 'bottom',
   },
   {
-    target: '[data-tour="opportunities-section"]',
-    content: `Once proof and privacy are ready, matched opportunities will appear here. We use ${UI_VOCABULARY.pacLabel} scoring to compare skills, evidence, freshness, verification, and practical constraints.`,
-    placement: 'bottom',
-  },
-  {
-    target: '[data-tour="messages-section"]',
+    target: '[data-tour="matching-link"]',
     content:
-      'Communicate with potential employers through our secure messaging system. Initial messages are identity-masked to reduce bias.',
+      'Once proof and privacy are ready, assignment reviews can appear here. Proofound keeps review context reason-coded and privacy staged.',
     placement: 'bottom',
   },
   {
-    target: '[data-tour="proof-readiness"]',
+    target: '[data-tour="communications-link"]',
+    content:
+      'Use secure workflow messages for staged introduction and interview context. Initial messages stay identity-masked to reduce bias.',
+    placement: 'bottom',
+  },
+  {
+    target: '[data-tour="home-link"]',
     content:
       'Track your proof readiness here. Start with one Proof Pack, then strengthen trust when it matters.',
     placement: 'left',
@@ -62,49 +62,50 @@ export const organizationTourSteps: Step[] = [
   {
     target: 'body',
     content:
-      "Welcome to Proofound! Let's take a quick tour to help you get started finding purpose-driven talent.",
+      "Welcome to Proofound! Let's take a quick tour to help you start a proof-first assignment review.",
     placement: 'center',
     disableBeacon: true,
   },
   {
-    target: '[data-tour="org-profile-section"]',
+    target: '[data-tour="org-profile"]',
     content:
-      'Complete your organization profile with mission, vision, values, and causes. This helps attract candidates who share your purpose.',
+      'Complete your organization trust page with mission, why the work matters, operating context, and domain evidence for one assignment path.',
     placement: 'bottom',
   },
   {
-    target: '[data-tour="assignments-section"]',
+    target: '[data-tour="assignments-link"]',
     content:
-      'Create assignments using our 5-step workflow: Business Value → Target Outcomes → Weight Matrix → Practicals → Expertise Mapping.',
+      'Create assignments with outcomes, practical constraints, proof requirements, and a clear review path.',
     placement: 'bottom',
   },
   {
-    target: '[data-tour="matches-section"]',
-    content: `Review matched candidates here. Our algorithm prioritizes ${UI_VOCABULARY.pacLabel.toLowerCase()} to find people who care about your mission.`,
+    target: '[data-tour="assignments-link"]',
+    content:
+      'Review reason-coded proof context here. Matching support stays internal to assignment review and staged introductions.',
     placement: 'bottom',
   },
   {
-    target: '[data-tour="projects-section"]',
+    target: '[data-tour="portfolio-link"]',
     content:
-      "Track your projects and their impact. Document outcomes to build your organization's credibility.",
+      'Preview the public trust page only after mission, work context, and domain evidence are ready for launch-safe sharing.',
     placement: 'bottom',
   },
   {
-    target: '[data-tour="team-section"]',
+    target: '[data-tour="org-profile"]',
     content:
-      'Manage your team members and their roles. Set up stakeholders who will be involved in hiring decisions.',
+      'Keep the organization trust page focused on the context participants need before one assignment path.',
     placement: 'bottom',
   },
   {
-    target: '[data-tour="interviews-section"]',
+    target: '[data-tour="communications-link"]',
     content:
-      'Schedule interviews directly through Proofound. We automatically include stakeholders and integrate with Zoom/Google Meet.',
+      'Schedule or reschedule interviews with clear state, consent, and manual meeting-link control.',
     placement: 'bottom',
   },
   {
-    target: '[data-tour="messages-section"]',
+    target: '[data-tour="communications-link"]',
     content:
-      'Communicate with candidates through our secure messaging system. Messages are initially identity-masked to reduce hiring bias.',
+      'Use secure workflow messages for staged introductions and interview context. Initial messages stay identity-masked to reduce review bias.',
     placement: 'bottom',
   },
 ];

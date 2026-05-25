@@ -14,7 +14,7 @@ import {
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { apiFetch } from '@/lib/api/fetch';
 import {
@@ -27,6 +27,11 @@ import {
   relationshipDisplayLabel,
   type CustomVerificationRelationship,
 } from '@/lib/verification/custom-verification-labels';
+import {
+  buildVisualCustomVerificationResponse,
+  clientVerificationLinkVisualFixturesEnabled,
+  VISUAL_VERIFY_TOKENS,
+} from '@/lib/verification/visual-link-fixtures';
 
 type VerifyItem = {
   id: string;
@@ -53,8 +58,8 @@ type VerificationData = {
   status: 'pending' | 'accepted' | 'declined' | 'expired';
   created_at: string;
   expires_at: string;
-  responded_at?: string;
-  response_message?: string;
+  responded_at?: string | null;
+  response_message?: string | null;
   items: VerifyItem[];
 };
 
@@ -98,6 +103,18 @@ function artifactTypeLabel(type: VerifyItem['artifact_type']): string {
   }
 }
 
+function verificationLoadError(status: number, error?: string | null) {
+  if (status === 410 || /expired/i.test(error ?? '')) {
+    return 'This verification request has expired. Ask the requester to send a new link if needed.';
+  }
+
+  if (status === 404 || status === 400 || /not found|invalid|unavailable/i.test(error ?? '')) {
+    return 'This verification link is invalid, expired, or no longer available.';
+  }
+
+  return 'We could not open this verification request right now.';
+}
+
 export default function VerifyCustomRequestPage() {
   const params = useParams();
   const router = useRouter();
@@ -119,11 +136,27 @@ export default function VerifyCustomRequestPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
+        if (clientVerificationLinkVisualFixturesEnabled()) {
+          const visualResponse = buildVisualCustomVerificationResponse(token);
+          if (visualResponse) {
+            const nextData = visualResponse.request as VerificationData;
+            setData(nextData);
+            if (nextData.request_kind === 'human_observed_attestation') {
+              setAttestationForm(
+                createDefaultHumanObservedAttestationForm(
+                  relationshipDisplayLabel(nextData.relationship)
+                )
+              );
+            }
+            return;
+          }
+        }
+
         const response = await fetch(`/api/verify/custom/${token}`);
 
         if (!response.ok) {
           const errorData = await response.json();
-          setError(errorData.error || 'Failed to load verification request');
+          setError(verificationLoadError(response.status, errorData.error));
           return;
         }
 
@@ -138,7 +171,7 @@ export default function VerifyCustomRequestPage() {
           );
         }
       } catch (_loadError) {
-        setError('Failed to load verification request');
+        setError('This verification link is invalid, expired, or no longer available.');
       } finally {
         setLoading(false);
       }
@@ -161,6 +194,21 @@ export default function VerifyCustomRequestPage() {
     setError(null);
 
     try {
+      if (
+        clientVerificationLinkVisualFixturesEnabled() &&
+        token === VISUAL_VERIFY_TOKENS.customBundle
+      ) {
+        setSubmitted(true);
+        setSubmittedAction(
+          humanObservedVerdict === 'partly'
+            ? 'partly'
+            : action === 'accept'
+              ? 'accepted'
+              : 'declined'
+        );
+        return;
+      }
+
       const response = await apiFetch(`/api/verify/custom/${token}`, {
         method: 'POST',
         headers: {
@@ -198,11 +246,15 @@ export default function VerifyCustomRequestPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#F7F6F1] to-[#E5E3DA] flex items-center justify-center p-4">
-        <Card className="w-full max-w-xl">
-          <CardContent className="pt-12 pb-12 text-center">
-            <Loader2 className="h-12 w-12 animate-spin text-proofound-forest mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading verification request...</p>
+      <div className="flex min-h-screen items-center justify-center bg-proofound-parchment p-4 py-10">
+        <Card className="w-full max-w-xl rounded-[24px] border-proofound-stone bg-white/95 shadow-[0_4px_24px_rgba(29,51,48,0.08)]">
+          <CardContent className="pb-12 pt-12 text-center">
+            <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-proofound-forest/10">
+              <Loader2 className="h-6 w-6 animate-spin text-proofound-forest" />
+            </span>
+            <h1 className="font-display text-2xl font-semibold leading-none tracking-tight text-proofound-charcoal">
+              Loading verification request
+            </h1>
           </CardContent>
         </Card>
       </div>
@@ -211,14 +263,18 @@ export default function VerifyCustomRequestPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#F7F6F1] to-[#E5E3DA] flex items-center justify-center p-4">
-        <Card className="w-full max-w-xl">
-          <CardContent className="pt-12 pb-12 text-center">
-            <AlertCircle className="h-12 w-12 text-proofound-terracotta mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-foreground mb-2">Unable to Load Request</h2>
-            <p className="text-muted-foreground mb-6">{error}</p>
+      <div className="flex min-h-screen items-center justify-center bg-proofound-parchment p-4 py-10">
+        <Card className="w-full max-w-xl rounded-[24px] border-proofound-stone bg-white/95 shadow-[0_4px_24px_rgba(29,51,48,0.08)]">
+          <CardContent className="pb-12 pt-12 text-center">
+            <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+              <AlertCircle className="h-6 w-6 text-destructive" />
+            </span>
+            <h1 className="mb-2 font-display text-2xl font-semibold leading-none tracking-tight text-proofound-charcoal">
+              Unable to load request
+            </h1>
+            <p className="mb-6 text-sm leading-6 text-muted-foreground">{error}</p>
             <Button variant="outline" onClick={() => router.push('/')}>
-              Go to Homepage
+              Return home
             </Button>
           </CardContent>
         </Card>
@@ -256,12 +312,18 @@ export default function VerifyCustomRequestPage() {
     const Icon = config.icon;
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#F7F6F1] to-[#E5E3DA] flex items-center justify-center p-4">
-        <Card className="w-full max-w-xl">
-          <CardContent className={`pt-12 pb-12 text-center ${config.bgColor} rounded-lg`}>
-            <Icon className={`h-16 w-16 ${config.color} mx-auto mb-4`} />
-            <h2 className="text-xl font-semibold text-foreground mb-2">{config.title}</h2>
-            <p className="text-muted-foreground">{config.message}</p>
+      <div className="flex min-h-screen items-center justify-center bg-proofound-parchment p-4 py-10">
+        <Card className="w-full max-w-xl rounded-[24px] border-proofound-stone bg-white/95 shadow-[0_4px_24px_rgba(29,51,48,0.08)]">
+          <CardContent className="pb-12 pt-12 text-center">
+            <span
+              className={`mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full ${config.bgColor}`}
+            >
+              <Icon className={`h-6 w-6 ${config.color}`} />
+            </span>
+            <h1 className="mb-2 font-display text-2xl font-semibold leading-none tracking-tight text-proofound-charcoal">
+              {config.title}
+            </h1>
+            <p className="text-sm leading-6 text-muted-foreground">{config.message}</p>
           </CardContent>
         </Card>
       </div>
@@ -270,13 +332,13 @@ export default function VerifyCustomRequestPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#F7F6F1] to-[#E5E3DA] flex items-center justify-center p-4">
-        <Card className="w-full max-w-xl">
-          <CardContent className="pt-12 pb-12 text-center">
+      <div className="flex min-h-screen items-center justify-center bg-proofound-parchment p-4 py-10">
+        <Card className="w-full max-w-xl rounded-[24px] border-proofound-stone bg-white/95 shadow-[0_4px_24px_rgba(29,51,48,0.08)]">
+          <CardContent className="pb-12 pt-12 text-center">
             {submittedAction === 'accepted' ? (
               <>
                 <CheckCircle2 className="h-16 w-16 text-green-600 mx-auto mb-4" />
-                <h2 className="text-2xl font-semibold text-foreground mb-2">Thank You!</h2>
+                <h1 className="text-2xl font-semibold text-foreground mb-2">Thank You!</h1>
                 <p className="text-muted-foreground mb-4">
                   {data?.request_kind === 'human_observed_attestation'
                     ? `You've recorded a bounded observed-in-practice attestation for ${data?.requester_name}.`
@@ -289,9 +351,9 @@ export default function VerifyCustomRequestPage() {
             ) : submittedAction === 'partly' ? (
               <>
                 <MinusCircle className="h-16 w-16 text-amber-600 mx-auto mb-4" />
-                <h2 className="text-2xl font-semibold text-foreground mb-2">
+                <h1 className="text-2xl font-semibold text-foreground mb-2">
                   Partial Response Recorded
-                </h2>
+                </h1>
                 <p className="text-muted-foreground">
                   You recorded a structured partial attestation. It has been stored for review and
                   audit.
@@ -300,7 +362,7 @@ export default function VerifyCustomRequestPage() {
             ) : (
               <>
                 <XCircle className="h-16 w-16 text-proofound-terracotta mx-auto mb-4" />
-                <h2 className="text-2xl font-semibold text-foreground mb-2">Response Recorded</h2>
+                <h1 className="text-2xl font-semibold text-foreground mb-2">Response Recorded</h1>
                 <p className="text-muted-foreground">
                   You've declined this verification request. The requester has been notified.
                 </p>
@@ -313,14 +375,16 @@ export default function VerifyCustomRequestPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F7F6F1] to-[#E5E3DA] flex items-center justify-center p-4">
-      <Card className="w-full max-w-xl">
-        <CardHeader className="bg-gradient-to-r from-[#1C4D3A] to-[#2D5F4A] text-white rounded-t-lg">
-          <div className="flex items-center gap-3 mb-2">
-            <Shield className="h-8 w-8" />
-            <CardTitle className="text-xl">Custom Verification Request</CardTitle>
+    <div className="flex min-h-screen items-center justify-center bg-proofound-parchment p-4 py-10">
+      <Card className="w-full max-w-xl overflow-hidden rounded-[24px] border-proofound-stone bg-white/95 shadow-[0_4px_24px_rgba(29,51,48,0.08)]">
+        <CardHeader className="bg-proofound-forest text-white">
+          <div className="mb-2 flex min-w-0 items-center gap-3">
+            <Shield className="h-8 w-8 shrink-0" />
+            <h1 className="min-w-0 font-display text-xl font-semibold leading-7 tracking-tight">
+              Custom Verification Request
+            </h1>
           </div>
-          <p className="text-white/80 text-sm">
+          <p className="text-sm leading-6 text-white/80">
             {data?.request_kind === 'human_observed_attestation'
               ? 'Review a bounded observed-in-practice attestation request.'
               : 'Review one request that covers multiple artifacts'}
@@ -328,12 +392,12 @@ export default function VerifyCustomRequestPage() {
         </CardHeader>
 
         <CardContent className="pt-6 space-y-5">
-          <div className="flex items-center gap-4 p-4 bg-japandi-bg rounded-lg">
-            <div className="h-12 w-12 rounded-full bg-proofound-forest text-white flex items-center justify-center text-lg font-semibold">
+          <div className="flex min-w-0 items-center gap-4 rounded-lg bg-japandi-bg p-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-proofound-forest text-lg font-semibold text-white">
               {data?.requester_name?.[0]?.toUpperCase() || '?'}
             </div>
-            <div>
-              <p className="font-semibold text-foreground">{data?.requester_name}</p>
+            <div className="min-w-0">
+              <p className="break-words font-semibold text-foreground">{data?.requester_name}</p>
               <p className="text-sm text-muted-foreground">
                 {data?.request_kind === 'human_observed_attestation'
                   ? 'is requesting your bounded observation'
@@ -355,21 +419,25 @@ export default function VerifyCustomRequestPage() {
                 ? 'Skills in scope'
                 : 'Artifacts to Verify'}
             </p>
-            <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+            <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
               {data?.items?.map((item) => (
                 <div
                   key={item.id}
-                  className="rounded-md border border-proofound-stone bg-white px-3 py-2 flex items-start justify-between gap-3"
+                  className="flex min-w-0 flex-col gap-3 rounded-md border border-proofound-stone bg-white px-3 py-3 sm:flex-row sm:items-start sm:justify-between"
                 >
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-foreground">{item.claim_label}</p>
-                    <p className="text-xs text-muted-foreground">Context: {item.display_label}</p>
+                  <div className="min-w-0 space-y-1">
+                    <p className="break-words text-sm font-medium leading-5 text-foreground">
+                      {item.claim_label}
+                    </p>
+                    <p className="break-words text-xs leading-5 text-muted-foreground">
+                      Context: {item.display_label}
+                    </p>
                   </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <Badge variant="outline" className="text-xs whitespace-nowrap">
+                  <div className="flex shrink-0 flex-wrap items-start gap-2 sm:flex-col sm:items-end">
+                    <Badge variant="outline" className="text-xs">
                       {artifactTypeLabel(item.artifact_type)}
                     </Badge>
-                    <Badge variant="outline" className="text-xs capitalize whitespace-nowrap">
+                    <Badge variant="outline" className="text-xs capitalize">
                       {item.support_label}
                     </Badge>
                   </div>
@@ -425,12 +493,12 @@ export default function VerifyCustomRequestPage() {
           </p>
         </CardContent>
 
-        <CardFooter className="flex gap-3 border-t pt-6">
+        <CardFooter className="flex flex-col gap-3 border-t pt-6 sm:flex-row">
           {data?.request_kind === 'human_observed_attestation' ? (
             <>
               <Button
                 variant="outline"
-                className="flex-1 border-[#C76B4A] text-proofound-terracotta hover:bg-[#FFF0F0]"
+                className="w-full border-[#C76B4A] text-proofound-terracotta hover:bg-[#FFF0F0] sm:flex-1"
                 onClick={() => handleSubmit('decline', 'no')}
                 disabled={submitting}
               >
@@ -443,7 +511,7 @@ export default function VerifyCustomRequestPage() {
               </Button>
               <Button
                 variant="outline"
-                className="flex-1 border-amber-300 text-amber-800 hover:bg-amber-50"
+                className="w-full border-amber-300 text-amber-800 hover:bg-amber-50 sm:flex-1"
                 onClick={() => handleSubmit('accept', 'partly')}
                 disabled={submitting}
               >
@@ -455,7 +523,7 @@ export default function VerifyCustomRequestPage() {
                 Partly
               </Button>
               <Button
-                className="flex-1 bg-proofound-forest text-white hover:bg-proofound-forest/90"
+                className="w-full bg-proofound-forest text-white hover:bg-proofound-forest/90 sm:flex-1"
                 onClick={() => handleSubmit('accept', 'yes')}
                 disabled={submitting}
               >
@@ -471,7 +539,7 @@ export default function VerifyCustomRequestPage() {
             <>
               <Button
                 variant="outline"
-                className="flex-1 border-[#C76B4A] text-proofound-terracotta hover:bg-[#FFF0F0]"
+                className="w-full border-[#C76B4A] text-proofound-terracotta hover:bg-[#FFF0F0] sm:flex-1"
                 onClick={() => handleSubmit('decline')}
                 disabled={submitting}
               >
@@ -483,7 +551,7 @@ export default function VerifyCustomRequestPage() {
                 Decline
               </Button>
               <Button
-                className="flex-1 bg-proofound-forest text-white hover:bg-proofound-forest/90"
+                className="w-full bg-proofound-forest text-white hover:bg-proofound-forest/90 sm:flex-1"
                 onClick={() => handleSubmit('accept')}
                 disabled={submitting}
               >

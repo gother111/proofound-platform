@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "findingId": "fnd_sig-feat-route-0b54f0f0fb-8eddcc_57e4ef231e",
+  "featureId": "feat_route_0b54f0f0fb",
+  "title": "Publish endpoint can reactivate held or closed assignments",
+  "category": "bug",
+  "severity": "medium",
+  "confidence": "high",
+  "triage": "confirmed-bug",
+  "evidence": [
+    {
+      "path": "app/api/assignments/[id]/publish/route.ts",
+      "startLine": 72,
+      "endLine": 84,
+      "symbol": "POST",
+      "quote": "if (!PUBLISHABLE_CREATION_STATUSES.includes(assignment.creationStatus as any))"
+    },
+    {
+      "path": "app/api/assignments/[id]/publish/route.ts",
+      "startLine": 179,
+      "endLine": 187,
+      "symbol": "POST",
+      "quote": "status: 'active'"
+    }
+  ],
+  "reasoning": "The route gates publishability only on creationStatus, then unconditionally writes status='active'. Because the same row has a separate workflow status, any assignment that is already on hold or closed but still has creationStatus='review_ready' will be reactivated through this publish route instead of requiring the appropriate resume/reopen lifecycle path.",
+  "reproduction": "Create or update an assignment so creationStatus is review_ready and status is closed or hold, then POST /api/assignments/:id/publish with a valid manager principal; the final update sets status to active.",
+  "recommendation": "Reject non-publishable workflow statuses before publishing, allowing only draft and optionally active for idempotency. Also include the allowed current status in the update predicate so a concurrent status change cannot be overwritten.",
+  "whyTestsDoNotAlreadyCoverThis": "The feature metadata lists no linked tests, and the route has no visible assertion that closed or held assignments are rejected.",
+  "suggestedRegressionTest": "Exercise POST /api/assignments/:id/publish with status='closed' and creationStatus='review_ready' and assert a 409 response plus no status change.",
+  "minimumFixScope": "Add workflow-status validation and a guarded update predicate in app/api/assignments/[id]/publish/route.ts.",
+  "status": "fixed",
+  "history": [
+    {
+      "runId": null,
+      "kind": "triage",
+      "status": "fixed",
+      "note": "Fixed manually: publish now rejects non-draft/non-active workflow states and guards the final update; covered by tests/api/assignments-publish-route.test.ts.",
+      "reasoning": null,
+      "commands": [],
+      "createdAt": "2026-05-16T17:17:56.278Z"
+    }
+  ],
+  "signature": "sig_feat-route-0b54f0f0fb_8eddcc5ea0",
+  "linkedPatchAttemptIds": [],
+  "createdByRunId": "20260516T164325-52e1d0",
+  "createdAt": "2026-05-16T16:46:26.329Z",
+  "updatedAt": "2026-05-16T17:17:56.277Z"
+}

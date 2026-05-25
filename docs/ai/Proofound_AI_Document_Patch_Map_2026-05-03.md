@@ -1,5 +1,5 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-05-04`
+> Last Verified: `2026-05-21`
 
 # Proofound AI Document Patch Map
 
@@ -55,7 +55,7 @@ If the AI addendum conflicts with this locked source of truth, this locked sourc
 Add this bullet under the existing focus-protection boundaries:
 
 ```md
-- Assistive AI is allowed only as optional support for proof quality, assignment clarity, verification wording, and privacy preflight. It must not introduce scoring, ranking, automated hiring recommendations, black-box review intelligence, or AI-first positioning.
+- Assistive AI is allowed only as optional support for proof quality, assignment clarity, verification wording, and privacy preflight. It must not introduce scoring, ranking, automated workflow recommendations, black-box review intelligence, or AI-first positioning.
 ```
 
 ### 1.3 Add to non-goals
@@ -63,7 +63,7 @@ Add this bullet under the existing focus-protection boundaries:
 Add this bullet under explicit MVP non-goals or postponed scope:
 
 ```md
-- AI candidate scoring, AI ranking, AI hiring recommendations, AI fit verdicts, and automated AI review decisions are excluded from MVP.
+- AI proof-review participant scoring, AI ranking, AI workflow recommendations, AI fit verdicts, and automated AI review decisions are excluded from MVP.
 ```
 
 ---
@@ -88,8 +88,8 @@ Product rules:
 
 - AI suggestions are optional and button-click based.
 - AI suggestions are never saved, sent, or published automatically.
-- AI does not score, rank, recommend, shortlist, or evaluate candidates.
-- AI does not make hiring, reveal, verification, or trust decisions.
+- AI does not score, rank, recommend, shortlist, or evaluate proof-review participants.
+- AI does not make interview, engagement, workflow, reveal, verification, or trust decisions.
 - AI does not receive full private files by default.
 - AI output is always user-reviewed before use.
 - Review Summary / Reason-Code Explanation Assistant is postponed from MVP v1.
@@ -116,7 +116,7 @@ Organization owners or managers may request optional assignment clarity suggesti
 
 The assistant may flag ambiguous outcomes, missing constraints, vague capability requirements, and weak proof expectations.
 
-The assistant must not create candidate scoring rubrics, ranking logic, or discriminatory criteria.
+The assistant must not create proof-review participant scoring rubrics, ranking logic, or discriminatory criteria.
 ```
 
 ### 2.4 Add to verification section
@@ -128,7 +128,7 @@ Individuals may request an optional draft for a claim-scoped verification reques
 
 The assistant may produce a subject, message, claim scope, and scoped verification questions.
 
-The request must remain attached to one claim or one Proof Pack. It must not ask for vague praise or overall candidate judgment. The user must review and send it manually.
+The request must remain attached to one claim or one Proof Pack. It must not ask for vague praise or overall proof-review participant judgment. The user must review and send it manually.
 ```
 
 ### 2.5 Add to privacy section
@@ -193,7 +193,7 @@ AI data model additions:
 - `ai_suggestion_cache`
 - `ai_suggestion_events`
 
-These tables support spend caps, auditability, cache reuse, and user-visible suggestion event tracking. They must not become a hidden candidate evaluation store.
+These tables support spend caps, auditability, cache reuse, and user-visible suggestion event tracking. They must not become a hidden proof-review participant evaluation store.
 ```
 
 ### 3.5 Add under reliability
@@ -226,7 +226,7 @@ If AI assistance is enabled for a pilot, the following gates must pass:
 - AI privacy redaction tests pass.
 - AI routes reject full private file payloads.
 - AI routes reject signed URLs and tokenized links.
-- AI routes do not produce scoring, ranking, fit verdicts, or hiring recommendations.
+- AI routes do not produce scoring, ranking, fit verdicts, or workflow recommendations.
 - AI can be disabled without breaking the core corridor.
 ```
 
@@ -278,11 +278,11 @@ Allowed phrasing:
 Avoid:
 
 - AI-powered hiring intelligence
-- AI candidate scoring
+- AI proof-review participant scoring
 - AI recruiter
 - AI screening
 - AI talent intelligence
-- automated hiring decisions
+- automated workflow decisions
 ```
 
 ### 5.2 Add to buyer messaging

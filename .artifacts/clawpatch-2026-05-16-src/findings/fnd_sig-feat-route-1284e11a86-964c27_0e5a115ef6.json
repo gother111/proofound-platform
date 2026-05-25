@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "findingId": "fnd_sig-feat-route-1284e11a86-964c27_0e5a115ef6",
+  "featureId": "feat_route_1284e11a86",
+  "title": "Invalid request bodies are reported as server failures",
+  "category": "api-contract",
+  "severity": "medium",
+  "confidence": "high",
+  "triage": "contract-mismatch",
+  "evidence": [
+    {
+      "path": "app/api/admin/organizations/[orgId]/verify/route.ts",
+      "startLine": 100,
+      "endLine": 101,
+      "symbol": "POST",
+      "quote": "const rawBody = await request.json();\n    const body = OrgTrustTierSchema.parse(rawBody);"
+    },
+    {
+      "path": "app/api/admin/organizations/[orgId]/verify/route.ts",
+      "startLine": 176,
+      "endLine": 187,
+      "symbol": "POST",
+      "quote": null
+    }
+  ],
+  "reasoning": "Malformed JSON from request.json() and validation failures from OrgTrustTierSchema.parse() are caught by the broad catch block and returned as 500. These are client/input errors at a user-input and network boundary, so callers receive the wrong API contract and operational logs will show expected bad input as route failures.",
+  "reproduction": "POST a syntactically valid authenticated request with {\"trustTier\":\"not_a_tier\"} or malformed JSON. The schema parse/request parsing throws and the catch block returns {\"error\":\"Failed to update organization verification\"} with status 500 instead of a 400 validation response.",
+  "recommendation": "Handle SyntaxError and z.ZodError separately before the generic catch response, returning 400 with a stable validation error shape. Keep unexpected exceptions on the 500 path.",
+  "whyTestsDoNotAlreadyCoverThis": "No linked tests were included for malformed JSON or schema validation failure behavior.",
+  "suggestedRegressionTest": "Add route-handler tests for malformed JSON, invalid trustTier, overlong reasonCode, and the no trustTier/verified case, asserting 400 for client validation errors and 500 only for unexpected failures.",
+  "minimumFixScope": "Route-local error handling around request.json() and OrgTrustTierSchema.parse().",
+  "status": "fixed",
+  "history": [
+    {
+      "runId": null,
+      "kind": "triage",
+      "status": "fixed",
+      "note": "Fixed manually: admin verify route now returns 400 for malformed JSON and schema validation errors; covered by tests/api/admin-organizations-verify-route.test.ts.",
+      "reasoning": null,
+      "commands": [],
+      "createdAt": "2026-05-16T17:18:11.011Z"
+    }
+  ],
+  "signature": "sig_feat-route-1284e11a86_964c278488",
+  "linkedPatchAttemptIds": [],
+  "createdByRunId": "20260516T164325-52e1d0",
+  "createdAt": "2026-05-16T16:53:23.656Z",
+  "updatedAt": "2026-05-16T17:18:11.010Z"
+}

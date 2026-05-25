@@ -109,6 +109,11 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
       return false;
     }
 
+    if (min > max) {
+      setHoursValidationHint('Minimum desired hours must be lower than maximum desired hours.');
+      return false;
+    }
+
     setHoursValidationHint(null);
     return true;
   };
@@ -187,7 +192,7 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
           Set up your matching profile
         </h2>
         <p className="text-sm" style={{ color: '#6B6760' }}>
-          Save your focus, proof emphasis, and work preferences to unlock better matches.
+          Save your focus, proof emphasis, and work preferences to make better matches available.
         </p>
       </div>
 
@@ -318,9 +323,9 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
         </section>
       </div>
 
-      <div className="mt-6 flex gap-2">
+      <div className="mt-6 flex flex-col gap-2 pb-20 sm:flex-row sm:pb-0">
         <Button type="button" variant="outline" onClick={onCancel}>
-          Save & Continue Later
+          Continue later
         </Button>
         <Button
           type="button"

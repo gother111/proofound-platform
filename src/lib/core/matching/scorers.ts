@@ -318,7 +318,7 @@ export function scoreWorkAuthorization(params: WorkAuthorizationParams): number 
  * - Any must-have skill level is below required
  *
  * Otherwise, score based on:
- * - Level match quality
+ * - Required-level alignment
  * - Nice-to-have bonuses
  */
 export function scoreSkills(

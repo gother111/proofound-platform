@@ -1,68 +1,73 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-02-26`
+> Last Verified: `2026-05-21`
 
 # Manual Testing Checklist
 
+Use this as the quick human smoke checklist for the locked MVP corridor. It complements `docs/testing-strategy.md`, `docs/verification-checklist.md`, and `.artifacts/mvp-surface-sweep-2026-05-19/SURFACE_SWEEP.md`.
+
 ## Setup
 
-- [ ] `npm run dev` running
-- [ ] Required env vars configured
-- [ ] Clean browser session ready
+- [ ] Use the intended target URL and account role for the pass.
+- [ ] Keep manual-link interview scheduling as the default posture.
+- [ ] Enable connected-provider checks only when the target explicitly launches that provider path.
+- [ ] Use separate browser profiles or incognito windows for individual, organization, and admin checks.
+- [ ] Do not paste secrets or private proof content into screenshots or shared notes.
 
-## Public/Auth
+## Public / Logged-Out
 
-- [ ] `/` renders and CTAs route correctly
-- [ ] `/signup` works for individual and organization personas
-- [ ] `/login` success and invalid-credential paths work
-- [ ] `/reset-password` form validates and submits
-- [ ] `/verify-email` valid/invalid token paths are handled
+- [ ] `/` renders with proof-first positioning and CTAs route to the correct signup/login paths.
+- [ ] `/signup`, `/signup/individual`, and `/signup/organization` orient the persona choice clearly.
+- [ ] `/login` handles success, invalid credentials, and protected-route redirects.
+- [ ] `/privacy`, `/terms`, `/cookies`, and `/cookies/settings` are reachable from public navigation or footer links.
+- [ ] `/portfolio/<handle>` and `/portfolio/org/<slug>` render either a safe public projection or the launch-safe unavailable state.
+- [ ] Public pages do not expose private proof, contact, reveal, verification, or admin diagnostics.
 
-## Individual
+## Individual App
 
-- [ ] `/app/i/home` loads without runtime errors
-- [ ] `/app/i/profile` edits persist
-- [ ] `/app/i/expertise` interactions work
-- [ ] `/app/i/matching` setup and actions work
-- [ ] `/app/i/messages` and `/app/i/interviews` load
-- [ ] `/app/i/settings/*` renders and saves where applicable
+- [ ] `/onboarding` starts with one Proof Pack or first-proof action, not generic profile completion.
+- [ ] `/app/i/home` orients the user toward proof readiness and current next actions.
+- [ ] `/app/i/portfolio` shows private profile context, Proof Packs, public publishing state, and readiness without public-directory language.
+- [ ] `/app/i/verifications` shows incoming/sent verification requests with bounded, claim-scoped language.
+- [ ] `/app/i/communications` covers messages, reveal, interview, decision, and feedback states without identity leaks before consent.
+- [ ] `/app/i/interviews` shows interview and decision context if active.
+- [ ] `/app/i/settings/privacy` supports visibility, export, delete/account lifecycle, and audit/history expectations.
+- [ ] Empty, loading, error, disabled, success, gated, and mobile states are understandable.
 
-## Organization
+## Organization App
 
-- [ ] `/app/o/<slug>/home` loads
-- [ ] `/app/o/<slug>/profile` edits persist
-- [ ] `/app/o/<slug>/members` role/invite paths behave correctly
-- [ ] `/app/o/<slug>/assignments` create/publish flow works
-- [ ] `/app/o/<slug>/matching` renders results/actions
+- [ ] `/app/o/<slug>/home` orients the organization to assignments and proof review.
+- [ ] `/app/o/<slug>/profile` and `/app/o/<slug>/portfolio` maintain the organization trust-page posture.
+- [ ] `/app/o/<slug>/assignments` supports assignment list, create, review, edit, and publish paths.
+- [ ] `/app/o/<slug>/assignments/new` makes purpose, work, proof, constraints, and readiness requirements clear before publish.
+- [ ] `/app/o/<slug>/matching` and `/app/o/<slug>/shortlist` route into the active assignment/review corridor instead of broad marketplace behavior.
+- [ ] `/app/o/<slug>/communications` covers intro, reveal, interview, decision, and engagement-verification communications.
+- [ ] `/app/o/<slug>/interviews` supports interview scheduling/reschedule/cancel/complete and decision follow-up with manual links.
+- [ ] Organization pages preserve role permissions, privacy ceilings, and proof-review participant consent before identity/contact reveal.
 
-## Admin
+## Internal / Admin / Ops
 
-- [ ] `/admin` and core admin routes load
-- [ ] Non-admin access is denied
+- [ ] `/admin` fails closed for non-admin users and does not leak diagnostics.
+- [ ] `/admin/verification` shows verification/privacy/reveal/risky-upload/pilot ops queues only to authorized admins.
+- [ ] `/admin/audit` shows protected audit logs and pagination only to authorized admins.
+- [ ] Internal monitoring and launch-status surfaces are authenticated or internal-only.
 
-## Accessibility
+## Accessibility, Mobile, And Stability
 
-- [ ] Skip-link behavior works on public routes
-- [ ] Keyboard-only navigation succeeds on critical flows
-- [ ] Focus indicators are visible
-- [ ] No blocking a11y violations in manual pass
+- [ ] Keyboard-only navigation reaches the primary action on representative public, individual, organization, and admin surfaces.
+- [ ] Focus indicators are visible.
+- [ ] Main content skip links work on public routes.
+- [ ] Mobile viewport has no horizontal overflow on representative public, app, org, and admin surfaces.
+- [ ] No critical console/runtime errors appear on happy paths.
+- [ ] No repeated failing network calls appear in active launch flows.
 
-## Performance and Stability
+## Companion Automated Checks
 
-- [ ] No critical console errors on happy paths
-- [ ] No repeated failing network calls in core flows
-- [ ] Route transitions are responsive
-
-## Data Integrity
-
-- [ ] Core entities persist after refresh (profile/org/assignment)
-- [ ] Visibility and verification states persist as expected
-
-## Companion Automated Checks (Recommended)
-
-- [ ] `npm run test`
-- [ ] `npm run test:e2e:auth:real`
-- [ ] `npm run test:e2e:individual:strict`
-- [ ] `npm run test:e2e:org:strict`
-- [ ] `npm run test:e2e:privacy:strict`
-- [ ] `npm run test:e2e:providers:strict`
+- [ ] `npm run lint`
+- [ ] `npm run typecheck`
+- [ ] `npm run docs:freshness`
+- [ ] `npm run test:launch:routes`
+- [ ] `npm run test:launch:workflow`
+- [ ] `npm run test:launch:org-corridor`
+- [ ] `npm run test:launch:privacy`
+- [ ] `npm run test:e2e:providers:advisory` only if connected-provider scheduling is intentionally in scope for the target
 - [ ] `npm run test:a11y:strict`

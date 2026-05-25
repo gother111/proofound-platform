@@ -228,8 +228,8 @@ export async function notifyAssignmentPublished(
   return createNotification({
     userId,
     type: 'assignment_published',
-    title: 'New Opportunity',
-    message: `${orgName} posted: ${assignmentTitle}`,
+    title: 'New Assignment Review',
+    message: `${orgName} posted an assignment for proof review: ${assignmentTitle}`,
     actionUrl: `/app/i/matching?assignment=${assignmentId}`,
     entityType: 'assignment',
     entityId: assignmentId,
@@ -254,20 +254,5 @@ export async function notifyInterviewScheduled(
     entityType: 'interview',
     entityId: interviewId,
     metadata: { interviewDate: interviewDate.toISOString() },
-  });
-}
-
-/**
- * Notify user of a signed contract
- */
-export async function notifyContractSigned(userId: string, contractId: string, orgName: string) {
-  return createNotification({
-    userId,
-    type: 'contract_signed',
-    title: 'Contract Signed!',
-    message: `Your contract with ${orgName} has been signed`,
-    actionUrl: `/app/i/contracts/${contractId}`,
-    entityType: 'contract',
-    entityId: contractId,
   });
 }

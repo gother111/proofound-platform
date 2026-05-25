@@ -114,18 +114,19 @@ export function FocusAreasSection({
     <div className="space-y-6">
       <div className="space-y-2">
         <Label htmlFor="roles">Roles You're Interested In</Label>
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row">
           <Input
             id="roles"
             value={roleInput}
             onChange={(e) => setRoleInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddRole())}
             placeholder="e.g., Software Engineer, Product Manager"
+            className="min-w-0"
           />
           <button
             type="button"
             onClick={handleAddRole}
-            className="px-4 py-2 bg-proofound-forest text-white rounded-md hover:bg-proofound-forest/90"
+            className="min-h-11 rounded-md bg-proofound-forest px-4 py-2 text-white hover:bg-proofound-forest/90 sm:min-w-20"
           >
             Add
           </button>

@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import MatchingPage from '@/app/app/i/matching/page';
+import MatchingPage from '@/app/app/i/matching/(workspace)/page';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
@@ -79,7 +79,7 @@ describe('MatchingPage soft-gated state', () => {
         {
           id: 'update-public-portfolio',
           title: 'Strengthen Public Page proof',
-          description: 'Refresh proof-backed work examples and trust signals.',
+          description: 'Refresh proof-backed work examples and verification checks.',
           actionUrl: '/app/i/profile?profileView=full&tab=proof_packs',
         },
       ],

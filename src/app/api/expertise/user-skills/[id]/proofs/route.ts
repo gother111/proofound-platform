@@ -8,7 +8,7 @@ import { attachUploadedFile } from '@/lib/uploads/lifecycle';
 import { resolveArtifactDisplayName } from '@/lib/uploads/privacy';
 import { revalidatePublicPortfolioByProfileId } from '@/lib/portfolio/public-invalidation';
 import { listCanonicalSkillProofRowsForOwnerSkill } from '@/lib/proofs/canonical-pack';
-import { isMockSupabaseEnabled } from '@/lib/env';
+import { log } from '@/lib/log';
 
 type ApiAuthContext = NonNullable<Awaited<ReturnType<typeof requireApiAuthContext>>>;
 
@@ -125,38 +125,16 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const { user, supabase } = authContext;
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
     const { id: skillId } = await params;
 
     // Validate input
     const validated = CreateProofSchema.parse(body);
-
-    if (isMockSupabaseEnabled()) {
-      const proofTitle =
-        validated.title?.trim() ||
-        (validated.url ? deriveProofTitleFromUrl(validated.url) : '') ||
-        (validated.uploadedFileId ? UPLOADED_PROOF_FALLBACK_TITLE : '') ||
-        'Proof Link';
-
-      return NextResponse.json(
-        {
-          proof: {
-            id: `mock-proof-${skillId}`,
-            title: proofTitle,
-            description: validated.description?.trim() || null,
-            proof_type: validated.proofType,
-            url: validated.url || null,
-            skill_id: skillId,
-            profile_id: user.id,
-            canonicalArtifactId: `mock-artifact-${skillId}`,
-            canonicalPackId: `mock-pack-${skillId}`,
-            canonicalPackTitle: proofTitle,
-            primaryAnchor: validated.primaryAnchor,
-          },
-        },
-        { status: 201 }
-      );
-    }
 
     const hasValidPrimaryAnchor = await validateOwnedPrimaryAnchor(
       supabase as any,
@@ -251,7 +229,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         importedFrom: validated.uploadedFileId ? 'skill-proof-upload' : 'skill-proof-form',
       });
     } catch (proofError) {
-      console.error('Error creating canonical proof:', proofError);
+      log.error('expertise.user_skill_proofs.canonical_create_failed', { error: proofError });
       return NextResponse.json({ error: 'Failed to create proof' }, { status: 500 });
     }
 
@@ -266,7 +244,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         syncReadinessMilestones(user.id, { source: 'proof_added' })
       )
       .catch((readinessError) => {
-        console.error('Failed to sync readiness milestones after proof creation:', readinessError);
+        log.error('expertise.user_skill_proofs.readiness_sync_failed', {
+          error: readinessError,
+        });
       });
 
     await revalidatePublicPortfolioByProfileId(user.id);
@@ -290,7 +270,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         { status: 400 }
       );
     }
-    console.error('Proof POST error:', error);
+    log.error('expertise.user_skill_proofs.post_failed', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -324,7 +304,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({ proofs });
   } catch (error) {
-    console.error('Proof GET error:', error);
+    log.error('expertise.user_skill_proofs.get_failed', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

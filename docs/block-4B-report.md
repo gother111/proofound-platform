@@ -28,7 +28,7 @@ Reduce cold-start latency risk on `/api/monitoring/launch-status` without weaken
   - `node -e "require('dotenv').config({path:'.env.local'}); process.env.BASE_URL='http://127.0.0.1:33103'; process.env.SUS_STUDY_COMPLETE='true'; process.env.GO_NO_GO_RUN_SYNTHETICS='0'; const {spawnSync}=require('node:child_process'); const result=spawnSync('npm',['run','go:no-go'],{stdio:'inherit',env:process.env}); process.exit(result.status ?? 1);"`
 - acceptance and blocker isolation:
   - `npm run typecheck`
-  - `find .next/types -maxdepth 6 \( -path '.next/types/app/api/monitoring/*' -o -path '.next/types/app/api/health/*' -o -path '.next/types/app/(auth)/login/*' -o -path '.next/types/app/app/o/*' -o -path '.next/types/app/layout.ts' -o -path '.next/types/app/page.ts' \) -print`
+  - `find .next/types -maxdepth 6 \( -path '.next/types/app/api/monitoring/*' -o -path '.next/types/app/api/health/*' -o -path '.next/types/app/login/*' -o -path '.next/types/app/app/o/*' -o -path '.next/types/app/layout.ts' -o -path '.next/types/app/page.ts' \) -print`
   - `npm run build`
   - `npm run typecheck`
 

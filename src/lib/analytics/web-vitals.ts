@@ -36,29 +36,17 @@ interface PerformanceMetricPayload {
 }
 
 /**
- * Send metric to backend for storage and analysis
+ * Keep client-side web-vitals capture local while broad analytics endpoints are archived for MVP.
  */
 async function sendMetricToBackend(payload: PerformanceMetricPayload): Promise<void> {
+  dispatchLocalWebVitalsEvent('captured', payload);
+}
+
+function dispatchLocalWebVitalsEvent(type: 'captured' | 'init_failed', detail: object): void {
   try {
-    // Use sendBeacon for reliability (works even on page unload)
-    if (navigator.sendBeacon) {
-      const blob = new Blob([JSON.stringify(payload)], {
-        type: 'application/json',
-      });
-      navigator.sendBeacon('/api/analytics/web-vitals', blob);
-    } else {
-      // Fallback to fetch
-      fetch('/api/analytics/web-vitals', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-        keepalive: true,
-      }).catch((error) => {
-        console.error('Failed to send web vital:', error);
-      });
-    }
-  } catch (error) {
-    console.error('Failed to send web vital:', error);
+    window.dispatchEvent(new CustomEvent('proofound:web-vital', { detail: { type, ...detail } }));
+  } catch {
+    // Local instrumentation must never affect the user flow.
   }
 }
 
@@ -96,15 +84,6 @@ function trackMetric(metric: Metric): void {
   };
 
   sendMetricToBackend(payload);
-
-  // Log to console in development
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`[Web Vitals] ${metric.name}:`, {
-      value: Math.round(metric.value),
-      rating: payload.rating,
-      threshold: WEB_VITALS_THRESHOLDS[metric.name as keyof typeof WEB_VITALS_THRESHOLDS],
-    });
-  }
 }
 
 /**
@@ -120,7 +99,9 @@ export function reportWebVitals(): void {
     onFCP(trackMetric);
     onTTFB(trackMetric);
   } catch (error) {
-    console.error('Failed to initialize web vitals:', error);
+    dispatchLocalWebVitalsEvent('init_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 }
 

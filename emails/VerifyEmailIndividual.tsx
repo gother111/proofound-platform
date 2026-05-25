@@ -19,20 +19,20 @@ interface VerifyEmailIndividualProps {
 export const VerifyEmailIndividual = ({ verifyUrl }: VerifyEmailIndividualProps) => (
   <Html>
     <Head />
-    <Preview>Welcome to Proofound! Verify your email to start building your profile</Preview>
+    <Preview>Verify your email to start building your first Proof Pack</Preview>
     <Body style={main}>
       <Container style={container}>
         <Heading style={h1}>Welcome to Proofound!</Heading>
         <Text style={text}>
           Thanks for signing up as an Individual! Verify your email address to get started building
-          your professional profile on Proofound.
+          your proof-first profile on Proofound.
         </Text>
         <Text style={text}>Once verified, you&apos;ll be able to:</Text>
         <ul style={list}>
-          <li>Create your personal profile showcasing your skills and experience</li>
-          <li>Connect with mission-aligned opportunities</li>
-          <li>Build credibility through verifications</li>
-          <li>Find collaborators and mentors</li>
+          <li>Create one artifact-backed Proof Pack</li>
+          <li>Choose which proof and profile details are public-safe</li>
+          <li>Request work-email verification as an account-side trust signal</li>
+          <li>Prepare for staged assignment reviews and introductions</li>
         </ul>
         <Section style={buttonContainer}>
           <Button style={button} href={verifyUrl}>

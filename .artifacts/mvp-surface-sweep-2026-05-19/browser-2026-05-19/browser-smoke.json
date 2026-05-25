@@ -1,0 +1,916 @@
+{
+  "capturedAt": "2026-05-19T11:42:08.262Z",
+  "baseUrl": "http://localhost:33180",
+  "desktopSmokeResults": [
+    {
+      "route": "/",
+      "name": "landing",
+      "screenshot": "/Users/yuriibakurov/proofound/.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-19/desktop-landing.png",
+      "anchors": [
+        {
+          "href": "#main-content",
+          "text": "Skip to main content"
+        },
+        {
+          "href": "/",
+          "text": "Proofound"
+        },
+        {
+          "href": "#story",
+          "text": "How it works"
+        },
+        {
+          "href": "#start-individuals",
+          "text": "For individuals"
+        },
+        {
+          "href": "#start-organizations",
+          "text": "For organizations"
+        },
+        {
+          "href": "/login",
+          "text": "Sign in"
+        },
+        {
+          "href": "/login",
+          "text": "Sign in"
+        },
+        {
+          "href": "/signup",
+          "text": "Start"
+        },
+        {
+          "href": "/signup/organization",
+          "text": "Request a pilot"
+        },
+        {
+          "href": "/signup/organization",
+          "text": "Request a pilot"
+        },
+        {
+          "href": "/signup/individual",
+          "text": "Create your proof portfolio"
+        },
+        {
+          "href": "/signup/organization",
+          "text": "Request a pilot"
+        },
+        {
+          "href": "/signup/individual",
+          "text": "Create your proof portfolio"
+        },
+        {
+          "href": "/",
+          "text": "Proofound"
+        },
+        {
+          "href": "/cookies",
+          "text": "Cookies"
+        },
+        {
+          "href": "/cookies/settings",
+          "text": "Cookie settings"
+        },
+        {
+          "href": "/privacy",
+          "text": "Privacy"
+        },
+        {
+          "href": "/terms",
+          "text": "Terms"
+        },
+        {
+          "href": "/login",
+          "text": "Sign in"
+        }
+      ],
+      "bodyEmpty": false,
+      "buttons": [
+        "For individualsCreate your proof portfolioStart with a cleaner proof portfolio, ",
+        "For organizationsExplore evidence-based hiringReview work through structured pro"
+      ],
+      "h1": ["Proof behind the claim", "Proof behind the claim"],
+      "hasRuntimeErrorText": false,
+      "horizontalOverflow": false,
+      "text": "Proof behind the claimProofound turns real work into structured Proof Packs for privacy-safe hiring review before identity takes over.Request a pilotCreate your proof portfolio02Real outcomes, not bullet pointsVague summaries and floating skill lists resolve into structured outcomes, work scope, ownership, and context. Skills stop existing as decoration and start living next to real work.Senior Operations ProfessionalOutcome signalProof snapshotReviewable12Team200+Scale31%OutcomeOutcome record, artifacts, and trust method stay together.Work scopeOwnershipContext03Verification trust layerArtifacts alone are not enough. Proofound adds verification states, method markers, and trust signals so r",
+      "title": "Proofound | Proof Behind the Claim",
+      "url": "http://localhost:33180/",
+      "viewport": {
+        "height": 720,
+        "width": 1280
+      }
+    },
+    {
+      "route": "/portfolio/demo",
+      "name": "public_portfolio_demo",
+      "screenshot": "/Users/yuriibakurov/proofound/.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-19/desktop-public_portfolio_demo.png",
+      "anchors": [
+        {
+          "href": "#main-content",
+          "text": "Skip to main content"
+        }
+      ],
+      "bodyEmpty": false,
+      "buttons": [],
+      "h1": [],
+      "hasRuntimeErrorText": false,
+      "horizontalOverflow": false,
+      "text": "Skip to main contentPublic Page unavailableThis Public Page link is unavailable. It may be hidden, retired, or not ready for launch-safe sharing.proofound.io/portfolio/demoPublic Page unavailable(self.__next_f=self.__next_f||[]).push([0])self.__next_f.push([1,\"5:I[\\\"(app-pages-browser)/./node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js\\\",[\\\"app-pages-internals\\\",\\\"static/chunks/app-pages-internals.js\\\"],\\\"SegmentViewNode\\\"]\\n7:\\\"$Sreact.fragment\\\"\\n13:I[\\\"(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js\\\",[\\\"app-pages-internals\\\",\\\"static/chunks/app-pages-internals.js\\\"],\\\"\\\"]\\n15:I[\\\"(app-pages-browser)/./node_modules/next/dist/clien",
+      "title": "Public Page Unavailable | Proofound",
+      "url": "http://localhost:33180/portfolio/demo",
+      "viewport": {
+        "height": 720,
+        "width": 1280
+      }
+    },
+    {
+      "route": "/portfolio/org/test-org",
+      "name": "public_org_test",
+      "screenshot": "/Users/yuriibakurov/proofound/.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-19/desktop-public_org_test.png",
+      "anchors": [
+        {
+          "href": "#main-content",
+          "text": "Skip to main content"
+        }
+      ],
+      "bodyEmpty": false,
+      "buttons": [],
+      "h1": [],
+      "hasRuntimeErrorText": false,
+      "horizontalOverflow": false,
+      "text": "Skip to main contentOrganization portfolio unavailableThis organization link is unavailable. It may be hidden, retired, or not yet ready for public sharing.proofound.io/portfolio/org/test-orgOrganization portfolio unavailable(self.__next_f=self.__next_f||[]).push([0])self.__next_f.push([1,\"5:I[\\\"(app-pages-browser)/./node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js\\\",[\\\"app-pages-internals\\\",\\\"static/chunks/app-pages-internals.js\\\"],\\\"SegmentViewNode\\\"]\\n7:\\\"$Sreact.fragment\\\"\\n13:I[\\\"(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js\\\",[\\\"app-pages-internals\\\",\\\"static/chunks/app-pages-internals.js\\\"],\\\"\\\"]\\n15:I[\\\"(app-pages-browser)/",
+      "title": "Public Page Unavailable | Proofound",
+      "url": "http://localhost:33180/portfolio/org/test-org",
+      "viewport": {
+        "height": 720,
+        "width": 1280
+      }
+    },
+    {
+      "route": "/signup",
+      "name": "signup",
+      "screenshot": "/Users/yuriibakurov/proofound/.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-19/desktop-signup.png",
+      "anchors": [
+        {
+          "href": "#main-content",
+          "text": "Skip to main content"
+        },
+        {
+          "href": "/terms",
+          "text": "Terms of Service"
+        },
+        {
+          "href": "/privacy",
+          "text": "Privacy Policy"
+        }
+      ],
+      "bodyEmpty": false,
+      "buttons": [
+        "Back",
+        "IndividualFor professionals who want a clean proof-based portfolio link they can",
+        "OrganizationFor organizations that need a credible trust page on day 1, then one",
+        "Sign in"
+      ],
+      "h1": ["Join Proofound"],
+      "hasRuntimeErrorText": false,
+      "horizontalOverflow": false,
+      "text": "Skip to main contentBackJoin ProofoundChoose the account type that fits how you'll use Proofound.IndividualFor professionals who want a clean proof-based portfolio link they can share today, plus matching as they grow.Continue as Individual →OrganizationFor organizations that need a credible trust page on day 1, then one assignment and a privacy-safe shortlist.Continue as Organization →Already have an account? Sign inBy creating an account, you agree to our Terms of Service and Privacy Policy(self.__next_f=self.__next_f||[]).push([0])self.__next_f.push([1,\"5:I[\\\"(app-pages-browser)/./node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js\\\",[\\\"app-pages-internals\\\",\\\"stat",
+      "title": "Sign Up | Proofound",
+      "url": "http://localhost:33180/signup",
+      "viewport": {
+        "height": 720,
+        "width": 1280
+      }
+    },
+    {
+      "route": "/login",
+      "name": "login",
+      "screenshot": "/Users/yuriibakurov/proofound/.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-19/desktop-login.png",
+      "anchors": [
+        {
+          "href": "#main-content",
+          "text": "Skip to main content"
+        },
+        {
+          "href": "/app/i/home",
+          "text": "Overview"
+        },
+        {
+          "href": "/app/i/profile",
+          "text": "Profile"
+        },
+        {
+          "href": "/app/i/communications",
+          "text": "Communications"
+        },
+        {
+          "href": "/app/i/matching",
+          "text": "Matching"
+        },
+        {
+          "href": "/app/i/settings",
+          "text": "Settings"
+        },
+        {
+          "href": "/app/i/home",
+          "text": "Overview"
+        },
+        {
+          "href": "/app/i/profile",
+          "text": "Profile"
+        },
+        {
+          "href": "/app/i/communications",
+          "text": "Inbox"
+        },
+        {
+          "href": "/app/i/matching",
+          "text": "Matching"
+        },
+        {
+          "href": "/app/i/settings",
+          "text": "Settings"
+        },
+        {
+          "href": "/app/i/profile?profileView=full&tab=proof_packs",
+          "text": "Review Proof Packs"
+        },
+        {
+          "href": "/app/i/profile?profileView=full&tab=proof_packs",
+          "text": "Proof Packs1 proof-backed signalPresent"
+        },
+        {
+          "href": "/app/i/verifications",
+          "text": "Trust anchors4 accepted trust signalsVerified"
+        },
+        {
+          "href": "/app/i/profile?profileView=full&tab=visibility",
+          "text": "Public Page visibilityPublic-safe sharing controlsReview"
+        },
+        {
+          "href": "/app/i/profile?profileView=full&tab=proof_packs",
+          "text": "Add new record"
+        },
+        {
+          "href": "/app/i/profile?profileView=full&tab=proof_packs",
+          "text": "Review proof"
+        },
+        {
+          "href": "/app/i/verifications",
+          "text": "View request"
+        },
+        {
+          "href": "/app/i/profile?profileView=full&tab=visibility",
+          "text": "Manage visibility"
+        },
+        {
+          "href": "/app/i/profile?profileView=full&tab=proof_packs",
+          "text": "Review proof readiness"
+        }
+      ],
+      "bodyEmpty": false,
+      "buttons": ["", "VA"],
+      "h1": ["Verify strongest proof record"],
+      "hasRuntimeErrorText": false,
+      "horizontalOverflow": false,
+      "text": "Proof-first homeVerify strongest proof recordWelcome back, Verification. Your proof is ready for context, trust, and visibility review.Review Proof PacksYour Proof Wallet3 checksEvidence, trust, and sharing stateProof Packs1 proof-backed signalPresentTrust anchors4 accepted trust signalsVerifiedPublic Page visibilityPublic-safe sharing controlsReviewAdd new recordReadiness Checklist1 to resolveProof Pack is presentReadyCheck the context, evidence, and visibility before sharing.Review proofTrust anchor verifiedVerified4 accepted trust signals attached to your proof.View requestPortfolio visibility reviewReviewYour proof surface is ready for a final sharing pass.Manage visibilityProof Readines",
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33180/app/i/home",
+      "viewport": {
+        "height": 720,
+        "width": 1280
+      }
+    },
+    {
+      "route": "/onboarding",
+      "name": "onboarding",
+      "screenshot": "/Users/yuriibakurov/proofound/.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-19/desktop-onboarding.png",
+      "anchors": [
+        {
+          "href": "#main-content",
+          "text": "Skip to main content"
+        },
+        {
+          "href": "/app/i/home",
+          "text": "Overview"
+        },
+        {
+          "href": "/app/i/profile",
+          "text": "Profile"
+        },
+        {
+          "href": "/app/i/communications",
+          "text": "Communications"
+        },
+        {
+          "href": "/app/i/matching",
+          "text": "Matching"
+        },
+        {
+          "href": "/app/i/settings",
+          "text": "Settings"
+        },
+        {
+          "href": "/app/i/home",
+          "text": "Overview"
+        },
+        {
+          "href": "/app/i/profile",
+          "text": "Profile"
+        },
+        {
+          "href": "/app/i/communications",
+          "text": "Inbox"
+        },
+        {
+          "href": "/app/i/matching",
+          "text": "Matching"
+        },
+        {
+          "href": "/app/i/settings",
+          "text": "Settings"
+        },
+        {
+          "href": "/app/i/profile?profileView=full&tab=proof_packs",
+          "text": "Review Proof Packs"
+        },
+        {
+          "href": "/app/i/profile?profileView=full&tab=proof_packs",
+          "text": "Proof Packs1 proof-backed signalPresent"
+        },
+        {
+          "href": "/app/i/verifications",
+          "text": "Trust anchors4 accepted trust signalsVerified"
+        },
+        {
+          "href": "/app/i/profile?profileView=full&tab=visibility",
+          "text": "Public Page visibilityPublic-safe sharing controlsReview"
+        },
+        {
+          "href": "/app/i/profile?profileView=full&tab=proof_packs",
+          "text": "Add new record"
+        },
+        {
+          "href": "/app/i/profile?profileView=full&tab=proof_packs",
+          "text": "Review proof"
+        },
+        {
+          "href": "/app/i/verifications",
+          "text": "View request"
+        },
+        {
+          "href": "/app/i/profile?profileView=full&tab=visibility",
+          "text": "Manage visibility"
+        },
+        {
+          "href": "/app/i/profile?profileView=full&tab=proof_packs",
+          "text": "Review proof readiness"
+        }
+      ],
+      "bodyEmpty": false,
+      "buttons": ["", "VA"],
+      "h1": ["Verify strongest proof record"],
+      "hasRuntimeErrorText": false,
+      "horizontalOverflow": false,
+      "text": "Proof-first homeVerify strongest proof recordWelcome back, Verification. Your proof is ready for context, trust, and visibility review.Review Proof PacksYour Proof Wallet3 checksEvidence, trust, and sharing stateProof Packs1 proof-backed signalPresentTrust anchors4 accepted trust signalsVerifiedPublic Page visibilityPublic-safe sharing controlsReviewAdd new recordReadiness Checklist1 to resolveProof Pack is presentReadyCheck the context, evidence, and visibility before sharing.Review proofTrust anchor verifiedVerified4 accepted trust signals attached to your proof.View requestPortfolio visibility reviewReviewYour proof surface is ready for a final sharing pass.Manage visibilityProof Readines",
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33180/app/i/home",
+      "viewport": {
+        "height": 720,
+        "width": 1280
+      }
+    },
+    {
+      "route": "/app/i/portfolio",
+      "name": "individual_portfolio",
+      "screenshot": "/Users/yuriibakurov/proofound/.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-19/desktop-individual_portfolio.png",
+      "anchors": [
+        {
+          "href": "#main-content",
+          "text": "Skip to main content"
+        },
+        {
+          "href": "/app/i/home",
+          "text": "Overview"
+        },
+        {
+          "href": "/app/i/profile",
+          "text": "Profile"
+        },
+        {
+          "href": "/app/i/communications",
+          "text": "Communications"
+        },
+        {
+          "href": "/app/i/matching",
+          "text": "Matching"
+        },
+        {
+          "href": "/app/i/settings",
+          "text": "Settings"
+        },
+        {
+          "href": "/app/i/home",
+          "text": "Overview"
+        },
+        {
+          "href": "/app/i/profile",
+          "text": "Profile"
+        },
+        {
+          "href": "/app/i/communications",
+          "text": "Inbox"
+        },
+        {
+          "href": "/app/i/matching",
+          "text": "Matching"
+        },
+        {
+          "href": "/app/i/settings",
+          "text": "Settings"
+        }
+      ],
+      "bodyEmpty": false,
+      "buttons": ["", "VA"],
+      "h1": [],
+      "hasRuntimeErrorText": false,
+      "horizontalOverflow": false,
+      "text": "Loading profilePreparing your proof, visibility, and readiness details.",
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33180/app/i/profile?profileView=full&tab=proof_packs&portfolioLocked=1&lockReason=safe_shell",
+      "viewport": {
+        "height": 720,
+        "width": 1280
+      }
+    },
+    {
+      "route": "/app/o/test-org/assignments",
+      "name": "org_assignments",
+      "screenshot": "/Users/yuriibakurov/proofound/.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-19/desktop-org_assignments.png",
+      "anchors": [
+        {
+          "href": "#main-content",
+          "text": "Skip to main content"
+        },
+        {
+          "href": "/app/i/home",
+          "text": "Overview"
+        },
+        {
+          "href": "/app/i/profile",
+          "text": "Profile"
+        },
+        {
+          "href": "/app/i/communications",
+          "text": "Communications"
+        },
+        {
+          "href": "/app/i/matching",
+          "text": "Matching"
+        },
+        {
+          "href": "/app/i/settings",
+          "text": "Settings"
+        },
+        {
+          "href": "/app/i/home",
+          "text": "Overview"
+        },
+        {
+          "href": "/app/i/profile",
+          "text": "Profile"
+        },
+        {
+          "href": "/app/i/communications",
+          "text": "Inbox"
+        },
+        {
+          "href": "/app/i/matching",
+          "text": "Matching"
+        },
+        {
+          "href": "/app/i/settings",
+          "text": "Settings"
+        },
+        {
+          "href": "/app/i/profile?profileView=full&tab=proof_packs",
+          "text": "Review Proof Packs"
+        },
+        {
+          "href": "/app/i/profile?profileView=full&tab=proof_packs",
+          "text": "Proof Packs1 proof-backed signalPresent"
+        },
+        {
+          "href": "/app/i/verifications",
+          "text": "Trust anchors4 accepted trust signalsVerified"
+        },
+        {
+          "href": "/app/i/profile?profileView=full&tab=visibility",
+          "text": "Public Page visibilityPublic-safe sharing controlsReview"
+        },
+        {
+          "href": "/app/i/profile?profileView=full&tab=proof_packs",
+          "text": "Add new record"
+        },
+        {
+          "href": "/app/i/profile?profileView=full&tab=proof_packs",
+          "text": "Review proof"
+        },
+        {
+          "href": "/app/i/verifications",
+          "text": "View request"
+        },
+        {
+          "href": "/app/i/profile?profileView=full&tab=visibility",
+          "text": "Manage visibility"
+        },
+        {
+          "href": "/app/i/profile?profileView=full&tab=proof_packs",
+          "text": "Review proof readiness"
+        }
+      ],
+      "bodyEmpty": false,
+      "buttons": ["", "VA"],
+      "h1": ["Verify strongest proof record"],
+      "hasRuntimeErrorText": false,
+      "horizontalOverflow": false,
+      "text": "Proof-first homeVerify strongest proof recordWelcome back, Verification. Your proof is ready for context, trust, and visibility review.Review Proof PacksYour Proof Wallet3 checksEvidence, trust, and sharing stateProof Packs1 proof-backed signalPresentTrust anchors4 accepted trust signalsVerifiedPublic Page visibilityPublic-safe sharing controlsReviewAdd new recordReadiness Checklist1 to resolveProof Pack is presentReadyCheck the context, evidence, and visibility before sharing.Review proofTrust anchor verifiedVerified4 accepted trust signals attached to your proof.View requestPortfolio visibility reviewReviewYour proof surface is ready for a final sharing pass.Manage visibilityProof Readines",
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33180/app/i/home",
+      "viewport": {
+        "height": 720,
+        "width": 1280
+      }
+    },
+    {
+      "route": "/admin/verification",
+      "name": "admin_verification",
+      "screenshot": "/Users/yuriibakurov/proofound/.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-19/desktop-admin_verification.png",
+      "anchors": [
+        {
+          "href": "#main-content",
+          "text": "Skip to main content"
+        },
+        {
+          "href": "/app/i/home",
+          "text": "Go to Overview"
+        },
+        {
+          "href": "/",
+          "text": "Go to Home"
+        }
+      ],
+      "bodyEmpty": false,
+      "buttons": [],
+      "h1": ["403"],
+      "hasRuntimeErrorText": false,
+      "horizontalOverflow": false,
+      "text": "Skip to main content403You do not have access to this pageYou don't have permission to access this page. This area is restricted to authorized personnel only.Go to OverviewGo to HomeIf you believe you should have access to this page, please contact your administrator.(self.__next_f=self.__next_f||[]).push([0])self.__next_f.push([1,\"5:I[\\\"(app-pages-browser)/./node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js\\\",[\\\"app-pages-internals\\\",\\\"static/chunks/app-pages-internals.js\\\"],\\\"SegmentViewNode\\\"]\\n7:\\\"$Sreact.fragment\\\"\\n13:I[\\\"(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js\\\",[\\\"app-pages-internals\\\",\\\"static/chunks/app-pages-interna",
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33180/403",
+      "viewport": {
+        "height": 720,
+        "width": 1280
+      }
+    }
+  ],
+  "mobileSmokeResults": [
+    {
+      "route": "/",
+      "name": "landing",
+      "screenshot": "/Users/yuriibakurov/proofound/.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-19/mobile-landing.png",
+      "anchors": [
+        {
+          "href": "#main-content",
+          "text": "Skip to main content"
+        },
+        {
+          "href": "/",
+          "text": "Proofound"
+        },
+        {
+          "href": "#story",
+          "text": "How it works"
+        },
+        {
+          "href": "#start-individuals",
+          "text": "For individuals"
+        },
+        {
+          "href": "#start-organizations",
+          "text": "For organizations"
+        },
+        {
+          "href": "/login",
+          "text": "Sign in"
+        },
+        {
+          "href": "/login",
+          "text": "Sign in"
+        },
+        {
+          "href": "/signup",
+          "text": "Start"
+        },
+        {
+          "href": "/signup/organization",
+          "text": "Request a pilot"
+        },
+        {
+          "href": "/signup/organization",
+          "text": "Request a pilot"
+        },
+        {
+          "href": "/signup/individual",
+          "text": "Create your proof portfolio"
+        },
+        {
+          "href": "/signup/organization",
+          "text": "Request a pilot"
+        },
+        {
+          "href": "/signup/individual",
+          "text": "Create your proof portfolio"
+        },
+        {
+          "href": "/",
+          "text": "Proofound"
+        },
+        {
+          "href": "/cookies",
+          "text": "Cookies"
+        },
+        {
+          "href": "/cookies/settings",
+          "text": "Cookie settings"
+        },
+        {
+          "href": "/privacy",
+          "text": "Privacy"
+        },
+        {
+          "href": "/terms",
+          "text": "Terms"
+        },
+        {
+          "href": "/login",
+          "text": "Sign in"
+        }
+      ],
+      "bodyEmpty": false,
+      "buttons": [
+        "For individualsCreate your proof portfolioStart with a cleaner proof portfolio, ",
+        "For organizationsExplore evidence-based hiringReview work through structured pro"
+      ],
+      "h1": ["Proof behind the claim", "Proof behind the claim"],
+      "hasRuntimeErrorText": false,
+      "horizontalOverflow": false,
+      "text": "Proof behind the claimProofound turns real work into structured Proof Packs for privacy-safe hiring review before identity takes over.Request a pilotCreate your proof portfolio02Real outcomes, not bullet pointsVague summaries and floating skill lists resolve into structured outcomes, work scope, ownership, and context. Skills stop existing as decoration and start living next to real work.Senior Operations ProfessionalOutcome signalProof snapshotReviewable12Team200+Scale31%OutcomeOutcome record, artifacts, and trust method stay together.Work scopeOwnershipContext03Verification trust layerArtifacts alone are not enough. Proofound adds verification states, method markers, and trust signals so r",
+      "title": "Proofound | Proof Behind the Claim",
+      "url": "http://localhost:33180/",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "route": "/portfolio/demo",
+      "name": "public_portfolio_demo",
+      "screenshot": "/Users/yuriibakurov/proofound/.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-19/mobile-public_portfolio_demo.png",
+      "anchors": [
+        {
+          "href": "#main-content",
+          "text": "Skip to main content"
+        }
+      ],
+      "bodyEmpty": false,
+      "buttons": [],
+      "h1": [],
+      "hasRuntimeErrorText": false,
+      "horizontalOverflow": false,
+      "text": "Skip to main contentPublic Page unavailableThis Public Page link is unavailable. It may be hidden, retired, or not ready for launch-safe sharing.proofound.io/portfolio/demoPublic Page unavailable(self.__next_f=self.__next_f||[]).push([0])self.__next_f.push([1,\"5:I[\\\"(app-pages-browser)/./node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js\\\",[\\\"app-pages-internals\\\",\\\"static/chunks/app-pages-internals.js\\\"],\\\"SegmentViewNode\\\"]\\n7:\\\"$Sreact.fragment\\\"\\n13:I[\\\"(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js\\\",[\\\"app-pages-internals\\\",\\\"static/chunks/app-pages-internals.js\\\"],\\\"\\\"]\\n15:I[\\\"(app-pages-browser)/./node_modules/next/dist/clien",
+      "title": "Public Page Unavailable | Proofound",
+      "url": "http://localhost:33180/portfolio/demo",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "route": "/portfolio/org/test-org",
+      "name": "public_org_test",
+      "screenshot": "/Users/yuriibakurov/proofound/.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-19/mobile-public_org_test.png",
+      "anchors": [
+        {
+          "href": "#main-content",
+          "text": "Skip to main content"
+        }
+      ],
+      "bodyEmpty": false,
+      "buttons": [],
+      "h1": [],
+      "hasRuntimeErrorText": false,
+      "horizontalOverflow": false,
+      "text": "Skip to main contentOrganization portfolio unavailableThis organization link is unavailable. It may be hidden, retired, or not yet ready for public sharing.proofound.io/portfolio/org/test-orgOrganization portfolio unavailable(self.__next_f=self.__next_f||[]).push([0])self.__next_f.push([1,\"5:I[\\\"(app-pages-browser)/./node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js\\\",[\\\"app-pages-internals\\\",\\\"static/chunks/app-pages-internals.js\\\"],\\\"SegmentViewNode\\\"]\\n7:\\\"$Sreact.fragment\\\"\\n13:I[\\\"(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js\\\",[\\\"app-pages-internals\\\",\\\"static/chunks/app-pages-internals.js\\\"],\\\"\\\"]\\n15:I[\\\"(app-pages-browser)/",
+      "title": "Public Page Unavailable | Proofound",
+      "url": "http://localhost:33180/portfolio/org/test-org",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "route": "/app/i/portfolio",
+      "name": "individual_portfolio",
+      "screenshot": "/Users/yuriibakurov/proofound/.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-19/mobile-individual_portfolio.png",
+      "anchors": [
+        {
+          "href": "#main-content",
+          "text": "Skip to main content"
+        },
+        {
+          "href": "/app/i/home",
+          "text": "Overview"
+        },
+        {
+          "href": "/app/i/profile",
+          "text": "Profile"
+        },
+        {
+          "href": "/app/i/communications",
+          "text": "Communications"
+        },
+        {
+          "href": "/app/i/matching",
+          "text": "Matching"
+        },
+        {
+          "href": "/app/i/settings",
+          "text": "Settings"
+        },
+        {
+          "href": "/app/i/home",
+          "text": "Overview"
+        },
+        {
+          "href": "/app/i/profile",
+          "text": "Profile"
+        },
+        {
+          "href": "/app/i/communications",
+          "text": "Inbox"
+        },
+        {
+          "href": "/app/i/matching",
+          "text": "Matching"
+        },
+        {
+          "href": "/app/i/settings",
+          "text": "Settings"
+        }
+      ],
+      "bodyEmpty": false,
+      "buttons": ["", "VA"],
+      "h1": [],
+      "hasRuntimeErrorText": false,
+      "horizontalOverflow": false,
+      "text": "Loading profilePreparing your proof, visibility, and readiness details.",
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33180/app/i/profile?profileView=full&tab=proof_packs&portfolioLocked=1&lockReason=safe_shell",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "route": "/app/o/test-org/assignments",
+      "name": "org_assignments",
+      "screenshot": "/Users/yuriibakurov/proofound/.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-19/mobile-org_assignments.png",
+      "anchors": [
+        {
+          "href": "#main-content",
+          "text": "Skip to main content"
+        },
+        {
+          "href": "/app/i/home",
+          "text": "Overview"
+        },
+        {
+          "href": "/app/i/profile",
+          "text": "Profile"
+        },
+        {
+          "href": "/app/i/communications",
+          "text": "Communications"
+        },
+        {
+          "href": "/app/i/matching",
+          "text": "Matching"
+        },
+        {
+          "href": "/app/i/settings",
+          "text": "Settings"
+        },
+        {
+          "href": "/app/i/home",
+          "text": "Overview"
+        },
+        {
+          "href": "/app/i/profile",
+          "text": "Profile"
+        },
+        {
+          "href": "/app/i/communications",
+          "text": "Inbox"
+        },
+        {
+          "href": "/app/i/matching",
+          "text": "Matching"
+        },
+        {
+          "href": "/app/i/settings",
+          "text": "Settings"
+        },
+        {
+          "href": "/app/i/profile?profileView=full&tab=proof_packs",
+          "text": "Review Proof Packs"
+        },
+        {
+          "href": "/app/i/profile?profileView=full&tab=proof_packs",
+          "text": "Proof Packs1 proof-backed signalPresent"
+        },
+        {
+          "href": "/app/i/verifications",
+          "text": "Trust anchors4 accepted trust signalsVerified"
+        },
+        {
+          "href": "/app/i/profile?profileView=full&tab=visibility",
+          "text": "Public Page visibilityPublic-safe sharing controlsReview"
+        },
+        {
+          "href": "/app/i/profile?profileView=full&tab=proof_packs",
+          "text": "Add new record"
+        },
+        {
+          "href": "/app/i/profile?profileView=full&tab=proof_packs",
+          "text": "Review proof"
+        },
+        {
+          "href": "/app/i/verifications",
+          "text": "View request"
+        },
+        {
+          "href": "/app/i/profile?profileView=full&tab=visibility",
+          "text": "Manage visibility"
+        },
+        {
+          "href": "/app/i/profile?profileView=full&tab=proof_packs",
+          "text": "Review proof readiness"
+        }
+      ],
+      "bodyEmpty": false,
+      "buttons": ["", "VA"],
+      "h1": ["Verify strongest proof record"],
+      "hasRuntimeErrorText": false,
+      "horizontalOverflow": false,
+      "text": "Proof-first homeVerify strongest proof recordWelcome back, Verification. Your proof is ready for context, trust, and visibility review.Review Proof PacksYour Proof Wallet3 checksEvidence, trust, and sharing stateProof Packs1 proof-backed signalPresentTrust anchors4 accepted trust signalsVerifiedPublic Page visibilityPublic-safe sharing controlsReviewAdd new recordReadiness Checklist1 to resolveProof Pack is presentReadyCheck the context, evidence, and visibility before sharing.Review proofTrust anchor verifiedVerified4 accepted trust signals attached to your proof.View requestPortfolio visibility reviewReviewYour proof surface is ready for a final sharing pass.Manage visibilityProof Readines",
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33180/app/i/home",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "route": "/admin/verification",
+      "name": "admin_verification",
+      "screenshot": "/Users/yuriibakurov/proofound/.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-19/mobile-admin_verification.png",
+      "anchors": [
+        {
+          "href": "#main-content",
+          "text": "Skip to main content"
+        },
+        {
+          "href": "/app/i/home",
+          "text": "Go to Overview"
+        },
+        {
+          "href": "/",
+          "text": "Go to Home"
+        }
+      ],
+      "bodyEmpty": false,
+      "buttons": [],
+      "h1": ["403"],
+      "hasRuntimeErrorText": false,
+      "horizontalOverflow": false,
+      "text": "Skip to main content403You do not have access to this pageYou don't have permission to access this page. This area is restricted to authorized personnel only.Go to OverviewGo to HomeIf you believe you should have access to this page, please contact your administrator.(self.__next_f=self.__next_f||[]).push([0])self.__next_f.push([1,\"5:I[\\\"(app-pages-browser)/./node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js\\\",[\\\"app-pages-internals\\\",\\\"static/chunks/app-pages-internals.js\\\"],\\\"SegmentViewNode\\\"]\\n7:\\\"$Sreact.fragment\\\"\\n13:I[\\\"(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js\\\",[\\\"app-pages-internals\\\",\\\"static/chunks/app-pages-interna",
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33180/403",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    }
+  ]
+}

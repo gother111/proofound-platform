@@ -29,6 +29,7 @@ import { Button } from '@/components/ui/button';
 import { BellOff, Calendar, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 interface SnoozeDialogProps {
   open: boolean;
@@ -80,7 +81,7 @@ export function SnoozeDialog({
       onOpenChange(false);
       if (onSnoozed) onSnoozed();
     } catch (error) {
-      console.error('Failed to snooze match:', error);
+      dispatchClientErrorDiagnostic('matching.snooze_dialog.snooze_failed', error);
       toast.error('Failed to snooze match. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -155,7 +156,7 @@ export function SnoozeDialog({
         <div className="bg-japandi-bg rounded-lg p-3 border border-proofound-stone mb-4">
           <p className="text-xs leading-relaxed text-foreground">
             <strong className="font-semibold">Note:</strong> You can view and manage snoozed matches
-            from your Matching preferences. Snoozed matches won't affect your overall match score.
+            from this matching page. Paused matches do not change your proof readiness.
           </p>
         </div>
 

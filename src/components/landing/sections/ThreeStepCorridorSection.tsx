@@ -4,7 +4,7 @@ const steps = [
   {
     number: '01',
     title: 'Build proof',
-    body: 'Candidates add context, outcomes, artifacts, and trust anchors through Proof Packs.',
+    body: 'Proof-review participants add context, outcomes, artifacts, and optional verification through Proof Packs.',
   },
   {
     number: '02',
@@ -14,7 +14,7 @@ const steps = [
   {
     number: '03',
     title: 'Review safely',
-    body: 'Organizations review stronger signal first, then move through intro, reveal, interview, and decision with explanation and consent built in.',
+    body: 'Organizations review stronger proof first, then move through intro, reveal, interview, and decision with explanation and consent built in.',
   },
 ];
 

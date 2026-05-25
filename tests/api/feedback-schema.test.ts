@@ -36,7 +36,7 @@ describe('SubmitPayloadSchema', () => {
         audienceVariant: 'candidate',
         reasonCode: 'verification_pending',
         personalizedNote:
-          'Your portfolio is credible, but the strongest trust signal is still waiting on verification.',
+          'Your portfolio is credible, but the strongest verification check is still pending.',
         suggestedNextStep:
           'Complete the pending verification request and keep your proof links current.',
         authorRole: 'organization_member',
@@ -61,6 +61,6 @@ describe('SubmitPayloadSchema', () => {
           authorRole: 'organization_member',
         },
       })
-    ).toThrow(/candidate-facing reason code/i);
+    ).toThrow(/participant-facing reason code/i);
   });
 });

@@ -26,6 +26,7 @@ import { Separator } from '@/components/ui/separator';
 import { Eye, EyeOff, Shield, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ConsentExplainer } from '@/components/workflow/ConsentExplainer';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 interface ConsentToShareDialogProps {
   isOpen: boolean;
@@ -81,16 +82,14 @@ export function ConsentToShareDialog({
 
       await onConsent(matchId);
 
-      console.log('Consent given for match:', matchId);
-
       toast({
         title: 'Consent given',
-        description: `Your profile will be shared with ${organizationName}`,
+        description: `Your proof-review snapshot will be shared with ${organizationName}`,
       });
 
       onClose();
     } catch (error) {
-      console.error('Failed to record consent:', error);
+      dispatchClientErrorDiagnostic('matching.consent_to_share.record_failed', error);
       toast({
         title: 'Failed to record consent',
         description: 'Please try again',
@@ -123,11 +122,11 @@ export function ConsentToShareDialog({
       <DialogHeader className="md:px-0 text-left">
         <DialogTitle className="flex items-center gap-2">
           <Shield className="h-5 w-5 text-blue-600" />
-          Consent to Share Profile
+          Consent to Share Proof Snapshot
         </DialogTitle>
         <DialogDescription>
-          Review what information will be shared with {organizationName} for the {assignmentRole}{' '}
-          role
+          Review the exact proof-review snapshot that will be shared with {organizationName} for{' '}
+          {assignmentRole}
         </DialogDescription>
       </DialogHeader>
     </div>
@@ -142,7 +141,7 @@ export function ConsentToShareDialog({
             : ['Only the role-specific proof-backed fields listed below']
         }
         hiddenUntilLater={hiddenUntilInterviewItems}
-        whyThisRequestExists={`This share lets ${organizationName} review your proof-backed profile for the ${assignmentRole} role and decide whether to continue the hiring corridor. It does not auto-reveal contact details or weaken blind review on future requests.`}
+        whyThisRequestExists={`This share lets ${organizationName} review this proof-backed snapshot for ${assignmentRole} and decide whether to request the next workflow stage. It does not auto-reveal contact details or weaken blind review on future requests.`}
         privacyNote={`Only the fields listed in this snapshot are shared with ${organizationName} right now.`}
       />
 
@@ -227,7 +226,7 @@ export function ConsentToShareDialog({
             <p className="font-semibold text-amber-900 dark:text-amber-100">Important Notice</p>
             <ul className="space-y-1 text-amber-800 dark:text-amber-200 list-disc list-inside">
               <li>Once shared, you cannot revoke access to this specific snapshot</li>
-              <li>The organization may retain this information as part of their hiring process</li>
+              <li>The organization may retain this snapshot as part of this assignment workflow</li>
               <li>You can update your visibility settings anytime to control future shares</li>
               <li>Public portfolio publication does not expand what this organization sees here</li>
             </ul>
@@ -265,7 +264,7 @@ export function ConsentToShareDialog({
             className="text-sm font-normal cursor-pointer leading-relaxed"
           >
             I understand that {organizationName} will see this information and I consent to sharing
-            it for the purpose of the {assignmentRole} hiring process
+            it for the {assignmentRole} assignment workflow
           </Label>
         </div>
       </div>
@@ -284,7 +283,7 @@ export function ConsentToShareDialog({
           disabled={!hasReadTerms || !understands || isSubmitting}
           className="w-full sm:w-auto"
         >
-          {isSubmitting ? 'Sharing...' : 'Give Consent & Share Profile'}
+          {isSubmitting ? 'Sharing...' : 'Give Consent & Share Snapshot'}
         </Button>
       </DialogFooter>
     </div>

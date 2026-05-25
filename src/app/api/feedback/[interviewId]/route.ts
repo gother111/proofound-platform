@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
+import { log } from '@/lib/log';
 
 const ParamsSchema = z.object({
   interviewId: z.string().uuid(),
@@ -10,9 +11,8 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ interviewId: string }> }
 ) {
-  const supabase = await createClient();
-
   try {
+    const supabase = await createClient();
     const {
       data: { user },
       error: authError,
@@ -111,7 +111,7 @@ export async function GET(
       responses: maskedResponses,
     });
   } catch (error: any) {
-    console.error('Feedback load failed', error);
+    log.error('feedback.load.failed', { error });
 
     if (error.name === 'ZodError') {
       return NextResponse.json({ error: 'Invalid interview id' }, { status: 400 });

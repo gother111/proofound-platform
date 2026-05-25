@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { deflateSync } from 'node:zlib';
 
 const dbMocks = vi.hoisted(() => ({
   select: vi.fn(),
@@ -24,6 +25,8 @@ import {
   buildDeterministicDrafts,
   countStartFromCvPages,
   enforceStartFromCvDailyLimits,
+  extractStartFromCvSession,
+  extractTextFromPdfStreams,
   getStartFromCvLaunchSummary,
   resolveStartFromCvConfig,
   START_FROM_CV_QUOTA_COUNTED_STATUSES,
@@ -96,7 +99,7 @@ describe('Start from CV guardrails', () => {
     ).resolves.toBeUndefined();
   });
 
-  it('keeps organization profiles outside Start from CV even during open beta', async () => {
+  it('keeps organization trust-page work outside Start from CV even during open beta', async () => {
     await expect(
       assertStartFromCvAccess({
         userId: '11111111-1111-4111-8111-111111111111',
@@ -167,6 +170,57 @@ describe('Start from CV guardrails', () => {
 
     expect(countStartFromCvPages('application/pdf', new Uint8Array(pdf))).toBe(2);
     expect(countStartFromCvPages('image/png', new Uint8Array([1, 2, 3]))).toBe(1);
+  });
+
+  it('does not inflate oversized PDF streams during local extraction fallback', () => {
+    const compressed = deflateSync(Buffer.from(`(${`A`.repeat(250_000)})`, 'utf8'));
+    const pdf = Buffer.concat([
+      Buffer.from('%PDF-1.7\n1 0 obj\n<< /Filter /FlateDecode >>\nstream\n', 'latin1'),
+      compressed,
+      Buffer.from('\nendstream\nendobj\n', 'latin1'),
+    ]);
+
+    expect(extractTextFromPdfStreams(new Uint8Array(pdf))).toBe('');
+  });
+
+  it('rejects repeat extraction for a session that already produced a draft', async () => {
+    const limitMock = vi.fn().mockResolvedValue([
+      {
+        id: 'session-1',
+        userId: '11111111-1111-4111-8111-111111111111',
+        status: 'ready_for_review',
+        extractionStatus: 'completed',
+        consentConfirmedAt: new Date(),
+        deletedAt: null,
+      },
+    ]);
+    const whereMock = vi.fn(() => ({ limit: limitMock }));
+    const fromMock = vi.fn(() => ({ where: whereMock }));
+    dbMocks.select.mockReturnValue({ from: fromMock });
+
+    await expect(
+      extractStartFromCvSession({
+        sessionId: 'session-1',
+        userId: '11111111-1111-4111-8111-111111111111',
+        persona: 'individual',
+        orgIds: [],
+        isBetaTesting: true,
+        file: {
+          name: 'cv.pdf',
+          type: 'application/pdf',
+          size: 8,
+          bytes: new Uint8Array(Buffer.from('%PDF-1.7')),
+        },
+        env: {
+          START_FROM_CV_BETA_ENABLED: 'true',
+          START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_ENABLED: 'true',
+          START_FROM_CV_OPEN_BETA_ENABLED: 'true',
+          NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED: 'false',
+        },
+      })
+    ).rejects.toMatchObject({ code: 'START_FROM_CV_EXTRACTION_ALREADY_COMPLETED', status: 409 });
+
+    expect(pdfMocks.extractPdfTextFromBytes).not.toHaveBeenCalled();
   });
 
   it('keeps unsupported skill drafts explicitly unsupported with no trust or matching lift', () => {

@@ -1,0 +1,591 @@
+{
+  "generatedAt": "2026-05-20T18:29:32.892Z",
+  "individualBase": "http://127.0.0.1:33123",
+  "orgBase": "http://localhost:33122",
+  "results": [
+    {
+      "route": "individual-home",
+      "requestedUrl": "http://127.0.0.1:33123/app/i/home",
+      "viewport": {},
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/desktop-individual-home.png",
+      "gotoError": null,
+      "actions": [],
+      "cookieBannerVisible": false,
+      "finalUrl": "http://127.0.0.1:33123/app/i/home",
+      "h1": "Build your proof-first profile",
+      "headings": [
+        {
+          "tag": "H2",
+          "text": "Portfolio Readiness"
+        },
+        {
+          "tag": "H1",
+          "text": "Build your proof-first profile"
+        }
+      ],
+      "loadingVisible": false,
+      "loginVisible": true,
+      "mainTextStart": "Portfolio ReadinessSetup RequiredBuild your proof-first profileWelcome back, there. Start by creating your first proof record. Shaping a single trusted work sample or artifact unlocks your profile.Guided setupYour profile is private by default. Candidates stay hidden until they explicitly authorize discovery or initiate a verification check.",
+      "overflowOffenders": [],
+      "scroll": {
+        "bodyScrollHeight": 1000,
+        "bodyScrollWidth": 1440,
+        "clientWidth": 1440,
+        "horizontalOverflow": 0,
+        "scrollHeight": 1000,
+        "scrollWidth": 1440
+      },
+      "title": "Proofound - Focus on what matters"
+    },
+    {
+      "route": "individual-home",
+      "requestedUrl": "http://127.0.0.1:33123/app/i/home",
+      "viewport": {},
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/mobile-individual-home.png",
+      "gotoError": null,
+      "actions": [],
+      "cookieBannerVisible": false,
+      "finalUrl": "http://127.0.0.1:33123/app/i/home",
+      "h1": "Build your proof-first profile",
+      "headings": [
+        {
+          "tag": "H2",
+          "text": "Portfolio Readiness"
+        },
+        {
+          "tag": "H1",
+          "text": "Build your proof-first profile"
+        }
+      ],
+      "loadingVisible": false,
+      "loginVisible": true,
+      "mainTextStart": "Portfolio ReadinessSetup RequiredBuild your proof-first profileWelcome back, there. Start by creating your first proof record. Shaping a single trusted work sample or artifact unlocks your profile.Guided setupYour profile is private by default. Candidates stay hidden until they explicitly authorize discovery or initiate a verification check.",
+      "overflowOffenders": [],
+      "scroll": {
+        "bodyScrollHeight": 844,
+        "bodyScrollWidth": 390,
+        "clientWidth": 390,
+        "horizontalOverflow": 0,
+        "scrollHeight": 844,
+        "scrollWidth": 390
+      },
+      "title": "Proofound - Focus on what matters"
+    },
+    {
+      "route": "individual-onboarding",
+      "requestedUrl": "http://127.0.0.1:33123/onboarding",
+      "viewport": {},
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/desktop-individual-onboarding.png",
+      "gotoError": null,
+      "actions": [],
+      "cookieBannerVisible": false,
+      "finalUrl": "http://127.0.0.1:33123/onboarding",
+      "h1": "Start with one Proof Pack",
+      "headings": [
+        {
+          "tag": "H1",
+          "text": "Start with one Proof Pack"
+        }
+      ],
+      "loadingVisible": false,
+      "loginVisible": false,
+      "mainTextStart": "Skip to main content ← Back to persona choice Start with one Proof Pack Add your name, where you are based, and one artifact that can become your first Proof Pack. Basic details One proof artifact Basic details Name and residence only. The proof comes next. First name * Last name * City or residence * Continue to proof artifact",
+      "overflowOffenders": [],
+      "scroll": {
+        "bodyScrollHeight": 1000,
+        "bodyScrollWidth": 1440,
+        "clientWidth": 1440,
+        "horizontalOverflow": 0,
+        "scrollHeight": 1000,
+        "scrollWidth": 1440
+      },
+      "title": "Proofound - Focus on what matters"
+    },
+    {
+      "route": "individual-onboarding",
+      "requestedUrl": "http://127.0.0.1:33123/onboarding",
+      "viewport": {},
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/mobile-individual-onboarding.png",
+      "gotoError": null,
+      "actions": [],
+      "cookieBannerVisible": false,
+      "finalUrl": "http://127.0.0.1:33123/onboarding",
+      "h1": "Start with one Proof Pack",
+      "headings": [
+        {
+          "tag": "H1",
+          "text": "Start with one Proof Pack"
+        }
+      ],
+      "loadingVisible": false,
+      "loginVisible": false,
+      "mainTextStart": "Skip to main content ← Back to persona choice Start with one Proof Pack Add your name, where you are based, and one artifact that can become your first Proof Pack. Basic details One proof artifact Basic details Name and residence only. The proof comes next. First name * Last name * City or residence * Continue to proof artifact",
+      "overflowOffenders": [],
+      "scroll": {
+        "bodyScrollHeight": 861,
+        "bodyScrollWidth": 379,
+        "clientWidth": 379,
+        "horizontalOverflow": 0,
+        "scrollHeight": 861,
+        "scrollWidth": 379
+      },
+      "title": "Proofound - Focus on what matters"
+    },
+    {
+      "route": "individual-portfolio-redirect",
+      "requestedUrl": "http://127.0.0.1:33123/app/i/portfolio",
+      "viewport": {},
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/desktop-individual-portfolio-redirect.png",
+      "gotoError": null,
+      "actions": [],
+      "cookieBannerVisible": false,
+      "finalUrl": "http://127.0.0.1:33123/app/i/profile?profileView=full&tab=proof_packs&portfolioLocked=1&lockReason=safe_shell&proof=first",
+      "h1": "",
+      "headings": [],
+      "loadingVisible": true,
+      "loginVisible": false,
+      "mainTextStart": "Loading profilePreparing your proof, visibility, and readiness details.",
+      "overflowOffenders": [],
+      "scroll": {
+        "bodyScrollHeight": 1000,
+        "bodyScrollWidth": 1440,
+        "clientWidth": 1440,
+        "horizontalOverflow": 0,
+        "scrollHeight": 1000,
+        "scrollWidth": 1440
+      },
+      "title": "Proofound - Focus on what matters"
+    },
+    {
+      "route": "individual-portfolio-redirect",
+      "requestedUrl": "http://127.0.0.1:33123/app/i/portfolio",
+      "viewport": {},
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/mobile-individual-portfolio-redirect.png",
+      "gotoError": null,
+      "actions": [],
+      "cookieBannerVisible": false,
+      "finalUrl": "http://127.0.0.1:33123/app/i/profile?profileView=full&tab=proof_packs&portfolioLocked=1&lockReason=safe_shell&proof=first",
+      "h1": "",
+      "headings": [],
+      "loadingVisible": true,
+      "loginVisible": false,
+      "mainTextStart": "Loading profilePreparing your proof, visibility, and readiness details.",
+      "overflowOffenders": [],
+      "scroll": {
+        "bodyScrollHeight": 844,
+        "bodyScrollWidth": 390,
+        "clientWidth": 390,
+        "horizontalOverflow": 0,
+        "scrollHeight": 844,
+        "scrollWidth": 390
+      },
+      "title": "Proofound - Focus on what matters"
+    },
+    {
+      "route": "individual-profile-full",
+      "requestedUrl": "http://127.0.0.1:33123/app/i/profile?profileView=full&tab=proof_packs",
+      "viewport": {},
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/desktop-individual-profile-full.png",
+      "gotoError": null,
+      "actions": [],
+      "cookieBannerVisible": false,
+      "finalUrl": "http://127.0.0.1:33123/app/i/profile?profileView=full&tab=proof_packs",
+      "h1": "",
+      "headings": [],
+      "loadingVisible": true,
+      "loginVisible": false,
+      "mainTextStart": "Loading profilePreparing your proof, visibility, and readiness details.",
+      "overflowOffenders": [],
+      "scroll": {
+        "bodyScrollHeight": 1000,
+        "bodyScrollWidth": 1440,
+        "clientWidth": 1440,
+        "horizontalOverflow": 0,
+        "scrollHeight": 1000,
+        "scrollWidth": 1440
+      },
+      "title": "Proofound - Focus on what matters"
+    },
+    {
+      "route": "individual-profile-full",
+      "requestedUrl": "http://127.0.0.1:33123/app/i/profile?profileView=full&tab=proof_packs",
+      "viewport": {},
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/mobile-individual-profile-full.png",
+      "gotoError": null,
+      "actions": [],
+      "cookieBannerVisible": false,
+      "finalUrl": "http://127.0.0.1:33123/app/i/profile?profileView=full&tab=proof_packs",
+      "h1": "Mock Individual",
+      "headings": [
+        {
+          "tag": "H2",
+          "text": "Mock Individual"
+        },
+        {
+          "tag": "H1",
+          "text": "Mock Individual"
+        },
+        {
+          "tag": "H2",
+          "text": "Public Page readiness"
+        }
+      ],
+      "loadingVisible": false,
+      "loginVisible": false,
+      "mainTextStart": "Keep building proof readinessKeep the first milestone anchored in real work. Add proof context, visibility choices, and optional verification checks before expanding public details.First Proof Pack createdPublic Page readyMatching preferences savedNon-self verification addedStart with one context-backed Proof PackMOMock IndividualMock IndividualHiddenShareAdd locationJoined February 2026Add a taglineA brief statement that captures who you are and what you care about1/5Public Page readinessComplete one clear proof path before publishing.Next: Complete your safe shellSafe shell basicsOne real context is anchoredOne real proof is added and structuredOne non-self verification is acceptedPublic Page publicationProof readinessSafe shellNeeds basicsContext1 context itemProofAdd your first proofVerificationRequest scoped verificationProfile emphasisIndividual profiles are built from proof, conte",
+      "overflowOffenders": [],
+      "scroll": {
+        "bodyScrollHeight": 844,
+        "bodyScrollWidth": 390,
+        "clientWidth": 390,
+        "horizontalOverflow": 0,
+        "scrollHeight": 844,
+        "scrollWidth": 390
+      },
+      "title": "Proofound - Focus on what matters"
+    },
+    {
+      "route": "individual-verifications",
+      "requestedUrl": "http://127.0.0.1:33123/app/i/verifications",
+      "viewport": {},
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/desktop-individual-verifications.png",
+      "gotoError": null,
+      "actions": [],
+      "cookieBannerVisible": false,
+      "finalUrl": "http://127.0.0.1:33123/app/i/verifications",
+      "h1": "Proof verification requests",
+      "headings": [
+        {
+          "tag": "H1",
+          "text": "Proof verification requests"
+        },
+        {
+          "tag": "H2",
+          "text": "2 requests need attention."
+        }
+      ],
+      "loadingVisible": false,
+      "loginVisible": false,
+      "mainTextStart": "Proof verification requestsFollow which proof, claim, verifier, and bounded outcome each request is tied to.Incoming2Sent22 requests need attention.Start here for failed, disputed, contradicted, or soon-expiring confirmations.2Attention1Pending0ActiveShow attentionAll(2)ActivePending(1)Needs attention(2)DeclinedExpired / staleRevoked / correctedNewestScopeMAMira AnderssonVerification subject: Proof-first hiring corridor readiness reviewClaim-Confirm that the proof pack clearly connects private source material, review decisions, and a launch-safe candidate story without exposing sensitive details.PendingDeclineConfirmSLSofia LindVerification subject: Review uncertainty reductionClaim-The reviewer needs a clearer confirmation path before this outcome can be treated as proof-backed.Failed",
+      "overflowOffenders": [],
+      "scroll": {
+        "bodyScrollHeight": 1000,
+        "bodyScrollWidth": 1440,
+        "clientWidth": 1440,
+        "horizontalOverflow": 0,
+        "scrollHeight": 1000,
+        "scrollWidth": 1440
+      },
+      "title": "Proofound - Focus on what matters"
+    },
+    {
+      "route": "individual-verifications",
+      "requestedUrl": "http://127.0.0.1:33123/app/i/verifications",
+      "viewport": {},
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/mobile-individual-verifications.png",
+      "gotoError": null,
+      "actions": [],
+      "cookieBannerVisible": false,
+      "finalUrl": "http://127.0.0.1:33123/app/i/verifications",
+      "h1": "Proof verification requests",
+      "headings": [
+        {
+          "tag": "H1",
+          "text": "Proof verification requests"
+        },
+        {
+          "tag": "H2",
+          "text": "2 requests need attention."
+        }
+      ],
+      "loadingVisible": false,
+      "loginVisible": false,
+      "mainTextStart": "Proof verification requestsFollow which proof, claim, verifier, and bounded outcome each request is tied to.Incoming2Sent22 requests need attention.Start here for failed, disputed, contradicted, or soon-expiring confirmations.2Attention1Pending0ActiveShow attentionAll(2)ActivePending(1)Needs attention(2)DeclinedExpired / staleRevoked / correctedNewestScopeMAMira AnderssonVerification subject: Proof-first hiring corridor readiness reviewClaim-Confirm that the proof pack clearly connects private source material, review decisions, and a launch-safe candidate story without exposing sensitive details.PendingDeclineConfirmSLSofia LindVerification subject: Review uncertainty reductionClaim-The reviewer needs a clearer confirmation path before this outcome can be treated as proof-backed.Failed",
+      "overflowOffenders": [],
+      "scroll": {
+        "bodyScrollHeight": 844,
+        "bodyScrollWidth": 390,
+        "clientWidth": 390,
+        "horizontalOverflow": 0,
+        "scrollHeight": 844,
+        "scrollWidth": 390
+      },
+      "title": "Proofound - Focus on what matters"
+    },
+    {
+      "route": "org-home",
+      "requestedUrl": "http://localhost:33122/app/o/test-org/home",
+      "viewport": {},
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/desktop-org-home.png",
+      "gotoError": null,
+      "actions": [],
+      "cookieBannerVisible": false,
+      "finalUrl": "http://localhost:33122/app/o/test-org/home",
+      "h1": "Nordic Field Systems",
+      "headings": [
+        {
+          "tag": "H1",
+          "text": "Nordic Field Systems"
+        },
+        {
+          "tag": "H2",
+          "text": "Create the first assignment"
+        }
+      ],
+      "loadingVisible": false,
+      "loginVisible": false,
+      "mainTextStart": "Nordic Field SystemsCurrent review workspaceSigned in as ManagerReview statusReady for assignmentCreate the first assignmentYour organization trust profile is active. Define a proof-led assignment (real-world context, required evidence, and compensation bounds) to open the matching corridor.Create first assignmentTeam accessMembers authorized to review matchesCCollaboratorManager",
+      "overflowOffenders": [],
+      "scroll": {
+        "bodyScrollHeight": 1000,
+        "bodyScrollWidth": 1440,
+        "clientWidth": 1440,
+        "horizontalOverflow": 0,
+        "scrollHeight": 1000,
+        "scrollWidth": 1440
+      },
+      "title": "Proofound - Focus on what matters"
+    },
+    {
+      "route": "org-home",
+      "requestedUrl": "http://localhost:33122/app/o/test-org/home",
+      "viewport": {},
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/mobile-org-home.png",
+      "gotoError": null,
+      "actions": [],
+      "cookieBannerVisible": false,
+      "finalUrl": "http://localhost:33122/app/o/test-org/home",
+      "h1": "Nordic Field Systems",
+      "headings": [
+        {
+          "tag": "H1",
+          "text": "Nordic Field Systems"
+        },
+        {
+          "tag": "H2",
+          "text": "Create the first assignment"
+        }
+      ],
+      "loadingVisible": false,
+      "loginVisible": false,
+      "mainTextStart": "Nordic Field SystemsCurrent review workspaceSigned in as ManagerReview statusReady for assignmentCreate the first assignmentYour organization trust profile is active. Define a proof-led assignment (real-world context, required evidence, and compensation bounds) to open the matching corridor.Create first assignmentTeam accessMembers authorized to review matchesCCollaboratorManager",
+      "overflowOffenders": [],
+      "scroll": {
+        "bodyScrollHeight": 844,
+        "bodyScrollWidth": 390,
+        "clientWidth": 390,
+        "horizontalOverflow": 0,
+        "scrollHeight": 844,
+        "scrollWidth": 390
+      },
+      "title": "Proofound - Focus on what matters"
+    },
+    {
+      "route": "org-assignments",
+      "requestedUrl": "http://localhost:33122/app/o/test-org/assignments",
+      "viewport": {},
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/desktop-org-assignments.png",
+      "gotoError": null,
+      "actions": [],
+      "cookieBannerVisible": false,
+      "finalUrl": "http://localhost:33122/app/o/test-org/assignments",
+      "h1": "Assignments",
+      "headings": [
+        {
+          "tag": "H1",
+          "text": "Assignments"
+        },
+        {
+          "tag": "H2",
+          "text": "Assignment review queue"
+        },
+        {
+          "tag": "H2",
+          "text": "Field operations launch lead for municipal infrastructure handoffs"
+        }
+      ],
+      "loadingVisible": true,
+      "loginVisible": false,
+      "mainTextStart": "Assignment corridorOrganization / AssignmentsAssignmentsAssignment cards own their matching corridor, candidate review, and pipeline context.Assignment review queueReview proof-backed candidates, shortlist fits, and request intros when ready.New AssignmentActive AssignmentsField operations launch lead for municipal infrastructure handoffsReview updatesOpen7 matchesPartner readiness analystDraft0 matchesFocused ReviewField operations launch lead for municipal infrastructure handoffsLaunched 5/16/2026Edit assignment contextLoading proof-aligned candidates...",
+      "overflowOffenders": [],
+      "scroll": {
+        "bodyScrollHeight": 1000,
+        "bodyScrollWidth": 1440,
+        "clientWidth": 1440,
+        "horizontalOverflow": 0,
+        "scrollHeight": 1000,
+        "scrollWidth": 1440
+      },
+      "title": "Proofound - Focus on what matters"
+    },
+    {
+      "route": "org-assignments",
+      "requestedUrl": "http://localhost:33122/app/o/test-org/assignments",
+      "viewport": {},
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/mobile-org-assignments.png",
+      "gotoError": null,
+      "actions": [],
+      "cookieBannerVisible": false,
+      "finalUrl": "http://localhost:33122/app/o/test-org/assignments",
+      "h1": "Assignments",
+      "headings": [
+        {
+          "tag": "H1",
+          "text": "Assignments"
+        },
+        {
+          "tag": "H2",
+          "text": "Assignment workspace is loading"
+        }
+      ],
+      "loadingVisible": true,
+      "loginVisible": false,
+      "mainTextStart": "Assignment corridorOrganization / AssignmentsAssignmentsAssignment cards own their matching corridor, candidate review, and pipeline context.AssignmentsAssignment workspace is loadingWe are preparing the assignment cards, proof matches, and review context for this workspace.Loading assignments and matches...Create assignment",
+      "overflowOffenders": [],
+      "scroll": {
+        "bodyScrollHeight": 844,
+        "bodyScrollWidth": 390,
+        "clientWidth": 390,
+        "horizontalOverflow": 0,
+        "scrollHeight": 844,
+        "scrollWidth": 390
+      },
+      "title": "Proofound - Focus on what matters"
+    },
+    {
+      "route": "org-communications",
+      "requestedUrl": "http://localhost:33122/app/o/test-org/communications",
+      "viewport": {},
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/desktop-org-communications.png",
+      "gotoError": null,
+      "actions": [],
+      "cookieBannerVisible": false,
+      "finalUrl": "http://localhost:33122/app/o/test-org/communications",
+      "h1": "",
+      "headings": [],
+      "loadingVisible": false,
+      "loginVisible": false,
+      "mainTextStart": "",
+      "overflowOffenders": [],
+      "scroll": {
+        "bodyScrollHeight": 0,
+        "bodyScrollWidth": 1424,
+        "clientWidth": 1440,
+        "horizontalOverflow": 0,
+        "scrollHeight": 1000,
+        "scrollWidth": 1440
+      },
+      "title": ""
+    },
+    {
+      "route": "org-communications",
+      "requestedUrl": "http://localhost:33122/app/o/test-org/communications",
+      "viewport": {},
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/mobile-org-communications.png",
+      "gotoError": null,
+      "actions": [],
+      "cookieBannerVisible": false,
+      "finalUrl": "http://localhost:33122/app/o/test-org/communications",
+      "h1": "Messages",
+      "headings": [
+        {
+          "tag": "H1",
+          "text": "Messages"
+        },
+        {
+          "tag": "H2",
+          "text": "Messages"
+        }
+      ],
+      "loadingVisible": false,
+      "loginVisible": false,
+      "mainTextStart": "Hiring CorridorCommunicationsMessagesThreads, intros, and reveal requests.InterviewsScheduling, feedback, and handoff.Secure CorridorMessages, scheduling, and reveal steps stay inside the consent-bound corridor.MessagesAssignment conversations stay private and stage-aware. Candidate identity remains protected until a consented reveal opens the next step.MessagesSelect a conversationConversations appear after an assignment and introduction are ready. Choose a thread when one opens in the list.Candidate identity remains protected before reveal",
+      "overflowOffenders": [],
+      "scroll": {
+        "bodyScrollHeight": 844,
+        "bodyScrollWidth": 390,
+        "clientWidth": 390,
+        "horizontalOverflow": 0,
+        "scrollHeight": 844,
+        "scrollWidth": 390
+      },
+      "title": "Proofound - Focus on what matters"
+    },
+    {
+      "route": "org-shortlist-redirect",
+      "requestedUrl": "http://localhost:33122/app/o/test-org/shortlist",
+      "viewport": {},
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/desktop-org-shortlist-redirect.png",
+      "gotoError": null,
+      "actions": [],
+      "cookieBannerVisible": false,
+      "finalUrl": "http://localhost:33122/app/o/test-org/assignments",
+      "h1": "Assignments",
+      "headings": [
+        {
+          "tag": "H1",
+          "text": "Assignments"
+        },
+        {
+          "tag": "H2",
+          "text": "Assignment review queue"
+        },
+        {
+          "tag": "H2",
+          "text": "Field operations launch lead for municipal infrastructure handoffs"
+        }
+      ],
+      "loadingVisible": true,
+      "loginVisible": false,
+      "mainTextStart": "Assignment corridorOrganization / AssignmentsAssignmentsAssignment cards own their matching corridor, candidate review, and pipeline context.Assignment review queueReview proof-backed candidates, shortlist fits, and request intros when ready.New AssignmentActive AssignmentsField operations launch lead for municipal infrastructure handoffsReview updatesOpen7 matchesPartner readiness analystDraft0 matchesFocused ReviewField operations launch lead for municipal infrastructure handoffsLaunched 5/16/2026Edit assignment contextLoading proof-aligned candidates...",
+      "overflowOffenders": [],
+      "scroll": {
+        "bodyScrollHeight": 1000,
+        "bodyScrollWidth": 1440,
+        "clientWidth": 1440,
+        "horizontalOverflow": 0,
+        "scrollHeight": 1000,
+        "scrollWidth": 1440
+      },
+      "title": "Proofound - Focus on what matters"
+    },
+    {
+      "route": "org-shortlist-redirect",
+      "requestedUrl": "http://localhost:33122/app/o/test-org/shortlist",
+      "viewport": {},
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/mobile-org-shortlist-redirect.png",
+      "gotoError": null,
+      "actions": [],
+      "cookieBannerVisible": false,
+      "finalUrl": "http://localhost:33122/app/o/test-org/assignments",
+      "h1": "Assignments",
+      "headings": [
+        {
+          "tag": "H1",
+          "text": "Assignments"
+        },
+        {
+          "tag": "H2",
+          "text": "Assignment review queue"
+        },
+        {
+          "tag": "H2",
+          "text": "Field operations launch lead for municipal infrastructure handoffs"
+        }
+      ],
+      "loadingVisible": true,
+      "loginVisible": false,
+      "mainTextStart": "Assignment corridorOrganization / AssignmentsAssignmentsAssignment cards own their matching corridor, candidate review, and pipeline context.Assignment review queueReview proof-backed candidates, shortlist fits, and request intros when ready.New AssignmentActive AssignmentsField operations launch lead for municipal infrastructure handoffsReview updatesOpen7 matchesPartner readiness analystDraft0 matchesFocused ReviewField operations launch lead for municipal infrastructure handoffsLaunched 5/16/2026Edit assignment contextLoading proof-aligned candidates...",
+      "overflowOffenders": [],
+      "scroll": {
+        "bodyScrollHeight": 844,
+        "bodyScrollWidth": 390,
+        "clientWidth": 390,
+        "horizontalOverflow": 0,
+        "scrollHeight": 844,
+        "scrollWidth": 390
+      },
+      "title": "Proofound - Focus on what matters"
+    }
+  ]
+}

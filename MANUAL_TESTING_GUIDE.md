@@ -1,111 +1,130 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-02-26`
+> Last Verified: `2026-05-21`
 
 # Manual Testing Guide
 
-This guide defines current manual testing flows aligned with active routes and test contracts.
+This guide describes the current human QA path for the locked Proofound MVP. It is intentionally narrower than older platform-era manual guides.
 
-## Prerequisites
+## Ground Rules
 
-- `npm run dev` running.
-- Valid `.env.local` configured (Supabase + provider integrations if testing provider flows).
-- Separate browser profiles or incognito windows for multi-user tests.
+- Use the authority order in `AGENTS.md` when manual findings conflict with older docs.
+- Treat proof-first assignment review, Proof Packs, assignments, verification, consented reveal, interviews, decisions, and engagement verification as the active corridor.
+- Treat manual-link interview scheduling as the default interview path.
+- Run connected-provider checks only when a target explicitly enables that provider.
+- Record target URL, account role, viewport, result, and any remaining `UNVERIFIED` item.
 
-## 1) Public and Auth Flows
+## 1. Public And Auth
 
-### Routes
+Routes:
 
 - `/`
 - `/signup`
+- `/signup/individual`
+- `/signup/organization`
 - `/login`
-- `/reset-password`
-- `/verify-email`
+- `/privacy`
+- `/terms`
+- `/cookies`
+- `/portfolio/<handle>`
+- `/portfolio/org/<slug>`
 
-### Checks
+Checks:
 
-- Individual signup path works.
-- Organization signup path works.
-- Login success and failure states render correctly.
-- Password reset shows success and error states appropriately.
-- Verification route handles valid/invalid/missing token paths.
+- Landing copy is proof-first, calm, and specific.
+- Signup and login have obvious primary actions and recoverable error states.
+- Footer/legal links are reachable.
+- Public individual and organization pages either render safe public projections or a safe unavailable state.
+- Public surfaces do not expose private proof, hidden verification state, proof-review participant contact details, reveal status, or admin diagnostics.
 
-## 2) Individual App Flow
+## 2. Individual Corridor
 
-### Core Routes
+Routes:
 
+- `/onboarding`
 - `/app/i/home`
-- `/app/i/profile`
-- `/app/i/expertise`
-- `/app/i/matching`
-- `/app/i/messages`
+- `/app/i/portfolio`
+- `/app/i/verifications`
+- `/app/i/communications`
 - `/app/i/interviews`
-- `/app/i/settings/*`
+- `/app/i/settings/privacy`
 
-### Checks
+Checks:
 
-- Profile edits persist across refresh.
-- Matching setup persists and match actions are stable.
-- Messaging and interview flows load without route-level failures.
-- Verification/integrations settings render proper status.
+- First-time flow starts with proof creation and readiness, not broad profile theater.
+- Profile context remains private unless explicitly published.
+- Proof Pack state, proof quality, anchor context, verification state, and publishing readiness are understandable.
+- Verification requests use bounded, claim-scoped copy.
+- Communications preserve privacy before reveal and make intro/reveal/interview/decision states clear.
+- Export/delete/privacy controls are discoverable and do not overstate trust.
+- Empty, loading, error, disabled, success, archived/gated, and mobile states are covered where relevant.
 
-## 3) Organization App Flow
+## 3. Organization Corridor
 
-### Core Routes
+Routes:
 
 - `/app/o/<slug>/home`
 - `/app/o/<slug>/profile`
-- `/app/o/<slug>/members`
-- `/app/o/<slug>/invitations`
+- `/app/o/<slug>/portfolio`
 - `/app/o/<slug>/assignments`
+- `/app/o/<slug>/assignments/new`
 - `/app/o/<slug>/matching`
-- `/app/o/<slug>/settings`
+- `/app/o/<slug>/shortlist`
+- `/app/o/<slug>/communications`
+- `/app/o/<slug>/interviews`
 
-### Checks
+Checks:
 
-- Org onboarding and profile updates persist.
-- Assignment create/publish lifecycle is functional.
-- Role-based access control is enforced for members/settings.
+- Organization onboarding/profile/trust surfaces stay focused on the current organization, not broad directory behavior.
+- Assignment list/create/edit/review/publish paths make the primary object and next action obvious.
+- Proof-submission review cards explain why a match is relevant without ranking theater or hidden identity leaks.
+- Matching and shortlist shortcuts stay inside the assignment review corridor.
+- Intro request, reveal request, proof-review participant consent, interview scheduling/reschedule, decision recording, engage/close, and engagement verification are understandable.
+- Team/role behavior, if active for the target, enforces current permissions.
+- Empty, loading, error, disabled, success, archived/gated, and mobile states are covered where relevant.
 
-## 4) Admin Flow
+## 4. Admin And Internal Ops
 
-### Core Routes
+Routes:
 
 - `/admin`
-- `/admin/users`
-- `/admin/organizations`
 - `/admin/verification`
-- `/admin/fairness`
+- `/admin/audit`
 
-### Checks
+Checks:
 
-- Core admin pages load without blocking route errors.
-- Non-admin users are denied access (`/403` or redirect).
+- Public and standard users fail closed.
+- Queue content is visible only to authorized admins.
+- Verification, privacy/reveal dispute, risky-upload, and pilot-ops queue labels match the internal ops SOPs.
+- Audit logs are protected and useful for launch-safe manual review.
+- Monitoring and launch-status diagnostics remain internal/authenticated.
 
-## 5) Accessibility Manual Pass
+## 5. Accessibility And Visual QA
 
-- Keyboard-first navigation for public routes.
-- Focus visibility on all critical controls.
-- Screen reader spot-check on auth + app shell pages.
-- Contrast check for critical text and controls.
+Use desktop and mobile viewports.
 
-## 6) Performance Manual Pass
+- Public, individual, organization, and admin surfaces have a clear primary object and next action.
+- Text fits containers without overlap.
+- Keyboard navigation reaches all critical controls.
+- Focus states are visible.
+- Error states are written in plain language.
+- The UI avoids generic dashboards, vanity metrics, broad platform claims, and internal jargon.
 
-- Home and app shell routes load without major blocking regressions.
-- No sustained 4xx/5xx for happy-path flows.
-- Console remains clean on critical paths.
+## 6. Automation Companions
 
-## 7) Database Verification Spot Checks
+Run or cite the strongest available automated checks:
 
-For key manual flows, validate persistence in Supabase using targeted SQL on:
+- `npm run docs:freshness`
+- `npm run test:launch:routes`
+- `npm run test:launch:workflow`
+- `npm run test:launch:org-corridor`
+- `npm run test:launch:privacy`
+- `npm run test:launch:portfolio`
+- `npm run test:e2e:providers:advisory` only if connected-provider scheduling is intentionally in scope for the target
+- `npm run test:a11y:strict`
+- `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch`
+- `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go`
 
-- profiles / individual_profiles
-- organizations / organization_members
-- matching_profiles / skills
-- assignments / matches
-- verification tables
+For protected launch-status and go/no-go checks, `INTERNAL_API_SECRET=<secret>` may replace
+`CRON_SECRET=<secret>`.
 
-## Canonical Automation Companions
-
-- `docs/testing-strategy.md`
-- `docs/qa/e2e-matrix.md`
-- `agent/checklists/verification.md`
+If a check cannot run, record the exact reason and the manual evidence that partially covers it. Do not convert that into a launch `PASS`.

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { requestPasswordReset, signUp, verifyEmail } from '@/actions/auth';
+import { requestPasswordReset, signInWithOAuth, signUp, verifyEmail } from '@/actions/auth';
 import { resolveCanonicalSiteUrl } from '@/lib/env';
+import { log } from '@/lib/log';
 
 // Mock dependencies
 vi.mock('next/headers', () => ({
@@ -31,6 +32,7 @@ const mockSupabase = {
   auth: {
     signUp: vi.fn(),
     signInWithPassword: vi.fn(),
+    signInWithOAuth: vi.fn(),
     resend: vi.fn(),
     resetPasswordForEmail: vi.fn(),
     verifyOtp: vi.fn(),
@@ -77,6 +79,15 @@ vi.mock('@/lib/analytics/events', () => ({
   emitUserSignup: vi.fn(),
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    debug: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+  },
+}));
+
 const sendEmailMock = vi.fn();
 
 vi.mock('@/lib/email/sender', () => ({
@@ -100,6 +111,10 @@ describe('Auth Actions', () => {
     mockSupabase.auth.resend.mockResolvedValue({ error: null });
     mockSupabase.auth.signInWithPassword.mockResolvedValue({
       error: { message: 'Invalid login credentials', status: 400 },
+    });
+    mockSupabase.auth.signInWithOAuth.mockResolvedValue({
+      data: { url: null },
+      error: null,
     });
     generateLinkMock.mockResolvedValue({
       data: {
@@ -163,6 +178,9 @@ describe('Auth Actions', () => {
 
       expect(result.success).toBe(true);
       expect(result.error).toBeNull();
+      expect(log.warn).toHaveBeenCalledWith('auth.signup.profile_trigger_missing', {
+        userId: 'new-user-id',
+      });
 
       // Verify auth.signUp called with correct persona
       expect(mockSupabase.auth.signUp).toHaveBeenCalledWith(
@@ -195,6 +213,12 @@ describe('Auth Actions', () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('valid email');
+      expect(log.warn).toHaveBeenCalledWith(
+        'auth.signup.validation_failed',
+        expect.objectContaining({
+          persona: 'individual',
+        })
+      );
     });
 
     it('fails closed when the canonical public site url is unavailable', async () => {
@@ -232,6 +256,12 @@ describe('Auth Actions', () => {
       expect(result.success).toBe(false);
       expect(result.error).toContain('temporarily unable to send verification emails');
       expect(createAdminClientMock).not.toHaveBeenCalled();
+      expect(log.error).toHaveBeenCalledWith(
+        'auth.signup.provider_failed',
+        expect.objectContaining({
+          error: expect.objectContaining({ status: 429 }),
+        })
+      );
     });
 
     it('falls back to admin generateLink + Resend API when Supabase cannot send confirmation email', async () => {
@@ -268,6 +298,116 @@ describe('Auth Actions', () => {
         })
       );
     });
+
+    it('logs structured fallback-link failures without exposing form payloads', async () => {
+      mockSupabase.auth.signUp.mockResolvedValue({
+        data: { user: null },
+        error: { message: 'Error sending confirmation email', status: 500 },
+      });
+      generateLinkMock.mockResolvedValue({
+        data: null,
+        error: { message: 'admin link unavailable', status: 500 },
+      });
+
+      const formData = new FormData();
+      formData.append('email', 'fallback-failed@example.com');
+      formData.append('password', 'password123');
+      formData.append('persona', 'individual');
+      formData.append('gdprConsent', 'true');
+      formData.append('marketingOptIn', 'false');
+
+      const result = await signUp(undefined, formData);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('temporarily unable to send verification emails');
+      expect(log.error).toHaveBeenCalledWith('auth.fallback_link.generate_failed', {
+        type: 'signup',
+        error: expect.objectContaining({ message: 'admin link unavailable' }),
+      });
+    });
+  });
+
+  describe('signInWithOAuth', () => {
+    it.each([
+      ['google', 'Google'],
+      ['linkedin_oidc', 'LinkedIn'],
+    ])('starts %s social login through Supabase Auth', async (provider) => {
+      const formData = new FormData();
+      formData.append('provider', provider);
+
+      await signInWithOAuth(undefined, formData);
+
+      expect(mockSupabase.auth.signInWithOAuth).toHaveBeenCalledWith({
+        provider,
+        options: {
+          redirectTo: 'http://localhost/auth/callback',
+        },
+      });
+    });
+
+    it('preserves safe CTA routing through the Supabase OAuth callback', async () => {
+      const formData = new FormData();
+      formData.append('provider', 'linkedin_oidc');
+      formData.append('next', '/app/i/verifications');
+
+      await signInWithOAuth(undefined, formData);
+
+      expect(mockSupabase.auth.signInWithOAuth).toHaveBeenCalledWith({
+        provider: 'linkedin_oidc',
+        options: {
+          redirectTo: 'http://localhost/auth/callback?next=%2Fapp%2Fi%2Fverifications',
+        },
+      });
+    });
+
+    it('allows local Browser origin to keep OAuth redirects on localhost', async () => {
+      vi.mocked(resolveCanonicalSiteUrl).mockReturnValueOnce('https://proofound.io');
+
+      const formData = new FormData();
+      formData.append('provider', 'google');
+      formData.append('requestOrigin', 'http://localhost:3001');
+
+      await signInWithOAuth(undefined, formData);
+
+      expect(mockSupabase.auth.signInWithOAuth).toHaveBeenCalledWith({
+        provider: 'google',
+        options: {
+          redirectTo: 'http://localhost:3001/auth/callback',
+        },
+      });
+    });
+
+    it.each(['https://attacker.example/app/i/home', '/\\\\attacker.example/phish'])(
+      'drops unsafe next path %s before starting social login',
+      async (nextPath) => {
+        const formData = new FormData();
+        formData.append('provider', 'google');
+        formData.append('next', nextPath);
+
+        await signInWithOAuth(undefined, formData);
+
+        expect(mockSupabase.auth.signInWithOAuth).toHaveBeenCalledWith({
+          provider: 'google',
+          options: {
+            redirectTo: 'http://localhost/auth/callback',
+          },
+        });
+      }
+    );
+
+    it('logs unexpected OAuth exceptions as structured diagnostics', async () => {
+      mockSupabase.auth.signInWithOAuth.mockRejectedValueOnce(new Error('OAuth exploded'));
+
+      const formData = new FormData();
+      formData.append('provider', 'google');
+
+      const result = await signInWithOAuth(undefined, formData);
+
+      expect(result.error).toContain('OAuth exploded');
+      expect(log.error).toHaveBeenCalledWith('auth.oauth.failed', {
+        error: expect.any(Error),
+      });
+    });
   });
 
   describe('requestPasswordReset', () => {
@@ -293,6 +433,10 @@ describe('Auth Actions', () => {
 
       expect(result).toEqual({ success: true });
       expect(mockSupabase.auth.resetPasswordForEmail).toHaveBeenCalledOnce();
+      expect(log.warn).toHaveBeenCalledWith('auth.password_reset.masked_provider_error', {
+        status: 429,
+        message: 'Too many requests',
+      });
     });
 
     it('returns success when provider reset call succeeds', async () => {

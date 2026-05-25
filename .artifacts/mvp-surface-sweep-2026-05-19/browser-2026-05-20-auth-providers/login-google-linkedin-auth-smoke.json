@@ -1,0 +1,18 @@
+{
+  "bodyExcerpt": "Skip to main content\nWelcome back\n\nSign in to continue to Proofound\n\nEMAIL ADDRESS\n*\nPASSWORD\n*\nRemember me\nForgot password?\nSign in\nOR CONTINUE WITH\nGoogle\nLinkedIn\nDon't have an account? Create account\n\nBy signing in, you agree to our Terms of Service and Privacy Policy",
+  "h1s": ["Welcome back"],
+  "hasGoogleButton": true,
+  "hasHorizontalOverflow": false,
+  "hasLinkedInButton": true,
+  "hasRuntimeErrorText": false,
+  "mainCount": 1,
+  "staleCopyMatches": [],
+  "title": "Sign In | Proofound",
+  "url": "http://127.0.0.1:33180/login?next=%2Fapp%2Fi%2Fverifications",
+  "viewport": {
+    "height": 1354,
+    "width": 1359
+  },
+  "consoleIssues": [],
+  "screenshot": "/Users/yuriibakurov/proofound/.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-auth-providers/login-google-linkedin-auth-smoke.png"
+}

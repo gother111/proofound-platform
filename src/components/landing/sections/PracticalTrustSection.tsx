@@ -23,12 +23,12 @@ export function PracticalTrustSection({ shouldReduceMotion }: PracticalTrustSect
     {
       icon: ShieldCheck,
       title: 'Verification & credibility',
-      desc: 'Trust signals are cryptographically verified and checked against the source, creating a high-signal environment.',
+      desc: 'Verification checks stay tied to a source, method, and proof item so reviewers can see what was actually confirmed.',
     },
     {
       icon: Fingerprint,
-      title: 'Explainable matching',
-      desc: 'When you are matched, you see exactly why. No black-box AI making opaque decisions about your future.',
+      title: 'Explainable review',
+      desc: 'When proof is reviewed, the reasons stay visible. No opaque score decides the next step.',
     },
   ];
 
@@ -58,7 +58,7 @@ export function PracticalTrustSection({ shouldReduceMotion }: PracticalTrustSect
             Trust built on reality
           </h2>
           <p className="text-lg md:text-xl text-muted-foreground font-sans leading-relaxed">
-            We replace empty signals with structured evidence. You control your privacy, own your
+            We replace empty claims with structured evidence. You control your privacy, own your
             portable proof, and always know how matches are made.
           </p>
         </motion.div>

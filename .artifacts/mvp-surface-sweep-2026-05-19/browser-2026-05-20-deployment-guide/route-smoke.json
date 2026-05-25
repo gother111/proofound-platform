@@ -1,0 +1,99 @@
+{
+  "checkedAt": "2026-05-19T23:38:50.267Z",
+  "baseUrl": "http://localhost:3000",
+  "routes": [
+    {
+      "route": "/",
+      "actionTexts": [
+        "Skip to main content",
+        "Proofound",
+        "How it works",
+        "For individuals",
+        "For organizations",
+        "Sign in"
+      ],
+      "h1": "Proof behind the claim",
+      "noindex": null,
+      "overflow": false,
+      "title": "Proofound | Proof Behind the Claim"
+    },
+    {
+      "route": "/login",
+      "actionTexts": [
+        "Skip to main content",
+        "Forgot password?",
+        "Sign in",
+        "Google",
+        "LinkedIn",
+        "Create account"
+      ],
+      "h1": "Welcome back",
+      "noindex": null,
+      "overflow": false,
+      "title": "Sign In | Proofound"
+    },
+    {
+      "route": "/signup",
+      "actionTexts": [
+        "Skip to main content",
+        "Back",
+        "IndividualFor professionals who want a clean proof-based portfolio link they can share today, plus matching as they grow.Continue as Individual →",
+        "OrganizationFor organizations that need a credible trust page on day 1, then one assignment and a privacy-safe shortlist.Continue as Organization →",
+        "Sign in",
+        "Terms of Service"
+      ],
+      "h1": "Join Proofound",
+      "noindex": null,
+      "overflow": false,
+      "title": "Sign Up | Proofound"
+    },
+    {
+      "route": "/portfolio/demo",
+      "actionTexts": ["Skip to main content"],
+      "h1": "Public Page unavailable",
+      "noindex": "noindex, nofollow, nocache",
+      "overflow": false,
+      "title": "Public Page Unavailable | Proofound"
+    },
+    {
+      "route": "/portfolio/org/demo",
+      "actionTexts": ["Skip to main content"],
+      "h1": "Organization portfolio unavailable",
+      "noindex": "noindex, nofollow, nocache",
+      "overflow": false,
+      "title": "Public Page Unavailable | Proofound"
+    },
+    {
+      "route": "/privacy",
+      "actionTexts": [
+        "Skip to main content",
+        "Back to Home",
+        "privacy@proofound.com",
+        "View Terms of Service",
+        "View Cookie Policy",
+        "Email privacy"
+      ],
+      "h1": "Privacy Policy",
+      "noindex": null,
+      "overflow": false,
+      "title": "Privacy Policy | Proofound privacy and consent controls"
+    }
+  ],
+  "mobileLogin": {
+    "actionTexts": [
+      "Skip to main content",
+      "Forgot password?",
+      "Sign in",
+      "Google",
+      "LinkedIn",
+      "Create account",
+      "Terms of Service",
+      "Privacy Policy"
+    ],
+    "h1": "Welcome back",
+    "overflow": false,
+    "title": "Sign In | Proofound",
+    "url": "http://localhost:3000/login"
+  },
+  "screenshotStatus": "Browser screenshot capture timed out in this backend session"
+}

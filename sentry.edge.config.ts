@@ -1,5 +1,19 @@
 import * as Sentry from '@sentry/nextjs';
 
+function scrubSentryEvent(event: Sentry.Event): Sentry.Event {
+  if (event.user) {
+    event.user = { id: event.user.id };
+  }
+
+  if (event.request) {
+    delete event.request.cookies;
+    delete event.request.headers;
+    delete event.request.data;
+  }
+
+  return event;
+}
+
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
@@ -30,13 +44,7 @@ Sentry.init({
       return null;
     }
 
-    // Add user context if available (avoid PII)
-    if (event.user) {
-      // Remove email and other PII, keep only ID
-      event.user = {
-        id: event.user.id,
-      };
-    }
+    scrubSentryEvent(event);
 
     // Filter out events without error info
     if (!event.exception && !event.message) {

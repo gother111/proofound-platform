@@ -64,18 +64,35 @@ export function getErrorMessage(error: unknown): string {
 }
 
 /**
- * Safe console error logging
- * Converts Event objects to readable format before logging
+ * Safe error diagnostic dispatch.
+ * Converts Event objects to readable format before reporting.
  */
 export function logError(context: string, error: unknown): void {
   const message = getErrorMessage(error);
 
-  // In development, log the full error for debugging
-  if (process.env.NODE_ENV === 'development') {
-    console.error(`[${context}]`, message, error);
-  } else {
-    // In production, only log the safe message
-    console.error(`[${context}]`, message);
+  if (typeof window === 'undefined' || typeof window.dispatchEvent !== 'function') {
+    return;
+  }
+
+  try {
+    window.dispatchEvent(
+      new CustomEvent('proofound:client-diagnostic', {
+        detail: {
+          reason: 'global_error_handler.error',
+          context,
+          error: message,
+          includeOriginalType: process.env.NODE_ENV === 'development',
+          originalType:
+            process.env.NODE_ENV === 'development'
+              ? error instanceof Error
+                ? error.name
+                : typeof error
+              : undefined,
+        },
+      })
+    );
+  } catch {
+    // Diagnostics must never affect the user flow.
   }
 }
 

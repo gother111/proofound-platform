@@ -46,7 +46,6 @@ describe('match visible fields route', () => {
           bio: 'Profile bio',
           skills: ['TypeScript'],
           location: 'Stockholm',
-          linkedin_profile_url: 'https://linkedin.com/in/person',
         },
       ])
       .mockResolvedValueOnce([{ comp_min: 90000, comp_max: 120000, currency: 'USD' }])
@@ -72,6 +71,7 @@ describe('match visible fields route', () => {
     expect(byField.get('location')?.isRedacted).toBe(false);
     expect(byField.has('values')).toBe(false);
     expect(byField.has('causes')).toBe(false);
+    expect(byField.has('linkedin_url')).toBe(false);
     expect(byField.get('compensation')?.value).toBe('Compensation overlap only');
     expect(byField.get('compensation')?.isRedacted).toBe(false);
   });
@@ -89,7 +89,6 @@ describe('match visible fields route', () => {
             bio: 'Profile bio',
             skills: ['TypeScript'],
             location: 'Stockholm',
-            linkedin_profile_url: 'https://linkedin.com/in/person',
           },
         ];
       }

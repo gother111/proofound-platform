@@ -3,6 +3,16 @@ import { defineConfig, devices } from '@playwright/test';
 const playwrightPort = Number.parseInt(process.env.PLAYWRIGHT_PORT || '33101', 10);
 const playwrightServerMode = process.env.PLAYWRIGHT_SERVER_MODE?.trim().toLowerCase();
 const baseURL = process.env.BASE_URL || `http://127.0.0.1:${playwrightPort}`;
+const parsedBaseURL = (() => {
+  try {
+    return new URL(baseURL);
+  } catch {
+    return null;
+  }
+})();
+const baseURLIsExternal = Boolean(
+  parsedBaseURL && !['localhost', '127.0.0.1', '::1'].includes(parsedBaseURL.hostname)
+);
 const webServerCommand =
   playwrightServerMode === 'prod'
     ? `NEXT_PUBLIC_USE_MOCK_SUPABASE=true npm run start -- -p ${playwrightPort}`
@@ -37,7 +47,7 @@ export default defineConfig({
     // Avoid requiring real Supabase credentials for a11y tests.
     command: webServerCommand,
     url: baseURL,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: baseURLIsExternal || !process.env.CI,
     timeout: 120000,
   },
 });

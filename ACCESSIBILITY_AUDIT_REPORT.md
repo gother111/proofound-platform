@@ -1,36 +1,56 @@
 # Accessibility Audit Report
 
 > Doc Class: `active`
-> Last Verified: `2026-02-12`
+> Last Verified: `2026-05-19`
 
-Date: 2026-02-11
-Scope: Automated Playwright + Axe critical-flow checks and keyboard navigation checks.
+Date: 2026-05-19
+Scope: baseline automated Playwright + axe checks for public launch surfaces and keyboard/focus smoke checks.
 
-## Automated Audit Result (`npm run test:a11y`)
+## Automated Baseline Result
 
 Command:
 
 ```bash
-PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:a11y
+npm run test:a11y
 ```
 
 Result:
 
 - Overall: `PASS`
-- Total tests: `18`
-- Passed: `18`
+- Total tests: `15`
+- Passed: `11`
+- Skipped: `4`
 - Failed: `0`
+- Runtime: Node `v25.4.0` local runtime; repo command uses `scripts/playwright-node24.mjs`.
+- Config: `playwright.a11y.config.ts`
+- Test files:
+  - `tests/a11y/critical-flows.spec.ts`
+  - `tests/a11y/keyboard-navigation.spec.ts`
 
-## Manual Checklist References
+The first sandbox run could not start the local Playwright web server because binding `0.0.0.0:33101` returned `EPERM`. The same command passed when rerun outside the sandbox with the approved test command.
 
-- Keyboard and focus behavior: `tests/a11y/keyboard-navigation.spec.ts`
-- Critical user journey coverage: `tests/a11y/critical-flows.spec.ts`
-- CI entrypoint: `.github/workflows/accessibility.yml`
+## Coverage
 
-## Known Gaps / Follow-ups
+- Axe WCAG 2.1 A/AA scan for:
+  - `/`
+  - `/login`
+  - `/signup`
+- Keyboard/focus smoke checks for:
+  - skip link behavior
+  - top navigation focusability
+  - login form tab order and labels
+  - visible focus indicator
+  - page-load focus escape
+  - accessible names for homepage buttons
+  - alt text for homepage images
 
-- Current report is based on automated checks only. Manual screen-reader validation (VoiceOver/NVDA) is still pending.
+## Known Gaps / Follow-Ups
+
+- Manual screen-reader validation with VoiceOver/NVDA is still pending.
+- The deeper modal focus-trap, dropdown, table/grid, and modal focus-return checks are explicitly
+  skipped until stable active MVP fixtures are wired into the accessibility suite.
+- Strict authenticated accessibility remains a production-candidate gate through `npm run test:a11y:strict`; it was not rerun in this report because it requires strict Supabase-backed fixtures.
 
 ## Go/No-Go Note
 
-This file exists to satisfy evidence tracking for go/no-go checks. Automated accessibility checks currently pass.
+This file exists as active evidence for `npm run go:no-go`. It proves the baseline mock-mode accessibility suite passed on 2026-05-19, but it does not close strict authenticated accessibility or manual screen-reader validation by itself.

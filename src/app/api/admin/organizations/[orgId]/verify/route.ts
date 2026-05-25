@@ -11,7 +11,8 @@ import { requireBreakGlassPlatformAdminJson } from '@/lib/authz';
 import { db } from '@/db';
 import { organizations, organizationTrustTierTransitions } from '@/db/schema';
 import { eq } from 'drizzle-orm';
-import { logAdminAction } from '@/lib/audit/admin-logger';
+import { logAdminActionInTransaction } from '@/lib/audit/admin-logger';
+import { log } from '@/lib/log';
 
 const OrgTrustTierSchema = z.object({
   trustTier: z.enum(['unreviewed', 'basic_trusted', 'reviewed', 'restricted']).optional(),
@@ -167,26 +168,25 @@ export async function POST(
         },
         createdAt: now,
       });
-    });
 
-    // Log the action
-    await logAdminAction({
-      adminId: adminUser.userId,
-      action: 'set_org_trust_tier',
-      targetType: 'organization',
-      targetId: orgId,
-      changes: {
-        previousTier,
-        newTier: trustTier,
-        previousCompatibilityStatus: org.trustStatus ?? 'unverified',
-        newCompatibilityStatus: compatibilityTrustStatus,
-      },
-      metadata: {
-        organizationName: org.displayName,
-        breakGlassReason: breakGlass.reason,
-        reasonCode: body.reasonCode ?? null,
-        note: body.note ?? null,
-      },
+      await logAdminActionInTransaction(tx, {
+        adminId: adminUser.userId,
+        action: 'set_org_trust_tier',
+        targetType: 'organization',
+        targetId: orgId,
+        changes: {
+          previousTier,
+          newTier: trustTier,
+          previousCompatibilityStatus: org.trustStatus ?? 'unverified',
+          newCompatibilityStatus: compatibilityTrustStatus,
+        },
+        metadata: {
+          organizationName: org.displayName,
+          breakGlassReason: breakGlass.reason,
+          reasonCode: body.reasonCode ?? null,
+          note: body.note ?? null,
+        },
+      });
     });
 
     return NextResponse.json({
@@ -195,12 +195,15 @@ export async function POST(
       message: buildTrustTierMessage(trustTier),
     });
   } catch (error) {
-    console.error('Failed to update organization verification:', error);
-
     // Check if this is a redirect
     if (error && typeof error === 'object' && 'digest' in error) {
       throw error;
     }
+
+    log.error('admin.organization_verify.update_failed', {
+      orgId: (await params).orgId,
+      errorName: error instanceof Error ? error.name : typeof error,
+    });
 
     return NextResponse.json(
       { error: 'Failed to update organization verification' },

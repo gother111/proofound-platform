@@ -3,7 +3,11 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 
+import { getLaunchDateSlug } from '@/lib/launch/date-slug';
+import { isTrustedLaunchSecretUrl } from '@/lib/launch/trusted-internal-auth';
+
 export const FINAL_LAUNCH_VALIDATION_SCHEMA_VERSION = 1;
+export const FINAL_LAUNCH_VALIDATION_REPORT_FILE_NAME = 'launch-gate-status.md';
 
 export type FinalLaunchGateStatus = 'PASS' | 'FAIL' | 'UNVERIFIED' | 'NOT APPLICABLE';
 export type FinalLaunchGatePriority = 'P0' | 'P1';
@@ -121,16 +125,19 @@ function nodeCommand(args: string[], timeoutMs?: number, env?: Record<string, st
 }
 
 function getDateSlug(now: Date) {
-  return new Intl.DateTimeFormat('en-CA', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    timeZone: process.env.TZ || 'UTC',
-  }).format(now);
+  return getLaunchDateSlug(now);
 }
 
 function hasAnyEnv(env: NodeJS.ProcessEnv, names: readonly string[]) {
   return names.some((name) => Boolean(env[name]?.trim()));
+}
+
+function hasInternalLaunchSecret(env: NodeJS.ProcessEnv) {
+  const value = env.CRON_SECRET?.trim();
+  const internalValue = env.INTERNAL_API_SECRET?.trim();
+  return [internalValue, value].some((secret) =>
+    Boolean(secret && secret.toLowerCase() !== 'undefined' && secret.toLowerCase() !== 'null')
+  );
 }
 
 export function environmentSupportsStrictOrgCorridor(env: NodeJS.ProcessEnv = process.env) {
@@ -158,7 +165,28 @@ export function buildFinalLaunchValidationGates(
   const env = options.env ?? process.env;
   const baseUrl = env.BASE_URL?.trim();
   const outputDir = options.outputDir ?? '.artifacts/launch-validation-current';
+  const launchSmokeArtifactPath = path.join(outputDir, 'launch-smoke-report.json');
   const strictOrgSupport = environmentSupportsStrictOrgCorridor(env);
+  const internalLaunchSecretConfigured = hasInternalLaunchSecret(env);
+  const baseUrlMayReceiveLaunchSecret = baseUrl ? isTrustedLaunchSecretUrl(baseUrl, env) : false;
+  const protectedLaunchGateSkip = baseUrl
+    ? internalLaunchSecretConfigured
+      ? baseUrlMayReceiveLaunchSecret
+        ? undefined
+        : {
+            status: 'UNVERIFIED' as const,
+            reason:
+              'BASE_URL is not trusted for internal launch secrets. Use localhost, proofound.io, or add the exact origin to LAUNCH_TRUSTED_BASE_URLS.',
+          }
+      : {
+          status: 'UNVERIFIED' as const,
+          reason:
+            'INTERNAL_API_SECRET or CRON_SECRET is required for authenticated production-candidate launch-status, monitor, and go/no-go gates.',
+        }
+    : {
+        status: 'NOT APPLICABLE' as const,
+        reason: 'BASE_URL is not configured, so this production-candidate gate is not run.',
+      };
 
   return [
     {
@@ -258,7 +286,7 @@ export function buildFinalLaunchValidationGates(
               '--base-url',
               baseUrl,
               '--artifact',
-              path.join(outputDir, 'launch-smoke-report.json'),
+              launchSmokeArtifactPath,
             ],
             15 * ONE_MINUTE,
             { BASE_URL: baseUrl }
@@ -270,6 +298,72 @@ export function buildFinalLaunchValidationGates(
             status: 'NOT APPLICABLE',
             reason: 'BASE_URL is not configured, so launch smoke is not run by this command.',
           },
+    },
+    {
+      id: 'perf_budgets',
+      label: 'Performance budgets',
+      priority: 'P0',
+      command: baseUrl
+        ? npmCommand(['run', 'perf:budgets'], 10 * ONE_MINUTE, { BASE_URL: baseUrl })
+        : undefined,
+      skip: baseUrl
+        ? undefined
+        : {
+            status: 'NOT APPLICABLE',
+            reason:
+              'BASE_URL is not configured, so performance budgets are not run by this command.',
+          },
+    },
+    {
+      id: 'launch_synthetics',
+      label: 'Launch synthetic monitors',
+      priority: 'P0',
+      command:
+        baseUrl && internalLaunchSecretConfigured && baseUrlMayReceiveLaunchSecret
+          ? npmCommand(
+              [
+                'run',
+                'monitor:launch',
+                '--',
+                '--base-url',
+                baseUrl,
+                '--artifact',
+                launchSmokeArtifactPath,
+              ],
+              10 * ONE_MINUTE,
+              {
+                BASE_URL: baseUrl,
+                LAUNCH_SMOKE_ARTIFACT_PATH: launchSmokeArtifactPath,
+              }
+            )
+          : undefined,
+      skip: protectedLaunchGateSkip,
+    },
+    {
+      id: 'launch_status',
+      label: 'Authenticated launch status',
+      priority: 'P0',
+      command:
+        baseUrl && internalLaunchSecretConfigured && baseUrlMayReceiveLaunchSecret
+          ? npmCommand(['run', 'launch:status'], 5 * ONE_MINUTE, {
+              BASE_URL: baseUrl,
+              LAUNCH_SMOKE_ARTIFACT_PATH: launchSmokeArtifactPath,
+            })
+          : undefined,
+      skip: protectedLaunchGateSkip,
+    },
+    {
+      id: 'go_no_go',
+      label: 'Go/No-Go',
+      priority: 'P0',
+      command:
+        baseUrl && internalLaunchSecretConfigured && baseUrlMayReceiveLaunchSecret
+          ? npmCommand(['run', 'go:no-go'], 10 * ONE_MINUTE, {
+              BASE_URL: baseUrl,
+              LAUNCH_SMOKE_ARTIFACT_PATH: launchSmokeArtifactPath,
+            })
+          : undefined,
+      skip: protectedLaunchGateSkip,
     },
     {
       id: 'production_dependency_audit',
@@ -543,7 +637,7 @@ export async function runFinalLaunchValidation(options: FinalLaunchValidationOpt
     'utf8'
   );
   await fs.writeFile(
-    path.join(outputDir, 'final-launch-checklist-status.md'),
+    path.join(outputDir, FINAL_LAUNCH_VALIDATION_REPORT_FILE_NAME),
     renderMarkdownReport(bundle),
     'utf8'
   );
@@ -552,7 +646,7 @@ export async function runFinalLaunchValidation(options: FinalLaunchValidationOpt
     bundle,
     outputDir,
     commandsPath: path.join(outputDir, 'commands.json'),
-    reportPath: path.join(outputDir, 'final-launch-checklist-status.md'),
+    reportPath: path.join(outputDir, FINAL_LAUNCH_VALIDATION_REPORT_FILE_NAME),
   };
 }
 

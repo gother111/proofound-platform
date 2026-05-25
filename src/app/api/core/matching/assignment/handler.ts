@@ -17,6 +17,11 @@ import { computeAssignmentMatches } from '@/lib/core/matching/assignmentMatcher'
 import { getPreset, normalizeWeights } from '@/lib/core/matching/presets';
 import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
 import { resolveFeatureFlags } from '@/lib/feature-flags/server';
+import { getMatchingVisualState, buildVisualOrgMatches } from '@/lib/matching/visual-fixtures';
+import {
+  VISUAL_ASSIGNMENT_FIXTURE_IDS,
+  visualAssignmentFixturesEnabled,
+} from '@/lib/assignments/visual-fixtures';
 import { emitLaunchTrace, startLaunchTrace } from '@/lib/launch/trace';
 import { log } from '@/lib/log';
 import {
@@ -24,9 +29,8 @@ import {
   buildCanonicalMatchPersistenceFields,
   buildProofFirstReviewCard,
   buildVisibilitySafeWhy,
-  canMutateReview,
   ensureMatchReviewState,
-  getReviewCardProofPackMap,
+  getReviewCardProofPackMapForMatchedOrg,
   getRankBand,
   getVisibleIdentityFields,
   normalizeFairnessStatus,
@@ -35,8 +39,22 @@ import {
   resolveCanonicalFallbackState,
 } from '@/lib/matching/review-contract';
 
-// Shared handler imported by the kept launch corridor routes.
 export const dynamic = 'force-dynamic';
+
+function toVisibilitySafeAssignmentMatchItem<T extends Record<string, unknown>>(item: T) {
+  const {
+    score: _score,
+    scoreTotal: _scoreTotal,
+    subscores: _subscores,
+    subscoresJson: _subscoresJson,
+    scoreSnapshotJson: _scoreSnapshotJson,
+    contributions: _contributions,
+    focusBoost: _focusBoost,
+    ...safeItem
+  } = item;
+
+  return safeItem;
+}
 
 // Validation schema
 const MatchRequestSchema = z.object({
@@ -76,13 +94,99 @@ export async function POST(request: NextRequest) {
     const { user } = authContext;
     trace.actorId = user.id;
     trace.actorType = 'organization_member';
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      emitLaunchTrace(trace, {
+        outcome: 'rejected',
+        state: 'shortlist_validation_failed',
+        failureClass: 'invalid_json_body',
+      });
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
 
     const validatedData = MatchRequestSchema.parse(body);
     const { assignmentId, k = 20, annLimit = 500 } = validatedData;
     const useTwoStage = false;
     const refresh = validatedData.refresh === true;
     trace.objectRefs.assignmentId = assignmentId;
+
+    if (visualAssignmentFixturesEnabled() && VISUAL_ASSIGNMENT_FIXTURE_IDS.has(assignmentId)) {
+      const visualState = getMatchingVisualState(request.url);
+      if (visualState === 'empty') {
+        emitLaunchTrace(trace, {
+          outcome: 'fallback',
+          state: 'browse_only_low_candidate_supply',
+          details: {
+            resultCount: 0,
+            cached: true,
+            fixture: true,
+          },
+        });
+
+        return NextResponse.json({
+          items: [],
+          meta: {
+            total: 0,
+            returned: 0,
+            durationMs: Date.now() - startTime,
+            weights: {},
+            twoStage: false,
+            hasMissionVisionScores: false,
+            cached: true,
+            fairness: {
+              status: 'not_evaluated',
+              evaluationId: null,
+            },
+            launchFallback: {
+              mode: 'browse_only_low_candidate_supply',
+              activeModes: ['browse_only_low_candidate_supply'],
+              introCorridorLive: null,
+              exactRankLive: null,
+            },
+          },
+        });
+      }
+
+      // Default: Return the 7 visual mock matches
+      const mockItems = buildVisualOrgMatches(assignmentId).map(
+        toVisibilitySafeAssignmentMatchItem
+      );
+      emitLaunchTrace(trace, {
+        outcome: 'success',
+        state: 'shortlist_generated',
+        details: {
+          resultCount: mockItems.length,
+          cached: true,
+          fixture: true,
+        },
+      });
+
+      return NextResponse.json({
+        items: mockItems,
+        meta: {
+          total: mockItems.length,
+          returned: mockItems.length,
+          durationMs: Date.now() - startTime,
+          weights: {},
+          twoStage: false,
+          hasMissionVisionScores: false,
+          cached: true,
+          scoreVisibility: 'internal_ordering_only',
+          fairness: {
+            status: 'pass',
+            evaluationId: 'visual-evaluation-id',
+          },
+          launchFallback: {
+            mode: null,
+            activeModes: [],
+            introCorridorLive: null,
+            exactRankLive: null,
+          },
+        },
+      });
+    }
 
     const assignment = await db.query.assignments.findFirst({
       where: eq(assignments.id, assignmentId),
@@ -155,7 +259,7 @@ export async function POST(request: NextRequest) {
           db.query.matchingProfiles.findMany({
             where: inArray(matchingProfiles.profileId, profileIds),
           }),
-          getReviewCardProofPackMap(profileIds),
+          getReviewCardProofPackMapForMatchedOrg(profileIds),
         ]);
         const reviewStateByMatchId = new Map(reviewStateRows.map((row) => [row.matchId, row]));
         const profileById = new Map(profileRows.map((row) => [row.profileId, row]));
@@ -210,10 +314,6 @@ export async function POST(request: NextRequest) {
 
             return {
               profileId: row.profileId,
-              score: Number(row.score),
-              scoreTotal: row.scoreTotal,
-              subscoresJson: row.subscoresJson,
-              scoreSnapshotJson: row.scoreSnapshotJson,
               reasonCodes,
               profile: profile ? scrubDisallowedFields(profile) : null,
               id: row.id,
@@ -250,6 +350,7 @@ export async function POST(request: NextRequest) {
             twoStage: false,
             hasMissionVisionScores: false,
             cached: true,
+            scoreVisibility: 'internal_ordering_only',
             fairness: {
               status: cachedFairnessStatus,
               evaluationId: null,
@@ -340,7 +441,6 @@ export async function POST(request: NextRequest) {
       actorType: 'user_account',
     });
     const fairnessStatus = normalizeFairnessStatus(fairnessEvaluation.status);
-    const canViewExactRank = canMutateReview(membershipRole);
     const flags = await resolveFeatureFlags(
       [
         FEATURE_FLAG_KEYS.QUALIFIED_INTRO_CORRIDOR,
@@ -358,9 +458,7 @@ export async function POST(request: NextRequest) {
     const introCorridorLive =
       flags[FEATURE_FLAG_KEYS.QUALIFIED_INTRO_CORRIDOR] &&
       !flags[FEATURE_FLAG_KEYS.KILL_SWITCH_INTROS];
-    const exactRankLive =
-      flags[FEATURE_FLAG_KEYS.EXACT_RANK_EXPOSURE] &&
-      !flags[FEATURE_FLAG_KEYS.KILL_SWITCH_EXACT_RANK];
+    const exactRankLive = false;
     const fallbackModes = [
       ...(items.length === 0 ? (['browse_only_low_candidate_supply'] as const) : []),
       ...(!introCorridorLive ? (['intro_hold_insufficient_qualified_intros'] as const) : []),
@@ -389,11 +487,9 @@ export async function POST(request: NextRequest) {
         })
       : [];
     const reviewStateByMatchId = new Map(reviewStateRows.map((row) => [row.matchId, row]));
-    const proofPackByProfileId = await getReviewCardProofPackMap(
+    const proofPackByProfileId = await getReviewCardProofPackMapForMatchedOrg(
       items.map((item) => item.profileId)
     );
-    const showExactRank = canViewExactRank && fairnessStatus === 'pass' && exactRankLive;
-
     emitLaunchTrace(trace, {
       outcome: primaryFallbackMode ? 'fallback' : 'success',
       state: primaryFallbackMode ?? 'shortlist_generated',
@@ -432,10 +528,6 @@ export async function POST(request: NextRequest) {
 
         return {
           profileId: item.profileId,
-          score: item.score,
-          scoreTotal: item.scoreTotal,
-          subscoresJson: item.subscoresJson,
-          scoreSnapshotJson: item.scoreSnapshotJson,
           reasonCodes: item.reasonCodes,
           profile: item.profile,
           id: matchId,
@@ -446,7 +538,7 @@ export async function POST(request: NextRequest) {
           fairness: {
             status: fairnessStatus,
           },
-          rank: showExactRank ? index + 1 : null,
+          rank: null,
           rankBand,
           why: buildVisibilitySafeWhy({
             reasonCodes: item.reasonCodes,
@@ -466,6 +558,8 @@ export async function POST(request: NextRequest) {
       }),
       meta: {
         ...meta,
+        weights: {},
+        scoreVisibility: 'internal_ordering_only',
         fairness: {
           status: fairnessStatus,
           evaluationId: fairnessEvaluation.id,

@@ -8,9 +8,16 @@ ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.feature_flags ENABLE ROW LEVEL SECURITY;
 
 -- Profiles policies
-CREATE POLICY "Users can view all profiles"
+CREATE POLICY "Users can view own or public profiles"
   ON public.profiles FOR SELECT
-  USING (true);
+  USING (
+    auth.uid() = id
+    OR EXISTS (
+      SELECT 1 FROM public.individual_profiles
+      WHERE individual_profiles.user_id = profiles.id
+        AND individual_profiles.visibility = 'public'
+    )
+  );
 
 CREATE POLICY "Users can update own profile"
   ON public.profiles FOR UPDATE

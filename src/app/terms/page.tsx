@@ -79,9 +79,9 @@ export default function TermsOfServicePage() {
                   2. Service Scope
                 </h2>
                 <p className="mt-3 leading-7">
-                  Proofound is a proof-first hiring corridor centered on Proof Packs, public proof
-                  portfolios, organization trust pages, and privacy-safe review inside structured
-                  assignment flows.
+                  Proofound is a proof-first assignment review corridor centered on Proof Packs,
+                  public proof portfolios, organization trust pages, and privacy-safe review inside
+                  structured assignment flows.
                 </p>
               </section>
 
@@ -92,7 +92,7 @@ export default function TermsOfServicePage() {
                 <ul className="mt-3 list-disc space-y-2 pl-6 leading-7">
                   <li>No fraud, impersonation, or misleading submissions.</li>
                   <li>No harassment, abusive content, or unlawful activity.</li>
-                  <li>No automated abuse, scraping, or interference with platform security.</li>
+                  <li>No automated abuse, scraping, or interference with service security.</li>
                   <li>Respect confidentiality and rights of other users.</li>
                 </ul>
               </section>
@@ -102,7 +102,7 @@ export default function TermsOfServicePage() {
                   4. Moderation and Enforcement
                 </h2>
                 <p className="mt-3 leading-7">
-                  We may review content and apply moderation actions under platform rules. Where
+                  We may review content and apply moderation actions under service rules. Where
                   required, we provide a statement of reasons and an appeal pathway.
                 </p>
               </section>
@@ -140,10 +140,10 @@ export default function TermsOfServicePage() {
                 <p className="mt-3 leading-7">
                   For legal questions, contact{' '}
                   <a
-                    href="mailto:legal@proofound.com"
+                    href="mailto:legal@proofound.io"
                     className="font-medium text-proofound-terracotta hover:underline"
                   >
-                    legal@proofound.com
+                    legal@proofound.io
                   </a>
                   .
                 </p>
@@ -156,8 +156,8 @@ export default function TermsOfServicePage() {
                 <p className="mt-3 leading-7">
                   You retain ownership of content you upload. By using the service, you grant
                   Proofound a limited license to host, process, and display submitted materials as
-                  needed to deliver platform functionality. You are responsible for ensuring
-                  uploaded content does not infringe third-party rights.
+                  needed to deliver requested account functionality. You are responsible for
+                  ensuring uploaded content does not infringe third-party rights.
                 </p>
               </section>
 
@@ -180,7 +180,7 @@ export default function TermsOfServicePage() {
                 <p className="mt-3 leading-7">
                   We maintain operational safeguards to keep availability and integrity within
                   reasonable expectations. During incidents, we may temporarily limit selected
-                  features to protect platform stability or user safety. Material disruptions are
+                  features to protect service stability or user safety. Material disruptions are
                   communicated through our published legal and privacy contact channels whenever
                   practical.
                 </p>
@@ -212,7 +212,7 @@ export default function TermsOfServicePage() {
               <Link href="/cookies">View Cookie Policy</Link>
             </Button>
             <a
-              href="mailto:legal@proofound.com"
+              href="mailto:legal@proofound.io"
               className="inline-flex items-center justify-center rounded-md border border-proofound-stone px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-proofound-terracotta hover:bg-proofound-terracotta/5"
             >
               Email legal

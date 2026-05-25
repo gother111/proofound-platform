@@ -1,162 +1,124 @@
-# 🚀 Quick Start - Apply Migrations
+# Quick Start
 
-## ⚠️ Network Issue Detected
+> Doc Class: `active`
+> Last Verified: `2026-05-21`
 
-We encountered a network connectivity issue (IPv6 EHOSTUNREACH error) when trying to connect to Supabase from the command line.
+This is the launch-safe local quick start for the locked Proofound MVP corridor.
+It is for local setup and smoke checks only. Do not use this file to apply
+production migrations, change Supabase project settings, or broaden scope beyond
+the proof-first assignment review corridor.
 
-**This is common and easily fixable using the Supabase Dashboard!**
+For database migration operations, use the current migration runbooks instead:
 
----
+- `APPLY_MIGRATIONS_MANUAL.md`
+- `RUN_MIGRATIONS_GUIDE.md`
+- `SETUP_SUPABASE.md`
+- `agent/runbooks/setup.md`
 
-## ✅ RECOMMENDED: Use Supabase Dashboard (Takes 2 minutes)
+## 1. Install
 
-### Step-by-Step Instructions:
-
-1. **Open Your Browser**
-   - Go to: https://supabase.com/dashboard/project/cjpfrgmsxwxhuomnvciq
-
-2. **Navigate to SQL Editor**
-   - Click "SQL Editor" in the left sidebar
-   - Click the "+ New query" button
-
-3. **Copy & Paste the Migration**
-   - Open this file: `./migrations-to-run.sql`
-   - Select all (Cmd+A) and copy (Cmd+C)
-   - Paste into the Supabase SQL Editor
-
-4. **Run the Migration**
-   - Click "Run" button (or press Cmd+Enter)
-   - Wait for completion (~5 seconds)
-
-5. **Verify Success**
-   - You should see a success message
-   - The verification query at the end will show all tables with `exists = true`
-
-That's it! ✨
-
----
-
-## 📋 What Gets Created
-
-### New Tables:
-
-- ✅ `self_assessments` - Mental health screenings (PHQ-2, GAD-2)
-- ✅ `work_schedules` - Weekly work hours tracking
-- ✅ `dashboard_layouts` - Customizable dashboard widgets
-
-### Enhanced Tables:
-
-- ✅ `individual_profiles` - Privacy controls (field_visibility, redact_mode)
-- ✅ `matches` - Enhanced matching data (subscores, rank, snooze)
-- ✅ `interviews` - Meeting link integration
-- ✅ `dashboard_layouts` - Widget configuration
-
-### Performance Indexes:
-
-- ✅ 5+ indexes for faster queries
-
----
-
-## 🔧 Alternative Methods (If Dashboard Doesn't Work)
-
-### Option 2: Using psql Command
-
-If you have PostgreSQL client installed:
+Use the pinned Node/npm versions:
 
 ```bash
-cd .
-
-psql "postgresql://postgres:[PASSWORD]@db.your-project-ref.supabase.co:5432/postgres?sslmode=require" \
-  -f migrations-to-run.sql
+nvm use
+npm ci
 ```
 
-### Option 3: Manual Table Creation
+The repo expects Node `24.x`, npm `11.12.1`, and `engine-strict=true`.
 
-If you prefer, you can create tables one by one through the Supabase Table Editor:
+## 2. Configure Local Environment
 
-1. Go to "Database" → "Tables"
-2. Click "New table"
-3. Follow the schema in `migrations-to-run.sql`
+Create or update `.env.local` from your local/private environment source. Do not
+commit secrets or paste secret values into docs.
 
----
+Minimum local web-app variables are documented in:
 
-## 🎯 After Migration - Next Steps
+- `docs/ENV_VARIABLES.md`
+- `README.md`
+- `agent/runbooks/setup.md`
 
-Once migrations are complete:
+Connected provider credentials are target-scoped. Manual meeting links remain
+the locked MVP default for interview scheduling.
 
-1. **Test the Platform**
+## 3. Run The App
 
-   ```bash
-   cd .
-   npm run dev
-   ```
+```bash
+npm run dev
+```
 
-2. **Create a Test User**
-   - Sign up at http://localhost:3000
-   - Experience the first-run guided tour
-   - Test new features
+Open the local URL printed by the dev server.
 
-3. **Verify Features Work**
-   - ✅ First-run tour appears for new users
-   - ✅ Privacy controls in settings
-   - ✅ Well-being tracking in Zen Hub
-   - ✅ Match filtering and snoozing
-   - ✅ Dashboard customization
+Representative launch-safe routes to smoke:
 
-4. **Check for Linting Errors**
-   ```bash
-   npm run lint
-   ```
+- `/`
+- `/signup`
+- `/login`
+- `/portfolio/demo`
+- `/portfolio/org/test-org`
+- `/onboarding`
+- `/app/i/portfolio`
+- `/app/i/verifications`
+- `/app/i/settings/privacy`
+- `/app/o/test-org/assignments`
+- `/admin`
+- `/admin/verification`
+- `/admin/audit`
 
----
+Protected routes should fail closed when the required mock/auth context is not
+active. Public missing portfolio links should render the generic unavailable
+surface rather than a blank page or private details.
 
-## 📊 Migration Status
+## 4. MVP Feature Smoke
 
-### ✅ Completed:
+Keep the smoke focused on the active corridor:
 
-- Database schema designed
-- Migration files generated (0004, 0005, 0006)
-- All components built (40+ components)
-- All API endpoints created (25+ routes)
-- All features implemented (15/15 - 100%)
+- Public landing, signup, login, legal links, and public portfolio unavailable
+  states.
+- Individual onboarding, first Proof Pack, proof upload/import/linking,
+  verification requests, privacy settings, export/delete, and public portfolio
+  publishing.
+- Organization onboarding, trust profile, assignments, proof submission review,
+  reason-coded matching, intro/reveal consent, interview manual-link scheduling,
+  decisions, and engagement verification.
+- Internal launch ops: operations queues, audit logs, and protected diagnostics.
 
-### ⏳ Pending:
+Do not treat Zen/wellbeing, broad dashboard customization, broad admin users,
+fairness dashboards, native Zoom/video OAuth, ATS/HRIS replacement, public
+directory behavior, or marketplace scope as launch evidence.
 
-- Apply migrations to database (waiting for you!)
-- Test in browser
-- Deploy to production
+## 5. Useful Checks
 
----
+Run focused checks before broader gates:
 
-## 🐛 Troubleshooting
+```bash
+npm run docs:freshness
+npm run test:launch:routes
+npm run lint
+npm run typecheck
+```
 
-### "relation already exists" error
+For the full launch-gate sequence, follow:
 
-**This is SAFE!** The migration script handles this automatically.
+- `agent/checklists/verification.md`
+- `docs/mvp-launch-master-checklist.md`
+- `PRODUCTION_CHECKLIST.md`
 
-### "column already exists" error
+If typecheck reports missing `.next-dev*/types` files, remove the stale local
+generated dev-build directory and rerun typecheck. Do not commit `.next*`
+artifacts.
 
-**This is SAFE!** The script uses `IF NOT EXISTS` clauses.
+## 6. Browser Verification
 
-### Can't access Supabase Dashboard
+Use the Codex in-app Browser or Playwright for representative desktop and mobile
+checks after UI changes. For this MVP, evidence should show:
 
-1. Check your Supabase login at https://supabase.com
-2. Verify project ID: `cjpfrgmsxwxhuomnvciq`
-3. Check your internet connection
+- no runtime overlay or blank body
+- no horizontal overflow on mobile
+- clear primary object and next action
+- no public leakage of private proof, queue, audit, reveal, or export data
+- archived/post-MVP routes gated, unavailable, `404`, or `410` according to
+  route policy
 
-### Network connectivity issues
+Current sweep evidence is saved under:
 
-Use the Supabase Dashboard method (Option 1) - it always works!
-
----
-
-## 📞 Need Help?
-
-The migration file is ready at:
-📁 `./migrations-to-run.sql`
-
-Just copy it into Supabase SQL Editor and click Run! 🚀
-
----
-
-**Ready to go?** Open Supabase Dashboard and paste the SQL! 🎉
+- `.artifacts/mvp-surface-sweep-2026-05-19/SURFACE_SWEEP.md`

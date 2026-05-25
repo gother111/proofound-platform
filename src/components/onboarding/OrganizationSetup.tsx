@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { completeOrganizationOnboarding } from '@/actions/onboarding';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { createClient } from '@/lib/supabase/client';
 import { CheckCircle, Copy, ExternalLink } from 'lucide-react';
 
@@ -56,7 +57,7 @@ export function OrganizationSetup() {
           }
         }
       } catch (err) {
-        console.error('Error checking for existing organization:', err);
+        dispatchClientErrorDiagnostic('onboarding.organization.existing_check_failed', err);
       } finally {
         setCheckingExisting(false);
       }
@@ -172,7 +173,7 @@ export function OrganizationSetup() {
           Create your organization
         </CardTitle>
         <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
-          Add the basics candidates need to trust you, then create one assignment.
+          Add the basics reviewers need to trust the work context, then create one assignment.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -190,7 +191,7 @@ export function OrganizationSetup() {
               className="border-proofound-stone dark:border-border focus-visible:ring-proofound-forest"
             />
             <p className="text-xs text-proofound-charcoal/70 dark:text-muted-foreground mt-1">
-              This appears on your public organization profile.
+              This appears on your public organization trust page.
             </p>
           </div>
 
@@ -200,7 +201,7 @@ export function OrganizationSetup() {
             </Label>
             <div className="flex items-center gap-2">
               <span className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
-                proofound.com/o/
+                proofound.io/portfolio/org/
               </span>
               <Input
                 id="slug"

@@ -106,14 +106,28 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
     href: `${basePath}${item.hrefSuffix}`,
     icon: orgIconMap[item.icon],
     label: item.label,
+    mobileLabel:
+      item.hrefSuffix === '/assignments'
+        ? 'Work'
+        : item.hrefSuffix === '/communications'
+          ? 'Inbox'
+          : item.hrefSuffix === '/profile'
+            ? 'Profile'
+            : item.hrefSuffix === '/portfolio'
+              ? 'Preview'
+              : item.label,
     dataTour:
       item.hrefSuffix === '/home'
         ? 'home-link'
         : item.hrefSuffix === '/assignments'
           ? 'assignments-link'
-          : item.hrefSuffix === '/profile'
-            ? 'org-profile'
-            : 'portfolio-link',
+          : item.hrefSuffix === '/communications'
+            ? 'communications-link'
+            : item.hrefSuffix === '/profile'
+              ? 'org-profile'
+              : item.hrefSuffix === '/portfolio'
+                ? 'portfolio-link'
+                : undefined,
   }));
 
   const navItems = isOrg ? orgNavItems : individualNavItems;
@@ -240,7 +254,7 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
                   : 'border-proofound-forest/30 bg-proofound-parchment text-proofound-forest'
               )}
             >
-              {isExpanded ? 'Beta testing' : 'Beta'}
+              {isExpanded ? 'Early access' : 'Early'}
             </div>
           ) : null}
           <button
@@ -260,11 +274,11 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
 
       {/* Mobile Bottom Tab Bar Navigation */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-neutral-light-50 border-proofound-stone/60 pointer-events-none"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-neutral-light-50 border-proofound-stone/60 pointer-events-auto"
         role="navigation"
         aria-label="Mobile primary navigation"
       >
-        <div className="flex items-center gap-1 px-1 py-2 safe-area-inset-bottom pointer-events-none">
+        <div className="flex items-center gap-1 px-1 py-2 safe-area-inset-bottom">
           {/* Show the retained mobile navigation corridor. */}
           {mobileNavItems.map((item) => {
             const Icon = item.icon;
@@ -299,7 +313,7 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
               <Link
                 key={item.href}
                 href={item.href}
-                className={`relative flex flex-1 min-w-0 flex-col items-center gap-1 px-1 py-2 rounded-lg transition-colors min-h-[64px] justify-center pointer-events-auto ${
+                className={`relative flex flex-1 min-w-0 flex-col items-center gap-1 px-1 py-2 rounded-lg transition-colors min-h-[64px] justify-center pointer-events-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-light-50 ${
                   isActive
                     ? 'text-proofound-forest'
                     : 'text-muted-foreground hover:text-proofound-charcoal'

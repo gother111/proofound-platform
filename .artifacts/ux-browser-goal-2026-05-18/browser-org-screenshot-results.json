@@ -1,0 +1,32 @@
+[
+  {
+    "name": "org-home-mobile390.png",
+    "ok": false,
+    "error": "Error: Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+    "url": "http://localhost:33100/app/o/test-org/home"
+  },
+  {
+    "name": "org-assignment-new-mobile390.png",
+    "ok": false,
+    "error": "Error: Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+    "url": "http://localhost:33100/app/o/test-org/assignments/new"
+  },
+  {
+    "name": "org-matching-mobile390.png",
+    "ok": false,
+    "error": "Error: Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+    "url": "http://localhost:33100/app/o/test-org/assignments"
+  },
+  {
+    "name": "org-home-desktop1280.png",
+    "ok": false,
+    "error": "Error: Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+    "url": "http://localhost:33100/app/o/test-org/home"
+  },
+  {
+    "name": "org-assignment-new-desktop1280.png",
+    "ok": false,
+    "error": "Error: Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+    "url": "http://localhost:33100/app/o/test-org/assignments/new"
+  }
+]

@@ -3,8 +3,16 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { FileDown, Loader2 } from 'lucide-react';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { cn } from '@/lib/utils';
 
-export function DownloadOrganizationPdfButton({ slug }: { slug: string }) {
+export function DownloadOrganizationPdfButton({
+  slug,
+  className,
+}: {
+  slug: string;
+  className?: string;
+}) {
   const [loading, setLoading] = useState(false);
 
   const getErrorMessage = async (res: Response): Promise<string> => {
@@ -29,7 +37,7 @@ export function DownloadOrganizationPdfButton({ slug }: { slug: string }) {
       return 'Only active organization members can download this PDF.';
     }
     if (res.status === 404) {
-      return 'Organization profile is not ready for PDF export yet.';
+      return 'Organization trust page is not ready for PDF export yet.';
     }
 
     return payloadMessage || 'Could not download PDF. Please try again.';
@@ -66,7 +74,7 @@ export function DownloadOrganizationPdfButton({ slug }: { slug: string }) {
       link.remove();
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      console.error('organization portfolio pdf download failed', err);
+      dispatchClientErrorDiagnostic('portfolio.organization_pdf.download_failed', err);
       alert(
         err instanceof Error && err.message
           ? err.message
@@ -83,10 +91,10 @@ export function DownloadOrganizationPdfButton({ slug }: { slug: string }) {
       size="sm"
       onClick={handleDownload}
       disabled={loading}
-      className="inline-flex items-center gap-1.5"
+      className={cn('inline-flex items-center gap-1.5', className)}
     >
       {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
-      {loading ? 'Preparing...' : 'Download profile PDF'}
+      {loading ? 'Preparing...' : 'Download organization PDF'}
     </Button>
   );
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { requireApiAuthContext } from '@/lib/auth';
+import { log } from '@/lib/log';
 import {
   cancelCanonicalBundleItems,
   getCanonicalBundleById,
@@ -54,7 +55,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Custom verification request GET error:', error);
+    log.error('verification.custom_bundle.get_failed', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -161,7 +162,7 @@ export async function PATCH(
       );
     }
 
-    console.error('Custom verification request PATCH error:', error);
+    log.error('verification.custom_bundle.patch_failed', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

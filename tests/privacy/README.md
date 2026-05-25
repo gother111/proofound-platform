@@ -1,4 +1,8 @@
-# 🔐 RLS Privacy Test Suite
+# RLS Privacy Test Suite
+
+> Doc Class: `reference-spec`
+> Last Verified: `2026-05-19`
+> Reference note: this file documents the privacy test suite shape. It is not standalone launch readiness proof and must be read with the current locked MVP authority stack, `verification.md`, `docs/production-readiness-checklist.md`, and fresh test output.
 
 ## 📋 Overview
 
@@ -41,9 +45,9 @@ tests/privacy/
 
 ### 1. Prerequisites
 
-- ✅ Node.js 20.20.0 installed (see `.nvmrc`)
+- ✅ Node.js 24.15.0 installed (see `.nvmrc`)
 - ✅ Separate test Supabase project (NOT your production database!)
-- ✅ All dependencies installed (`npm install`)
+- ✅ All dependencies installed from the lockfile (`npm ci`)
 
 ### 2. Environment Setup
 
@@ -63,7 +67,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 # Run core 5 privacy tests only
 npm run test:privacy
 
-# Run all privacy tests (core + extended)
+# Run all privacy tests discovered under tests/privacy
 npm run test:privacy:all
 
 # Run in watch mode (during development)
@@ -86,7 +90,7 @@ npm run test:privacy:extended
     ✓ User can read their own profile
     ✓ User A cannot read User B's private profile data
     ✓ Unauthenticated users cannot read profiles directly
-    ✓ Users can read public profiles list (but with RLS filtering)
+    ✓ Authenticated users can query profile shell rows with RLS filtering
   ✓ 2. Verifier Email Protection (4)
     ✓ Requester can see their own verification request with verifier email
     ✓ User B cannot see User A's verifier emails
@@ -104,7 +108,7 @@ If a test fails, it typically means an RLS policy is missing or misconfigured:
   Expected query to be unauthorized - but query succeeded with data: {...}
 ```
 
-**Action Required:** Check the RLS policy for that table in `src/db/policies.sql`
+**Action Required:** Check the repo-owned migration/policy source for that table and rerun the migration audit before changing behavior.
 
 ## 🧪 Test Architecture
 
@@ -241,11 +245,13 @@ test('❌ Negative case: User cannot access other user's data', async () => {
 
 **Solution:**
 
-1. Run migrations on your test project:
+1. Use the repo-owned migration path on the explicitly configured test target:
    ```bash
-   supabase db push --project-ref your-test-project-ref
+   npm run db:drift-check
+   npm run db:audit:migrations
+   npm run db:migrate
    ```
-2. Or manually run migrations in Supabase SQL Editor
+2. For production-candidate or production evidence, also take a backup checkpoint and run isolated restore verification before treating the target as launch evidence.
 
 ### Tests Are Slow
 
@@ -293,7 +299,7 @@ test('❌ Negative case: User cannot access other user's data', async () => {
 - **[ENV_SETUP.md](./ENV_SETUP.md)** - Detailed environment setup guide
 - **[CROSS_DOCUMENT_PRIVACY_AUDIT.md](../../CROSS_DOCUMENT_PRIVACY_AUDIT.md)** - Privacy requirements
 - **[DATA_SECURITY_PRIVACY_ARCHITECTURE.md](../../DATA_SECURITY_PRIVACY_ARCHITECTURE.md)** - RLS policy specifications
-- **[src/db/policies.sql](../../src/db/policies.sql)** - Actual RLS policy implementations
+- **[RUN_MIGRATIONS_GUIDE.md](../../RUN_MIGRATIONS_GUIDE.md)** - Repo-owned migration and policy application path
 
 ## 🤝 Contributing
 
@@ -326,26 +332,28 @@ Your RLS policies are correctly implemented if:
 - ✅ Tests run in under 2 minutes
 - ✅ No orphaned test data remains after tests
 
-## 🎯 Test Coverage Goals
+## Test Coverage Goals
 
-| Category             | Coverage | Status |
-| -------------------- | -------- | ------ |
-| Profile Privacy      | 100%     | ✅     |
-| Verification Privacy | 100%     | ✅     |
-| Message Privacy      | 100%     | ✅     |
-| Analytics Privacy    | 100%     | ✅     |
-| Compensation Privacy | 100%     | ✅     |
-| Skills Privacy       | 100%     | ✅     |
-| Assignment Privacy   | 100%     | ✅     |
-| Organization Privacy | 100%     | ✅     |
-| Blocked Users        | 100%     | ✅     |
-| Conversation Stages  | 100%     | ✅     |
+The table below is a coverage target for the privacy suite, not a current launch-readiness certificate.
+For current launch evidence, rerun the scripts above against the intended target and record dated output.
+
+| Category             | Target expectation                         |
+| -------------------- | ------------------------------------------ |
+| Profile Privacy      | Unauthorized cross-user reads are blocked. |
+| Verification Privacy | Verifier contact details stay protected.   |
+| Message Privacy      | Conversation access follows participants.  |
+| Analytics Privacy    | User analytics are isolated.               |
+| Compensation Privacy | Compensation visibility is stage-gated.    |
+| Skills Privacy       | Proof-skill changes are owner-scoped.      |
+| Assignment Privacy   | Draft/private assignment data is gated.    |
+| Organization Privacy | Internal org data requires org access.     |
+| Blocked Users        | Block relationships are respected.         |
+| Conversation Stages  | Masked/revealed states stay consistent.    |
 
 ## 📞 Need Help?
 
 - 📖 Check [ENV_SETUP.md](./ENV_SETUP.md) for setup issues
 - 🐛 Review this README's troubleshooting section
-- 💬 Ask the team in #engineering-support
 - 🔍 Check existing test files for patterns
 
 ---

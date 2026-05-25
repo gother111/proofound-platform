@@ -1,0 +1,123 @@
+{
+  "bodyExcerpt": "Skip to main content\nOverview\nProfile\nCommunications\nMatching\nSettings\nProofound\n\nOverview\n\nBM\nProof-first home\nVerify strongest proof record\n\nWelcome back, Browser. Your proof is ready for context, trust, and visibility review.\n\nReview Proof Packs\nYour Proof Wallet\n3 checks\n\nEvidence, trust, and sharing state\n\nProof Packs\n\n2 proof-backed signals\n\nPresent\n\nTrust anchors\n\n1 accepted trust signal\n\nVerified\n\nPublic Page visibility\n\nPublic-safe sharing controls\n\nReview\nAdd new record\nReadiness Checklist\n1 to resolve\n\nProof Pack is present\n\nReady\n\nCheck the context, evidence, and visibility before sharing.\n\nReview proof\n\nTrust anchor verified\n\nVerified\n\n1 accepted trust signal attached to your proof.\n\nPlan anchor\n\nPortfolio visibility review\n\nReview\n\nYour proof surface is ready for a final sharing pass.\n\nManage visibility\nProof Readiness\nChecklist\n\nProof and trust anchor present\n\n1 accepted trust signal\n0 pending verifications\n2 proof items ready\nPublic Page can be reviewed\nReview proof readiness\nTrust Controls\nAccount\nPrivacy controls\nManage visibility\nExport or delete\nAccount history\nPrivacy choices\n\nEssential cookies keep Proofound working. Optional analytics help us improve the product. We never sell your data.\n\nPrivacy Policy\nCookie Policy\nCookie Settings\nAccept All\nEssential Only",
+  "checkedAt": "2026-05-20T04:40:45.741Z",
+  "hasLinkedInGateLanguage": false,
+  "hasRuntimeError": false,
+  "horizontalOverflow": false,
+  "mainCount": 1,
+  "sampledLinks": [
+    {
+      "href": "#main-content",
+      "text": "Skip to main content"
+    },
+    {
+      "href": "/app/i/home",
+      "text": "Overview"
+    },
+    {
+      "href": "/app/i/profile",
+      "text": "Profile"
+    },
+    {
+      "href": "/app/i/communications",
+      "text": "Communications"
+    },
+    {
+      "href": "/app/i/matching",
+      "text": "Matching"
+    },
+    {
+      "href": "/app/i/settings",
+      "text": "Settings"
+    },
+    {
+      "href": "/app/i/home",
+      "text": "Overview"
+    },
+    {
+      "href": "/app/i/profile",
+      "text": "Profile"
+    },
+    {
+      "href": "/app/i/communications",
+      "text": "Inbox"
+    },
+    {
+      "href": "/app/i/matching",
+      "text": "Matching"
+    },
+    {
+      "href": "/app/i/settings",
+      "text": "Settings"
+    },
+    {
+      "href": "/app/i/profile?profileView=full&tab=proof_packs",
+      "text": "Review Proof Packs"
+    },
+    {
+      "href": "/app/i/profile?profileView=full&tab=proof_packs",
+      "text": "Proof Packs2 proof-backed signalsPresent"
+    },
+    {
+      "href": "/app/i/verifications",
+      "text": "Trust anchors1 accepted trust signalVerified"
+    },
+    {
+      "href": "/app/i/profile?profileView=full&tab=visibility",
+      "text": "Public Page visibilityPublic-safe sharing controlsReview"
+    },
+    {
+      "href": "/app/i/profile?profileView=full&tab=proof_packs",
+      "text": "Add new record"
+    },
+    {
+      "href": "/app/i/profile?profileView=full&tab=proof_packs",
+      "text": "Review proof"
+    },
+    {
+      "href": "/app/i/verifications",
+      "text": "Plan anchor"
+    },
+    {
+      "href": "/app/i/profile?profileView=full&tab=visibility",
+      "text": "Manage visibility"
+    },
+    {
+      "href": "/app/i/profile?profileView=full&tab=proof_packs",
+      "text": "Review proof readiness"
+    },
+    {
+      "href": "/app/i/settings/privacy",
+      "text": "Privacy controls"
+    },
+    {
+      "href": "/app/i/profile?profileView=full&tab=visibility",
+      "text": "Manage visibility"
+    },
+    {
+      "href": "/app/i/settings?tab=privacy",
+      "text": "Export or delete"
+    },
+    {
+      "href": "/app/i/settings/audit-log",
+      "text": "Account history"
+    },
+    {
+      "href": "/privacy",
+      "text": "Privacy Policy"
+    },
+    {
+      "href": "/cookies",
+      "text": "Cookie Policy"
+    },
+    {
+      "href": "/cookies/settings?returnTo=%2Fapp%2Fi%2Fhome",
+      "text": "Cookie Settings"
+    }
+  ],
+  "title": "Proofound - Focus on what matters",
+  "url": "http://127.0.0.1:33180/app/i/home",
+  "console": [],
+  "note": "Browser navigated to /app/o/demo/assignments/new on port 33180 after restarting the broken local server. The mock Browser session resolved to the individual home fallback, so route-level org builder visibility is covered by focused component tests; Browser confirmed the active rendered fallback had no stale LinkedIn gate language, no runtime error, one main landmark, and no overflow.",
+  "screenshotError": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1"
+}

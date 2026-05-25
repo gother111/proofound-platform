@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   FINAL_LAUNCH_CHECKLIST_DEFINITIONS,
@@ -40,6 +40,9 @@ async function createWorkspaceFixture(
 ## Stale Claims To Retire Now
 
 - Older route counts are stale.
+  - Retire this as current truth. Old explanatory route-count details should not become a separate stale claim.
+- \`Google, LinkedIn, and video integrations remain live launch compatibility flows.\`
+  - Retire this as current truth. Legacy integration-route wording should not erase active Supabase social sign-in.
 `
   );
 
@@ -53,7 +56,7 @@ async function createWorkspaceFixture(
 | Proof Pack canonicality | Locked MVP | Fresh proof evidence | Canonical proof evidence passed. | \`PASS\` |
 | bounded verification semantics | Locked MVP | Fresh verification evidence | Verification status route is canonical. | \`PASS\` |
 | blind-by-default review | Locked MVP | Fresh review evidence | Blind review passed. | \`PASS\` |
-| candidate-consented reveal | Locked MVP | Fresh reveal evidence | Reveal passed. | \`PASS\` |
+| proof-review-participant-consented reveal | Locked MVP | Fresh reveal evidence | Reveal passed. | \`PASS\` |
 | assignment create / edit / publish | Locked MVP | Fresh assignment evidence | Assignment publish passed. | \`PASS\` |
 `
   );
@@ -99,7 +102,9 @@ async function createWorkspaceFixture(
     `# Locked MVP
 
 Make portfolio-ready narrow and verified. Make intro-eligible hard.
-The proof-first hiring corridor is centered on Proof Packs.
+The proof-first assignment review corridor is centered on Proof Packs.
+Matching exists to help each side reach better-fit introductions faster using stronger signal than CV filtering.
+Proofound helps organizations review proof submissions instead of profile theater.
 It includes org_owner, org_manager, and org_reviewer.
 `
   );
@@ -138,6 +143,9 @@ critical alerts are configured
     'README.md',
     `# Proofound
 
+Proofound is a narrow proof-first assignment review corridor centered on Proof Packs.
+MVP excludes ATS or HRIS replacement, public people directories, open candidate indexes, and social or feed-driven product behavior.
+
 \`npm run db:backup:checkpoint\`
 `
   );
@@ -166,7 +174,7 @@ Configure critical alerts:
     `# Launch Restore Drill
 
 \`npm run db:backup:checkpoint\`
-\`npm run db:restore:verify -- --checkpoint <dir>\`
+\`npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json\`
 `
   );
 
@@ -219,7 +227,7 @@ Status: \`PASS\`
 Hire through proof, not profile theater.
 See the work behind the claim.
 
-## Candidate Supply-Seeding Plan
+## Proof-Submission Supply-Seeding Plan
 
 Status: \`PASS\`
 
@@ -236,7 +244,9 @@ assignment, proof expectations, and verification queue handoffs are documented.
     await writeFile(
       workspace,
       'docs/internal-ops/launch-owner-roster-2026-04-27.md',
-      `# Launch Owner Roster
+      `> Doc Class: \`active\`
+
+# Launch Owner Roster
 
 Status: \`PASS\`
 
@@ -253,7 +263,9 @@ Status: \`PASS\`
     await writeFile(
       workspace,
       'docs/internal-ops/production-launch-evidence-2026-04-27.md',
-      `# Production Launch Evidence
+      `> Doc Class: \`active\`
+
+# Production Launch Evidence
 
 Critical alert drill status: \`PASS\`
 
@@ -419,6 +431,12 @@ queue item must say which checklist point failed or passed
               evidence: ['repo-ready-launch-status-route.log'],
             },
             {
+              id: 'public_portfolio_safe',
+              status: 'PASS',
+              summary: 'Fresh public portfolio safety tests passed.',
+              evidence: ['repo-ready-public-portfolio.log'],
+            },
+            {
               id: 'live_launch_smoke_artifact_refresh',
               status: 'PASS',
               summary: 'Fresh smoke artifact refresh passed.',
@@ -488,6 +506,16 @@ describe('final launch checklist pipeline', () => {
     expect(buildItem?.status).toBe('FAIL');
     expect(buildItem?.summary).toContain('PageNotFoundError');
     expect(buildItem?.retiredStaleClaims.length).toBeGreaterThan(0);
+    expect(report.retiredStaleClaims).toContain('Older route counts are stale.');
+    expect(report.retiredStaleClaims).toContain(
+      '`Non-auth Google/LinkedIn integration routes and native video integrations remain live launch compatibility flows.`'
+    );
+    expect(report.retiredStaleClaims).not.toContain(
+      '`Google, LinkedIn, and video integrations remain live launch compatibility flows.`'
+    );
+    expect(report.retiredStaleClaims).not.toContain(
+      'Retire this as current truth. Old explanatory route-count details should not become a separate stale claim.'
+    );
   });
 
   it('propagates blocker dependencies to the go/no-go signoff row', async () => {
@@ -551,6 +579,70 @@ describe('final launch checklist pipeline', () => {
     expect(report.latestLaunchBundleDir).toBe('.artifacts/launch-validation-2026-04-14');
     expect(buildItem?.status).toBe('PASS');
     expect(buildItem?.summary).toContain('Fresh local build passed');
+    expect(
+      report.items.find((item) => item.id === 'product_public_portfolio_safe_and_separate')?.status
+    ).toBe('PASS');
+  });
+
+  it('uses current strict-org and privacy gates over older green corridor claims', async () => {
+    const workspace = await createWorkspaceFixture({ includeRepoReadyBundle: true });
+
+    await writeFile(
+      workspace,
+      `.artifacts/launch-validation-2026-04-15/${REPO_READY_VALIDATION_FILE_NAME}`,
+      JSON.stringify(
+        {
+          schemaVersion: 1,
+          kind: 'repo_ready_validation',
+          scope: 'repo',
+          generatedAt: '2026-04-15T21:00:00.000Z',
+          authoritativeBaseUrl: 'http://127.0.0.1:33124',
+          verdict: 'NOT_READY',
+          gates: [
+            {
+              id: 'strict_org_corridor_e2e',
+              status: 'FAIL',
+              summary: 'Strict org corridor failed in the latest validation run.',
+              evidence: ['strict_org_corridor_e2e.log'],
+            },
+            {
+              id: 'privacy_rls_baseline_tests',
+              status: 'FAIL',
+              summary: 'Privacy/RLS baseline failed in the latest validation run.',
+              evidence: ['privacy_rls_baseline_tests.log'],
+            },
+            {
+              id: 'privacy_rls_extended_tests',
+              status: 'FAIL',
+              summary: 'Privacy/RLS extended failed in the latest validation run.',
+              evidence: ['privacy_rls_extended_tests.log'],
+            },
+          ],
+        },
+        null,
+        2
+      )
+    );
+
+    const report = await generateFinalLaunchChecklistReport({
+      workspaceRoot: workspace,
+      scope: 'repo',
+      now: new Date('2026-04-15T21:10:00.000Z'),
+      fetchImpl: globalThis.fetch,
+    });
+
+    const item = (id: string) => report.items.find((candidate) => candidate.id === id);
+
+    expect(item('product_review_queue_blind_and_reason_coded')?.status).toBe('FAIL');
+    expect(item('product_hire_and_engagement_distinct')?.status).toBe('FAIL');
+    expect(item('qa_assignment_publish_smoke')?.status).toBe('FAIL');
+    expect(item('engineering_three_role_model_canonical')?.status).toBe('FAIL');
+    expect(item('product_hire_and_engagement_distinct')?.retiredStaleClaims.length).toBeGreaterThan(
+      0
+    );
+    expect(
+      item('engineering_three_role_model_canonical')?.retiredStaleClaims.length
+    ).toBeGreaterThan(0);
   });
 
   it('treats external prerequisites as non-blocking in repo scope but blocking in full scope', async () => {
@@ -601,8 +693,135 @@ describe('final launch checklist pipeline', () => {
     expect(itemStatus('ops_critical_alerts_configured')).toBe('PASS');
     expect(itemStatus('founder_icp_design_partner_locked')).toBe('PASS');
     expect(itemStatus('founder_pilot_package_documented')).toBe('PASS');
+    expect(itemStatus('founder_public_story_signal_over_cvs')).toBe('PASS');
     expect(itemStatus('founder_candidate_supply_plan')).toBe('PASS');
     expect(itemStatus('founder_org_onboarding_playbook')).toBe('PASS');
     expect(itemStatus('ops_backup_restore_verified')).toBe('UNVERIFIED');
+  });
+
+  it('does not accept historical launch evidence as current full-launch proof', async () => {
+    const workspace = await createWorkspaceFixture({
+      includeRepoReadyBundle: true,
+      includeLaunchEvidence: true,
+    });
+
+    await writeFile(
+      workspace,
+      'docs/internal-ops/launch-owner-roster-2026-04-27.md',
+      `> Doc Class: \`historical\`
+
+# Historical Launch Owner Roster - 2026-04-27
+
+Status: \`PASS\`
+
+| Role | Named human |
+| --- | --- |
+| Founder / launch owner | Yurii Bakurov |
+| Incident owner | Yurii Bakurov |
+| Technical owner | Yurii Bakurov |
+| Product / ops owner | Yurii Bakurov |
+| Support / verification owner | Yurii Bakurov |
+`
+    );
+
+    await writeFile(
+      workspace,
+      'docs/internal-ops/production-launch-evidence-2026-04-27.md',
+      `> Doc Class: \`historical\`
+
+# Historical Production Launch Evidence - 2026-04-27
+
+Critical alert drill status: \`PASS\`
+
+Live \`/api/monitoring/launch-status\`: \`PASS\`
+
+auth email upload workflow privacy
+
+Restore drill status: \`PASS\`
+
+isolated recovery target
+`
+    );
+
+    await writeFile(
+      workspace,
+      'docs/launch-signoff-2026-04-27.md',
+      `> Doc Class: \`historical\`
+
+# Historical Production Launch Signoff - 2026-04-27
+
+Decision: \`GO\`
+
+Evidence bundle date: \`2026-04-27\`
+
+Founder / launch owner: \`Yurii Bakurov\` \`APPROVED\`
+
+Technical owner: \`Yurii Bakurov\` \`APPROVED\`
+`
+    );
+
+    const report = await generateFinalLaunchChecklistReport({
+      workspaceRoot: workspace,
+      scope: 'full',
+      now: new Date('2026-04-14T21:10:00.000Z'),
+      fetchImpl: globalThis.fetch,
+    });
+
+    const itemStatus = (id: string) => report.items.find((item) => item.id === id)?.status;
+
+    expect(itemStatus('ops_incident_roles_assigned')).toBe('UNVERIFIED');
+    expect(itemStatus('ops_critical_alerts_configured')).toBe('UNVERIFIED');
+    expect(itemStatus('ops_backup_restore_verified')).toBe('UNVERIFIED');
+    expect(itemStatus('founder_go_no_go_signed_after_green')).not.toBe('PASS');
+  });
+
+  it('does not send cron secrets to untrusted live checklist origins or public health checks', async () => {
+    const workspace = await createWorkspaceFixture({ includeRepoReadyBundle: true });
+    vi.stubEnv('CRON_SECRET', 'cron-secret-value');
+    vi.stubEnv('LAUNCH_TRUSTED_BASE_URLS', '');
+    const fetchCalls: Array<{ url: string; authorization: string | null }> = [];
+    const fetchImpl = (async (url: string | URL | Request, init?: RequestInit) => {
+      const requestUrl = String(url);
+      const headers = new Headers(init?.headers);
+      fetchCalls.push({
+        url: requestUrl,
+        authorization: headers.get('authorization'),
+      });
+      return new Response(JSON.stringify({ status: 'ok' }), { status: 200 });
+    }) as typeof fetch;
+
+    await generateFinalLaunchChecklistReport({
+      workspaceRoot: workspace,
+      scope: 'full',
+      liveBaseUrl: 'https://evil.example',
+      now: new Date('2026-04-14T21:10:00.000Z'),
+      fetchImpl,
+    });
+
+    expect(fetchCalls).toEqual(
+      expect.arrayContaining([
+        { url: 'https://evil.example/api/health', authorization: null },
+        { url: 'https://evil.example/api/monitoring/launch-status', authorization: null },
+      ])
+    );
+
+    fetchCalls.length = 0;
+    await generateFinalLaunchChecklistReport({
+      workspaceRoot: workspace,
+      scope: 'full',
+      liveBaseUrl: 'https://proofound.io',
+      now: new Date('2026-04-14T21:10:00.000Z'),
+      fetchImpl,
+    });
+
+    expect(fetchCalls).toEqual(
+      expect.arrayContaining([
+        { url: 'https://proofound.io/api/health', authorization: null },
+        {
+          url: 'https://proofound.io/api/monitoring/launch-status',
+          authorization: 'Bearer cron-secret-value',
+        },
+      ])
+    );
   });
 });

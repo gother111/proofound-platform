@@ -45,7 +45,7 @@
     },
     "organizations": {
       "title": "För organisationer",
-      "description": "Visa ditt team, uppdrag och påverkan transparent."
+      "description": "Publicera en förtroendesida, definiera tydliga uppdrag och granska bevisbaserade inlämningar."
     },
     "principles": {
       "title": "Vägledande principer",
@@ -56,11 +56,11 @@
     "faq": {
       "title": "Vanliga frågor",
       "q1": "Vad gör Proofound annorlunda?",
-      "a1": "Proofound fokuserar på verifierbart bevis över självpromotion.",
+      "a1": "Proofound fokuserar på Proof Packs, integritetssäker granskning och starkare bevis än CV:n.",
       "q2": "Är Proofound gratis?",
-      "a2": "Ja, kärnfunktioner är gratis för individer och organisationer.",
+      "a2": "Lanseringsåtkomst är fokuserad på inbjudna användare och pilotteam.",
       "q3": "Hur fungerar verifiering?",
-      "a3": "Vi bygger flera verifieringsmetoder inklusive rekommendationer och externa bevis."
+      "a3": "Verifiering är avgränsad till verkligt arbete, bevis och sammanhang medan tidig granskning är anonym som standard."
     },
     "footer": {
       "about": "Om",

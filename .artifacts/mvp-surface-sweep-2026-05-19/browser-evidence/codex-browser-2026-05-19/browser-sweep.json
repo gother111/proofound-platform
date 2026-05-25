@@ -1,0 +1,177 @@
+{
+  "generatedAt": "2026-05-19T21:28:13.216Z",
+  "results": [
+    {
+      "route": "login",
+      "screenshotPath": "/Users/yuriibakurov/proofound/.artifacts/mvp-surface-sweep-2026-05-19/browser-evidence/codex-browser-2026-05-19/login.png",
+      "bodyText": "Skip to main content\nWelcome back\n\nSign in to continue to Proofound\n\nEMAIL ADDRESS\n*\nPASSWORD\n*\nRemember me\nForgot password?\nSign in\nOR CONTINUE WITH\nGoogle\nLinkedIn\nDon't have an account? Create account\n\nBy signing in, you agree to our Terms of Service and Privacy Policy",
+      "buttons": ["Sign in", "Google", "LinkedIn"],
+      "h1": "Welcome back",
+      "links": [
+        {
+          "href": "http://localhost:33180/login#main-content",
+          "text": "Skip to main content"
+        },
+        {
+          "href": "http://localhost:33180/reset-password",
+          "text": "Forgot password?"
+        },
+        {
+          "href": "http://localhost:33180/signup",
+          "text": "Create account"
+        },
+        {
+          "href": "http://localhost:33180/terms",
+          "text": "Terms of Service"
+        },
+        {
+          "href": "http://localhost:33180/privacy",
+          "text": "Privacy Policy"
+        }
+      ],
+      "overflowX": false,
+      "title": "Sign In | Proofound",
+      "url": "http://localhost:33180/login",
+      "viewport": {}
+    },
+    {
+      "route": "signup",
+      "screenshotPath": "/Users/yuriibakurov/proofound/.artifacts/mvp-surface-sweep-2026-05-19/browser-evidence/codex-browser-2026-05-19/signup.png",
+      "bodyText": "Skip to main content\nBack\nJoin Proofound\n\nChoose the account type that fits how you'll use Proofound.\n\nIndividual\n\nFor professionals who want a clean proof-based portfolio link they can share today, plus matching as they grow.\n\nContinue as Individual →\nOrganization\n\nFor organizations that need a credible trust page on day 1, then one assignment and a privacy-safe shortlist.\n\nContinue as Organization →\n\nAlready have an account? Sign in\n\nBy creating an account, you agree to our Terms of Service and Privacy Policy",
+      "buttons": [
+        "Back",
+        "IndividualFor professionals who want a clean proof-based portfolio link they can share today, plus matching as they grow.Continue as Individual →",
+        "OrganizationFor organizations that need a credible trust page on day 1, then one assignment and a privacy-safe shortlist.Continue as Organization →",
+        "Sign in"
+      ],
+      "h1": "Join Proofound",
+      "links": [
+        {
+          "href": "http://localhost:33180/signup#main-content",
+          "text": "Skip to main content"
+        },
+        {
+          "href": "http://localhost:33180/terms",
+          "text": "Terms of Service"
+        },
+        {
+          "href": "http://localhost:33180/privacy",
+          "text": "Privacy Policy"
+        }
+      ],
+      "overflowX": false,
+      "title": "Sign Up | Proofound",
+      "url": "http://localhost:33180/signup",
+      "viewport": {}
+    },
+    {
+      "route": "portfolio-demo",
+      "screenshotPath": "/Users/yuriibakurov/proofound/.artifacts/mvp-surface-sweep-2026-05-19/browser-evidence/codex-browser-2026-05-19/portfolio-demo.png",
+      "bodyText": "Skip to main content\nPUBLIC PAGE UNAVAILABLE\n\nThis Public Page link is unavailable. It may be hidden, retired, or not ready for launch-safe sharing.\n\nproofound.io/portfolio/demo\nPublic Page unavailable",
+      "buttons": [],
+      "h1": "Public Page unavailable",
+      "links": [
+        {
+          "href": "http://localhost:33180/portfolio/demo#main-content",
+          "text": "Skip to main content"
+        }
+      ],
+      "overflowX": false,
+      "title": "Public Page Unavailable | Proofound",
+      "url": "http://localhost:33180/portfolio/demo",
+      "viewport": {}
+    },
+    {
+      "route": "home",
+      "screenshotPath": "/Users/yuriibakurov/proofound/.artifacts/mvp-surface-sweep-2026-05-19/browser-evidence/codex-browser-2026-05-19/home.png",
+      "bodyText": "Skip to main content\nPROOFOUND\nHow it works\nFor individuals\nFor organizations\nSign in\nRequest a pilot\nProof behind\nthe claim\n\nProofound turns real work into structured Proof Packs for privacy-safe hiring review before identity takes over.\n\nProof portfolios for individuals. Evidence-based review for teams.\n\nRequest a pilot\nCreate your proof portfolio\nBlind by default\n\nPhoto, name, contact details, prestige markers, and other identity signals are removed first. The goal is not anonymity for its own sake. It is capability before bias.\n\nWeak signal should leave before judgment begins.\n\n01 / 09\nBlind by default\n\nTHE STORY RESOLVES INTO ACTION\n\nBuild hiring on stronger proof\n\nProofound helps individuals present real capability through structured evidence, and helps organizations compare work-to-proof more clearly before time is lost.\n\nFOR INDIVIDUALS\n\nCreate your proof portfolio\n\nStart with a cleaner proof portfolio, then add proof, verification, and privacy-safe signal over time.\n\nStart building\n\nFOR ORGANIZATIONS\n\nExplore evidence-based hiring\n\nReview work through structured proof, clearer trust signals, and a more explainable assignment-fit review.\n\nTalk to the team\nPROOFOUND\n\nEvidence-based hiring for a world with too much polished signal and too little proof.\n\nCookies\nCookie settings\nPrivacy\nTerms\nSign in\n\n© 2026 Proofound. Privacy-first by design.\n\nCalm signal. Clearer proof. Better fit.",
+      "buttons": [
+        "For individualsCreate your proof portfolioStart with a cleaner proof portfolio, then add proof, verification, and privacy-safe signal over time.Start building",
+        "For organizationsExplore evidence-based hiringReview work through structured proof, clearer trust signals, and a more explainable assignment-fit review.Talk to the team"
+      ],
+      "h1": "Proof behind the claim",
+      "links": [
+        {
+          "href": "http://localhost:33180/#main-content",
+          "text": "Skip to main content"
+        },
+        {
+          "href": "http://localhost:33180/",
+          "text": "Proofound"
+        },
+        {
+          "href": "http://localhost:33180/#story",
+          "text": "How it works"
+        },
+        {
+          "href": "http://localhost:33180/#start-individuals",
+          "text": "For individuals"
+        },
+        {
+          "href": "http://localhost:33180/#start-organizations",
+          "text": "For organizations"
+        },
+        {
+          "href": "http://localhost:33180/login",
+          "text": "Sign in"
+        },
+        {
+          "href": "http://localhost:33180/login",
+          "text": "Sign in"
+        },
+        {
+          "href": "http://localhost:33180/signup",
+          "text": "Start"
+        },
+        {
+          "href": "http://localhost:33180/signup/organization",
+          "text": "Request a pilot"
+        },
+        {
+          "href": "http://localhost:33180/signup/organization",
+          "text": "Request a pilot"
+        },
+        {
+          "href": "http://localhost:33180/signup/individual",
+          "text": "Create your proof portfolio"
+        },
+        {
+          "href": "http://localhost:33180/signup/organization",
+          "text": "Request a pilot"
+        },
+        {
+          "href": "http://localhost:33180/signup/individual",
+          "text": "Create your proof portfolio"
+        },
+        {
+          "href": "http://localhost:33180/",
+          "text": "Proofound"
+        },
+        {
+          "href": "http://localhost:33180/cookies",
+          "text": "Cookies"
+        },
+        {
+          "href": "http://localhost:33180/cookies/settings",
+          "text": "Cookie settings"
+        },
+        {
+          "href": "http://localhost:33180/privacy",
+          "text": "Privacy"
+        },
+        {
+          "href": "http://localhost:33180/terms",
+          "text": "Terms"
+        },
+        {
+          "href": "http://localhost:33180/login",
+          "text": "Sign in"
+        }
+      ],
+      "overflowX": false,
+      "title": "Proofound | Proof Behind the Claim",
+      "url": "http://localhost:33180/",
+      "viewport": {}
+    }
+  ]
+}

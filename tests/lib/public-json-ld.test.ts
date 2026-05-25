@@ -12,8 +12,9 @@ describe('public JSON-LD helpers', () => {
   it('builds static page graph entries for public pages', () => {
     const items = buildStaticPageJsonLd({
       path: '/',
-      title: 'Proofound | Hire through proof, not profile theater',
-      description: 'Proof-first hiring corridor with privacy-safe review and public trust surfaces.',
+      title: 'Proofound | Proof-first assignment review',
+      description:
+        'Proof-first assignment review corridor with privacy-safe review and public trust surfaces.',
     });
 
     expect(items).toHaveLength(4);

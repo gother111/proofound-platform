@@ -1,5 +1,5 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-05-04`
+> Last Verified: `2026-05-21`
 
 # Proofound AI Assistive Layer Codex Implementation Prompts
 
@@ -31,7 +31,7 @@ Hard product rules:
 - Do not add AI shortlisting.
 - Do not add AI suitability judgments.
 - Do not add AI fit verdicts.
-- Do not add AI hiring recommendations.
+- Do not add AI workflow recommendations.
 - Do not add AI verification decisions.
 - Do not add AI trust-state decisions.
 - Do not send full private files to the model by default.
@@ -42,7 +42,7 @@ Hard product rules:
 - Gemini assistive AI is production-eligible only after live model smoke, app-level hard caps, launch-status checks, privacy tests, and raw-prompt logging checks pass.
 - Google Cloud Document AI OCR is production-beta only for authenticated-user Proof Artifact Text Extraction and authenticated-individual Start from CV, not the archived CV import wizard.
 - OCR requires explicit consent per document and returns draft text only.
-- OCR output must not auto-publish, auto-verify, auto-score, auto-rank, shortlist, recommend, or affect match/review/trust/hiring state.
+- OCR output must not auto-publish, auto-verify, auto-score, auto-rank, shortlist, recommend, or affect match/review/trust/workflow state.
 - Cloud Vision OCR, taxonomy shortlist, reranker, and Gemini skill extractor for employer review are excluded.
 
 ---
@@ -142,7 +142,7 @@ Privacy/security requirements:
 - Do not store raw prompt text.
 - Store input_hash, output_hash, token counts, cost, feature, entity reference, and redaction summary.
 - RLS: service role can insert/update; platform admins can read; ordinary users cannot read global usage logs.
-- Avoid leaking org/candidate data through log metadata.
+- Avoid leaking org/proof-review participant data through log metadata.
 
 Tests:
 - Budget cap blocks calls.
@@ -215,7 +215,7 @@ Privacy/security requirements:
 - Never send original filenames.
 - Never send hidden private context unless user explicitly selected a public-safe field.
 - Never infer protected traits.
-- Never produce candidate score, rank, or fit judgment.
+- Never produce proof-review participant score, rank, or fit judgment.
 
 Tests:
 - Unauthorized user cannot request suggestions.
@@ -280,23 +280,23 @@ Implementation requirements:
 
 Privacy/security requirements:
 - Do not generate discriminatory criteria.
-- Do not generate candidate scoring rubrics.
-- Do not rank or judge candidates.
+- Do not generate proof-review participant scoring rubrics.
+- Do not rank or judge proof-review participants.
 - Do not include protected-trait criteria.
-- Do not send private candidate data.
+- Do not send private proof-review participant data.
 
 Tests:
 - org_reviewer cannot edit or clarify assignment if current product policy restricts editing to owner/manager.
 - Non-member gets 403.
 - Assistant flags vague outcomes and missing proof expectations.
-- Assistant does not produce candidate scoring language.
+- Assistant does not produce proof-review participant scoring language.
 - Assignment remains draft until user explicitly saves/publishes.
 - UI test covers button and accept/dismiss behavior.
 
 Acceptance criteria:
 - Org manager can improve assignment clarity without creating scoring/ranking logic.
 - Output remains assignment-focused: outcomes, constraints, proof expectations.
-- No candidate data is used.
+- No proof-review participant data is used.
 ```
 
 ---
@@ -346,7 +346,7 @@ Privacy/security requirements:
 - Do not include hidden private context.
 - Do not include verifier email in model prompt.
 - Do not ask for general praise.
-- Do not ask verifier to assess overall candidate quality.
+- Do not ask verifier to assess overall proof-review participant quality.
 - Do not generate more than one primary claim scope per request.
 
 Tests:

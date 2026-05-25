@@ -11,8 +11,10 @@ import { SnoozedMatchesList } from '@/components/matching/SnoozedMatchesList';
 import { HiddenMatchesList } from '@/components/matching/HiddenMatchesList';
 import { CardGridSkeleton, PageIntroSkeleton } from '@/components/skeletons/CoreLoadingPrimitives';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { Search } from 'lucide-react';
 
-const MATCHING_DATA_TIMEOUT_MS = 30000;
+const MATCHING_DATA_TIMEOUT_MS = 10000;
 
 type MatchabilityCriterion = {
   id: string;
@@ -62,6 +64,7 @@ export function MatchingClient() {
   });
   const [showManageHiddenSnoozed, setShowManageHiddenSnoozed] = useState(false);
   const [blockedState, setBlockedState] = useState<MatchabilityBlockedPayload | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [readinessActions, setReadinessActions] = useState<
     Array<{ id: string; title: string; description: string; actionUrl: string }>
   >([]);
@@ -74,7 +77,8 @@ export function MatchingClient() {
       {
         id: 'update-public-portfolio-default',
         title: 'Strengthen Public Page proof',
-        description: 'Refresh proof-backed work examples and trust signals on your Public Page.',
+        description:
+          'Refresh proof-backed work examples and verification checks on your Public Page.',
         actionUrl: '/app/i/profile?profileView=full&tab=proof_packs',
       },
       {
@@ -102,6 +106,17 @@ export function MatchingClient() {
   };
 
   const fetchMatches = async () => {
+    setIsLoading(true);
+    setLoadError(null);
+    const visualState =
+      typeof window !== 'undefined'
+        ? new URLSearchParams(window.location.search).get('visualState')
+        : null;
+    const visualQuery =
+      visualState === 'filled' || visualState === 'empty'
+        ? `?visualState=${encodeURIComponent(visualState)}`
+        : '';
+
     // Create abort controller for timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), MATCHING_DATA_TIMEOUT_MS);
@@ -109,10 +124,10 @@ export function MatchingClient() {
     try {
       // Fetch matching profile
       const [profileRes, readinessRes] = await Promise.all([
-        fetch('/api/matching-profile', {
+        fetch(`/api/matching-profile${visualQuery}`, {
           signal: controller.signal,
         }),
-        fetch('/api/individual/readiness', {
+        fetch(`/api/individual/readiness${visualQuery}`, {
           signal: controller.signal,
         }),
       ]);
@@ -124,7 +139,7 @@ export function MatchingClient() {
 
       if (!profileRes.ok) {
         const errorData = await profileRes.json().catch(() => ({}));
-        console.error('Failed to load matching profile:', errorData);
+        dispatchClientErrorDiagnostic('matching.client.profile_load_failed', errorData);
         throw new Error(errorData.message || 'Failed to load matching profile');
       }
 
@@ -133,7 +148,7 @@ export function MatchingClient() {
 
       // If profile exists, fetch matches
       if (profileData.profile) {
-        const matchesRes = await apiFetch('/api/match/profile', {
+        const matchesRes = await apiFetch(`/api/match/profile${visualQuery}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({}),
@@ -152,7 +167,7 @@ export function MatchingClient() {
 
         if (!matchesRes.ok) {
           const errorData = matchesPayload || {};
-          console.error('Failed to load matches:', errorData);
+          dispatchClientErrorDiagnostic('matching.client.matches_load_failed', errorData);
           throw new Error(errorData.message || 'Failed to load matches');
         }
 
@@ -161,47 +176,20 @@ export function MatchingClient() {
         setBlockedState(null);
         setMatches(matchItems);
         setFilteredMatches(matchItems);
-
-        // Track first match shown for TTFQI metric
-        if (matchItems.length > 0) {
-          try {
-            await fetch('/api/analytics/track', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                eventType: 'first_match_shown',
-                userId: matchItems[0].userId || matchItems[0].user_id,
-                entityType: 'match',
-                entityId: matchItems[0].id,
-                properties: {
-                  totalMatches: matchItems.length,
-                  topScore: matchItems[0].score || matchItems[0].totalScore,
-                },
-              }),
-            });
-          } catch (analyticsError) {
-            // Log but don't fail the page load
-            console.error('Failed to track first match shown:', analyticsError);
-          }
-        }
       } else {
         setBlockedState(null);
       }
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
-        console.error('Matching data request timed out');
-        toast.error('Request timed out', {
-          description: 'Please check your connection and try again.',
-        });
-        // Set empty state on timeout
-        setMatchingProfile(null);
-        setBlockedState(null);
-        setMatches([]);
-        setFilteredMatches([]);
+        dispatchClientErrorDiagnostic('matching.client.load_timeout', error);
+        setLoadError(
+          'Matching is taking longer than usual. You can retry or review your proof readiness.'
+        );
       } else {
-        console.error('Error loading matching data:', error);
+        dispatchClientErrorDiagnostic('matching.client.load_failed', error);
         const errorMessage =
           error instanceof Error ? error.message : 'Failed to load matching data';
+        setLoadError(errorMessage);
         toast.error(errorMessage);
       }
     } finally {
@@ -221,7 +209,7 @@ export function MatchingClient() {
     }
     refreshTimer.current = setTimeout(() => {
       fetchMatches().catch((err) => {
-        console.error('Failed to refresh matches after restore:', err);
+        dispatchClientErrorDiagnostic('matching.client.restore_refresh_failed', err);
         toast.error('Could not refresh matches. Please try again.');
       });
     }, 120);
@@ -263,7 +251,7 @@ export function MatchingClient() {
 
   if (isLoading) {
     return (
-      <div className="max-w-5xl mx-auto px-4 py-6">
+      <div className="mx-auto max-w-5xl px-4 pb-28 pt-6 md:pb-6">
         <p className="mb-3 text-sm text-muted-foreground" role="status" aria-live="polite">
           Preparing matches...
         </p>
@@ -275,6 +263,38 @@ export function MatchingClient() {
           columnsClassName="grid grid-cols-1 md:grid-cols-2 gap-4"
           tileClassName="min-h-[220px]"
         />
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-8">
+        <div className="rounded-2xl border border-proofound-stone/80 bg-white/75 p-5 shadow-sm sm:p-6">
+          <p className="text-sm font-medium text-muted-foreground">Matching</p>
+          <h1 className="mt-2 font-display text-2xl font-semibold text-proofound-charcoal">
+            Matching needs another moment
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">{loadError}</p>
+          <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+            <button
+              type="button"
+              onClick={() => {
+                void fetchMatches();
+              }}
+              className="rounded-full bg-proofound-forest px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-proofound-forest/90"
+            >
+              Retry matching
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push('/app/i/profile?profileView=full&tab=proof_packs')}
+              className="rounded-full border border-proofound-stone px-4 py-2.5 text-sm font-medium text-proofound-charcoal transition-colors hover:border-proofound-forest hover:bg-white"
+            >
+              Review proof readiness
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -298,7 +318,7 @@ export function MatchingClient() {
   // Show empty state if no profile
   if (!matchingProfile) {
     return (
-      <div className="max-w-5xl mx-auto px-4 py-6">
+      <div className="mx-auto max-w-5xl px-4 pb-28 pt-6 md:pb-6">
         <IndividualMatchingEmpty onSetup={() => setShowSetup(true)} />
       </div>
     );
@@ -306,7 +326,7 @@ export function MatchingClient() {
 
   // Show filled view with matches
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6">
+    <div className="mx-auto max-w-5xl px-4 pb-28 pt-6 md:pb-6">
       <div className="mb-6">
         <div className="mb-2 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
@@ -316,8 +336,8 @@ export function MatchingClient() {
             <p className="mt-1 text-sm leading-6 text-muted-foreground dark:text-[#8A8174]">
               {blockedState
                 ? 'Browsing stays open. Add recent proof and one preference before introductions.'
-                : `${filteredMatches.length} opportunit${
-                    filteredMatches.length === 1 ? 'y' : 'ies'
+                : `${filteredMatches.length} assignment review${
+                    filteredMatches.length === 1 ? '' : 's'
                   } aligned with your skills, proof, and constraints`}
             </p>
           </div>
@@ -332,7 +352,7 @@ export function MatchingClient() {
               onClick={() => {
                 setShowSetup(true);
               }}
-              className="text-sm underline text-proofound-forest"
+              className="rounded-full border border-proofound-stone bg-white/70 px-3 py-2 text-sm font-medium text-proofound-forest transition-colors hover:border-proofound-forest hover:bg-white"
             >
               Edit profile
             </button>
@@ -360,7 +380,7 @@ export function MatchingClient() {
           </div>
 
           <p className="mt-4 text-xs text-muted-foreground">
-            Qualified introductions stay locked until stronger proof, a verified trust signal, and
+            Qualified introductions stay locked until stronger proof, one accepted verification, and
             full intro constraints are complete.
           </p>
 
@@ -380,24 +400,27 @@ export function MatchingClient() {
           ) : null}
         </div>
       ) : filteredMatches.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-proofound-stone/80 bg-white/60 px-4 py-12 text-center">
-          <p className="mb-2 font-display text-xl font-semibold text-proofound-charcoal">
+        <div className="flex flex-col items-center justify-center rounded-lg border border-proofound-stone/70 bg-white px-4 py-16 text-center shadow-sm">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#eef3e8] text-proofound-forest">
+            <Search className="h-8 w-8" />
+          </div>
+          <h2 className="mb-2 font-display text-xl font-semibold text-proofound-charcoal">
             No matches yet
-          </p>
-          <p className="mx-auto max-w-lg text-sm leading-6 text-muted-foreground">
+          </h2>
+          <p className="mb-6 mx-auto max-w-md text-sm leading-6 text-muted-foreground">
             {matches.length === 0
-              ? 'Nothing needs your attention right now. Keep your proof and preferences current so new opportunities can land cleanly.'
+              ? 'Nothing needs your attention right now. Keep your proof and preferences current so new assignment reviews can land cleanly.'
               : 'No matches fit the current filters. Loosen one filter to widen the corridor.'}
           </p>
           {ensureThreeActions(readinessActions).length > 0 ? (
-            <div className="mx-auto mt-5 max-w-xl space-y-2 text-left">
+            <div className="mx-auto w-full max-w-xl space-y-2 text-left mt-2">
               {ensureThreeActions(readinessActions).map((action) => (
                 <button
                   key={action.id}
                   onClick={() => router.push(action.actionUrl)}
-                  className="w-full rounded-lg border border-proofound-stone bg-white/70 px-3 py-2 transition-colors hover:border-proofound-forest hover:bg-japandi-bg"
+                  className="w-full rounded-lg border border-proofound-stone bg-white px-3 py-2 transition-colors hover:border-proofound-forest hover:bg-proofound-parchment/30 text-left"
                 >
-                  <p className="text-sm font-medium text-foreground">{action.title}</p>
+                  <p className="text-sm font-medium text-proofound-charcoal">{action.title}</p>
                   <p className="text-xs text-muted-foreground">{action.description}</p>
                 </button>
               ))}
@@ -464,7 +487,7 @@ export function MatchingClient() {
                       body: JSON.stringify({ matchId: match.id }),
                     });
                   } catch (error) {
-                    console.error('Failed to hide match:', error);
+                    dispatchClientErrorDiagnostic('matching.client.hide_failed', error);
                   }
                 }
 
@@ -492,8 +515,8 @@ export function MatchingClient() {
             className="text-sm text-proofound-forest underline flex items-center gap-2"
           >
             {showManageHiddenSnoozed
-              ? 'Hide snoozed/hidden manager'
-              : 'Manage snoozed or hidden matches'}
+              ? 'Hide paused/hidden manager'
+              : 'Manage paused or hidden matches'}
           </button>
 
           {showManageHiddenSnoozed && (

@@ -1,5 +1,5 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-03-11`
+> Last Verified: `2026-05-21`
 
 # Proofound MVP Executive Summary
 
@@ -8,7 +8,7 @@
 
 ## Product Promise
 
-Proofound MVP is a proof-first, privacy-first hiring credibility corridor centered on Proof Packs for individuals and lean organizations. It helps individuals turn real work into structured Proof Packs and helps organizations review people through privacy-safe, explainable evidence instead of profile theater.
+Proofound MVP is a proof-first, privacy-first assignment review corridor centered on Proof Packs for individuals and lean organizations. It helps individuals turn real work into structured Proof Packs and helps organizations review proof submissions through privacy-safe, explainable evidence instead of profile theater.
 
 ## Minimum Valuable Experience
 
@@ -23,8 +23,8 @@ Proofound MVP is a proof-first, privacy-first hiring credibility corridor center
 
 - publish a trust page
 - create one strong assignment
-- review privacy-safe proof-backed candidates
-- move one candidate through intro, reveal, interview, and decision
+- review privacy-safe proof-backed submissions
+- move one proof-review participant through intro, reveal, interview, and decision
 
 ## Canonical Launch Posture
 
@@ -38,7 +38,7 @@ Proofound MVP is a proof-first, privacy-first hiring credibility corridor center
 ## MVP Exclusions
 
 - ATS, HRIS, payroll, or contract-signing integrations
-- public candidate directory
+- public people directory
 - social-feed behavior
 - reviewer marketplace UI
 - sponsor or bounty marketplace UI
@@ -47,7 +47,13 @@ Proofound MVP is a proof-first, privacy-first hiring credibility corridor center
 
 ## Reading Order
 
-1. `Proofound_Project_Specification_2026-03-11.md`
-2. `PRD_TECHNICAL_REQUIREMENTS.md`
-3. `PRD_for_a_web_platform_MVP.master-latest.md`
-4. `LAUNCH_RUNBOOK.md`
+1. `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`
+2. `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`
+3. `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`
+4. `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`
+5. `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md`
+6. Fresh repo-grounded audits and evidence
+
+`Proofound_Project_Specification_2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.md`,
+`PRD_for_a_web_platform_MVP.master-latest.md`, and `LAUNCH_RUNBOOK.md` are
+reference-only context and must not broaden the locked MVP corridor.

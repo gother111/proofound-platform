@@ -1,0 +1,12 @@
+{
+  "checkedAt": "2026-05-19T12:24:57.167Z",
+  "tool": "Browser plugin / in-app browser",
+  "url": "http://localhost:33180/portfolio/demo",
+  "title": "Public Page Unavailable | Proofound",
+  "visibleSnapshot": "- link \"Skip to main content\":\n  - /url: \"#main-content\"\n- banner:\n  - heading \"Public Page unavailable\" [level=2]\n- paragraph: This Public Page link is unavailable. It may be hidden, retired, or not ready for launch-safe sharing.\n- generic: proofound.io/portfolio/demo\n- generic: Public Page unavailable",
+  "consoleWarningsOrErrors": [],
+  "screenshot": {
+    "status": "failed",
+    "reason": "CDP Page.captureScreenshot timed out twice for viewport capture"
+  }
+}

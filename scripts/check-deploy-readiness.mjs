@@ -47,10 +47,12 @@ const stagingDeployDetected =
     .toLowerCase() === 'staging';
 const strict =
   env.FORCE_STRICT_DEPLOY_CHECK === 'true' || productionDeployDetected || stagingDeployDetected;
+const liveDeployDetected = productionDeployDetected || stagingDeployDetected;
 
 const enabledMockModes = [];
 if (truthy(env.NEXT_PUBLIC_USE_MOCK_SUPABASE))
   enabledMockModes.push('NEXT_PUBLIC_USE_MOCK_SUPABASE');
+if (truthy(env.MOCK_ORG_MODE)) enabledMockModes.push('MOCK_ORG_MODE');
 if (truthy(env.MOCK_ADMIN_MODE)) enabledMockModes.push('MOCK_ADMIN_MODE');
 if (truthy(env.MOBILE_MOCK_AUTH)) enabledMockModes.push('MOBILE_MOCK_AUTH');
 const mockPlatformRole = String(env.MOCK_PLATFORM_ROLE ?? '').trim();
@@ -66,6 +68,10 @@ if (!env.SUPABASE_SERVICE_ROLE_KEY) missing.push('SUPABASE_SERVICE_ROLE_KEY');
 if (!(env.NEXT_PUBLIC_SITE_URL || env.SITE_URL)) missing.push('NEXT_PUBLIC_SITE_URL/SITE_URL');
 if (!env.DATABASE_URL) missing.push('DATABASE_URL');
 
+if (strict && !env.RESEND_API_KEY) {
+  missing.push('RESEND_API_KEY');
+}
+
 if ((productionDeployDetected || stagingDeployDetected) && !env.KV_REST_API_URL) {
   missing.push('KV_REST_API_URL');
 }
@@ -77,6 +83,39 @@ if ((productionDeployDetected || stagingDeployDetected) && !env.KV_REST_API_TOKE
 if (strict && enabledMockModes.length) {
   failures.push(
     `Strict deploy checks must not enable mock database/admin/auth modes: ${enabledMockModes.join(', ')}`
+  );
+}
+
+if (strict && truthy(env.PROOFOUND_SKIP_TRANSACTIONAL_EMAIL_DELIVERY)) {
+  failures.push(
+    'Strict deploy checks must not skip transactional email delivery: PROOFOUND_SKIP_TRANSACTIONAL_EMAIL_DELIVERY'
+  );
+}
+
+const enabledDebugIngest = [
+  truthy(env.DEBUG_INGEST_ENABLED) ? 'DEBUG_INGEST_ENABLED' : null,
+  env.DEBUG_INGEST_URL ? 'DEBUG_INGEST_URL' : null,
+  env.NEXT_PUBLIC_DEBUG_INGEST_URL ? 'NEXT_PUBLIC_DEBUG_INGEST_URL' : null,
+].filter(Boolean);
+
+if (strict && enabledDebugIngest.length) {
+  failures.push(
+    `Strict deploy checks must not enable debug ingest sinks: ${enabledDebugIngest.join(', ')}`
+  );
+}
+
+const enabledLocalSmokeFlags = [
+  truthy(env.PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK)
+    ? 'PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK'
+    : null,
+  truthy(env.PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE)
+    ? 'PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE'
+    : null,
+].filter(Boolean);
+
+if (liveDeployDetected && enabledLocalSmokeFlags.length) {
+  failures.push(
+    `Live deploy checks must not enable local smoke fallbacks: ${enabledLocalSmokeFlags.join(', ')}`
   );
 }
 
@@ -127,9 +166,7 @@ if (truthy(env.GCP_CV_OCR_ENABLED)) {
   }
 }
 
-const hasLinkedInCreds = Boolean(env.LINKEDIN_CLIENT_ID) && Boolean(env.LINKEDIN_CLIENT_SECRET);
 const hasGoogleCreds = Boolean(env.GOOGLE_CLIENT_ID) && Boolean(env.GOOGLE_CLIENT_SECRET);
-const hasZoomCreds = Boolean(env.ZOOM_CLIENT_ID) && Boolean(env.ZOOM_CLIENT_SECRET);
 
 const googleRedirectPath = (() => {
   try {
@@ -142,20 +179,10 @@ const googleRedirectPath = (() => {
   }
 })();
 
-if (hasLinkedInCreds && !env.LINKEDIN_REDIRECT_URI) {
-  warnings.push(
-    'LINKEDIN_REDIRECT_URI is not set. LinkedIn OAuth may fail with redirect_uri mismatch.'
-  );
-}
-
 if (hasGoogleCreds && !env.GOOGLE_REDIRECT_URI) {
   warnings.push(
     'GOOGLE_REDIRECT_URI is not set. Google OAuth may fail with redirect_uri mismatch.'
   );
-}
-
-if (hasZoomCreds && !env.ZOOM_REDIRECT_URI) {
-  warnings.push('ZOOM_REDIRECT_URI is not set. Zoom OAuth may fail with redirect_uri mismatch.');
 }
 
 if (googleRedirectPath === '/api/auth/google/callback') {

@@ -1,0 +1,21 @@
+{
+  "checkedAt": "2026-05-19T23:49:19.118Z",
+  "baseUrl": "http://localhost:3000",
+  "desktop": {
+    "h1": "Proof behind the claim",
+    "hasMissionLed": false,
+    "hasProgramCopy": false,
+    "hasProofLed": false,
+    "overflow": false,
+    "staleCopy": [],
+    "title": "Proofound | Proof Behind the Claim"
+  },
+  "mobile": {
+    "h1": "Proof behind the claim",
+    "hasMissionLed": false,
+    "overflow": false,
+    "staleCopy": [],
+    "title": "Proofound | Proof Behind the Claim"
+  },
+  "screenshotStatus": "not captured; prior Browser screenshot capture timed out in this backend session"
+}

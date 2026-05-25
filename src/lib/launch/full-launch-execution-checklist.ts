@@ -151,7 +151,7 @@ const EXECUTION_MAP: Record<string, ExecutionEntry> = {
   founder_candidate_supply_plan: {
     owner: 'Founder',
     passCriteria:
-      'There is a concrete plan to seed credible candidate supply for the launch corridor.',
+      'There is a concrete plan to seed credible proof-submission supply for the launch corridor.',
     evidenceRequired: ['Supply plan document with source channels and volume assumptions.'],
     action: 'Write the first-wave sourcing plan before launching org outreach.',
   },

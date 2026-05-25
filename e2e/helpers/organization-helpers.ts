@@ -3,7 +3,7 @@ import { Page, expect } from '@playwright/test';
 /**
  * E2E Test Helpers for Organization Flows
  *
- * Utilities for testing organization assignment creation, match viewing, and candidate interactions
+ * Utilities for testing organization assignment creation, match viewing, and proof-submission review
  */
 
 /**
@@ -245,7 +245,7 @@ export function getOrgMatchCard(page: Page, index: number) {
 }
 
 /**
- * Express organization interest in a candidate
+ * Express organization interest in a proof-submission review
  */
 export async function expressOrgInterest(page: Page, matchIndex = 0) {
   const matchCard = getOrgMatchCard(page, matchIndex);
@@ -266,14 +266,16 @@ export async function expressOrgInterest(page: Page, matchIndex = 0) {
 }
 
 /**
- * View candidate deep dive/profile
+ * View proof-submission detail.
  */
-export async function viewCandidateProfile(page: Page, matchIndex = 0) {
+export async function viewProofSubmissionDetail(page: Page, matchIndex = 0) {
   const matchCard = getOrgMatchCard(page, matchIndex);
 
-  // Look for "View Profile" or click on card
+  // Look for proof-submission detail actions or click on card.
   const viewButton = matchCard
-    .locator('button:has-text("View"), button:has-text("Profile"), a[href*="candidate"]')
+    .locator(
+      'button:has-text("View"), button:has-text("Detail"), button:has-text("Review"), a[href*="matching"]'
+    )
     .first();
 
   if (await viewButton.isVisible()) {
@@ -287,9 +289,9 @@ export async function viewCandidateProfile(page: Page, matchIndex = 0) {
 }
 
 /**
- * Shortlist candidate (move to shortlist stage)
+ * Shortlist proof-submission review (move to shortlist stage)
  */
-export async function shortlistCandidate(page: Page, matchIndex = 0) {
+export async function shortlistProofSubmission(page: Page, matchIndex = 0) {
   const matchCard = getOrgMatchCard(page, matchIndex);
 
   const shortlistButton = matchCard
@@ -366,7 +368,7 @@ export async function scheduleInterviewViaUI(
     timezone?: string;
   }
 ) {
-  // Navigate to interviews page or candidate profile
+  // Navigate to interviews page or proof-submission detail
   await page.goto(`/app/o/${orgSlug}/interviews`);
   await page.waitForLoadState('networkidle');
 
@@ -423,7 +425,7 @@ export async function waitForOrgMatches(page: Page, timeout = 10000) {
     page.waitForSelector('[data-testid="match-card"], .match-card, [class*="MatchCard"]', {
       timeout,
     }),
-    page.waitForSelector('text=/no matches|no candidates|check back soon/i', { timeout }),
+    page.waitForSelector('text=/no matches|no proof submissions|check back soon/i', { timeout }),
   ]);
 }
 

@@ -1,0 +1,23 @@
+> proofound@0.1.0 test
+> node ./scripts/run-vitest-with-timeout.mjs tests/ui/public-portfolio-access-consistency.test.tsx tests/ui/public-portfolio-page.test.tsx tests/lib/public-portfolio-projection.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+ ✓ tests/lib/public-portfolio-projection.test.ts  (15 tests) 27ms
+ ✓ tests/ui/public-portfolio-access-consistency.test.tsx  (2 tests) 94ms
+ ✓ tests/ui/public-portfolio-page.test.tsx  (9 tests) 254ms
+
+ Test Files  3 passed (3)
+      Tests  26 passed (26)
+   Start at  04:57:58
+   Duration  1.13s (transform 277ms, setup 319ms, collect 708ms, tests 375ms, environment 630ms, prepare 129ms)

@@ -1,5 +1,5 @@
 > Doc Class: `active`
-> Last Verified: `2026-02-26`
+> Last Verified: `2026-05-19`
 
 # E2E Matrix (Current)
 
@@ -30,7 +30,7 @@ This matrix maps personas and critical flows to canonical Playwright contracts.
   - `e2e/strict/individual.strict.spec.ts`
 - Privacy and reveal semantics:
   - `e2e/strict/privacy.strict.spec.ts`
-- Provider scheduling semantics:
+- Provider scheduling advisory:
   - `e2e/strict/providers.strict.spec.ts`
 
 ### Organization
@@ -41,15 +41,14 @@ This matrix maps personas and critical flows to canonical Playwright contracts.
   - `e2e/onboarding.spec.ts`
 - Strict MVP flows O-01..O-20:
   - `e2e/strict/organization.strict.spec.ts`
-- Provider scheduling semantics:
+- Provider scheduling advisory:
   - `e2e/strict/providers.strict.spec.ts`
 
 ### Admin
 
 - Admin route smoke:
   - `e2e/admin-dashboard-smoke.spec.ts`
-- Additional admin/fairness checks:
-  - `e2e/org/fairness-note.spec.ts`
+- Archived admin/fairness route behavior is covered by route-surface tests; the old org fairness-note E2E is archived under `e2e/archive/non_mvp_org_analytics/`.
 
 ## Cross-Cutting Coverage
 
@@ -73,7 +72,8 @@ This matrix maps personas and critical flows to canonical Playwright contracts.
   - `npm run test:e2e:individual:strict`
   - `npm run test:e2e:org:strict`
   - `npm run test:e2e:privacy:strict`
-  - `npm run test:e2e:providers:strict`
+- Provider advisory:
+  - `npm run test:e2e:providers:advisory`
 - Landing:
   - `npm run test:e2e:landing`
   - `npm run test:e2e:landing:visual`

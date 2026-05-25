@@ -2,7 +2,7 @@
  * Analytics Event Emission System
  *
  * Centralized event tracking for all key user actions
- * Supports PRD metrics: TTFQI, TTV, TTSC, PAC lift, SUS, Well-Being Delta, Fairness Gap
+ * Supports launch metrics: TTFQI, TTV, TTSC, proof-fit lift, and first-ten-minute activation.
  */
 
 import { db } from '@/db';
@@ -103,21 +103,6 @@ function normalizeEntityReference(event: AnalyticsEvent): {
 
   return { entityId: null, properties };
 }
-
-export type WellbeingCheckinSubmittedProps = {
-  checkin_id: string;
-  scores: { stress: number; control: number };
-  from_trigger?: 'manual' | 'rejection' | 'interview' | 'offer';
-};
-
-export type WellbeingOptInChangedProps = {
-  enabled: boolean;
-};
-
-export type ReflectionAddedProps = {
-  word_count: number;
-  from_trigger?: 'rejection' | 'interview' | 'offer';
-};
 
 // ============================================================================
 // EVENT EMISSION
@@ -432,37 +417,6 @@ export async function emitVerificationProvided(
 }
 
 // ============================================================================
-// SUS / FEEDBACK EVENTS
-// ============================================================================
-
-export function emitSUSSurveyCompletedAsync(
-  userId: string,
-  scoreOrProperties:
-    | number
-    | {
-        total_score: number;
-        individual_scores?: number[];
-        trigger_point?: string;
-      }
-): void {
-  const properties =
-    typeof scoreOrProperties === 'number'
-      ? { score: scoreOrProperties }
-      : {
-          score: scoreOrProperties.total_score,
-          ...scoreOrProperties,
-        };
-
-  emitAnalyticsEventAsync({
-    eventType: 'sus_survey_completed',
-    userId,
-    entityType: 'profile',
-    entityId: userId,
-    properties,
-  });
-}
-
-// ============================================================================
 // PRIVACY EVENTS
 // ============================================================================
 
@@ -752,15 +706,6 @@ export async function emitMatchViewed(userId: string, matchId: string) {
     entityType: 'match',
     entityId: matchId,
   });
-
-  // Check if user has reached 10 matches milestone and trigger SUS survey
-  try {
-    const { checkTenMatchesMilestone } = await import('@/lib/surveys/sus-triggers');
-    await checkTenMatchesMilestone(userId);
-  } catch (error) {
-    // Don't let survey trigger failure break match viewing
-    console.error('Failed to check 10 matches milestone:', error);
-  }
 }
 
 export async function emitMatchIntroduced(
@@ -794,7 +739,7 @@ export async function emitInterviewScheduled(
     match_id: string;
     duration_minutes: number;
     policy_preset?: 'startup' | 'enterprise' | 'volunteer' | 'advanced';
-    platform: 'zoom' | 'google_meet' | 'manual';
+    platform: 'google_meet' | 'manual';
     days_since_match: number; // For TTV calculation
   }
 ) {
@@ -816,7 +761,7 @@ export function emitInterviewScheduledAsync(
     match_id: string;
     duration_minutes: number;
     policy_preset?: 'startup' | 'enterprise' | 'volunteer' | 'advanced';
-    platform: 'zoom' | 'google_meet' | 'manual';
+    platform: 'google_meet' | 'manual';
     days_since_match: number;
   }
 ) {
@@ -862,129 +807,6 @@ export async function emitDecisionMade(
     userId,
     entityType: 'interview',
     entityId: interviewId,
-    properties,
-  });
-}
-
-// ============================================================================
-// CONTRACT EVENTS
-// ============================================================================
-
-export async function emitContractSigned(
-  userId: string,
-  contractId: string,
-  properties: {
-    contract_id?: string;
-    assignment_id?: string;
-    match_id?: string;
-    ttsc_days?: number; // Time to signed contract (from match)
-    contract_type?: string;
-    days_since_activation?: number;
-    days_since_first_intro?: number;
-  }
-) {
-  await emitAnalyticsEvent({
-    eventType: 'contract_signed',
-    userId,
-    entityType: 'contract',
-    entityId: contractId,
-    properties,
-  });
-}
-
-// ============================================================================
-// WELL-BEING EVENTS
-// ============================================================================
-
-export async function emitWellbeingCheckin(
-  userId: string,
-  checkinId: string,
-  properties: {
-    checkin_id: string;
-    overall_score: number;
-    dimensions: Record<string, number>;
-  }
-) {
-  await emitAnalyticsEvent({
-    eventType: 'wellbeing_checkin',
-    userId,
-    properties,
-  });
-}
-
-// Preferred zen hub check-in event with explicit partition and trigger context
-export async function emitWellbeingCheckinSubmitted(
-  userId: string,
-  properties: WellbeingCheckinSubmittedProps
-) {
-  await emitAnalyticsEvent({
-    eventType: 'wellbeing_checkin_submitted',
-    userId,
-    properties,
-    privacyPartition: 'wellbeing',
-  });
-}
-
-export async function emitWellbeingOptIn(
-  userId: string,
-  properties: {
-    opt_in_type: 'demographic' | 'wellbeing' | 'analytics';
-    demographic_fields?: string[];
-  }
-) {
-  await emitAnalyticsEvent({
-    eventType: 'wellbeing_opt_in',
-    userId,
-    properties,
-  });
-}
-
-// Updated opt-in flag for Zen Hub (private partition)
-export async function emitWellbeingOptInChanged(
-  userId: string,
-  properties: WellbeingOptInChangedProps
-) {
-  await emitAnalyticsEvent({
-    eventType: 'wellbeing_opt_in_changed',
-    userId,
-    properties,
-    privacyPartition: 'wellbeing',
-  });
-}
-
-export async function emitReflectionAdded(userId: string, properties: ReflectionAddedProps) {
-  await emitAnalyticsEvent({
-    eventType: 'reflection_added',
-    userId,
-    properties,
-    privacyPartition: 'wellbeing',
-  });
-}
-
-export async function emitPrivacyBannerAcknowledged(userId: string) {
-  await emitAnalyticsEvent({
-    eventType: 'privacy_banner_acknowledged',
-    userId,
-    properties: {},
-    privacyPartition: 'wellbeing',
-  });
-}
-
-// ============================================================================
-// SURVEY EVENTS
-// ============================================================================
-
-export async function emitSUSCompleted(
-  userId: string,
-  properties: {
-    total_score: number;
-    individual_scores: number[];
-    trigger_point: string; // When/why survey was shown
-  }
-) {
-  await emitAnalyticsEvent({
-    eventType: 'sus_survey_completed',
-    userId,
     properties,
   });
 }

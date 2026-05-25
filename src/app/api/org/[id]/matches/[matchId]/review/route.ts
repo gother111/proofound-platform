@@ -1,6 +1,5 @@
 import { and, eq, or, sql } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
-import { nanoid } from 'nanoid';
 import { z } from 'zod';
 
 import { db } from '@/db';
@@ -23,7 +22,7 @@ import {
   appendManualOverrideReason,
   buildProofFirstReviewCard,
   buildVisibilitySafeWhy,
-  getReviewCardProofPackMap,
+  getReviewCardProofPackMapForMatchedOrg,
   getOrgMembershipRole,
   normalizeFairnessStatus,
   resolveCanonicalCorridor,
@@ -42,6 +41,7 @@ import {
   syncRevealRequestTimeoutState,
   syncIntroWorkflowFromInterest,
 } from '@/lib/workflow/service';
+import { makeMaskedHandleForPersona } from '@/lib/messaging/conversation-access';
 
 export const dynamic = 'force-dynamic';
 
@@ -94,7 +94,7 @@ async function buildReviewCardPayload(params: {
   fairnessStatus: ReturnType<typeof normalizeFairnessStatus>;
   revealScope: RevealScope;
 }) {
-  const proofPackByProfileId = await getReviewCardProofPackMap([params.profileId]);
+  const proofPackByProfileId = await getReviewCardProofPackMapForMatchedOrg([params.profileId]);
 
   const reviewCard = buildProofFirstReviewCard({
     profileId: params.profileId,
@@ -156,7 +156,7 @@ function sanitizeBlindReviewString(value: unknown, fallback: string | null) {
   const hasUncertainIdentity =
     ROUTE_PRECISE_LOCATION_PATTERN.test(output) ||
     [...output.matchAll(ROUTE_FULL_NAME_PATTERN)].some(
-      (match) => !/^(Proof Pack|Proofound|Candidate Review)$/i.test(match[0].trim())
+      (match) => !/^(Proof Pack|Proofound|Proof Review)$/i.test(match[0].trim())
     );
 
   if (hasUncertainIdentity) {
@@ -238,6 +238,14 @@ function sanitizeBlindReviewCardForResponse(
   };
 }
 
+import { isMockSupabaseEnabled, visualFixturesRuntimeAllowed } from '@/lib/env';
+import { buildVisualOrgMatches } from '@/lib/matching/visual-fixtures';
+
+const visualAssignmentFixturesEnabled = () =>
+  isMockSupabaseEnabled() &&
+  process.env.PROOFOUND_VISUAL_FIXTURES === 'true' &&
+  visualFixturesRuntimeAllowed();
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; matchId: string }> }
@@ -262,6 +270,76 @@ export async function POST(
         { error: 'Invalid payload', details: parsed.error.flatten() },
         { status: 400 }
       );
+    }
+
+    if (visualAssignmentFixturesEnabled() && matchId.startsWith('visual-match-')) {
+      const mockMatches = buildVisualOrgMatches('11111111-1111-4111-8111-111111111111');
+      const foundMock = mockMatches.find((m) => m.id === matchId);
+      if (!foundMock) {
+        return NextResponse.json({ error: 'Match not found' }, { status: 404 });
+      }
+
+      if (parsed.data.action === 'shortlist') {
+        return NextResponse.json({
+          matchId: matchId,
+          reviewStage: 'shortlisted',
+          revealScope: 'shortlist_identity',
+          progressiveRevealStage: 'stage2_contextual_reveal',
+          corridorState: 'shortlist',
+          visibleIdentityFields: [
+            'photo',
+            'country',
+            'city',
+            'desired_roles',
+            'timezone',
+            'right_to_work',
+            'engagement_type',
+            'skills',
+          ],
+          reviewCard: {
+            ...foundMock.reviewCard,
+            candidateLabel: 'Elena Rostova',
+          },
+        });
+      }
+
+      if (parsed.data.action === 'request_intro') {
+        return NextResponse.json({
+          matchId: matchId,
+          reviewStage: 'shortlisted',
+          revealScope: 'full_identity',
+          progressiveRevealStage: 'stage3_unlocked',
+          corridorState: 'intro_approved',
+          conversationId: 'visual-conv-7',
+          introApproved: true,
+          visibleIdentityFields: [
+            'photo',
+            'country',
+            'city',
+            'desired_roles',
+            'timezone',
+            'right_to_work',
+            'engagement_type',
+            'skills',
+            'name',
+            'email',
+            'phone',
+          ],
+          reviewCard: {
+            ...foundMock.reviewCard,
+            candidateLabel: 'Elena Rostova',
+          },
+        });
+      }
+
+      if (parsed.data.action === 'pass') {
+        return NextResponse.json({
+          matchId: matchId,
+          reviewStage: 'passed',
+          revealScope: 'blind',
+          corridorState: 'passed',
+        });
+      }
     }
 
     const org = await getOrgByIdOrSlug(id);
@@ -515,7 +593,7 @@ export async function POST(
             }),
             message:
               requestedScope === 'full_identity'
-                ? 'Reveal request sent. Full identity remains locked until the candidate approves.'
+                ? 'Reveal request sent. Full identity remains locked until the proof-review participant approves.'
                 : 'Reveal request recorded.',
           });
         }
@@ -643,7 +721,7 @@ export async function POST(
                 fallbackState: corridor.fallbackState,
               }),
               message:
-                'Intro request recorded. Proofound will approve the introduction after the candidate reciprocates interest.',
+                'Intro request recorded. Proofound will approve the introduction after the proof-review participant reciprocates interest.',
             });
           }
 
@@ -693,8 +771,8 @@ export async function POST(
                 participantOneId: matchRow.profileId,
                 participantTwoId: user.id,
                 stage: 'masked',
-                maskedHandleOne: `Candidate #${nanoid(6).toUpperCase()}`,
-                maskedHandleTwo: `Organization #${nanoid(6).toUpperCase()}`,
+                maskedHandleOne: makeMaskedHandleForPersona('individual'),
+                maskedHandleTwo: makeMaskedHandleForPersona('organization'),
                 lastMessageAt: new Date(),
               })
               .returning({
@@ -737,7 +815,7 @@ export async function POST(
                 fallbackState: corridor.fallbackState,
               }),
               message:
-                'Introduction already approved. Masked messaging is open, and full identity stays locked until the candidate approves reveal.',
+                'Introduction already approved. Masked messaging is open, and full identity stays locked until the proof-review participant approves reveal.',
             });
           }
 
@@ -784,7 +862,9 @@ export async function POST(
             ]);
 
             const candidateName =
-              candidateProfile?.displayName || candidateProfile?.handle || 'The candidate';
+              candidateProfile?.displayName ||
+              candidateProfile?.handle ||
+              'The proof-review participant';
             const orgName = orgProfile?.displayName || orgProfile?.handle || 'The organization';
 
             await notifyIntroAccepted(user.id, matchRow.matchId, candidateName);
@@ -828,7 +908,7 @@ export async function POST(
               fallbackState: corridor.fallbackState,
             }),
             message:
-              'Introduction approved. Masked messaging is open, and full identity stays locked until the candidate approves reveal.',
+              'Introduction approved. Masked messaging is open, and full identity stays locked until the proof-review participant approves reveal.',
           });
         }
 

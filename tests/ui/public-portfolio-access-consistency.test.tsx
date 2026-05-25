@@ -87,7 +87,7 @@ function buildProjection() {
         {
           key: 'context',
           label: 'Context',
-          value: 'Industry: Proof-first hiring',
+          value: 'Industry: Proof-first assignment review',
           state: 'ready',
           sources: [
             {
@@ -222,7 +222,7 @@ describe('public portfolio access consistency', () => {
       params: Promise.resolve({ handle: 'jane' }),
       searchParams: Promise.resolve({}),
     });
-    render(page);
+    const { container } = render(page);
 
     const summaryResponse = await summaryGET(
       new Request('http://localhost/api/portfolio/public/jane/summary'),
@@ -237,6 +237,7 @@ describe('public portfolio access consistency', () => {
       }
     );
 
+    expect(container.querySelectorAll('main')).toHaveLength(1);
     expect(screen.getByRole('heading', { name: 'Jane Doe' })).toBeInTheDocument();
     expect(summaryResponse.status).toBe(200);
     expect(await summaryResponse.text()).toContain('Jane Doe');
@@ -257,7 +258,7 @@ describe('public portfolio access consistency', () => {
       params: Promise.resolve({ handle: 'jane' }),
       searchParams: Promise.resolve({}),
     });
-    render(page);
+    const { container } = render(page);
 
     const summaryResponse = await summaryGET(
       new Request('http://localhost/api/portfolio/public/jane/summary'),
@@ -272,7 +273,9 @@ describe('public portfolio access consistency', () => {
       }
     );
 
-    expect(screen.getByRole('heading', { name: 'Public Page unavailable' })).toBeInTheDocument();
+    expect(container.querySelectorAll('main')).toHaveLength(1);
+    expect(screen.getByRole('heading', { name: 'Public page unavailable' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Return home' })).toHaveAttribute('href', '/');
     expect(summaryResponse.status).toBe(404);
     expect(await summaryResponse.json()).toEqual({ error: 'Profile not found' });
     expect(exportResponse.status).toBe(404);

@@ -140,6 +140,23 @@ describe('match interest route', () => {
     });
   });
 
+  it('rejects malformed JSON before assignment lookup or gate checks', async () => {
+    (requireAuth as any).mockResolvedValue({ id: candidateId });
+
+    const req = new NextRequest('http://localhost/api/match/interest', {
+      method: 'POST',
+      body: '{"assignmentId":',
+      headers: { 'content-type': 'application/json' },
+    });
+
+    const res = await POST(req);
+
+    expect(res.status).toBe(400);
+    await expect(res.json()).resolves.toEqual({ error: 'Invalid JSON body' });
+    expect(db.query.assignments.findFirst).not.toHaveBeenCalled();
+    expect(checkVerificationGates).not.toHaveBeenCalled();
+  });
+
   it('rejects org-side interest when actor is not an active org member', async () => {
     (requireAuth as any).mockResolvedValue({ id: orgRepId });
     (db.query.assignments.findFirst as any).mockResolvedValue({ id: assignmentId, orgId });
@@ -180,8 +197,8 @@ describe('match interest route', () => {
         missingRequirements: [
           {
             id: 'trusted_signal',
-            label: 'Trusted or attested proof-backed signal',
-            detail: 'Add one trusted proof-backed skill.',
+            label: 'Accepted non-self verification',
+            detail: 'Add one accepted verification tied to proof.',
             met: false,
             actionUrl: '/app/i/verifications',
           },
@@ -210,6 +227,11 @@ describe('match interest route', () => {
     expect(payload.currentTrustLevel).toBe('match_visible');
     expect(payload.browseStillAvailable).toBe(true);
     expect(payload.copy.title).toContain('You can keep browsing');
+    expect(payload.copy.title).toContain('Introductions need stronger proof first');
+    expect(payload.copy.body).toContain('Your proof set is not yet ready');
+    expect(JSON.stringify(payload.copy)).not.toMatch(
+      /profile is visible|save this profile|introductions unlock|unlock introductions/i
+    );
   });
 
   it('counts skill-linked proof from experience-anchored packs toward assignment intro eligibility', async () => {

@@ -42,6 +42,7 @@ export function ConversationList({
   mode = 'individual',
 }: ConversationListProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const hasConversations = conversations.length > 0;
   const emptyCopy =
     mode === 'organization'
       ? {
@@ -86,7 +87,7 @@ export function ConversationList({
 
   // Get avatar initials
   const getInitials = (name: string) => {
-    if (name === 'Candidate') return 'C';
+    if (name === 'Submission') return 'S';
     if (name === 'Organization') return 'O';
     return name
       .split(' ')
@@ -127,7 +128,9 @@ export function ConversationList({
           Messages
         </h2>
         <p className="mb-3 text-xs leading-5 text-muted-foreground">
-          Conversations appear after a proof-safe introduction.
+          {hasConversations
+            ? 'Review open introductions and keep each thread tied to its proof corridor.'
+            : 'Conversations appear after a proof-safe introduction.'}
         </p>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -197,7 +200,7 @@ export function ConversationList({
                       {getDisplayName(conversation)}
                     </h3>
                     {conversation.assignmentTitle && (
-                      <p className="text-xs text-muted-foreground truncate">
+                      <p className="text-xs leading-5 text-muted-foreground line-clamp-2">
                         Re: {conversation.assignmentTitle}
                       </p>
                     )}

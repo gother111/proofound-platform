@@ -1,0 +1,21 @@
+{
+  "mode": "canonical",
+  "generatedAt": "2026-05-16T16:15:35.907Z",
+  "localMigrationFileCount": 123,
+  "databaseMigrationRowCount": 123,
+  "appliedWithFileCount": 122,
+  "fileNotAppliedCount": 1,
+  "appliedMissingFileCount": 1,
+  "fileNotApplied": [
+    {
+      "file": "20260516172000_harden_supabase_public_surface.sql",
+      "version": "20260516172000_harden_supabase_public_surface"
+    }
+  ],
+  "appliedMissingFile": [
+    {
+      "version": "20260317224741_canonicalize_org_role_constraints",
+      "name": "20260317224741_canonicalize_org_role_constraints"
+    }
+  ]
+}

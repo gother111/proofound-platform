@@ -21,21 +21,21 @@ const siteUrl = getSiteUrl();
 export const metadata: Metadata = {
   title: 'Proofound | Proof Behind the Claim',
   description:
-    'Proofound turns a CV-like surface into a blind-safe, proof-backed, privacy-aware hiring signal built around outcomes, evidence, verification, and clearer fit.',
+    'Proofound turns real work into blind-safe Proof Packs, public-safe trust surfaces, and clearer assignment review.',
   keywords: [
     'Proofound',
-    'evidence based hiring',
-    'proof based hiring',
+    'evidence based assignment review',
+    'proof based submission review',
     'verified proof portfolio',
-    'blind-safe hiring',
-    'privacy safe hiring',
-    'structured hiring signal',
+    'blind-safe assignment review',
+    'privacy safe proof review',
+    'structured proof review',
   ],
   alternates: { canonical: '/' },
   openGraph: {
     title: 'Proofound | Proof Behind the Claim',
     description:
-      'Replace weak CV signal with structured outcomes, proof artifacts, verification, privacy-safe presentation, and clearer work-to-proof comparison.',
+      'Replace weak CV claims with structured outcomes, proof artifacts, verification, privacy-safe presentation, and clearer assignment review.',
     url: siteUrl,
     siteName: 'Proofound',
     type: 'website',
@@ -44,15 +44,14 @@ export const metadata: Metadata = {
         url: `${siteUrl}/hero-visual.jpg`,
         width: 1200,
         height: 630,
-        alt: 'Proofound proof-first hiring corridor landing page',
+        alt: 'Proofound proof-first assignment review landing page',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Proofound | Proof Behind the Claim',
-    description:
-      'A calmer, proof-first homepage for evidence-based hiring and modern work-to-proof matching.',
+    description: 'A calmer, proof-first homepage for evidence-based assignment review.',
     images: [`${siteUrl}/hero-visual.jpg`],
   },
 };
@@ -62,7 +61,7 @@ export default function Home() {
     path: '/',
     title: 'Proofound | Proof Behind the Claim',
     description:
-      'Proofound is a proof-first hiring platform that replaces weak CV signal with structured outcomes, evidence, verification, and privacy-safe fit.',
+      'Proofound is a proof-first assignment corridor that replaces weak CV claims with structured outcomes, evidence, verification, and privacy-safe review.',
   });
 
   // Auth check disabled for debugging/verification of landing page

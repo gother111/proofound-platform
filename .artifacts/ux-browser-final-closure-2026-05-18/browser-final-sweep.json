@@ -1,0 +1,1138 @@
+[
+  {
+    "route": "landing",
+    "expectedPath": "/",
+    "bodyStart": "Skip to main content PROOFOUND How it works For individuals For organizations Sign in Request a pilot Proof behind the claim Proofound turns real work into structured Proof Packs for privacy-safe hiring review before identity takes over. Proof portfolios for individuals. Evidence-based review for teams. Request a pilot Create your proof portfolio Blind by default Photo, name, contact details, prestige markers, and other identity signals are removed first. The goal is not anonymity for its own sake. It is capability before bias. Weak signal should leave before judgment begins. 01 / 09 Blind by default THE STORY RESOLVES INTO ACTION Build hiring on stronger proof Proofound helps individuals pr",
+    "document": {
+      "clientWidth": 1269,
+      "scrollHeight": 8187,
+      "scrollWidth": 1269
+    },
+    "h1": ["Proof behind the claim", "Proof behind the claim"],
+    "headings": [
+      "Proof behind the claim",
+      "Real outcomes, not bullet points",
+      "Verification trust layer",
+      "Universal compatibility",
+      "To modern challenges",
+      "Proof behind the claim",
+      "Blind by default",
+      "Build hiring on stronger proof"
+    ],
+    "overflowEls": [
+      {
+        "cls": "absolute right-[-5%] top-[-10%] h-[42rem] w-[42rem] rounded-full bg-proofound-forest/10 blur-[130px]",
+        "left": 660,
+        "right": 1332,
+        "tag": "div",
+        "text": "",
+        "width": 672
+      },
+      {
+        "cls": "absolute bottom-[-12%] left-[-6%] h-[34rem] w-[34rem] rounded-full bg-proofound-terracotta/12 blur-[",
+        "left": -76,
+        "right": 468,
+        "tag": "div",
+        "text": "",
+        "width": 544
+      },
+      {
+        "cls": "absolute left-[-10%] top-[5%] h-[26rem] w-[26rem] rounded-full bg-proofound-forest/10 blur-[120px]",
+        "left": -127,
+        "right": 289,
+        "tag": "div",
+        "text": "",
+        "width": 416
+      },
+      {
+        "cls": "absolute bottom-[-5%] right-[-6%] h-[24rem] w-[24rem] rounded-full bg-proofound-terracotta/12 blur-[",
+        "left": 961,
+        "right": 1345,
+        "tag": "div",
+        "text": "",
+        "width": 384
+      }
+    ],
+    "overflowX": true,
+    "smallTargets": [
+      {
+        "h": 1,
+        "tag": "a",
+        "text": "Skip to main content",
+        "w": 1,
+        "x": -1,
+        "y": -1
+      }
+    ],
+    "title": "Proofound | Proof Behind the Claim",
+    "url": "http://localhost:3000/",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/desktop1280-landing.png"
+  },
+  {
+    "route": "login",
+    "expectedPath": "/login",
+    "bodyStart": "Skip to main content Welcome back Sign in to continue to Proofound EMAIL ADDRESS * PASSWORD * Remember me Forgot password? Sign in OR CONTINUE WITH Google LinkedIn Don't have an account? Create account By signing in, you agree to our Terms of Service and Privacy Policy",
+    "document": {
+      "clientWidth": 1269,
+      "scrollHeight": 1058,
+      "scrollWidth": 1269
+    },
+    "h1": ["Welcome back"],
+    "headings": ["Welcome back"],
+    "overflowEls": [],
+    "overflowX": false,
+    "smallTargets": [
+      {
+        "h": 1,
+        "tag": "a",
+        "text": "Skip to main content",
+        "w": 1,
+        "x": -1,
+        "y": -1
+      },
+      {
+        "h": 24,
+        "tag": "button",
+        "text": "Remember me",
+        "w": 24,
+        "x": 460,
+        "y": 517
+      },
+      {
+        "h": 13,
+        "tag": "input",
+        "text": "",
+        "w": 13,
+        "x": 447,
+        "y": 523
+      }
+    ],
+    "title": "Sign In | Proofound",
+    "url": "http://localhost:3000/login",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/desktop1280-login.png"
+  },
+  {
+    "route": "signup-individual",
+    "expectedPath": "/signup/individual",
+    "bodyStart": "Skip to main content Create your individual account Start with email and password. Add details after sign-up. EMAIL ADDRESS PASSWORD CONFIRM PASSWORD I agree to the Privacy Policy and Terms of Service* Send me updates about new features and matching opportunities Create account OR CONTINUE WITH Google LinkedIn Already have an account? Sign in",
+    "document": {
+      "clientWidth": 1269,
+      "scrollHeight": 1232,
+      "scrollWidth": 1269
+    },
+    "h1": ["Create your individual account"],
+    "headings": ["Create your individual account"],
+    "overflowEls": [],
+    "overflowX": false,
+    "smallTargets": [
+      {
+        "h": 1,
+        "tag": "a",
+        "text": "Skip to main content",
+        "w": 1,
+        "x": -1,
+        "y": -1
+      },
+      {
+        "h": 24,
+        "tag": "button",
+        "text": "I agree to the Privacy Policy and Terms of Service",
+        "w": 24,
+        "x": 468,
+        "y": 668
+      },
+      {
+        "h": 13,
+        "tag": "input",
+        "text": "",
+        "w": 13,
+        "x": 455,
+        "y": 666
+      },
+      {
+        "h": 24,
+        "tag": "button",
+        "text": "Send me updates about new features and matching opportunities",
+        "w": 24,
+        "x": 468,
+        "y": 780
+      },
+      {
+        "h": 13,
+        "tag": "input",
+        "text": "",
+        "w": 13,
+        "x": 455,
+        "y": 778
+      }
+    ],
+    "title": "Individual Sign Up | Proofound",
+    "url": "http://localhost:3000/signup/individual",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/desktop1280-signup-individual.png"
+  },
+  {
+    "route": "signup-organization",
+    "expectedPath": "/signup/organization",
+    "bodyStart": "Skip to main content Create your organization account Start with email and password. Add details after sign-up. EMAIL ADDRESS PASSWORD CONFIRM PASSWORD I agree to the Privacy Policy and Terms of Service* Send me updates about new features and matching opportunities Create organization account OR CONTINUE WITH Google LinkedIn Already have an account? Sign in",
+    "document": {
+      "clientWidth": 1269,
+      "scrollHeight": 1232,
+      "scrollWidth": 1269
+    },
+    "h1": ["Create your organization account"],
+    "headings": ["Create your organization account"],
+    "overflowEls": [],
+    "overflowX": false,
+    "smallTargets": [
+      {
+        "h": 1,
+        "tag": "a",
+        "text": "Skip to main content",
+        "w": 1,
+        "x": -1,
+        "y": -1
+      },
+      {
+        "h": 24,
+        "tag": "button",
+        "text": "I agree to the Privacy Policy and Terms of Service",
+        "w": 24,
+        "x": 468,
+        "y": 668
+      },
+      {
+        "h": 13,
+        "tag": "input",
+        "text": "",
+        "w": 13,
+        "x": 455,
+        "y": 666
+      },
+      {
+        "h": 24,
+        "tag": "button",
+        "text": "Send me updates about new features and matching opportunities",
+        "w": 24,
+        "x": 468,
+        "y": 780
+      },
+      {
+        "h": 13,
+        "tag": "input",
+        "text": "",
+        "w": 13,
+        "x": 455,
+        "y": 778
+      }
+    ],
+    "title": "Organization Sign Up | Proofound",
+    "url": "http://localhost:3000/signup/organization",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/desktop1280-signup-organization.png"
+  },
+  {
+    "route": "reset-password",
+    "expectedPath": "/reset-password",
+    "bodyStart": "Skip to main content Reset your password Enter your email and we'll send one secure reset link. Nothing else changes until you use it. Email Send reset link ← Back to login",
+    "document": {
+      "clientWidth": 1280,
+      "scrollHeight": 900,
+      "scrollWidth": 1280
+    },
+    "h1": ["Reset your password"],
+    "headings": ["Reset your password"],
+    "overflowEls": [],
+    "overflowX": false,
+    "smallTargets": [
+      {
+        "h": 1,
+        "tag": "a",
+        "text": "Skip to main content",
+        "w": 1,
+        "x": -1,
+        "y": -1
+      }
+    ],
+    "title": "Reset Password | Proofound",
+    "url": "http://localhost:3000/reset-password",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/desktop1280-reset-password.png"
+  },
+  {
+    "route": "individual-home",
+    "expectedPath": "/app/i/home",
+    "bodyStart": "Skip to main content Overview Assignments Communications Organization Profile Public Preview Proofound Overview TO Organization review cockpit Test Organization A focused launch desk for one clean hiring corridor: compose the trust profile, define one proof-led assignment, and review candidates through privacy-safe summaries. Complete organization profile Corridor Queue Trust, assignment, and review order Test Organization High Organization profile · Add the basics once. Review stays locked until trust is clear. 0% Proof expectations Next One assignment path · This opens after the organization profile has enough context. Needs trust Privacy-safe summaries Guarded Match review · No candidate ",
+    "document": {
+      "clientWidth": 1280,
+      "scrollHeight": 900,
+      "scrollWidth": 1280
+    },
+    "h1": ["Test Organization"],
+    "headings": ["Test Organization", "Corridor Queue", "Launch Summary", "Minimal Access"],
+    "overflowEls": [],
+    "overflowX": false,
+    "smallTargets": [
+      {
+        "h": 1,
+        "tag": "a",
+        "text": "Skip to main content",
+        "w": 1,
+        "x": -1,
+        "y": -1
+      }
+    ],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:3000/app/o/test-org/home",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/desktop1280-individual-home.png"
+  },
+  {
+    "route": "individual-messages",
+    "expectedPath": "/app/i/messages",
+    "bodyStart": "Skip to main content Overview Assignments Communications Organization Profile Public Preview Proofound Overview TO Organization review cockpit Test Organization A focused launch desk for one clean hiring corridor: compose the trust profile, define one proof-led assignment, and review candidates through privacy-safe summaries. Complete organization profile Corridor Queue Trust, assignment, and review order Test Organization High Organization profile · Add the basics once. Review stays locked until trust is clear. 0% Proof expectations Next One assignment path · This opens after the organization profile has enough context. Needs trust Privacy-safe summaries Guarded Match review · No candidate ",
+    "document": {
+      "clientWidth": 1280,
+      "scrollHeight": 900,
+      "scrollWidth": 1280
+    },
+    "h1": ["Test Organization"],
+    "headings": ["Test Organization", "Corridor Queue", "Launch Summary", "Minimal Access"],
+    "overflowEls": [],
+    "overflowX": false,
+    "smallTargets": [
+      {
+        "h": 1,
+        "tag": "a",
+        "text": "Skip to main content",
+        "w": 1,
+        "x": -1,
+        "y": -1
+      }
+    ],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:3000/app/o/test-org/home",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/desktop1280-individual-messages.png"
+  },
+  {
+    "route": "individual-communications",
+    "expectedPath": "/app/i/communications",
+    "bodyStart": "Skip to main content Overview Assignments Communications Organization Profile Public Preview Proofound Overview TO Organization review cockpit Test Organization A focused launch desk for one clean hiring corridor: compose the trust profile, define one proof-led assignment, and review candidates through privacy-safe summaries. Complete organization profile Corridor Queue Trust, assignment, and review order Test Organization High Organization profile · Add the basics once. Review stays locked until trust is clear. 0% Proof expectations Next One assignment path · This opens after the organization profile has enough context. Needs trust Privacy-safe summaries Guarded Match review · No candidate ",
+    "document": {
+      "clientWidth": 1280,
+      "scrollHeight": 900,
+      "scrollWidth": 1280
+    },
+    "h1": ["Test Organization"],
+    "headings": ["Test Organization", "Corridor Queue", "Launch Summary", "Minimal Access"],
+    "overflowEls": [],
+    "overflowX": false,
+    "smallTargets": [
+      {
+        "h": 1,
+        "tag": "a",
+        "text": "Skip to main content",
+        "w": 1,
+        "x": -1,
+        "y": -1
+      }
+    ],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:3000/app/o/test-org/home",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/desktop1280-individual-communications.png"
+  },
+  {
+    "route": "individual-privacy",
+    "expectedPath": "/app/i/privacy",
+    "bodyStart": "Not found This page is outside the locked launch MVP corridor. Archived Page: /app is outside the locked launch MVP corridor and is not reachable in the launch surface.",
+    "document": {
+      "clientWidth": 1280,
+      "scrollHeight": 900,
+      "scrollWidth": 1280
+    },
+    "h1": ["Not found"],
+    "headings": ["Not found"],
+    "overflowEls": [],
+    "overflowX": false,
+    "smallTargets": [],
+    "title": "Not found | Proofound",
+    "url": "http://localhost:3000/app/i/privacy",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/desktop1280-individual-privacy.png"
+  },
+  {
+    "route": "individual-settings",
+    "expectedPath": "/app/i/settings",
+    "bodyStart": "Skip to main content Overview Assignments Communications Organization Profile Public Preview Proofound Overview TO Organization review cockpit Test Organization A focused launch desk for one clean hiring corridor: compose the trust profile, define one proof-led assignment, and review candidates through privacy-safe summaries. Complete organization profile Corridor Queue Trust, assignment, and review order Test Organization High Organization profile · Add the basics once. Review stays locked until trust is clear. 0% Proof expectations Next One assignment path · This opens after the organization profile has enough context. Needs trust Privacy-safe summaries Guarded Match review · No candidate ",
+    "document": {
+      "clientWidth": 1280,
+      "scrollHeight": 900,
+      "scrollWidth": 1280
+    },
+    "h1": ["Test Organization"],
+    "headings": ["Test Organization", "Corridor Queue", "Launch Summary", "Minimal Access"],
+    "overflowEls": [],
+    "overflowX": false,
+    "smallTargets": [
+      {
+        "h": 1,
+        "tag": "a",
+        "text": "Skip to main content",
+        "w": 1,
+        "x": -1,
+        "y": -1
+      }
+    ],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:3000/app/o/test-org/home",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/desktop1280-individual-settings.png"
+  },
+  {
+    "route": "org-assignments",
+    "expectedPath": "/app/o/test-org/assignments",
+    "bodyStart": "Skip to main content Overview Assignments Communications Organization Profile Public Preview Proofound Assignments TO Organization / Assignments Assignments Assignment cards own their matching corridor, candidate review, and pipeline context. Create assignment ASSIGNMENTS Assignment workspace is loading We are preparing the assignment cards, proof matches, and review context for this workspace. Loading assignments and matches... Create assignment",
+    "document": {
+      "clientWidth": 1280,
+      "scrollHeight": 900,
+      "scrollWidth": 1280
+    },
+    "h1": ["Assignments"],
+    "headings": ["Assignments", "Assignment workspace is loading"],
+    "overflowEls": [],
+    "overflowX": false,
+    "smallTargets": [
+      {
+        "h": 1,
+        "tag": "a",
+        "text": "Skip to main content",
+        "w": 1,
+        "x": -1,
+        "y": -1
+      }
+    ],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:3000/app/o/test-org/assignments",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/desktop1280-org-assignments.png"
+  },
+  {
+    "route": "org-communications",
+    "expectedPath": "/app/o/test-org/communications",
+    "bodyStart": "Skip to main content Overview Assignments Communications Organization Profile Public Preview Proofound Communications TO HIRING CORRIDOR Communications Messages and interviews stay together, with reveal and decision steps inside the live corridor where they belong. Proof-safe process center Reveal and interview actions stay visible inside their live corridor surfaces. Messages Conversation threads, introductions, and reveal requests. Interviews Scheduling, decision windows, feedback, and handoff. Messages Use the organization conversation thread for messages, intros, and reveal requests. Switch to interviews Preparing organization messages Loading the team conversation context before showing",
+    "document": {
+      "clientWidth": 1280,
+      "scrollHeight": 900,
+      "scrollWidth": 1280
+    },
+    "h1": ["Communications"],
+    "headings": ["Communications", "Messages"],
+    "overflowEls": [],
+    "overflowX": false,
+    "smallTargets": [
+      {
+        "h": 1,
+        "tag": "a",
+        "text": "Skip to main content",
+        "w": 1,
+        "x": -1,
+        "y": -1
+      }
+    ],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:3000/app/o/test-org/communications",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/desktop1280-org-communications.png"
+  },
+  {
+    "route": "org-messages",
+    "expectedPath": "/app/o/test-org/messages",
+    "bodyStart": "Skip to main content Overview Assignments Communications Organization Profile Public Preview Proofound Messages TO Preparing organization messages Loading the team conversation context before showing threads, intros, and reveal requests.",
+    "document": {
+      "clientWidth": 1280,
+      "scrollHeight": 900,
+      "scrollWidth": 1280
+    },
+    "h1": [],
+    "headings": [],
+    "overflowEls": [],
+    "overflowX": false,
+    "smallTargets": [
+      {
+        "h": 1,
+        "tag": "a",
+        "text": "Skip to main content",
+        "w": 1,
+        "x": -1,
+        "y": -1
+      }
+    ],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:3000/app/o/test-org/messages",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/desktop1280-org-messages.png"
+  },
+  {
+    "route": "org-matching",
+    "expectedPath": "/app/o/test-org/matching",
+    "bodyStart": "Skip to main content Overview Assignments Communications Organization Profile Public Preview Proofound Assignments TO Organization / Assignments Assignments Assignment cards own their matching corridor, candidate review, and pipeline context. Create assignment ASSIGNMENTS Assignment workspace is loading We are preparing the assignment cards, proof matches, and review context for this workspace. Loading assignments and matches... Create assignment",
+    "document": {
+      "clientWidth": 1280,
+      "scrollHeight": 900,
+      "scrollWidth": 1280
+    },
+    "h1": ["Assignments"],
+    "headings": ["Assignments", "Assignment workspace is loading"],
+    "overflowEls": [],
+    "overflowX": false,
+    "smallTargets": [
+      {
+        "h": 1,
+        "tag": "a",
+        "text": "Skip to main content",
+        "w": 1,
+        "x": -1,
+        "y": -1
+      }
+    ],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:3000/app/o/test-org/assignments",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/desktop1280-org-matching.png"
+  },
+  {
+    "route": "org-shortlist",
+    "expectedPath": "/app/o/test-org/shortlist",
+    "bodyStart": "Skip to main content Overview Assignments Communications Organization Profile Public Preview Proofound Assignments TO Organization / Assignments Assignments Assignment cards own their matching corridor, candidate review, and pipeline context. Create assignment ASSIGNMENTS Assignment workspace is loading We are preparing the assignment cards, proof matches, and review context for this workspace. Loading assignments and matches... Create assignment",
+    "document": {
+      "clientWidth": 1280,
+      "scrollHeight": 900,
+      "scrollWidth": 1280
+    },
+    "h1": ["Assignments"],
+    "headings": ["Assignments", "Assignment workspace is loading"],
+    "overflowEls": [],
+    "overflowX": false,
+    "smallTargets": [
+      {
+        "h": 1,
+        "tag": "a",
+        "text": "Skip to main content",
+        "w": 1,
+        "x": -1,
+        "y": -1
+      }
+    ],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:3000/app/o/test-org/assignments",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/desktop1280-org-shortlist.png"
+  },
+  {
+    "route": "org-portfolio",
+    "expectedPath": "/app/o/test-org/portfolio",
+    "bodyStart": "Skip to main content Test Organization Shareable by direct link Public organization profile Help teams review candidates through concrete work evidence instead of polished claims. Return to menu Copy share link Website MISSION / PURPOSE Help teams review candidates through concrete work evidence instead of polished claims. WHAT WORK IS OFFERED WORK OFFERED Proof-first product reviewer ENGAGEMENT Full time Improve review quality through clearer proof expectations. ASSIGNMENT CLARITY Review candidate work through structured evidence and launch-safe summaries. PROOF EXPECTATIONS Shortlists become more explainable, privacy-safe, and grounded in real work. EXPECTED OUTCOMES • Clarify proof expect",
+    "document": {
+      "clientWidth": 1269,
+      "scrollHeight": 971,
+      "scrollWidth": 1269
+    },
+    "h1": ["Test Organization"],
+    "headings": [
+      "Test Organization",
+      "Mission / purpose",
+      "What work is offered",
+      "Assignment clarity",
+      "Seriousness of review",
+      "Organization basics"
+    ],
+    "overflowEls": [],
+    "overflowX": false,
+    "smallTargets": [
+      {
+        "h": 1,
+        "tag": "a",
+        "text": "Skip to main content",
+        "w": 1,
+        "x": -1,
+        "y": -1
+      }
+    ],
+    "title": "Proofound organization portfolio",
+    "url": "http://localhost:3000/portfolio/org/test-org?returnTo=%2Fapp%2Fo%2Ftest-org%2Fhome",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/desktop1280-org-portfolio.png"
+  },
+  {
+    "route": "landing",
+    "expectedPath": "/",
+    "bodyStart": "Skip to main content Sign in Start Proof behind the claim Proofound turns real work into structured Proof Packs for privacy-safe hiring review before identity takes over. Request a pilot Create your proof portfolio 02 Real outcomes, not bullet points Vague summaries and floating skill lists resolve into structured outcomes, work scope, ownership, and context. Skills stop existing as decoration and start living next to real work. Senior Operations Professional OUTCOME SIGNAL PROOF SNAPSHOT Reviewable 12 Team 200+ Scale 31% Outcome Outcome record, artifacts, and trust method stay together. Work scope Ownership Context 03 Verification trust layer Artifacts alone are not enough. Proofound adds v",
+    "document": {
+      "clientWidth": 379,
+      "scrollHeight": 4802,
+      "scrollWidth": 379
+    },
+    "h1": ["Proof behind the claim", "Proof behind the claim"],
+    "headings": [
+      "Proof behind the claim",
+      "Real outcomes, not bullet points",
+      "Verification trust layer",
+      "Universal compatibility",
+      "To modern challenges",
+      "Proof behind the claim",
+      "Blind by default",
+      "Build hiring on stronger proof"
+    ],
+    "overflowEls": [
+      {
+        "cls": "absolute right-[-5%] top-[-10%] h-[42rem] w-[42rem] rounded-full bg-proofound-forest/10 blur-[130px]",
+        "left": -274,
+        "right": 398,
+        "tag": "div",
+        "text": "",
+        "width": 672
+      },
+      {
+        "cls": "absolute bottom-[-12%] left-[-6%] h-[34rem] w-[34rem] rounded-full bg-proofound-terracotta/12 blur-[",
+        "left": -23,
+        "right": 521,
+        "tag": "div",
+        "text": "",
+        "width": 544
+      },
+      {
+        "cls": "absolute left-[-10%] top-[5%] h-[26rem] w-[26rem] rounded-full bg-proofound-forest/10 blur-[120px]",
+        "left": -38,
+        "right": 378,
+        "tag": "div",
+        "text": "",
+        "width": 416
+      },
+      {
+        "cls": "absolute bottom-[-5%] right-[-6%] h-[24rem] w-[24rem] rounded-full bg-proofound-terracotta/12 blur-[",
+        "left": 18,
+        "right": 402,
+        "tag": "div",
+        "text": "",
+        "width": 384
+      }
+    ],
+    "overflowX": true,
+    "smallTargets": [
+      {
+        "h": 1,
+        "tag": "a",
+        "text": "Skip to main content",
+        "w": 1,
+        "x": -1,
+        "y": -1
+      }
+    ],
+    "title": "Proofound | Proof Behind the Claim",
+    "url": "http://localhost:3000/",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/mobile390-landing.png"
+  },
+  {
+    "route": "login",
+    "expectedPath": "/login",
+    "bodyStart": "Skip to main content Welcome back Sign in to continue to Proofound EMAIL ADDRESS * PASSWORD * Remember me Forgot password? Sign in OR CONTINUE WITH Google LinkedIn Don't have an account? Create account By signing in, you agree to our Terms of Service and Privacy Policy",
+    "document": {
+      "clientWidth": 379,
+      "scrollHeight": 974,
+      "scrollWidth": 379
+    },
+    "h1": ["Welcome back"],
+    "headings": ["Welcome back"],
+    "overflowEls": [],
+    "overflowX": false,
+    "smallTargets": [
+      {
+        "h": 1,
+        "tag": "a",
+        "text": "Skip to main content",
+        "w": 1,
+        "x": -1,
+        "y": -1
+      },
+      {
+        "h": 24,
+        "tag": "button",
+        "text": "Remember me",
+        "w": 24,
+        "x": 37,
+        "y": 449
+      },
+      {
+        "h": 13,
+        "tag": "input",
+        "text": "",
+        "w": 13,
+        "x": 24,
+        "y": 455
+      }
+    ],
+    "title": "Sign In | Proofound",
+    "url": "http://localhost:3000/login",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/mobile390-login.png"
+  },
+  {
+    "route": "signup-individual",
+    "expectedPath": "/signup/individual",
+    "bodyStart": "Skip to main content Create your individual account Start with email and password. Add details after sign-up. EMAIL ADDRESS PASSWORD CONFIRM PASSWORD I agree to the Privacy Policy and Terms of Service* Send me updates about new features and matching opportunities Create account OR CONTINUE WITH Google LinkedIn Already have an account? Sign in",
+    "document": {
+      "clientWidth": 379,
+      "scrollHeight": 996,
+      "scrollWidth": 379
+    },
+    "h1": ["Create your individual account"],
+    "headings": ["Create your individual account"],
+    "overflowEls": [],
+    "overflowX": false,
+    "smallTargets": [
+      {
+        "h": 1,
+        "tag": "a",
+        "text": "Skip to main content",
+        "w": 1,
+        "x": -1,
+        "y": -1
+      },
+      {
+        "h": 24,
+        "tag": "button",
+        "text": "I agree to the Privacy Policy and Terms of Service",
+        "w": 24,
+        "x": 33,
+        "y": 508
+      },
+      {
+        "h": 13,
+        "tag": "input",
+        "text": "",
+        "w": 13,
+        "x": 20,
+        "y": 506
+      },
+      {
+        "h": 24,
+        "tag": "button",
+        "text": "Send me updates about new features and matching opportunities",
+        "w": 24,
+        "x": 33,
+        "y": 616
+      },
+      {
+        "h": 13,
+        "tag": "input",
+        "text": "",
+        "w": 13,
+        "x": 20,
+        "y": 614
+      }
+    ],
+    "title": "Individual Sign Up | Proofound",
+    "url": "http://localhost:3000/signup/individual",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/mobile390-signup-individual.png"
+  },
+  {
+    "route": "signup-organization",
+    "expectedPath": "/signup/organization",
+    "bodyStart": "Skip to main content Create your organization account Start with email and password. Add details after sign-up. EMAIL ADDRESS PASSWORD CONFIRM PASSWORD I agree to the Privacy Policy and Terms of Service* Send me updates about new features and matching opportunities Create organization account OR CONTINUE WITH Google LinkedIn Already have an account? Sign in",
+    "document": {
+      "clientWidth": 379,
+      "scrollHeight": 1028,
+      "scrollWidth": 379
+    },
+    "h1": ["Create your organization account"],
+    "headings": ["Create your organization account"],
+    "overflowEls": [],
+    "overflowX": false,
+    "smallTargets": [
+      {
+        "h": 1,
+        "tag": "a",
+        "text": "Skip to main content",
+        "w": 1,
+        "x": -1,
+        "y": -1
+      },
+      {
+        "h": 24,
+        "tag": "button",
+        "text": "I agree to the Privacy Policy and Terms of Service",
+        "w": 24,
+        "x": 33,
+        "y": 540
+      },
+      {
+        "h": 13,
+        "tag": "input",
+        "text": "",
+        "w": 13,
+        "x": 20,
+        "y": 538
+      },
+      {
+        "h": 24,
+        "tag": "button",
+        "text": "Send me updates about new features and matching opportunities",
+        "w": 24,
+        "x": 33,
+        "y": 648
+      },
+      {
+        "h": 13,
+        "tag": "input",
+        "text": "",
+        "w": 13,
+        "x": 20,
+        "y": 646
+      }
+    ],
+    "title": "Organization Sign Up | Proofound",
+    "url": "http://localhost:3000/signup/organization",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/mobile390-signup-organization.png"
+  },
+  {
+    "route": "reset-password",
+    "expectedPath": "/reset-password",
+    "bodyStart": "Skip to main content Reset your password Enter your email and we'll send one secure reset link. Nothing else changes until you use it. Email Send reset link ← Back to login",
+    "document": {
+      "clientWidth": 390,
+      "scrollHeight": 844,
+      "scrollWidth": 390
+    },
+    "h1": ["Reset your password"],
+    "headings": ["Reset your password"],
+    "overflowEls": [],
+    "overflowX": false,
+    "smallTargets": [
+      {
+        "h": 1,
+        "tag": "a",
+        "text": "Skip to main content",
+        "w": 1,
+        "x": -1,
+        "y": -1
+      }
+    ],
+    "title": "Reset Password | Proofound",
+    "url": "http://localhost:3000/reset-password",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/mobile390-reset-password.png"
+  },
+  {
+    "route": "individual-home",
+    "expectedPath": "/app/i/home",
+    "bodyStart": "Skip to main content Overview Work Inbox Profile Preview TO Organization review cockpit Test Organization A focused launch desk for one clean hiring corridor: compose the trust profile, define one proof-led assignment, and review candidates through privacy-safe summaries. Complete organization profile Corridor Queue Trust, assignment, and review order Test Organization High Organization profile · Add the basics once. Review stays locked until trust is clear. 0% Proof expectations Next One assignment path · This opens after the organization profile has enough context. Needs trust Privacy-safe summaries Guarded Match review · No candidate review starts until the corridor is ready. Locked Launc",
+    "document": {
+      "clientWidth": 390,
+      "scrollHeight": 844,
+      "scrollWidth": 390
+    },
+    "h1": ["Test Organization"],
+    "headings": ["Test Organization", "Corridor Queue", "Launch Summary", "Minimal Access"],
+    "overflowEls": [],
+    "overflowX": false,
+    "smallTargets": [
+      {
+        "h": 1,
+        "tag": "a",
+        "text": "Skip to main content",
+        "w": 1,
+        "x": -1,
+        "y": -1
+      }
+    ],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:3000/app/o/test-org/home",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/mobile390-individual-home.png"
+  },
+  {
+    "route": "individual-messages",
+    "expectedPath": "/app/i/messages",
+    "bodyStart": "Skip to main content Overview Work Inbox Profile Preview TO Organization review cockpit Test Organization A focused launch desk for one clean hiring corridor: compose the trust profile, define one proof-led assignment, and review candidates through privacy-safe summaries. Complete organization profile Corridor Queue Trust, assignment, and review order Test Organization High Organization profile · Add the basics once. Review stays locked until trust is clear. 0% Proof expectations Next One assignment path · This opens after the organization profile has enough context. Needs trust Privacy-safe summaries Guarded Match review · No candidate review starts until the corridor is ready. Locked Launc",
+    "document": {
+      "clientWidth": 390,
+      "scrollHeight": 844,
+      "scrollWidth": 390
+    },
+    "h1": ["Test Organization"],
+    "headings": ["Test Organization", "Corridor Queue", "Launch Summary", "Minimal Access"],
+    "overflowEls": [],
+    "overflowX": false,
+    "smallTargets": [
+      {
+        "h": 1,
+        "tag": "a",
+        "text": "Skip to main content",
+        "w": 1,
+        "x": -1,
+        "y": -1
+      }
+    ],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:3000/app/o/test-org/home",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/mobile390-individual-messages.png"
+  },
+  {
+    "route": "individual-communications",
+    "expectedPath": "/app/i/communications",
+    "bodyStart": "Skip to main content Overview Work Inbox Profile Preview TO Organization review cockpit Test Organization A focused launch desk for one clean hiring corridor: compose the trust profile, define one proof-led assignment, and review candidates through privacy-safe summaries. Complete organization profile Corridor Queue Trust, assignment, and review order Test Organization High Organization profile · Add the basics once. Review stays locked until trust is clear. 0% Proof expectations Next One assignment path · This opens after the organization profile has enough context. Needs trust Privacy-safe summaries Guarded Match review · No candidate review starts until the corridor is ready. Locked Launc",
+    "document": {
+      "clientWidth": 390,
+      "scrollHeight": 844,
+      "scrollWidth": 390
+    },
+    "h1": ["Test Organization"],
+    "headings": ["Test Organization", "Corridor Queue", "Launch Summary", "Minimal Access"],
+    "overflowEls": [],
+    "overflowX": false,
+    "smallTargets": [
+      {
+        "h": 1,
+        "tag": "a",
+        "text": "Skip to main content",
+        "w": 1,
+        "x": -1,
+        "y": -1
+      }
+    ],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:3000/app/o/test-org/home",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/mobile390-individual-communications.png"
+  },
+  {
+    "route": "individual-privacy",
+    "expectedPath": "/app/i/privacy",
+    "bodyStart": "Not found This page is outside the locked launch MVP corridor. Archived Page: /app is outside the locked launch MVP corridor and is not reachable in the launch surface.",
+    "document": {
+      "clientWidth": 390,
+      "scrollHeight": 844,
+      "scrollWidth": 390
+    },
+    "h1": ["Not found"],
+    "headings": ["Not found"],
+    "overflowEls": [],
+    "overflowX": false,
+    "smallTargets": [],
+    "title": "Not found | Proofound",
+    "url": "http://localhost:3000/app/i/privacy",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/mobile390-individual-privacy.png"
+  },
+  {
+    "route": "individual-settings",
+    "expectedPath": "/app/i/settings",
+    "bodyStart": "Skip to main content Overview Work Inbox Profile Preview TO Organization review cockpit Test Organization A focused launch desk for one clean hiring corridor: compose the trust profile, define one proof-led assignment, and review candidates through privacy-safe summaries. Complete organization profile Corridor Queue Trust, assignment, and review order Test Organization High Organization profile · Add the basics once. Review stays locked until trust is clear. 0% Proof expectations Next One assignment path · This opens after the organization profile has enough context. Needs trust Privacy-safe summaries Guarded Match review · No candidate review starts until the corridor is ready. Locked Launc",
+    "document": {
+      "clientWidth": 390,
+      "scrollHeight": 844,
+      "scrollWidth": 390
+    },
+    "h1": ["Test Organization"],
+    "headings": ["Test Organization", "Corridor Queue", "Launch Summary", "Minimal Access"],
+    "overflowEls": [],
+    "overflowX": false,
+    "smallTargets": [
+      {
+        "h": 1,
+        "tag": "a",
+        "text": "Skip to main content",
+        "w": 1,
+        "x": -1,
+        "y": -1
+      }
+    ],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:3000/app/o/test-org/home",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/mobile390-individual-settings.png"
+  },
+  {
+    "route": "org-assignments",
+    "expectedPath": "/app/o/test-org/assignments",
+    "bodyStart": "Skip to main content Overview Work Inbox Profile Preview TO Organization / Assignments Assignments Assignment cards own their matching corridor, candidate review, and pipeline context. Create assignment ASSIGNMENTS Assignment workspace is loading We are preparing the assignment cards, proof matches, and review context for this workspace. Loading assignments and matches... Create assignment",
+    "document": {
+      "clientWidth": 390,
+      "scrollHeight": 844,
+      "scrollWidth": 390
+    },
+    "h1": ["Assignments"],
+    "headings": ["Assignments", "Assignment workspace is loading"],
+    "overflowEls": [],
+    "overflowX": false,
+    "smallTargets": [
+      {
+        "h": 1,
+        "tag": "a",
+        "text": "Skip to main content",
+        "w": 1,
+        "x": -1,
+        "y": -1
+      }
+    ],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:3000/app/o/test-org/assignments",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/mobile390-org-assignments.png"
+  },
+  {
+    "route": "org-communications",
+    "expectedPath": "/app/o/test-org/communications",
+    "bodyStart": "Skip to main content Overview Work Inbox Profile Preview TO HIRING CORRIDOR Communications Messages and interviews stay together, with reveal and decision steps inside the live corridor where they belong. Proof-safe process center Reveal and interview actions stay visible inside their live corridor surfaces. Messages Conversation threads, introductions, and reveal requests. Interviews Scheduling, decision windows, feedback, and handoff. Messages Use the organization conversation thread for messages, intros, and reveal requests. Switch to interviews Preparing organization messages Loading the team conversation context before showing threads, intros, and reveal requests.",
+    "document": {
+      "clientWidth": 390,
+      "scrollHeight": 844,
+      "scrollWidth": 390
+    },
+    "h1": ["Communications"],
+    "headings": ["Communications", "Messages"],
+    "overflowEls": [],
+    "overflowX": false,
+    "smallTargets": [
+      {
+        "h": 1,
+        "tag": "a",
+        "text": "Skip to main content",
+        "w": 1,
+        "x": -1,
+        "y": -1
+      }
+    ],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:3000/app/o/test-org/communications",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/mobile390-org-communications.png"
+  },
+  {
+    "route": "org-messages",
+    "expectedPath": "/app/o/test-org/messages",
+    "bodyStart": "Skip to main content Overview Work Inbox Profile Preview TO Preparing organization messages Loading the team conversation context before showing threads, intros, and reveal requests.",
+    "document": {
+      "clientWidth": 390,
+      "scrollHeight": 844,
+      "scrollWidth": 390
+    },
+    "h1": [],
+    "headings": [],
+    "overflowEls": [],
+    "overflowX": false,
+    "smallTargets": [
+      {
+        "h": 1,
+        "tag": "a",
+        "text": "Skip to main content",
+        "w": 1,
+        "x": -1,
+        "y": -1
+      }
+    ],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:3000/app/o/test-org/messages",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/mobile390-org-messages.png"
+  },
+  {
+    "route": "org-matching",
+    "expectedPath": "/app/o/test-org/matching",
+    "bodyStart": "Skip to main content Overview Work Inbox Profile Preview TO Organization / Assignments Assignments Assignment cards own their matching corridor, candidate review, and pipeline context. Create assignment ASSIGNMENTS Assignment workspace is loading We are preparing the assignment cards, proof matches, and review context for this workspace. Loading assignments and matches... Create assignment",
+    "document": {
+      "clientWidth": 390,
+      "scrollHeight": 844,
+      "scrollWidth": 390
+    },
+    "h1": ["Assignments"],
+    "headings": ["Assignments", "Assignment workspace is loading"],
+    "overflowEls": [],
+    "overflowX": false,
+    "smallTargets": [
+      {
+        "h": 1,
+        "tag": "a",
+        "text": "Skip to main content",
+        "w": 1,
+        "x": -1,
+        "y": -1
+      }
+    ],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:3000/app/o/test-org/assignments",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/mobile390-org-matching.png"
+  },
+  {
+    "route": "org-shortlist",
+    "expectedPath": "/app/o/test-org/shortlist",
+    "bodyStart": "Skip to main content Overview Work Inbox Profile Preview TO Organization / Assignments Assignments Assignment cards own their matching corridor, candidate review, and pipeline context. Create assignment ASSIGNMENTS Assignment workspace is loading We are preparing the assignment cards, proof matches, and review context for this workspace. Loading assignments and matches... Create assignment",
+    "document": {
+      "clientWidth": 390,
+      "scrollHeight": 844,
+      "scrollWidth": 390
+    },
+    "h1": ["Assignments"],
+    "headings": ["Assignments", "Assignment workspace is loading"],
+    "overflowEls": [],
+    "overflowX": false,
+    "smallTargets": [
+      {
+        "h": 1,
+        "tag": "a",
+        "text": "Skip to main content",
+        "w": 1,
+        "x": -1,
+        "y": -1
+      }
+    ],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:3000/app/o/test-org/assignments",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/mobile390-org-shortlist.png"
+  },
+  {
+    "route": "org-portfolio",
+    "expectedPath": "/app/o/test-org/portfolio",
+    "bodyStart": "Skip to main content Test Organization Shareable by direct link Public organization profile Help teams review candidates through concrete work evidence instead of polished claims. Return to menu Copy share link Website MISSION / PURPOSE Help teams review candidates through concrete work evidence instead of polished claims. WHAT WORK IS OFFERED WORK OFFERED Proof-first product reviewer ENGAGEMENT Full time Improve review quality through clearer proof expectations. ASSIGNMENT CLARITY Review candidate work through structured evidence and launch-safe summaries. PROOF EXPECTATIONS Shortlists become more explainable, privacy-safe, and grounded in real work. EXPECTED OUTCOMES • Clarify proof expect",
+    "document": {
+      "clientWidth": 379,
+      "scrollHeight": 1958,
+      "scrollWidth": 379
+    },
+    "h1": ["Test Organization"],
+    "headings": [
+      "Test Organization",
+      "Mission / purpose",
+      "What work is offered",
+      "Assignment clarity",
+      "Seriousness of review",
+      "Organization basics"
+    ],
+    "overflowEls": [],
+    "overflowX": false,
+    "smallTargets": [
+      {
+        "h": 1,
+        "tag": "a",
+        "text": "Skip to main content",
+        "w": 1,
+        "x": -1,
+        "y": -1
+      }
+    ],
+    "title": "Proofound organization portfolio",
+    "url": "http://localhost:3000/portfolio/org/test-org?returnTo=%2Fapp%2Fo%2Ftest-org%2Fhome",
+    "viewport": {},
+    "screenshot": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-final-closure-2026-05-18/mobile390-org-portfolio.png"
+  }
+]

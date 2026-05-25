@@ -1,5 +1,5 @@
 import { and, eq, inArray } from 'drizzle-orm';
-import { nanoid } from 'nanoid';
+import { customAlphabet } from 'nanoid';
 
 import { db } from '@/db';
 import { assignments, conversations, matches, organizationMembers, profiles } from '@/db/schema';
@@ -11,6 +11,8 @@ type ConversationParticipantRecord = {
   state?: string | null | undefined;
 };
 
+const makeMaskedHandleId = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 6);
+
 export class ConversationAccessError extends Error {
   constructor(
     public readonly code: 'MATCH_NOT_FOUND' | 'ORG_REP_NOT_FOUND',
@@ -21,12 +23,12 @@ export class ConversationAccessError extends Error {
   }
 }
 
-function maskedHandleForPersona(persona: string | null | undefined): string {
+export function makeMaskedHandleForPersona(persona: string | null | undefined): string {
   if (persona === 'individual') {
-    return `Candidate #${nanoid(6).toUpperCase()}`;
+    return `Submission #${makeMaskedHandleId()}`;
   }
 
-  return `Organization #${nanoid(6).toUpperCase()}`;
+  return `Organization #${makeMaskedHandleId()}`;
 }
 
 export function pickPrioritizedOrgRepresentative<T extends ConversationParticipantRecord>(
@@ -120,8 +122,8 @@ export async function resolveConversationParticipantsForMatch(
     orgId: matchRecord.orgId,
     candidateId: matchRecord.candidateId,
     orgParticipantId,
-    maskedHandleOne: maskedHandleForPersona(personaById.get(matchRecord.candidateId)),
-    maskedHandleTwo: maskedHandleForPersona(personaById.get(orgParticipantId)),
+    maskedHandleOne: makeMaskedHandleForPersona(personaById.get(matchRecord.candidateId)),
+    maskedHandleTwo: makeMaskedHandleForPersona(personaById.get(orgParticipantId)),
   };
 }
 

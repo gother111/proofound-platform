@@ -28,17 +28,14 @@ const requiredEnvByTarget = {
     'SUPABASE_SERVICE_ROLE_KEY',
     'DATABASE_URL',
     'DIRECT_URL',
+    'KV_REST_API_URL',
+    'KV_REST_API_TOKEN',
     'CRON_SECRET',
     'RESEND_API_KEY',
     'EMAIL_FROM',
-    'ZOOM_CLIENT_ID',
-    'ZOOM_CLIENT_SECRET',
-    'ZOOM_REDIRECT_URI',
     'GOOGLE_CLIENT_ID',
     'GOOGLE_CLIENT_SECRET',
     'GOOGLE_REDIRECT_URI',
-    'LINKEDIN_CLIENT_ID',
-    'LINKEDIN_CLIENT_SECRET',
   ],
   preview: [
     'NEXT_PUBLIC_SITE_URL',
@@ -47,6 +44,8 @@ const requiredEnvByTarget = {
     'SUPABASE_SERVICE_ROLE_KEY',
     'DATABASE_URL',
     'DIRECT_URL',
+    'KV_REST_API_URL',
+    'KV_REST_API_TOKEN',
     'CRON_SECRET',
     'RESEND_API_KEY',
     'EMAIL_FROM',
@@ -58,6 +57,8 @@ const requiredEnvByTarget = {
     'SUPABASE_SERVICE_ROLE_KEY',
     'DATABASE_URL',
     'DIRECT_URL',
+    'KV_REST_API_URL',
+    'KV_REST_API_TOKEN',
     'CRON_SECRET',
     'RESEND_API_KEY',
     'EMAIL_FROM',
@@ -71,12 +72,42 @@ const compareKeys = [
   'SUPABASE_SERVICE_ROLE_KEY',
   'DATABASE_URL',
   'DIRECT_URL',
+  'KV_REST_API_URL',
+  'KV_REST_API_TOKEN',
   'CRON_SECRET',
-  'ZOOM_REDIRECT_URI',
   'GOOGLE_REDIRECT_URI',
   'RESEND_API_KEY',
   'EMAIL_FROM',
 ];
+
+const forbiddenEnvByTarget = {
+  production: [
+    'NEXT_PUBLIC_USE_MOCK_SUPABASE',
+    'MOCK_ORG_MODE',
+    'MOCK_ADMIN_MODE',
+    'MOCK_PLATFORM_ROLE',
+    'MOBILE_MOCK_AUTH',
+    'PROOFOUND_SKIP_TRANSACTIONAL_EMAIL_DELIVERY',
+    'PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK',
+    'PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE',
+    'DEBUG_INGEST_ENABLED',
+    'DEBUG_INGEST_URL',
+    'NEXT_PUBLIC_DEBUG_INGEST_URL',
+  ],
+  preview: [
+    'NEXT_PUBLIC_USE_MOCK_SUPABASE',
+    'MOCK_ORG_MODE',
+    'MOCK_ADMIN_MODE',
+    'MOCK_PLATFORM_ROLE',
+    'MOBILE_MOCK_AUTH',
+    'PROOFOUND_SKIP_TRANSACTIONAL_EMAIL_DELIVERY',
+    'PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK',
+    'PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE',
+    'DEBUG_INGEST_ENABLED',
+    'DEBUG_INGEST_URL',
+    'NEXT_PUBLIC_DEBUG_INGEST_URL',
+  ],
+};
 
 function hashValue(value) {
   if (value == null) return 'MISSING';
@@ -132,8 +163,31 @@ async function getProjectByName(name) {
 
 async function readLocalProjectLink() {
   const projectJsonPath = path.join(process.cwd(), '.vercel', 'project.json');
-  const raw = await fs.readFile(projectJsonPath, 'utf8');
-  return JSON.parse(raw);
+  try {
+    const raw = await fs.readFile(projectJsonPath, 'utf8');
+    return {
+      ...JSON.parse(raw),
+      source: projectJsonPath,
+    };
+  } catch (error) {
+    if (error?.code !== 'ENOENT') {
+      throw error;
+    }
+
+    const projectId = process.env.VERCEL_PROJECT_ID;
+    if (!projectId) {
+      throw new Error(
+        '.vercel/project.json was not found and VERCEL_PROJECT_ID is not set.'
+      );
+    }
+
+    return {
+      orgId: process.env.VERCEL_ORG_ID ?? '',
+      projectId,
+      projectName: process.env.VERCEL_PROJECT_NAME ?? canonicalProjectName,
+      source: 'VERCEL_PROJECT_ID',
+    };
+  }
 }
 
 async function main() {
@@ -144,15 +198,27 @@ async function main() {
   const failures = [];
 
   const localLink = await readLocalProjectLink();
-  console.log('Local Vercel link:', localLink.projectName, localLink.projectId);
+  console.log(
+    'Vercel project link:',
+    localLink.projectName,
+    localLink.projectId,
+    `(${localLink.source})`
+  );
 
   if (localLink.projectName !== canonicalProjectName) {
     failures.push(
-      `Local .vercel/project.json points to ${localLink.projectName}, expected ${canonicalProjectName}`
+      `Vercel project link points to ${localLink.projectName}, expected ${canonicalProjectName}`
     );
   }
 
   const canonicalProject = await api(`/v9/projects/${localLink.projectId}`);
+  const actualProjectName = canonicalProject?.name ?? '';
+  if (actualProjectName && actualProjectName !== canonicalProjectName) {
+    failures.push(
+      `Vercel project id resolves to ${actualProjectName}, expected ${canonicalProjectName}`
+    );
+  }
+
   const actualProductionBranch =
     canonicalProject?.link?.productionBranch ?? canonicalProject?.productionBranch ?? '';
 
@@ -181,6 +247,17 @@ async function main() {
       failures.push(`Missing ${target} env keys: ${missingKeys.join(', ')}`);
     } else {
       console.log(`OK ${target} env presence (${requiredKeys.length} keys)`);
+    }
+  }
+
+  for (const [target, forbiddenKeys] of Object.entries(forbiddenEnvByTarget)) {
+    const keySet = targetKeyMap.get(target) ?? new Set();
+    const presentForbiddenKeys = forbiddenKeys.filter((key) => keySet.has(key));
+
+    if (presentForbiddenKeys.length > 0) {
+      failures.push(`Forbidden ${target} env keys: ${presentForbiddenKeys.join(', ')}`);
+    } else {
+      console.log(`OK ${target} forbidden env absence (${forbiddenKeys.length} keys)`);
     }
   }
 

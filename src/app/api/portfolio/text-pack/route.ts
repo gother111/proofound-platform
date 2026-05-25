@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { fetchTrustExportData } from '@/lib/portfolio/export-data';
 import { respondWithText } from '@/lib/portfolio/export-response';
 import { buildTextPack } from '@/lib/portfolio/text-pack';
+import { log } from '@/lib/log';
 
 export async function GET() {
   try {
@@ -23,7 +24,7 @@ export async function GET() {
     const text = buildTextPack(data);
     return respondWithText(text, `proofound-${data.profile.handle}-summary.txt`);
   } catch (error) {
-    console.error('text pack failed', error);
+    log.error('portfolio.text_pack.failed', { error });
     return NextResponse.json({ error: 'Failed to build text pack' }, { status: 500 });
   }
 }

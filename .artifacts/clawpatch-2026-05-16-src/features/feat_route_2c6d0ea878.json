@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "featureId": "feat_route_2c6d0ea878",
+  "title": "Route /api/user/audit-log",
+  "summary": "Web route implemented by app/api/user/audit-log/route.ts.",
+  "kind": "route",
+  "source": "next-app-route",
+  "confidence": "high",
+  "entrypoints": [
+    {
+      "path": "app/api/user/audit-log/route.ts",
+      "symbol": null,
+      "route": "/api/user/audit-log",
+      "command": null
+    }
+  ],
+  "ownedFiles": [
+    {
+      "path": "app/api/user/audit-log/route.ts",
+      "reason": "entrypoint"
+    }
+  ],
+  "contextFiles": [],
+  "tests": [],
+  "tags": ["next", "web"],
+  "trustBoundaries": ["user-input", "network", "serialization"],
+  "status": "pending",
+  "lock": null,
+  "findingIds": [],
+  "patchAttemptIds": [],
+  "analysisHistory": [],
+  "createdAt": "2026-05-16T16:02:40.128Z",
+  "updatedAt": "2026-05-16T16:02:40.128Z"
+}

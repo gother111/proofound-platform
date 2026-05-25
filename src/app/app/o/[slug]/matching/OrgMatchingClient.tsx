@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { Info } from 'lucide-react';
 import { OrganizationMatchingEmpty } from '@/components/matching/OrganizationMatchingEmpty';
 import { MatchingOrganizationView } from '@/components/matching/MatchingOrganizationView';
 import { toast } from 'sonner';
 import { CardGridSkeleton, PageIntroSkeleton } from '@/components/skeletons/CoreLoadingPrimitives';
-import { AppSurface } from '@/components/ui/v2/AppSurface';
 
 export function OrgMatchingClient() {
   const router = useRouter();
@@ -19,6 +19,25 @@ export function OrgMatchingClient() {
         : null;
   const [assignments, setAssignments] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showShortlistNotice, setShowShortlistNotice] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('from') === 'shortlist') {
+        setShowShortlistNotice(true);
+      }
+    }
+  }, []);
+
+  const dismissShortlistNotice = () => {
+    setShowShortlistNotice(false);
+    if (!slug) {
+      return;
+    }
+
+    router.replace(`/app/o/${encodeURIComponent(slug)}/assignments`);
+  };
 
   useEffect(() => {
     const fetchAssignments = async () => {
@@ -47,22 +66,20 @@ export function OrgMatchingClient() {
 
   if (isLoading) {
     return (
-      <AppSurface>
-        <div className="max-w-6xl mx-auto space-y-6">
-          <p className="text-sm text-muted-foreground">Loading assignments and matches...</p>
-          <PageIntroSkeleton />
-          <CardGridSkeleton
-            count={4}
-            columnsClassName="grid gap-3 sm:grid-cols-2"
-            tileClassName="min-h-[160px]"
-          />
-          <CardGridSkeleton
-            count={4}
-            columnsClassName="grid grid-cols-1 md:grid-cols-2 gap-4"
-            tileClassName="min-h-[220px]"
-          />
-        </div>
-      </AppSurface>
+      <div className="mx-auto w-full max-w-6xl space-y-6">
+        <p className="text-sm text-muted-foreground">Loading assignments and matches...</p>
+        <PageIntroSkeleton />
+        <CardGridSkeleton
+          count={4}
+          columnsClassName="grid gap-3 sm:grid-cols-2"
+          tileClassName="min-h-[160px]"
+        />
+        <CardGridSkeleton
+          count={4}
+          columnsClassName="grid grid-cols-1 md:grid-cols-2 gap-4"
+          tileClassName="min-h-[220px]"
+        />
+      </div>
     );
   }
 
@@ -71,6 +88,30 @@ export function OrgMatchingClient() {
   }
 
   return (
-    <MatchingOrganizationView assignments={assignments} onCreateNew={handleCreateAssignment} />
+    <div className="space-y-4">
+      {showShortlistNotice ? (
+        <div
+          className="flex items-start gap-3 rounded-xl border border-proofound-stone/70 bg-[#f3f6ef] px-4 py-3 text-sm text-proofound-charcoal"
+          role="status"
+        >
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-proofound-forest" aria-hidden="true" />
+          <div className="min-w-0 flex-1">
+            <p className="font-medium">Shortlist lives inside each assignment</p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              Open an assignment, then use the Shortlist tab to review staged proof submissions and
+              request introductions.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={dismissShortlistNotice}
+            className="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-proofound-forest hover:bg-white/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+          >
+            Dismiss
+          </button>
+        </div>
+      ) : null}
+      <MatchingOrganizationView assignments={assignments} onCreateNew={handleCreateAssignment} />
+    </div>
   );
 }

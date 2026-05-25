@@ -1,5 +1,6 @@
 import { cookies, headers } from 'next/headers';
 import { AssignmentReviewClient } from '@/components/assignments/AssignmentReviewClient';
+import { log } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,7 +30,11 @@ async function fetchAssignmentServer(id: string, orgSlug: string) {
     const data = await res.json();
     return data.assignment || null;
   } catch (error) {
-    console.error('SSR fetch failed', error);
+    log.error('assignment.review_page.server_fetch_failed', {
+      assignmentId: id,
+      orgSlug,
+      error,
+    });
     return null;
   }
 }

@@ -13,6 +13,7 @@ import {
   getPolicyVersionForConsentType,
   type ConsentTypeValue,
 } from '@/lib/privacy/consent-contract';
+import { log } from '@/lib/log';
 import { getConsentCheck, syncConsentObligation } from '@/lib/workflow/service';
 
 export { CONSENT_TYPES, getPolicyVersionForConsentType };
@@ -82,7 +83,10 @@ export async function checkPolicyConsent(userId: string): Promise<{
       missingConsents: status.missingConsents,
     };
   } catch (error) {
-    console.error('Failed to check policy consent:', error);
+    log.error('privacy.policy_consent.check_failed', {
+      userId,
+      error,
+    });
     return {
       needsConsent: true,
       tosUpToDate: false,

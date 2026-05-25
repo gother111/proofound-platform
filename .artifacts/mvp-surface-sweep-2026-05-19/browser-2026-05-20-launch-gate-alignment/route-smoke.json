@@ -1,0 +1,94 @@
+{
+  "generatedAt": "2026-05-20T02:40:55.166Z",
+  "baseUrl": "http://localhost:33180",
+  "routes": [
+    {
+      "h1": "Proof behind the claim",
+      "h1Count": 2,
+      "hasRuntimeError": false,
+      "hasScoreTheater": false,
+      "horizontalOverflow": false,
+      "mainCount": 1,
+      "returnHomeLinks": [
+        {
+          "href": "/",
+          "text": "Proofound"
+        }
+      ],
+      "robots": null,
+      "title": "Proofound | Proof Behind the Claim",
+      "url": "http://localhost:33180/",
+      "visibleSample": "Skip to main content PROOFOUND How it works For individuals For organizations Sign in Request a pilot Proof behind the claim Proofound turns real work into structured Proof Packs for privacy-safe hiring review before identity takes over. Pr"
+    },
+    {
+      "h1": "Welcome back",
+      "h1Count": 1,
+      "hasRuntimeError": false,
+      "hasScoreTheater": false,
+      "horizontalOverflow": false,
+      "mainCount": 1,
+      "returnHomeLinks": [],
+      "robots": null,
+      "title": "Sign In | Proofound",
+      "url": "http://localhost:33180/login",
+      "visibleSample": "Skip to main content Welcome back Sign in to continue to Proofound EMAIL ADDRESS * PASSWORD * Remember me Forgot password? Sign in OR CONTINUE WITH Google LinkedIn Don't have an account? Create account By signing in, you agree to our Terms "
+    },
+    {
+      "h1": "Join Proofound",
+      "h1Count": 1,
+      "hasRuntimeError": false,
+      "hasScoreTheater": false,
+      "horizontalOverflow": false,
+      "mainCount": 1,
+      "returnHomeLinks": [],
+      "robots": null,
+      "title": "Sign Up | Proofound",
+      "url": "http://localhost:33180/signup",
+      "visibleSample": "Skip to main content Back Join Proofound Choose the account type that fits how you'll use Proofound. Individual For professionals who want a clean proof-based portfolio link they can share today, plus matching as they grow. Continue as Indi"
+    },
+    {
+      "h1": "Public page unavailable",
+      "h1Count": 1,
+      "hasRuntimeError": false,
+      "hasScoreTheater": false,
+      "horizontalOverflow": false,
+      "mainCount": 1,
+      "returnHomeLinks": [
+        {
+          "href": "/",
+          "text": "Return home"
+        }
+      ],
+      "robots": "noindex, nofollow, nocache",
+      "title": "Public Page Unavailable | Proofound",
+      "url": "http://localhost:33180/portfolio/demo",
+      "visibleSample": "Skip to main content PUBLIC PAGE UNAVAILABLE This Public Page link is unavailable. It may be hidden, retired, or not ready for launch-safe sharing. Return home proofound.io/portfolio/demo Public page unavailable"
+    },
+    {
+      "h1": "Organization portfolio unavailable",
+      "h1Count": 1,
+      "hasRuntimeError": false,
+      "hasScoreTheater": false,
+      "horizontalOverflow": false,
+      "mainCount": 1,
+      "returnHomeLinks": [
+        {
+          "href": "/",
+          "text": "Return home"
+        }
+      ],
+      "robots": "noindex, nofollow, nocache",
+      "title": "Public Page Unavailable | Proofound",
+      "url": "http://localhost:33180/portfolio/org/demo",
+      "visibleSample": "Skip to main content ORGANIZATION PORTFOLIO UNAVAILABLE This organization link is unavailable. It may be hidden, retired, or not yet ready for public sharing. Return home proofound.io/portfolio/org/demo Organization portfolio unavailable"
+    }
+  ],
+  "mobileLogin": {
+    "h1": "Welcome back",
+    "hasRuntimeError": false,
+    "horizontalOverflow": false,
+    "mainCount": 1,
+    "title": "Sign In | Proofound",
+    "url": "http://localhost:33180/login"
+  }
+}

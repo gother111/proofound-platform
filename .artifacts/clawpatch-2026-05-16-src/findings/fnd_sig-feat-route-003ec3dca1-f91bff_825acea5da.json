@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "findingId": "fnd_sig-feat-route-003ec3dca1-f91bff_825acea5da",
+  "featureId": "feat_route_003ec3dca1",
+  "title": "Malformed JSON bodies are reported as server errors",
+  "category": "api-contract",
+  "severity": "low",
+  "confidence": "high",
+  "triage": "contract-mismatch",
+  "evidence": [
+    {
+      "path": "app/api/engagement-verifications/[id]/route.ts",
+      "startLine": 31,
+      "endLine": 31,
+      "symbol": "PATCH",
+      "quote": "const parsed = EngagementVerificationPatchSchema.safeParse(await request.json());"
+    },
+    {
+      "path": "app/api/engagement-verifications/[id]/route.ts",
+      "startLine": 111,
+      "endLine": 118,
+      "symbol": "PATCH",
+      "quote": "return NextResponse.json({ error: message }, { status });"
+    }
+  ],
+  "reasoning": "If the request body is missing or invalid JSON, request.json() throws before zod validation runs. The catch block maps unknown errors to a 500 via toSafeEngagementPatchError, so a client input error becomes an internal server error instead of a 400 validation response. This is an API contract and error-handling issue at the user-input trust boundary.",
+  "reproduction": "Send PATCH /api/engagement-verifications/<id> with Content-Type: application/json and a malformed body such as `{`. The route throws from request.json() and returns the generic 500 response.",
+  "recommendation": "Parse JSON in a small guarded block before schema validation, and return a 400 response for SyntaxError or body parse failures. Then pass the parsed body into EngagementVerificationPatchSchema.safeParse.",
+  "whyTestsDoNotAlreadyCoverThis": "No linked tests were provided for this route, and the included file has no evidence of coverage for malformed or missing JSON bodies.",
+  "suggestedRegressionTest": "Add a route test that sends malformed JSON and asserts status 400 with a validation or invalid JSON error, not 500.",
+  "minimumFixScope": "Update app/api/engagement-verifications/[id]/route.ts to handle JSON parse failures before zod validation.",
+  "status": "fixed",
+  "history": [
+    {
+      "runId": "20260516T162219-d97e7c",
+      "kind": "revalidate",
+      "status": "fixed",
+      "note": null,
+      "reasoning": "The original route path still exists, but the original evidence is stale. app/api/engagement-verifications/[id]/route.ts no longer calls EngagementVerificationPatchSchema.safeParse(await request.json()); current lines 46-59 parse request.json() inside a guarded try/catch, return {error:\"Invalid JSON body\"} with status 400 on parse failure, then safeParse the already-parsed body. The old catch path that mapped unknown errors to 500 still exists at lines 149-156, but malformed JSON no longer reaches it. A focused regression test now exists in ../tests/api/engagement-verifications-route.test.ts lines 182-199 asserting malformed JSON returns 400 and does not call lookup/update mocks. I attempted to run that test, but the read-only sandbox blocked Vitest config temp-file creation with EPERM under node_modules/.vite-temp, so the executable verification could not complete in this environment.",
+      "commands": [
+        "pwd && rg --files -g 'AGENTS.md' -g 'app/api/engagement-verifications/**' -g '*engagement*verification*' -g 'package.json' -g 'agent/checklists/verification.md'",
+        "git status --short",
+        "rg --files .. -g 'AGENTS.md' -g 'agent/checklists/verification.md' -g 'package.json' -g 'tests/api/engagement-verifications-route.test.ts'",
+        "nl -ba 'app/api/engagement-verifications/[id]/route.ts' | sed -n '1,180p'",
+        "nl -ba '../tests/api/engagement-verifications-route.test.ts' | sed -n '1,260p'",
+        "node -e \"const p=require('../package.json'); console.log(JSON.stringify(p.scripts,null,2))\"",
+        "rg -n \"safeParse\\(await request\\.json\\(\\)\\)|Invalid JSON body|malformed JSON|request\\.json\\(\\)\" app ../tests/api/engagement-verifications-route.test.ts",
+        "npm --prefix .. run test -- tests/api/engagement-verifications-route.test.ts"
+      ],
+      "createdAt": "2026-05-16T16:23:27.934Z"
+    }
+  ],
+  "signature": "sig_feat-route-003ec3dca1_f91bff3864",
+  "linkedPatchAttemptIds": [],
+  "createdByRunId": "20260516T161141-38a836",
+  "createdAt": "2026-05-16T16:12:11.192Z",
+  "updatedAt": "2026-05-16T16:23:27.934Z"
+}

@@ -62,6 +62,17 @@ describe('CookieBanner', () => {
     }
   );
 
+  it('gives the compact close control a specific name and visible focus treatment', () => {
+    render(<CookieBanner />);
+
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+
+    const close = screen.getByRole('button', { name: /close cookie preferences/i });
+    expect(close).toHaveClass('focus-visible:ring-proofound-forest');
+  });
+
   it('does not render on snippet embed routes', () => {
     usePathnameMock.mockReturnValue('/p/demo/embed');
 

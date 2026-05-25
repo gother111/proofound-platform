@@ -72,8 +72,8 @@ export function EmptyProfileStateView({
                   <span className="text-sm text-muted-foreground">Proof-first setup</span>
                 </div>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Start with one context-backed Proof Pack, then add privacy and trust signals when
-                  they strengthen the work.
+                  Start with one context-backed Proof Pack, then add privacy choices and
+                  verification checks when they strengthen the work.
                 </p>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Compass className="w-3 h-3" />
@@ -188,7 +188,7 @@ export function EmptyProfileStateView({
                     <Edit3 className="w-4 h-4 text-muted-foreground/60 mt-1 group-hover/tagline:text-[#7A9278]" />
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">Add a tagline</p>
-                      <p className="text-xs text-muted-foreground/60">
+                      <p className="text-xs text-muted-foreground">
                         A brief statement that captures who you are and what you care about
                       </p>
                     </div>

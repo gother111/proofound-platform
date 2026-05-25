@@ -5,22 +5,26 @@
 
 Generated at: `2026-05-16T18:45:55Z`
 
+Final readiness update: `2026-05-16T22:55Z`
+
 Workspace: `/Users/yuriibakurov/proofound`
 
 Production Supabase project checked: `Proofound` (`cjpfrgmsxwxhuomnvciq`, region `eu-west-1`, database `Postgres 17.6`)
 
 ## Verdict
 
-`PARTIAL_GO`
+`GO`
 
-The production Supabase public-surface blocker that caused the earlier backend `NO_GO` has been remediated and rechecked:
+The production Supabase public-surface blocker that caused the earlier backend `NO_GO` has been remediated, rechecked, and covered by a final launch-validation pass:
 
 - All `181` public tables now have RLS enabled.
 - `0` RLS-disabled public tables are exposed to `anon` or `authenticated`.
 - `0` public security-definer views are selectable by `anon` or `authenticated`.
 - All local migration files are applied in production.
+- Final consolidated launch validation is `GO`: `13` pass, `0` fail, `0` unverified, `1` not applicable.
+- Strict authenticated organization E2E passed in the final consolidated validation run.
 
-This is not a final launch `GO` yet because the strict authenticated organization E2E gate could not be completed reliably in the current Codex runner after the remediation. The corridor passed once against a separated local app process during this run, but subsequent Playwright processes in this desktop session detached or were terminated before producing a final result. Treat strict org E2E as `UNVERIFIED` until it is rerun cleanly from a stable terminal or CI runner.
+The one not-applicable launch gate is launch smoke without `BASE_URL`; run the same validator with `BASE_URL` after deployment when validating a specific public web URL.
 
 ## Production Changes Applied
 
@@ -39,12 +43,12 @@ The final trigger-wrapper migration hardened the match-score stale-marking trigg
 Command:
 
 ```bash
-npm run db:audit:public-surface -- --out .artifacts/prod-supabase-backend-readiness-2026-05-16/public-surface-audit-after-trigger-wrapper.json
+npm run db:audit:public-surface -- --out .artifacts/prod-supabase-backend-readiness-2026-05-16/public-surface-audit-final.json
 ```
 
 Result artifact:
 
-- `.artifacts/prod-supabase-backend-readiness-2026-05-16/public-surface-audit-after-trigger-wrapper.json`
+- `.artifacts/prod-supabase-backend-readiness-2026-05-16/public-surface-audit-final.json`
 
 Summary:
 
@@ -63,12 +67,12 @@ The remaining executable security-definer functions are known public/RLS helper 
 Command:
 
 ```bash
-npm run db:audit:migrations -- --out .artifacts/prod-supabase-backend-readiness-2026-05-16/migration-ledger-audit-after-trigger-wrapper.json
+npm run db:audit:migrations -- --out .artifacts/prod-supabase-backend-readiness-2026-05-16/migration-ledger-audit-final.json
 ```
 
 Result artifact:
 
-- `.artifacts/prod-supabase-backend-readiness-2026-05-16/migration-ledger-audit-after-trigger-wrapper.json`
+- `.artifacts/prod-supabase-backend-readiness-2026-05-16/migration-ledger-audit-final.json`
 
 Summary:
 
@@ -79,6 +83,29 @@ Summary:
 - Historical DB row without local file: `20260317224741_canonicalize_org_role_constraints`
 
 The extra DB row is a known historical ledger mismatch and is not blocking the current production hardening state.
+
+### Final Launch Validation
+
+Command:
+
+```bash
+NEXT_DISABLE_WEBPACK_CACHE=1 NEXT_DISABLE_WEBPACK_BUILD_WORKER=1 NODE_OPTIONS=--max-old-space-size=8192 npm run launch:validate -- --output-dir .artifacts/launch-validation-2026-05-16-final-go
+```
+
+Result artifacts:
+
+- `.artifacts/launch-validation-2026-05-16-final-go/final-launch-checklist-status.md`
+- `.artifacts/launch-validation-2026-05-16-final-go/commands.json`
+
+Summary:
+
+- Verdict: `GO`
+- P0 blocking gates: `0`
+- Pass: `13`
+- Fail: `0`
+- Unverified: `0`
+- Not applicable: `1` (`launch_smoke`, because `BASE_URL` was not configured)
+- Strict org corridor E2E: PASS, `7` tests.
 
 ### Privacy Gate
 
@@ -112,30 +139,25 @@ Results:
 
 Work completed:
 
-- Stabilized the Next dev wrapper so the custom `.next-dev-PORT/package.json` CommonJS marker is only written when missing or incorrect.
-- Added clean-directory retry/fallback behavior for `.next-dev-PORT`.
-- Forwarded stop signals from the Node 24 dev wrapper to its child process.
 - Routed strict corridor mutating requests through the shared strict API helpers so CSRF refresh and transient request retry behavior are consistent.
 - Sanitized strict helper retry warnings so request cookies/tokens are not dumped into logs.
 - Made the invite-accept redirect wait for URL and network-idle before closing the reviewer browser context.
+- Added local production-smoke escape hatches for transactional email delivery, CSRF cookie security, and rate-limit fallback so the repo-managed Playwright `next start` server can exercise production mode locally without sending real email or requiring remote rate-limit infrastructure.
+- Fixed the production organization invite form path by binding an exported server action instead of relying on an inline server-action closure.
+- Fixed active-organization cache relation aliases used by backend-connected org flows.
 
 Current evidence:
 
-- The full authenticated org corridor passed once against a separated local app process before the later runner instability.
-- Subsequent Codex-managed Playwright runs detached or were terminated before producing a final pass/fail artifact.
-- One direct run exposed a dev-server `uncaughtException` around an aborted invite-accept redirect; the test was updated to avoid closing the reviewer context while the redirect was still settling.
-
-Required follow-up:
-
-- Rerun `npm run test:e2e:org:strict` from a stable local terminal or CI runner.
-- If it still fails, capture the final failure artifact and continue from the invite-accept/Next dev-server crash path.
+- Standalone `npm run test:e2e:org:strict`: PASS, `7` tests.
+- Consolidated launch validation strict org corridor E2E: PASS, `7` tests.
+- The final consolidated validator ended with verdict `GO`.
 
 ## Remaining Backend Risks
 
 - Default privileges still grant broad privileges for future `supabase_admin` objects in `public`. Existing public table/view blockers are fixed, but default privileges should be tightened in a follow-up migration so future objects do not reopen the same exposure.
 - Eleven public security-definer functions remain executable by `anon` and `authenticated`. They have configured search paths and appear to include intentional token/RLS helpers, but they should still receive a function-by-function launch review.
-- Strict authenticated org E2E remains unverified in this runner and is the main remaining launch-readiness evidence gap.
+- External public-web launch smoke was not run in the final validator because no `BASE_URL` was provided. This is a post-deploy URL-specific check, not a remaining backend public-surface blocker.
 
 ## Bottom Line
 
-The production Supabase public database surface is no longer in the earlier `NO_GO` state. The remaining blocker is not the public RLS/view exposure; it is final strict org E2E verification in a stable runner.
+The production Supabase public database surface is no longer in the earlier `NO_GO` state, and the backend-connected launch gates now have final `GO` evidence in the repo. The remaining items are follow-up hardening and post-deploy URL smoke, not current backend launch blockers.

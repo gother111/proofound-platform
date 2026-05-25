@@ -1,0 +1,98 @@
+{
+  "urls": [
+    "http://localhost:3000/signup/organization",
+    "http://localhost:3000/signup?type=organization"
+  ],
+  "capturedAt": "2026-05-18T13:59:42.000Z",
+  "browser": "Codex in-app Browser",
+  "states": [
+    {
+      "label": "mobile 390 initial",
+      "url": "http://localhost:3000/signup/organization",
+      "clientWidth": 390,
+      "scrollWidth": 390,
+      "horizontalOverflow": false,
+      "headings": ["Create your organization account"],
+      "visiblePrimaryAction": "Create organization account",
+      "visibleInputs": [
+        { "name": "email", "width": 316, "height": 44 },
+        { "name": "password", "width": 316, "height": 44 },
+        { "name": "confirmPassword", "width": 316, "height": 44 }
+      ],
+      "visibleControls": [
+        "Show password",
+        "Privacy Policy",
+        "Terms of Service",
+        "Create organization account",
+        "Google",
+        "LinkedIn",
+        "Sign in"
+      ],
+      "alertText": "",
+      "bodyText": "Create your organization account Start with a calm proof-first account. You can add details after sign-up. EMAIL ADDRESS PASSWORD CONFIRM PASSWORD I agree to the Privacy Policy and Terms of Service* Send me updates about new features and matching opportunities Create organization account OR CONTINUE WITH Google LinkedIn Already have an account? Sign in"
+    },
+    {
+      "label": "mobile 390 empty submit",
+      "url": "http://localhost:3000/signup/organization",
+      "clientWidth": 390,
+      "scrollWidth": 390,
+      "horizontalOverflow": false,
+      "headings": ["Create your organization account"],
+      "focusedElement": "Please enter your email address.",
+      "alertText": "Please enter your email address.",
+      "visiblePrimaryAction": "Create organization account",
+      "bodyText": "Create your organization account Start with a calm proof-first account. You can add details after sign-up. Please enter your email address. EMAIL ADDRESS PASSWORD CONFIRM PASSWORD I agree to the Privacy Policy and Terms of Service* Send me updates about new features and matching opportunities Create organization account"
+    },
+    {
+      "label": "mobile 390 success after valid submit",
+      "url": "http://localhost:3000/signup/organization",
+      "clientWidth": 390,
+      "scrollWidth": 390,
+      "horizontalOverflow": false,
+      "headings": ["Check your email"],
+      "visiblePrimaryAction": "Return to login",
+      "alertText": "",
+      "bodyText": "Check your email We've sent a verification link to org.browser.fixture@example.com Click the link in the email to verify your account and complete your registration. Return to login"
+    },
+    {
+      "label": "mobile 375 initial",
+      "url": "http://localhost:3000/signup/organization",
+      "clientWidth": 375,
+      "scrollWidth": 375,
+      "horizontalOverflow": false,
+      "headings": ["Create your organization account"],
+      "visiblePrimaryAction": "Create organization account",
+      "alertText": ""
+    },
+    {
+      "label": "desktop 1280 initial",
+      "url": "http://localhost:3000/signup/organization",
+      "clientWidth": 1280,
+      "scrollWidth": 1280,
+      "horizontalOverflow": false,
+      "headings": ["Create your organization account"],
+      "visiblePrimaryAction": "Create organization account",
+      "visibleInputs": [
+        { "name": "email", "width": 334, "height": 44 },
+        { "name": "password", "width": 334, "height": 44 },
+        { "name": "confirmPassword", "width": 334, "height": 44 }
+      ],
+      "alertText": ""
+    },
+    {
+      "label": "desktop signup type organization",
+      "url": "http://localhost:3000/signup/organization",
+      "requestedUrl": "http://localhost:3000/signup?type=organization",
+      "clientWidth": 1280,
+      "scrollWidth": 1280,
+      "horizontalOverflow": false,
+      "headings": ["Create your organization account"],
+      "visiblePrimaryAction": "Create organization account",
+      "alertText": ""
+    }
+  ],
+  "notes": [
+    "Browser keyboard entry was used for the valid mobile submit because the Browser virtual clipboard was unavailable.",
+    "The earlier matrix risk was stale: the current local mock route does not redirect to login during the verified organization signup flow."
+  ]
+}

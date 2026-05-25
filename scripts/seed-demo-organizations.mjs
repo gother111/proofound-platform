@@ -957,7 +957,7 @@ async function seedOrganizationVerification() {
   
   if (tableCheckError && tableCheckError.message.includes('does not exist')) {
     console.log(`   ⚠️  org_verification table does not exist yet. Run migrations first.`);
-    console.log(`   ℹ️  You can manually verify organizations later or run: npm run db:push`);
+    console.log(`   ℹ️  You can manually verify organizations later after npm run db:migrate.`);
     return;
   }
   
@@ -1518,4 +1518,3 @@ async function main() {
 
 // Run the script
 main();
-

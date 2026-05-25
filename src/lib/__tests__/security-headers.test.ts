@@ -26,9 +26,7 @@ function expectProductionScriptCsp(csp: string | null) {
   expect(scriptSrc.some((token) => /^'nonce-[A-Za-z0-9+/]+=*'$/.test(token))).toBe(true);
   expect(scriptSrc).not.toContain("'unsafe-inline'");
   expect(scriptSrc).not.toContain('https:');
-  expect(scriptSrc.filter((token) => token.startsWith('https://'))).toEqual([
-    'https://client.crisp.chat',
-  ]);
+  expect(scriptSrc.filter((token) => token.startsWith('https://'))).toEqual([]);
 }
 
 async function getMiddlewareResponse(url: string) {
@@ -81,16 +79,16 @@ describe('security headers middleware', () => {
     expectProductionScriptCsp(csp);
     expect(cspDirective(csp ?? '', 'default-src')).toBe("default-src 'self'");
     expect(cspDirective(csp ?? '', 'style-src')).toBe(
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://client.crisp.chat"
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com"
     );
     expect(cspDirective(csp ?? '', 'img-src')).toBe(
-      "img-src 'self' data: blob: https://project-ref.supabase.co https://*.supabase.co https://client.crisp.chat https://image.crisp.chat https://storage.crisp.chat https://images.unsplash.com"
+      "img-src 'self' data: blob: https://project-ref.supabase.co https://*.supabase.co https://images.unsplash.com"
     );
     expect(cspDirective(csp ?? '', 'font-src')).toBe(
       "font-src 'self' data: https://fonts.gstatic.com"
     );
     expect(cspDirective(csp ?? '', 'connect-src')).toBe(
-      "connect-src 'self' https://project-ref.supabase.co https://*.supabase.co wss://*.supabase.co https://client.crisp.chat https://image.crisp.chat https://storage.crisp.chat wss://client.relay.crisp.chat"
+      "connect-src 'self' https://project-ref.supabase.co https://*.supabase.co wss://*.supabase.co"
     );
     expect(csp).not.toContain('img-src https:');
     expect(csp).not.toContain('connect-src https:');

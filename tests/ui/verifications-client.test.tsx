@@ -137,13 +137,21 @@ describe('VerificationsClient', () => {
     expect(screen.getByText('Jordan Verifier')).toBeInTheDocument();
     expect(screen.queryByText('mentor@company.com')).not.toBeInTheDocument();
 
-    expect(screen.getByRole('tab', { name: /^Incoming/i })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /^Sent/i })).toBeInTheDocument();
+    const incomingTab = screen.getByRole('tab', { name: /^Incoming/i });
+    const sentTab = screen.getByRole('tab', { name: /^Sent/i });
+    expect(incomingTab).toBeInTheDocument();
+    expect(sentTab).toBeInTheDocument();
+    expect(incomingTab).toHaveClass('min-h-11');
+    expect(sentTab).toHaveClass('min-h-11');
+
+    expect(screen.getByRole('button', { name: /^All/i })).toHaveClass('min-h-11');
+    expect(screen.getByRole('button', { name: /^Newest$/i })).toHaveClass('min-h-11');
+    expect(screen.getByRole('button', { name: /^Scope$/i })).toHaveClass('min-h-11');
 
     expect(screen.getAllByText('Pending').length).toBeGreaterThan(0);
     expect(screen.getByText('Accepted')).toBeInTheDocument();
-    expect(screen.getByText('Declined')).toBeInTheDocument();
-    expect(screen.getByText('All')).toBeInTheDocument();
+    expect(screen.getAllByText('Declined').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('All').length).toBeGreaterThan(0);
   });
 
   it('filters verification state buckets and sorts the list by scope', async () => {
@@ -210,6 +218,58 @@ describe('VerificationsClient', () => {
     const rows = screen.getAllByTestId('verification-request-row');
     expect(rows[0]).toHaveTextContent('Alpha outcome proof');
     expect(rows[1]).toHaveTextContent('Beta corrected proof');
+  });
+
+  it('summarizes the next verification action before the filters', async () => {
+    const incomingRequests = [
+      makeRequest({
+        id: 'attention-failed',
+        subjectType: 'impact_story',
+        subjectId: 'impact-1',
+        verificationKind: 'impact_attestation',
+        requestKind: 'impact_attestation',
+        status: 'failed',
+        proofLabel: 'Outcome proof that needs attention',
+        createdAt: '2026-03-01T10:00:00.000Z',
+      }),
+      makeRequest({
+        id: 'pending-skill',
+        status: 'pending',
+        proofLabel: 'Pending TypeScript skill',
+        createdAt: '2026-03-02T10:00:00.000Z',
+      }),
+      makeRequest({
+        id: 'accepted-skill',
+        status: 'accepted',
+        proofLabel: 'Accepted platform skill',
+        createdAt: '2026-03-03T10:00:00.000Z',
+      }),
+    ];
+
+    render(
+      <VerificationsClient
+        incomingRequests={incomingRequests}
+        sentRequests={[]}
+        userEmail="me@proofound.io"
+      />
+    );
+    await settleAssistiveAiFlag();
+
+    const guidance = screen.getByRole('region', { name: /incoming verification guidance/i });
+    expect(within(guidance).getByText('1 request needs attention.')).toBeInTheDocument();
+    expect(
+      within(guidance).getByText(
+        'Start here for failed, disputed, contradicted, or soon-expiring confirmations.'
+      )
+    ).toBeInTheDocument();
+    expect(within(guidance).getByRole('button', { name: /^1 Attention$/i })).toHaveTextContent('1');
+    expect(within(guidance).getByRole('button', { name: /^1 Pending$/i })).toHaveTextContent('1');
+    expect(within(guidance).getByRole('button', { name: /^1 Active$/i })).toHaveTextContent('1');
+
+    fireEvent.click(within(guidance).getByRole('button', { name: /Show attention/i }));
+
+    expect(screen.getByText('Outcome proof that needs attention')).toBeInTheDocument();
+    expect(screen.queryByText('Pending TypeScript skill')).not.toBeInTheDocument();
   });
 
   it('renders incoming impact-story requests in read-only mode', async () => {
@@ -384,6 +444,51 @@ describe('VerificationsClient', () => {
     );
   });
 
+  it('keeps verification composer fallback generic when AI drafting is unavailable', async () => {
+    apiFetchMock.mockImplementation(async (url: string) => {
+      if (url === '/api/ai/verifications/compose') {
+        return {
+          ok: false,
+          json: async () => ({ fallbackAvailable: true }),
+        };
+      }
+
+      throw new Error(`Unexpected API call: ${url}`);
+    });
+
+    render(
+      <VerificationsClient
+        incomingRequests={[]}
+        sentRequests={[]}
+        userEmail="me@proofound.io"
+        composerProofPacks={[
+          {
+            proofPackId: '11111111-1111-4111-8111-111111111111',
+            claimId: '22222222-2222-4222-8222-222222222222',
+            title: 'Private client launch for Hidden Corp',
+            claimStatement: 'I worked with Hidden Corp executive Nina Secret.',
+            ownershipStatement: 'Private ownership details.',
+            outcomeSummary: 'Private outcome details.',
+            timeframe: '2026 Q1',
+            evidenceTitles: ['Nina Secret original file.pdf'],
+            primarySubjectType: 'skill',
+            primarySubjectId: '22222222-2222-4222-8222-222222222222',
+          },
+        ]}
+      />
+    );
+
+    fireEvent.click(await screen.findByRole('button', { name: /^Draft scoped request$/i }));
+
+    const dialog = screen.getByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: /^Draft scoped request$/i }));
+
+    const fallbackDraft = await screen.findByDisplayValue(/one scoped Proofound claim/i);
+    expect(fallbackDraft).toBeInTheDocument();
+    expect((fallbackDraft as HTMLTextAreaElement).value).not.toContain('Hidden Corp');
+    expect((fallbackDraft as HTMLTextAreaElement).value).not.toContain('Nina Secret');
+  });
+
   it('hides the scoped request composer when assistive AI UI is disabled', async () => {
     (global.fetch as any).mockResolvedValueOnce({
       ok: true,
@@ -499,7 +604,10 @@ describe('VerificationsClient', () => {
     fireEvent.click(sentTab);
     fireEvent.keyDown(sentTab, { key: 'Enter' });
     await waitFor(() => expect(screen.getByText('bundle@company.com')).toBeInTheDocument());
-    fireEvent.click(screen.getByRole('button', { name: 'Manage legacy bundle' }));
+    expect(screen.getByText('Proof Pack bundle request sent')).toBeInTheDocument();
+    expect(screen.queryByText(/legacy/i)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Manage bundle' }));
 
     expect(screen.getByTestId('bundle-dialog-open')).toHaveTextContent('bundle-request-1');
     expect(apiFetchMock).not.toHaveBeenCalled();

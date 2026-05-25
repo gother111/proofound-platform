@@ -19,6 +19,7 @@ import {
   issueCapabilityToken,
   revokeCapabilityTokenById,
 } from '@/lib/security/capability-tokens';
+import { log } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
 
@@ -90,7 +91,12 @@ export async function PATCH(
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
     }
 
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
     const parsed = updateCandidateInviteSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid invite action' }, { status: 400 });
@@ -197,12 +203,19 @@ export async function PATCH(
         },
       });
     } catch (error) {
-      console.error('Failed to resend candidate invite:', error);
+      log.warn('org_candidate_invites.resend_email_failed', {
+        orgId,
+        inviteId: invite.id,
+        recipientDomain: invite.inviteeEmail.split('@')[1] ?? null,
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
 
     return NextResponse.json({ success: true, status: CANDIDATE_INVITE_STATUS.PENDING });
   } catch (error) {
-    console.error('Failed to update candidate invite:', error);
-    return NextResponse.json({ error: 'Failed to update candidate invite' }, { status: 500 });
+    log.error('org_candidate_invites.update_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return NextResponse.json({ error: 'Failed to update submission invite' }, { status: 500 });
   }
 }

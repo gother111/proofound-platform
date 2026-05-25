@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import {
   CUSTOM_VERIFICATION_SELECTABLE_RELATIONSHIPS,
   relationshipDisplayLabel,
@@ -127,7 +128,7 @@ export function CustomVerificationRequestDialog({ open, onOpenChange, onCreated 
           }
         );
       } catch (error) {
-        console.error('Failed to load custom verification artifacts:', error);
+        dispatchClientErrorDiagnostic('verifications.custom_dialog.artifacts_load_failed', error);
         toast.error('Could not load unverified artifacts. Please try again.');
       } finally {
         if (active) {
@@ -259,7 +260,7 @@ export function CustomVerificationRequestDialog({ open, onOpenChange, onCreated 
       onOpenChange(false);
       onCreated?.();
     } catch (error) {
-      console.error('Failed to send custom verification request:', error);
+      dispatchClientErrorDiagnostic('verifications.custom_dialog.send_failed', error);
       toast.error('Failed to send custom verification request.');
     } finally {
       setSubmitting(false);

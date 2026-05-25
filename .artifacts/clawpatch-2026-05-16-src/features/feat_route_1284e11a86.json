@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "featureId": "feat_route_1284e11a86",
+  "title": "Route /api/admin/organizations/:orgId/verify",
+  "summary": "Web route implemented by app/api/admin/organizations/[orgId]/verify/route.ts.",
+  "kind": "route",
+  "source": "next-app-route",
+  "confidence": "high",
+  "entrypoints": [
+    {
+      "path": "app/api/admin/organizations/[orgId]/verify/route.ts",
+      "symbol": null,
+      "route": "/api/admin/organizations/:orgId/verify",
+      "command": null
+    }
+  ],
+  "ownedFiles": [
+    {
+      "path": "app/api/admin/organizations/[orgId]/verify/route.ts",
+      "reason": "entrypoint"
+    }
+  ],
+  "contextFiles": [],
+  "tests": [],
+  "tags": ["next", "web"],
+  "trustBoundaries": ["user-input", "network", "serialization"],
+  "status": "fixed",
+  "lock": null,
+  "findingIds": [
+    "fnd_sig-feat-route-1284e11a86-964c27_0e5a115ef6",
+    "fnd_sig-feat-route-1284e11a86-e35f98_2b2982acce"
+  ],
+  "patchAttemptIds": [],
+  "analysisHistory": [
+    {
+      "runId": "20260516T164325-52e1d0",
+      "kind": "review",
+      "summary": "2 finding(s)",
+      "provider": "codex",
+      "model": null,
+      "createdAt": "2026-05-16T16:53:23.666Z"
+    }
+  ],
+  "createdAt": "2026-05-16T16:02:40.128Z",
+  "updatedAt": "2026-05-16T17:18:25.365Z"
+}

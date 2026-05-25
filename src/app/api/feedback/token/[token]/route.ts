@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
 import { isFeatureEnabled } from '@/lib/feature-flags/server';
+import {
+  buildVisualFeedbackTokenResponse,
+  feedbackVisualFixturesEnabled,
+} from '@/lib/feedback/visual-fixtures';
 import { resolveFeedbackFollowUpState } from '@/lib/feedback/service';
 import {
   beginCapabilityTokenRedeemSession,
@@ -9,12 +13,19 @@ import {
   CAPABILITY_TOKEN_CLASSES,
   getCapabilityRedeemSessionCookieName,
 } from '@/lib/security/capability-tokens';
+import { log } from '@/lib/log';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
-  const admin = createAdminClient();
-
   try {
     const { token: tokenValue } = await params;
+    if (feedbackVisualFixturesEnabled()) {
+      const visualResponse = buildVisualFeedbackTokenResponse(tokenValue);
+      if (visualResponse) {
+        return NextResponse.json(visualResponse);
+      }
+    }
+
+    const admin = createAdminClient();
     const preview = await beginCapabilityTokenRedeemSession(tokenValue, {
       tokenClass: CAPABILITY_TOKEN_CLASSES.FEEDBACK_RESPONSE,
       actor: {
@@ -135,7 +146,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
 
     return response;
   } catch (error) {
-    console.error('Feedback token lookup failed', error);
+    log.error('feedback.token.lookup_failed', { error });
     return NextResponse.json({ error: 'Failed to load feedback form' }, { status: 500 });
   }
 }

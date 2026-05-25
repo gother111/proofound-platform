@@ -28,13 +28,11 @@ export const FeedbackRequest = ({
   interviewTime,
 }: FeedbackRequestProps) => {
   const isCandidate = direction === 'candidate_to_org';
-  const headline = isCandidate
-    ? 'Share your interview experience'
-    : 'Share feedback with the candidate';
+  const headline = isCandidate ? 'Share your interview experience' : 'Share workflow feedback';
 
   const preview = isCandidate
     ? 'Tell us how the interview went—your response is anonymous.'
-    : 'Provide structured feedback for the candidate—your name stays hidden.';
+    : 'Provide structured workflow feedback—your name stays hidden.';
 
   return (
     <Html>
@@ -75,7 +73,7 @@ export const FeedbackRequest = ({
               : 'This link expires in 7 days.'}
           </Text>
           <Text style={footer}>
-            Thank you for helping us keep interviews fair, clear, and respectful.
+            Thank you for helping us keep the review workflow fair, clear, and respectful.
           </Text>
         </Container>
       </Body>

@@ -21,7 +21,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           fetch-depth: 0
 
@@ -55,15 +55,15 @@ jobs:
           git checkout -b "$branch_name" origin/master
 
           python3 - <<'PY' > /tmp/release-shas.txt
-from os import environ
+          from os import environ
 
-raw = environ["COMMIT_SHAS"].replace("\n", ",")
-items = [item.strip() for item in raw.split(",") if item.strip()]
-if not items:
-    raise SystemExit("No commit SHAs were provided.")
-for item in items:
-    print(item)
-PY
+          raw = environ["COMMIT_SHAS"].replace("\n", ",")
+          items = [item.strip() for item in raw.split(",") if item.strip()]
+          if not items:
+              raise SystemExit("No commit SHAs were provided.")
+          for item in items:
+              print(item)
+          PY
 
           while IFS= read -r sha; do
             git rev-parse --verify "${sha}^{commit}" >/dev/null 2>&1 || {

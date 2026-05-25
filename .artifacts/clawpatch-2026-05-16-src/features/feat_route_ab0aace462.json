@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "featureId": "feat_route_ab0aace462",
+  "title": "Route /api/cron/decision-reminders",
+  "summary": "Web route implemented by app/api/cron/decision-reminders/route.ts.",
+  "kind": "route",
+  "source": "next-app-route",
+  "confidence": "high",
+  "entrypoints": [
+    {
+      "path": "app/api/cron/decision-reminders/route.ts",
+      "symbol": null,
+      "route": "/api/cron/decision-reminders",
+      "command": null
+    }
+  ],
+  "ownedFiles": [
+    {
+      "path": "app/api/cron/decision-reminders/route.ts",
+      "reason": "entrypoint"
+    }
+  ],
+  "contextFiles": [
+    {
+      "path": "app/api/cron/decision-reminders/__tests__/route.test.ts",
+      "reason": "nearby test"
+    }
+  ],
+  "tests": [
+    {
+      "path": "app/api/cron/decision-reminders/__tests__/route.test.ts",
+      "command": null
+    }
+  ],
+  "tags": ["next", "web"],
+  "trustBoundaries": ["user-input", "network", "serialization"],
+  "status": "pending",
+  "lock": null,
+  "findingIds": [],
+  "patchAttemptIds": [],
+  "analysisHistory": [],
+  "createdAt": "2026-05-16T16:02:40.128Z",
+  "updatedAt": "2026-05-16T16:02:40.128Z"
+}

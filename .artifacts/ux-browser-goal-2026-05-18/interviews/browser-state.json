@@ -1,0 +1,294 @@
+{
+  "mobile": {
+    "bodyText": "Skip to main content\nOverview\nProfile\nInbox\nMatching\nSettings\nU\nInterviews\n\nTrack the corridor from shortlist through interview, decision, and engagement verification.\n\nNordic Future Labs\n\nPrivacy-safe proof operations lead with a deliberately long assignment title\n\nInterview coordination is active with Nordic Future Labs.\n\nThe interview is scheduled. Keep the meeting details handy and prepare from the shared proof context.\n\nInterview coordination\nShortlisted\nIntro requested\nIntro accepted\nReveal requested\nReveal approved\nInterviews\nDecision\nEngagement recorded\nEngagement verified\n\nCURRENT NEXT ACTION\n\nPrepare for interview\n\nWednesday, May 20, 2026\n2:41 PM (30 min)\nGoogle Meet\nJoin Meeting\nAdd to Google Calendar\n.ics\nScheduled\n\nNorthstar Evidence Studio\n\nEvidence systems consultant\n\nThe decision is hire and engagement verification is waiting on your confirmation.\n\nThe hire decision is recorded. Confirm the engagement type so verification can finish.\n\nInterview coordination\nShortlisted\nIntro requested\nIntro accepted\nReveal requested\nReveal approved\nInterviews\nDecision\nEngagement recorded\nEngagement verified\n\nCURRENT NEXT ACTION\n\nConfirm engagement\n\nSaturday, May 16, 2026\n2:41 PM (45 min)\nManual\nCompleted\nDecision: Hire\nEngagement: Awaiting both confirmations\nSelect engagement type\nFull-time\nPart-time\nContract / consulting\nFractional / project\nConfirm Engagement",
+    "hasConfirm": true,
+    "hasGoogleMeet": true,
+    "hasInternalGoogleMeet": false,
+    "hasReviewMatching": false,
+    "overflow": {
+      "bodyScrollWidth": 390,
+      "clientWidth": 390,
+      "innerWidth": 390,
+      "scrollWidth": 390
+    },
+    "statusText": "Skip to main content\nOverview\nProfile\nInbox\nMatching\nSettings\nU\nInterviews\n\nTrac",
+    "visibleControls": [
+      {
+        "aria": "Profile",
+        "disabled": false,
+        "href": "/app/i/profile",
+        "rect": {
+          "h": 64,
+          "w": 73,
+          "x": 81,
+          "y": 780
+        },
+        "tag": "A",
+        "text": "Profile"
+      },
+      {
+        "aria": "Communications",
+        "disabled": false,
+        "href": "/app/i/communications",
+        "rect": {
+          "h": 64,
+          "w": 73,
+          "x": 158,
+          "y": 780
+        },
+        "tag": "A",
+        "text": "Inbox"
+      },
+      {
+        "aria": "Matching",
+        "disabled": false,
+        "href": "/app/i/matching",
+        "rect": {
+          "h": 64,
+          "w": 73,
+          "x": 236,
+          "y": 780
+        },
+        "tag": "A",
+        "text": "Matching"
+      },
+      {
+        "aria": "Settings",
+        "disabled": false,
+        "href": "/app/i/settings",
+        "rect": {
+          "h": 64,
+          "w": 73,
+          "x": 313,
+          "y": 780
+        },
+        "tag": "A",
+        "text": "Settings"
+      },
+      {
+        "aria": "Open profile menu",
+        "disabled": false,
+        "href": null,
+        "rect": {
+          "h": 44,
+          "w": 44,
+          "x": 330,
+          "y": 8
+        },
+        "tag": "BUTTON",
+        "text": "U"
+      },
+      {
+        "aria": null,
+        "disabled": false,
+        "href": "https://meet.google.com/visual-proofound",
+        "rect": {
+          "h": 21,
+          "w": 102,
+          "x": 158,
+          "y": 889
+        },
+        "tag": "A",
+        "text": "Join Meeting"
+      },
+      {
+        "aria": null,
+        "disabled": false,
+        "href": "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Proofound+interview&dates=20260520T124106Z%2F20260520T131106Z&details=Join+meeting%3A+https%3A%2F%2Fmeet.google.com%2Fvisual-proofound&location=https%3A%2F%2Fmeet.google.com%2Fvisual-proofound",
+        "rect": {
+          "h": 21,
+          "w": 174,
+          "x": 33,
+          "y": 930
+        },
+        "tag": "A",
+        "text": "Add to Google Calendar"
+      },
+      {
+        "aria": null,
+        "disabled": false,
+        "href": null,
+        "rect": {
+          "h": 28,
+          "w": 64,
+          "x": 223,
+          "y": 926
+        },
+        "tag": "BUTTON",
+        "text": ".ics"
+      },
+      {
+        "aria": "Engagement type",
+        "disabled": false,
+        "href": null,
+        "rect": {
+          "h": 40,
+          "w": 324,
+          "x": 33,
+          "y": 1821
+        },
+        "tag": "SELECT",
+        "text": "Select engagement typeFull-timePart-timeContract / consultingFractional / project"
+      },
+      {
+        "aria": null,
+        "disabled": false,
+        "href": null,
+        "rect": {
+          "h": 40,
+          "w": 324,
+          "x": 33,
+          "y": 1869
+        },
+        "tag": "BUTTON",
+        "text": "Confirm Engagement"
+      }
+    ],
+    "wide": []
+  },
+  "desktop": {
+    "bodyText": "Skip to main content\nOverview\nProfile\nCommunications\nMatching\nSettings\nProofound\nInterviews\nU\nInterviews\n\nTrack the corridor from shortlist through interview, decision, and engagement verification.\n\nNordic Future Labs\n\nPrivacy-safe proof operations lead with a deliberately long assignment title\n\nInterview coordination is active with Nordic Future Labs.\n\nThe interview is scheduled. Keep the meeting details handy and prepare from the shared proof context.\n\nInterview coordination\nShortlisted\nIntro requested\nIntro accepted\nReveal requested\nReveal approved\nInterviews\nDecision\nEngagement recorded\nEngagement verified\n\nCURRENT NEXT ACTION\n\nPrepare for interview\n\nWednesday, May 20, 2026\n2:41 PM (30 min)\nGoogle Meet\nJoin Meeting\nAdd to Google Calendar\n.ics\nScheduled\n\nNorthstar Evidence Studio\n\nEvidence systems consultant\n\nThe decision is hire and engagement verification is waiting on your confirmation.\n\nThe hire decision is recorded. Confirm the engagement type so verification can finish.\n\nInterview coordination\nShortlisted\nIntro requested\nIntro accepted\nReveal requested\nReveal approved\nInterviews\nDecision\nEngagement recorded\nEngagement verified\n\nCURRENT NEXT ACTION\n\nConfirm engagement\n\nSaturday, May 16, 2026\n2:41 PM (45 min)\nManual\nCompleted\nDecision: Hire\nEngagement: Awaiting both confirmations\nSelect engagement type\nFull-time\nPart-time\nContract / consulting\nFractional / project\nConfirm Engagement",
+    "hasConfirm": true,
+    "hasGoogleMeet": true,
+    "hasInternalGoogleMeet": false,
+    "overflow": {
+      "bodyScrollWidth": 1280,
+      "clientWidth": 1280,
+      "innerWidth": 1280,
+      "scrollWidth": 1280
+    },
+    "visibleControls": [
+      {
+        "aria": "Communications",
+        "disabled": false,
+        "href": "/app/i/communications",
+        "rect": {
+          "h": 48,
+          "w": 223,
+          "x": 8,
+          "y": 112
+        },
+        "tag": "A",
+        "text": "Communications"
+      },
+      {
+        "aria": "Matching",
+        "disabled": false,
+        "href": "/app/i/matching",
+        "rect": {
+          "h": 48,
+          "w": 223,
+          "x": 8,
+          "y": 162
+        },
+        "tag": "A",
+        "text": "Matching"
+      },
+      {
+        "aria": "Settings",
+        "disabled": false,
+        "href": "/app/i/settings",
+        "rect": {
+          "h": 48,
+          "w": 223,
+          "x": 8,
+          "y": 212
+        },
+        "tag": "A",
+        "text": "Settings"
+      },
+      {
+        "aria": "Collapse sidebar",
+        "disabled": false,
+        "href": null,
+        "rect": {
+          "h": 32,
+          "w": 223,
+          "x": 8,
+          "y": 860
+        },
+        "tag": "BUTTON",
+        "text": ""
+      },
+      {
+        "aria": "Open profile menu",
+        "disabled": false,
+        "href": null,
+        "rect": {
+          "h": 44,
+          "w": 44,
+          "x": 1220,
+          "y": 6
+        },
+        "tag": "BUTTON",
+        "text": "U"
+      },
+      {
+        "aria": null,
+        "disabled": false,
+        "href": "https://meet.google.com/visual-proofound",
+        "rect": {
+          "h": 21,
+          "w": 102,
+          "x": 462,
+          "y": 646
+        },
+        "tag": "A",
+        "text": "Join Meeting"
+      },
+      {
+        "aria": null,
+        "disabled": false,
+        "href": "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Proofound+interview&dates=20260520T124153Z%2F20260520T131153Z&details=Join+meeting%3A+https%3A%2F%2Fmeet.google.com%2Fvisual-proofound&location=https%3A%2F%2Fmeet.google.com%2Fvisual-proofound",
+        "rect": {
+          "h": 21,
+          "w": 174,
+          "x": 580,
+          "y": 646
+        },
+        "tag": "A",
+        "text": "Add to Google Calendar"
+      },
+      {
+        "aria": null,
+        "disabled": false,
+        "href": null,
+        "rect": {
+          "h": 36,
+          "w": 64,
+          "x": 770,
+          "y": 638
+        },
+        "tag": "BUTTON",
+        "text": ".ics"
+      },
+      {
+        "aria": "Engagement type",
+        "disabled": false,
+        "href": null,
+        "rect": {
+          "h": 40,
+          "w": 256,
+          "x": 927,
+          "y": 782
+        },
+        "tag": "SELECT",
+        "text": "Select engagement typeFull-timePart-timeContract / consultingFractional / project"
+      },
+      {
+        "aria": null,
+        "disabled": false,
+        "href": null,
+        "rect": {
+          "h": 36,
+          "w": 256,
+          "x": 927,
+          "y": 830
+        },
+        "tag": "BUTTON",
+        "text": "Confirm Engagement"
+      }
+    ],
+    "wide": []
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "route": "http://127.0.0.1:33180/app/i/settings",
+  "title": "Proofound - Focus on what matters",
+  "signals": {
+    "h1": "Settings",
+    "hasAccountTab": true,
+    "hasMain": true,
+    "hasNotificationAction": false,
+    "hasNotificationSettingsCopy": false,
+    "hasPrivacyData": true,
+    "hasRuntimeErrorText": false,
+    "note": "Toast live regions expose notification aria labels; this check scopes to actionable buttons/links.",
+    "overflowX": false,
+    "title": "Proofound - Focus on what matters",
+    "url": "http://127.0.0.1:33180/app/i/settings"
+  },
+  "warningsOrErrors": [],
+  "note": "Codex in-app Browser smoke proving settings/top bar do not expose archived notification controls."
+}

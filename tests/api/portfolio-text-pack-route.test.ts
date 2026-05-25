@@ -10,9 +10,16 @@ vi.mock('@/lib/portfolio/export-data', () => ({
   fetchTrustExportData: vi.fn(),
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+  },
+}));
+
 import { GET } from '@/app/api/portfolio/text-pack/route';
 import { fetchTrustExportData } from '@/lib/portfolio/export-data';
 import { createClient } from '@/lib/supabase/server';
+import { log } from '@/lib/log';
 
 function mockSupabaseUser(user: { id: string } | null) {
   (createClient as any).mockResolvedValue({
@@ -121,5 +128,20 @@ describe('/api/portfolio/text-pack', () => {
     expect(body).toContain('Proof-backed summary:');
     expect(body).toContain('Selected proof packs:');
     expect(body).toContain('Email: jane@example.com');
+  });
+
+  it('logs text-pack failures with structured diagnostics', async () => {
+    const routeError = new Error('export data failed');
+    mockSupabaseUser({ id: 'user-1' });
+    (fetchTrustExportData as any).mockRejectedValue(routeError);
+
+    const response = await GET();
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Failed to build text pack' });
+    expect(log.error).toHaveBeenCalledWith('portfolio.text_pack.failed', {
+      error: routeError,
+    });
   });
 });

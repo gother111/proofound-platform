@@ -1,0 +1,23 @@
+- generic [active] [ref=e1] [box=0,0,390,844]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer] [box=-1,-1,1,1]:
+    - /url: "#main-content"
+  - generic [ref=e5] [box=0,0,390,844]:
+    - navigation "Mobile primary navigation" [ref=e323] [box=0,771,390,73]:
+      - generic [ref=e324] [box=0,772,390,72]
+    - generic [ref=e42] [box=0,0,390,844]:
+      - banner [ref=e43] [box=0,0,390,61]
+      - main [ref=e53] [box=0,61,390,707]
+  - button "Open Next.js Dev Tools" [ref=e301] [cursor=pointer] [box=22,790,32,32]:
+    - img [ref=e302] [box=22,786,40,40]
+  - alert [ref=e305] [box=-1,843,1,1]
+  - region "Notifications alt+T" [box=0,844,390,0]
+  - region "Notifications (F8)" [box=0,844,390,0]:
+    - list [box=0,0,390,780]
+  - generic [ref=e308] [box=19,648,352,101]:
+    - generic [ref=e313] [box=19,648,352,57]:
+      - heading "Privacy choices" [level=3] [ref=e314] [box=19,648,352,21]
+      - paragraph [ref=e315] [box=19,673,352,32]: Essential cookies keep Proofound working. Optional analytics help us improve the product. We never sell your data.
+    - generic [ref=e320] [box=19,713,352,36]:
+      - button "Accept All" [ref=e321] [cursor=pointer] [box=19,713,150,36]
+      - button "Essential Only" [ref=e322] [cursor=pointer] [box=177,713,150,36]
+      - button "Close cookie preferences" [ref=e349] [cursor=pointer] [box=335,713,36,36]

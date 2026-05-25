@@ -65,8 +65,8 @@ describe('organization interviews page actions', () => {
       id: 'interview-1',
       scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       duration: 30,
-      platform: 'zoom',
-      meetingUrl: 'https://zoom.us/j/example',
+      platform: 'manual',
+      meetingUrl: 'https://example.com/manual-room',
       manualMeetingProvider: null,
       rescheduleCount: 0,
       status: 'scheduled',
@@ -86,6 +86,17 @@ describe('organization interviews page actions', () => {
     getInterviewCorridorItemsMock.mockReset();
   });
 
+  it('explains the loading corridor before interview actions arrive', () => {
+    getInterviewCorridorItemsMock.mockReturnValue(new Promise<never>(() => {}));
+
+    render(<OrganizationInterviewsPage />);
+
+    expect(
+      screen.getByRole('heading', { name: 'Interview workflow is loading' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Loading interview workflow...');
+  });
+
   it('shows edit/cancel actions and calls edit + cancel APIs with refresh', async () => {
     const upcomingInterviewAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
     const fetchCalls: Array<{ url: string; init?: RequestInit }> = [];
@@ -97,8 +108,8 @@ describe('organization interviews page actions', () => {
             id: 'interview-1',
             scheduledAt: upcomingInterviewAt,
             duration: 30,
-            platform: 'zoom',
-            meetingUrl: 'https://zoom.us/j/example',
+            platform: 'manual',
+            meetingUrl: 'https://example.com/manual-room',
             manualMeetingProvider: null,
             rescheduleCount: 0,
             status: 'scheduled',
@@ -160,6 +171,8 @@ describe('organization interviews page actions', () => {
       expect(screen.getByRole('button', { name: /edit interview/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /cancel interview/i })).toBeInTheDocument();
     });
+    expect(screen.getByText('Manual')).toBeInTheDocument();
+    expect(screen.queryByText('zoom')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /edit interview/i }));
     await waitFor(() => {
@@ -189,8 +202,8 @@ describe('organization interviews page actions', () => {
         id: 'interview-1',
         scheduledAt: upcomingInterviewAt,
         duration: 30,
-        platform: 'zoom',
-        meetingUrl: 'https://zoom.us/j/example',
+        platform: 'manual',
+        meetingUrl: 'https://example.com/manual-room',
         manualMeetingProvider: null,
         rescheduleCount: 0,
         status: 'completed',
@@ -239,7 +252,7 @@ describe('organization interviews page actions', () => {
         engagementVerification: {
           ...initialInterview.engagementVerification,
           status: 'pending_candidate_confirmation',
-          statusLabel: 'Awaiting candidate confirmation',
+          statusLabel: 'Awaiting proof-review participant confirmation',
           engagementType: 'full_time',
           organizationConfirmedAt: new Date().toISOString(),
         },
@@ -247,7 +260,7 @@ describe('organization interviews page actions', () => {
       engagementVerification: {
         ...initialInterview.engagementVerification,
         status: 'pending_candidate_confirmation',
-        statusLabel: 'Awaiting candidate confirmation',
+        statusLabel: 'Awaiting proof-review participant confirmation',
         engagementType: 'full_time',
         organizationConfirmedAt: new Date().toISOString(),
       },
@@ -321,7 +334,9 @@ describe('organization interviews page actions', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('Engagement: Awaiting candidate confirmation')).toBeInTheDocument();
+      expect(
+        screen.getByText('Engagement: Awaiting proof-review participant confirmation')
+      ).toBeInTheDocument();
     });
   });
 
@@ -335,8 +350,8 @@ describe('organization interviews page actions', () => {
             id: 'interview-1',
             scheduledAt: upcomingInterviewAt,
             duration: 30,
-            platform: 'zoom',
-            meetingUrl: 'https://zoom.us/j/example',
+            platform: 'manual',
+            meetingUrl: 'https://example.com/manual-room',
             manualMeetingProvider: null,
             rescheduleCount: 1,
             status: 'scheduled',

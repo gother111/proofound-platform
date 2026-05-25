@@ -35,7 +35,7 @@ export default function CookiesPage() {
             Effective date: {POLICY_EFFECTIVE_DATES.cookie} · Version: {POLICY_VERSIONS.cookie}
           </p>
           <p>
-            Necessary cookies support authentication, security, and core platform functionality.
+            Necessary cookies support authentication, security, and core account functionality.
             These cannot be switched off.
           </p>
           <p>
@@ -45,8 +45,8 @@ export default function CookiesPage() {
           <p>We do not use third-party advertising cookies and we do not sell personal data.</p>
           <p>
             Cookie retention and purpose are reviewed regularly to keep processing proportional to
-            platform needs. We avoid broad tracking scopes and only keep technical identifiers for
-            as long as necessary to deliver requested functionality, maintain security, or support
+            service needs. We avoid broad tracking scopes and only keep technical identifiers for as
+            long as necessary to deliver requested functionality, maintain security, or support
             consented analytics.
           </p>
           <p>
@@ -62,7 +62,7 @@ export default function CookiesPage() {
           <p>
             Where possible, we prefer privacy-preserving defaults and avoid category sprawl. This
             policy exists to make implementation choices legible, so users understand what each
-            cookie category does and how it impacts experience, measurement, and platform safety.
+            cookie category does and how it impacts experience, measurement, and account safety.
           </p>
         </div>
         <Link

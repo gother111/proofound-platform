@@ -78,7 +78,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const urls = [
     '/',
     '/login',
-    '/auth/login',
     '/signup',
     '/signup/individual',
     '/signup/organization',

@@ -1,7 +1,7 @@
 /**
  * Interviews Page - Organization
  *
- * View and manage the hiring corridor for your organization.
+ * View and manage the interview workflow for your organization.
  * Shows reveal approval, interview scheduling, decision, and engagement verification.
  */
 
@@ -28,6 +28,7 @@ import { HiringCorridorTimeline } from '@/components/interviews/HiringCorridorTi
 import { ScheduleInterviewButton } from '@/components/interviews/ScheduleInterviewButton';
 import { CardListSkeleton, PageIntroSkeleton } from '@/components/skeletons/CoreLoadingPrimitives';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -42,6 +43,7 @@ import {
   type InterviewCalendarPayload,
 } from '@/lib/interviews/calendar';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { internalValueLabel } from '@/lib/copy/labels';
 import type { HiringCorridorSnapshot } from '@/lib/hiring-corridor/snapshot';
 
@@ -111,7 +113,7 @@ export default function OrganizationInterviewsPage() {
       const data = await getInterviewCorridorItems({ perspective: 'organization' });
       setInterviews((data.items as Interview[]) || []);
     } catch (error) {
-      console.error('Failed to load interviews:', error);
+      dispatchClientErrorDiagnostic('interviews.organization.load_failed', error);
       setInterviews([]);
     } finally {
       setIsLoading(false);
@@ -151,12 +153,20 @@ export default function OrganizationInterviewsPage() {
     });
   };
 
+  const meetingPlatformLabel = (platform: string | null | undefined) => {
+    if (platform === 'zoom') return 'Manual link';
+    return internalValueLabel(platform);
+  };
+
   const toCalendarPayload = (interview: Interview): InterviewCalendarPayload => ({
     interviewId: interview.interview?.id ?? interview.id,
     scheduledAt: interview.interview?.scheduledAt ?? new Date().toISOString(),
     durationMinutes: interview.interview?.duration ?? 30,
     meetingUrl: interview.interview?.meetingUrl ?? 'pending',
-    platform: interview.interview?.platform ?? 'manual',
+    platform:
+      interview.interview?.platform === 'zoom'
+        ? 'manual'
+        : (interview.interview?.platform ?? 'manual'),
     title:
       interview.candidateDisplayName || interview.corridor.subjectLabel
         ? `Interview with ${interview.candidateDisplayName || interview.corridor.subjectLabel}`
@@ -273,7 +283,7 @@ export default function OrganizationInterviewsPage() {
       return;
     }
 
-    if (!confirm('Mark this interview as completed? This will unlock the decision step.')) {
+    if (!confirm('Mark this interview as completed? This will make the decision step available.')) {
       return;
     }
 
@@ -397,11 +407,11 @@ export default function OrganizationInterviewsPage() {
 
     return (
       <span
-        className="rounded-full px-2 py-1 text-xs font-medium"
-        style={{
-          backgroundColor: decisionState === 'hire' ? '#E8F5E9' : '#F1F5F9',
-          color: decisionState === 'hire' ? '#2E7D32' : '#334155',
-        }}
+        className={
+          decisionState === 'hire'
+            ? 'rounded-full bg-[#dff0d9] px-2 py-1 text-xs font-medium text-proofound-forest'
+            : 'rounded-full bg-proofound-stone/35 px-2 py-1 text-xs font-medium text-muted-foreground'
+        }
       >
         Decision: {internalValueLabel(decisionState)}
       </span>
@@ -419,11 +429,11 @@ export default function OrganizationInterviewsPage() {
 
     return (
       <span
-        className="rounded-full px-2 py-1 text-xs font-medium"
-        style={{
-          backgroundColor: isVerified ? '#E8F5E9' : '#FEF3C7',
-          color: isVerified ? '#2E7D32' : '#92400E',
-        }}
+        className={
+          isVerified
+            ? 'rounded-full bg-[#dff0d9] px-2 py-1 text-xs font-medium text-proofound-forest'
+            : 'rounded-full bg-[#fff1d6] px-2 py-1 text-xs font-medium text-[#8a5b00]'
+        }
       >
         Engagement: {verification.statusLabel}
       </span>
@@ -459,6 +469,21 @@ export default function OrganizationInterviewsPage() {
     return (
       <AppSurface>
         <div className="mx-auto max-w-4xl space-y-6">
+          <section className="rounded-2xl border border-proofound-stone bg-white/85 p-5 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              Interviews
+            </p>
+            <h1 className="mt-2 font-display text-xl font-semibold text-foreground">
+              Interview workflow is loading
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+              We are preparing scheduling, decision, feedback, and engagement verification steps for
+              this organization workspace.
+            </p>
+            <p className="mt-3 text-sm text-muted-foreground" role="status">
+              Loading interview workflow...
+            </p>
+          </section>
           <PageIntroSkeleton showAction={false} />
           <CardListSkeleton count={3} />
         </div>
@@ -469,27 +494,44 @@ export default function OrganizationInterviewsPage() {
   return (
     <AppSurface>
       <div className="mx-auto max-w-4xl">
-        <div className="mb-8">
-          <h1 className="mb-2 text-2xl font-semibold" style={{ color: '#2D3330' }}>
-            Interviews
-          </h1>
-          <p className="text-sm" style={{ color: '#6B6760' }}>
-            Track the full hiring corridor, from shortlist through decision and engagement
-            verification
-          </p>
-        </div>
+        <header className="mb-8 overflow-hidden rounded-lg border border-proofound-stone/70 bg-white shadow-[0_18px_50px_rgba(45,51,48,0.06)]">
+          <div className="flex items-center gap-2 border-b border-proofound-stone/60 bg-[#f3f6ef] px-5 py-3">
+            <Badge
+              variant="secondary"
+              className="bg-white hover:bg-white text-proofound-forest border-proofound-stone"
+            >
+              Interview workflow
+            </Badge>
+          </div>
+          <div className="flex flex-col gap-6 px-5 py-6 sm:flex-row sm:items-start sm:justify-between sm:px-6">
+            <div className="flex min-w-0 flex-1 gap-4 sm:gap-5">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[#dfead5] text-proofound-forest shadow-sm ring-1 ring-black/5 sm:h-14 sm:w-14">
+                <Calendar className="h-7 w-7" />
+              </div>
+              <div className="min-w-0">
+                <h1 className="mb-2 font-display text-2xl font-medium leading-tight text-proofound-charcoal md:text-3xl">
+                  Interviews
+                </h1>
+                <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+                  Track the staged workflow from shortlist through decision and engagement
+                  verification.
+                </p>
+              </div>
+            </div>
+          </div>
+        </header>
 
         {interviews.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white px-4 py-16 text-center">
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-japandi-bg">
-              <Calendar className="h-8 w-8" style={{ color: '#1C4D3A' }} />
+          <div className="flex flex-col items-center justify-center rounded-lg border border-proofound-stone/70 bg-white px-4 py-16 text-center shadow-sm">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#eef3e8] text-proofound-forest">
+              <Calendar className="h-8 w-8" />
             </div>
-            <h2 className="mb-2 text-xl font-medium" style={{ color: '#2D3330' }}>
-              No Active Hiring Corridor Yet
+            <h2 className="mb-2 text-xl font-medium text-proofound-charcoal">
+              No active interview workflow yet
             </h2>
             <p className="mb-6 max-w-md text-sm text-muted-foreground">
-              Once you shortlist a candidate, this page will show each corridor stage, the privacy
-              status, and the next legal action.
+              Once an introduction is approved, this page will show each workflow stage, the privacy
+              status, and the next action.
             </p>
           </div>
         ) : (
@@ -505,27 +547,27 @@ export default function OrganizationInterviewsPage() {
               return (
                 <div
                   key={interview.id}
-                  className="rounded-lg border border-gray-200 bg-white p-6 transition-colors hover:border-gray-300"
+                  className="rounded-lg border border-proofound-stone/70 bg-white p-4 transition-colors hover:border-proofound-stone sm:p-6 shadow-sm"
                 >
-                  <div className="flex items-start justify-between gap-6">
-                    <div className="flex-1 space-y-4">
+                  <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="min-w-0 flex-1 space-y-4">
                       <div className="space-y-2">
                         <div className="flex flex-wrap items-center gap-2">
                           {interview.candidateDisplayName ? (
                             <>
-                              <User className="h-4 w-4" style={{ color: '#1C4D3A' }} />
-                              <p className="text-base font-semibold" style={{ color: '#2D3330' }}>
+                              <User className="h-4 w-4 text-proofound-forest" />
+                              <p className="text-base font-semibold text-proofound-charcoal">
                                 {interview.candidateDisplayName}
                               </p>
                             </>
                           ) : (
-                            <p className="text-base font-semibold" style={{ color: '#2D3330' }}>
+                            <p className="text-base font-semibold text-proofound-charcoal">
                               {interview.corridor.subjectLabel}
                             </p>
                           )}
                         </div>
                         {interview.assignmentTitle ? (
-                          <p className="text-sm" style={{ color: '#6B6760' }}>
+                          <p className="text-sm text-muted-foreground">
                             {interview.assignmentTitle}
                           </p>
                         ) : null}
@@ -536,27 +578,27 @@ export default function OrganizationInterviewsPage() {
                       {interview.interview?.scheduledAt ? (
                         <div className="space-y-3">
                           <div className="flex flex-wrap items-center gap-4">
-                            <div className="flex items-center gap-2">
-                              <Calendar className="h-4 w-4" style={{ color: '#1C4D3A' }} />
-                              <span className="font-medium" style={{ color: '#2D3330' }}>
+                            <div className="flex items-center gap-2 text-proofound-forest">
+                              <Calendar className="h-4 w-4" />
+                              <span className="font-medium text-proofound-charcoal">
                                 {formatDate(interview.interview.scheduledAt)}
                               </span>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Clock className="h-4 w-4" style={{ color: '#6B6760' }} />
-                              <span className="text-sm" style={{ color: '#6B6760' }}>
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Clock className="h-4 w-4" />
+                              <span className="text-sm">
                                 {formatTime(interview.interview.scheduledAt)} (
                                 {interview.interview.duration} min)
                               </span>
                             </div>
                           </div>
 
-                          <div className="flex flex-wrap items-center gap-4">
+                          <div className="flex flex-wrap items-center gap-4 text-muted-foreground">
                             {interview.interview.platform ? (
                               <div className="flex items-center gap-2">
-                                <Video className="h-4 w-4" style={{ color: '#6B6760' }} />
-                                <span className="text-sm capitalize" style={{ color: '#6B6760' }}>
-                                  {interview.interview.platform}
+                                <Video className="h-4 w-4" />
+                                <span className="text-sm capitalize">
+                                  {meetingPlatformLabel(interview.interview.platform)}
                                 </span>
                               </div>
                             ) : null}
@@ -568,8 +610,7 @@ export default function OrganizationInterviewsPage() {
                                   href={interview.interview.meetingUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="flex items-center gap-1 text-sm hover:underline"
-                                  style={{ color: '#1C4D3A' }}
+                                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-proofound-stone/80 bg-white px-3 text-sm font-medium text-proofound-forest hover:bg-proofound-parchment/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
                                 >
                                   Join Meeting
                                   <ExternalLink className="h-3 w-3" />
@@ -578,16 +619,15 @@ export default function OrganizationInterviewsPage() {
                                   href={buildGoogleCalendarUrl(toCalendarPayload(interview))}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="flex items-center gap-1 text-sm hover:underline"
-                                  style={{ color: '#1C4D3A' }}
+                                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-proofound-stone/80 bg-white px-3 text-sm font-medium text-proofound-forest hover:bg-proofound-parchment/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
                                 >
-                                  Add to Google Calendar
+                                  Add to calendar
                                   <CalendarPlus className="h-3 w-3" />
                                 </a>
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="h-7 px-2 text-xs"
+                                  className="min-h-10 px-3 text-xs"
                                   onClick={() => downloadInterviewIcs(toCalendarPayload(interview))}
                                 >
                                   <Download className="mr-1 h-3 w-3" />
@@ -602,21 +642,13 @@ export default function OrganizationInterviewsPage() {
                       <div className="flex flex-wrap gap-2">
                         {interview.interview?.status ? (
                           <span
-                            className="rounded-full px-2 py-1 text-xs font-medium"
-                            style={{
-                              backgroundColor:
-                                interview.interview.status === 'scheduled'
-                                  ? '#E8F5E9'
-                                  : interview.interview.status === 'completed'
-                                    ? '#E3F2FD'
-                                    : '#FFF3E0',
-                              color:
-                                interview.interview.status === 'scheduled'
-                                  ? '#2E7D32'
-                                  : interview.interview.status === 'completed'
-                                    ? '#1565C0'
-                                    : '#E65100',
-                            }}
+                            className={
+                              interview.interview.status === 'scheduled'
+                                ? 'rounded-full bg-[#dff0d9] px-2 py-1 text-xs font-medium text-proofound-forest'
+                                : interview.interview.status === 'completed'
+                                  ? 'rounded-full bg-[#dcecf8] px-2 py-1 text-xs font-medium text-[#28628a]'
+                                  : 'rounded-full bg-[#fff1df] px-2 py-1 text-xs font-medium text-[#8a4d1f]'
+                            }
                           >
                             {internalValueLabel(interview.interview.status)}
                           </span>
@@ -624,13 +656,7 @@ export default function OrganizationInterviewsPage() {
                         {getDecisionBadge(interview.decisionState)}
                         {getEngagementBadge(interview)}
                         {(interview.interview?.rescheduleCount ?? 0) > 0 ? (
-                          <span
-                            className="rounded-full px-2 py-1 text-xs font-medium"
-                            style={{
-                              backgroundColor: '#FEF3C7',
-                              color: '#92400E',
-                            }}
-                          >
+                          <span className="rounded-full bg-[#fff1d6] px-2 py-1 text-xs font-medium text-[#8a5b00]">
                             Rescheduled {interview.interview?.rescheduleCount} time
                             {(interview.interview?.rescheduleCount ?? 0) === 1 ? '' : 's'}
                           </span>
@@ -638,7 +664,7 @@ export default function OrganizationInterviewsPage() {
                       </div>
                     </div>
 
-                    <div className="flex min-w-[210px] flex-col gap-2">
+                    <div className="flex w-full flex-col gap-2 lg:w-[220px] lg:shrink-0">
                       {canScheduleInterview(interview) && interview.introAcceptedAt ? (
                         <ScheduleInterviewButton
                           matchId={interview.matchId}
@@ -659,7 +685,7 @@ export default function OrganizationInterviewsPage() {
                             size="sm"
                             onClick={() => openEditDialog(interview)}
                             disabled={!canEditInterview(interview)}
-                            className="flex items-center gap-2"
+                            className="flex min-h-10 w-full items-center justify-center gap-2"
                           >
                             <Pencil className="h-4 w-4" />
                             {(interview.interview?.rescheduleCount ?? 0) > 0
@@ -671,7 +697,7 @@ export default function OrganizationInterviewsPage() {
                             size="sm"
                             onClick={() => handleCancelInterview(interview)}
                             disabled={isCancellingInterviewId === interview.interview?.id}
-                            className="flex items-center gap-2 border-[#E0C9C1] text-[#A03A2A]"
+                            className="flex min-h-10 w-full items-center justify-center gap-2 border-[#E0C9C1] text-[#A03A2A]"
                           >
                             <XCircle className="h-4 w-4" />
                             {isCancellingInterviewId === interview.interview?.id
@@ -688,8 +714,7 @@ export default function OrganizationInterviewsPage() {
                             size="sm"
                             onClick={() => handleCompleteInterview(interview)}
                             disabled={isCompletingInterviewId === interview.interview?.id}
-                            className="flex items-center gap-2"
-                            style={{ backgroundColor: '#1C4D3A' }}
+                            className="flex min-h-10 w-full items-center justify-center gap-2 bg-proofound-forest text-white hover:bg-proofound-forest/90"
                           >
                             <FileCheck className="h-4 w-4" />
                             {isCompletingInterviewId === interview.interview?.id
@@ -701,7 +726,7 @@ export default function OrganizationInterviewsPage() {
                             size="sm"
                             onClick={() => handleMarkNoShow(interview)}
                             disabled={isMarkingNoShowInterviewId === interview.interview?.id}
-                            className="flex items-center gap-2"
+                            className="flex min-h-10 w-full items-center justify-center gap-2"
                           >
                             <XCircle className="h-4 w-4" />
                             {isMarkingNoShowInterviewId === interview.interview?.id
@@ -716,8 +741,7 @@ export default function OrganizationInterviewsPage() {
                           variant="default"
                           size="sm"
                           onClick={() => handleOpenDecisionDialog(interview)}
-                          className="flex items-center gap-2"
-                          style={{ backgroundColor: '#1C4D3A' }}
+                          className="flex min-h-10 w-full items-center justify-center gap-2 bg-proofound-forest text-white hover:bg-proofound-forest/90"
                         >
                           <FileCheck className="h-4 w-4" />
                           Record Decision
@@ -735,7 +759,7 @@ export default function OrganizationInterviewsPage() {
                                 [verification.id]: event.target.value,
                               }))
                             }
-                            className="h-9 rounded-md border border-gray-300 px-3 text-sm"
+                            className="h-10 w-full rounded-md border border-gray-300 px-3 text-sm"
                           >
                             <option value="">Select engagement type</option>
                             <option value="full_time">Full-time</option>
@@ -748,7 +772,7 @@ export default function OrganizationInterviewsPage() {
                             size="sm"
                             onClick={() => handleConfirmEngagement(interview)}
                             disabled={isConfirmingEngagementId === verification.id}
-                            className="flex items-center gap-2"
+                            className="flex min-h-10 w-full items-center justify-center gap-2"
                           >
                             <FileCheck className="h-4 w-4" />
                             {isConfirmingEngagementId === verification.id
@@ -773,7 +797,7 @@ export default function OrganizationInterviewsPage() {
             <DialogHeader>
               <DialogTitle>Edit Interview</DialogTitle>
               <DialogDescription>
-                Update the interview time. Changes will be sent to the candidate via messaging.
+                Update the interview time. Changes will be sent through workflow messaging.
               </DialogDescription>
             </DialogHeader>
 
@@ -799,7 +823,7 @@ export default function OrganizationInterviewsPage() {
                   type="date"
                   value={editDate}
                   onChange={(event) => setEditDate(event.target.value)}
-                  className="h-10 w-full rounded-md border border-gray-300 px-3 text-sm"
+                  className="h-10 w-full rounded-md border border-proofound-stone/70 px-3 text-sm"
                 />
               </div>
 
@@ -815,7 +839,7 @@ export default function OrganizationInterviewsPage() {
                   type="time"
                   value={editTime}
                   onChange={(event) => setEditTime(event.target.value)}
-                  className="h-10 w-full rounded-md border border-gray-300 px-3 text-sm"
+                  className="h-10 w-full rounded-md border border-proofound-stone/70 px-3 text-sm"
                 />
               </div>
 
@@ -831,7 +855,7 @@ export default function OrganizationInterviewsPage() {
                   value={editReason}
                   onChange={(event) => setEditReason(event.target.value)}
                   rows={3}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                  className="w-full rounded-md border border-proofound-stone/70 px-3 py-2 text-sm"
                   placeholder="Add context for the update..."
                 />
               </div>

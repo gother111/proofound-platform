@@ -296,6 +296,27 @@ describe('POST /api/interviews/schedule', () => {
     expect(JSON.stringify(payload.details)).toContain('manualMeetingProvider');
   });
 
+  it('returns 400 for malformed JSON before match lookup or insert work', async () => {
+    const { supabase } = createSupabaseMock({
+      interviewsForMatch: [{ id: 'interview-cancelled', status: 'cancelled' }],
+    });
+    vi.mocked(createClient).mockResolvedValue(supabase);
+
+    const request = new NextRequest('http://localhost/api/interviews/schedule', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: '{"matchId":',
+    });
+
+    const response = await POST(request);
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload).toEqual({ error: 'Invalid JSON body' });
+    expect(db.execute).not.toHaveBeenCalled();
+    expect(createGoogleMeet).not.toHaveBeenCalled();
+  });
+
   it('returns reconnect-required payload and auto-disconnects when refresh fails with invalid_grant', async () => {
     vi.mocked(refreshGoogleToken).mockRejectedValue({
       message: 'invalid_grant',

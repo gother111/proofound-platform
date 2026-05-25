@@ -38,12 +38,12 @@ No dedicated landing Playwright suite was rerun in this hardening pass, so this 
 
 ## Current Homepage Summary
 
-The current homepage is a proof-first hiring-corridor landing page, not the broader marketing site described in the older reference. The page is organized around the narrow launch wedge:
+The current homepage is a proof-first assignment-review landing page, not the broader marketing site described in the older reference. The page is organized around the narrow launch wedge:
 
 1. hero
 2. translation band
 3. day-one individual surfaces
-4. hiring teams section
+4. review teams section
 5. three-step corridor
 6. proof object section
 7. privacy-safe review section
@@ -95,7 +95,7 @@ The landing still uses `Lenis` smooth scrolling unless reduced motion is enabled
 Current homepage metadata in `src/app/page.tsx`:
 
 - title: `Proofound | Hire through proof, not profile theater`
-- description centers on proof-backed, blind-by-default candidate review
+- description centers on proof-backed, blind-by-default submission review
 - Open Graph and Twitter copy both describe clear assignments, anonymized proof-backed review, and consented reveal
 
 ## Current Implementation Notes

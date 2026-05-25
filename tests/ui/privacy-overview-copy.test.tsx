@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PrivacyOverview } from '@/components/settings/PrivacyOverview';
@@ -14,13 +14,15 @@ vi.mock('@/components/privacy/VisibilitySettingsModal', () => ({
   VisibilitySettingsModal: () => null,
 }));
 
-vi.mock('@/components/settings/EnhancedDataImportDialog', () => ({
-  EnhancedDataImportDialog: () => null,
-}));
-
 describe('PrivacyOverview copy', () => {
+  const scrollIntoViewMock = vi.fn();
+  const focusMock = vi.fn();
+
   beforeEach(() => {
     vi.clearAllMocks();
+
+    Element.prototype.scrollIntoView = scrollIntoViewMock;
+    HTMLElement.prototype.focus = focusMock;
 
     (global as any).fetch = vi.fn(async (url: string) => {
       if (url === '/api/feature-flags') {
@@ -54,9 +56,66 @@ describe('PrivacyOverview copy', () => {
     expect(screen.getAllByText('Sensitive').length).toBeGreaterThan(0);
     expect(screen.getByText('Operational')).toBeInTheDocument();
     expect(screen.queryByText('Operational (Pseudonymized)')).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/Create your profile and support assignment-review matching/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Help match you with proof-led assignment reviews/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText('Trusted review context')).toBeInTheDocument();
+    expect(screen.getByText('Assignment review')).toBeInTheDocument();
+    expect(screen.getByText(/what stays private until assignment review/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Available only inside assignment-review surfaces/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Provide context for Proof Packs and assignment-specific review/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Matches, proof submissions, conversations/i)).toBeInTheDocument();
+    expect(screen.getByText(/Connect you with assignment-review workflows/i)).toBeInTheDocument();
+    expect(screen.queryByText('Connections')).not.toBeInTheDocument();
+    expect(screen.queryByText('After match')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Visible to matched organizations/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/sharing your profile/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Showcase your work and impact/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/relevant opportunities/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/match you with opportunities/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Connect you with opportunities/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Matches, applications, conversations/i)).not.toBeInTheDocument();
 
     expect(screen.queryByText(/Tier 1/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Tier 2/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Tier 3/i)).not.toBeInTheDocument();
+  });
+
+  it('uses existing full-page privacy sections instead of opening duplicate drill-downs', () => {
+    const target = document.createElement('section');
+    target.id = 'privacy-activity';
+    document.body.appendChild(target);
+
+    render(<PrivacyOverview userId="user-1" fullPageNavigation />);
+
+    fireEvent.click(screen.getAllByRole('button', { name: /view account history/i })[0]);
+
+    expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+    expect(focusMock).toHaveBeenCalledWith({ preventScroll: true });
+    expect(screen.queryByText('← Back to Privacy Overview')).not.toBeInTheDocument();
+
+    target.remove();
+  });
+
+  it('uses the read-only data inventory for inline data review', async () => {
+    render(<PrivacyOverview userId="user-1" />);
+
+    expect(
+      screen.getByText(/Review stored data categories and export your data/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /import data/i })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /view your data/i }));
+
+    expect(await screen.findByText('Your data')).toBeInTheDocument();
+    expect(global.fetch).toHaveBeenCalledWith('/api/user/data-inventory');
+    expect(global.fetch).not.toHaveBeenCalledWith('/api/user/export');
   });
 });

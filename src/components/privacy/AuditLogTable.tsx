@@ -24,6 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, ChevronRight, Activity } from 'lucide-react';
 import { format } from 'date-fns';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { internalValueLabel, isMachineIdentifier } from '@/lib/copy/labels';
 
 interface AuditLogEntry {
@@ -38,7 +39,11 @@ interface AuditLogEntry {
   metadata?: Record<string, any>;
 }
 
-export function AuditLogTable() {
+interface AuditLogTableProps {
+  title?: string;
+}
+
+export function AuditLogTable({ title = 'Account history' }: AuditLogTableProps) {
   const [logs, setLogs] = useState<AuditLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -62,7 +67,7 @@ export function AuditLogTable() {
       setLogs(data.events || []);
       setHasMore(data.hasMore || false);
     } catch (error) {
-      console.error('Failed to fetch account history:', error);
+      dispatchClientErrorDiagnostic('privacy.audit_log.load_failed', error);
     } finally {
       setLoading(false);
     }
@@ -114,7 +119,7 @@ export function AuditLogTable() {
     if (typeof value === 'number') return String(value);
     if (typeof value === 'string') {
       if (isMachineIdentifier(value)) return 'Protected reference';
-      return /[_-]/.test(value) ? internalValueLabel(value) : value;
+      return internalValueLabel(value);
     }
     if (Array.isArray(value)) return `${value.length} item${value.length === 1 ? '' : 's'}`;
     return 'Additional details';
@@ -127,6 +132,33 @@ export function AuditLogTable() {
     } catch {
       return timestamp;
     }
+  };
+
+  const renderMetadataDetails = (log: AuditLogEntry) => {
+    if (!log.metadata || Object.keys(log.metadata).length === 0) {
+      return null;
+    }
+
+    return (
+      <details className="mt-2">
+        <summary
+          className="cursor-pointer rounded-sm text-xs text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+          tabIndex={0}
+        >
+          More information
+        </summary>
+        <dl className="mt-2 grid gap-1 rounded bg-muted p-2 text-xs">
+          {Object.entries(log.metadata)
+            .slice(0, 6)
+            .map(([key, value]) => (
+              <div key={key} className="flex justify-between gap-3">
+                <dt className="text-muted-foreground">{internalValueLabel(key)}</dt>
+                <dd className="text-right">{readableMetadataValue(value)}</dd>
+              </div>
+            ))}
+        </dl>
+      </details>
+    );
   };
 
   if (loading && logs.length === 0) {
@@ -144,7 +176,7 @@ export function AuditLogTable() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Activity className="h-5 w-5" />
-          Activity log
+          {title}
         </CardTitle>
         <CardDescription>
           Your recent account activity. Access details are protected for privacy.
@@ -155,7 +187,34 @@ export function AuditLogTable() {
           <p className="text-center text-muted-foreground py-8">No activity recorded yet</p>
         ) : (
           <>
-            <div className="rounded-md border">
+            <div className="space-y-3 md:hidden">
+              {logs.map((log) => {
+                const eventType = normalizeEventType(log);
+                return (
+                  <article key={log.id} className="rounded-xl border bg-white p-4">
+                    <div className="flex flex-col gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge className={getEventBadgeColor(eventType)} variant="secondary">
+                          {formatEventType(eventType)}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {formatTimestamp(log.timestamp)}
+                        </span>
+                      </div>
+                      <p className="text-sm font-medium text-foreground">
+                        {normalizeEventDescription(log)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Access detail: {log.ipHash ? 'Protected' : 'Not recorded'}
+                      </p>
+                      {renderMetadataDetails(log)}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+
+            <div className="hidden overflow-x-auto rounded-md border md:block">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -180,25 +239,7 @@ export function AuditLogTable() {
                         </TableCell>
                         <TableCell className="max-w-md">
                           <span className="text-sm">{normalizeEventDescription(log)}</span>
-                          {log.metadata && Object.keys(log.metadata).length > 0 && (
-                            <details className="mt-1">
-                              <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">
-                                More information
-                              </summary>
-                              <dl className="mt-2 grid gap-1 rounded bg-muted p-2 text-xs">
-                                {Object.entries(log.metadata)
-                                  .slice(0, 6)
-                                  .map(([key, value]) => (
-                                    <div key={key} className="flex justify-between gap-3">
-                                      <dt className="text-muted-foreground">
-                                        {internalValueLabel(key)}
-                                      </dt>
-                                      <dd className="text-right">{readableMetadataValue(value)}</dd>
-                                    </div>
-                                  ))}
-                              </dl>
-                            </details>
-                          )}
+                          {renderMetadataDetails(log)}
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">
                           {log.ipHash ? 'Protected' : 'Not recorded'}

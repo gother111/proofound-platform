@@ -1,0 +1,19 @@
+> proofound@0.1.0 test
+> node ./scripts/run-vitest-with-timeout.mjs tests/api/launch-surface-inventory.test.ts tests/api/launch-page-inventory.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+ ✓ tests/api/launch-surface-inventory.test.ts  (4 tests) 34ms
+ ✓ tests/api/launch-page-inventory.test.ts  (6 tests) 76ms
+
+ Test Files  2 passed (2)
+      Tests  10 passed (10)
+   Start at  00:07:40
+   Duration  1.16s (transform 48ms, setup 384ms, collect 54ms, tests 110ms, environment 752ms, prepare 119ms)

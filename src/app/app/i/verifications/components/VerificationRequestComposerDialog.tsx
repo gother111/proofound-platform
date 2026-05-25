@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import type { VerificationComposerProofPackOption } from '@/lib/verification/request-feed';
 import {
   CUSTOM_VERIFICATION_SELECTABLE_RELATIONSHIPS,
@@ -76,7 +77,8 @@ function buildManualComposerDraft(params: {
   relationship: string;
   scope: VerificationScope;
 }): ComposerDraft {
-  const claim = params.proofPack.claimStatement || params.proofPack.title || 'one scoped claim';
+  void params.proofPack;
+  const claim = 'one scoped Proofound claim';
   const relationship = params.relationship || 'someone familiar with the work';
 
   return {
@@ -93,7 +95,7 @@ function buildManualComposerDraft(params: {
       'Which parts can you confirm from direct knowledge or observation?',
       'Is there anything in this request that you cannot verify?',
     ],
-    privacyNotes: ['Draft uses selected public-safe Proof Pack fields only.'],
+    privacyNotes: ['Fallback draft uses generic claim text until server-side redaction returns.'],
     tooBroadWarnings: [
       'AI suggestions are temporarily unavailable; manual editing still works.',
       `Keep this request limited to the ${params.scope.replace(/_/g, ' ')} scope.`,
@@ -218,7 +220,7 @@ export function VerificationRequestComposerDialog({
 
       setDraft(body as ComposerDraft);
     } catch (error) {
-      console.error('Failed to draft verification request:', error);
+      dispatchClientErrorDiagnostic('verifications.composer.draft_failed', error);
       toast.error('Failed to draft verification request.');
     } finally {
       setDrafting(false);
@@ -265,7 +267,7 @@ export function VerificationRequestComposerDialog({
       onOpenChange(false);
       onSent?.();
     } catch (error) {
-      console.error('Failed to send drafted verification request:', error);
+      dispatchClientErrorDiagnostic('verifications.composer.send_failed', error);
       toast.error('Failed to send verification request.');
     } finally {
       setSending(false);
@@ -416,8 +418,8 @@ export function VerificationRequestComposerDialog({
                 <div className="rounded-md border border-proofound-stone bg-japandi-bg px-3 py-2 text-sm text-muted-foreground">
                   <p className="font-medium text-foreground">Manual checklist draft</p>
                   <p>
-                    Provider assistance was unavailable, so this deterministic draft uses selected
-                    public-safe fields only. Manual editing still works.
+                    Guided suggestions are unavailable right now, so this draft uses only the
+                    selected public-safe fields. Manual editing still works.
                   </p>
                 </div>
               ) : (

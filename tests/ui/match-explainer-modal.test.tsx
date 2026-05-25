@@ -83,24 +83,23 @@ vi.mock('@/components/ui/drawer', () => ({
 }));
 
 describe('MatchExplainerModal', () => {
-  it('renders privacy-safe explanation summary and fairness warning', () => {
+  it('renders privacy-safe explanation summary and policy warning', () => {
     render(
       <MatchExplainerModal
         matchId="match-1"
-        compositeScore={0.82}
-        rankBand="Top 10"
+        rankBand="High-priority proof review"
         rankMode="band"
         exactRankAvailable
-        fairnessWarning="Exact ranking detail is suppressed while fairness remediation is active."
+        fairnessWarning="Exact ordering detail is suppressed while policy review is active."
         reasonSummary={[
           'Evidence points to a strong skills fit for this assignment.',
           'The organization has requested reveal. Identity-bearing fields stay hidden until you approve.',
         ]}
         reasonSections={{
-          manual_override: ['A reviewer manually shortlisted this candidate.'],
+          manual_override: ['A reviewer manually shortlisted this proof-review participant.'],
         }}
         reviewCard={{
-          candidateLabel: 'Candidate A7F2',
+          candidateLabel: 'Submission A7F2',
           strongestProof: {
             summary: 'Built a blind review corridor around proof-backed evaluation.',
             outcome: 'Made fit clearer without exposing identity-bearing fields.',
@@ -113,18 +112,18 @@ describe('MatchExplainerModal', () => {
             count: 2,
           },
           trustLabels: ['Verified proof signal present', 'Auditable verification history'],
-          fitBand: 'Top 10',
+          fitBand: 'High-priority proof review',
           fitSummary: {
             headline: 'Proof signals align with the role needs.',
             bullets: ['Evidence points to a strong skills fit for this assignment.'],
             reasonCodes: ['skills_strong'],
           },
         }}
-        subscores={{
-          skills: 0.9,
-          constraints: 0.8,
-          recency: 0.75,
-          evidence: 0.9,
+        proofSignals={{
+          skills: 'Strong proof support',
+          constraints: 'Clear support',
+          recency: 'Clear support',
+          evidence: 'Strong proof support',
         }}
         skillsMatch={{ required: [], nice: [] }}
         constraints={{
@@ -147,7 +146,7 @@ describe('MatchExplainerModal', () => {
       MATCH_EXPLAINER_DIALOG_DESCRIPTION
     );
     expect(screen.getByText('Strongest relevant proof')).toBeInTheDocument();
-    expect(screen.getAllByText('Top 10').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('High-priority proof review').length).toBeGreaterThan(0);
     expect(
       screen.getByText('Built a blind review corridor around proof-backed evaluation.')
     ).toBeInTheDocument();
@@ -156,25 +155,38 @@ describe('MatchExplainerModal', () => {
     expect(screen.getByText('Privacy-safe explanation')).toBeInTheDocument();
     expect(
       screen.getByText(
-        'Blind-by-default review keeps identity-bearing details hidden until the candidate consents to reveal.'
+        'Blind-by-default review keeps identity-bearing details hidden until the proof-review participant consents to reveal.'
       )
     ).toBeInTheDocument();
     expect(
       screen.getAllByText('Evidence points to a strong skills fit for this assignment.')
     ).toHaveLength(2);
-    expect(screen.getByText('A reviewer manually shortlisted this candidate.')).toBeInTheDocument();
+    expect(
+      screen.getByText('A reviewer manually shortlisted this proof-review participant.')
+    ).toBeInTheDocument();
     expect(screen.getByText('Auditable verification history')).toBeInTheDocument();
-    expect(screen.getByText('Comparative score detail')).toBeInTheDocument();
+    expect(screen.queryByText('Comparative score detail')).not.toBeInTheDocument();
     expect(
-      screen.getByText('Exact ranking detail is suppressed while fairness remediation is active.')
+      screen.getByText('Exact ordering detail is suppressed while policy review is active.')
     ).toBeInTheDocument();
     expect(
-      screen.getByText('Exact rank is hidden while privacy or fairness limits apply.')
+      screen.getByText('Exact ordering is hidden while privacy or policy limits apply.')
     ).toBeInTheDocument();
+    expect(screen.getByText('Supporting fit signal')).toBeInTheDocument();
+    expect(screen.getByText('Review signals by area')).toBeInTheDocument();
+    expect(screen.getByText('Skills evidence')).toBeInTheDocument();
+    expect(screen.getByText('Practical constraints')).toBeInTheDocument();
+    expect(screen.getByText('Proof freshness')).toBeInTheDocument();
+    expect(screen.getByText('Verification support')).toBeInTheDocument();
+    expect(screen.queryByText('82%')).not.toBeInTheDocument();
+    expect(screen.queryByText('90%')).not.toBeInTheDocument();
+    expect(screen.queryByText('Top 10')).not.toBeInTheDocument();
     expect(
       screen.getByText(
-        'This comparative score summarizes proof strength, fit rationale, and practical constraints after the privacy-safe review context above.'
+        'This fit signal summarizes proof strength, fit rationale, and practical constraints after the privacy-safe review context above.'
       )
     ).toBeInTheDocument();
+    expect(screen.queryByText(/fairness/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/ranking/i)).not.toBeInTheDocument();
   });
 });

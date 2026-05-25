@@ -8,12 +8,22 @@ vi.mock('@/db', () => ({
   },
 }));
 
-function mockSelectRows(rows: Array<{ duration: number | null }>) {
-  (db.select as any).mockReturnValue({
+function selectResult(
+  rows: Array<{ route?: string | null; duration: number | null; responseStatus?: number | null }>
+) {
+  return {
     from: vi.fn().mockReturnValue({
       where: vi.fn().mockResolvedValue(rows),
     }),
-  });
+  };
+}
+
+function mockSelectRows(
+  ...rowSets: Array<
+    Array<{ route?: string | null; duration: number | null; responseStatus?: number | null }>
+  >
+) {
+  (db.select as any).mockImplementation(() => selectResult(rowSets.shift() ?? []));
 }
 
 const CRON_SECRET = 'perf-status-test-secret';
@@ -45,23 +55,85 @@ describe('/api/monitoring/perf-status', () => {
     expect(db.select).not.toHaveBeenCalled();
   });
 
-  it('returns analytics-based payload when api_latency events exist', async () => {
-    mockSelectRows([{ duration: 100 }, { duration: 400 }, { duration: 900 }]);
+  it('returns performance-metrics payload when api latency samples exist', async () => {
+    mockSelectRows([
+      { route: '/api/assignments', duration: 100, responseStatus: 200 },
+      { route: '/api/assignments', duration: 400, responseStatus: 200 },
+      { route: '/api/assignments', duration: 900, responseStatus: 200 },
+    ]);
     const fetchSpy = vi.spyOn(globalThis, 'fetch');
 
     const response = await GET(authenticatedRequest());
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body.source).toBe('analytics_events');
+    expect(body.source).toBe('performance_metrics');
     expect(body.sampleCount).toBe(3);
     expect(body.p95).toBeCloseTo(850, 10);
     expect(body.message).toContain('API latency P95=850ms');
+    expect(body.ok).toBe(true);
+    expect(body.missingRequiredRoutes).toEqual([]);
+    expect(body.routeBreakdown).toEqual([
+      { route: '/api/assignments', sampleCount: 3, p95: expect.closeTo(850, 10) },
+    ]);
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
-  it('filters null analytics durations before percentile calculation', async () => {
-    mockSelectRows([{ duration: null }, { duration: 200 }, { duration: 800 }]);
+  it('filters null performance durations before percentile calculation', async () => {
+    mockSelectRows([
+      { route: '/api/assignments', duration: null, responseStatus: 200 },
+      { route: '/api/assignments', duration: 200, responseStatus: 200 },
+      { route: '/api/assignments', duration: 800, responseStatus: 200 },
+    ]);
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+
+    const response = await GET(authenticatedRequest());
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.source).toBe('performance_metrics');
+    expect(body.sampleCount).toBe(2);
+    expect(body.p95).toBeCloseTo(770, 10);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('keeps the gate closed when assignment samples are only unauthenticated failures', async () => {
+    mockSelectRows([
+      { route: '/api/assignments', duration: 40, responseStatus: 401 },
+      { route: '/api/assignments', duration: 50, responseStatus: 401 },
+    ]);
+
+    const response = await GET(authenticatedRequest());
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.source).toBe('performance_metrics');
+    expect(body.ok).toBe(false);
+    expect(body.missingRequiredRoutes).toEqual(['/api/assignments']);
+    expect(body.message).toContain('Missing required route latency samples: /api/assignments');
+  });
+
+  it('keeps the gate closed when required route latency samples are missing', async () => {
+    mockSelectRows([{ route: '/api/health', duration: 80 }]);
+
+    const response = await GET(authenticatedRequest());
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.source).toBe('performance_metrics');
+    expect(body.ok).toBe(false);
+    expect(body.missingRequiredRoutes).toEqual(['/api/assignments']);
+    expect(body.message).toContain('Missing required route latency samples: /api/assignments');
+  });
+
+  it('falls back to legacy analytics events when performance metrics are absent', async () => {
+    mockSelectRows(
+      [],
+      [
+        { route: '/api/assignments', duration: 100, responseStatus: 200 },
+        { route: '/api/assignments', duration: 300, responseStatus: 200 },
+      ]
+    );
     const fetchSpy = vi.spyOn(globalThis, 'fetch');
 
     const response = await GET(authenticatedRequest());
@@ -70,12 +142,15 @@ describe('/api/monitoring/perf-status', () => {
     expect(response.status).toBe(200);
     expect(body.source).toBe('analytics_events');
     expect(body.sampleCount).toBe(2);
-    expect(body.p95).toBeCloseTo(770, 10);
+    expect(body.ok).toBe(true);
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
   it('falls back to health probe when no analytics events are available', async () => {
-    mockSelectRows([{ duration: null }]);
+    mockSelectRows(
+      [{ route: '/api/assignments', duration: null }],
+      [{ route: null, duration: null }]
+    );
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
       .mockResolvedValue(new Response(JSON.stringify({ status: 'ok' }), { status: 200 }));
@@ -85,14 +160,17 @@ describe('/api/monitoring/perf-status', () => {
 
     expect(response.status).toBe(200);
     expect(body.source).toBe('probe');
+    expect(body.ok).toBe(false);
     expect(body.sampleCount).toBe(10);
-    expect(body.message).toContain('No api_latency events in the last 24h.');
+    expect(body.missingRequiredRoutes).toEqual(['/api/assignments']);
+    expect(body.message).toContain('No performance_metrics api_latency samples in the last 24h.');
+    expect(body.message).toContain('No legacy api_latency events in the last 24h.');
     expect(fetchSpy).toHaveBeenCalledTimes(11);
     expect(fetchSpy).toHaveBeenCalledWith('https://example.com/api/health', { cache: 'no-store' });
   });
 
   it('returns degraded payload when analytics and probe are unavailable', async () => {
-    mockSelectRows([]);
+    mockSelectRows([], []);
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('error', { status: 500 }));
 
     const response = await GET(authenticatedRequest());
@@ -102,6 +180,7 @@ describe('/api/monitoring/perf-status', () => {
     expect(body.ok).toBe(false);
     expect(body.source).toBe('unavailable');
     expect(body.status).toBe('critical');
+    expect(body.missingRequiredRoutes).toEqual(['/api/assignments']);
     expect(body.message).toContain('Fallback /api/health probe failed');
   });
 });

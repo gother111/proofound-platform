@@ -1,11 +1,9 @@
 import { requirePersona } from '@/lib/auth';
 import { LeftNav } from '@/components/app/LeftNav';
 import { TopBar } from '@/components/app/TopBar';
-import { TourProvider } from '@/components/tour/TourProvider';
+import { DeferredTourProvider } from '@/components/tour/DeferredTourProvider';
 import { CommandPalette } from '@/components/navigation/CommandPalette';
 import { SpotlightProvider } from '@/components/ui/spotlight-provider';
-import { getIndividualProfileCompletionState } from '@/lib/profile/completion-flow.server';
-import { evaluateIndividualProfileCompletion } from '@/lib/profile/completion-flow';
 
 /**
  * Individual User Layout
@@ -20,15 +18,6 @@ import { evaluateIndividualProfileCompletion } from '@/lib/profile/completion-fl
 
 export default async function IndividualLayout({ children }: { children: React.ReactNode }) {
   const user = await requirePersona('individual');
-  const completionState = await getIndividualProfileCompletionState(user.id).catch(() =>
-    evaluateIndividualProfileCompletion({
-      displayName: user.displayName,
-      handle: user.handle,
-      skillsCount: 0,
-      proofCount: 0,
-      acceptedVerificationCount: 0,
-    })
-  );
 
   const userName = user.displayName || user.handle || 'User';
   const userInitials = userName
@@ -43,21 +32,14 @@ export default async function IndividualLayout({ children }: { children: React.R
   return (
     <SpotlightProvider>
       <div className={`flex h-screen ${isV2 ? 'bg-japandi-bg' : 'bg-proofound-parchment'}`}>
-        <LeftNav
-          basePath="/app/i"
-          individualPortfolioGate={{
-            locked: !completionState.isPortfolioReady,
-            reason: completionState.portfolioLockReason,
-          }}
-          isBetaTesting={user.isBetaTesting}
-        />
+        <LeftNav basePath="/app/i" isBetaTesting={user.isBetaTesting} />
         <div className="flex-1 flex flex-col min-w-0">
           <TopBar userName={userName} userInitials={userInitials} basePath="/app/i" />
           {/* Main content region with ID for skip-to-content link */}
-          {/* Add bottom padding on mobile to account for bottom navigation (80px) */}
+          {/* Reserve mobile space for the fixed bottom navigation. */}
           <main
             id="main-content"
-            className="flex-1 overflow-y-auto overflow-x-hidden pb-20 md:pb-0 relative"
+            className="relative mb-[4.75rem] flex-1 overflow-y-auto overflow-x-hidden pb-[calc(5.5rem+env(safe-area-inset-bottom))] scroll-pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:mb-0 md:pb-0 md:scroll-pb-0"
             role="main"
             aria-label="Main content"
             // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- scrollable landmark must be keyboard focusable for WCAG 2.1.1
@@ -67,7 +49,7 @@ export default async function IndividualLayout({ children }: { children: React.R
           </main>
         </div>
         <CommandPalette />
-        <TourProvider />
+        <DeferredTourProvider />
       </div>
     </SpotlightProvider>
   );

@@ -5,6 +5,7 @@ import { Loader2, PackageMinus } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -112,7 +113,7 @@ export function BundleCancelDialog({
         setSelectedItemIds({});
       } catch (error) {
         if (!active) return;
-        console.error('Failed to load bundle cancellation details:', error);
+        dispatchClientErrorDiagnostic('verifications.bundle_cancel.details_load_failed', error);
         setBundleRequest(null);
         setLoadError(error instanceof Error ? error.message : 'Failed to load bundle details.');
       } finally {
@@ -180,7 +181,7 @@ export function BundleCancelDialog({
       );
       onOpenChange(false);
     } catch (error) {
-      console.error('Failed to cancel selected bundle artifacts:', error);
+      dispatchClientErrorDiagnostic('verifications.bundle_cancel.selected_cancel_failed', error);
       toast.error('Failed to cancel selected artifacts.');
     } finally {
       setSaving(false);

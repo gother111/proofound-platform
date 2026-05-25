@@ -1,0 +1,53 @@
+{
+  "route": "/admin/audit",
+  "url": "http://127.0.0.1:33187/admin/audit",
+  "tool": "Codex in-app Browser",
+  "capturedAt": "2026-05-20T06:18:00+02:00",
+  "environment": {
+    "mockAdminMode": true,
+    "mockSupabase": true,
+    "playwright": true,
+    "devServer": "npm run dev -- --port 33187 --hostname 127.0.0.1"
+  },
+  "desktop": {
+    "viewport": {
+      "width": 1360,
+      "height": 900
+    },
+    "title": "Proofound - Focus on what matters",
+    "h1": "Audit Logs",
+    "mainLandmarks": 1,
+    "hasBreakGlassHeading": true,
+    "hasReasonCopy": true,
+    "hasOrgInput": true,
+    "hasReasonInput": true,
+    "hasPreviewButton": true,
+    "horizontalOverflow": false,
+    "consoleWarningsOrErrors": [],
+    "leakTermsFound": []
+  },
+  "mobile": {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "h1": "Audit Logs",
+    "mainLandmarks": 1,
+    "hasBreakGlassHeading": true,
+    "hasReasonCopy": true,
+    "hasVerifyOrganizationCardText": true,
+    "horizontalOverflow": false,
+    "visibleRuntimeError": false,
+    "consoleWarningsOrErrors": [],
+    "leakTermsFound": []
+  },
+  "screenshot": {
+    "attempted": true,
+    "status": "timeout",
+    "message": "Browser Page.captureScreenshot timed out; DOM, viewport, console, overflow, and leak-term evidence was captured instead."
+  },
+  "notes": [
+    "The Browser runtime could not automate the native confirm dialog for the break-glass submit path; submit behavior is covered by focused UI/API tests.",
+    "Mobile route rendered audit rows as stacked article cards rather than a table, with the break-glass preview controls visible above the list."
+  ]
+}
