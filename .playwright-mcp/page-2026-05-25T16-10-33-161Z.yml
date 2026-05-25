@@ -1,0 +1,90 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e5]:
+    - banner [ref=e6]:
+      - generic [ref=e7]:
+        - link "Proofound home" [ref=e9] [cursor=pointer]:
+          - /url: /
+          - img "Proofound" [ref=e10]
+          - generic [ref=e11]: Proofound
+        - navigation [ref=e12]:
+          - link "How it works" [ref=e13] [cursor=pointer]:
+            - /url: "#story"
+          - link "For individuals" [ref=e14] [cursor=pointer]:
+            - /url: "#start-individuals"
+          - link "For organizations" [ref=e15] [cursor=pointer]:
+            - /url: "#start-organizations"
+        - generic [ref=e16]:
+          - link "Sign in" [ref=e18] [cursor=pointer]:
+            - /url: /login
+          - link "Request a pilot" [ref=e19] [cursor=pointer]:
+            - /url: /signup/organization
+            - generic [ref=e20]: Request a pilot
+            - img [ref=e21]
+    - main [ref=e23]:
+      - generic [ref=e30]:
+        - generic [ref=e32]:
+          - heading "Proof behind the claim" [level=1] [ref=e33]:
+            - generic [ref=e34]: Proof behind
+            - generic [ref=e35]: the claim
+          - generic [ref=e36]:
+            - paragraph [ref=e37]: Proofound turns real work into structured Proof Packs for privacy-safe assignment review before identity takes over.
+            - paragraph [ref=e38]: Proof portfolios for individuals. Evidence-based review for teams.
+          - generic [ref=e39]:
+            - link "Request a pilot" [ref=e40] [cursor=pointer]:
+              - /url: /signup/organization
+              - text: Request a pilot
+              - img [ref=e41]
+            - link "Create your proof portfolio" [ref=e43] [cursor=pointer]:
+              - /url: /signup/individual
+        - generic [ref=e45]:
+          - heading "Blind by default" [level=2] [ref=e46]
+          - paragraph [ref=e47]: Photo, name, contact details, prestige markers, and other identity signals are removed first. The goal is not anonymity for its own sake. It is capability before bias.
+          - paragraph [ref=e48]: Weak evidence should not lead the first review.
+      - generic [ref=e60]:
+        - generic [ref=e61]:
+          - paragraph [ref=e62]: One corridor, two safer starts
+          - heading "Build proof-first review" [level=2] [ref=e63]
+          - paragraph [ref=e64]: Proofound helps individuals present real capability through structured evidence, and helps organizations compare work-to-proof more clearly before time is lost.
+        - generic [ref=e65]:
+          - button "For individuals Create your proof portfolio Start with a cleaner proof portfolio, then add proof, verification, and privacy-safe evidence over time. Start building" [ref=e66] [cursor=pointer]:
+            - paragraph [ref=e67]: For individuals
+            - paragraph [ref=e68]: Create your proof portfolio
+            - paragraph [ref=e69]: Start with a cleaner proof portfolio, then add proof, verification, and privacy-safe evidence over time.
+            - generic [ref=e70]:
+              - text: Start building
+              - img [ref=e71]
+          - button "For organizations Explore proof-first review Review work through structured proof, clearer verification checks, and a more explainable assignment-fit review. Request a pilot" [ref=e73] [cursor=pointer]:
+            - paragraph [ref=e74]: For organizations
+            - paragraph [ref=e75]: Explore proof-first review
+            - paragraph [ref=e76]: Review work through structured proof, clearer verification checks, and a more explainable assignment-fit review.
+            - generic [ref=e77]:
+              - text: Request a pilot
+              - img [ref=e78]
+      - generic [ref=e82]:
+        - generic [ref=e83]:
+          - generic [ref=e84]:
+            - link "Proofound home" [ref=e85] [cursor=pointer]:
+              - /url: /
+              - img "Proofound" [ref=e86]
+              - generic [ref=e87]: Proofound
+            - paragraph [ref=e88]: Evidence-based assignment review for a world with too much polish and too little proof.
+          - navigation [ref=e89]:
+            - link "Cookies" [ref=e90] [cursor=pointer]:
+              - /url: /cookies
+            - link "Cookie settings" [ref=e91] [cursor=pointer]:
+              - /url: /cookies/settings
+            - link "Privacy" [ref=e92] [cursor=pointer]:
+              - /url: /privacy
+            - link "Terms" [ref=e93] [cursor=pointer]:
+              - /url: /terms
+            - link "Sign in" [ref=e94] [cursor=pointer]:
+              - /url: /login
+        - generic [ref=e95]:
+          - paragraph [ref=e96]: © 2026 Proofound. Privacy-first by design.
+          - paragraph [ref=e97]: Calm review. Clearer proof. Better fit.
+  - alert [ref=e98]
+  - region "Notifications alt+T"
+  - region "Notifications (F8)":
+    - list

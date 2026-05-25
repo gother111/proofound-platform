@@ -1,0 +1,42 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - main [ref=e5]:
+    - button "Back" [ref=e6] [cursor=pointer]:
+      - img [ref=e7]
+      - generic [ref=e9]: Back
+    - generic [ref=e10]:
+      - generic [ref=e11]:
+        - generic [ref=e12]:
+          - img "Proofound" [ref=e14]
+          - heading "Join Proofound" [level=1] [ref=e15]
+          - paragraph [ref=e16]: Choose the account type that fits how you'll use Proofound.
+        - generic [ref=e17]:
+          - button "Individual For professionals who want a clean proof-based portfolio link they can share today, plus matching as they grow. Continue as Individual →" [ref=e19] [cursor=pointer]:
+            - generic [ref=e21]:
+              - img [ref=e23]
+              - generic [ref=e26]:
+                - heading "Individual" [level=3] [ref=e27]
+                - paragraph [ref=e28]: For professionals who want a clean proof-based portfolio link they can share today, plus matching as they grow.
+              - generic [ref=e29]: Continue as Individual →
+          - button "Organization For organizations that need a credible trust page on day 1, then one assignment and a privacy-safe shortlist. Continue as Organization →" [ref=e31] [cursor=pointer]:
+            - generic [ref=e33]:
+              - img [ref=e35]
+              - generic [ref=e39]:
+                - heading "Organization" [level=3] [ref=e40]
+                - paragraph [ref=e41]: For organizations that need a credible trust page on day 1, then one assignment and a privacy-safe shortlist.
+              - generic [ref=e42]: Continue as Organization →
+        - paragraph [ref=e44]:
+          - text: Already have an account?
+          - button "Sign in" [ref=e45] [cursor=pointer]
+      - paragraph [ref=e46]:
+        - text: By creating an account, you agree to our
+        - link "Terms of Service" [ref=e47] [cursor=pointer]:
+          - /url: /terms
+        - text: and
+        - link "Privacy Policy" [ref=e48] [cursor=pointer]:
+          - /url: /privacy
+  - alert [ref=e49]
+  - region "Notifications alt+T"
+  - region "Notifications (F8)":
+    - list
