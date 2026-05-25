@@ -5,6 +5,7 @@ import { Briefcase, Globe, PackageOpen, ShieldCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE } from '@/lib/ai/start-from-cv-contract';
 import type { IndividualProfileCompletionState } from '@/lib/profile/completion-flow';
 import type {
   Education,
@@ -153,6 +154,7 @@ export function ProfileTabsSection({
         onEditVolunteering={onEditVolunteering}
         onDeleteVolunteering={onDeleteVolunteering}
         onImportComplete={onImportContextComplete}
+        cvScaffoldingSurface={START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE}
       />
 
       <ImpactTab

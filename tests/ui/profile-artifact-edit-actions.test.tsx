@@ -1,11 +1,21 @@
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ImpactTab } from '@/components/profile/editable-profile/ImpactTab';
 import { ProfileTabsSection } from '@/components/profile/editable-profile/ProfileTabsSection';
 import { VisibilityPortfolioTab } from '@/components/profile/editable-profile/VisibilityPortfolioTab';
 import type { ProfileProofPack } from '@/types/profile';
+
+const startFromCvStatus = vi.hoisted(() => ({
+  visible: false,
+  available: false,
+  blockers: [] as string[],
+}));
+
+vi.mock('@/hooks/useStartFromCvBetaStatus', () => ({
+  useStartFromCvBetaStatus: () => startFromCvStatus,
+}));
 
 vi.mock('next/link', () => ({
   default: ({ children, href, ...props }: any) => (
@@ -96,67 +106,83 @@ function makeProofPack(overrides: Partial<ProfileProofPack>): ProfileProofPack {
   };
 }
 
+function makeCompletionState() {
+  return {
+    stage: 'first_proof' as const,
+    checks: {
+      hasDisplayName: true,
+      hasHandle: true,
+      hasHeadlineOrBio: true,
+      hasLocationOrTimezone: true,
+      hasTargetRoleFocus: true,
+      hasWorkPreference: true,
+      hasEngagementPreference: true,
+      hasLegacyShellCompatibility: true,
+      hasSafeShell: true,
+      hasRealContext: true,
+      hasFirstProof: false,
+      hasStructuredProofPack: false,
+      hasProofForPublishing: false,
+      hasPublishedPortfolio: false,
+      hasRequiredVerification: false,
+    },
+    counts: {
+      contexts: 1,
+      skills: 0,
+      proofPacks: 0,
+      anchoredProofPacks: 0,
+      proofArtifacts: 0,
+      acceptedVerifications: 0,
+    },
+    isCoreProfileComplete: true,
+    isPortfolioReady: false,
+    portfolioLockCode: 'proof' as const,
+    portfolioLockReason: 'Add at least one anchored Proof Pack before your portfolio can be ready.',
+  };
+}
+
+function renderProfileTabsSection(
+  overrides: Partial<React.ComponentProps<typeof ProfileTabsSection>> = {}
+) {
+  return render(
+    <ProfileTabsSection
+      impactStories={[]}
+      experiences={[]}
+      education={[]}
+      volunteering={[]}
+      completionState={makeCompletionState()}
+      proofArtifactCount={0}
+      acceptedVerificationCount={0}
+      isPending={false}
+      impactPending={false}
+      onAddImpactStory={vi.fn()}
+      onEditImpactStory={vi.fn()}
+      onDeleteImpactStory={vi.fn()}
+      onAddExperience={vi.fn()}
+      onEditExperience={vi.fn()}
+      onDeleteExperience={vi.fn()}
+      onAddEducation={vi.fn()}
+      onEditEducation={vi.fn()}
+      onDeleteEducation={vi.fn()}
+      onAddVolunteering={vi.fn()}
+      onEditVolunteering={vi.fn()}
+      onDeleteVolunteering={vi.fn()}
+      onAddFirstProof={vi.fn()}
+      onCompleteSafeShell={vi.fn()}
+      {...overrides}
+    />
+  );
+}
+
 describe('profile launch IA', () => {
+  afterEach(() => {
+    startFromCvStatus.visible = false;
+    startFromCvStatus.available = false;
+    startFromCvStatus.blockers = [];
+  });
+
   it('replaces legacy profile tabs with launch IA labels', () => {
-    render(
-      <ProfileTabsSection
-        impactStories={[]}
-        experiences={[]}
-        education={[]}
-        volunteering={[]}
-        completionState={{
-          stage: 'first_proof',
-          checks: {
-            hasDisplayName: true,
-            hasHandle: true,
-            hasHeadlineOrBio: true,
-            hasLocationOrTimezone: true,
-            hasTargetRoleFocus: true,
-            hasWorkPreference: true,
-            hasEngagementPreference: true,
-            hasLegacyShellCompatibility: true,
-            hasSafeShell: true,
-            hasRealContext: true,
-            hasFirstProof: false,
-            hasStructuredProofPack: false,
-            hasProofForPublishing: false,
-            hasPublishedPortfolio: false,
-            hasRequiredVerification: false,
-          },
-          counts: {
-            contexts: 1,
-            skills: 0,
-            proofPacks: 0,
-            anchoredProofPacks: 0,
-            proofArtifacts: 0,
-            acceptedVerifications: 0,
-          },
-          isCoreProfileComplete: true,
-          isPortfolioReady: false,
-          portfolioLockCode: 'proof',
-          portfolioLockReason:
-            'Add at least one anchored Proof Pack before your portfolio can be ready.',
-        }}
-        proofArtifactCount={0}
-        acceptedVerificationCount={0}
-        isPending={false}
-        impactPending={false}
-        onAddImpactStory={vi.fn()}
-        onEditImpactStory={vi.fn()}
-        onDeleteImpactStory={vi.fn()}
-        onAddExperience={vi.fn()}
-        onEditExperience={vi.fn()}
-        onDeleteExperience={vi.fn()}
-        onAddEducation={vi.fn()}
-        onEditEducation={vi.fn()}
-        onDeleteEducation={vi.fn()}
-        onAddVolunteering={vi.fn()}
-        onEditVolunteering={vi.fn()}
-        onDeleteVolunteering={vi.fn()}
-        onAddFirstProof={vi.fn()}
-        onCompleteSafeShell={vi.fn()}
-      />
-    );
+    renderProfileTabsSection();
 
     expect(getTabTrigger('Context')).toBeInTheDocument();
     expect(getTabTrigger('Proof Packs')).toBeInTheDocument();
@@ -168,6 +194,15 @@ describe('profile launch IA', () => {
     expect(queryTabTrigger(/service/i)).toBeUndefined();
     expect(queryTabTrigger(/proof stories/i)).toBeUndefined();
     expect(queryTabTrigger(/network/i)).toBeUndefined();
+  });
+
+  it('surfaces Start from CV from the approved profile scaffolding context when beta is available', () => {
+    startFromCvStatus.visible = true;
+    startFromCvStatus.available = true;
+
+    renderProfileTabsSection();
+
+    expect(screen.getAllByRole('button', { name: /Start from CV/i }).length).toBeGreaterThan(0);
   });
 
   it('shows proof-pack blockers and a direct add-proof path', () => {
