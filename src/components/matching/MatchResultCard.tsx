@@ -40,6 +40,7 @@ type DeferredComponent = ComponentType<any>;
 interface MatchResultCardProps {
   result: {
     id?: string; // Match ID for fetching detailed explanation
+    contributions?: Record<string, number>;
     proofSignals?: Array<{ key: string; support: string }>;
     profileId?: string;
     assignmentId?: string;

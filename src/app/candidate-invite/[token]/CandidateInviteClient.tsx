@@ -771,337 +771,320 @@ export function CandidateInviteClient({
                 </p>
               </div>
 
-                <div
-                  className="grid gap-3 rounded-lg border border-proofound-stone bg-white/70 p-4 text-sm sm:grid-cols-3"
-                  data-testid="candidate-proof-demo-path"
-                >
-                  <div className="space-y-1">
-                    <p className="font-medium text-proofound-charcoal">1. Build proof</p>
-                    <p className="text-xs leading-5 text-proofound-charcoal/60">
-                      Use one claim or outcome tied to this assignment.
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="font-medium text-proofound-charcoal">2. Attach evidence</p>
-                    <p className="text-xs leading-5 text-proofound-charcoal/60">
-                      Add an artifact, link, or placeholder that supports the claim.
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="font-medium text-proofound-charcoal">3. Review privacy</p>
-                    <p className="text-xs leading-5 text-proofound-charcoal/60">
-                      Submit only after checking what the organization can see.
-                    </p>
-                  </div>
+              <div
+                className="grid gap-3 rounded-lg border border-proofound-stone bg-white/70 p-4 text-sm sm:grid-cols-3"
+                data-testid="candidate-proof-demo-path"
+              >
+                <div className="space-y-1">
+                  <p className="font-medium text-proofound-charcoal">1. Build proof</p>
+                  <p className="text-xs leading-5 text-proofound-charcoal/60">
+                    Use one claim or outcome tied to this assignment.
+                  </p>
                 </div>
-
-                <Button asChild variant="outline">
-                  <Link href={proofOnboardingHref}>
-                    Create first Proof Pack
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-
-                {!currentUser ? (
-                  <div className="space-y-3">
-                    <p className="text-sm text-slate-700">
-                      Continue with the invited email when you are ready to submit assignment proof.
-                    </p>
-                    <p className="text-xs leading-5 text-proofound-charcoal/60">
-                      After account creation, privacy, export, and deletion controls are available
-                      from individual privacy settings.
-                    </p>
-                    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-                      <Button
-                        asChild
-                        className="w-full bg-proofound-forest text-white hover:bg-proofound-forest/90 sm:w-auto"
-                      >
-                        <Link href={`/signup/individual?next=${nextParam}`}>
-                          Continue to proof submission
-                          <ArrowRight className="ml-2 h-4 w-4" />
-                        </Link>
-                      </Button>
-                      <Button asChild variant="outline" className="w-full sm:w-auto">
-                        <Link href={`/login?next=${nextParam}`}>Sign in</Link>
-                      </Button>
-                    </div>
-                  </div>
-                ) : null}
-
-                <div className="rounded-lg border border-proofound-stone bg-white/70 p-3 text-xs leading-5 text-proofound-charcoal/60">
-                  Minimum demo packet: one claim or outcome, one evidence artifact or link, one
-                  trust or verification signal, and one privacy confirmation.
+                <div className="space-y-1">
+                  <p className="font-medium text-proofound-charcoal">2. Attach evidence</p>
+                  <p className="text-xs leading-5 text-proofound-charcoal/60">
+                    Add an artifact, link, or placeholder that supports the claim.
+                  </p>
                 </div>
+                <div className="space-y-1">
+                  <p className="font-medium text-proofound-charcoal">3. Review privacy</p>
+                  <p className="text-xs leading-5 text-proofound-charcoal/60">
+                    Submit only after checking what the organization can see.
+                  </p>
+                </div>
+              </div>
 
-                {reviewProofPackId ? (
-                  <div className="space-y-4 rounded-lg border border-proofound-forest/50 bg-white p-4">
-                    <div>
-                      <p className="text-sm font-semibold text-proofound-charcoal">
-                        Final review before submission
-                      </p>
-                      <p className="mt-1 text-sm leading-6 text-proofound-charcoal/70">
-                        Confirm what {organization.displayName} can see before this application is
-                        submitted.
-                      </p>
-                    </div>
+              <Button asChild variant="outline">
+                <Link href={proofOnboardingHref}>
+                  Create first Proof Pack
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
 
-                {!isTestFlow && currentUser && !isCompleted && isClaimedByCurrentUser ? (
-                  <div className="space-y-5">
-                    <p className="text-sm text-slate-700">
-                      Create or choose one owner-only Proof Pack for this assignment. The submission
-                      does not publish a public page or broaden visibility beyond this assignment.
-                    </p>
-
-                    <Button asChild variant="outline" className="w-full sm:w-auto">
-                      <Link href={proofOnboardingHref}>
-                        Create first Proof Pack
+              {!currentUser ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-slate-700">
+                    Continue with the invited email when you are ready to submit assignment proof.
+                  </p>
+                  <p className="text-xs leading-5 text-proofound-charcoal/60">
+                    After account creation, privacy, export, and deletion controls are available
+                    from individual privacy settings.
+                  </p>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                    <Button
+                      asChild
+                      className="w-full bg-proofound-forest text-white hover:bg-proofound-forest/90 sm:w-auto"
+                    >
+                      <Link href={`/signup/individual?next=${nextParam}`}>
+                        Continue to proof submission
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Link>
                     </Button>
+                    <Button asChild variant="outline" className="w-full sm:w-auto">
+                      <Link href={`/login?next=${nextParam}`}>Sign in</Link>
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
 
-                    <div className="space-y-3 rounded-lg border border-proofound-stone bg-white/70 p-4">
-                      {availableProofPacks.length > 0 ? (
-                        <div className="space-y-2">
-                          <Label htmlFor="proof-pack-id">Owner-only Proof Pack</Label>
-                          <select
-                            id="proof-pack-id"
-                            value={proofPackId}
-                            onChange={(event) => {
-                              setProofPackId(event.target.value);
-                              setReviewProofPackId('');
-                              setReviewConfirmed(false);
-                            }}
-                            className="flex h-11 w-full rounded-lg border border-proofound-stone bg-white px-4 py-2 text-sm text-proofound-charcoal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest"
-                          >
-                            {availableProofPacks.map((pack) => (
-                              <option key={pack.id} value={pack.id}>
-                                {pack.title}
-                              </option>
-                            ))}
-                          </select>
-                          {selectedProofPack ? (
-                            <p className="text-xs leading-5 text-proofound-charcoal/60">
-                              {selectedProofPack.summary ||
-                                selectedProofPack.evidenceSummary ||
-                                'Selected Proof Pack stays owner-only until you submit it for this assignment.'}
+              <div className="rounded-lg border border-proofound-stone bg-white/70 p-3 text-xs leading-5 text-proofound-charcoal/60">
+                Minimum demo packet: one claim or outcome, one evidence artifact or link, one trust
+                or verification signal, and one privacy confirmation.
+              </div>
+
+              {!isTestFlow && currentUser && !isCompleted && isClaimedByCurrentUser ? (
+                <div className="space-y-5">
+                  <p className="text-sm text-slate-700">
+                    Create or choose one owner-only Proof Pack for this assignment. The submission
+                    does not publish a public page or broaden visibility beyond this assignment.
+                  </p>
+
+                  <Button asChild variant="outline" className="w-full sm:w-auto">
+                    <Link href={proofOnboardingHref}>
+                      Create first Proof Pack
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+
+                  <div className="space-y-3 rounded-lg border border-proofound-stone bg-white/70 p-4">
+                    {availableProofPacks.length > 0 ? (
+                      <div className="space-y-2">
+                        <Label htmlFor="proof-pack-id">Owner-only Proof Pack</Label>
+                        <select
+                          id="proof-pack-id"
+                          value={proofPackId}
+                          onChange={(event) => {
+                            setProofPackId(event.target.value);
+                            setReviewProofPackId('');
+                            setReviewConfirmed(false);
+                          }}
+                          className="flex h-11 w-full rounded-lg border border-proofound-stone bg-white px-4 py-2 text-sm text-proofound-charcoal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest"
+                        >
+                          {availableProofPacks.map((pack) => (
+                            <option key={pack.id} value={pack.id}>
+                              {pack.title}
+                            </option>
+                          ))}
+                        </select>
+                        {selectedProofPack ? (
+                          <p className="text-xs leading-5 text-proofound-charcoal/60">
+                            {selectedProofPack.summary ||
+                              selectedProofPack.evidenceSummary ||
+                              'Selected Proof Pack stays owner-only until you submit it for this assignment.'}
+                          </p>
+                        ) : null}
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <p className="text-sm font-semibold text-proofound-charcoal">
+                          No owner-only Proof Pack is ready for this assignment yet.
+                        </p>
+                        <p className="text-xs leading-5 text-proofound-charcoal/60">
+                          Create one from your proof workspace, then return to this invite to review
+                          and submit it for this assignment. Public Page links and legacy snippet
+                          URLs are not accepted in this assignment flow.
+                        </p>
+                      </div>
+                    )}
+
+                    <Button
+                      variant="outline"
+                      onClick={openProofPackReview}
+                      disabled={submitting || availableProofPacks.length === 0}
+                      className="w-full sm:w-auto"
+                    >
+                      Review assignment proof
+                    </Button>
+                  </div>
+
+                  {reviewProofPackId ? (
+                    <div className="space-y-4 rounded-lg border border-proofound-forest/50 bg-white p-4">
+                      <div>
+                        <p className="text-sm font-semibold text-proofound-charcoal">
+                          Final review before submission
+                        </p>
+                        <p className="mt-1 text-sm leading-6 text-proofound-charcoal/70">
+                          Confirm what {organization.displayName} can see before this proof
+                          submission is sent.
+                        </p>
+                      </div>
+
+                      <div className="grid gap-3 text-sm md:grid-cols-2">
+                        <div className="rounded-md border border-proofound-stone bg-proofound-parchment/50 p-3">
+                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-proofound-charcoal/55">
+                            Submitted for
+                          </p>
+                          <p className="mt-1 font-medium text-proofound-charcoal">
+                            {assignmentTitle} at {organization.displayName}
+                          </p>
+                        </div>
+                        <div className="rounded-md border border-proofound-stone bg-proofound-parchment/50 p-3">
+                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-proofound-charcoal/55">
+                            Proof/context included
+                          </p>
+                          <p className="mt-1 font-medium text-proofound-charcoal">
+                            {reviewProofPack?.title || `Proof Pack ${reviewProofPackId}`}
+                          </p>
+                          {reviewProofPack?.evidenceSummary || reviewProofPack?.outcomesSummary ? (
+                            <p className="mt-1 text-xs leading-5 text-proofound-charcoal/60">
+                              {[reviewProofPack?.evidenceSummary, reviewProofPack?.outcomesSummary]
+                                .filter(Boolean)
+                                .join(' ')}
                             </p>
                           ) : null}
                         </div>
-                      ) : (
-                        <div className="space-y-3">
-                          <p className="text-sm font-semibold text-proofound-charcoal">
-                            No owner-only Proof Pack is ready for this assignment yet.
+                        <div className="rounded-md border border-proofound-stone bg-proofound-parchment/50 p-3">
+                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-proofound-charcoal/55">
+                            Employer visibility
                           </p>
-                          <p className="text-xs leading-5 text-proofound-charcoal/60">
-                            Create one from your proof workspace, then return to this invite to
-                            review and submit it for this assignment. Public Page links and legacy
-                            snippet URLs are not accepted in this assignment flow.
-                          </p>
-                        </div>
-                      )}
-
-                      <Button
-                        variant="outline"
-                        onClick={openProofPackReview}
-                        disabled={submitting || availableProofPacks.length === 0}
-                        className="w-full sm:w-auto"
-                      >
-                        Review assignment proof
-                      </Button>
-                    </div>
-
-                    {reviewProofPackId ? (
-                      <div className="space-y-4 rounded-lg border border-proofound-forest/50 bg-white p-4">
-                        <div>
-                          <p className="text-sm font-semibold text-proofound-charcoal">
-                            Final review before submission
-                          </p>
-                          <p className="mt-1 text-sm leading-6 text-proofound-charcoal/70">
-                            Confirm what {organization.displayName} can see before this proof
-                            submission is sent.
+                          <p className="mt-1 leading-6 text-proofound-charcoal/75">
+                            Owner-only proof-submission packet. It does not publish your Public
+                            Page, broaden visibility, expose a share link, or reveal contact
+                            details.
                           </p>
                         </div>
-
-                        <div className="grid gap-3 text-sm md:grid-cols-2">
-                          <div className="rounded-md border border-proofound-stone bg-proofound-parchment/50 p-3">
-                            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-proofound-charcoal/55">
-                              Submitted for
-                            </p>
-                            <p className="mt-1 font-medium text-proofound-charcoal">
-                              {assignmentTitle} at {organization.displayName}
-                            </p>
-                          </div>
-                          <div className="rounded-md border border-proofound-stone bg-proofound-parchment/50 p-3">
-                            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-proofound-charcoal/55">
-                              Proof/context included
-                            </p>
-                            <p className="mt-1 font-medium text-proofound-charcoal">
-                              {reviewProofPack?.title || `Proof Pack ${reviewProofPackId}`}
-                            </p>
-                            {reviewProofPack?.evidenceSummary ||
-                            reviewProofPack?.outcomesSummary ? (
-                              <p className="mt-1 text-xs leading-5 text-proofound-charcoal/60">
-                                {[
-                                  reviewProofPack?.evidenceSummary,
-                                  reviewProofPack?.outcomesSummary,
-                                ]
-                                  .filter(Boolean)
-                                  .join(' ')}
-                              </p>
-                            ) : null}
-                          </div>
-                          <div className="rounded-md border border-proofound-stone bg-proofound-parchment/50 p-3">
-                            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-proofound-charcoal/55">
-                              Employer visibility
-                            </p>
-                            <p className="mt-1 leading-6 text-proofound-charcoal/75">
-                              Owner-only proof-submission packet. It does not publish your Public
-                              Page, broaden visibility, expose a share link, or reveal contact
-                              details.
-                            </p>
-                          </div>
-                          <div className="rounded-md border border-proofound-stone bg-proofound-parchment/50 p-3">
-                            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-proofound-charcoal/55">
-                              Verification requests
-                            </p>
-                            <p className="mt-1 leading-6 text-proofound-charcoal/75">
-                              None will be sent from this submission. Save-without-sending and
-                              send-now choices stay inside explicit verification flows.
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="rounded-md border border-proofound-stone bg-proofound-parchment/40 p-3 text-sm leading-6 text-proofound-charcoal/70">
-                          Intro, reveal, interview, decision, and feedback states continue in
-                          Communications. Identity-bearing reveal still requires the
-                          participant-controlled reveal step.
-                        </div>
-
-                        <label className="flex items-start gap-3 text-sm leading-6 text-proofound-charcoal/75">
-                          <input
-                            id="candidate-submit-review-confirmed"
-                            type="checkbox"
-                            className="mt-1"
-                            checked={reviewConfirmed}
-                            onChange={(event) => setReviewConfirmed(event.target.checked)}
-                          />
-                          <span>
-                            I reviewed the visibility summary and confirm this owner-only Proof Pack
-                            should be submitted to {organization.displayName}.
-                          </span>
-                        </label>
-
-                        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => {
-                              setReviewProofPackId('');
-                              setReviewConfirmed(false);
-                            }}
-                            disabled={submitting}
-                          >
-                            Back
-                          </Button>
-                          <Button
-                            type="button"
-                            onClick={submitReviewedProofPack}
-                            disabled={submitting || !reviewConfirmed}
-                            className="w-full sm:w-auto"
-                          >
-                            Submit reviewed proof
-                          </Button>
+                        <div className="rounded-md border border-proofound-stone bg-proofound-parchment/50 p-3">
+                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-proofound-charcoal/55">
+                            Verification requests
+                          </p>
+                          <p className="mt-1 leading-6 text-proofound-charcoal/75">
+                            None will be sent from this submission. Save-without-sending and
+                            send-now choices stay inside explicit verification flows.
+                          </p>
                         </div>
                       </div>
-                    ) : null}
 
-                    <div className="rounded-lg border border-proofound-stone bg-white/70 p-3 text-xs leading-5 text-proofound-charcoal/60">
-                      Account controls: manage privacy, export, and deletion from{' '}
+                      <div className="rounded-md border border-proofound-stone bg-proofound-parchment/40 p-3 text-sm leading-6 text-proofound-charcoal/70">
+                        Intro, reveal, interview, decision, and feedback states continue in
+                        Communications. Identity-bearing reveal still requires the
+                        participant-controlled reveal step.
+                      </div>
+
+                      <label className="flex items-start gap-3 text-sm leading-6 text-proofound-charcoal/75">
+                        <input
+                          id="candidate-submit-review-confirmed"
+                          type="checkbox"
+                          className="mt-1"
+                          checked={reviewConfirmed}
+                          onChange={(event) => setReviewConfirmed(event.target.checked)}
+                        />
+                        <span>
+                          I reviewed the visibility summary and confirm this owner-only Proof Pack
+                          should be submitted to {organization.displayName}.
+                        </span>
+                      </label>
+
+                      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setReviewProofPackId('');
+                            setReviewConfirmed(false);
+                          }}
+                          disabled={submitting}
+                        >
+                          Back
+                        </Button>
+                        <Button
+                          type="button"
+                          onClick={submitReviewedProofPack}
+                          disabled={submitting || !reviewConfirmed}
+                          className="w-full sm:w-auto"
+                        >
+                          Submit reviewed proof
+                        </Button>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  <div className="rounded-lg border border-proofound-stone bg-white/70 p-3 text-xs leading-5 text-proofound-charcoal/60">
+                    Account controls: manage privacy, export, and deletion from{' '}
+                    <Link
+                      href={accountSaveControls.privacyDataControlsUrl}
+                      className="font-medium text-proofound-forest"
+                    >
+                      privacy settings
+                    </Link>
+                    .
+                  </div>
+                </div>
+              ) : null}
+
+              {isTestFlow && isClaimedByCurrentUser ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-emerald-700">
+                    Trial match accepted. You can now use messages and matching.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {invite.communicationsUrl ? (
+                      <Link href={invite.communicationsUrl}>
+                        <Button>Open Communications</Button>
+                      </Link>
+                    ) : null}
+                    <Link href="/app/i/matching">
+                      <Button variant="outline">Open Matching</Button>
+                    </Link>
+                  </div>
+                </div>
+              ) : null}
+
+              {!isTestFlow && isCompleted ? (
+                <div className="space-y-4">
+                  <div className="rounded-lg border border-emerald-200 bg-emerald-50/80 p-4">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle2 className="mt-0.5 h-5 w-5 text-emerald-700" />
+                      <div className="space-y-2">
+                        <p className="text-sm font-semibold text-emerald-900">
+                          Saved privately to your submission workspace
+                        </p>
+                        <p className="text-sm leading-6 text-emerald-800">
+                          Assignment proof is submitted for blind-first review. Your reusable Proof
+                          Pack, privacy settings, export controls, and deletion controls stay in
+                          your account.
+                        </p>
+                        <div className="grid gap-2 text-xs text-emerald-900 sm:grid-cols-2">
+                          <span className="flex items-center gap-2">
+                            <EyeOff className="h-3.5 w-3.5" />
+                            Public Page not auto-published
+                          </span>
+                          <span className="flex items-center gap-2">
+                            <ShieldCheck className="h-3.5 w-3.5" />
+                            Assignment review state remains separate
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <Button asChild className="w-full sm:w-auto">
+                      <Link href={accountSaveControls.proofWorkspaceUrl}>Open Proof Packs</Link>
+                    </Button>
+                    <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+                      <Link
+                        href={accountSaveControls.profileVisibilityUrl}
+                        className="font-medium text-proofound-forest hover:text-proofound-charcoal"
+                      >
+                        Visibility
+                      </Link>
                       <Link
                         href={accountSaveControls.privacyDataControlsUrl}
-                        className="font-medium text-proofound-forest"
+                        className="font-medium text-proofound-forest hover:text-proofound-charcoal"
                       >
-                        privacy settings
+                        Export or delete
                       </Link>
-                      .
-                    </div>
-                  </div>
-                ) : null}
-
-                {isTestFlow && isClaimedByCurrentUser ? (
-                  <div className="space-y-3">
-                    <p className="text-sm text-emerald-700">
-                      Trial match accepted. You can now use messages and matching.
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {invite.communicationsUrl ? (
-                        <Link href={invite.communicationsUrl}>
-                          <Button>Open Communications</Button>
-                        </Link>
-                      ) : null}
-                      <Link href="/app/i/matching">
-                        <Button variant="outline">Open Matching</Button>
+                      <Link
+                        href={accountSaveControls.assignmentReviewUrl}
+                        className="font-medium text-proofound-forest hover:text-proofound-charcoal"
+                      >
+                        Assignment review
                       </Link>
                     </div>
                   </div>
-                ) : null}
-
-                {!isTestFlow && isCompleted ? (
-                  <div className="space-y-4">
-                    <div className="rounded-lg border border-emerald-200 bg-emerald-50/80 p-4">
-                      <div className="flex items-start gap-3">
-                        <CheckCircle2 className="mt-0.5 h-5 w-5 text-emerald-700" />
-                        <div className="space-y-2">
-                          <p className="text-sm font-semibold text-emerald-900">
-                            Saved privately to your submission workspace
-                          </p>
-                          <p className="text-sm leading-6 text-emerald-800">
-                            Assignment proof is submitted for blind-first review. Your reusable
-                            Proof Pack, privacy settings, export controls, and deletion controls
-                            stay in your account.
-                          </p>
-                          <div className="grid gap-2 text-xs text-emerald-900 sm:grid-cols-2">
-                            <span className="flex items-center gap-2">
-                              <EyeOff className="h-3.5 w-3.5" />
-                              Public Page not auto-published
-                            </span>
-                            <span className="flex items-center gap-2">
-                              <ShieldCheck className="h-3.5 w-3.5" />
-                              Assignment review state remains separate
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                      <Button asChild className="w-full sm:w-auto">
-                        <Link href={accountSaveControls.proofWorkspaceUrl}>Open Proof Packs</Link>
-                      </Button>
-                      <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
-                        <Link
-                          href={accountSaveControls.profileVisibilityUrl}
-                          className="font-medium text-proofound-forest hover:text-proofound-charcoal"
-                        >
-                          Visibility
-                        </Link>
-                        <Link
-                          href={accountSaveControls.privacyDataControlsUrl}
-                          className="font-medium text-proofound-forest hover:text-proofound-charcoal"
-                        >
-                          Export or delete
-                        </Link>
-                        <Link
-                          href={accountSaveControls.assignmentReviewUrl}
-                          className="font-medium text-proofound-forest hover:text-proofound-charcoal"
-                        >
-                          Assignment review
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
-              </div>
+                </div>
+              ) : null}
             </>
           )}
         </section>
