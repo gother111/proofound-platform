@@ -145,12 +145,24 @@ export async function resolveLastSuccessfulAiProviderSmokeAt(
 ): Promise<string | null> {
   const env = params.env ?? process.env;
   const envTimestamp = env.AI_PROVIDER_SMOKE_LAST_SUCCESS_AT?.trim();
+  const envDefaultModel = normalizeModel(env.AI_PROVIDER_SMOKE_DEFAULT_MODEL);
+  const envFallbackModel = normalizeModel(env.AI_PROVIDER_SMOKE_FALLBACK_MODEL);
   const expectedDefaultModel = normalizeModel(params.expectedDefaultModel);
   const expectedFallbackModel = normalizeModel(params.expectedFallbackModel);
   const requiresModelMatch = Boolean(expectedDefaultModel || expectedFallbackModel);
 
-  if (envTimestamp && !requiresModelMatch && isValidSmokeTimestamp(envTimestamp)) {
-    return envTimestamp;
+  if (envTimestamp && isValidSmokeTimestamp(envTimestamp)) {
+    if (!requiresModelMatch) {
+      return envTimestamp;
+    }
+
+    if (
+      expectedDefaultModel &&
+      envDefaultModel === expectedDefaultModel &&
+      (!expectedFallbackModel || envFallbackModel === expectedFallbackModel)
+    ) {
+      return envTimestamp;
+    }
   }
 
   const artifact = await readAiProviderSmokeArtifact({ artifactPath: params.artifactPath });

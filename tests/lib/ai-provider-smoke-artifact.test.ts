@@ -110,6 +110,40 @@ describe('AI provider smoke artifact', () => {
     ).resolves.toBeNull();
   });
 
+  it('accepts env smoke evidence for model-gated launch checks only when the smoke model matches', async () => {
+    await expect(
+      resolveLastSuccessfulAiProviderSmokeAt({
+        artifactPath,
+        env: {
+          AI_PROVIDER_SMOKE_LAST_SUCCESS_AT: '2026-05-04T10:00:00.000Z',
+          AI_PROVIDER_SMOKE_DEFAULT_MODEL: 'gemini-3.1-flash-lite',
+        },
+        expectedDefaultModel: 'gemini-3.1-flash-lite',
+      })
+    ).resolves.toBe('2026-05-04T10:00:00.000Z');
+
+    await expect(
+      resolveLastSuccessfulAiProviderSmokeAt({
+        artifactPath,
+        env: {
+          AI_PROVIDER_SMOKE_LAST_SUCCESS_AT: '2026-05-04T10:00:00.000Z',
+          AI_PROVIDER_SMOKE_DEFAULT_MODEL: 'gemini-3.1-flash-lite-preview',
+        },
+        expectedDefaultModel: 'gemini-3.1-flash-lite',
+      })
+    ).resolves.toBeNull();
+
+    await expect(
+      resolveLastSuccessfulAiProviderSmokeAt({
+        artifactPath,
+        env: {
+          AI_PROVIDER_SMOKE_LAST_SUCCESS_AT: '2026-05-04T10:00:00.000Z',
+        },
+        expectedDefaultModel: 'gemini-3.1-flash-lite',
+      })
+    ).resolves.toBeNull();
+  });
+
   it('requires configured fallback smoke evidence before accepting fallback verification', async () => {
     await writeAiProviderSmokeArtifact(
       {
