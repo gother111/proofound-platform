@@ -83,7 +83,10 @@ const nextConfig = {
   outputFileTracingRoot: process.cwd(),
   outputFileTracingIncludes: {
     '/api/cron/launch-synthetic-checks': ['.artifacts/launch-smoke-report.json'],
-    '/api/monitoring/launch-status': ['.artifacts/launch-smoke-report.json'],
+    '/api/monitoring/launch-status': [
+      '.artifacts/ai-provider-smoke.json',
+      '.artifacts/launch-smoke-report.json',
+    ],
   },
   images: {
     remotePatterns: [

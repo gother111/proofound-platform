@@ -132,6 +132,14 @@ describe('launch gate package configuration', () => {
     expect(perfBudgets).toContain('API ${path} p95');
   });
 
+  it('ships model-matching AI provider smoke evidence with launch-status on Vercel', () => {
+    const nextConfig = fs.readFileSync(path.join(repoRoot, 'next.config.js'), 'utf8');
+
+    expect(nextConfig).toContain("'/api/monitoring/launch-status'");
+    expect(nextConfig).toContain("'.artifacts/ai-provider-smoke.json'");
+    expect(nextConfig).toContain("'.artifacts/launch-smoke-report.json'");
+  });
+
   it('keeps launch CLI probes aligned with server-only internal auth fallback order', () => {
     const launchStatus = fs.readFileSync(
       path.join(repoRoot, 'scripts/check-launch-status.mjs'),
