@@ -267,6 +267,10 @@ jobs:
       - name: Build production deployment output
         if: steps.freshness.outputs.current == 'true' && steps.changes.outputs.should_build == 'true' && steps.repo.outputs.sha != steps.live.outputs.sha && steps.pending.outputs.exists != 'true'
         env:
+          NEXT_PUBLIC_SITE_URL: https://proofound.io
+          SITE_URL: https://proofound.io
+          NEXT_PUBLIC_APP_ENV: production
+          APP_ENV: production
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
@@ -282,6 +286,10 @@ jobs:
         id: deploy
         if: steps.freshness.outputs.current == 'true' && steps.changes.outputs.should_build == 'true' && steps.repo.outputs.sha != steps.live.outputs.sha && steps.pending.outputs.exists != 'true'
         env:
+          NEXT_PUBLIC_SITE_URL: https://proofound.io
+          SITE_URL: https://proofound.io
+          NEXT_PUBLIC_APP_ENV: production
+          APP_ENV: production
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
