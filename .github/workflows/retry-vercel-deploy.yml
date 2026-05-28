@@ -118,6 +118,7 @@ jobs:
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
         run: |
           npm run ci:workflows
           npm run deploy:readiness:strict
