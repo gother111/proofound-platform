@@ -17,7 +17,7 @@ function getSiteUrl(): string {
 }
 
 const siteUrl = getSiteUrl();
-const socialPreviewImageUrl = `${siteUrl}/proofound-social-preview.png?version=20260528-hero`;
+const socialPreviewImageUrl = `${siteUrl}/proofound-social-preview.png?version=20260528-hero-v2`;
 
 export const metadata: Metadata = {
   title: 'Proofound | Proof Behind the Claim',
