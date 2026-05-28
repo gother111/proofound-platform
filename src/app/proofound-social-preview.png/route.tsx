@@ -12,58 +12,14 @@ const colors = {
   foreground: '#26231F',
   muted: '#6E675D',
   forest: '#56624F',
-  terracotta: '#8B4A36',
   stone: '#D5CABA',
   paper: '#FDFBF7',
+  sage: '#EEF1EA',
 };
 
-function ProofItem({ label, tone }: { label: string; tone: 'forest' | 'terracotta' | 'stone' }) {
-  const background = tone === 'forest' ? '#EEF1EA' : tone === 'terracotta' ? '#F4E7E1' : '#F8F4EC';
-  const border =
-    tone === 'forest'
-      ? 'rgba(86, 98, 79, 0.32)'
-      : tone === 'terracotta'
-        ? 'rgba(139, 74, 54, 0.28)'
-        : colors.stone;
-  const dot =
-    tone === 'forest' ? colors.forest : tone === 'terracotta' ? colors.terracotta : '#A19586';
+export function GET(request: Request) {
+  const origin = new URL(request.url).origin;
 
-  return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 14,
-        width: '100%',
-        borderRadius: 22,
-        border: `1px solid ${border}`,
-        background,
-        padding: '18px 20px',
-      }}
-    >
-      <div
-        style={{
-          width: 18,
-          height: 18,
-          borderRadius: 999,
-          background: dot,
-        }}
-      />
-      <span
-        style={{
-          color: colors.foreground,
-          fontFamily: 'Inter, Arial, sans-serif',
-          fontSize: 28,
-          fontWeight: 700,
-        }}
-      >
-        {label}
-      </span>
-    </div>
-  );
-}
-
-export function GET() {
   return new ImageResponse(
     (
       <div
@@ -83,20 +39,16 @@ export function GET() {
             position: 'absolute',
             inset: 0,
             background:
-              'radial-gradient(circle at 86% 16%, rgba(139, 74, 54, 0.18), transparent 32%), radial-gradient(circle at 80% 82%, rgba(86, 98, 79, 0.18), transparent 36%), linear-gradient(135deg, rgba(255,255,255,0.9), rgba(243,240,232,0.92))',
+              'radial-gradient(circle at top, rgba(255,255,255,0.9), rgba(247,246,241,0.98) 38%, rgba(244,241,233,1) 100%)',
           }}
         />
         <div
           style={{
             position: 'absolute',
-            left: 42,
-            right: 42,
-            top: 38,
-            bottom: 38,
+            inset: 0,
             display: 'flex',
-            borderRadius: 42,
-            border: `1px solid ${colors.stone}`,
-            background: 'rgba(253, 251, 247, 0.72)',
+            background:
+              'linear-gradient(180deg, rgba(86,98,79,0.08), rgba(86,98,79,0) 26%, rgba(139,74,54,0.08) 100%)',
           }}
         />
 
@@ -104,43 +56,79 @@ export function GET() {
           style={{
             position: 'relative',
             display: 'flex',
+            flexDirection: 'column',
             width: '100%',
             height: '100%',
-            padding: '74px 78px',
-            gap: 54,
+            padding: '34px 52px 46px',
           }}
         >
           <div
             style={{
               display: 'flex',
-              flexDirection: 'column',
+              alignItems: 'center',
               justifyContent: 'space-between',
-              width: 580,
+              height: 70,
+              borderBottom: `1px solid rgba(213, 202, 186, 0.56)`,
+              color: colors.muted,
             }}
           >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 30 }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 16,
+                color: colors.forest,
+                fontSize: 22,
+                fontWeight: 700,
+                letterSpacing: 5,
+              }}
+            >
               <div
                 style={{
                   display: 'flex',
-                  alignItems: 'center',
-                  gap: 16,
-                  color: colors.forest,
-                  fontSize: 26,
-                  fontWeight: 800,
-                  letterSpacing: 1.4,
+                  width: 42,
+                  height: 42,
+                  borderRadius: 999,
+                  background: colors.forest,
+                }}
+              />
+              PROOFOUND
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 30, fontSize: 18 }}>
+              <span>How it works</span>
+              <span>For individuals</span>
+              <span>For organizations</span>
+              <span
+                style={{
+                  borderRadius: 999,
+                  background: colors.forest,
+                  color: 'white',
+                  padding: '12px 22px',
+                  fontWeight: 700,
                 }}
               >
-                <div
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 999,
-                    background: colors.forest,
-                  }}
-                />
-                PROOFOUND
-              </div>
+                Request a pilot
+              </span>
+            </div>
+          </div>
 
+          <div
+            style={{
+              display: 'flex',
+              flex: 1,
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 38,
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                width: 620,
+                gap: 30,
+              }}
+            >
               <h1
                 style={{
                   display: 'flex',
@@ -149,9 +137,8 @@ export function GET() {
                   color: colors.foreground,
                   fontFamily: 'Georgia, Times New Roman, serif',
                   fontSize: 82,
-                  lineHeight: 0.9,
+                  lineHeight: 0.88,
                   fontWeight: 700,
-                  letterSpacing: -1,
                 }}
               >
                 <span>Proof behind</span>
@@ -162,92 +149,125 @@ export function GET() {
                 style={{
                   margin: 0,
                   maxWidth: 560,
-                  color: colors.muted,
-                  fontSize: 32,
-                  lineHeight: 1.22,
+                  color: 'rgba(38, 35, 31, 0.74)',
+                  fontSize: 25,
+                  lineHeight: 1.45,
                   fontWeight: 500,
                 }}
               >
-                Structured Proof Packs for privacy-safe assignment review before identity takes
-                over.
+                Proofound turns real work into structured Proof Packs for privacy-safe assignment
+                review before identity takes over.
               </p>
-            </div>
 
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 18,
-                color: colors.terracotta,
-                fontSize: 25,
-                fontWeight: 800,
-              }}
-            >
-              Evidence-based review for real work
-            </div>
-          </div>
+              <p
+                style={{
+                  margin: 0,
+                  color: 'rgba(38, 35, 31, 0.7)',
+                  fontSize: 18,
+                  lineHeight: 1.35,
+                  fontWeight: 600,
+                }}
+              >
+                Proof portfolios for individuals. Evidence-based review for teams.
+              </p>
 
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              width: 380,
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 18,
-                width: 380,
-                borderRadius: 34,
-                border: `1px solid ${colors.stone}`,
-                background: colors.paper,
-                padding: 28,
-              }}
-            >
               <div
                 style={{
                   display: 'flex',
-                  justifyContent: 'space-between',
                   alignItems: 'center',
-                  color: colors.muted,
-                  fontSize: 20,
-                  fontWeight: 800,
-                  letterSpacing: 0.7,
+                  gap: 18,
+                  paddingTop: 8,
                 }}
               >
-                PROOF PACK
-                <span style={{ color: colors.forest }}>Verified</span>
+                <span
+                  style={{
+                    borderRadius: 999,
+                    background: colors.forest,
+                    color: 'white',
+                    padding: '18px 30px',
+                    fontSize: 20,
+                    fontWeight: 700,
+                  }}
+                >
+                  Request a pilot
+                </span>
+                <span
+                  style={{
+                    borderRadius: 999,
+                    border: `1px solid ${colors.stone}`,
+                    background: 'rgba(255, 255, 255, 0.72)',
+                    color: colors.foreground,
+                    padding: '18px 30px',
+                    fontSize: 20,
+                    fontWeight: 700,
+                  }}
+                >
+                  Create your proof portfolio
+                </span>
               </div>
+            </div>
 
-              <ProofItem label="Outcome" tone="forest" />
-              <ProofItem label="Artifacts" tone="terracotta" />
-              <ProofItem label="Blind-safe" tone="stone" />
-
+            <div
+              style={{
+                display: 'flex',
+                position: 'relative',
+                width: 430,
+                height: 548,
+                marginRight: 20,
+              }}
+            >
+              <img
+                src={`${origin}/hero-resume-stack/paper-pile.png`}
+                alt=""
+                width="1122"
+                height="1402"
+                style={{
+                  position: 'absolute',
+                  left: -42,
+                  top: -18,
+                  width: 510,
+                  height: 637,
+                  objectFit: 'contain',
+                }}
+              />
+              <img
+                src={`${origin}/hero-resume-stack/cv-sheet.png`}
+                alt=""
+                width="1086"
+                height="1448"
+                style={{
+                  position: 'absolute',
+                  left: 78,
+                  top: 38,
+                  width: 286,
+                  height: 382,
+                  objectFit: 'contain',
+                }}
+              />
               <div
                 style={{
+                  position: 'absolute',
+                  right: 4,
+                  top: 210,
                   display: 'flex',
-                  gap: 10,
-                  marginTop: 6,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexDirection: 'column',
+                  width: 98,
+                  height: 138,
+                  transform: 'rotate(4deg)',
+                  borderRadius: 12,
+                  border: `1px solid rgba(213, 202, 186, 0.7)`,
+                  background: colors.background,
+                  color: 'rgba(86, 98, 79, 0.78)',
+                  fontSize: 18,
+                  fontWeight: 700,
+                  lineHeight: 1.08,
+                  textAlign: 'center',
                 }}
               >
-                {['Public page', 'Review corridor'].map((label) => (
-                  <div
-                    key={label}
-                    style={{
-                      borderRadius: 999,
-                      border: `1px solid ${colors.stone}`,
-                      color: colors.muted,
-                      fontSize: 18,
-                      fontWeight: 700,
-                      padding: '10px 14px',
-                    }}
-                  >
-                    {label}
-                  </div>
-                ))}
+                <span>Results</span>
+                <span>note</span>
               </div>
             </div>
           </div>
