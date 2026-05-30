@@ -1,697 +1,121 @@
 # Proofound MVP
 
 > Doc Class: `active`
-> Last Verified: `2026-05-21`
+> Last Verified: `2026-05-30`
 
-Launch-candidate scaffold for a proof-first, privacy-first assignment review corridor centered on Proof Packs, with one individual side and one organization side. Final launch readiness still depends on the target-specific gates below.
+Proofound is a proof-first, privacy-first assignment review corridor centered on Proof Packs, with one individual side and one organization side.
 
-## Overview
+## MVP Scope
 
-Proofound is a narrow proof-first assignment review corridor. It centers the product on Proof Packs and keeps the public portfolio as a derived trust surface. Core launch scope:
+Proofound helps individuals turn real work into structured Proof Packs and selected public portfolios, and helps organizations review proof-backed assignment submissions through blind-by-default, explainable, privacy-safe workflows.
 
-- **Two MVP Corridors**: One clean Individual corridor and one clean Organization corridor
-- **Proof Packs First**: Structured proof of real work, selected public portfolio output, and clear trust anchors
-- **Privacy by Design**: Blind-by-default review, progressive reveal, row-level security, and user-controlled visibility
-- **Calm, Launchable Scope**: One clean individual side, one clean organization side, and no launch drift into ATS, HRIS, public-directory, or social-feed behavior
+Proofound is not a broad ATS, AI recruiter, public people directory, social network, generic marketplace, HRIS, payroll system, or dashboard-heavy organization platform. Optional AI assistance is button-click support for proof clarity, assignment clarity, verification wording, and privacy preflight; it must not score, rank, shortlist, or make hiring decisions.
 
-Launch contract highlights:
+## Source Of Truth
 
-- Active MVP implementation authority starts with `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, then `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md`, then fresh repo-grounded audits and evidence.
-- Interactive web auth uses Supabase SSR session cookies.
-- Public portfolio publication is explicit and non-indexed by default until publication criteria are met.
-- Uploads are quarantine-first and private by default, with public promotion limited to approved safe image types.
-- MVP excludes ATS or HRIS replacement, public people directories, open candidate indexes, and social or feed-driven product behavior.
+Use this authority stack for product, technical, launch, and GTM decisions:
 
-## Visual Architecture (quick view)
+1. [Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md](Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md)
+2. [PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md](PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md)
+3. [PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md](PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md)
+4. [LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md](LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md)
+5. [Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md](Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md)
+6. Fresh repo-grounded audits and evidence
 
-```mermaid
-graph TD
-  A[User Browser] --> B[Vercel Edge]
-  B --> C[Next.js App Router]
-  C -->|SSR session cookies| D[Supabase Auth]
-  C -->|Reads/Writes| E[Supabase Postgres (RLS on)]
-  C -->|Internal document intelligence| J[Python internal service]
-  C -->|Emails| F[Resend]
-  C -->|Telemetry| G[Sentry]
-  H[Vercel Cron] --> C
-  C -->|Internal API calls| C
-  E -. secure storage .- I[Supabase Storage (assets)]
-  E -->|Queue-backed jobs| K[Python internal job queue]
-```
+`README.md` is only the repo front door. It does not override the locked MVP stack. Older broad specs, legacy PRDs, audit reports, and generated evidence are reference-only unless the active authority stack points to them.
 
-- Traffic enters via Vercel edge, hits the Next.js app, and all data flows through Supabase with RLS enforced.
-- Cron jobs call the same API routes, so logic stays in one place.
-- Resend handles transactional email; Sentry captures errors and performance traces.
-
-## Persona & App Flow
-
-```mermaid
-flowchart LR
-  U[Sign up / Login] --> V{Email verified?}
-  V -- No --> X[Send magic link / verify email]
-  V -- Yes --> W{Persona chosen?}
-  W -- Individual --> I[(Individual profile + Proof Packs)]
-  W -- Organization --> O[(Organization + members + roles)]
-  I --> S[App Shell /app/i/*]
-  O --> T[App Shell /app/o/[slug]/*]
-  S & T --> R[Supabase (RLS enforces data per user/org)]
-```
-
-- After email verification, users branch into either the Individual or Organization shell.
-- Both shells read/write through the same Supabase backend with RLS guarding visibility.
-
-## Documentation map
-
-- MVP implementation authority: `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md`, and fresh repo-grounded audits/evidence.
-- Reference-only broader strategy and diagnostics: `Proofound_Project_Specification_2026-03-11.md`, `PRD_for_a_web_platform_MVP.master-latest.md`, `PRD_TECHNICAL_REQUIREMENTS.md`, `LAUNCH_RUNBOOK.md`, `docs/proofound-hard-audit-2026-03-12.md`, `project/Prompt.md`, `project/Architecture.md`, `README.md`.
-- Repo-grounded implementation snapshots and readiness aids: `project/Architecture.md`, `project/Plans.md`, `project/Implement.md`, `PRODUCTION_CHECKLIST.md`.
-- Historical architecture context only: `SYSTEM_ARCHITECTURE_COMPREHENSIVE.md`, `SYSTEM_ARCHITECTURE_SUPPLEMENT.md`, `PRD_for_a_web_platform_MVP.md`.
-- APIs: `docs/API_REFERENCE.md` (generated from `src/app/api/**/route.ts` via `node scripts/generate-api-reference.mjs`; historical API specs remain archived under `docs/archive/legacy-platform/api-reference-history/`).
-- Runbooks: `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, `PRODUCTION_CHECKLIST.md`, `APPLY_MIGRATIONS_MANUAL.md`, `RUN_MIGRATIONS_GUIDE.md`, `SETUP_SUPABASE.md`. Provider setup context lives in `OAUTH_SETUP_GUIDE.md` as a reference, not a launch gate.
-- Archives: historical docs are grouped under `docs/archive/legacy-platform/`, status reports under `docs/archive/status-reports/`, demo artifacts under `docs/archive/demos/`.
-- Public/legal pages and metadata surfaces: `/`, `/login`, `/auth/login`, `/signup/**`, `/onboarding`, `/privacy`, `/terms`, `/cookies`, `/cookies/settings`, `/portfolio/[handle]`, `/portfolio/org/[slug]`, `src/lib/seo/public-metadata.ts`, `src/app/sitemap.ts`, `src/app/layout.tsx`, and `public/favicon.svg`.
-
-## Tech Stack
-
-- **Framework**: Next.js 15 (App Router) + TypeScript + React Server Components
-- **Styling**: Tailwind CSS + shadcn/ui (Radix primitives)
-- **Database**: Supabase Postgres + Drizzle ORM
-- **Auth**: Supabase Auth with SSR session cookies (email/password + Google + LinkedIn)
-- **Email**: Resend + React Email
-- **i18n**: next-intl with English launch baseline; Swedish deferred
-- **Testing**: Vitest (unit) + Playwright (e2e) + @axe-core (a11y)
-- **CI/CD**: GitHub Actions + Vercel
-
-## Brand Tokens
-
-Design system extracted from Figma "Proofound Style Guidelines":
-
-- **Colors**: Forest Green (primary), Parchment (background), Terracotta (accent)
-- **Typography**: Crimson Pro (display), Inter (UI)
-- **Motion**: Calm, purposeful animations (100-600ms durations)
+For a directory-by-directory map and documentation status table, start with [docs/REPO_GUIDE.md](docs/REPO_GUIDE.md).
 
 ## Prerequisites
 
-- Node.js 24.15.0 (see `.nvmrc`) and npm 11.12.1 (pinned in `package.json`)
-- Python 3.12 recommended for local document-intelligence work (`.venv311` or `python3.11` also work for the bundled Python tests)
-- Supabase account (free tier works)
-- Resend account (free tier works)
-- Vercel account (optional, for deployment)
+- Node.js `24.15.0` from [.nvmrc](.nvmrc)
+- npm `11.12.1` from `package.json`
+- `npm ci` for clean installs
+- Environment values copied from [.env.example](.env.example) into `.env.local`
+- Supabase, Resend, and Vercel access only when the task requires connected services
 
-## Getting Started
+The repo uses `engine-strict=true`; unsupported Node versions should fail closed.
 
-### 1. Clone and Install
+## Quick Start
 
 ```bash
-git clone <your-repo-url>
-cd proofound-platform
+nvm install
+nvm use
 npm ci
-```
-
-`npm ci` is the launch-gate install path. The repo uses `package-lock.json`, pins
-`packageManager: npm@11.12.1`, and enables `engine-strict=true`; installs must run
-on Node `24.x`.
-
-### 2. Set Up Supabase
-
-1. Create a new project at [supabase.com](https://supabase.com)
-2. Go to Project Settings → API
-3. Copy your project URL and anon key
-4. Copy your service role key (keep this secret!)
-5. Go to Project Settings → Database
-6. Copy your connection string
-
-### 3. Configure Environment Variables
-
-```bash
 cp .env.example .env.local
-```
-
-Edit `.env.local` (you will copy these values into Vercel later):
-
-```env
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
-NEXT_PUBLIC_APP_ENV=local
-
-# Supabase (from step 2)
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-DATABASE_URL=postgresql://postgres:[PASSWORD]@db.your-project.supabase.co:6543/postgres
-DIRECT_URL=postgresql://postgres:[PASSWORD]@db.your-project.supabase.co:5432/postgres
-PII_HASH_SALT=your-salt
-
-# Resend
-RESEND_API_KEY=re_your_key
-EMAIL_FROM="Proofound <no-reply@proofound.io>"
-
-# Rate Limiting
-RATE_LIMIT_WINDOW_SECONDS=60
-RATE_LIMIT_MAX=30
-
-# Sentry (error monitoring)
-NEXT_PUBLIC_SENTRY_DSN=
-SENTRY_ORG=
-SENTRY_PROJECT=
-SENTRY_AUTH_TOKEN=
-SENTRY_DEBUG=false
-
-# Cron jobs
-CRON_SECRET=your-cron-bearer-token
-INTERNAL_API_SECRET=your-internal-launch-ops-token
-```
-
-Archived Python document-intelligence helper variables are documented in `docs/ENV_VARIABLES.md`; they are not default MVP launch requirements.
-
-> **Heads up:** Once this works locally, open your Vercel project, go to **Settings → Environment Variables**, and add each of the keys above (Production, Preview, and Development tabs). For `DATABASE_URL`, copy the Supabase value from **Project Settings → Database → Connection string → Node.js**.
-
-### 4. Set Up Database
-
-Run migrations and triggers:
-
-```bash
-# Apply ordered SQL migrations + policy/trigger supplements
-PATH=/opt/homebrew/opt/node@24/bin:$PATH npm run db:migrate
-
-# Optional but recommended for assignment-fit review
-PATH=/opt/homebrew/opt/node@24/bin:$PATH npm run db:seed-taxonomy
-```
-
-**Quick guide to DB scripts:**
-
-- `npm run db:generate` — Create a new migration from schema changes.
-- `npm run db:migrate` — Apply ordered `src/db/migrations/*.sql` plus ledgered policy/trigger SQL.
-- `npm run db:drift-check` — Enforce canonical migration-path discipline in CI.
-- `npm run db:push` — Dev-only. Push the current schema directly to a database (bypasses migration files). Do not use this for production.
-- `npm run db:backup:checkpoint` — Create a database checkpoint before risky DDL.
-- `npm run db:audit:migrations` — Audit canonical migration ledger drift (`src/db/migrations` + supplemental policy/trigger versions vs `public.app_migration_ledger`).
-  - Strict legacy baseline audit: `npm run db:audit:migrations -- --mode legacy-supabase-baseline --baseline supabase/ledger-baseline/schema_migrations.current-db.json`.
-  - Optional diagnostics-only file inventory audit: `npm run db:audit:migrations -- --mode legacy-supabase`.
-- `npm run db:seed` — Seed feature flags (and demo data when enabled).
-- `npm run db:seed-taxonomy` — Seed the expertise taxonomy slice used by assignment-fit review.
-
-### 5. Seed Database (Optional)
-
-```bash
-npm run db:seed
-```
-
-This creates feature flags. Demo users should be created via the signup flow.
-
-### 6. Set Up Resend
-
-1. Sign up at [resend.com](https://resend.com)
-2. Add and verify your domain
-3. Configure DNS records (SPF, DKIM, DMARC):
-   - **SPF**: Add TXT record: `v=spf1 include:_spf.resend.com ~all`
-   - **DKIM**: Add CNAME records provided by Resend
-   - **DMARC**: Add TXT record: `v=DMARC1; p=none; rua=mailto:dmarc@proofound.io`
-4. Get your API key from the dashboard
-5. Update `RESEND_API_KEY` and `EMAIL_FROM` in `.env.local`
-
-**Email previews (optional):**
-
-Run `npm run email:dev` to open the React Email preview server. If your Next.js dev server is already on port 3000, pass `--port 3001` (e.g., `npm run email:dev -- --port 3001`).
-
-### 3b. Set Up Sentry (error monitoring)
-
-1. Create a Sentry project (Platform: Next.js).
-2. In Sentry Settings → Projects → Client Keys (DSN), copy the `SENTRY_DSN`.
-3. Add these env vars (local + Vercel): `SENTRY_DSN`, `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN` (auth token is only for source map upload in CI/build; keep it secret).
-4. Deploy or restart dev to pick up the vars. Errors will be captured via `@sentry/nextjs` wrapping in `next.config.js`.
-
-### 7. Start Development Server
-
-```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
-
-## Project Structure
-
-```
-src/
-├── actions/              # Server Actions (auth, profile, org, onboarding)
-├── app/                  # Next.js App Router pages
-│   ├── (auth)/          # Auth pages (login, signup, reset)
-│   ├── app/             # Protected app routes
-│   │   ├── i/          # Individual shell
-│   │   └── o/[slug]/   # Organization shell
-│   ├── onboarding/     # Onboarding wizard
-│   └── page.tsx        # Landing page
-├── components/
-│   ├── ui/             # shadcn/ui components
-│   ├── brand/          # Logo, Wordmark, ThemeToggle
-│   ├── auth/           # Auth forms
-│   ├── onboarding/     # Onboarding steps
-│   ├── individual/     # Individual-specific
-│   ├── organization/   # Org-specific
-│   └── landing/        # Landing page sections
-├── db/                 # Database schema, policies, seed
-├── design/             # Brand tokens (JSON)
-├── i18n/               # Internationalization (en, sv)
-├── lib/                # Utilities (auth, supabase, email, motion)
-└── middleware.ts       # Session refresh, route guards
-
-emails/                 # React Email templates
-e2e/                    # Playwright E2E tests
-```
-
-## Available Scripts
-
-```bash
-# Development
-npm run dev              # Start dev server
-npm run build            # Build for production
-npm run start            # Start production server
-npm run lint             # Lint code
-npm run format           # Format with Prettier
-npm run typecheck        # TypeScript type checking
-
-# Database
-npm run db:generate      # Generate Drizzle migrations
-npm run db:migrate       # Run ordered SQL migrations + policy/trigger supplements
-npm run db:drift-check   # Check migration path drift
-npm run db:push          # Dev-only schema push (do not use for production)
-npm run db:backup:checkpoint  # Create a DB checkpoint before risky DDL
-npm run db:audit:migrations   # Audit canonical migration ledger drift
-npm run db:studio        # Open Drizzle Studio
-npm run db:seed          # Seed database
-
-# Vercel
-npm run vercel:preflight  # Check Vercel project link + required env key presence
-npm run vercel:pull       # Pull preview env values into .vercel/
-npm run vercel:pull:production  # Pull production env values into .vercel/
-npm run vercel:build      # Build .vercel/output using preview/local envs
-npm run vercel:build:production # Build .vercel/output using production envs
-npm run vercel:deploy:prebuilt  # Upload prebuilt preview output
-npm run vercel:deploy:prebuilt:production # Upload prebuilt production output
-npm run vercel:env-parity # Optional env parity snapshot vs legacy project
-
-# Testing
-npm ci                   # Clean-checkout install used by CI and launch gates
-npm run test             # Run unit tests (Vitest)
-npm run test:privacy     # Core Supabase RLS/privacy suite
-npm run test:privacy:extended # Extended privacy and workflow isolation suite
-npm run test:launch:smoke # Launch smoke matrix; writes .artifacts/launch-smoke-report.json
-npm run monitor:launch   # Synthetic launch monitors; pass BASE_URL for target checks
-npm run launch:status    # Authenticated launch-status probe; requires BASE_URL and CRON_SECRET/INTERNAL_API_SECRET for protected runtimes
-npm run test:archived:non-launch # Archived/removed non-MVP tests kept out of npm test
-npm run test:e2e         # Run E2E tests (Playwright)
-npm run test:e2e:ui      # Run E2E tests with UI
-npm run perf:budgets     # Perf budgets (Lighthouse TTI/CLS + API p95)
-npm run go:no-go         # Go/No-Go gating (smoke + protected perf/launch status + restore evidence)
-```
-
-> **Troubleshooting:** If `npm run lint` reports that `next` cannot be found, follow the steps in [`docs/TROUBLESHOOTING_LINT.md`](docs/TROUBLESHOOTING_LINT.md).
-
-## Cron Jobs (Ops Quick Reference)
-
-- Primary scheduler: Vercel Cron for daily core business automation. Use cron-job.org only for explicitly managed observability jobs.
-- Auth: cron routes require `Authorization: Bearer ${CRON_SECRET}` unless explicitly documented otherwise, such as `/api/cron/health-check`.
-- Routes and schedules (UTC):
-  - `/api/cron/decision-reminders` — 10:00 (decision reminders and performance-health summary; weekly digest temporarily disabled)
-  - `/api/cron/refresh-matches` — 03:00 (enqueue match refresh jobs)
-  - `/api/cron/refresh-matches-worker` — 03:15 (drain queued refresh jobs)
-  - `/api/cron/sla-enforcement` — 08:00 (expire stale matches and flag overdue interview decisions)
-  - `/api/cron/python-internal-worker` — archived/non-MVP compatibility route; not scheduled
-  - `/api/cron/cv-import-temp-cleanup` — removed from active launch infrastructure; not scheduled
-- Active launch env requirements:
-  - `CRON_SECRET` (for inbound cron calls)
-  - `CRON_API_KEY` (optional, for syncing cron-job.org jobs from the repo)
-  - `SUPABASE_SERVICE_ROLE_KEY` (required for queue worker + matching internals)
-  - `MATCHING_REFRESH_QUEUE_ENABLED` (default `true`)
-  - `MATCHING_REFRESH_WORKER_BATCH_SIZE` (default `100`)
-  - `MATCHING_REFRESH_WORKER_CONCURRENCY` (default `4`)
-  - `MATCHING_REFRESH_MAX_ATTEMPTS` (default `3`)
-  - `MATCHING_TWO_STAGE_ENABLED` (default `true`)
-  - `MATCHING_NEAR_SCAN_LIMIT` (default `300`)
-  - `PERF_API_P95_BUDGET_MS` (default `1500`)
-- Archived compatibility/helper env, not default launch requirements:
-  - `PYTHON_INTERNAL_SERVICE_SECRET`
-  - `PYTHON_CV_IMPORT_BASE_URL`
-  - `PYTHON_INTERNAL_JOBS_ENABLED`
-  - `PYTHON_INTERNAL_WORKER_BATCH_SIZE`
-  - `PYTHON_INTERNAL_WORKER_CONCURRENCY`
-  - `PYTHON_INTERNAL_WORKER_LEASE_SECONDS`
-  - `PYTHON_INTERNAL_MAX_ATTEMPTS`
-  - `CV_IMPORT_ENGINE_MODE`
-  - `CV_IMPORT_TEMP_TTL_HOURS`
-- Observability routes managed through cron-job.org:
-  - `/api/cron/performance-check` — daily at 06:00 Europe/Stockholm
-  - `/api/cron/health-check` — every 3 hours (no auth required by the route)
-- Unscheduled compatibility/manual routes:
-  - `/api/cron/account-deletion-workflow` — retired compatibility route; returns 410 because account deletion is immediate
-  - `/api/cron/send-deletion-reminders` — retired compatibility route; returns 410 because grace-period reminders are not part of the locked launch MVP
-  - `/api/cron/process-deletions` — retired compatibility route; returns 410 because scheduled deletion processing is not part of the locked launch MVP
-  - `/api/cron/generate-fairness-note` — archived compatibility route outside the locked launch MVP
-  - `/api/cron/weekly-digest` — manual compatibility route; weekly digest delivery is temporarily disabled
-- Tracking & troubleshooting:
-  - cron-job.org History for status/body; enable notifications on non-200.
-  - Vercel function logs for detailed errors.
-  - DB tables: `fairnessNotes`, `fairnessReports` for outputs; other crons rely on logs/status JSON.
-  - Success = 200 JSON; 401 = bad/missing bearer; 500 = code/data/env issue (check logs).
-- Legacy CV import PDF analyze is archived/non-launch.
-  - `/api/expertise/cv-import/wizard-*` routes are retained only as archived compatibility handlers and must return launch-safe `410` responses.
-  - Do not use the legacy CV wizard as MVP launch evidence or as approval for broad OCR/import behavior.
-  - Active assisted import/proof work belongs to the approved Start from CV private scaffolding and Proof Artifact Text Extraction corridors.
-- Manual test (example):
-  ```bash
-  curl -i -H "Authorization: Bearer $CRON_SECRET" https://proofound.io/api/cron/refresh-matches
-  curl -i -H "Authorization: Bearer $CRON_SECRET" https://proofound.io/api/cron/refresh-matches-worker
-  ```
-- Sync the managed cron-job.org job set from this repo:
-  ```bash
-  npm run cron:sync
-  ```
-- `npm run cron:sync` keeps the intended external jobs enabled/disabled and disables overlapping or retired external jobs such as `account-deletion-workflow`, `send-deletion-reminders`, `process-deletions`, `refresh-matches`, and `sla-enforcement`.
-- If managing cron-job.org manually: use Method `GET`, the same URL, and the header `Authorization: Bearer $CRON_SECRET` for protected routes. Use its notifications/logs for external monitoring.
-
-## Database Schema
-
-### Core Tables
-
-- `profiles` - User profiles (extends Supabase auth.users)
-- `individual_profiles` - Individual-specific data
-- `organizations` - Organization entities
-- `organization_members` - Membership with canonical roles (`org_owner`, `org_manager`, `org_reviewer`)
-- `org_invitations` - Pending invitations
-- `audit_logs` - Audit trail for important actions
-- `feature_flags` - Feature toggle system
-- `rate_limits` - Rate limiting tracking
-
-### RLS (Row-Level Security)
-
-All tables have RLS enabled with policies:
-
-- Users can read their own data and public data
-- Organization data is scoped to members
-- Admins/owners can manage org settings and members
-- Audit logs are readable by relevant users/org members
-
-## Authentication Flow
-
-1. **Sign Up** → Email verification → Onboarding
-2. **Login** → Check persona → Redirect to appropriate shell
-3. **Onboarding**:
-   - Choose: Individual or Organization
-   - **Individual**: Set handle, name, locale → `/app/i/home`
-   - **Organization**: Create org → Invite team → `/app/o/[slug]/home`
-
-## App Shells
-
-### Individual Shell (`/app/i/*`)
-
-- Home: Dashboard with quick actions
-- Profile: Edit headline, bio, skills, location, visibility
-- Settings: Account, notifications, security, language
-
-### Organization Shell (`/app/o/[slug]/*`)
-
-- Home: Org overview, member count, activity
-- Profile: Edit mission, logo, website
-- Members: Invite, manage roles, remove members
-- Settings: Org branding, audit log viewer
-
-## Testing
-
-### Unit Tests
-
-```bash
-npm run test
-```
-
-The default suite is the MVP release signal for repo-wide unit/API/UI contracts.
-It intentionally excludes archived or removed non-MVP surfaces, privacy/RLS tests
-with their own database harness, integration tests, a11y, and Playwright E2E.
-
-Tests for:
-
-- Auth helpers
-- RBAC functions
-- Zod schemas
-- Utility functions
-
-### E2E Tests
-
-```bash
-npm run test:e2e
-```
-
-Test scenarios:
-
-- Individual signup → onboarding → profile
-- Organization creation → invite → accept
-- RLS enforcement (cross-org access denied)
-- Accessibility (axe-core checks)
-
-### A11y Testing
-
-E2E tests include `@axe-core/playwright` for WCAG AA compliance checks on key pages.
-
-### Specialized Tests & Checks
-
-- `npm run test:privacy` (and `:extended`, `:coverage`, `:watch`) — Supabase RLS/Privacy suites.
-- `npm run test:launch:smoke` — launch smoke matrix for the locked MVP corridor.
-- `npm run monitor:launch` — synthetic launch monitor runner; pass `BASE_URL` when checking a specific runtime.
-- `npm run launch:status` — authenticated launch-status probe; pass `BASE_URL` and `CRON_SECRET` or `INTERNAL_API_SECRET` for protected runtimes.
-- `npm run test:archived:non-launch` — archived/removed non-MVP regression tests that are preserved but do not block the default launch gate.
-- `npm run test:python` — Python document-intelligence package regression tests; not default MVP launch evidence. See `tests/python/README.md`.
-- `npm run test:a11y` — Playwright accessibility-only suite.
-- `npm run perf:budgets` — Lighthouse-based performance budget check.
-- `npm run go:no-go` — Composite gate for fresh smoke, protected perf/launch status, safe-mode flags, required evidence files, and production-candidate restore evidence.
-
-## Deployment
-
-### Vercel (Recommended)
-
-Production deploys default to a GitHub Actions prebuilt workflow:
-
-1. Merge the release PR into `master`
-2. GitHub Actions runs `vercel pull --environment=production`
-3. GitHub Actions runs `vercel build --prod`
-4. GitHub Actions runs `vercel deploy --prebuilt --prod`
-
-Preview deployments remain Git-integrated for now so release branches and PRs still receive the normal Vercel preview URL.
-
-**Manual production parity flow:**
-
-```bash
-npm run vercel:preflight
-npm run vercel:pull:production
-npm run vercel:build:production
-ls .vercel/output
-npm run vercel:deploy:prebuilt:production
-```
-
-**Environment Variable Groups:**
-
-- **Supabase**: URL, anon key, service role key, DATABASE_URL
-- **Resend**: API key, FROM email
-- **App**: NEXT_PUBLIC_SITE_URL, NEXT_PUBLIC_APP_ENV=production
-
-**Prebuilt deployment caveats:**
-
-- `vercel pull` writes build-time env files under `.vercel/` and those files stay gitignored.
-- `vercel build --prod` is the production build source of truth for CI and local parity.
-- `vercel deploy --prebuilt` uploads `.vercel/output`; it does not fix missing build-time env vars after the build is already done.
-- If Vercel Git auto-deploys remain enabled for production, Vercel can still create cloud-build deployments alongside the prebuilt workflow until that setting is intentionally disabled.
-- Preview deployments remain Git-based for now. If the team later moves previews to prebuilt deploys too, preserve Git metadata and validate branch-specific env/domain behavior first.
-
-**Post-Deployment:**
-
-- Apply database migrations explicitly via `npm run db:migrate` (do not use `db:push` for production)
-- Verify email sending works
-- Test auth flows end-to-end
-- Verify `https://proofound.io/api/health` returns the minimal public contract with
-  `status:"ok"`. Confirm the deployed commit SHA through Vercel deployment metadata or the
-  prebuilt workflow summary, not the public health payload.
-
-### Database Migrations on Deploy
-
-Proofound does not run database migrations automatically in the Vercel build.
-
-Apply schema changes out of band using canonical SQL migrations (`src/db/migrations/*.sql`) and:
-
-```bash
-PATH=/opt/homebrew/opt/node@24/bin:$PATH npm run db:migrate
-```
-
-## CI/CD
-
-GitHub Actions workflow (`.github/workflows/ci.yml`) runs on push/PR:
-
-1. Install dependencies
-2. Lint
-3. Type check
-4. Run unit tests
-5. Build
-
-Protect your `master` branch:
-
-- Require PR reviews
-- Require CI to pass
-- No direct pushes
-
-## Security
-
-- **RLS**: All tables have row-level security
-- **Rate Limiting**: Auth routes are rate-limited
-- **Env Vars**: Never commit secrets; use `.env.local`
-- **Service Role**: Only used server-side, never exposed to client
-- **HTTPS**: Enforced in production (Vercel default)
-
-## Internationalization
-
-Launch runtime locale: English (en)
-
-- Locale-ready message files remain in `src/i18n/messages/{locale}.json`
-- Swedish assets may remain in source, but Swedish runtime parity is deferred from launch
-- Server-side rendering uses next-intl with UTC persistence and user-local display formatting
-
-## Accessibility
-
-- WCAG 2.1 AA compliance target
-- Focus-visible rings on all interactive elements
-- Color contrast tested against brand tokens
-- Keyboard navigation support
-- Screen reader tested
-- Automated axe-core checks in E2E tests
-
-## Brand & Design
-
-Design tokens from Figma Style Guidelines:
-
-- **Colors**: `src/design/brand-tokens.json`
-- **Motion**: `src/design/motion-tokens.json`
-- Tailwind config extends from tokens
-- Dark mode support (media + class strategy)
-- Reduced motion respected (`prefers-reduced-motion`)
-
-## Locked MVP Boundary
-
-- Keep the product centered on Proof Packs, privacy-safe review, public proof portfolios, org trust pages, and one structured assignment corridor.
-- Treat public portfolios as selected output surfaces, not the product center.
-- Do not broaden launch messaging into marketplace behavior, ATS replacement, public directories, social feeds, or dashboard-heavy org suites.
-
-## PRD Flow Seed (Supabase)
-
-Use this seed to preload representative personas, organizations, assignments, and review data for end-to-end testing.
-
-1. Ensure `.env.local` contains `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (service role is required to bypass RLS during seed).
-2. Run the seed: `npm run seed:prd-supabase`
-3. Demo logins created:
-   - Individuals: `nenah@proofound-demo.com`, `mateo@proofound-demo.com`, `ola@proofound-demo.com`, `dmitry@proofound-demo.com`, `priya@proofound-demo.com`
-   - Org admins: `ops@greengrid-demo.com`, `talent@bridges-demo.org`, `sourcing@cityworks-demo.gov`
-   - Password (all): `DemoPass123!`
-
-What this populates:
-
-- Minimal taxonomy slice (L1-L4) for skills used in review
-- Individual profiles, proof objects, visibility settings, and portfolio-safe data
-- Organizations with trust-page fields and admin members
-- Assignments with review gates, outcomes, and expertise matrix
-- Matches, conversations, interviews, and analytics events
-
-## Troubleshooting
-
-### "Database connection error"
-
-- Check `DATABASE_URL` in `.env.local`
-- Verify Supabase project is active
-- Check if IP is whitelisted (if using IP restrictions)
-
-### "Email not sending"
-
-- Verify Resend API key
-- Check domain verification status
-- Review DNS records (SPF, DKIM, DMARC)
-- Check Resend dashboard logs
-
-### "RLS policy error"
-
-- Ensure policies.sql was run in Supabase
-- Check if user is authenticated
-- Verify org membership in `organization_members` table
-
-### "Onboarding redirect loop"
-
-- Check `profiles.persona` value
-- Verify middleware logic
-- Clear cookies and try again
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-MIT License - see LICENSE file for details
-
-## Getting Support
-
-### For Platform Users
-
-- **Email:** hello@proofound.io (Response within 24 hours, Monday-Friday)
-- **Support window:** Monday-Friday, 9 AM - 6 PM UTC
-- **User Support Guide:** See [`SUPPORT.md`](SUPPORT.md) for FAQs and troubleshooting
-
-### For Development Issues
-
-- **Open a GitHub Issue:** Report bugs or request features
-- **Review Documentation:**
-  - [`PRODUCTION_CHECKLIST.md`](PRODUCTION_CHECKLIST.md) - Deployment checklist
-  - [`LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`](LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md) - Operational procedures
-  - [`docs/API_REFERENCE.md`](docs/API_REFERENCE.md) - API contracts and endpoint families
-  - [`EMAIL_SUPPORT_SETUP.md`](EMAIL_SUPPORT_SETUP.md) - Email support configuration
-- **Third-Party Docs:** Supabase, Resend, Vercel documentation
-
-### Team Contacts
-
-- **Pavlo Samoshko** (CEO, Product) - pavlo.samoshko@proofound.io
-- **Yurii Bakurov** (Technical Lead) - yurii.bakurov@proofound.io
-
----
-
-Built for proof-first, privacy-safe assignment review.
-
-### Lint in restricted CI
-
-`npm run lint` auto-skips when Next.js/deps cannot be installed (restricted CI).
-To force lint, set `FORCE_LINT=true` or run locally after `npm ci`.
-
-### Environment setup (quick)
-
-1. Copy `.env.example` to `.env.local` and fill the values.
-2. In Supabase → Authentication → URL Configuration:
-   - Set **Site URL** to the same domain as `NEXT_PUBLIC_SITE_URL` (or `SITE_URL` if you use the private fallback).
-   - Add redirect URLs: `/auth/callback`, `/reset-password/confirm`, `/verify-email`.
-3. Ensure `DATABASE_URL` points to your Postgres (Supabase) connection string (use the `?sslmode=require` variant if provided).
-4. (Optional) Set `SUPABASE_SERVICE_ROLE_KEY` for scripts/cron jobs.
-5. Run `npm run build` (a readiness check will warn if anything is missing).
-
-If you see `ENV_MISCONFIG` in the UI or logs, check the variables above.
-
-### Auth Template Sync (Supabase SMTP)
-
-For Supabase Auth emails (signup, recovery, magic link, invite, email change), templates are generated
-from code and can be synced to Supabase via Management API.
-
-Required env vars:
-
-- `SUPABASE_ACCESS_TOKEN`
-- `SUPABASE_PROJECT_REF`
-
-Commands:
-
-- Dry run: `npm run email:auth:templates:dry-run`
-- Apply update: `npm run email:auth:templates:sync`
-
-The sync command writes a backup snapshot of the current auth config to:
-
-- `artifacts/supabase-auth-config/`
+Open [http://localhost:3000](http://localhost:3000).
+
+Keep secrets out of tracked files. Use [.env.example](.env.example) and [docs/ENV_VARIABLES.md](docs/ENV_VARIABLES.md) for names and intent only.
+
+## Common Commands
+
+| Task                 | Command                           |
+| -------------------- | --------------------------------- |
+| Start local app      | `npm run dev`                     |
+| Build                | `npm run build`                   |
+| Lint                 | `npm run lint`                    |
+| Typecheck            | `npm run typecheck`               |
+| Unit/API/UI tests    | `npm run test`                    |
+| E2E tests            | `npm run test:e2e`                |
+| Landing E2E          | `npm run test:e2e:landing`        |
+| Landing visual E2E   | `npm run test:e2e:landing:visual` |
+| Privacy/RLS core     | `npm run test:privacy`            |
+| Privacy/RLS extended | `npm run test:privacy:extended`   |
+| Docs freshness       | `npm run docs:freshness`          |
+| Launch smoke         | `npm run test:launch:smoke`       |
+| Launch monitors      | `npm run monitor:launch`          |
+| Launch status        | `npm run launch:status`           |
+| Go/no-go gate        | `npm run go:no-go`                |
+
+For the full verification ladder, use [agent/checklists/verification.md](agent/checklists/verification.md). For local setup details, use [agent/runbooks/setup.md](agent/runbooks/setup.md).
+
+## Repo Structure
+
+| Path                 | Purpose                                                                                                                                                                                                                                                             |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/app/`           | Next.js App Router pages, route groups, protected app shells, public/legal pages, API routes, cron routes, and monitoring routes                                                                                                                                    |
+| `src/components/`    | UI components for landing, auth, onboarding, individual, organization, matching, messaging, privacy, proof, verification, and workflow surfaces                                                                                                                     |
+| `src/lib/`           | Domain logic and infrastructure helpers: auth, authorization, privacy, visibility, proof packs, portfolio projection, matching/review, assignments, interviews, decisions, verification, launch policy, AI helpers, monitoring, email, uploads, and Supabase access |
+| `src/actions/`       | Server Actions for user-facing flows                                                                                                                                                                                                                                |
+| `src/db/`            | Drizzle schema, seed code, canonical SQL migrations, policies, and triggers                                                                                                                                                                                         |
+| `supabase/`          | Legacy Supabase migration baseline, storage setup, and migration README                                                                                                                                                                                             |
+| `tests/`             | Vitest unit, API, UI, script, DB, privacy, and archived non-MVP regression suites                                                                                                                                                                                   |
+| `e2e/`               | Playwright E2E, strict, mobile, visual, and archived browser suites                                                                                                                                                                                                 |
+| `scripts/`           | Setup, verification, smoke, launch, migration, docs, seed, monitoring, taxonomy, and utility scripts                                                                                                                                                                |
+| `docs/`              | Active setup/runbook/reference docs, launch docs, internal ops docs, AI addenda, backlog docs, and archives                                                                                                                                                         |
+| `project/`           | Governance, implementation contract, architecture snapshot, plans, and change-entry guidance                                                                                                                                                                        |
+| `agent/`             | Agent setup runbooks, verification/preflight checklists, and sharded scratchpad guidance                                                                                                                                                                            |
+| `.artifacts/`        | Generated or point-in-time evidence. Treat as verification context, not source authority                                                                                                                                                                            |
+| `.github/workflows/` | CI, strict quality, release, accessibility, and prebuilt deployment workflows                                                                                                                                                                                       |
+
+## Documentation Map
+
+- Active product authority: the six-file source-of-truth stack listed above.
+- Practical front doors: this README, [docs/REPO_GUIDE.md](docs/REPO_GUIDE.md), [agent/runbooks/setup.md](agent/runbooks/setup.md), and [agent/checklists/verification.md](agent/checklists/verification.md).
+- Current repo truth snapshots: [docs/CURRENT_TRUTH.md](docs/CURRENT_TRUTH.md) and [.artifacts/CURRENT_CODEBASE_TRUTH.md](.artifacts/CURRENT_CODEBASE_TRUTH.md). Treat counts and readiness claims in snapshots as dated evidence that must be refreshed before launch decisions.
+- Documentation registry: [docs/DOCS_REGISTRY.md](docs/DOCS_REGISTRY.md).
+- Shared language: [docs/PROOFOUND_UBIQUITOUS_LANGUAGE.md](docs/PROOFOUND_UBIQUITOUS_LANGUAGE.md).
+- AI addendum: [docs/ai/Proofound_AI_Assistive_Layer_Source_Of_Truth_Addendum_2026-05-03.md](docs/ai/Proofound_AI_Assistive_Layer_Source_Of_Truth_Addendum_2026-05-03.md).
+- Launch and ops: [PRODUCTION_CHECKLIST.md](PRODUCTION_CHECKLIST.md), [docs/mvp-launch-master-checklist.md](docs/mvp-launch-master-checklist.md), [docs/release-checklist.md](docs/release-checklist.md), and [docs/internal-ops/index.md](docs/internal-ops/index.md).
+- Historical or stale material: [docs/archive/](docs/archive/), `src/archive/`, `tests/archive/`, `e2e/archive/`, and older root reports. Do not use them to broaden MVP scope.
+
+## Launch Status Caveat
+
+This repo contains launch and readiness evidence, but a README cannot certify production readiness. Before any launch-ready claim, refresh the target-specific evidence bundle: smoke, launch status, perf budgets, restore evidence, migration audit, and operator signoff for the intended environment.
+
+## Contributing Safely
+
+- Read [AGENTS.md](AGENTS.md) and the closest relevant docs before changing behavior.
+- Keep changes scoped and update docs when behavior, setup, verification, routes, or launch evidence changes.
+- Do not modify product behavior, database behavior, auth, permissions, billing, deployment settings, production data, external services, Linear issues, or GitHub settings without explicit task scope.
+- Do not revive archived/post-MVP routes, broad public directory behavior, AI scoring, ATS replacement language, vanity metrics, or marketplace framing.
+- Do not append routine work logs to `agent/scratchpad.md` or `project/Documentation.md`; use `npm run log:session` or `npm run log:change` when durable sharded notes are needed.
+
+## Known Caveats
+
+- Some repo truth documents are dated snapshots. For example, current filesystem route counts should be regenerated from `src/app` before quoting them.
+- `docs:freshness` checks registry coverage and active-doc links; when adding docs, register them in [docs/DOCS_REGISTRY.md](docs/DOCS_REGISTRY.md).
+- Database mutation commands, production launch probes, Vercel deploy commands, and connected-provider E2E checks may require credentials or external access. Do not run them unless the target and risk are explicit.

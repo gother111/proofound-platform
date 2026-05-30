@@ -1,7 +1,7 @@
 # Documentation Registry
 
 > Doc Class: `active`
-> Last Verified: `2026-05-20`
+> Last Verified: `2026-05-30`
 > Generated for documentation freshness governance.
 > Last Generated: `2026-04-15`
 > Latest Active Docs Sync: [Proofound 0-5 execution backlog pack](../project/changes/entries/2026-03-25T21-04-06Z__master__de2cde6d.md)
@@ -79,7 +79,7 @@ Columns: `path`, `class`, `owner-surface`, `verification-source`, `last-verified
 | `Proofound_Project_Specification_2026-03-11.md`                                                         | `reference-spec` | `root`        | `repo`              | `2026-05-21`  | `-`                                                                                                     | `false`   |
 | `Proofound_PRD_MVP.md`                                                                                  | `reference-spec` | `root`        | `repo`              | `2026-05-21`  | `-`                                                                                                     | `false`   |
 | `QUICK_START.md`                                                                                        | `active`         | `root`        | `repo+live`         | `2026-05-21`  | `-`                                                                                                     | `false`   |
-| `README.md`                                                                                             | `active`         | `root`        | `repo+live`         | `2026-05-21`  | `-`                                                                                                     | `false`   |
+| `README.md`                                                                                             | `active`         | `root`        | `repo+live`         | `2026-05-30`  | `-`                                                                                                     | `false`   |
 | `RESEARCH_FINDINGS_Skill_Quality_Best_Practices.md`                                                     | `reference-spec` | `root`        | `repo`              | `2026-02-12`  | `-`                                                                                                     | `false`   |
 | `RLS_DEPLOYMENT_SUMMARY.md`                                                                             | `historical`     | `root`        | `archive`           | `2026-05-19`  | `-`                                                                                                     | `true`    |
 | `RUN_MIGRATIONS_GUIDE.md`                                                                               | `active`         | `root`        | `repo+live`         | `2026-05-19`  | `-`                                                                                                     | `false`   |
@@ -168,6 +168,7 @@ Columns: `path`, `class`, `owner-surface`, `verification-source`, `last-verified
 | `src/archive/non_launch_pages/verify-skill/README.md`                                                   | `historical`     | `src`         | `archive`           | `2026-05-20`  | `-`                                                                                                     | `false`   |
 | `src/archive/non_launch_admin_ui/README.md`                                                             | `historical`     | `src`         | `archive`           | `2026-05-19`  | `-`                                                                                                     | `false`   |
 | `docs/PROOFOUND_UBIQUITOUS_LANGUAGE.md`                                                                 | `active`         | `docs`        | `repo`              | `2026-05-21`  | `-`                                                                                                     | `false`   |
+| `docs/REPO_GUIDE.md`                                                                                    | `active`         | `docs`        | `repo`              | `2026-05-30`  | `-`                                                                                                     | `false`   |
 | `docs/LINKEDIN_VERIFICATION_IMPLEMENTATION_SUMMARY.md`                                                  | `historical`     | `docs`        | `archive`           | `-`           | `docs/archive/status-reports/docs-historical/LINKEDIN_VERIFICATION_IMPLEMENTATION_SUMMARY.md`           | `false`   |
 | `docs/LINKEDIN_VERIFICATION_SETUP.md`                                                                   | `active`         | `docs`        | `repo+live`         | `2026-03-25`  | `-`                                                                                                     | `false`   |
 | `docs/internal-ops/assignment-quality-checklist.md`                                                     | `active`         | `docs`        | `repo+live`         | `2026-03-25`  | `-`                                                                                                     | `false`   |
