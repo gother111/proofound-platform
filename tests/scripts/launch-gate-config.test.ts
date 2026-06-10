@@ -140,6 +140,29 @@ describe('launch gate package configuration', () => {
     expect(nextConfig).toContain("'.artifacts/launch-smoke-report.json'");
   });
 
+  it('keeps launch gates fail-closed for client-exposed AI provider secrets', () => {
+    const goNoGo = fs.readFileSync(path.join(repoRoot, 'scripts/go-no-go-check.ts'), 'utf8');
+    const deployReadiness = fs.readFileSync(
+      path.join(repoRoot, 'scripts/check-deploy-readiness.mjs'),
+      'utf8'
+    );
+    const aiSecretGuard = fs.readFileSync(
+      path.join(repoRoot, 'scripts/lib/client-exposed-ai-secrets.mjs'),
+      'utf8'
+    );
+
+    for (const source of [goNoGo, deployReadiness]) {
+      expect(source).toContain('listClientExposedAiSecretKeys');
+      expect(source).toContain('client-exposed AI provider secret');
+    }
+
+    expect(aiSecretGuard).toContain('NEXT_PUBLIC_');
+    expect(aiSecretGuard).toContain('OPENAI');
+    expect(aiSecretGuard).toContain('ANTHROPIC');
+    expect(aiSecretGuard).toContain('GEMINI');
+    expect(aiSecretGuard).toContain('SECRET_NAME_PATTERN');
+  });
+
   it('keeps launch CLI probes aligned with server-only internal auth fallback order', () => {
     const launchStatus = fs.readFileSync(
       path.join(repoRoot, 'scripts/check-launch-status.mjs'),

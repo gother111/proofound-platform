@@ -10,6 +10,7 @@ import {
   resolveAiRawPromptLoggingEnabled,
 } from '@/lib/ai/usage-ledger';
 import { parseJobDescription } from '@/lib/ai/jd-parser';
+import { listClientExposedAiSecretKeys } from '../../scripts/lib/client-exposed-ai-secrets.mjs';
 
 const originalEnv = { ...process.env };
 const AI_ROUTE_ROOT = path.join(process.cwd(), 'src/app/api/ai');
@@ -78,12 +79,26 @@ describe('AI launch no-go guardrails', () => {
     process.env = { ...originalEnv };
   });
 
-  it('fails if a client-exposed Gemini API key is configured in the test environment', () => {
-    const exposed = Object.entries(process.env)
-      .filter(([key, value]) => /^NEXT_PUBLIC_.*GEMINI.*KEY$/i.test(key) && value?.trim())
-      .map(([key]) => key);
+  it('detects client-exposed AI provider secrets without blocking ordinary public config', () => {
+    expect(
+      listClientExposedAiSecretKeys({
+        NEXT_PUBLIC_AI_PROVIDER_KEY: 'browser-ai-secret',
+        NEXT_PUBLIC_ANTHROPIC_API_TOKEN: 'browser-anthropic-secret',
+        NEXT_PUBLIC_GCP_GEMINI_API_KEY: 'browser-gemini-secret',
+        NEXT_PUBLIC_OPENAI_API_KEY: 'browser-openai-secret',
+        NEXT_PUBLIC_SITE_URL: 'https://proofound.example',
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: 'anon-key',
+      })
+    ).toEqual([
+      'NEXT_PUBLIC_AI_PROVIDER_KEY',
+      'NEXT_PUBLIC_ANTHROPIC_API_TOKEN',
+      'NEXT_PUBLIC_GCP_GEMINI_API_KEY',
+      'NEXT_PUBLIC_OPENAI_API_KEY',
+    ]);
+  });
 
-    expect(exposed).toEqual([]);
+  it('fails if a client-exposed AI provider secret is configured in the test environment', () => {
+    expect(listClientExposedAiSecretKeys(process.env)).toEqual([]);
   });
 
   it('blocks raw prompt logging in production-like environments', () => {

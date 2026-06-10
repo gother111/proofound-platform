@@ -684,7 +684,7 @@ export function MatchingOrganizationView({
                                     onClick={() =>
                                       handleReviewAction(activeMatch.id, 'request_intro')
                                     }
-                                    className="bg-proofound-forest hover:bg-proofound-forest/90 text-white rounded-full text-xs font-semibold px-4 py-2 w-full"
+                                    className="min-h-9 w-full rounded-full bg-proofound-forest px-4 py-2 text-xs font-semibold text-white hover:bg-proofound-forest/90"
                                   >
                                     <Lock className="w-3.5 h-3.5 mr-1.5" />
                                     Request intro
@@ -693,7 +693,7 @@ export function MatchingOrganizationView({
                                 <Button
                                   onClick={() => handleReviewAction(activeMatch.id, 'pass')}
                                   variant="ghost"
-                                  className="text-xs font-medium text-muted-foreground hover:bg-proofound-stone/20 rounded-full w-full py-1.5"
+                                  className="min-h-9 w-full rounded-full py-1.5 text-xs font-medium text-muted-foreground hover:bg-proofound-stone/20"
                                 >
                                   Remove from shortlist
                                 </Button>
@@ -805,13 +805,13 @@ export function MatchingOrganizationView({
                           ) : (
                             <Tabs defaultValue="skills" className="w-full">
                               <TabsList className="grid w-full grid-cols-3 bg-proofound-stone/20 p-0.5 rounded-lg">
-                                <TabsTrigger value="skills" className="text-xs py-1.5">
+                                <TabsTrigger value="skills" className="min-h-9 text-xs">
                                   Skills
                                 </TabsTrigger>
-                                <TabsTrigger value="constraints" className="text-xs py-1.5">
+                                <TabsTrigger value="constraints" className="min-h-9 text-xs">
                                   Constraints
                                 </TabsTrigger>
-                                <TabsTrigger value="evidence" className="text-xs py-1.5">
+                                <TabsTrigger value="evidence" className="min-h-9 text-xs">
                                   Evidence
                                 </TabsTrigger>
                               </TabsList>

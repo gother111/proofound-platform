@@ -133,10 +133,15 @@ export function FocusAreasSection({
         </div>
         <div className="flex flex-wrap gap-2 mt-2">
           {profile.desiredRoles.map((role: string, i: number) => (
-            <Badge key={i} variant="secondary" className="gap-1">
+            <Badge key={i} variant="secondary" className="gap-1.5 px-2 py-1.5">
               {role}
-              <button onClick={() => handleRemoveRole(role)} className="ml-1">
-                <X className="w-3 h-3" />
+              <button
+                type="button"
+                onClick={() => handleRemoveRole(role)}
+                className="-mr-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-white/70 hover:text-[#A03A2A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-1"
+                aria-label={`Remove ${role}`}
+              >
+                <X className="h-3.5 w-3.5" />
               </button>
             </Badge>
           ))}
@@ -176,15 +181,20 @@ export function FocusAreasSection({
         <Label>Organization Types</Label>
         <div className="space-y-2">
           {orgTypeOptions.map((type) => (
-            <div key={type.value} className="flex items-center space-x-2">
+            <div
+              key={type.value}
+              className="flex min-h-10 items-center gap-3 rounded-md border border-proofound-stone/70 bg-white/70 px-3 transition-colors hover:border-proofound-forest/35 hover:bg-proofound-parchment/30"
+            >
               <Checkbox
                 id={`org-${type.value}`}
                 checked={profile.orgTypes?.includes(type.value)}
                 onCheckedChange={() => toggleOrgType(type.value)}
+                className="h-5 w-5"
+                aria-label={type.label}
               />
               <label
                 htmlFor={`org-${type.value}`}
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                className="flex min-h-10 flex-1 cursor-pointer items-center text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               >
                 {type.label}
               </label>

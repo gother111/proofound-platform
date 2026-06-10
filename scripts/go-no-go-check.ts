@@ -17,6 +17,7 @@ import {
 } from '../src/lib/launch/smoke-artifact';
 import { formatLaunchBlockingReasons } from '../src/lib/launch/status-report';
 import { CLIENT_FEATURE_FLAG_RESPONSE_MAP } from '../src/lib/featureFlags';
+import { listClientExposedAiSecretKeys } from './lib/client-exposed-ai-secrets.mjs';
 
 loadEnv({ path: '.env.local', quiet: true });
 loadEnv({ quiet: true });
@@ -176,10 +177,9 @@ function collectRouteFiles(dir: string): string[] {
 }
 
 function checkAiLaunchNoGoGuards() {
-  for (const [key, value] of Object.entries(process.env)) {
-    if (/^NEXT_PUBLIC_.*GEMINI.*KEY$/i.test(key) && value?.trim()) {
-      fail(`client-exposed Gemini key is configured: ${key}`);
-    }
+  const exposedAiSecretKeys = listClientExposedAiSecretKeys(process.env);
+  if (exposedAiSecretKeys.length > 0) {
+    fail(`client-exposed AI provider secret is configured: ${exposedAiSecretKeys.join(', ')}`);
   }
 
   if (process.env.AI_RAW_PROMPT_LOGGING_ENABLED?.trim().toLowerCase() === 'true') {

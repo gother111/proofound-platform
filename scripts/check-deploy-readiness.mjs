@@ -3,6 +3,7 @@
  * mode or production deploys so launch cannot proceed with mock DB/admin modes.
  */
 import { config as loadEnv } from 'dotenv';
+import { listClientExposedAiSecretKeys } from './lib/client-exposed-ai-secrets.mjs';
 
 loadEnv({ path: '.env.local', quiet: true });
 loadEnv({ quiet: true });
@@ -48,6 +49,7 @@ const stagingDeployDetected =
 const strict =
   env.FORCE_STRICT_DEPLOY_CHECK === 'true' || productionDeployDetected || stagingDeployDetected;
 const liveDeployDetected = productionDeployDetected || stagingDeployDetected;
+const exposedAiSecretKeys = listClientExposedAiSecretKeys(env);
 
 const enabledMockModes = [];
 if (truthy(env.NEXT_PUBLIC_USE_MOCK_SUPABASE))
@@ -83,6 +85,12 @@ if ((productionDeployDetected || stagingDeployDetected) && !env.KV_REST_API_TOKE
 if (strict && enabledMockModes.length) {
   failures.push(
     `Strict deploy checks must not enable mock database/admin/auth modes: ${enabledMockModes.join(', ')}`
+  );
+}
+
+if (strict && exposedAiSecretKeys.length) {
+  failures.push(
+    `Strict deploy checks must not configure client-exposed AI provider secrets: ${exposedAiSecretKeys.join(', ')}`
   );
 }
 

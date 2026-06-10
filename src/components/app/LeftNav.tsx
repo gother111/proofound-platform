@@ -260,13 +260,13 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
           <button
             type="button"
             onClick={() => setIsExpanded(!isExpanded)}
-            className="flex h-8 w-full items-center justify-center rounded-xl text-sm font-medium transition-all duration-300 hover:bg-proofound-forest/5 hover:text-proofound-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="flex min-h-10 w-full items-center justify-center rounded-md text-sm font-medium transition-all duration-300 hover:bg-proofound-forest/5 hover:text-proofound-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             aria-label={isExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
           >
             {isExpanded ? (
-              <ChevronLeft className="w-3.5 h-3.5" />
+              <ChevronLeft className="h-4 w-4" />
             ) : (
-              <ChevronRight className="w-3.5 h-3.5" />
+              <ChevronRight className="h-4 w-4" />
             )}
           </button>
         </div>

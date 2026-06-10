@@ -83,17 +83,17 @@ export function TypeaheadChips({
           <Badge
             key={key}
             variant="secondary"
-            className="flex items-center gap-1 px-2 py-1"
+            className="flex items-center gap-1.5 px-2 py-1.5"
             style={{ backgroundColor: '#E8E6DD' }}
           >
             <span className="text-xs">{getLabel(key)}</span>
             <button
               type="button"
               onClick={() => handleRemove(key)}
-              className="hover:text-red-600 transition-colors"
+              className="-mr-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-white/70 hover:text-[#A03A2A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-1"
               aria-label={`Remove ${getLabel(key)}`}
             >
-              <X className="w-3 h-3" />
+              <X className="h-3.5 w-3.5" />
             </button>
           </Badge>
         ))}

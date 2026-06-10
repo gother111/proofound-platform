@@ -187,8 +187,10 @@ export function PublicProofPackList({ proofPacks }: PublicProofPackListProps) {
 
               {hasExtraDetails && (
                 <button
+                  type="button"
                   onClick={() => toggleExpand(pack.id)}
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-proofound-forest transition-colors hover:text-[#143829]"
+                  aria-expanded={isExpanded}
+                  className="-mr-2 inline-flex min-h-8 items-center gap-1.5 rounded-md px-2 text-xs font-semibold text-proofound-forest transition-colors hover:bg-proofound-forest/5 hover:text-[#143829] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
                 >
                   <span>{isExpanded ? 'Hide details' : 'Show details'}</span>
                   {isExpanded ? (

@@ -124,6 +124,22 @@ describe('check-deploy-readiness', () => {
     expect(`${result.stdout}${result.stderr}`).toContain('NEXT_PUBLIC_DEBUG_INGEST_URL');
   });
 
+  it('fails strict readiness when AI provider secrets are exposed as public env vars', () => {
+    const result = runReadiness({
+      ...requiredEnv,
+      FORCE_STRICT_DEPLOY_CHECK: 'true',
+      NEXT_PUBLIC_OPENAI_API_KEY: 'browser-openai-secret',
+      NEXT_PUBLIC_ANTHROPIC_API_TOKEN: 'browser-anthropic-secret',
+    });
+
+    expect(result.status).toBe(1);
+    expect(`${result.stdout}${result.stderr}`).toContain('NEXT_PUBLIC_OPENAI_API_KEY');
+    expect(`${result.stdout}${result.stderr}`).toContain('NEXT_PUBLIC_ANTHROPIC_API_TOKEN');
+    expect(`${result.stdout}${result.stderr}`).toContain(
+      'Strict deploy checks must not configure client-exposed AI provider secrets'
+    );
+  });
+
   it('fails live deploy readiness when local smoke fallbacks are enabled', () => {
     const result = runReadiness({
       ...requiredEnv,
