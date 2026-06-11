@@ -228,6 +228,22 @@ export type VerificationLogEntryType = (typeof VERIFICATION_LOG_ENTRY_TYPE_VALUE
 export const VerificationLogEntryTypeSchema = z.enum(VERIFICATION_LOG_ENTRY_TYPE_VALUES);
 
 export const MATCH_REASON_CODE_VALUES = [
+  'canonical_skill_overlap',
+  'alias_skill_overlap',
+  'adjacent_skill_overlap',
+  'proof_text_overlap',
+  'role_relevant_outcome',
+  'proof_expectation_overlap',
+  'custom_wording_overlap',
+  'fresh_proof_present',
+  'non_self_trust_anchor_present',
+  'verification_gate_missing',
+  'fresh_proof_missing',
+  'constraint_match',
+  'constraint_mismatch',
+  'low_supply_expanded_discovery',
+  'privacy_safe_for_stage',
+  'privacy_or_policy_hold',
   'skills_strong',
   'skills_gap',
   'purpose_alignment_strong',

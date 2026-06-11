@@ -35,6 +35,28 @@ function reviewBandLabel(label?: string | null): string | null {
   return label;
 }
 
+const REVIEW_STATE_LABELS: Record<string, string> = {
+  possible_discovery_match: 'Possible discovery',
+  review_ready_match: 'Review ready',
+  intro_ready_match: 'Intro ready',
+  strong_evidence_overlap: 'Strong evidence overlap',
+  relevant_partial: 'Relevant partial',
+  adjacent_exploratory: 'Adjacent exploratory',
+  needs_more_proof: 'Needs more proof',
+  constraint_or_trust_hold: 'Constraint or trust hold',
+  intro_ready: 'Intro ready',
+  intro_hold_missing_trust_anchor: 'Trust anchor needed',
+  intro_hold_missing_fresh_relevant_proof: 'Fresh proof needed',
+  intro_hold_constraint_mismatch: 'Constraint hold',
+  intro_hold_privacy_or_policy_review: 'Privacy or policy hold',
+  intro_hold_not_match_visible: 'Discovery only',
+};
+
+function reviewStateLabel(value?: string | null): string | null {
+  if (!value) return null;
+  return REVIEW_STATE_LABELS[value] ?? value.replace(/_/g, ' ');
+}
+
 type DeferredComponent = ComponentType<any>;
 
 interface MatchResultCardProps {
@@ -48,6 +70,12 @@ interface MatchResultCardProps {
     revealScope?: string;
     corridorState?: string;
     progressiveRevealStage?: string;
+    discoveryStatus?: string;
+    fitBand?: string;
+    introGate?: string;
+    canRequestIntro?: boolean;
+    missingGates?: string[];
+    supplyState?: string | null;
     visibleIdentityFields?: string[];
     fairness?: {
       status?: string;
@@ -313,6 +341,8 @@ export function MatchResultCard({
     result.reviewStage === 'blind_review' ||
     (result.reviewStage === 'shortlisted' && result.corridorState === 'shortlist');
   const orgPrimaryLabel = result.reviewStage === 'shortlisted' ? 'Request intro' : 'Shortlist';
+  const orgPrimaryDisabled =
+    result.reviewStage === 'shortlisted' && result.canRequestIntro === false;
 
   if (isOrgView) {
     return (
@@ -328,6 +358,15 @@ export function MatchResultCard({
                 <Badge variant="secondary">{stateBadgeLabel}</Badge>
                 {reviewBandLabel(orgReviewCard?.fitBand) ? (
                   <Badge variant="outline">{reviewBandLabel(orgReviewCard?.fitBand)}</Badge>
+                ) : null}
+                {reviewStateLabel(result.discoveryStatus) ? (
+                  <Badge variant="outline">{reviewStateLabel(result.discoveryStatus)}</Badge>
+                ) : null}
+                {reviewStateLabel(result.fitBand) ? (
+                  <Badge variant="outline">{reviewStateLabel(result.fitBand)}</Badge>
+                ) : null}
+                {reviewStateLabel(result.introGate) ? (
+                  <Badge variant="secondary">{reviewStateLabel(result.introGate)}</Badge>
                 ) : null}
                 {result.fairness?.status && result.fairness.status !== 'pass' ? (
                   <Badge variant="outline">Policy protected</Badge>
@@ -386,6 +425,12 @@ export function MatchResultCard({
               )
             ) : null}
           </div>
+
+          {result.supplyState === 'browse_only_low_candidate_supply' ? (
+            <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              Low-supply discovery widened review results. Intro gates are unchanged.
+            </div>
+          ) : null}
 
           <div className="mb-4 rounded-xl border border-proofound-stone bg-proofound-parchment/40 p-4">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -448,19 +493,30 @@ export function MatchResultCard({
           </div>
 
           {showOrgPrimaryAction ? (
-            <div className="mt-4 flex gap-2">
-              <Button
-                size="sm"
-                onClick={handleInterested}
-                style={{ backgroundColor: '#1C4D3A' }}
-                className="flex-1"
-              >
-                {orgPrimaryLabel}
-              </Button>
-              <Button size="sm" variant="outline" onClick={onHide}>
-                Pass
-              </Button>
-            </div>
+            <>
+              <div className="mt-4 flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={handleInterested}
+                  disabled={orgPrimaryDisabled}
+                  style={{ backgroundColor: '#1C4D3A' }}
+                  className="flex-1"
+                >
+                  {orgPrimaryLabel}
+                </Button>
+                <Button size="sm" variant="outline" onClick={onHide}>
+                  Pass
+                </Button>
+              </div>
+              {orgPrimaryDisabled ? (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {reviewStateLabel(result.introGate) || 'Intro hold'}
+                  {Array.isArray(result.missingGates) && result.missingGates.length > 0
+                    ? `: ${result.missingGates.map((gate) => gate.replace(/_/g, ' ')).join(', ')}`
+                    : ''}
+                </p>
+              ) : null}
+            </>
           ) : (
             <div className="mt-4 rounded-lg border border-proofound-stone bg-proofound-parchment/30 px-3 py-2 text-sm text-muted-foreground">
               Review actions continue in the masked intro corridor.

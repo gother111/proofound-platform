@@ -19,14 +19,25 @@ import {
 } from '@/lib/core/matching/language-resolution';
 import { log } from '@/lib/log';
 import { toAnnualCompensationRange } from '@/lib/matching/compensation';
+import { discoverPossibleMatches } from '@/lib/matching/discovery';
+import { evaluateMatchEvidence } from '@/lib/matching/evidence-evaluation';
 import { evaluateIndividualMatchabilityForProfiles } from '@/lib/matching/eligibility';
 import {
   buildCanonicalMatchScoreArtifact,
   compareCanonicalMatchOrder,
+  MATCH_SCORE_CONTRACT_VERSION,
+  MATCH_SCORE_MAX_BPS,
+  MATCH_SCORE_MODEL_VERSION,
   type CanonicalMatchScoreArtifact,
 } from '@/lib/matching/match-score-contract';
+import { sortReasonCodeStrings } from '@/lib/matching/reason-codes';
 import { annRetrieveSimilarProfiles } from '@/lib/matching/semantic';
 import { CONSENT_TYPES } from '@/lib/privacy/consent-contract';
+import {
+  hasPrimaryAnchorContext,
+  listCanonicalProofPackAggregatesForOwner,
+  type CanonicalProofPackAggregate,
+} from '@/lib/proofs/canonical-pack';
 
 export type AssignmentMatchResult = {
   profileId: string;
@@ -62,6 +73,13 @@ export type ComputeAssignmentMatchesInput = {
 const DEFAULT_FULL_SCAN_MULTIPLIER = 10;
 const MIN_FULL_SCAN_LIMIT = 50;
 const MAX_FULL_SCAN_LIMIT = 500;
+const DISCOVERY_ONLY_SCORE_CEILING = 6400;
+const LOW_SUPPLY_INTRO_READY_THRESHOLD = 3;
+const NON_SELF_TRUST_KINDS = new Set([
+  'skill_attestation_peer',
+  'skill_attestation_manager',
+  'impact_attestation',
+]);
 
 function resolveCandidateScanLimit(k: number, annLimit?: number): number {
   const fullScanTarget = Math.min(
@@ -74,6 +92,160 @@ function resolveCandidateScanLimit(k: number, annLimit?: number): number {
   }
 
   return fullScanTarget;
+}
+
+function hasActiveNonSelfTrustAnchor(
+  record: CanonicalProofPackAggregate['verificationReferences'][number],
+  seenRecordIds: Set<string>
+) {
+  if (seenRecordIds.has(record.id)) return false;
+  if (!NON_SELF_TRUST_KINDS.has(record.verificationKind)) return false;
+  if (record.status !== 'verified' || record.integrityStatus !== 'clear') return false;
+  if (record.disputeState === 'open' || record.disputeState === 'under_review') return false;
+  seenRecordIds.add(record.id);
+  return true;
+}
+
+function collectAggregateSkillIds(aggregate: CanonicalProofPackAggregate) {
+  const skillIds = new Set<string>();
+
+  for (const item of aggregate.items) {
+    if (item.artifact.subjectType === 'skill' && typeof item.artifact.subjectId === 'string') {
+      skillIds.add(item.artifact.subjectId);
+    }
+  }
+
+  for (const record of aggregate.verificationReferences) {
+    if (record.subjectType === 'skill' && typeof record.subjectId === 'string') {
+      skillIds.add(record.subjectId);
+    }
+  }
+
+  return [...skillIds];
+}
+
+function buildDiscoveryProofPacks(
+  aggregates: CanonicalProofPackAggregate[],
+  seenRecordIds: Set<string>
+) {
+  return aggregates
+    .filter((aggregate) => aggregate.pack.packKind === 'verification_bundle')
+    .map((aggregate) => {
+      const contract = aggregate.ownerFull.contract;
+      return {
+        id: aggregate.pack.id,
+        title: aggregate.pack.title,
+        claim: contract.primaryClaim.statement,
+        summary: aggregate.pack.summary,
+        outcome: contract.outcomeSummary ?? aggregate.pack.outcomesSummary,
+        ownership: contract.ownershipStatement ?? aggregate.pack.ownershipStatement,
+        freshnessState: aggregate.freshnessState,
+        verificationStatus: aggregate.verificationStatus,
+        hasPrimaryAnchor: hasPrimaryAnchorContext(aggregate.pack),
+        hasActiveNonSelfTrustAnchor: aggregate.verificationReferences.some((record) =>
+          hasActiveNonSelfTrustAnchor(record, seenRecordIds)
+        ),
+        linkedSkillIds: collectAggregateSkillIds(aggregate),
+        visibility: aggregate.pack.visibility,
+        revealGate: aggregate.pack.revealGate,
+      };
+    });
+}
+
+function buildDiscoveryAssignmentInput(params: {
+  assignment: Assignment;
+  mustHaveSkills: Skill[];
+  niceToHaveSkills: Skill[];
+}) {
+  return {
+    id: params.assignment.id,
+    role: params.assignment.role,
+    description: params.assignment.description,
+    businessValue: params.assignment.businessValue,
+    expectedImpact: params.assignment.expectedImpact,
+    mustHaveSkills: params.mustHaveSkills,
+    niceToHaveSkills: params.niceToHaveSkills,
+    proofExpectations: [
+      params.assignment.expectedImpact,
+      params.assignment.businessValue,
+      ...(params.assignment.verificationGates ?? []),
+    ]
+      .filter(Boolean)
+      .join(' '),
+  };
+}
+
+function buildDiscoveryScoreArtifact(input: {
+  assignmentId: string;
+  profileId: string;
+  evaluation: ReturnType<typeof evaluateMatchEvidence>;
+  gates: Array<Record<string, unknown>>;
+}): CanonicalMatchScoreArtifact {
+  const now = new Date();
+  const scoreTotal = Math.min(
+    DISCOVERY_ONLY_SCORE_CEILING,
+    Math.max(900, Math.round(input.evaluation.internalOrder * 100))
+  );
+  const reasonCodes = sortReasonCodeStrings(
+    input.evaluation.reasonDetails.map((reason) => reason.code)
+  ) as CanonicalMatchScoreArtifact['reasonCodes'];
+
+  return {
+    scoreVersion: MATCH_SCORE_CONTRACT_VERSION,
+    modelVersion: MATCH_SCORE_MODEL_VERSION,
+    scoreState: 'generated',
+    scoreTotal,
+    scoreNormalized: Number((scoreTotal / MATCH_SCORE_MAX_BPS).toFixed(4)),
+    inputsHash: `${input.assignmentId}:${input.profileId}:discovery-v1`,
+    reasonCodes,
+    generatedAt: now,
+    staleAt: null,
+    recomputedAt: null,
+    hiddenDueToPolicyAt: null,
+    hiddenDueToPolicyReasonCodes: [],
+    subscoresJson: {
+      discovery_fit: scoreTotal,
+      skills_fit: null,
+      proof_fit: null,
+      constraints_fit: null,
+      verification_fit: null,
+      purpose_fit: null,
+      confidence_total: null,
+    },
+    scoreSnapshotJson: {
+      contract_version: MATCH_SCORE_CONTRACT_VERSION,
+      model_version: MATCH_SCORE_MODEL_VERSION,
+      discovery_status: input.evaluation.discoveryStatus,
+      fit_band: input.evaluation.fitBand,
+      reason_codes: reasonCodes,
+      gates: input.gates,
+      score_visibility: 'internal_ordering_only',
+    },
+  };
+}
+
+function augmentArtifactWithDiscovery(
+  artifact: CanonicalMatchScoreArtifact,
+  evaluation: ReturnType<typeof evaluateMatchEvidence> | null
+): CanonicalMatchScoreArtifact {
+  if (!evaluation) return artifact;
+
+  const reasonCodes = sortReasonCodeStrings([
+    ...artifact.reasonCodes,
+    ...evaluation.reasonDetails.map((reason) => reason.code),
+  ]) as CanonicalMatchScoreArtifact['reasonCodes'];
+
+  return {
+    ...artifact,
+    reasonCodes,
+    scoreSnapshotJson: {
+      ...artifact.scoreSnapshotJson,
+      discovery_status: evaluation.discoveryStatus,
+      fit_band: evaluation.fitBand,
+      discovery_reason_codes: evaluation.reasonDetails.map((reason) => reason.code),
+      score_visibility: 'internal_ordering_only',
+    },
+  };
 }
 
 export async function computeAssignmentMatches(input: ComputeAssignmentMatchesInput): Promise<{
@@ -199,14 +371,80 @@ export async function computeAssignmentMatches(input: ComputeAssignmentMatchesIn
     : [];
   const activeMatchingConsentIds = new Set(activeMatchingConsentRows.map((row) => row.profileId));
   const eligibilityByProfileId = await evaluateIndividualMatchabilityForProfiles(profileIds);
+  const proofAggregatesByProfileId = new Map<string, CanonicalProofPackAggregate[]>();
+  await Promise.all(
+    profileIds.map(async (profileId) => {
+      proofAggregatesByProfileId.set(
+        profileId,
+        await listCanonicalProofPackAggregatesForOwner('individual_profile', profileId)
+      );
+    })
+  );
+  const discoveryAssignment = buildDiscoveryAssignmentInput({
+    assignment,
+    mustHaveSkills,
+    niceToHaveSkills,
+  });
+  const discoveryCandidateProfiles = candidateProfiles.filter((profile) => {
+    const matchingConsentActive = activeMatchingConsentIds.has(profile.profileId);
+    const matchabilityEligible = eligibilityByProfileId.get(profile.profileId) ?? false;
+    return matchingConsentActive && matchabilityEligible;
+  });
+  const discoveryCandidates = discoveryCandidateProfiles.map((profile) => {
+    const seenTrustRecordIds = new Set<string>();
+    const aggregates = proofAggregatesByProfileId.get(profile.profileId) ?? [];
+    const proofPacks = buildDiscoveryProofPacks(aggregates, seenTrustRecordIds);
+    const profileSkills = profileSkillRows.get(profile.profileId) ?? [];
+    return {
+      id: profile.profileId,
+      profileId: profile.profileId,
+      skills: profileSkills.map((skill) => skill.skillCode || skill.skillId).filter(Boolean),
+      customWording: [
+        ...(profile.desiredRoles ?? []),
+        ...(profile.desiredIndustries ?? []),
+        ...(profile.preferredIndustryLabels ?? []),
+      ],
+      proofPacks,
+      readiness: {
+        discoverable: eligibilityByProfileId.get(profile.profileId) ?? false,
+      },
+      trustSignals: {
+        activeNonSelfTrustAnchorCount: proofPacks.filter(
+          (proof) => proof.hasActiveNonSelfTrustAnchor
+        ).length,
+        hasFreshRoleRelevantProof: proofPacks.some((proof) => proof.freshnessState === 'fresh'),
+        orphanRelevantProofCount: proofPacks.filter((proof) => proof.hasPrimaryAnchor === false)
+          .length,
+      },
+      constraints: {
+        hardConstraintsSatisfied: !(
+          Boolean(profile.needsSponsorship) && assignment.canSponsorVisa === false
+        ),
+        constraintMismatchCodes:
+          Boolean(profile.needsSponsorship) && assignment.canSponsorVisa === false
+            ? ['work_authorization_possible']
+            : [],
+      },
+      privacy: {
+        privacySafeForStage: true,
+      },
+    };
+  });
 
   const results: AssignmentMatchResult[] = [];
   const assignmentLanguageRequirement = assignment.minLanguage as {
     code: string;
     level: string;
   } | null;
+  const scoredByProfileId = new Map<string, CanonicalMatchScoreArtifact>();
 
   for (const profile of candidateProfiles) {
+    const matchingConsentActive = activeMatchingConsentIds.has(profile.profileId);
+    const matchabilityEligible = eligibilityByProfileId.get(profile.profileId) ?? false;
+    if (!matchingConsentActive || !matchabilityEligible) {
+      continue;
+    }
+
     const candidateSkillSet = skillsByProfile[profile.profileId] || {};
     const atlasLanguageLevels = atlasLanguagesByProfile.get(profile.profileId) || {};
     const legacyLanguageLevels = parseLegacyLanguageLevels(profile.languages);
@@ -228,8 +466,8 @@ export async function computeAssignmentMatches(input: ComputeAssignmentMatchesIn
       profileId: profile.profileId,
       assignmentOrgId: assignment.orgId,
       assignmentStatus: assignment.status,
-      matchabilityEligible: eligibilityByProfileId.get(profile.profileId) ?? false,
-      matchingConsentActive: activeMatchingConsentIds.has(profile.profileId),
+      matchabilityEligible,
+      matchingConsentActive,
       requiredSkills: mustHaveSkills.map((entry) => ({ id: entry.id, level: entry.level })),
       niceToHaveSkills: niceToHaveSkills.map((entry) => ({ id: entry.id, level: entry.level })),
       candidateSkills: candidateSkillSet,
@@ -264,19 +502,67 @@ export async function computeAssignmentMatches(input: ComputeAssignmentMatchesIn
       },
     });
 
-    if (!artifact) {
+    if (artifact) {
+      scoredByProfileId.set(profile.profileId, artifact);
+    }
+  }
+
+  const introReadyEstimate = [...scoredByProfileId.values()].filter((artifact) =>
+    artifact.reasonCodes.includes('verification_ready')
+  ).length;
+  const discoveredMatches = discoverPossibleMatches({
+    assignment: discoveryAssignment,
+    candidates: discoveryCandidates,
+    lowSupply: {
+      introReadyCount: introReadyEstimate,
+      introReadyThreshold: LOW_SUPPLY_INTRO_READY_THRESHOLD,
+    },
+  });
+  const discoveryEvaluationByProfileId = new Map(
+    discoveredMatches.map((candidate) => [
+      candidate.profileId,
+      evaluateMatchEvidence({ discoveredCandidate: candidate }),
+    ])
+  );
+
+  for (const profile of candidateProfiles) {
+    const matchingConsentActive = activeMatchingConsentIds.has(profile.profileId);
+    const matchabilityEligible = eligibilityByProfileId.get(profile.profileId) ?? false;
+    if (!matchingConsentActive || !matchabilityEligible) {
       continue;
     }
 
+    const artifact = scoredByProfileId.get(profile.profileId) ?? null;
+    const evaluation = discoveryEvaluationByProfileId.get(profile.profileId) ?? null;
+    if (!artifact && !evaluation) {
+      continue;
+    }
+
+    const finalArtifact = artifact
+      ? augmentArtifactWithDiscovery(artifact, evaluation)
+      : buildDiscoveryScoreArtifact({
+          assignmentId,
+          profileId: profile.profileId,
+          evaluation: evaluation as NonNullable<typeof evaluation>,
+          gates: [
+            {
+              gate: 'required_skills_met',
+              passed: false,
+              blocking: true,
+              detail: 'discovery_only',
+            },
+          ],
+        });
+
     results.push({
       profileId: profile.profileId,
-      score: artifact.scoreNormalized,
-      scoreTotal: artifact.scoreTotal,
-      subscoresJson: artifact.subscoresJson,
-      scoreSnapshotJson: artifact.scoreSnapshotJson,
-      reasonCodes: artifact.reasonCodes,
+      score: finalArtifact.scoreNormalized,
+      scoreTotal: finalArtifact.scoreTotal,
+      subscoresJson: finalArtifact.subscoresJson,
+      scoreSnapshotJson: finalArtifact.scoreSnapshotJson,
+      reasonCodes: finalArtifact.reasonCodes,
       profile: scrubDisallowedFields(profile),
-      artifact,
+      artifact: finalArtifact,
     });
   }
 

@@ -178,6 +178,102 @@ export type ProofFirstReviewCard = {
 };
 
 const REASON_DICTIONARY: Record<MatchReasonCode, ReasonDictionaryEntry> = {
+  canonical_skill_overlap: {
+    category: 'positive_match',
+    orgCopy: 'A requested skill overlaps directly with candidate skill evidence.',
+    candidateCopy: 'Your proof-backed skill evidence overlaps directly with this assignment.',
+    importance: 88,
+  },
+  alias_skill_overlap: {
+    category: 'positive_match',
+    orgCopy: 'Different wording appears to describe the same capability.',
+    candidateCopy: 'Different wording appears to describe the same capability.',
+    importance: 78,
+  },
+  adjacent_skill_overlap: {
+    category: 'positive_match',
+    orgCopy: 'Nearby capability evidence may be relevant, but it needs reviewer judgment.',
+    candidateCopy: 'Nearby capability evidence may be relevant, but it needs reviewer judgment.',
+    importance: 55,
+  },
+  proof_text_overlap: {
+    category: 'positive_match',
+    orgCopy: 'Proof text overlaps with the assignment need.',
+    candidateCopy: 'Your proof text overlaps with the assignment need.',
+    importance: 70,
+  },
+  role_relevant_outcome: {
+    category: 'positive_match',
+    orgCopy: 'A proof outcome lines up with the role outcome being requested.',
+    candidateCopy: 'A proof outcome lines up with the role outcome being requested.',
+    importance: 84,
+  },
+  proof_expectation_overlap: {
+    category: 'positive_match',
+    orgCopy: 'Candidate proof overlaps with the assignment proof expectation.',
+    candidateCopy: 'Your proof overlaps with the assignment proof expectation.',
+    importance: 72,
+  },
+  custom_wording_overlap: {
+    category: 'positive_match',
+    orgCopy: 'Custom wording overlaps with the assignment outcome language.',
+    candidateCopy: 'Your wording overlaps with the assignment outcome language.',
+    importance: 50,
+  },
+  fresh_proof_present: {
+    category: 'positive_match',
+    orgCopy: 'Relevant proof is fresh enough for serious review.',
+    candidateCopy: 'Relevant proof is fresh enough for serious review.',
+    importance: 82,
+  },
+  non_self_trust_anchor_present: {
+    category: 'positive_match',
+    orgCopy: 'A relevant non-self trust anchor is active.',
+    candidateCopy: 'A relevant non-self trust anchor is active.',
+    importance: 86,
+  },
+  verification_gate_missing: {
+    category: 'constraint_mismatch',
+    orgCopy: 'A required verification or trust gate is still missing.',
+    candidateCopy: 'A required verification or trust gate is still missing.',
+    importance: 90,
+  },
+  fresh_proof_missing: {
+    category: 'constraint_mismatch',
+    orgCopy: 'Fresh role-relevant proof is missing or too weak for an intro.',
+    candidateCopy: 'Fresh role-relevant proof is missing or too weak for an intro.',
+    importance: 88,
+  },
+  constraint_match: {
+    category: 'positive_match',
+    orgCopy: 'Known practical constraints do not block review.',
+    candidateCopy: 'Known practical constraints do not block review.',
+    importance: 60,
+  },
+  constraint_mismatch: {
+    category: 'constraint_mismatch',
+    orgCopy: 'One or more hard assignment constraints are not satisfied.',
+    candidateCopy: 'One or more hard assignment constraints are not satisfied.',
+    importance: 92,
+  },
+  low_supply_expanded_discovery: {
+    category: 'workflow_decision',
+    orgCopy: 'Low qualified supply expanded discovery, but did not lower intro thresholds.',
+    candidateCopy: 'Low qualified supply expanded discovery, but did not lower intro thresholds.',
+    importance: 52,
+  },
+  privacy_safe_for_stage: {
+    category: 'positive_match',
+    orgCopy: 'The review payload is safe for the current blind or contextual stage.',
+    candidateCopy: 'The review payload is safe for the current blind or contextual stage.',
+    importance: 64,
+  },
+  privacy_or_policy_hold: {
+    category: 'constraint_mismatch',
+    orgCopy: 'Privacy, moderation, policy, or redaction review is holding advancement.',
+    candidateCopy: 'Privacy, moderation, policy, or redaction review is holding advancement.',
+    importance: 96,
+  },
   skills_strong: {
     category: 'positive_match',
     orgCopy: 'Evidence points to a strong skills fit for this assignment.',

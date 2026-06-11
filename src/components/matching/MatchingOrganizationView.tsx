@@ -68,6 +68,34 @@ function proofEvidenceSignalLabel(explanation: any, key: string) {
   return explanation.proofSignals?.[key] ?? 'Not available';
 }
 
+const DISCOVERY_STATUS_LABELS: Record<string, string> = {
+  possible_discovery_match: 'Possible discovery',
+  review_ready_match: 'Review ready',
+  intro_ready_match: 'Intro ready',
+};
+
+const FIT_BAND_LABELS: Record<string, string> = {
+  strong_evidence_overlap: 'Strong evidence overlap',
+  relevant_partial: 'Relevant partial',
+  adjacent_exploratory: 'Adjacent exploratory',
+  needs_more_proof: 'Needs more proof',
+  constraint_or_trust_hold: 'Constraint or trust hold',
+};
+
+const INTRO_GATE_LABELS: Record<string, string> = {
+  intro_ready: 'Intro ready',
+  intro_hold_missing_trust_anchor: 'Trust anchor needed',
+  intro_hold_missing_fresh_relevant_proof: 'Fresh proof needed',
+  intro_hold_constraint_mismatch: 'Constraint hold',
+  intro_hold_privacy_or_policy_review: 'Privacy or policy hold',
+  intro_hold_not_match_visible: 'Discovery only',
+};
+
+function readableMatchLabel(value?: string | null, labels: Record<string, string> = {}) {
+  if (!value) return null;
+  return labels[value] ?? value.replace(/_/g, ' ');
+}
+
 export function MatchingOrganizationView({
   assignments,
   onCreateNew,
@@ -326,6 +354,17 @@ export function MatchingOrganizationView({
                   fairness: data.fairness ?? match.fairness,
                   why: data.why ?? match.why,
                   reviewCard: data.reviewCard ?? match.reviewCard,
+                  anonymousCandidateLabel:
+                    data.anonymousCandidateLabel ?? match.anonymousCandidateLabel,
+                  discoveryStatus: data.discoveryStatus ?? match.discoveryStatus,
+                  fitBand: data.fitBand ?? match.fitBand,
+                  introGate: data.introGate ?? match.introGate,
+                  canRequestIntro: data.canRequestIntro ?? match.canRequestIntro,
+                  proofSummaries: data.proofSummaries ?? match.proofSummaries,
+                  skillClusters: data.skillClusters ?? match.skillClusters,
+                  reasonDetails: data.reasonDetails ?? match.reasonDetails,
+                  missingGates: data.missingGates ?? match.missingGates,
+                  supplyState: data.supplyState ?? match.supplyState,
                 }
               : match
           )
@@ -553,6 +592,11 @@ export function MatchingOrganizationView({
                       const skillsList = match.profile?.skills
                         ? Object.keys(match.profile.skills).slice(0, 3)
                         : [];
+                      const discoveryLabel = readableMatchLabel(
+                        match.discoveryStatus,
+                        DISCOVERY_STATUS_LABELS
+                      );
+                      const fitLabel = readableMatchLabel(match.fitBand, FIT_BAND_LABELS);
 
                       return (
                         <button
@@ -578,6 +622,13 @@ export function MatchingOrganizationView({
                               <Badge className="bg-amber-50 text-amber-600 border-amber-200 text-[9px]">
                                 Requested
                               </Badge>
+                            ) : discoveryLabel ? (
+                              <Badge
+                                variant="outline"
+                                className="text-[9px] border-proofound-stone/70"
+                              >
+                                {discoveryLabel}
+                              </Badge>
                             ) : null}
                           </div>
 
@@ -585,6 +636,12 @@ export function MatchingOrganizationView({
                             {match.reviewCard?.fitSummary?.headline ||
                               'Clear proof-backed alignment.'}
                           </p>
+
+                          {fitLabel && (
+                            <p className="text-[10px] font-medium text-proofound-charcoal/70">
+                              {fitLabel}
+                            </p>
+                          )}
 
                           {skillsList.length > 0 && (
                             <div className="flex flex-wrap gap-1 pt-1">
@@ -627,6 +684,30 @@ export function MatchingOrganizationView({
                                   ? 'Full identity revealed'
                                   : 'Blind by default'}
                               </Badge>
+                              {readableMatchLabel(
+                                activeMatch.discoveryStatus,
+                                DISCOVERY_STATUS_LABELS
+                              ) && (
+                                <Badge variant="outline" className="text-[10px] font-semibold">
+                                  {readableMatchLabel(
+                                    activeMatch.discoveryStatus,
+                                    DISCOVERY_STATUS_LABELS
+                                  )}
+                                </Badge>
+                              )}
+                              {readableMatchLabel(activeMatch.fitBand, FIT_BAND_LABELS) && (
+                                <Badge variant="outline" className="text-[10px] font-semibold">
+                                  {readableMatchLabel(activeMatch.fitBand, FIT_BAND_LABELS)}
+                                </Badge>
+                              )}
+                              {readableMatchLabel(activeMatch.introGate, INTRO_GATE_LABELS) && (
+                                <Badge
+                                  variant="secondary"
+                                  className="text-[10px] font-semibold bg-proofound-stone/30 text-proofound-charcoal"
+                                >
+                                  {readableMatchLabel(activeMatch.introGate, INTRO_GATE_LABELS)}
+                                </Badge>
+                              )}
                               {activeMatch.reviewCard?.fitBand && (
                                 <Badge
                                   variant="secondary"
@@ -684,12 +765,28 @@ export function MatchingOrganizationView({
                                     onClick={() =>
                                       handleReviewAction(activeMatch.id, 'request_intro')
                                     }
+                                    disabled={activeMatch.canRequestIntro === false}
                                     className="min-h-9 w-full rounded-full bg-proofound-forest px-4 py-2 text-xs font-semibold text-white hover:bg-proofound-forest/90"
                                   >
                                     <Lock className="w-3.5 h-3.5 mr-1.5" />
                                     Request intro
                                   </Button>
                                 )}
+                                {activeMatch.canRequestIntro === false &&
+                                  activeMatch.introGate !== 'intro_ready' && (
+                                    <p className="text-[10px] leading-relaxed text-muted-foreground">
+                                      {readableMatchLabel(
+                                        activeMatch.introGate,
+                                        INTRO_GATE_LABELS
+                                      ) || 'Intro hold'}
+                                      {Array.isArray(activeMatch.missingGates) &&
+                                      activeMatch.missingGates.length > 0
+                                        ? `: ${activeMatch.missingGates
+                                            .map((gate: string) => gate.replace(/_/g, ' '))
+                                            .join(', ')}`
+                                        : ''}
+                                    </p>
+                                  )}
                                 <Button
                                   onClick={() => handleReviewAction(activeMatch.id, 'pass')}
                                   variant="ghost"
@@ -702,11 +799,18 @@ export function MatchingOrganizationView({
                           </div>
                         </div>
 
-                        {/* Suitability summary */}
+                        {activeMatch.supplyState === 'browse_only_low_candidate_supply' && (
+                          <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                            Low-supply discovery is showing broader possible matches. Intro gates
+                            are unchanged.
+                          </div>
+                        )}
+
+                        {/* Fit evidence summary */}
                         {activeMatch.reviewCard?.fitSummary && (
                           <div className="space-y-2">
                             <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                              Fit Suitability
+                              Fit Evidence
                             </h4>
                             <p className="text-sm font-semibold text-proofound-charcoal">
                               {activeMatch.reviewCard.fitSummary.headline}

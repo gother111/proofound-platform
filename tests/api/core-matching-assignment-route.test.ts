@@ -48,7 +48,31 @@ vi.mock('@/lib/matching/review-contract', () => ({
   appendSystemReasonLedger: vi.fn(),
   buildVisibilitySafeWhy: vi.fn(() => ({ summary: 'fallback active' })),
   buildCanonicalMatchPersistenceFields: vi.fn(),
-  buildProofFirstReviewCard: vi.fn(),
+  buildProofFirstReviewCard: vi.fn(() => ({
+    candidateLabel: 'Submission A7F2',
+    strongestProof: {
+      summary: 'Proof-backed review signal.',
+      outcome: 'Outcome summary.',
+      ownership: 'Ownership summary.',
+      anchorContext: 'Anchored in prior proof',
+      freshnessLabel: 'Fresh',
+    },
+    verification: {
+      summaryLabel: 'Verified proof signal present',
+      count: 1,
+    },
+    trustLabels: ['Verified proof signal present'],
+    fitBand: 'Relevant partial',
+    fitSummary: {
+      headline: 'Proof signals align with the assignment needs.',
+      bullets: ['Evidence is available for review.'],
+      reasonCodes: ['alias_skill_overlap'],
+    },
+    privacy: {
+      reviewState: 'visible',
+      reasons: [],
+    },
+  })),
   canMutateReview: vi.fn(() => true),
   ensureMatchReviewState: vi.fn(),
   getReviewCardProofPackMap: vi.fn(async () => new Map()),
@@ -172,15 +196,33 @@ describe('/api/core/matching/assignment', () => {
           score: 0.91,
           scoreTotal: 9100,
           subscoresJson: {},
-          scoreSnapshotJson: {},
-          reasonCodes: ['proof_pack_relevant'],
+          scoreSnapshotJson: {
+            discovery_status: 'review_ready_match',
+            fit_band: 'relevant_partial',
+          },
+          reasonCodes: [
+            'alias_skill_overlap',
+            'fresh_proof_present',
+            'non_self_trust_anchor_present',
+            'privacy_safe_for_stage',
+            'constraint_match',
+          ],
           profile: { profileId: 'profile-1', verified: { proofPack: true } },
           artifact: {
             scoreNormalized: 0.91,
             scoreTotal: 9100,
             subscoresJson: {},
-            scoreSnapshotJson: {},
-            reasonCodes: ['proof_pack_relevant'],
+            scoreSnapshotJson: {
+              discovery_status: 'review_ready_match',
+              fit_band: 'relevant_partial',
+            },
+            reasonCodes: [
+              'alias_skill_overlap',
+              'fresh_proof_present',
+              'non_self_trust_anchor_present',
+              'privacy_safe_for_stage',
+              'constraint_match',
+            ],
           },
         },
       ],
@@ -212,6 +254,30 @@ describe('/api/core/matching/assignment', () => {
     expect(body.items[0]).not.toHaveProperty('scoreSnapshotJson');
     expect(body.items[0].rank).toBeNull();
     expect(body.items[0].rankBand).toBe('top_band');
+    expect(body.items[0]).toEqual(
+      expect.objectContaining({
+        anonymousCandidateLabel: 'Submission A7F2',
+        discoveryStatus: 'review_ready_match',
+        fitBand: 'relevant_partial',
+        introGate: 'intro_ready',
+        canRequestIntro: false,
+        missingGates: [],
+      })
+    );
+    expect(body.items[0].reasonDetails).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: 'alias_skill_overlap',
+        }),
+      ])
+    );
+    expect(body.items[0].proofSummaries).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          summary: 'Proof-backed review signal.',
+        }),
+      ])
+    );
     expect(body.meta.weights).toEqual({});
     expect(body.meta.scoreVisibility).toBe('internal_ordering_only');
     expect(body.meta.launchFallback.exactRankLive).toBe(false);
