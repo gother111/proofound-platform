@@ -9,8 +9,14 @@ type DownloadPdfButtonProps = {
   endpoint?: string;
 };
 
+type DownloadFeedback = {
+  kind: 'success' | 'error';
+  message: string;
+};
+
 export function DownloadPdfButton({ endpoint = '/api/portfolio/export' }: DownloadPdfButtonProps) {
   const [loading, setLoading] = useState(false);
+  const [feedback, setFeedback] = useState<DownloadFeedback | null>(null);
 
   const getErrorMessage = async (res: Response): Promise<string> => {
     const contentType = res.headers.get('content-type') || '';
@@ -40,6 +46,7 @@ export function DownloadPdfButton({ endpoint = '/api/portfolio/export' }: Downlo
   const handleDownload = async () => {
     try {
       setLoading(true);
+      setFeedback(null);
       const res = await fetch(endpoint, {
         method: 'GET',
         cache: 'no-store',
@@ -67,28 +74,46 @@ export function DownloadPdfButton({ endpoint = '/api/portfolio/export' }: Downlo
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
+      setFeedback({ kind: 'success', message: 'Trust PDF download started.' });
     } catch (err) {
       dispatchClientErrorDiagnostic('portfolio.public_pdf.download_failed', err);
-      alert(
-        err instanceof Error && err.message
-          ? err.message
-          : 'Could not download PDF. Please try again.'
-      );
+      setFeedback({
+        kind: 'error',
+        message:
+          err instanceof Error && err.message
+            ? err.message
+            : 'Could not download PDF. Please try again.',
+      });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Button
-      variant="secondary"
-      size="sm"
-      onClick={handleDownload}
-      disabled={loading}
-      className="gap-2"
-    >
-      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
-      {loading ? 'Preparing...' : 'Download trust PDF'}
-    </Button>
+    <div className="inline-flex flex-col items-start gap-1.5">
+      <Button
+        variant="secondary"
+        size="sm"
+        onClick={handleDownload}
+        disabled={loading}
+        className="gap-2"
+      >
+        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
+        {loading ? 'Preparing...' : 'Download trust PDF'}
+      </Button>
+      {feedback ? (
+        <p
+          className={
+            feedback.kind === 'error'
+              ? 'max-w-64 text-xs leading-5 text-[#8A3F21]'
+              : 'max-w-64 text-xs leading-5 text-proofound-forest'
+          }
+          role={feedback.kind === 'error' ? 'alert' : 'status'}
+          aria-live={feedback.kind === 'error' ? 'assertive' : 'polite'}
+        >
+          {feedback.message}
+        </p>
+      ) : null}
+    </div>
   );
 }

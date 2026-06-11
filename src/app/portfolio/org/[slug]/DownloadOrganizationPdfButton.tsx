@@ -6,6 +6,11 @@ import { FileDown, Loader2 } from 'lucide-react';
 import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { cn } from '@/lib/utils';
 
+type DownloadFeedback = {
+  kind: 'success' | 'error';
+  message: string;
+};
+
 export function DownloadOrganizationPdfButton({
   slug,
   className,
@@ -14,6 +19,7 @@ export function DownloadOrganizationPdfButton({
   className?: string;
 }) {
   const [loading, setLoading] = useState(false);
+  const [feedback, setFeedback] = useState<DownloadFeedback | null>(null);
 
   const getErrorMessage = async (res: Response): Promise<string> => {
     const contentType = res.headers.get('content-type') || '';
@@ -46,6 +52,7 @@ export function DownloadOrganizationPdfButton({
   const handleDownload = async () => {
     try {
       setLoading(true);
+      setFeedback(null);
       const res = await fetch(`/api/portfolio/org/${encodeURIComponent(slug)}/export`, {
         method: 'GET',
         cache: 'no-store',
@@ -73,28 +80,46 @@ export function DownloadOrganizationPdfButton({
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
+      setFeedback({ kind: 'success', message: 'Organization PDF download started.' });
     } catch (err) {
       dispatchClientErrorDiagnostic('portfolio.organization_pdf.download_failed', err);
-      alert(
-        err instanceof Error && err.message
-          ? err.message
-          : 'Could not download PDF. Please try again.'
-      );
+      setFeedback({
+        kind: 'error',
+        message:
+          err instanceof Error && err.message
+            ? err.message
+            : 'Could not download PDF. Please try again.',
+      });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={handleDownload}
-      disabled={loading}
-      className={cn('inline-flex items-center gap-1.5', className)}
-    >
-      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
-      {loading ? 'Preparing...' : 'Download organization PDF'}
-    </Button>
+    <div className="inline-flex flex-col items-start gap-1.5">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleDownload}
+        disabled={loading}
+        className={cn('inline-flex items-center gap-1.5', className)}
+      >
+        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
+        {loading ? 'Preparing...' : 'Download organization PDF'}
+      </Button>
+      {feedback ? (
+        <p
+          className={
+            feedback.kind === 'error'
+              ? 'max-w-64 text-xs leading-5 text-[#8A3F21]'
+              : 'max-w-64 text-xs leading-5 text-proofound-forest'
+          }
+          role={feedback.kind === 'error' ? 'alert' : 'status'}
+          aria-live={feedback.kind === 'error' ? 'assertive' : 'polite'}
+        >
+          {feedback.message}
+        </p>
+      ) : null}
+    </div>
   );
 }
