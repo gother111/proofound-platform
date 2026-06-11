@@ -69,6 +69,7 @@ Keep secrets out of tracked files. Use [.env.example](.env.example) and [docs/EN
 | Launch monitors      | `npm run monitor:launch`          |
 | Launch status        | `npm run launch:status`           |
 | Go/no-go gate        | `npm run go:no-go`                |
+| Python helper tests  | `npm run test:python`             |
 
 For the full verification ladder, use [agent/checklists/verification.md](agent/checklists/verification.md). For local setup details, use [agent/runbooks/setup.md](agent/runbooks/setup.md).
 
@@ -104,7 +105,11 @@ For the full verification ladder, use [agent/checklists/verification.md](agent/c
 
 ## Launch Status Caveat
 
-This repo contains launch and readiness evidence, but a README cannot certify production readiness. Before any launch-ready claim, refresh the target-specific evidence bundle: smoke, launch status, perf budgets, restore evidence, migration audit, and operator signoff for the intended environment.
+Launch-candidate scaffold: this repo contains launch and readiness evidence, but a README cannot certify production readiness. Final launch readiness still depends on the target-specific gates: smoke, launch status, perf budgets, restore evidence, migration audit, and operator signoff for the intended environment.
+
+Active launch env requirements use the target-scoped secrets documented in [docs/ENV_VARIABLES.md](docs/ENV_VARIABLES.md), including `INTERNAL_API_SECRET=your-internal-launch-ops-token` for protected launch-ops checks such as `npm run launch:status`.
+
+Archived compatibility/helper env, not default launch requirements: Archived Python document-intelligence helper variables are documented in `docs/ENV_VARIABLES.md`; they are not default MVP launch requirements. `npm run test:python` remains package-level regression coverage for `tests/python/README.md`, not default MVP launch evidence.
 
 ## Contributing Safely
 

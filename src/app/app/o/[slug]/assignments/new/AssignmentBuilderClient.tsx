@@ -656,7 +656,7 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
       <div className="mx-auto flex min-w-0 max-w-4xl flex-col gap-6">
         <header className="space-y-1 border-b border-proofound-stone/50 pb-5">
           <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-proofound-forest">
-            Assignment corridor
+            Lean assignment corridor
           </p>
           <h1 className="font-display text-3xl font-semibold text-proofound-charcoal">
             Create assignment
@@ -666,6 +666,34 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
             publish.
           </p>
         </header>
+
+        <section className="rounded-xl border border-proofound-stone/70 bg-white/75 p-4">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(220px,0.6fr)] lg:items-center">
+            <div className="space-y-1">
+              <h2 className="text-sm font-semibold text-foreground">
+                What this assignment path proves
+              </h2>
+              <p className="text-sm leading-6 text-muted-foreground">
+                The company turns a vague role into measurable outcomes and proof-based requirements
+                before inviting proof submissions.
+              </p>
+            </div>
+            <div
+              className="grid grid-cols-3 gap-2 text-center text-[11px] font-semibold uppercase tracking-[0.12em] text-proofound-forest"
+              data-testid="assignment-demo-path"
+            >
+              <span className="rounded-md border border-proofound-stone/70 bg-[#f8f6f1] px-2 py-2">
+                Start
+              </span>
+              <span className="rounded-md border border-proofound-stone/70 bg-[#f8f6f1] px-2 py-2">
+                Middle
+              </span>
+              <span className="rounded-md border border-proofound-stone/70 bg-[#f8f6f1] px-2 py-2">
+                Finish
+              </span>
+            </div>
+          </div>
+        </section>
 
         <Card className="min-w-0 p-4">
           <div className="flex flex-col gap-4">

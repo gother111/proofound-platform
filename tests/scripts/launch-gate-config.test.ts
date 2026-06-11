@@ -230,7 +230,7 @@ describe('launch gate package configuration', () => {
       fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8')
     );
     const authorityDocs = [
-      ['AGENTS.md', 'repo+live', '2026-05-19'],
+      ['AGENTS.md', 'repo+live', '2026-05-22'],
       ['Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md', 'repo', '2026-05-21'],
       [
         'PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md',
@@ -956,12 +956,12 @@ describe('launch gate package configuration', () => {
     expect(docsRegistry).toContain(
       '| `docs/API_REFERENCE.md`                                                                                 | `active`         | `docs`        | `repo+live`         | `2026-05-20`'
     );
-    expect(docsRegistry).toContain('> Last Verified: `2026-05-20`');
+    expect(docsRegistry).toContain('> Last Verified: `2026-05-30`');
     expect(docsRegistry).toContain(
       '| `.artifacts/mvp-surface-sweep-2026-05-19/SURFACE_SWEEP.md`                                              | `reference-spec` | `artifacts`   | `repo+browser`      | `2026-05-20`'
     );
     expect(docsRegistry).toContain(
-      '| `docs/DOCS_REGISTRY.md`                                                                                 | `active`         | `docs`        | `repo+live`         | `2026-05-20`'
+      '| `docs/DOCS_REGISTRY.md`                                                                                 | `active`         | `docs`        | `repo+live`         | `2026-05-30`'
     );
     expect(docsRegistry).toContain(
       '| `.artifacts/proofound-current-state-reality-check.md`                                                   | `reference-spec` | `artifacts`   | `repo`              | `2026-05-20`'
@@ -3139,11 +3139,11 @@ describe('launch gate package configuration', () => {
     );
     const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
 
-    expect(readme).toContain('Last Verified: `2026-05-21`');
+    expect(readme).toContain('Last Verified: `2026-05-30`');
     expect(readme).toContain('INTERNAL_API_SECRET=your-internal-launch-ops-token');
     expect(readme).toContain('npm run launch:status');
     expect(docsRegistry).toContain(
-      '| `README.md`                                                                                             | `active`         | `root`        | `repo+live`         | `2026-05-21`'
+      '| `README.md`                                                                                             | `active`         | `root`        | `repo+live`         | `2026-05-30`'
     );
     expect(testingStrategy).toContain('Last Verified: `2026-05-21`');
     expect(testingStrategy).toContain('BASE_URL=<production-candidate-url>');

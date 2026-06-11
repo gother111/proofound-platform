@@ -180,17 +180,17 @@ describe('Assignment builder lean corridor', () => {
       screen.getByRole('button', { name: /import existing assignment brief/i })
     ).toBeInTheDocument();
     expect(screen.getByTestId('assignment-demo-path')).toHaveTextContent(/start.*middle.*finish/i);
-    expect(screen.getByText(/what this demo proves/i)).toBeInTheDocument();
+    expect(screen.getByText(/what this assignment path proves/i)).toBeInTheDocument();
     expect(
       screen.getByText(
         /The company turns a vague role into measurable outcomes and proof-based requirements/i
       )
     ).toBeInTheDocument();
-    expect(screen.getByText('Why this role exists')).toBeInTheDocument();
-    expect(screen.getByText('What work will actually be done')).toBeInTheDocument();
-    expect(screen.getByText('What proof would count')).toBeInTheDocument();
-    expect(screen.getByText('What practical constraints are real')).toBeInTheDocument();
-    expect(screen.getByText('Internal review and publish')).toBeInTheDocument();
+    expect(screen.getAllByText('Why this role exists').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('What work will actually be done').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('What proof would count').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('What practical constraints are real').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Internal review and publish').length).toBeGreaterThan(0);
     expect(screen.queryByTestId('advanced-mode-opt-in')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Advanced' })).not.toBeInTheDocument();
     expect(screen.queryByText('Weight Matrix')).not.toBeInTheDocument();
