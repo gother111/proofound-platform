@@ -238,6 +238,7 @@ export function CandidateInviteClient({
     DEFAULT_ACCOUNT_SAVE_CONTROLS
   );
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
 
   const nextParam = useMemo(() => encodeURIComponent(`/candidate-invite/${token}`), [token]);
 
@@ -249,6 +250,7 @@ export function CandidateInviteClient({
 
     setLoading(true);
     setError(null);
+    setErrorDetail(null);
 
     try {
       const [inviteResponse, userResponse] = await Promise.all([
@@ -263,6 +265,7 @@ export function CandidateInviteClient({
       if (!inviteResponse.ok) {
         const payload = await inviteResponse.json().catch(() => null);
         setError(candidateInviteLoadError(inviteResponse.status, payload?.error));
+        setErrorDetail(null);
         return;
       }
 
@@ -297,6 +300,7 @@ export function CandidateInviteClient({
     } catch (loadError) {
       dispatchClientErrorDiagnostic('candidate_invite.client.load_failed', loadError);
       setError('This invitation link is invalid, expired, or no longer available.');
+      setErrorDetail(null);
     } finally {
       setLoading(false);
     }
@@ -309,6 +313,7 @@ export function CandidateInviteClient({
   const claimInvite = async () => {
     setSubmitting(true);
     setError(null);
+    setErrorDetail(null);
     setSuccessMessage(null);
 
     try {
@@ -319,6 +324,7 @@ export function CandidateInviteClient({
       const payload = await response.json().catch(() => null);
       if (!response.ok) {
         setError(payload?.error ?? 'Failed to claim invite.');
+        setErrorDetail(null);
         return;
       }
 
@@ -332,6 +338,7 @@ export function CandidateInviteClient({
     } catch (claimError) {
       dispatchClientErrorDiagnostic('candidate_invite.client.claim_failed', claimError);
       setError('Failed to claim invite.');
+      setErrorDetail(null);
     } finally {
       setSubmitting(false);
     }
@@ -341,10 +348,12 @@ export function CandidateInviteClient({
     const normalizedProofPackId = proofPackId.trim();
     if (!normalizedProofPackId) {
       setError('Choose an owner-only Proof Pack before submitting assignment proof.');
+      setErrorDetail(null);
       return;
     }
 
     setError(null);
+    setErrorDetail(null);
     setSuccessMessage(null);
     setReviewConfirmed(false);
     setReviewProofPackId(normalizedProofPackId);
@@ -354,16 +363,19 @@ export function CandidateInviteClient({
     const normalizedProofPackId = reviewProofPackId.trim();
     if (!normalizedProofPackId) {
       setError('Review a Proof Pack before submitting.');
+      setErrorDetail(null);
       return;
     }
 
     if (!reviewConfirmed) {
       setError('Confirm the final visibility review before submitting.');
+      setErrorDetail(null);
       return;
     }
 
     setSubmitting(true);
     setError(null);
+    setErrorDetail(null);
     setSuccessMessage(null);
 
     try {
@@ -396,7 +408,10 @@ export function CandidateInviteClient({
 
       const payload = await response.json().catch(() => null);
       if (!response.ok) {
-        setError(payload?.error ?? 'Failed to submit assignment proof.');
+        setError(payload?.error ?? 'Assignment proof could not be submitted.');
+        setErrorDetail(
+          'Your selected Proof Pack and visibility review are still here. Check the summary, then try submitting again.'
+        );
         return;
       }
 
@@ -411,7 +426,10 @@ export function CandidateInviteClient({
       await loadState();
     } catch (submitError) {
       dispatchClientErrorDiagnostic('candidate_invite.client.proof_submit_failed', submitError);
-      setError('Failed to submit assignment proof.');
+      setError('Assignment proof could not be submitted.');
+      setErrorDetail(
+        'Your selected Proof Pack and visibility review are still here. Check the summary, then try submitting again.'
+      );
     } finally {
       setSubmitting(false);
     }
@@ -743,7 +761,10 @@ export function CandidateInviteClient({
               role="alert"
               className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-900 md:col-span-2"
             >
-              {error}
+              <p>{error}</p>
+              {errorDetail ? (
+                <p className="mt-2 text-xs leading-5 text-red-800">{errorDetail}</p>
+              ) : null}
             </div>
           ) : null}
 

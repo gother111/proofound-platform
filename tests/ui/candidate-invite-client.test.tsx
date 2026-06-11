@@ -604,6 +604,86 @@ describe('CandidateInviteClient test_match flow', () => {
     expect(apiFetchMock).not.toHaveBeenCalledWith('/api/profile/snippet', expect.anything());
   });
 
+  it('keeps reviewed assignment proof recoverable when submission fails', async () => {
+    const fetchMock = vi.fn().mockImplementation(async (url: string) => {
+      if (url === '/api/candidate-invites/token-value') {
+        return {
+          ok: true,
+          json: async () => ({
+            invite: {
+              id: 'invite-1',
+              status: 'claimed',
+              flowType: 'proof_card',
+              assignmentId: 'assignment-1',
+              maskedEmail: 'ca***@example.com',
+              expiresAt: new Date(Date.now() + 3600_000).toISOString(),
+              claimedAt: new Date().toISOString(),
+              claimedByCurrentUser: true,
+              acceptedAt: null,
+              acceptedByCurrentUser: false,
+              communicationsUrl: null,
+              proofSubmittedAt: null,
+            },
+            organization: {
+              id: 'org-1',
+              slug: 'acme',
+              displayName: 'Acme Org',
+              logoUrl: null,
+            },
+            assignment: structuredAssignment,
+            availableProofPacks: [
+              {
+                id: '11111111-1111-4111-8111-111111111111',
+                title: 'Service design proof pack',
+                summary: 'One owner-only proof pack for this assignment.',
+                evidenceSummary: 'Private evidence stays in the assignment packet.',
+                outcomesSummary: null,
+                verificationSummary: null,
+                updatedAt: new Date().toISOString(),
+              },
+            ],
+          }),
+        };
+      }
+
+      if (url === '/api/user/me') {
+        return {
+          ok: true,
+          json: async () => ({
+            id: 'user-1',
+            email: 'candidate@example.com',
+          }),
+        };
+      }
+
+      throw new Error(`Unexpected fetch URL: ${url}`);
+    });
+    apiFetchMock.mockRejectedValueOnce(new Error('submission service unavailable'));
+
+    vi.stubGlobal('fetch', fetchMock as any);
+
+    render(<CandidateInviteClient token="token-value" />);
+
+    await screen.findByRole('heading', { name: /designer/i });
+
+    fireEvent.click(screen.getByRole('button', { name: /review assignment proof/i }));
+    fireEvent.click(screen.getByLabelText(/I reviewed the visibility summary/i));
+    fireEvent.click(screen.getByRole('button', { name: /submit reviewed proof/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Assignment proof could not be submitted.'
+    );
+    expect(
+      screen.getByText(
+        'Your selected Proof Pack and visibility review are still here. Check the summary, then try submitting again.'
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Final review before submission/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Service design proof pack/i).length).toBeGreaterThan(0);
+    expect(screen.getByLabelText(/I reviewed the visibility summary/i)).toBeChecked();
+    expect(screen.getByRole('button', { name: /submit reviewed proof/i })).toBeEnabled();
+  });
+
   it('supports local visual initial state without calling the public token API', async () => {
     vi.stubGlobal('fetch', vi.fn());
 
