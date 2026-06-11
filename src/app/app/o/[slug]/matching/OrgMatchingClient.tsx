@@ -1,12 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Info } from 'lucide-react';
+import { AlertTriangle, Info, RefreshCcw } from 'lucide-react';
 import { OrganizationMatchingEmpty } from '@/components/matching/OrganizationMatchingEmpty';
 import { MatchingOrganizationView } from '@/components/matching/MatchingOrganizationView';
 import { toast } from 'sonner';
 import { CardGridSkeleton, PageIntroSkeleton } from '@/components/skeletons/CoreLoadingPrimitives';
+import { Button } from '@/components/ui/button';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 export function OrgMatchingClient() {
   const router = useRouter();
@@ -19,6 +21,7 @@ export function OrgMatchingClient() {
         : null;
   const [assignments, setAssignments] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [showShortlistNotice, setShowShortlistNotice] = useState(false);
 
   useEffect(() => {
@@ -39,22 +42,42 @@ export function OrgMatchingClient() {
     router.replace(`/app/o/${encodeURIComponent(slug)}/assignments`);
   };
 
-  useEffect(() => {
-    const fetchAssignments = async () => {
-      try {
-        const orgQuery = slug ? `?orgSlug=${encodeURIComponent(slug)}` : '';
-        const response = await fetch(`/api/assignments${orgQuery}`);
-        const data = await response.json();
-        setAssignments(data.items || []);
-      } catch {
-        toast.error('Failed to load assignments');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchAssignments = useCallback(async () => {
+    setIsLoading(true);
+    setLoadError(null);
 
-    void fetchAssignments();
+    try {
+      const orgQuery = slug ? `?orgSlug=${encodeURIComponent(slug)}` : '';
+      const response = await fetch(`/api/assignments${orgQuery}`);
+
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => null);
+        throw new Error(
+          typeof errorPayload?.error === 'string'
+            ? errorPayload.error
+            : 'Failed to fetch assignments'
+        );
+      }
+
+      const data = await response.json();
+      setAssignments(data.items || []);
+    } catch (error) {
+      dispatchClientErrorDiagnostic('matching.organization_assignments.load_failed', error);
+      setAssignments([]);
+      setLoadError(
+        'Your assignments and review queue are still safe. Retry loading this section before creating a new assignment.'
+      );
+      toast.error('Assignments could not load', {
+        description: 'Retry the assignment corridor without leaving this page.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }, [slug]);
+
+  useEffect(() => {
+    void fetchAssignments();
+  }, [fetchAssignments]);
 
   const handleCreateAssignment = () => {
     if (!slug) {
@@ -79,6 +102,32 @@ export function OrgMatchingClient() {
           columnsClassName="grid grid-cols-1 md:grid-cols-2 gap-4"
           tileClassName="min-h-[220px]"
         />
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div
+        className="mx-auto flex min-h-[420px] w-full max-w-3xl flex-col items-center justify-center rounded-xl border border-proofound-stone/80 bg-white/75 p-8 text-center shadow-sm"
+        role="alert"
+      >
+        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#fff1d6] text-[#8a5b00]">
+          <AlertTriangle className="h-5 w-5" aria-hidden="true" />
+        </div>
+        <h2 className="font-display text-xl font-semibold text-proofound-charcoal">
+          Assignments could not load
+        </h2>
+        <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">{loadError}</p>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => void fetchAssignments()}
+          className="mt-4 min-h-10 rounded-full border-proofound-stone/85 bg-white px-4 text-proofound-forest hover:border-proofound-forest hover:bg-proofound-parchment/30"
+        >
+          <RefreshCcw className="mr-2 h-4 w-4" aria-hidden="true" />
+          Retry assignments
+        </Button>
       </div>
     );
   }
