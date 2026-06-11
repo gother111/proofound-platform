@@ -80,7 +80,62 @@ describe('FeedbackForm', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /submit feedback/i }));
 
-    expect(await screen.findByText(/Please complete the required questions/i)).toBeInTheDocument();
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      /Please complete the required questions marked below/i
+    );
+    expect(screen.getByRole('spinbutton')).toHaveAttribute('aria-invalid', 'true');
+    expect(
+      screen.getByText('Choose a rating to complete this required question.')
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Required questions are labeled Required/i)).toBeInTheDocument();
+  });
+
+  it('labels required and optional questions without implying required text is optional', async () => {
+    render(
+      <FeedbackForm
+        template={{
+          ...template,
+          questions: [
+            {
+              id: 'q-text-required',
+              prompt: 'What should improve next?',
+              question_type: 'text' as const,
+              required: true,
+              sort_order: 1,
+            },
+            {
+              id: 'q-text-optional',
+              prompt: 'Anything else?',
+              question_type: 'text' as const,
+              required: false,
+              sort_order: 2,
+            },
+          ],
+        }}
+        interviewId="interview-1"
+      />
+    );
+
+    expect(screen.getAllByText('Required')).toHaveLength(1);
+    expect(screen.getAllByText('Optional')).toHaveLength(1);
+    expect(screen.getByLabelText(/What should improve next/i)).toHaveAttribute(
+      'placeholder',
+      'Add the required context'
+    );
+    expect(screen.getByLabelText(/Anything else/i)).toHaveAttribute(
+      'placeholder',
+      'Add details (optional)'
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /submit feedback/i }));
+
+    expect(
+      await screen.findByText('Add a short answer to complete this required question.')
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/What should improve next/i)).toHaveAttribute(
+      'aria-invalid',
+      'true'
+    );
   });
 
   it('keeps organization feedback prompts workflow-scoped instead of candidate-led', () => {

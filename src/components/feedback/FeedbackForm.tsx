@@ -51,6 +51,11 @@ type AnswerState = Record<
   }
 >;
 
+type FormMessage = {
+  tone: 'success' | 'error';
+  text: string;
+};
+
 export function FeedbackForm({
   template,
   interviewId,
@@ -62,7 +67,8 @@ export function FeedbackForm({
   const router = useRouter();
   const [answers, setAnswers] = useState<AnswerState>({});
   const [submitting, setSubmitting] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<FormMessage | null>(null);
+  const [missingQuestionIds, setMissingQuestionIds] = useState<Set<string>>(() => new Set());
 
   const orderedQuestions = useMemo(
     () => [...template.questions].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)),
@@ -74,20 +80,23 @@ export function FeedbackForm({
     setSubmitting(true);
     setMessage(null);
 
-    const missingRequired = orderedQuestions.some((q) => {
+    const missingRequiredIds = orderedQuestions.flatMap((q) => {
       const current = answers[q.id];
-      if (!q.required) return false;
+      if (!q.required) return [];
       if (q.question_type === 'scale') {
-        return current?.score === undefined || current?.score === null;
+        return current?.score === undefined || current?.score === null ? [q.id] : [];
       }
-      return !current?.textAnswer?.trim();
+      return !current?.textAnswer?.trim() ? [q.id] : [];
     });
 
-    if (missingRequired) {
-      setMessage('Please complete the required questions.');
+    if (missingRequiredIds.length > 0) {
+      setMissingQuestionIds(new Set(missingRequiredIds));
+      setMessage({ tone: 'error', text: 'Please complete the required questions marked below.' });
       setSubmitting(false);
       return;
     }
+
+    setMissingQuestionIds(new Set());
 
     const payload = {
       interviewId,
@@ -105,7 +114,7 @@ export function FeedbackForm({
       clientFeedbackVisualFixturesEnabled() &&
       token === VISUAL_FEEDBACK_TOKENS.pendingCandidateToOrg
     ) {
-      setMessage('Feedback submitted. Thank you!');
+      setMessage({ tone: 'success', text: 'Feedback submitted. Thank you!' });
       setSubmitting(false);
       onSubmitted?.();
       return;
@@ -119,15 +128,24 @@ export function FeedbackForm({
 
     if (!response.ok) {
       const error = await response.json();
-      setMessage(error.error || 'Something went wrong. Please try again.');
+      setMessage({ tone: 'error', text: error.error || 'Something went wrong. Please try again.' });
       setSubmitting(false);
       return;
     }
 
-    setMessage('Feedback submitted. Thank you!');
+    setMessage({ tone: 'success', text: 'Feedback submitted. Thank you!' });
     setSubmitting(false);
     onSubmitted?.();
     router.refresh();
+  };
+
+  const clearMissingQuestion = (questionId: string) => {
+    setMissingQuestionIds((current) => {
+      if (!current.has(questionId)) return current;
+      const next = new Set(current);
+      next.delete(questionId);
+      return next;
+    });
   };
 
   const directionCopy =
@@ -147,7 +165,7 @@ export function FeedbackForm({
       <CardHeader className={headerClassName}>
         <CardTitle className="text-lg">{directionCopy}</CardTitle>
         <p className="text-sm text-muted-foreground">
-          Your name will not be shown to the other side. Required items are marked with *.
+          Your name will not be shown to the other side. Required questions are labeled Required.
         </p>
       </CardHeader>
       <CardContent className={contentClassName}>
@@ -158,14 +176,38 @@ export function FeedbackForm({
           <form className="space-y-6" onSubmit={handleSubmit} noValidate>
             {orderedQuestions.map((question) => {
               const inputId = `feedback-${question.id}`;
+              const helperId = `${inputId}-helper`;
+              const errorId = `${inputId}-error`;
+              const hasQuestionError = missingQuestionIds.has(question.id);
+              const describedBy = [
+                question.helper_text ? helperId : null,
+                hasQuestionError ? errorId : null,
+              ]
+                .filter(Boolean)
+                .join(' ');
+
               return (
                 <div key={question.id} className="space-y-2">
-                  <Label className="font-medium" htmlFor={inputId}>
-                    {question.prompt}
-                    {question.required ? ' *' : ''}
+                  <Label
+                    className="flex flex-wrap items-center gap-2 font-medium"
+                    htmlFor={inputId}
+                  >
+                    <span>{question.prompt}</span>
+                    <span
+                      className={cn(
+                        'rounded-full px-2 py-0.5 text-[11px] font-semibold',
+                        question.required
+                          ? 'bg-[#F5E8DE] text-[#8A3F21]'
+                          : 'bg-muted text-muted-foreground'
+                      )}
+                    >
+                      {question.required ? 'Required' : 'Optional'}
+                    </span>
                   </Label>
                   {question.helper_text ? (
-                    <p className="text-xs text-muted-foreground">{question.helper_text}</p>
+                    <p id={helperId} className="text-xs text-muted-foreground">
+                      {question.helper_text}
+                    </p>
                   ) : null}
                   {question.question_type === 'scale' ? (
                     <Input
@@ -175,34 +217,49 @@ export function FeedbackForm({
                       max={question.scale_max ?? 5}
                       step={1}
                       required={question.required}
+                      aria-invalid={hasQuestionError || undefined}
+                      aria-describedby={describedBy || undefined}
                       value={answers[question.id]?.score ?? ''}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        clearMissingQuestion(question.id);
                         setAnswers((prev) => ({
                           ...prev,
                           [question.id]: {
                             ...prev[question.id],
                             score: Number(e.target.value),
                           },
-                        }))
-                      }
+                        }));
+                      }}
                     />
                   ) : (
                     <Textarea
                       id={inputId}
-                      placeholder="Add details (optional)"
+                      placeholder={
+                        question.required ? 'Add the required context' : 'Add details (optional)'
+                      }
                       required={question.required}
+                      aria-invalid={hasQuestionError || undefined}
+                      aria-describedby={describedBy || undefined}
                       value={answers[question.id]?.textAnswer ?? ''}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        clearMissingQuestion(question.id);
                         setAnswers((prev) => ({
                           ...prev,
                           [question.id]: {
                             ...prev[question.id],
                             textAnswer: e.target.value,
                           },
-                        }))
-                      }
+                        }));
+                      }}
                     />
                   )}
+                  {hasQuestionError ? (
+                    <p id={errorId} className="text-xs font-medium text-destructive">
+                      {question.question_type === 'scale'
+                        ? 'Choose a rating to complete this required question.'
+                        : 'Add a short answer to complete this required question.'}
+                    </p>
+                  ) : null}
                 </div>
               );
             })}
@@ -213,13 +270,14 @@ export function FeedbackForm({
               </Button>
               {message ? (
                 <span
-                  role={message.includes('Thank') ? 'status' : 'alert'}
+                  role={message.tone === 'success' ? 'status' : 'alert'}
+                  aria-live={message.tone === 'success' ? 'polite' : 'assertive'}
                   className={cn(
                     'rounded-xl px-3 py-2 text-sm leading-6',
-                    message.includes('Thank') ? 'text-emerald-700' : 'text-destructive'
+                    message.tone === 'success' ? 'text-emerald-700' : 'text-destructive'
                   )}
                 >
-                  {message}
+                  {message.text}
                 </span>
               ) : null}
             </div>
