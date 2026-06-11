@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,6 +14,8 @@ import {
   MessagesSquare,
   Target,
   Settings,
+  AlertTriangle,
+  RefreshCcw,
 } from 'lucide-react';
 import { DataBreakdown } from '@/components/privacy/DataBreakdown';
 import { DataExportFeedback } from '@/components/privacy/DataExportFeedback';
@@ -30,6 +32,20 @@ interface PrivacyOverviewProps {
   fullPageNavigation?: boolean;
 }
 
+type VisibilityCounts = {
+  public: number;
+  network_only: number;
+  match_only: number;
+  private: number;
+};
+
+const EMPTY_VISIBILITY_COUNTS: VisibilityCounts = {
+  public: 0,
+  network_only: 0,
+  match_only: 0,
+  private: 0,
+};
+
 export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyOverviewProps) {
   const [showDataBreakdown, setShowDataBreakdown] = useState(false);
   const [showAuditLog, setShowAuditLog] = useState(false);
@@ -44,12 +60,10 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
   const [privacySummaryEnabled, setPrivacySummaryEnabled] = useState(
     CLIENT_FF_DEFAULTS.privacySummary
   );
-  const [visibilityCounts, setVisibilityCounts] = useState({
-    public: 0,
-    network_only: 0,
-    match_only: 0,
-    private: 0,
-  });
+  const [visibilityCounts, setVisibilityCounts] =
+    useState<VisibilityCounts>(EMPTY_VISIBILITY_COUNTS);
+  const [visibilitySummaryLoading, setVisibilitySummaryLoading] = useState(true);
+  const [visibilitySummaryError, setVisibilitySummaryError] = useState<string | null>(null);
 
   const focusPageSection = (sectionId: string, block: ScrollLogicalPosition = 'start') => {
     const section = document.getElementById(sectionId);
@@ -72,37 +86,57 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
     showInlineSection();
   };
 
-  useEffect(() => {
-    void (async () => {
-      try {
-        const flagsResponse = await fetch('/api/feature-flags');
-        if (flagsResponse.ok) {
-          const flagsPayload = await flagsResponse.json();
-          setPrivacySummaryEnabled(flagsPayload?.flags?.privacySummary !== false);
-        }
+  const loadVisibilitySummary = useCallback(async () => {
+    setVisibilitySummaryLoading(true);
+    setVisibilitySummaryError(null);
 
-        const response = await apiFetch('/api/profile/privacy-settings');
-        if (!response.ok) return;
-        const payload = await response.json();
-        const fieldVisibility = (payload?.fieldVisibility || {}) as Record<string, string>;
-        const counts = {
-          public: 0,
-          network_only: 0,
-          match_only: 0,
-          private: 0,
-        };
-        Object.values(fieldVisibility).forEach((level) => {
-          if (level === 'public') counts.public += 1;
-          if (level === 'network_only') counts.network_only += 1;
-          if (level === 'match_only') counts.match_only += 1;
-          if (level === 'private') counts.private += 1;
-        });
-        setVisibilityCounts(counts);
-      } catch (error) {
-        dispatchClientErrorDiagnostic('settings.privacy_overview.visibility_summary_failed', error);
+    try {
+      const flagsResponse = await fetch('/api/feature-flags');
+      let summaryEnabled = CLIENT_FF_DEFAULTS.privacySummary;
+      if (flagsResponse.ok) {
+        const flagsPayload = await flagsResponse.json();
+        summaryEnabled = flagsPayload?.flags?.privacySummary !== false;
       }
-    })();
+
+      setPrivacySummaryEnabled(summaryEnabled);
+      if (!summaryEnabled) return;
+
+      const response = await apiFetch('/api/profile/privacy-settings');
+      if (!response.ok) {
+        throw new Error('Visibility summary request failed');
+      }
+
+      const payload = await response.json();
+      const fieldVisibility = (payload?.fieldVisibility || {}) as Record<string, string>;
+      const counts: VisibilityCounts = { ...EMPTY_VISIBILITY_COUNTS };
+      Object.values(fieldVisibility).forEach((level) => {
+        if (level === 'public') counts.public += 1;
+        if (level === 'network_only') counts.network_only += 1;
+        if (level === 'match_only') counts.match_only += 1;
+        if (level === 'private') counts.private += 1;
+      });
+      setVisibilityCounts(counts);
+    } catch (error) {
+      setPrivacySummaryEnabled(CLIENT_FF_DEFAULTS.privacySummary);
+      setVisibilitySummaryError(
+        'We could not refresh this summary. Your saved field controls are still available below.'
+      );
+      dispatchClientErrorDiagnostic('settings.privacy_overview.visibility_summary_failed', error);
+    } finally {
+      setVisibilitySummaryLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    void loadVisibilitySummary();
+  }, [loadVisibilitySummary]);
+
+  const getVisibilitySummaryText = (count: number) => {
+    if (visibilitySummaryLoading) return 'Loading...';
+    if (visibilitySummaryError) return 'Needs refresh';
+
+    return `${count} ${count === 1 ? 'section' : 'sections'}`;
+  };
 
   const handleExportData = async () => {
     setIsExporting(true);
@@ -245,22 +279,65 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {visibilitySummaryError ? (
+              <div
+                role="alert"
+                aria-live="polite"
+                className="rounded-xl border border-[#FCD34D] bg-[#FFFBEB] p-4 dark:border-yellow-800 dark:bg-yellow-950/20"
+              >
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex min-w-0 gap-3">
+                    <AlertTriangle
+                      className="mt-0.5 h-5 w-5 flex-shrink-0 text-[#D97706]"
+                      aria-hidden="true"
+                    />
+                    <div>
+                      <p className="font-medium text-[#92400E] dark:text-yellow-100">
+                        Visibility summary needs a refresh
+                      </p>
+                      <p className="mt-1 text-sm text-[#92400E] dark:text-yellow-200">
+                        {visibilitySummaryError}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      void loadVisibilitySummary();
+                    }}
+                    className="w-full border-[#D97706] text-[#92400E] hover:bg-[#FEF3C7] sm:w-auto dark:border-yellow-700 dark:text-yellow-100 dark:hover:bg-yellow-950/40"
+                  >
+                    <RefreshCcw className="h-4 w-4" aria-hidden="true" />
+                    Retry summary
+                  </Button>
+                </div>
+              </div>
+            ) : null}
             <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2 md:grid-cols-4">
               <div className="rounded-lg border p-3">
                 <p className="font-medium">Public</p>
-                <p className="text-muted-foreground">{visibilityCounts.public} sections</p>
+                <p className="text-muted-foreground">
+                  {getVisibilitySummaryText(visibilityCounts.public)}
+                </p>
               </div>
               <div className="rounded-lg border p-3">
                 <p className="font-medium">Trusted review context</p>
-                <p className="text-muted-foreground">{visibilityCounts.network_only} sections</p>
+                <p className="text-muted-foreground">
+                  {getVisibilitySummaryText(visibilityCounts.network_only)}
+                </p>
               </div>
               <div className="rounded-lg border p-3">
                 <p className="font-medium">Assignment review</p>
-                <p className="text-muted-foreground">{visibilityCounts.match_only} sections</p>
+                <p className="text-muted-foreground">
+                  {getVisibilitySummaryText(visibilityCounts.match_only)}
+                </p>
               </div>
               <div className="rounded-lg border p-3">
                 <p className="font-medium">Private</p>
-                <p className="text-muted-foreground">{visibilityCounts.private} sections</p>
+                <p className="text-muted-foreground">
+                  {getVisibilitySummaryText(visibilityCounts.private)}
+                </p>
               </div>
             </div>
             <div className="flex gap-2">

@@ -1,13 +1,18 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PrivacyOverview } from '@/components/settings/PrivacyOverview';
 
 const apiFetchMock = vi.fn();
+const dispatchClientErrorDiagnosticMock = vi.fn();
 
 vi.mock('@/lib/api/fetch', () => ({
   apiFetch: (...args: any[]) => apiFetchMock(...args),
+}));
+
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientErrorDiagnostic: (...args: unknown[]) => dispatchClientErrorDiagnosticMock(...args),
 }));
 
 vi.mock('@/components/privacy/VisibilitySettingsModal', () => ({
@@ -157,5 +162,44 @@ describe('PrivacyOverview copy', () => {
     expect(alert).toHaveTextContent('We could not prepare your data export');
     expect(alertSpy).not.toHaveBeenCalled();
     expect(global.fetch).toHaveBeenCalledWith('/api/user/export');
+  });
+
+  it('does not present zero visibility counts when the summary fails to load', async () => {
+    apiFetchMock
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({}),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          fieldVisibility: {
+            displayName: 'public',
+            email: 'private',
+            location: 'network_only',
+            impactStory: 'match_only',
+          },
+        }),
+      });
+
+    render(<PrivacyOverview userId="user-1" />);
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Visibility summary needs a refresh');
+    expect(alert).toHaveTextContent('Your saved field controls are still available below');
+    expect(screen.getAllByText('Needs refresh')).toHaveLength(4);
+    expect(screen.queryByText('0 sections')).not.toBeInTheDocument();
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'settings.privacy_overview.visibility_summary_failed',
+      expect.any(Error)
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retry summary' }));
+
+    await waitFor(() => {
+      expect(screen.getAllByText('1 section')).toHaveLength(4);
+    });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(apiFetchMock).toHaveBeenCalledTimes(2);
   });
 });
