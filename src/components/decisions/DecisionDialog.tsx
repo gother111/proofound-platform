@@ -7,7 +7,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useId } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { CheckCircle2, ArrowRight, Clock, XCircle, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, ArrowRight, Clock, XCircle, AlertTriangle, RefreshCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiFetch } from '@/lib/api/fetch';
 import { dispatchClientDiagnostic } from '@/lib/client-diagnostics';
@@ -29,7 +29,7 @@ interface DecisionDialogProps {
   onClose: () => void;
   interviewId: string;
   candidateName: string;
-  role: string;
+  assignmentTitle: string;
   onDecisionMade?: () => void;
 }
 
@@ -46,7 +46,7 @@ export function DecisionDialog({
   onClose,
   interviewId,
   candidateName,
-  role,
+  assignmentTitle,
   onDecisionMade,
 }: DecisionDialogProps) {
   const [decision, setDecision] = useState<DecisionType | null>(null);
@@ -54,6 +54,8 @@ export function DecisionDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [decisionWindow, setDecisionWindow] = useState<DecisionWindow | null>(null);
   const [isLoadingWindow, setIsLoadingWindow] = useState(true);
+  const [decisionWindowError, setDecisionWindowError] = useState<string | null>(null);
+  const optionDescriptionIdBase = useId();
   const { toast } = useToast();
 
   // Fetch decision window status
@@ -67,6 +69,8 @@ export function DecisionDialog({
   const fetchDecisionWindow = async () => {
     try {
       setIsLoadingWindow(true);
+      setDecisionWindowError(null);
+      setDecisionWindow(null);
       const response = await fetch(`/api/decisions/window/${interviewId}`);
 
       if (!response.ok) {
@@ -83,11 +87,9 @@ export function DecisionDialog({
       dispatchClientDiagnostic('decision.window.fetch_failed', {
         error: error instanceof Error ? error.message : 'Unknown error',
       });
-      toast({
-        title: 'Failed to load decision window',
-        description: 'Could not fetch decision deadline information',
-        variant: 'destructive',
-      });
+      setDecisionWindowError(
+        'The decision can still be recorded, but the 48-hour SLA countdown could not load. Retry before confirming if you need the current deadline.'
+      );
     } finally {
       setIsLoadingWindow(false);
     }
@@ -238,11 +240,49 @@ export function DecisionDialog({
         <DialogHeader>
           <DialogTitle>Record Workflow Decision</DialogTitle>
           <DialogDescription>
-            Interview workflow for {candidateName} and {role}
+            Interview workflow for {candidateName} and {assignmentTitle}
           </DialogDescription>
         </DialogHeader>
 
         {/* Decision Window Timer */}
+        {isLoadingWindow ? (
+          <div
+            className="flex items-center gap-2 rounded-lg border border-proofound-stone/70 bg-muted/30 p-4 text-sm text-muted-foreground"
+            role="status"
+            aria-live="polite"
+          >
+            <RefreshCcw className="h-4 w-4 animate-spin" />
+            Loading decision deadline...
+          </div>
+        ) : null}
+
+        {!isLoadingWindow && decisionWindowError ? (
+          <div
+            className="rounded-lg border border-amber-200 bg-amber-50/70 p-4 text-amber-950"
+            role="alert"
+          >
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="space-y-1">
+                <p className="flex items-center gap-2 text-sm font-semibold">
+                  <AlertTriangle className="h-4 w-4" />
+                  Decision deadline unavailable
+                </p>
+                <p className="text-sm leading-5">{decisionWindowError}</p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="shrink-0 bg-white"
+                onClick={fetchDecisionWindow}
+              >
+                <RefreshCcw className="mr-2 h-4 w-4" />
+                Retry deadline
+              </Button>
+            </div>
+          </div>
+        ) : null}
+
         {!isLoadingWindow && decisionWindow && (
           <div
             className={`rounded-lg border p-4 ${
@@ -274,11 +314,15 @@ export function DecisionDialog({
             {decisionOptions.map((option) => {
               const Icon = option.icon;
               const isSelected = decision === option.value;
+              const descriptionId = `${optionDescriptionIdBase}-${option.value}-description`;
 
               return (
                 <button
                   key={option.value}
                   type="button"
+                  aria-label={option.label}
+                  aria-describedby={descriptionId}
+                  aria-pressed={isSelected}
                   onClick={() => setDecision(option.value)}
                   className={`flex flex-col items-start gap-2 rounded-lg border-2 p-4 transition-all ${
                     isSelected
@@ -290,7 +334,10 @@ export function DecisionDialog({
                     <Icon className={`h-5 w-5 ${option.color}`} />
                     <span className="font-semibold">{option.label}</span>
                   </div>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 text-left">
+                  <p
+                    id={descriptionId}
+                    className="text-left text-xs text-gray-600 dark:text-gray-400"
+                  >
                     {option.description}
                   </p>
                 </button>

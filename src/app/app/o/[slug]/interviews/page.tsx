@@ -944,7 +944,7 @@ export default function OrganizationInterviewsPage() {
             candidateName={
               selectedInterview.candidateDisplayName || selectedInterview.corridor.subjectLabel
             }
-            role={selectedInterview.assignmentTitle || 'Assignment'}
+            assignmentTitle={selectedInterview.assignmentTitle || 'Assignment'}
             onDecisionMade={handleDecisionMade}
           />
         ) : null}
