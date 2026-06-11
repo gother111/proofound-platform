@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const apiFetchMock = vi.fn();
@@ -206,7 +206,7 @@ describe('AdminVerificationDashboard', () => {
   });
 
   it('requires a note for resolve actions and patches the generic queue endpoint once provided', async () => {
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const confirmSpy = vi.spyOn(window, 'confirm');
     apiFetchMock
       .mockResolvedValueOnce(buildJsonResponse(actionableQueuePayload))
       .mockResolvedValueOnce(
@@ -259,6 +259,13 @@ describe('AdminVerificationDashboard', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: 'Resolve' }));
 
+    const resolveDialog = await screen.findByRole('alertdialog', { name: 'Resolve queue item?' });
+    expect(resolveDialog).toBeInTheDocument();
+    expect(within(resolveDialog).getByText('Safe after review.')).toBeInTheDocument();
+    expect(apiFetchMock).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(within(resolveDialog).getByRole('button', { name: 'Confirm resolve' }));
+
     await waitFor(() => {
       expect(apiFetchMock).toHaveBeenCalledWith(
         '/api/admin/internal-ops/queues/33333333-3333-4333-8333-333333333333',
@@ -270,7 +277,10 @@ describe('AdminVerificationDashboard', () => {
     await waitFor(() => {
       expect(toastSuccessMock).toHaveBeenCalledWith('Queue item moved to Resolved.');
     });
-    expect(confirmSpy).toHaveBeenCalledWith(expect.stringContaining('Resolve this queue item'));
+    await waitFor(() => {
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    });
+    expect(confirmSpy).not.toHaveBeenCalled();
 
     confirmSpy.mockRestore();
   });
@@ -351,7 +361,7 @@ describe('AdminVerificationDashboard', () => {
   });
 
   it('uses explicit approve and reject actions for uploaded-file queue items', async () => {
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const confirmSpy = vi.spyOn(window, 'confirm');
     const uploadQueuePayload = {
       queues: [queuePayload.queues[2]],
       stats: queuePayload.stats,
@@ -404,6 +414,19 @@ describe('AdminVerificationDashboard', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: /approve private evidence/i }));
 
+    const approveDialog = await screen.findByRole('alertdialog', {
+      name: 'Approve private evidence queue item?',
+    });
+    expect(approveDialog).toBeInTheDocument();
+    expect(
+      within(approveDialog).getByText('Inspected metadata flags; safe for private evidence only.')
+    ).toBeInTheDocument();
+    expect(apiFetchMock).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(
+      within(approveDialog).getByRole('button', { name: /confirm approve private evidence/i })
+    );
+
     await waitFor(() => {
       expect(apiFetchMock).toHaveBeenCalledWith(
         '/api/admin/internal-ops/queues/33333333-3333-4333-8333-333333333333',
@@ -421,9 +444,12 @@ describe('AdminVerificationDashboard', () => {
       uploadReviewAction: 'approve',
       note: 'Inspected metadata flags; safe for private evidence only.',
     });
-    expect(confirmSpy).toHaveBeenCalledWith(expect.stringContaining('Approve this upload'));
+    expect(confirmSpy).not.toHaveBeenCalled();
     await waitFor(() => {
       expect(toastSuccessMock).toHaveBeenCalledWith('Upload approved for private evidence.');
+    });
+    await waitFor(() => {
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
     });
 
     confirmSpy.mockRestore();

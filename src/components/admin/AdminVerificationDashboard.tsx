@@ -15,6 +15,15 @@ import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api/fetch';
 import { dispatchClientDiagnostic } from '@/lib/client-diagnostics';
 import { internalValueLabel } from '@/lib/copy/labels';
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -75,6 +84,11 @@ type QueueAction = {
   uploadReviewAction?: 'approve' | 'reject';
   confirmationMessage?: string;
   successMessage?: string;
+};
+type ConfirmingQueueAction = {
+  item: QueueItem;
+  action: QueueAction;
+  note: string;
 };
 
 const PRIORITY_BADGE_CLASS: Record<QueueItem['priority'], string> = {
@@ -441,6 +455,7 @@ export function AdminVerificationDashboard() {
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('all');
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const [confirmingAction, setConfirmingAction] = useState<ConfirmingQueueAction | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -490,23 +505,8 @@ export function AdminVerificationDashboard() {
     }
   }, [queueIds, selectedTab]);
 
-  const handleQueueAction = async (item: QueueItem, action: QueueAction) => {
+  const submitQueueAction = async (item: QueueItem, action: QueueAction, note: string) => {
     const nextStatus = action.nextStatus;
-    const note = notes[item.id]?.trim() ?? '';
-
-    if (requiresOperatorNote(item.status, nextStatus) && !note) {
-      toast.error('Add an operator note before resolving, cancelling, or reopening this item.');
-      return;
-    }
-
-    if (
-      action.confirmationMessage &&
-      typeof window !== 'undefined' &&
-      typeof window.confirm === 'function' &&
-      !window.confirm(action.confirmationMessage)
-    ) {
-      return;
-    }
 
     try {
       setPendingAction(`${item.id}:${action.id}`);
@@ -536,13 +536,51 @@ export function AdminVerificationDashboard() {
       toast.success(
         action.successMessage ?? `Queue item moved to ${formatQueueStatus(nextStatus)}.`
       );
+      return true;
     } catch (error) {
       dispatchClientDiagnostic('admin.operations_queues.update_failed', {
         errorName: error instanceof Error ? error.name : typeof error,
       });
       toast.error(error instanceof Error ? error.message : 'Failed to update queue item');
+      return false;
     } finally {
       setPendingAction(null);
+    }
+  };
+
+  const handleQueueAction = async (item: QueueItem, action: QueueAction) => {
+    const nextStatus = action.nextStatus;
+    const note = notes[item.id]?.trim() ?? '';
+
+    if (requiresOperatorNote(item.status, nextStatus) && !note) {
+      toast.error('Add an operator note before resolving, cancelling, or reopening this item.');
+      return;
+    }
+
+    if (action.confirmationMessage) {
+      setConfirmingAction({ item, action, note });
+      return;
+    }
+
+    await submitQueueAction(item, action, note);
+  };
+
+  const confirmingActionKey = confirmingAction
+    ? `${confirmingAction.item.id}:${confirmingAction.action.id}`
+    : null;
+
+  const handleConfirmQueueAction = async () => {
+    if (!confirmingAction) {
+      return;
+    }
+
+    const succeeded = await submitQueueAction(
+      confirmingAction.item,
+      confirmingAction.action,
+      confirmingAction.note
+    );
+    if (succeeded) {
+      setConfirmingAction(null);
     }
   };
 
@@ -872,6 +910,59 @@ export function AdminVerificationDashboard() {
           </TabsContent>
         ))}
       </Tabs>
+      <AlertDialog
+        open={Boolean(confirmingAction)}
+        onOpenChange={(open) => {
+          if (!open && !pendingAction) {
+            setConfirmingAction(null);
+          }
+        }}
+      >
+        <AlertDialogContent className="max-w-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{confirmingAction?.action.label} queue item?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p>{confirmingAction?.action.confirmationMessage}</p>
+                {confirmingAction && (
+                  <div className="rounded-lg border border-proofound-stone/70 bg-[#FBFAF6] p-3 text-left text-sm text-foreground">
+                    <p className="font-medium">{confirmingAction.item.summary}</p>
+                    <p className="mt-2 break-all text-xs text-muted-foreground">
+                      Related record: {confirmingAction.item.linkedEntityId}
+                    </p>
+                    <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Operator note
+                    </p>
+                    <p className="mt-1 whitespace-pre-wrap break-words text-sm text-foreground">
+                      {confirmingAction.note || 'No operator note added.'}
+                    </p>
+                  </div>
+                )}
+                <p>
+                  Confirming will update this launch-critical queue item. Keep details minimum
+                  necessary and leave private evidence out of the note.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={pendingAction === confirmingActionKey}>
+              Keep in review
+            </AlertDialogCancel>
+            <Button
+              type="button"
+              variant={confirmingAction?.action.variant ?? 'default'}
+              loading={pendingAction === confirmingActionKey}
+              disabled={pendingAction === confirmingActionKey}
+              onClick={() => void handleConfirmQueueAction()}
+            >
+              {confirmingAction
+                ? `Confirm ${confirmingAction.action.label.toLowerCase()}`
+                : 'Confirm action'}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
