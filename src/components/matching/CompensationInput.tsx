@@ -90,7 +90,7 @@ export function CompensationInput({
             value={value.currency}
             onValueChange={(currency) => onChange({ ...value, currency })}
           >
-            <SelectTrigger id="currency">
+            <SelectTrigger id="currency" aria-label="Compensation currency">
               <SelectValue placeholder="Select currency" />
             </SelectTrigger>
             <SelectContent>
@@ -112,7 +112,7 @@ export function CompensationInput({
             value={value.period}
             onValueChange={(period: CompensationPeriod) => onChange({ ...value, period })}
           >
-            <SelectTrigger id="comp-period">
+            <SelectTrigger id="comp-period" aria-label="Compensation period">
               <SelectValue placeholder="Select period" />
             </SelectTrigger>
             <SelectContent>

@@ -136,7 +136,7 @@ export default async function OrganizationProfilePage({
                   <p className="font-medium text-foreground">Public preview</p>
                   <p>
                     <Link
-                      className="underline underline-offset-4"
+                      className="-mx-1 inline-flex min-h-8 items-center rounded-md px-1 font-medium text-proofound-forest underline underline-offset-4 transition-colors hover:bg-proofound-forest/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
                       href={`/app/o/${slug}/portfolio`}
                     >
                       View the public organization page

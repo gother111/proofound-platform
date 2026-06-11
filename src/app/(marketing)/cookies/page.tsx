@@ -67,7 +67,7 @@ export default function CookiesPage() {
         </div>
         <Link
           href="/cookies/settings"
-          className="text-sm font-semibold text-proofound-forest underline underline-offset-4"
+          className="inline-flex min-h-10 items-center rounded-md px-2 text-sm font-semibold text-proofound-forest underline underline-offset-4 transition-colors hover:bg-proofound-forest/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
         >
           Open cookie settings
         </Link>

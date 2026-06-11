@@ -41,7 +41,7 @@ export default function TermsOfServicePage() {
           <div className="mx-auto max-w-4xl px-6 py-6">
             <Link
               href="/"
-              className="inline-flex items-center gap-2 text-sm text-[#2D333099] transition-colors hover:text-proofound-forest"
+              className="-ml-2 inline-flex min-h-10 items-center gap-2 rounded-md px-2 text-sm text-[#2D333099] transition-colors hover:bg-proofound-terracotta/5 hover:text-proofound-terracotta focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-terracotta focus-visible:ring-offset-2"
             >
               <ArrowLeft className="h-4 w-4" />
               Back to Home
