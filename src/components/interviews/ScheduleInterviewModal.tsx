@@ -75,6 +75,14 @@ export function ScheduleInterviewModal({
 
   const isReschedule = existingInterviewsCount > 0;
   const canReschedule = existingInterviewsCount < 1;
+  const errorMessageId = 'interview-schedule-error';
+  const providerHelpId = 'manual-meeting-provider-help';
+  const linkHelpId = 'manual-meeting-link-help';
+  const rescheduleLimitId = 'interview-reschedule-limit';
+  const providerHasError = error === 'Please select the meeting provider when using manual mode';
+  const linkHasError =
+    error === 'Please add a meeting link when using manual mode' ||
+    error === 'Please provide a valid meeting link URL';
 
   const maxDate = useMemo(() => {
     const max = new Date(matchAgreedAt);
@@ -255,8 +263,8 @@ export function ScheduleInterviewModal({
           </SelectContent>
         </Select>
         <p className="text-xs text-[#6B6760]">
-          Manual mode works with any valid meeting link. Select which provider the link belongs
-          to, then paste the URL you want participants to use.
+          Manual mode works with any valid meeting link. Select which provider the link belongs to,
+          then paste the URL you want participants to use.
         </p>
       </div>
 
@@ -266,7 +274,13 @@ export function ScheduleInterviewModal({
           value={manualMeetingProvider || undefined}
           onValueChange={(value) => setManualMeetingProvider(value as ManualMeetingProvider)}
         >
-          <SelectTrigger id="manualMeetingProvider">
+          <SelectTrigger
+            id="manualMeetingProvider"
+            aria-invalid={providerHasError || undefined}
+            aria-describedby={
+              providerHasError ? `${providerHelpId} ${errorMessageId}` : providerHelpId
+            }
+          >
             <SelectValue placeholder="Select provider" />
           </SelectTrigger>
           <SelectContent>
@@ -275,6 +289,10 @@ export function ScheduleInterviewModal({
             <SelectItem value="other">Other</SelectItem>
           </SelectContent>
         </Select>
+        <p id={providerHelpId} className="text-xs text-[#6B6760]">
+          This labels the meeting link for both participants; it does not connect an external
+          calendar provider.
+        </p>
         <Label htmlFor="manualMeetingLink">Meeting Link</Label>
         <input
           id="manualMeetingLink"
@@ -282,19 +300,37 @@ export function ScheduleInterviewModal({
           value={manualMeetingLink}
           onChange={(event) => setManualMeetingLink(event.target.value)}
           placeholder="https://meet.google.com/... or another secure meeting URL"
+          aria-invalid={linkHasError || undefined}
+          aria-describedby={linkHasError ? `${linkHelpId} ${errorMessageId}` : linkHelpId}
           className="flex h-11 w-full rounded-lg border border-proofound-stone dark:border-border bg-white dark:bg-background px-4 py-2 text-base text-proofound-charcoal dark:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest"
         />
+        <p id={linkHelpId} className="text-xs text-[#6B6760]">
+          Use the meeting URL participants should open for this interview.
+        </p>
       </div>
 
       {error && (
-        <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+        <div
+          id={errorMessageId}
+          role="alert"
+          aria-live="assertive"
+          className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
+        >
           {error}
         </div>
       )}
 
       {isReschedule && !canReschedule && (
-        <div className="rounded-md border border-warning/40 bg-warning/15 p-3 text-sm text-proofound-charcoal">
-          ⚠️ You have already rescheduled this interview once. No further reschedules allowed.
+        <div
+          id={rescheduleLimitId}
+          role="status"
+          aria-live="polite"
+          className="rounded-md border border-warning/40 bg-warning/15 p-3 text-sm text-proofound-charcoal"
+        >
+          <p className="font-medium">Reschedule limit reached</p>
+          <p className="mt-1">
+            You have already rescheduled this interview once. No further reschedules are allowed.
+          </p>
         </div>
       )}
     </div>

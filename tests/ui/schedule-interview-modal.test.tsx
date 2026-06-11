@@ -225,10 +225,41 @@ describe('ScheduleInterviewModal', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /schedule interview/i }));
 
-    await waitFor(() =>
-      expect(
-        screen.getByText('Please select the meeting provider when using manual mode')
-      ).toBeInTheDocument()
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Please select the meeting provider when using manual mode');
+    expect(scheduleInterviewMock).not.toHaveBeenCalled();
+  });
+
+  it('marks the manual meeting link invalid when the URL is missing', async () => {
+    render(
+      <ScheduleInterviewModal
+        isOpen
+        onClose={vi.fn()}
+        matchId="6e704a5a-a89e-43cc-9f71-d1f29fd7f3dd"
+        matchAgreedAt={new Date()}
+      />
+    );
+
+    await screen.findAllByTestId('mock-select');
+    const dateSelect = findSelectByOption(new Date().toISOString().slice(0, 10));
+    const timeSelect = findSelectByOption('09:00');
+    const platformSelect = findSelectByOption('manual');
+    const manualProviderSelect = findSelectByOption('teams');
+
+    fireEvent.change(dateSelect, { target: { value: dateSelect.options[0].value } });
+    fireEvent.change(timeSelect, { target: { value: timeSelect.options[0].value } });
+    fireEvent.change(platformSelect, { target: { value: 'manual' } });
+    fireEvent.change(manualProviderSelect, { target: { value: 'teams' } });
+
+    fireEvent.click(screen.getByRole('button', { name: /schedule interview/i }));
+
+    const alert = await screen.findByRole('alert');
+    const meetingLinkInput = screen.getByLabelText(/meeting link/i);
+
+    expect(alert).toHaveTextContent('Please add a meeting link when using manual mode');
+    expect(meetingLinkInput).toHaveAttribute('aria-invalid', 'true');
+    expect(meetingLinkInput).toHaveAccessibleDescription(
+      'Use the meeting URL participants should open for this interview. Please add a meeting link when using manual mode'
     );
     expect(scheduleInterviewMock).not.toHaveBeenCalled();
   });
@@ -358,10 +389,28 @@ describe('ScheduleInterviewModal', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: /schedule interview/i }));
 
-    await waitFor(() =>
-      expect(
-        screen.getByText('Retry with a valid manual meeting link or choose another secure URL.')
-      ).toBeInTheDocument()
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(
+      'Retry with a valid manual meeting link or choose another secure URL.'
     );
+  });
+
+  it('announces the reschedule limit without exposing the submit action', async () => {
+    render(
+      <ScheduleInterviewModal
+        isOpen
+        onClose={vi.fn()}
+        matchId="6e704a5a-a89e-43cc-9f71-d1f29fd7f3dd"
+        matchAgreedAt={new Date(Date.now() - 24 * 60 * 60 * 1000)}
+        existingInterviewsCount={1}
+      />
+    );
+
+    await screen.findAllByTestId('mock-select');
+
+    const status = screen.getByRole('status');
+    expect(status).toHaveTextContent('Reschedule limit reached');
+    expect(status).toHaveTextContent('No further reschedules are allowed.');
+    expect(screen.getByRole('button', { name: /reschedule/i })).toBeDisabled();
   });
 });
