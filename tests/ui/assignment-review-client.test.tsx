@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 
 import { AssignmentReviewClient } from '@/components/assignments/AssignmentReviewClient';
+import { apiFetch } from '@/lib/api/fetch';
 
 const pushMock = vi.hoisted(() => vi.fn());
 
@@ -69,6 +70,53 @@ describe('AssignmentReviewClient', () => {
     expect(screen.getAllByText('Role purpose').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Work summary').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Proof expectations').length).toBeGreaterThan(0);
+  });
+
+  it('confirms publish in an in-app dialog before starting matching', async () => {
+    const confirmSpy = vi.fn();
+    vi.stubGlobal('confirm', confirmSpy);
+    vi.mocked(apiFetch).mockResolvedValue({
+      ok: true,
+      json: async () => ({}),
+    } as Response);
+
+    render(
+      <AssignmentReviewClient
+        initialAssignment={baseAssignment}
+        assignmentId="assignment-1"
+        slug="acme"
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Publish Assignment/i }));
+
+    expect(apiFetch).not.toHaveBeenCalled();
+    expect(confirmSpy).not.toHaveBeenCalled();
+
+    const publishDialog = await screen.findByRole('dialog');
+    expect(
+      within(publishDialog).getByText(/starts the proof-led matching corridor/i)
+    ).toBeInTheDocument();
+    expect(
+      within(publishDialog).getByText(/Publication makes the assignment discoverable/i)
+    ).toBeInTheDocument();
+
+    fireEvent.click(within(publishDialog).getByRole('button', { name: /^Publish assignment$/i }));
+
+    await waitFor(() => {
+      expect(apiFetch).toHaveBeenCalledWith('/api/assignments/assignment-1/publish?orgSlug=acme', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          principalContext: {
+            principalType: 'organization',
+            orgId: 'org-1',
+          },
+        }),
+      });
+    });
+    expect(pushMock).toHaveBeenCalledWith('/app/o/acme/assignments?matching=assignment-1');
+    expect(confirmSpy).not.toHaveBeenCalled();
   });
 
   it('keeps publish disabled and routes users to missing draft details', () => {

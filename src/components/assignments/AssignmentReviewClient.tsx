@@ -6,6 +6,14 @@ import { AlertCircle, Check, Edit, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { engagementTypeLabel } from '@/lib/copy/labels';
 import { apiFetch } from '@/lib/api/fetch';
 import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
@@ -114,6 +122,7 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
   const [isLoading, setIsLoading] = useState(!initialAssignment);
   const [hasFetched, setHasFetched] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [publishDialogOpen, setPublishDialogOpen] = useState(false);
   const [publishBlocks, setPublishBlocks] = useState<PublishBlock[]>([]);
 
   // Fallback fetch only if server fetch returned nothing
@@ -145,8 +154,6 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
   }, [assignment, assignmentId, hasFetched, slug]);
 
   const handlePublish = async () => {
-    if (!confirm('Are you ready to publish this assignment and start matching?')) return;
-
     setIsPublishing(true);
     setPublishBlocks([]);
     try {
@@ -164,8 +171,10 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
       });
 
       if (response.ok) {
+        setPublishDialogOpen(false);
         router.push(`/app/o/${slug}/assignments?matching=${encodeURIComponent(assignmentId)}`);
       } else {
+        setPublishDialogOpen(false);
         const errorData = await response.json().catch(() => ({}));
         const blocks = Array.isArray(errorData.details?.blocks)
           ? (errorData.details.blocks as PublishBlock[])
@@ -187,6 +196,7 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
       }
     } catch (error) {
       dispatchClientErrorDiagnostic('assignment_review.publish_failed', error);
+      setPublishDialogOpen(false);
       setPublishBlocks([
         {
           blockCode: 'publish_request_failed',
@@ -300,7 +310,7 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
               <Badge className="bg-proofound-forest text-white">Published</Badge>
             ) : (
               <Button
-                onClick={handlePublish}
+                onClick={() => setPublishDialogOpen(true)}
                 disabled={publishDisabled}
                 className="w-full justify-center bg-proofound-forest hover:bg-proofound-forest/90 sm:w-auto"
               >
@@ -375,6 +385,53 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
             </div>
           </Card>
         ) : null}
+
+        <Dialog
+          open={publishDialogOpen}
+          onOpenChange={(open) => {
+            if (!isPublishing) setPublishDialogOpen(open);
+          }}
+        >
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-proofound-forest">
+                <Check className="h-5 w-5" aria-hidden="true" />
+                Publish assignment
+              </DialogTitle>
+              <DialogDescription>
+                This starts the proof-led matching corridor for this assignment.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-3 rounded-lg border border-[#d8e6d2] bg-[#f5faf1] p-3 text-sm text-proofound-forest">
+              <p className="font-medium">Publication makes the assignment discoverable.</p>
+              <p>
+                Reviewers will use this brief, its proof expectations, and its required skills to
+                assess fit. You can still manage the corridor from the assignment list after
+                publishing.
+              </p>
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setPublishDialogOpen(false)}
+                disabled={isPublishing}
+              >
+                Keep reviewing
+              </Button>
+              <Button
+                onClick={() => {
+                  void handlePublish();
+                }}
+                disabled={isPublishing}
+                className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
+              >
+                {isPublishing ? 'Publishing...' : 'Publish assignment'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Why this role exists */}
         <Card className="p-6">

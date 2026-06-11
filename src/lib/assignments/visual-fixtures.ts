@@ -90,10 +90,12 @@ export function buildVisualAssignmentFixtures(orgId: string): VisualAssignmentFi
       builderMode: 'basic',
       businessValue:
         'Clarify readiness evidence before partner expansion work reaches proof review.',
-      expectedImpact: null,
+      expectedImpact:
+        'Proof should show partner-readiness maps, owner decisions, and evidence that handoff risks were reduced before expansion.',
       mustHaveSkills: [
         { id: 'process-mapping', label: 'Process mapping', level: 3 },
         { id: 'partner-ops', label: 'Partner operations', level: 3 },
+        { id: 'readiness-reviews', label: 'Readiness reviews', level: 3 },
       ],
       niceToHaveSkills: [],
       createdAt: isoHoursAgo(28),
