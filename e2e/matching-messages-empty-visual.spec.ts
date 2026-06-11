@@ -41,13 +41,19 @@ test.describe('Matching and messages empty-state visual contract', () => {
 
     await prepareEmptyStateViewport(page);
     await page.goto('/app/i/matching', { waitUntil: 'domcontentloaded' });
+    await expect(page.getByRole('heading', { name: 'No matches yet' })).toBeVisible({
+      timeout: 30000,
+    });
     await stabilizeEmptyState(page);
 
     await expect(page.getByRole('heading', { name: 'Matching' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Browse readiness' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'No matches yet' })).toBeVisible();
     await expect(
-      page.getByText('Qualified introductions stay locked until stronger proof')
+      page.getByText(
+        'Nothing needs your attention right now. Keep your proof and preferences current'
+      )
     ).toBeVisible();
+    await expect(page.getByText('Tune match preferences')).toBeVisible();
     await expect(page.locator('body')).not.toContainText('Perfect-Fit');
 
     await expect(page.locator('main')).toHaveScreenshot('individual-matching-readiness.png', {

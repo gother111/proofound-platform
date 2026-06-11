@@ -55,7 +55,7 @@ describe('MatchingPage soft-gated state', () => {
     vi.clearAllMocks();
   });
 
-  it('renders browse-readiness guidance when personalized browse is soft-gated', async () => {
+  it('renders introduction readiness guidance when personalized matching is soft-gated', async () => {
     const blockedPayload = {
       items: [],
       meta: {
@@ -125,10 +125,83 @@ describe('MatchingPage soft-gated state', () => {
     render(<MatchingPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Browse readiness')).toBeInTheDocument();
+      expect(screen.getByText('Introductions need more proof')).toBeInTheDocument();
     });
 
+    expect(
+      screen.getByText(
+        'Browsing is open, but add a few recent skills and one preference to personalize results.'
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'You can keep browsing, but introductions unlock after the required proof, one accepted verification, and intro constraints are current.'
+      )
+    ).toBeInTheDocument();
     expect(screen.getByText('Recent skills')).toBeInTheDocument();
     expect(screen.getByText('Strengthen Public Page proof')).toBeInTheDocument();
+  });
+
+  it('renders the empty matching corridor when browsing is eligible but no assignments are ready', async () => {
+    const fetchMock = vi.fn(async (input: string | URL, init?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input.toString();
+
+      if (url.startsWith('/api/csrf-token')) {
+        return {
+          ok: true,
+          json: async () => ({ token: 'csrf-token' }),
+        };
+      }
+
+      if (url === '/api/matching-profile') {
+        return {
+          ok: true,
+          json: async () => ({ profile: { id: 'user-1' } }),
+        };
+      }
+
+      if (url === '/api/individual/readiness') {
+        return {
+          ok: true,
+          json: async () => ({
+            topActions: [
+              {
+                id: 'visual-match-preferences',
+                title: 'Tune match preferences',
+                description:
+                  'Adjust work mode, availability, and compensation before sending interest.',
+                actionUrl: '/app/i/matching/preferences',
+              },
+            ],
+          }),
+        };
+      }
+
+      if (url === '/api/match/profile' && init?.method === 'POST') {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ items: [], meta: { total: 0 } }),
+        };
+      }
+
+      throw new Error(`Unexpected fetch URL: ${url}`);
+    });
+
+    (global as any).fetch = fetchMock;
+
+    render(<MatchingPage />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'No matches yet' })).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByText(
+        'Nothing needs your attention right now. Keep your proof and preferences current so new assignment reviews can land cleanly.'
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText('Tune match preferences')).toBeInTheDocument();
+    expect(screen.queryByText('Introductions need more proof')).not.toBeInTheDocument();
   });
 });

@@ -349,6 +349,7 @@ export function MatchingClient() {
               />
             ) : null}
             <button
+              type="button"
               onClick={() => {
                 setShowSetup(true);
               }}
@@ -362,7 +363,9 @@ export function MatchingClient() {
 
       {blockedState ? (
         <div className="rounded-xl border border-proofound-stone bg-japandi-bg p-5">
-          <h2 className="text-lg font-semibold text-foreground">Browse readiness</h2>
+          <h2 className="font-display text-xl font-semibold text-proofound-charcoal">
+            Introductions need more proof
+          </h2>
           <p className="mt-1 text-sm text-muted-foreground">{blockedState.meta.message}</p>
 
           <div className="mt-4 space-y-2">
@@ -380,14 +383,15 @@ export function MatchingClient() {
           </div>
 
           <p className="mt-4 text-xs text-muted-foreground">
-            Qualified introductions stay locked until stronger proof, one accepted verification, and
-            full intro constraints are complete.
+            You can keep browsing, but introductions unlock after the required proof, one accepted
+            verification, and intro constraints are current.
           </p>
 
           {ensureThreeActions(blockedState.topActions).length > 0 ? (
             <div className="mt-4 grid grid-cols-1 gap-2 md:grid-cols-3">
               {ensureThreeActions(blockedState.topActions).map((action) => (
                 <button
+                  type="button"
                   key={action.id}
                   onClick={() => router.push(action.actionUrl)}
                   className="rounded-lg border border-proofound-stone px-3 py-2 text-left hover:border-proofound-forest hover:bg-white"
@@ -416,6 +420,7 @@ export function MatchingClient() {
             <div className="mx-auto w-full max-w-xl space-y-2 text-left mt-2">
               {ensureThreeActions(readinessActions).map((action) => (
                 <button
+                  type="button"
                   key={action.id}
                   onClick={() => router.push(action.actionUrl)}
                   className="w-full rounded-lg border border-proofound-stone bg-white px-3 py-2 transition-colors hover:border-proofound-forest hover:bg-proofound-parchment/30 text-left"
