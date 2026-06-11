@@ -102,6 +102,35 @@ describe('organization interviews page actions', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Loading interview workflow...');
   });
 
+  it('keeps load failures separate from the empty workflow state and retries', async () => {
+    getInterviewCorridorItemsMock
+      .mockRejectedValueOnce(new Error('network down'))
+      .mockResolvedValueOnce({ items: [] });
+
+    render(<OrganizationInterviewsPage />);
+
+    expect(
+      await screen.findByRole('heading', { name: /interview workflow could not load/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /scheduled interviews, decisions, and engagement records are still safe\. retry this section to refresh the organization workflow\./i
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: /no active interview workflow yet/i })
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /retry interviews/i }));
+
+    await waitFor(() => {
+      expect(getInterviewCorridorItemsMock).toHaveBeenCalledTimes(2);
+    });
+    expect(
+      await screen.findByRole('heading', { name: /no active interview workflow yet/i })
+    ).toBeInTheDocument();
+  });
+
   it('uses in-app dialogs for interview outcome actions before refresh', async () => {
     const upcomingInterviewAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
     const fetchCalls: Array<{ url: string; init?: RequestInit }> = [];

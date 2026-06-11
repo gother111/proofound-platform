@@ -20,6 +20,7 @@ import {
   Pencil,
   XCircle,
   AlertTriangle,
+  RefreshCcw,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -91,6 +92,7 @@ interface Interview {
 export default function OrganizationInterviewsPage() {
   const [interviews, setInterviews] = useState<Interview[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [decisionDialogOpen, setDecisionDialogOpen] = useState(false);
   const [selectedInterview, setSelectedInterview] = useState<Interview | null>(null);
   const [editingInterview, setEditingInterview] = useState<Interview | null>(null);
@@ -117,6 +119,7 @@ export default function OrganizationInterviewsPage() {
 
   const loadInterviews = async () => {
     setIsLoading(true);
+    setLoadError(null);
 
     try {
       const data = await getInterviewCorridorItems({ perspective: 'organization' });
@@ -124,6 +127,9 @@ export default function OrganizationInterviewsPage() {
     } catch (error) {
       dispatchClientErrorDiagnostic('interviews.organization.load_failed', error);
       setInterviews([]);
+      setLoadError(
+        'Scheduled interviews, decisions, and engagement records are still safe. Retry this section to refresh the organization workflow.'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -548,7 +554,38 @@ export default function OrganizationInterviewsPage() {
           </div>
         </header>
 
-        {interviews.length === 0 ? (
+        {loadError ? (
+          <div
+            role="alert"
+            className="rounded-lg border border-proofound-stone/70 bg-white p-5 shadow-sm sm:p-6"
+          >
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-lg bg-[#fff1d6] text-[#8a5b00]">
+                  <AlertTriangle className="h-5 w-5" />
+                </div>
+                <p className="text-sm font-medium text-muted-foreground">Interview workflow</p>
+                <h2 className="mt-2 font-display text-xl font-semibold text-proofound-charcoal">
+                  Interview workflow could not load
+                </h2>
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
+                  {loadError}
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex min-h-10 shrink-0 items-center justify-center gap-2"
+                onClick={() => {
+                  void loadInterviews();
+                }}
+              >
+                <RefreshCcw className="h-4 w-4" />
+                Retry interviews
+              </Button>
+            </div>
+          </div>
+        ) : interviews.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-lg border border-proofound-stone/70 bg-white px-4 py-16 text-center shadow-sm">
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#eef3e8] text-proofound-forest">
               <Calendar className="h-8 w-8" />

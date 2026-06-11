@@ -9,7 +9,16 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Calendar, Clock, Video, ExternalLink, CalendarPlus, Download } from 'lucide-react';
+import {
+  AlertTriangle,
+  Calendar,
+  Clock,
+  Video,
+  ExternalLink,
+  CalendarPlus,
+  Download,
+  RefreshCcw,
+} from 'lucide-react';
 import { HiringCorridorTimeline } from '@/components/interviews/HiringCorridorTimeline';
 import { Button } from '@/components/ui/button';
 import { getInterviewCorridorItems } from '@/app/actions/interviews';
@@ -63,6 +72,7 @@ interface Interview {
 export default function IndividualInterviewsPage() {
   const [interviews, setInterviews] = useState<Interview[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [isConfirmingEngagementId, setIsConfirmingEngagementId] = useState<string | null>(null);
   const [engagementTypeSelections, setEngagementTypeSelections] = useState<Record<string, string>>(
     {}
@@ -74,6 +84,7 @@ export default function IndividualInterviewsPage() {
 
   const loadInterviews = async () => {
     setIsLoading(true);
+    setLoadError(null);
 
     try {
       const data = await getInterviewCorridorItems({ perspective: 'individual' });
@@ -81,6 +92,9 @@ export default function IndividualInterviewsPage() {
     } catch (error) {
       dispatchClientErrorDiagnostic('interviews.individual.load_failed', error);
       setInterviews([]); // Set empty array on error
+      setLoadError(
+        'Your scheduled interviews and decisions are still safe. Retry this section to refresh the interview workflow.'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -230,7 +244,38 @@ export default function IndividualInterviewsPage() {
         </div>
 
         {/* Interviews List */}
-        {interviews.length === 0 ? (
+        {loadError ? (
+          <div
+            role="alert"
+            className="rounded-2xl border border-proofound-stone/80 bg-white/75 p-5 shadow-sm sm:p-6"
+          >
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-[#fff1d6] text-[#8a5b00]">
+                  <AlertTriangle className="h-5 w-5" />
+                </div>
+                <p className="text-sm font-medium text-muted-foreground">Interviews</p>
+                <h2 className="mt-2 font-display text-xl font-semibold text-proofound-charcoal">
+                  Interview workflow could not load
+                </h2>
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
+                  {loadError}
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="min-h-10 shrink-0 gap-2"
+                onClick={() => {
+                  void loadInterviews();
+                }}
+              >
+                <RefreshCcw className="h-4 w-4" />
+                Retry interviews
+              </Button>
+            </div>
+          </div>
+        ) : interviews.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-proofound-stone/80 bg-white/60 px-4 py-16 text-center">
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-japandi-bg">
               <Calendar className="h-8 w-8 text-proofound-forest" />

@@ -1,6 +1,6 @@
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import InterviewsPage from '@/app/app/i/interviews/IndividualInterviewsPage';
 
@@ -87,6 +87,35 @@ describe('individual interviews page clarity', () => {
 
     const nextAction = screen.getByRole('link', { name: /review matching/i });
     expect(nextAction).toHaveAttribute('href', '/app/i/matching');
+  });
+
+  it('keeps load failures separate from the empty workflow state and retries', async () => {
+    getInterviewCorridorItemsMock
+      .mockRejectedValueOnce(new Error('network down'))
+      .mockResolvedValueOnce({ items: [] });
+
+    render(<InterviewsPage />);
+
+    expect(
+      await screen.findByRole('heading', { name: /interview workflow could not load/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /your scheduled interviews and decisions are still safe\. retry this section to refresh the interview workflow\./i
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: /no active interview workflow yet/i })
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /retry interviews/i }));
+
+    await waitFor(() => {
+      expect(getInterviewCorridorItemsMock).toHaveBeenCalledTimes(2);
+    });
+    expect(
+      await screen.findByRole('heading', { name: /no active interview workflow yet/i })
+    ).toBeInTheDocument();
   });
 
   it('shows filled interview details and engagement confirmation controls', async () => {
