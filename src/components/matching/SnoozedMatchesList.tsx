@@ -43,6 +43,7 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
   const [matches, setMatches] = useState<SnoozedMatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [unsnoozing, setUnsnoozing] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchSnoozedMatches();
@@ -50,13 +51,25 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
 
   const fetchSnoozedMatches = async () => {
     try {
+      setLoading(true);
+      setError(null);
       const response = await apiFetch('/api/match/snoozed');
       if (response.ok) {
         const data = await response.json();
         setMatches(data.matches || []);
+      } else {
+        const text = await response.text().catch(() => '');
+        setError('Paused matches could not load');
+        toast.error('Paused matches could not load', {
+          description: text || 'You can retry without leaving matching.',
+        });
       }
     } catch (error) {
       dispatchClientErrorDiagnostic('matching.snoozed_matches.load_failed', error);
+      setError('Paused matches could not load');
+      toast.error('Paused matches could not load', {
+        description: 'You can retry without leaving matching.',
+      });
     } finally {
       setLoading(false);
     }
@@ -79,7 +92,7 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
       }
 
       toast.success('Match unsnoozed', {
-        description: 'This match will now appear in your main feed',
+        description: 'This assignment review will reappear in matching.',
       });
 
       // Refresh the main matching list before we exit (best-effort) and also warm API
@@ -136,20 +149,39 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
     );
   }
 
+  if (error) {
+    return (
+      <Card variant="bento" className="border p-4">
+        <div className="mb-2 flex items-center gap-2 text-[#DC2626]">
+          <Clock className="h-4 w-4" />
+          <h3 className="text-sm font-medium">Paused</h3>
+        </div>
+        <p className="mb-1 text-sm text-[#DC2626]">{error}</p>
+        <p className="mb-3 text-xs leading-5 text-muted-foreground">
+          Your paused assignment reviews are unchanged. Retry this panel to refresh the list.
+        </p>
+        <Button size="sm" variant="outline" onClick={fetchSnoozedMatches} className="text-xs">
+          Retry paused matches
+        </Button>
+      </Card>
+    );
+  }
+
   if (matches.length === 0) {
     return (
       <Card variant="bento" className="p-12 text-center">
         <Clock className="h-16 w-16 mx-auto mb-4 text-[#A8B69D]" />
-        <h3 className="text-lg font-semibold text-foreground mb-2">No Paused Matches</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-2">No paused matches right now</h3>
         <p className="text-sm text-muted-foreground mb-6">
-          Matches you pause will appear here until they are restored or the pause period ends.
+          Assignment reviews you pause will appear here until you restore them or the pause period
+          ends.
         </p>
         <Button
           variant="outline"
-          onClick={() => (window.location.href = '/app/i/matching')}
+          onClick={() => router.push('/app/i/matching')}
           className="border-proofound-forest text-proofound-forest"
         >
-          View All Matches
+          Back to matching feed
         </Button>
       </Card>
     );

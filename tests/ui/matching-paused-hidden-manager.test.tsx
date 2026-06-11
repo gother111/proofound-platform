@@ -1,12 +1,13 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { HiddenMatchesList } from '@/components/matching/HiddenMatchesList';
 import { SnoozedMatchesList } from '@/components/matching/SnoozedMatchesList';
 
-const { apiFetchMock, refreshMock } = vi.hoisted(() => ({
+const { apiFetchMock, pushMock, refreshMock } = vi.hoisted(() => ({
   apiFetchMock: vi.fn(),
+  pushMock: vi.fn(),
   refreshMock: vi.fn(),
 }));
 
@@ -16,6 +17,7 @@ vi.mock('@/lib/api/fetch', () => ({
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
+    push: pushMock,
     refresh: refreshMock,
   }),
 }));
@@ -156,5 +158,46 @@ describe('matching paused/hidden manager launch safety', () => {
     expect(screen.getByText('Proof review needed')).toBeInTheDocument();
     expect(screen.queryByText('Strong proof alignment')).not.toBeInTheDocument();
     expect(document.body.innerHTML).not.toContain('93%');
+  });
+
+  it('keeps the empty paused state inside the matching route without a full reload', async () => {
+    apiFetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ matches: [] }),
+    });
+
+    render(<SnoozedMatchesList />);
+
+    expect(await screen.findByText('No paused matches right now')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Assignment reviews you pause will appear here until you restore them or the pause period ends.'
+      )
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Back to matching feed' }));
+
+    expect(pushMock).toHaveBeenCalledWith('/app/i/matching');
+  });
+
+  it('shows a recoverable paused-match load error and retries in place', async () => {
+    apiFetchMock.mockRejectedValueOnce(new Error('network unavailable')).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ matches: [] }),
+    });
+
+    render(<SnoozedMatchesList />);
+
+    expect(await screen.findByText('Paused matches could not load')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Your paused assignment reviews are unchanged. Retry this panel to refresh the list.'
+      )
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retry paused matches' }));
+
+    expect(await screen.findByText('No paused matches right now')).toBeInTheDocument();
+    expect(apiFetchMock).toHaveBeenCalledTimes(2);
   });
 });
