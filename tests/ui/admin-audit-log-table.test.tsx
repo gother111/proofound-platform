@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const apiFetchMock = vi.fn();
@@ -129,8 +129,38 @@ describe('AuditLogTable', () => {
     });
   });
 
+  it('cancels break-glass preview confirmation without loading protected audit data', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm');
+    apiFetchMock.mockResolvedValueOnce(buildJsonResponse(auditPayload));
+
+    render(<AuditLogTable />);
+
+    await screen.findAllByText('Verify Organization');
+
+    fireEvent.change(screen.getByLabelText('Organization id'), {
+      target: { value: 'org-1' },
+    });
+    fireEvent.change(screen.getByLabelText('Break-glass reason'), {
+      target: { value: 'Investigating confirmed privacy incident' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
+
+    const previewDialog = await screen.findByRole('alertdialog', {
+      name: 'Open break-glass audit preview?',
+    });
+    fireEvent.click(within(previewDialog).getByRole('button', { name: 'Keep closed' }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    });
+    expect(apiFetchMock).toHaveBeenCalledTimes(1);
+    expect(confirmSpy).not.toHaveBeenCalled();
+
+    confirmSpy.mockRestore();
+  });
+
   it('loads break-glass org audit preview with explicit reason and no raw metadata', async () => {
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const confirmSpy = vi.spyOn(window, 'confirm');
     apiFetchMock.mockResolvedValueOnce(buildJsonResponse(auditPayload)).mockResolvedValueOnce(
       buildJsonResponse({
         orgId: 'org-1',
@@ -166,13 +196,28 @@ describe('AuditLogTable', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
 
+    const previewDialog = await screen.findByRole('alertdialog', {
+      name: 'Open break-glass audit preview?',
+    });
+    expect(previewDialog).toBeInTheDocument();
+    expect(within(previewDialog).getByText('org-1')).toBeInTheDocument();
+    expect(
+      within(previewDialog).getByText('Investigating confirmed privacy incident')
+    ).toBeInTheDocument();
+    expect(apiFetchMock).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(within(previewDialog).getByRole('button', { name: 'Confirm preview' }));
+
     await screen.findByText('1 preview rows for org-1');
 
-    expect(confirmSpy).toHaveBeenCalledWith(expect.stringContaining('break-glass'));
+    expect(confirmSpy).not.toHaveBeenCalled();
     expect(apiFetchMock).toHaveBeenLastCalledWith('/api/admin/organizations/org-1/audit?limit=10', {
       headers: {
         'x-break-glass-reason': 'Investigating confirmed privacy incident',
       },
+    });
+    await waitFor(() => {
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
     });
     expect(screen.getByText('Member Invited')).toBeInTheDocument();
     expect(screen.getByText('Protected metadata withheld')).toBeInTheDocument();

@@ -11,6 +11,15 @@ import {
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { AlertCircle, Search, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { apiFetch } from '@/lib/api/fetch';
@@ -46,6 +55,11 @@ interface OrgAuditPreviewResponse {
   }>;
 }
 
+type PendingBreakGlassPreview = {
+  orgId: string;
+  reason: string;
+};
+
 function formatAuditLabel(value: string) {
   return internalValueLabel(value.replace(/[.:-]+/g, '_'));
 }
@@ -62,6 +76,8 @@ export function AuditLogTable() {
   const [breakGlassLoading, setBreakGlassLoading] = useState(false);
   const [breakGlassError, setBreakGlassError] = useState<string | null>(null);
   const [breakGlassPreview, setBreakGlassPreview] = useState<OrgAuditPreviewResponse | null>(null);
+  const [pendingBreakGlassPreview, setPendingBreakGlassPreview] =
+    useState<PendingBreakGlassPreview | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -116,13 +132,10 @@ export function AuditLogTable() {
       return;
     }
 
-    const confirmed = window.confirm(
-      'Open a break-glass organization audit preview? This records the reason and keeps raw metadata hidden.'
-    );
-    if (!confirmed) {
-      return;
-    }
+    setPendingBreakGlassPreview({ orgId, reason });
+  };
 
+  const loadBreakGlassPreview = async ({ orgId, reason }: PendingBreakGlassPreview) => {
     setBreakGlassLoading(true);
     try {
       const res = await apiFetch(
@@ -137,11 +150,13 @@ export function AuditLogTable() {
         throw new Error('Break-glass preview failed');
       }
       setBreakGlassPreview((await res.json()) as OrgAuditPreviewResponse);
+      setPendingBreakGlassPreview(null);
     } catch (error) {
       dispatchClientDiagnostic('admin.break_glass_org_audit.preview_failed', {
         errorName: error instanceof Error ? error.name : typeof error,
       });
       setBreakGlassError('Break-glass preview could not be loaded. Check the id and reason.');
+      setPendingBreakGlassPreview(null);
     } finally {
       setBreakGlassLoading(false);
     }
@@ -184,7 +199,11 @@ export function AuditLogTable() {
             )}
           </Button>
         </form>
-        {breakGlassError ? <p className="mt-3 text-sm text-amber-950">{breakGlassError}</p> : null}
+        {breakGlassError ? (
+          <p className="mt-3 text-sm text-amber-950" role="alert">
+            {breakGlassError}
+          </p>
+        ) : null}
         {breakGlassPreview ? (
           <div className="mt-4 rounded-md border border-amber-200 bg-white p-3">
             <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
@@ -381,6 +400,60 @@ export function AuditLogTable() {
           </div>
         </div>
       )}
+
+      <AlertDialog
+        open={Boolean(pendingBreakGlassPreview)}
+        onOpenChange={(open) => {
+          if (!open && !breakGlassLoading) {
+            setPendingBreakGlassPreview(null);
+          }
+        }}
+      >
+        <AlertDialogContent className="max-w-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Open break-glass audit preview?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p>
+                  This records the reason and returns only the minimum necessary organization audit
+                  preview. Raw metadata remains hidden.
+                </p>
+                {pendingBreakGlassPreview ? (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-left text-sm text-amber-950">
+                    <p className="font-medium">Organization id</p>
+                    <p className="mt-1 break-all text-foreground">
+                      {pendingBreakGlassPreview.orgId}
+                    </p>
+                    <p className="mt-3 font-medium">Break-glass reason</p>
+                    <p className="mt-1 whitespace-pre-wrap break-words text-foreground">
+                      {pendingBreakGlassPreview.reason}
+                    </p>
+                  </div>
+                ) : null}
+                <p>
+                  Continue only for approved privacy, trust, or incident review. Do not copy private
+                  user content from other systems into the reason.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={breakGlassLoading}>Keep closed</AlertDialogCancel>
+            <Button
+              type="button"
+              loading={breakGlassLoading}
+              disabled={breakGlassLoading}
+              onClick={() => {
+                if (pendingBreakGlassPreview) {
+                  void loadBreakGlassPreview(pendingBreakGlassPreview);
+                }
+              }}
+            >
+              Confirm preview
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
