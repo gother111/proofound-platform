@@ -9,8 +9,10 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import {
   ArrowRight,
+  AlertTriangle,
   ListChecks,
   Plus,
+  RefreshCcw,
   Users,
   CheckCircle2,
   ShieldCheck,
@@ -113,6 +115,7 @@ export function MatchingOrganizationView({
   const [viewedAtByAssignment, setViewedAtByAssignment] = useState<Record<string, string>>({});
   const [matches, setMatches] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [activeSegment, setActiveSegment] = useState<'queue' | 'shortlist'>('queue');
   const [activeMatchId, setActiveMatchId] = useState<string>('');
   const [explanations, setExplanations] = useState<Record<string, any>>({});
@@ -202,37 +205,47 @@ export function MatchingOrganizationView({
       : 'New submissions';
   };
 
-  // Fetch matches when the selected assignment changes
-  useEffect(() => {
+  const fetchMatches = useCallback(async () => {
     if (!selectedAssignment) return;
 
-    const fetchMatches = async () => {
-      setIsLoading(true);
-      try {
-        const response = await apiFetch('/api/match/assignment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            assignmentId: selectedAssignment,
-          }),
-        });
+    setIsLoading(true);
+    setLoadError(null);
+    try {
+      const response = await apiFetch('/api/match/assignment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          assignmentId: selectedAssignment,
+        }),
+      });
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch matches');
-        }
-
-        const data = await response.json();
-        setMatches(data.items || []);
-      } catch {
-        toast.error('Failed to load matches');
-        setMatches([]);
-      } finally {
-        setIsLoading(false);
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => null);
+        throw new Error(
+          typeof errorPayload?.error === 'string' ? errorPayload.error : 'Failed to fetch matches'
+        );
       }
-    };
 
-    void fetchMatches();
+      const data = await response.json();
+      setMatches(data.items || []);
+    } catch (error) {
+      dispatchClientErrorDiagnostic('matching.organization_view.matches_load_failed', error);
+      setLoadError(
+        'Your review queue is still safe, and no shortlist, pass, or intro action was changed.'
+      );
+      toast.error('Proof submissions could not load', {
+        description: 'Retry the review queue without leaving this assignment.',
+      });
+      setMatches([]);
+    } finally {
+      setIsLoading(false);
+    }
   }, [selectedAssignment]);
+
+  // Fetch matches when the selected assignment changes
+  useEffect(() => {
+    void fetchMatches();
+  }, [fetchMatches]);
 
   // Filter matches based on the active tab segment
   const filteredMatches = matches.filter((match: any) => {
@@ -511,6 +524,30 @@ export function MatchingOrganizationView({
               <p className="text-sm text-muted-foreground mt-1 max-w-sm">
                 Choose one assignment in the left sidebar to start reviewing matched submissions.
               </p>
+            </div>
+          ) : loadError ? (
+            <div
+              className="flex flex-1 flex-col justify-center rounded-xl border border-proofound-stone/80 bg-white/75 p-8 text-center shadow-sm"
+              role="alert"
+            >
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#fff1d6] text-[#8a5b00]">
+                <AlertTriangle className="h-5 w-5" aria-hidden="true" />
+              </div>
+              <h3 className="text-base font-semibold text-proofound-charcoal">
+                Proof submissions could not load
+              </h3>
+              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">
+                {loadError}
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => void fetchMatches()}
+                className="mx-auto mt-4 min-h-10 rounded-full border-proofound-stone/85 bg-white px-4 text-proofound-forest hover:border-proofound-forest hover:bg-proofound-parchment/30"
+              >
+                <RefreshCcw className="mr-2 h-4 w-4" aria-hidden="true" />
+                Retry review queue
+              </Button>
             </div>
           ) : matches.length === 0 ? (
             <div className="flex-1 flex flex-col justify-center items-center text-center p-8 bg-white/70 border border-proofound-stone/60 rounded-xl">

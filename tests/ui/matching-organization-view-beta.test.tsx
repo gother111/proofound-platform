@@ -107,6 +107,51 @@ describe('MatchingOrganizationView launch corridor', () => {
     );
   });
 
+  it('shows a retryable load failure instead of the empty submissions state', async () => {
+    apiFetchMock
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: 'matching service unavailable' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          items: [
+            {
+              id: 'match-1',
+              assignmentId: 'assignment-1',
+              reviewStage: 'blind_review',
+              revealScope: 'blind',
+              corridorState: 'generated',
+              reviewCard: {
+                candidateLabel: 'Submission A7F2',
+                fitSummary: {
+                  headline: 'Fresh proof signals are attached.',
+                  bullets: [],
+                  reasonCodes: [],
+                },
+              },
+              profile: {
+                skills: {},
+              },
+            },
+          ],
+        }),
+      });
+
+    render(<MatchingOrganizationView assignments={assignments as any} onCreateNew={vi.fn()} />);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Proof submissions could not load');
+    expect(screen.getByText(/Your review queue is still safe/i)).toBeInTheDocument();
+    expect(screen.queryByText('No proof submissions yet')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /retry review queue/i }));
+
+    expect(await screen.findByText('Submission A7F2')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(apiFetchMock).toHaveBeenCalledTimes(2);
+  });
+
   it('opens assignment-specific matching from the assignment card', async () => {
     apiFetchMock.mockResolvedValue({
       ok: true,
