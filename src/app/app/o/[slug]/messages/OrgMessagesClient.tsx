@@ -34,32 +34,40 @@ function OrganizationMessagesPageContent({ currentUserId, hideHeader }: OrgMessa
   const [selectedConversationId, setSelectedConversationId] = useState<string | undefined>();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoadingConversations, setIsLoadingConversations] = useState(true);
+  const [conversationLoadError, setConversationLoadError] = useState<string | null>(null);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [RealtimeThread, setRealtimeThread] =
     useState<ComponentType<RealtimeMessageThreadProps> | null>(null);
 
   const loadConversations = useCallback(async () => {
     setIsLoadingConversations(true);
+    setConversationLoadError(null);
     try {
       const response = await fetch('/api/conversations');
-      if (response.ok) {
-        const data = await response.json();
-        // Transform API response to match ConversationList component interface
-        const transformedConversations = (data.conversations || []).map((conv: any) => ({
-          id: conv.id,
-          otherPartyName: conv.otherParty?.displayName || 'Unknown',
-          otherPartyAvatar: conv.otherParty?.displayAvatar,
-          lastMessage: conv.lastMessage?.content || '',
-          lastMessageAt: conv.lastMessageAt || conv.createdAt,
-          unreadCount: conv.unreadCount || 0,
-          matchId: conv.matchId,
-          assignmentTitle: conv.assignmentRole,
-          stage: conv.stage === 'revealed' ? 'revealed' : 'masked',
-        }));
-        setConversations(transformedConversations);
+      if (!response.ok) {
+        throw new Error('Conversation list request failed');
       }
+
+      const data = await response.json();
+      // Transform API response to match ConversationList component interface
+      const transformedConversations = (data.conversations || []).map((conv: any) => ({
+        id: conv.id,
+        otherPartyName: conv.otherParty?.displayName || 'Unknown',
+        otherPartyAvatar: conv.otherParty?.displayAvatar,
+        lastMessage: conv.lastMessage?.content || '',
+        lastMessageAt: conv.lastMessageAt || conv.createdAt,
+        unreadCount: conv.unreadCount || 0,
+        matchId: conv.matchId,
+        assignmentTitle: conv.assignmentRole,
+        stage: conv.stage === 'revealed' ? 'revealed' : 'masked',
+      }));
+      setConversations(transformedConversations);
     } catch (error) {
       dispatchClientErrorDiagnostic('messages.organization.conversations_load_failed', error);
+      setConversations([]);
+      setConversationLoadError(
+        'Assignment conversations are still safe. Retry this section to load messages, reveal requests, and proof-corridor updates.'
+      );
     } finally {
       setIsLoadingConversations(false);
     }
@@ -211,6 +219,10 @@ function OrganizationMessagesPageContent({ currentUserId, hideHeader }: OrgMessa
             onSelect={setSelectedConversationId}
             isLoading={isLoadingConversations}
             mode="organization"
+            loadError={conversationLoadError}
+            onRetry={() => {
+              void loadConversations();
+            }}
           />
         </div>
 

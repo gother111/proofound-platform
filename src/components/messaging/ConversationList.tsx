@@ -8,7 +8,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { MessageSquare, Search } from 'lucide-react';
+import { AlertTriangle, MessageSquare, RefreshCcw, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -32,6 +32,8 @@ interface ConversationListProps {
   onSelect: (id: string) => void;
   isLoading?: boolean;
   mode?: 'individual' | 'organization';
+  loadError?: string | null;
+  onRetry?: () => void;
 }
 
 export function ConversationList({
@@ -40,9 +42,12 @@ export function ConversationList({
   onSelect,
   isLoading = false,
   mode = 'individual',
+  loadError,
+  onRetry,
 }: ConversationListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const hasConversations = conversations.length > 0;
+  const hasLoadError = Boolean(loadError);
   const trimmedSearchQuery = searchQuery.trim();
   const hasSearchQuery = trimmedSearchQuery.length > 0;
   const emptyCopy =
@@ -130,9 +135,11 @@ export function ConversationList({
           Messages
         </h2>
         <p className="mb-3 text-xs leading-5 text-muted-foreground">
-          {hasConversations
-            ? 'Review open introductions and keep each thread tied to its proof corridor.'
-            : 'Conversations appear after a proof-safe introduction.'}
+          {hasLoadError
+            ? 'Retry the proof-corridor thread list without changing any messages.'
+            : hasConversations
+              ? 'Review open introductions and keep each thread tied to its proof corridor.'
+              : 'Conversations appear after a proof-safe introduction.'}
         </p>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -149,7 +156,30 @@ export function ConversationList({
 
       {/* Conversation list */}
       <div className="divide-y divide-proofound-stone/60">
-        {filteredConversations.length === 0 && !hasSearchQuery && (
+        {loadError ? (
+          <div
+            className="mx-4 mt-4 rounded-2xl border border-proofound-stone/80 bg-white/75 p-5 shadow-sm"
+            role="alert"
+          >
+            <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-[#fff1d6] text-[#8a5b00]">
+              <AlertTriangle className="h-5 w-5" />
+            </div>
+            <p className="text-sm font-medium text-proofound-charcoal">
+              Conversations could not load
+            </p>
+            <p className="mt-2 text-xs leading-5 text-muted-foreground">{loadError}</p>
+            {onRetry ? (
+              <button
+                type="button"
+                onClick={onRetry}
+                className="mt-4 inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-proofound-stone/80 bg-white px-3 text-xs font-medium text-proofound-forest transition-colors hover:border-proofound-forest hover:bg-proofound-parchment/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+              >
+                <RefreshCcw className="h-3.5 w-3.5" />
+                Retry conversations
+              </button>
+            ) : null}
+          </div>
+        ) : filteredConversations.length === 0 && !hasSearchQuery ? (
           <div className="mx-4 mt-4 rounded-2xl border border-dashed border-proofound-stone/80 bg-proofound-parchment/45 p-6 text-center">
             <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white text-proofound-forest">
               <MessageSquare className="h-5 w-5" />
@@ -162,9 +192,9 @@ export function ConversationList({
               {emptyCopy.helper}
             </p>
           </div>
-        )}
+        ) : null}
 
-        {filteredConversations.length === 0 && hasSearchQuery && (
+        {!loadError && filteredConversations.length === 0 && hasSearchQuery && (
           <div
             className="mx-4 mt-4 rounded-2xl border border-dashed border-proofound-stone/80 bg-white/70 p-6 text-center"
             role="status"

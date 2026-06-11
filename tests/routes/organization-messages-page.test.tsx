@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const replaceMock = vi.fn();
@@ -16,13 +16,26 @@ vi.mock('next/navigation', () => ({
 vi.mock('@/components/messaging/ConversationList', () => ({
   ConversationList: ({
     conversations,
+    loadError,
+    onRetry,
     selectedId,
   }: {
     conversations: any[];
+    loadError?: string | null;
+    onRetry?: () => void;
     selectedId?: string;
   }) => (
     <div>
       <p data-testid="selected-conversation">{selectedId ?? 'none'}</p>
+      {loadError ? (
+        <div role="alert">
+          <p>Conversations could not load</p>
+          <p>{loadError}</p>
+          <button type="button" onClick={onRetry}>
+            Retry conversations
+          </button>
+        </div>
+      ) : null}
       {conversations.map((conversation) => (
         <p key={conversation.id}>{conversation.otherPartyName}</p>
       ))}
@@ -102,6 +115,43 @@ describe('organization messages page', () => {
     });
 
     expect(screen.queryByText(/^loading\.\.\.$/i)).not.toBeInTheDocument();
+  });
+
+  it('shows a recoverable organization conversation load failure instead of an empty list', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockRejectedValueOnce(new Error('network down'))
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            conversations: [
+              {
+                id: 'conversation-retry',
+                otherParty: { displayName: 'Submission Retry', displayAvatar: null },
+                createdAt: '2026-01-03T00:00:00.000Z',
+                matchId: 'match-retry',
+                stage: 'masked',
+              },
+            ],
+          }),
+        }) as any
+    );
+
+    render(<OrgMessagesClient currentUserId="user-1" />);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Conversations could not load');
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Assignment conversations are still safe. Retry this section to load messages, reveal requests, and proof-corridor updates.'
+    );
+    expect(screen.queryByText('Submission Retry')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retry conversations' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Submission Retry')).toBeInTheDocument();
+    });
   });
 
   it('uses the server org-member persona as the current user source', async () => {

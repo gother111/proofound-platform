@@ -64,4 +64,28 @@ describe('ConversationList', () => {
     expect(screen.getByText(baseConversation.otherPartyName)).toBeInTheDocument();
     expect(screen.queryByText('No conversations match “billing”')).not.toBeInTheDocument();
   });
+
+  it('keeps load failures separate from the empty conversations state', () => {
+    const retry = vi.fn();
+
+    render(
+      <ConversationList
+        conversations={[]}
+        onSelect={vi.fn()}
+        mode="individual"
+        loadError="Your conversation threads are still safe. Retry this section to load messages."
+        onRetry={retry}
+      />
+    );
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Conversations could not load');
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Your conversation threads are still safe. Retry this section to load messages.'
+    );
+    expect(screen.queryByText('No conversations yet')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retry conversations' }));
+
+    expect(retry).toHaveBeenCalledTimes(1);
+  });
 });
