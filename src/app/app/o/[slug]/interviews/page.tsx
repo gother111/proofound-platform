@@ -19,6 +19,7 @@ import {
   Download,
   Pencil,
   XCircle,
+  AlertTriangle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -33,9 +34,12 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 import {
   buildGoogleCalendarUrl,
@@ -90,6 +94,8 @@ export default function OrganizationInterviewsPage() {
   const [decisionDialogOpen, setDecisionDialogOpen] = useState(false);
   const [selectedInterview, setSelectedInterview] = useState<Interview | null>(null);
   const [editingInterview, setEditingInterview] = useState<Interview | null>(null);
+  const [cancelInterview, setCancelInterview] = useState<Interview | null>(null);
+  const [cancelReason, setCancelReason] = useState('');
   const [editDate, setEditDate] = useState('');
   const [editTime, setEditTime] = useState('');
   const [editReason, setEditReason] = useState('');
@@ -201,6 +207,17 @@ export default function OrganizationInterviewsPage() {
     setIsSavingEdit(false);
   };
 
+  const openCancelDialog = (interview: Interview) => {
+    setCancelInterview(interview);
+    setCancelReason('');
+  };
+
+  const closeCancelDialog = () => {
+    if (isCancellingInterviewId) return;
+    setCancelInterview(null);
+    setCancelReason('');
+  };
+
   const handleSaveInterviewEdit = async () => {
     if (!editingInterview?.interview) return;
     if (!editDate || !editTime) {
@@ -241,25 +258,20 @@ export default function OrganizationInterviewsPage() {
     }
   };
 
-  const handleCancelInterview = async (interview: Interview) => {
-    if (!interview.interview) {
+  const handleConfirmCancelInterview = async () => {
+    if (!cancelInterview?.interview) {
       return;
     }
 
-    if (!confirm('Are you sure you want to cancel this interview?')) {
-      return;
-    }
+    const reason = cancelReason.trim();
 
-    const reasonInput = window.prompt('Optional reason for cancellation (shown in conversation):');
-    const reason = typeof reasonInput === 'string' ? reasonInput.trim() : '';
-
-    setIsCancellingInterviewId(interview.interview.id);
+    setIsCancellingInterviewId(cancelInterview.interview.id);
     try {
       const response = await apiFetch('/api/interviews/cancel', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          interviewId: interview.interview.id,
+          interviewId: cancelInterview.interview.id,
           ...(reason ? { reason } : {}),
         }),
       });
@@ -270,6 +282,8 @@ export default function OrganizationInterviewsPage() {
       }
 
       toast.success('Interview cancelled');
+      setCancelInterview(null);
+      setCancelReason('');
       await loadInterviews();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to cancel interview');
@@ -695,7 +709,7 @@ export default function OrganizationInterviewsPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleCancelInterview(interview)}
+                            onClick={() => openCancelDialog(interview)}
                             disabled={isCancellingInterviewId === interview.interview?.id}
                             className="flex min-h-10 w-full items-center justify-center gap-2 border-[#E0C9C1] text-[#A03A2A]"
                           >
@@ -884,6 +898,69 @@ export default function OrganizationInterviewsPage() {
             onDecisionMade={handleDecisionMade}
           />
         ) : null}
+
+        <Dialog
+          open={Boolean(cancelInterview)}
+          onOpenChange={(open) => !open && closeCancelDialog()}
+        >
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-[#A03A2A]">
+                <AlertTriangle className="h-5 w-5" />
+                Cancel interview
+              </DialogTitle>
+              <DialogDescription>
+                Add a brief reason before cancelling so the candidate and workflow record stay
+                clear.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div className="rounded-lg border border-[#E0C9C1] bg-[#fff8f3] p-3 text-sm text-[#6f2f22]">
+                <p className="font-medium">Cancellation changes the active interview workflow.</p>
+                <p className="mt-1">
+                  The interview will be marked cancelled. A replacement interview can be scheduled
+                  only when the corridor next action allows it.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="cancel-interview-reason">Reason (optional)</Label>
+                <Textarea
+                  id="cancel-interview-reason"
+                  value={cancelReason}
+                  onChange={(event) => setCancelReason(event.target.value)}
+                  rows={3}
+                  disabled={Boolean(isCancellingInterviewId)}
+                  aria-describedby="cancel-interview-reason-help"
+                  placeholder="Add context for the candidate and workflow record..."
+                />
+                <p id="cancel-interview-reason-help" className="text-xs text-muted-foreground">
+                  Keep this concise and suitable for conversation history.
+                </p>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={closeCancelDialog}
+                disabled={Boolean(isCancellingInterviewId)}
+              >
+                Keep interview
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  void handleConfirmCancelInterview();
+                }}
+                disabled={Boolean(isCancellingInterviewId)}
+              >
+                {isCancellingInterviewId ? 'Cancelling interview...' : 'Cancel interview'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AppSurface>
   );

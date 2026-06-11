@@ -1,6 +1,6 @@
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 
 import OrganizationInterviewsPage from '@/app/app/o/[slug]/interviews/page';
 import { __resetCsrfCacheForTests } from '@/lib/api/fetch';
@@ -29,8 +29,13 @@ vi.mock('@/components/interviews/HiringCorridorTimeline', () => ({
 
 vi.mock('@/components/ui/dialog', () => ({
   Dialog: ({ open, children }: any) => (open ? <div>{children}</div> : null),
-  DialogContent: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  DialogContent: ({ children, ...props }: any) => (
+    <div role="dialog" aria-label="Dialog" {...props}>
+      {children}
+    </div>
+  ),
   DialogHeader: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  DialogFooter: ({ children, ...props }: any) => <div {...props}>{children}</div>,
   DialogTitle: ({ children, ...props }: any) => <h2 {...props}>{children}</h2>,
   DialogDescription: ({ children, ...props }: any) => <p {...props}>{children}</p>,
 }));
@@ -97,7 +102,7 @@ describe('organization interviews page actions', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Loading interview workflow...');
   });
 
-  it('shows edit/cancel actions and calls edit + cancel APIs with refresh', async () => {
+  it('shows edit/cancel actions and uses in-app cancellation details before refresh', async () => {
     const upcomingInterviewAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
     const fetchCalls: Array<{ url: string; init?: RequestInit }> = [];
 
@@ -121,14 +126,10 @@ describe('organization interviews page actions', () => {
       ],
     }));
 
-    vi.stubGlobal(
-      'confirm',
-      vi.fn(() => true)
-    );
-    vi.stubGlobal(
-      'prompt',
-      vi.fn(() => 'Need to move due to conflict')
-    );
+    const confirmSpy = vi.fn();
+    const promptSpy = vi.fn();
+    vi.stubGlobal('confirm', confirmSpy);
+    vi.stubGlobal('prompt', promptSpy);
 
     vi.stubGlobal(
       'fetch',
@@ -186,9 +187,30 @@ describe('organization interviews page actions', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /cancel interview/i }));
 
+    const cancelDialog = await screen.findByRole('dialog');
+    expect(
+      within(cancelDialog).getByText(/candidate and workflow record stay clear/i)
+    ).toBeInTheDocument();
+    expect(
+      within(cancelDialog).getByText(/Cancellation changes the active interview workflow/i)
+    ).toBeInTheDocument();
+    fireEvent.change(within(cancelDialog).getByLabelText(/reason/i), {
+      target: { value: 'Need to move due to conflict' },
+    });
+    fireEvent.click(within(cancelDialog).getByRole('button', { name: /^cancel interview$/i }));
+
     await waitFor(() => {
       expect(fetchCalls.some((call) => call.url === '/api/interviews/cancel')).toBe(true);
     });
+    const cancelCall = fetchCalls.find((call) => call.url === '/api/interviews/cancel');
+    expect(cancelCall?.init?.body).toBe(
+      JSON.stringify({
+        interviewId: 'interview-1',
+        reason: 'Need to move due to conflict',
+      })
+    );
+    expect(confirmSpy).not.toHaveBeenCalled();
+    expect(promptSpy).not.toHaveBeenCalled();
 
     await waitFor(() => {
       expect(getInterviewCorridorItemsMock.mock.calls.length).toBeGreaterThanOrEqual(3);
