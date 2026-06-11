@@ -108,7 +108,7 @@ export async function POST(request: Request) {
     const merged = mergeVisibilityFlags((current.data as any)?.field_visibility);
     const next = {
       ...merged,
-      header: parsed.header ?? merged.header,
+      header: true,
       proofBar: parsed.proofBar ?? merged.proofBar,
       workEmail: parsed.workEmail ?? merged.workEmail,
       linkedin: false,

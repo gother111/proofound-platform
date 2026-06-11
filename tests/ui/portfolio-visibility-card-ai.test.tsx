@@ -175,9 +175,70 @@ describe('PortfolioVisibilityCard AI privacy preflight', () => {
     render(<PortfolioVisibilityCard />);
 
     expect(await screen.findByRole('switch', { name: /public page enabled/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('switch', { name: /header \(name, handle, headline\)/i })
+    ).toBeDisabled();
     expect(screen.getByRole('switch', { name: /proof bar block/i })).toBeInTheDocument();
     expect(screen.getByRole('switch', { name: /contact section/i })).toBeInTheDocument();
     expect(screen.queryByRole('switch', { name: /LinkedIn/i })).not.toBeInTheDocument();
+  });
+
+  it('keeps the required Public Page header locked on before saving', async () => {
+    global.fetch = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+
+      if (url === '/api/feature-flags') {
+        return {
+          ok: true,
+          json: async () => ({ flags: { assistiveAiUi: true } }),
+        } as Response;
+      }
+
+      if (url === '/api/portfolio/visibility') {
+        return {
+          ok: true,
+          json: async () => ({
+            visibility: {
+              header: false,
+              proofBar: true,
+              workEmail: false,
+              linkedin: true,
+              identity: true,
+              skills: false,
+              bio: false,
+              contact: false,
+            },
+            publicPageEnabled: true,
+            searchIndexingEnabled: false,
+          }),
+        } as Response;
+      }
+
+      throw new Error(`Unexpected fetch call: ${url}`);
+    }) as any;
+
+    render(<PortfolioVisibilityCard />);
+
+    const headerSwitch = await screen.findByRole('switch', {
+      name: /header \(name, handle, headline\)/i,
+    });
+    expect(headerSwitch).toBeChecked();
+    expect(headerSwitch).toBeDisabled();
+
+    fireEvent.click(screen.getByRole('button', { name: /save visibility/i }));
+
+    await waitFor(() => {
+      expect(apiFetchMock).toHaveBeenCalledWith(
+        '/api/portfolio/visibility',
+        expect.objectContaining({ method: 'POST' })
+      );
+    });
+    expect(JSON.parse(String(apiFetchMock.mock.calls[0]?.[1]?.body))).toEqual(
+      expect.objectContaining({
+        header: true,
+        linkedin: false,
+      })
+    );
   });
 
   it('confirms visibility saves inline without a browser alert', async () => {

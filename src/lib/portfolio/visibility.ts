@@ -34,7 +34,7 @@ export function mergeVisibilityFlags(
   };
 
   return {
-    header: normalizeFlag(incoming.header, defaultVisibility.header),
+    header: true,
     proofBar: normalizeFlag(incoming.proofBar, defaultVisibility.proofBar),
     workEmail: normalizeFlag(incoming.workEmail, defaultVisibility.workEmail),
     linkedin: false,

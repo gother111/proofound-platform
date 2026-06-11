@@ -254,6 +254,45 @@ describe('POST /api/portfolio/visibility privacy preflight', () => {
     );
   });
 
+  it('keeps the public header visible even when clients request it off', async () => {
+    const supabase = buildSupabase({
+      individual: {
+        field_visibility: {
+          header: false,
+          bio: false,
+          contact: false,
+          workEmail: false,
+          identity: true,
+          proofBar: true,
+          linkedin: false,
+          skills: false,
+        },
+        headline: 'Proof-first launch work',
+        bio: '',
+        tagline: null,
+        work_email: 'jane@example.com',
+      },
+    });
+    vi.mocked(createClient).mockResolvedValue(supabase as any);
+
+    const response = await POST(
+      request({
+        publicPageEnabled: true,
+        searchIndexingEnabled: false,
+        header: false,
+      })
+    );
+
+    expect(response.status).toBe(200);
+    expect(supabase.__mocks.individualUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        field_visibility: expect.objectContaining({
+          header: true,
+        }),
+      })
+    );
+  });
+
   it('hard-disables individual search indexing even when requested', async () => {
     const supabase = buildSupabase();
     vi.mocked(createClient).mockResolvedValue(supabase as any);

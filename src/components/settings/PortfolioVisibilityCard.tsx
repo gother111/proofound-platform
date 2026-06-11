@@ -48,6 +48,15 @@ const defaults: VisibilityFlags = {
   contact: false,
 };
 
+function normalizeVisibilityFlags(input: Partial<VisibilityFlags> | null | undefined) {
+  return {
+    ...defaults,
+    ...(input ?? {}),
+    header: true,
+    linkedin: false,
+  };
+}
+
 function formatPrivacyPreflightMessage(payload: PrivacyPreflightPayload) {
   const flags = Array.isArray(payload.flags) ? payload.flags : [];
   const firstFlag = flags[0];
@@ -85,7 +94,7 @@ export function PortfolioVisibilityCard() {
         const res = await fetch('/api/portfolio/visibility');
         if (res.ok) {
           const data = await res.json();
-          if (data.visibility) setFlags(data.visibility);
+          if (data.visibility) setFlags(normalizeVisibilityFlags(data.visibility));
           setPublicPageEnabled(data.publicPageEnabled !== false);
         }
       } catch (e) {
@@ -98,6 +107,9 @@ export function PortfolioVisibilityCard() {
   }, []);
 
   const toggle = (key: keyof VisibilityFlags) => {
+    if (key === 'header') {
+      return;
+    }
     setSaveFeedback(null);
     setFlags((prev) => ({ ...prev, [key]: !prev[key] }));
   };
@@ -105,6 +117,7 @@ export function PortfolioVisibilityCard() {
   const save = async () => {
     setSaving(true);
     setSaveFeedback(null);
+    const normalizedFlags = normalizeVisibilityFlags(flags);
     try {
       const res = await apiFetch('/api/portfolio/visibility', {
         method: 'POST',
@@ -112,7 +125,7 @@ export function PortfolioVisibilityCard() {
         body: JSON.stringify({
           publicPageEnabled,
           searchIndexingEnabled: false,
-          ...flags,
+          ...normalizedFlags,
         }),
       });
       if (!res.ok) throw new Error('Save failed');
@@ -193,9 +206,10 @@ export function PortfolioVisibilityCard() {
             />
             <VisibilityRow
               label="Header (name, handle, headline)"
-              description="Required for a credible Public Page."
+              description="Required so your direct-link Public Page has a trustworthy identity anchor."
               checked={flags.header}
               onCheckedChange={() => toggle('header')}
+              disabled
             />
             <VisibilityRow
               label="Proof bar block"
