@@ -188,10 +188,10 @@ describe('CandidateInviteClient test_match flow', () => {
     expect(
       screen.getByText(/does not publish a public page or broaden visibility/i)
     ).toBeInTheDocument();
-    expect(screen.getByTestId('candidate-proof-demo-path')).toHaveTextContent(
+    expect(screen.getByTestId('candidate-proof-submission-path')).toHaveTextContent(
       /Build proof.*Attach evidence.*Review privacy/i
     );
-    expect(screen.getByText(/Minimum demo packet/i)).toBeInTheDocument();
+    expect(screen.getByText(/Minimum submission packet/i)).toBeInTheDocument();
     expect(
       screen.queryByPlaceholderText(/00000000-0000-0000-0000-000000000000/)
     ).not.toBeInTheDocument();
@@ -202,7 +202,7 @@ describe('CandidateInviteClient test_match flow', () => {
     expect(
       screen.queryByRole('link', { name: /cv import|resume|people search/i })
     ).not.toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: /create first proof pack/i })).toEqual(
+    expect(screen.getAllByRole('link', { name: /create another proof pack/i })).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           href: expect.stringContaining('/onboarding?next=%2Fcandidate-invite%2Ftoken-value'),
@@ -564,9 +564,9 @@ describe('CandidateInviteClient test_match flow', () => {
     });
 
     expect(screen.getByText(/Create or choose one owner-only Proof Pack/i)).toBeInTheDocument();
-    expect(screen.getByTestId('candidate-proof-demo-path')).toBeInTheDocument();
+    expect(screen.getByTestId('candidate-proof-submission-path')).toBeInTheDocument();
     expect(screen.getAllByText(/one claim or outcome/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole('link', { name: /create first proof pack/i })).toEqual(
+    expect(screen.getAllByRole('link', { name: /create another proof pack/i })).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           href: expect.stringContaining('/onboarding?next=%2Fcandidate-invite%2Ftoken-value'),
