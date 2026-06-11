@@ -119,7 +119,7 @@ describe('LeftNav portfolio gating', () => {
     );
     expect(screen.getByRole('menuitem', { name: /export or delete data/i })).toHaveAttribute(
       'href',
-      '/app/i/settings?tab=privacy'
+      '/app/i/settings/privacy#privacy-delete'
     );
     expect(screen.getByRole('menuitem', { name: /account history/i })).toHaveAttribute(
       'href',

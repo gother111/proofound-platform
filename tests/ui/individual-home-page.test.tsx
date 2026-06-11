@@ -50,5 +50,9 @@ describe('IndividualHomePage', () => {
         expect.objectContaining({ className: expect.stringContaining('min-h-9') }),
       ])
     );
+    expect(screen.getByRole('link', { name: /export or delete/i })).toHaveAttribute(
+      'href',
+      '/app/i/settings/privacy#privacy-delete'
+    );
   });
 });

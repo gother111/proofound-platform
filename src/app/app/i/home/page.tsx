@@ -144,7 +144,7 @@ export default async function IndividualHomePage() {
     {
       icon: Download,
       title: 'Export or delete',
-      href: '/app/i/settings?tab=privacy',
+      href: '/app/i/settings/privacy#privacy-delete',
     },
     {
       icon: History,

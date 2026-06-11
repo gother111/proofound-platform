@@ -444,6 +444,10 @@ describe('profile launch IA', () => {
     );
 
     expect(screen.queryByRole('link', { name: /review portfolio visibility/i })).toBeNull();
+    expect(screen.getByRole('link', { name: /export or delete/i })).toHaveAttribute(
+      'href',
+      '/app/i/settings/privacy#privacy-delete'
+    );
     fireEvent.click(screen.getByRole('button', { name: /complete safe shell/i }));
     expect(onCompleteSafeShell).toHaveBeenCalledTimes(1);
   });

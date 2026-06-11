@@ -13,6 +13,31 @@ import { PrivacySettingsLoadingShell } from './PrivacySettingsLoadingShell';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
 
+const PRIVACY_SECTION_IDS = new Set([
+  'privacy-data',
+  'privacy-field-visibility',
+  'privacy-activity',
+  'privacy-delete',
+]);
+const PRIVACY_ANCHOR_OFFSET_PX = 24;
+
+function getScrollableParent(element: HTMLElement): HTMLElement | null {
+  let parent = element.parentElement;
+
+  while (parent && parent !== document.body) {
+    const overflowY = window.getComputedStyle(parent).overflowY;
+    const canScroll = overflowY === 'auto' || overflowY === 'scroll';
+
+    if (canScroll && parent.scrollHeight > parent.clientHeight) {
+      return parent;
+    }
+
+    parent = parent.parentElement;
+  }
+
+  return null;
+}
+
 export function PrivacySettingsClient() {
   const [initialVisibility, setInitialVisibility] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -44,6 +69,64 @@ export function PrivacySettingsClient() {
 
     fetchVisibility();
   }, []);
+
+  useEffect(() => {
+    if (loading || typeof window === 'undefined') return;
+
+    const sectionId = window.location.hash.replace('#', '');
+    if (!PRIVACY_SECTION_IDS.has(sectionId)) return;
+
+    const focusHashedSection = (behavior: ScrollBehavior) => {
+      const section = document.getElementById(sectionId);
+      if (!section) return;
+
+      const scrollParent = getScrollableParent(section);
+      if (scrollParent) {
+        const parentRect = scrollParent.getBoundingClientRect();
+        const sectionRect = section.getBoundingClientRect();
+        const nextScrollTop =
+          scrollParent.scrollTop + sectionRect.top - parentRect.top - PRIVACY_ANCHOR_OFFSET_PX;
+
+        if (typeof scrollParent.scrollTo === 'function') {
+          scrollParent.scrollTo({ top: nextScrollTop, behavior });
+        } else {
+          scrollParent.scrollTop = nextScrollTop;
+        }
+      } else {
+        section.scrollIntoView({ behavior, block: 'start' });
+      }
+      section.focus({ preventScroll: true });
+    };
+
+    const animationFrame = window.requestAnimationFrame(() => focusHashedSection('smooth'));
+    const settleTimer = window.setTimeout(() => focusHashedSection('auto'), 350);
+    const lateSettleTimer = window.setTimeout(() => focusHashedSection('auto'), 900);
+    let mutationSettleTimer: number | null = null;
+    const observerTarget = document.getElementById('main-content') || document.body;
+    const mutationObserver =
+      typeof window.MutationObserver === 'function'
+        ? new window.MutationObserver(() => {
+            if (mutationSettleTimer) {
+              window.clearTimeout(mutationSettleTimer);
+            }
+
+            mutationSettleTimer = window.setTimeout(() => focusHashedSection('auto'), 120);
+          })
+        : null;
+    mutationObserver?.observe(observerTarget, { childList: true, subtree: true });
+    const observerStopTimer = window.setTimeout(() => mutationObserver?.disconnect(), 7000);
+
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+      window.clearTimeout(settleTimer);
+      window.clearTimeout(lateSettleTimer);
+      window.clearTimeout(observerStopTimer);
+      if (mutationSettleTimer) {
+        window.clearTimeout(mutationSettleTimer);
+      }
+      mutationObserver?.disconnect();
+    };
+  }, [loading]);
 
   const handleSave = async (visibility: any) => {
     try {

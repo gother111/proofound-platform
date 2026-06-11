@@ -73,6 +73,48 @@ describe('deferred settings loaders', () => {
     global.fetch = originalFetch;
   });
 
+  it('focuses anchored privacy sections after deferred visibility settings load', async () => {
+    const originalFetch = global.fetch;
+    const originalPath = window.location.href;
+    const originalScrollIntoView = Element.prototype.scrollIntoView;
+    const scrollIntoViewMock = vi.fn();
+    const focusMock = vi.fn();
+    const rafSpy = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+      callback(0);
+      return 1;
+    });
+    const focusSpy = vi.spyOn(HTMLElement.prototype, 'focus').mockImplementation(focusMock);
+    Element.prototype.scrollIntoView = scrollIntoViewMock;
+    global.fetch = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ profile: true }),
+    })) as typeof fetch;
+    window.history.pushState({}, '', '/app/i/settings/privacy#privacy-delete');
+
+    try {
+      render(<PrivacySettingsClient />);
+
+      expect(await screen.findByTestId('delete-account')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(scrollIntoViewMock).toHaveBeenCalledWith({
+          behavior: 'smooth',
+          block: 'start',
+        });
+      });
+      expect(focusMock).toHaveBeenCalledWith({ preventScroll: true });
+    } finally {
+      global.fetch = originalFetch;
+      window.history.pushState({}, '', originalPath);
+      rafSpy.mockRestore();
+      if (originalScrollIntoView) {
+        Element.prototype.scrollIntoView = originalScrollIntoView;
+      } else {
+        delete (Element.prototype as Partial<Element>).scrollIntoView;
+      }
+      focusSpy.mockRestore();
+    }
+  });
+
   it('lets users retry privacy controls after the chunk fails', async () => {
     const loadPrivacySettingsView = vi
       .fn()
