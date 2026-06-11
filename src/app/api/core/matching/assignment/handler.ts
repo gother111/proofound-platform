@@ -488,9 +488,10 @@ export async function POST(request: NextRequest) {
               proofPack: proofPackByProfileId.get(row.profileId) ?? null,
               fitBand: rankBand,
             });
+            const cachedReviewSignals = row.scoreSnapshotJson;
             const safeReview = buildSafeReviewMetadata({
               reasonCodes,
-              scoreSnapshotJson: row.scoreSnapshotJson,
+              scoreSnapshotJson: cachedReviewSignals,
               reviewCard,
               reviewStage: reviewState.reviewStage,
               revealScope: reviewState.revealScope,
@@ -721,9 +722,10 @@ export async function POST(request: NextRequest) {
           proofPack: proofPackByProfileId.get(item.profileId) ?? null,
           fitBand: rankBand,
         });
+        const computedReviewSignals = item.scoreSnapshotJson;
         const safeReview = buildSafeReviewMetadata({
           reasonCodes: item.reasonCodes,
-          scoreSnapshotJson: item.scoreSnapshotJson,
+          scoreSnapshotJson: computedReviewSignals,
           reviewCard,
           reviewStage: reviewState.reviewStage,
           revealScope: reviewState.revealScope,

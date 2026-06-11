@@ -8,9 +8,11 @@ vi.mock('@/db', () => ({
     query: {
       assignments: { findFirst: vi.fn() },
       matchReviewStates: { findMany: vi.fn() },
+      matchingProfiles: { findMany: vi.fn() },
       organizationMembers: { findFirst: vi.fn() },
     },
     insert: vi.fn(),
+    select: vi.fn(),
   },
 }));
 
@@ -109,6 +111,17 @@ describe('/api/core/matching/assignment', () => {
       status: 'active',
     });
     (db.query.matchReviewStates.findMany as any).mockResolvedValue([]);
+    (db.query.matchingProfiles.findMany as any).mockResolvedValue([]);
+    (db.select as any).mockReset();
+    (db.select as any).mockImplementation(() => ({
+      from: vi.fn(() => ({
+        where: vi.fn(() => ({
+          orderBy: vi.fn(() => ({
+            limit: vi.fn(async () => []),
+          })),
+        })),
+      })),
+    }));
     (db.insert as any).mockImplementation(() => ({
       values: vi.fn(() => ({
         onConflictDoUpdate: vi.fn(() => ({
@@ -144,6 +157,78 @@ describe('/api/core/matching/assignment', () => {
       expect.objectContaining({
         outcome: 'rejected',
         failureClass: 'invalid_json_body',
+      })
+    );
+  });
+
+  it('keeps retained assignment matches proof-first without returning raw score artifacts', async () => {
+    (db.select as any).mockImplementation(() => ({
+      from: vi.fn(() => ({
+        where: vi.fn(() => ({
+          orderBy: vi.fn(() => ({
+            limit: vi.fn(async () => [
+              {
+                id: 'match-retained-1',
+                profileId: 'profile-1',
+                assignmentId: '11111111-1111-1111-1111-111111111111',
+                score: 0.91,
+                scoreTotal: 9100,
+                subscoresJson: { proof_fit: 9100 },
+                scoreSnapshotJson: {
+                  discovery_status: 'review_ready_match',
+                  fit_band: 'relevant_partial',
+                },
+                reasonCodes: [
+                  'alias_skill_overlap',
+                  'fresh_proof_present',
+                  'non_self_trust_anchor_present',
+                  'privacy_safe_for_stage',
+                  'constraint_match',
+                ],
+                generatedAt: new Date('2026-05-20T00:00:00.000Z'),
+                fairnessStatus: 'pass',
+              },
+            ]),
+          })),
+        })),
+      })),
+    }));
+    (db.query.matchingProfiles.findMany as any).mockResolvedValue([
+      { profileId: 'profile-1', verified: { proofPack: true } },
+    ]);
+
+    const response = await POST(
+      new NextRequest('http://localhost/api/core/matching/assignment', {
+        method: 'POST',
+        body: JSON.stringify({
+          assignmentId: '11111111-1111-1111-1111-111111111111',
+        }),
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(computeAssignmentMatches).not.toHaveBeenCalled();
+    expect(body.items).toHaveLength(1);
+    expect(body.items[0]).not.toHaveProperty('score');
+    expect(body.items[0]).not.toHaveProperty('scoreTotal');
+    expect(body.items[0]).not.toHaveProperty('subscoresJson');
+    expect(body.items[0]).not.toHaveProperty('scoreSnapshotJson');
+    expect(body.items[0]).toEqual(
+      expect.objectContaining({
+        id: 'match-retained-1',
+        profileId: 'profile-1',
+        discoveryStatus: 'review_ready_match',
+        fitBand: 'relevant_partial',
+        rank: null,
+        rankBand: 'top_band',
+      })
+    );
+    expect(body.meta).toEqual(
+      expect.objectContaining({
+        cached: true,
+        scoreVisibility: 'internal_ordering_only',
+        weights: {},
       })
     );
   });
