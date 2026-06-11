@@ -53,16 +53,18 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
         const data: HiddenMatchesResponse = await response.json();
         setHidden(data.matches || []);
       } else {
-        const text = await response.text();
-        setError('Failed to load hidden matches');
-        toast.error('Failed to load hidden matches', {
-          description: text || undefined,
+        const text = await response.text().catch(() => '');
+        setError('Hidden matches could not load');
+        toast.error('Hidden matches could not load', {
+          description: text || 'You can retry without leaving matching.',
         });
       }
     } catch (error) {
       dispatchClientErrorDiagnostic('matching.hidden_matches.load_failed', error);
-      setError('Failed to load hidden matches');
-      toast.error('Failed to load hidden matches');
+      setError('Hidden matches could not load');
+      toast.error('Hidden matches could not load', {
+        description: 'You can retry without leaving matching.',
+      });
     } finally {
       setLoading(false);
     }
@@ -129,9 +131,12 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
           <EyeOff className="w-4 h-4" />
           <h3 className="text-sm font-medium">Hidden</h3>
         </div>
-        <p className="text-sm text-[#DC2626] mb-3">{error}</p>
+        <p className="text-sm text-[#DC2626] mb-1">{error}</p>
+        <p className="mb-3 text-xs leading-5 text-muted-foreground">
+          Your hidden assignment reviews are unchanged. Retry this panel to refresh the list.
+        </p>
         <Button size="sm" variant="outline" onClick={fetchHidden} className="text-xs">
-          Retry
+          Retry hidden matches
         </Button>
       </Card>
     );

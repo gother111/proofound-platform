@@ -90,6 +90,42 @@ describe('matching paused/hidden manager launch safety', () => {
     expect(screen.queryByText('Opportunity')).not.toBeInTheDocument();
   });
 
+  it('shows a recoverable hidden-match load error and retries in place', async () => {
+    apiFetchMock.mockRejectedValueOnce(new Error('network unavailable')).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        matches: [
+          {
+            id: 'match-restored-load',
+            assignment: {
+              title: 'Restored hidden assignment',
+              locationMode: 'remote',
+              country: 'SE',
+            },
+            organization: {
+              name: 'Proofound Labs',
+            },
+          },
+        ],
+      }),
+    });
+
+    render(<HiddenMatchesList />);
+
+    expect(await screen.findByText('Hidden matches could not load')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Your hidden assignment reviews are unchanged. Retry this panel to refresh the list.'
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText('No hidden matches right now.')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retry hidden matches' }));
+
+    expect(await screen.findByText('Restored hidden assignment')).toBeInTheDocument();
+    expect(apiFetchMock).toHaveBeenCalledTimes(2);
+  });
+
   it('keeps paused matches inside the active matching route and avoids detail links', async () => {
     apiFetchMock.mockResolvedValueOnce({
       ok: true,
