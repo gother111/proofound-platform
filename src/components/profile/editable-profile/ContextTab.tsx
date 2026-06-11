@@ -21,6 +21,17 @@ import { Card } from '@/components/ui/card';
 import { TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -138,11 +149,15 @@ function VerificationBadge({ verified }: { verified: boolean | null | undefined 
 function ItemActionButtons({
   editLabel,
   deleteLabel,
+  deleteContextLabel,
+  deleteItemName,
   onEdit,
   onDelete,
 }: {
   editLabel: string;
   deleteLabel: string;
+  deleteContextLabel: string;
+  deleteItemName: string;
   onEdit: () => void;
   onDelete: () => void;
 }) {
@@ -151,9 +166,31 @@ function ItemActionButtons({
       <Button type="button" variant="ghost" size="icon" onClick={onEdit} aria-label={editLabel}>
         <Pencil className="h-4 w-4" />
       </Button>
-      <Button type="button" variant="ghost" size="icon" onClick={onDelete} aria-label={deleteLabel}>
-        <Trash2 className="h-4 w-4" />
-      </Button>
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button type="button" variant="ghost" size="icon" aria-label={deleteLabel}>
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {deleteItemName}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes this private {deleteContextLabel} from your profile context. If it
+              anchors a Proof Pack, review that proof after deletion.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep context</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-white hover:bg-destructive/90"
+              onClick={onDelete}
+            >
+              Delete {deleteContextLabel}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -267,12 +304,10 @@ function WorkContextCard({
             <ItemActionButtons
               editLabel={`Edit ${experience.title}`}
               deleteLabel={`Delete ${experience.title}`}
+              deleteContextLabel="work context"
+              deleteItemName={experience.title}
               onEdit={() => onEdit(experience)}
-              onDelete={() => {
-                if (confirm('Are you sure you want to delete this experience?')) {
-                  onDelete(experience.id);
-                }
-              }}
+              onDelete={() => onDelete(experience.id)}
             />
           </div>
 
@@ -340,12 +375,10 @@ function LearningContextCard({
             <ItemActionButtons
               editLabel={`Edit ${education.degree}`}
               deleteLabel={`Delete ${education.degree}`}
+              deleteContextLabel="learning context"
+              deleteItemName={education.degree}
               onEdit={() => onEdit(education)}
-              onDelete={() => {
-                if (confirm('Are you sure you want to delete this education?')) {
-                  onDelete(education.id);
-                }
-              }}
+              onDelete={() => onDelete(education.id)}
             />
           </div>
           <div className="grid gap-3 md:grid-cols-2">
@@ -415,12 +448,10 @@ function VolunteeringContextCard({
             <ItemActionButtons
               editLabel={`Edit ${volunteering.title}`}
               deleteLabel={`Delete ${volunteering.title}`}
+              deleteContextLabel="volunteering context"
+              deleteItemName={volunteering.title}
               onEdit={() => onEdit(volunteering)}
-              onDelete={() => {
-                if (confirm('Are you sure you want to delete this volunteer work?')) {
-                  onDelete(volunteering.id);
-                }
-              }}
+              onDelete={() => onDelete(volunteering.id)}
             />
           </div>
           <div className="grid gap-3 md:grid-cols-2">
