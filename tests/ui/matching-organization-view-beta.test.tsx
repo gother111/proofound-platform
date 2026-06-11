@@ -147,9 +147,79 @@ describe('MatchingOrganizationView launch corridor', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /retry review queue/i }));
 
-    expect(await screen.findByText('Submission A7F2')).toBeInTheDocument();
+    expect((await screen.findAllByText('Submission A7F2')).length).toBeGreaterThan(0);
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(apiFetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps failed review actions visible and retryable without changing the queue', async () => {
+    apiFetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          items: [
+            {
+              id: 'match-1',
+              assignmentId: 'assignment-1',
+              reviewStage: 'blind_review',
+              revealScope: 'blind',
+              corridorState: 'generated',
+              canRequestIntro: true,
+              reviewCard: {
+                candidateLabel: 'Submission A7F2',
+                fitSummary: {
+                  headline: 'Fresh proof signals are attached.',
+                  bullets: [],
+                  reasonCodes: [],
+                },
+              },
+              profile: {
+                skills: {},
+              },
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: 'Review service temporarily unavailable' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          reviewStage: 'shortlisted',
+          revealScope: 'shortlist_identity',
+          progressiveRevealStage: 'shortlist_identity',
+          corridorState: 'shortlist',
+          visibleIdentityFields: [],
+        }),
+      });
+
+    render(<MatchingOrganizationView assignments={assignments as any} onCreateNew={vi.fn()} />);
+
+    expect(await screen.findByText('Submission A7F2')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Shortlist' }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Shortlist did not save');
+    expect(alert).toHaveTextContent('Review service temporarily unavailable');
+    expect(alert).toHaveTextContent('No shortlist, decline, or intro action was changed.');
+    expect(screen.getAllByText('Submission A7F2').length).toBeGreaterThan(0);
+
+    fireEvent.click(screen.getByRole('button', { name: /retry shortlist/i }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
+    expect(apiFetchMock).toHaveBeenCalledWith(
+      '/api/org/org-1/matches/match-1/review',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ action: 'shortlist' }),
+      })
+    );
+    expect(apiFetchMock).toHaveBeenCalledTimes(3);
   });
 
   it('opens assignment-specific matching from the assignment card', async () => {

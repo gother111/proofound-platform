@@ -93,6 +93,23 @@ const INTRO_GATE_LABELS: Record<string, string> = {
   intro_hold_not_match_visible: 'Discovery only',
 };
 
+type ReviewAction = 'shortlist' | 'pass' | 'request_intro';
+
+type ReviewActionState = {
+  matchId: string;
+  action: ReviewAction;
+};
+
+type ReviewActionError = ReviewActionState & {
+  message: string;
+};
+
+const REVIEW_ACTION_LABELS: Record<ReviewAction, string> = {
+  shortlist: 'Shortlist',
+  pass: 'Decline',
+  request_intro: 'Request intro',
+};
+
 function readableMatchLabel(value?: string | null, labels: Record<string, string> = {}) {
   if (!value) return null;
   return labels[value] ?? value.replace(/_/g, ' ');
@@ -120,6 +137,8 @@ export function MatchingOrganizationView({
   const [activeMatchId, setActiveMatchId] = useState<string>('');
   const [explanations, setExplanations] = useState<Record<string, any>>({});
   const [isLoadingExplanation, setIsLoadingExplanation] = useState(false);
+  const [reviewActionPending, setReviewActionPending] = useState<ReviewActionState | null>(null);
+  const [reviewActionError, setReviewActionError] = useState<ReviewActionError | null>(null);
 
   const currentAssignment = assignments.find((a) => a.id === selectedAssignment);
 
@@ -295,14 +314,14 @@ export function MatchingOrganizationView({
     void fetchExplanation();
   }, [activeMatchId, explanations]);
 
-  const handleReviewAction = async (
-    matchId: string,
-    action: 'shortlist' | 'pass' | 'request_intro'
-  ) => {
+  const handleReviewAction = async (matchId: string, action: ReviewAction) => {
     if (!matchId || !currentAssignment?.orgId) {
       toast.error('Match context not found');
       return;
     }
+
+    setReviewActionPending({ matchId, action });
+    setReviewActionError(null);
 
     // Determine the next match to select for auto-advance UX
     const currentIndex = filteredMatches.findIndex((m: any) => m.id === matchId);
@@ -392,7 +411,21 @@ export function MatchingOrganizationView({
         setActiveMatchId(nextMatchId);
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to update review state');
+      dispatchClientErrorDiagnostic('matching.organization_view.review_action_failed', error);
+      const message =
+        error instanceof Error && error.message
+          ? error.message
+          : 'Review action could not be saved';
+      setReviewActionError({
+        matchId,
+        action,
+        message: `${message}. No shortlist, decline, or intro action was changed.`,
+      });
+      toast.error('Review action did not save', {
+        description: 'No shortlist, decline, or intro action was changed.',
+      });
+    } finally {
+      setReviewActionPending(null);
     }
   };
 
@@ -404,6 +437,10 @@ export function MatchingOrganizationView({
 
   const activeMatch = filteredMatches.find((m: any) => m.id === activeMatchId);
   const explanation = activeMatchId ? explanations[activeMatchId] : null;
+  const activeReviewActionError =
+    activeMatch && reviewActionError?.matchId === activeMatch.id ? reviewActionError : null;
+  const activeReviewActionPending =
+    activeMatch && reviewActionPending?.matchId === activeMatch.id ? reviewActionPending : null;
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 md:px-0 space-y-6">
@@ -761,16 +798,22 @@ export function MatchingOrganizationView({
                               <div className="flex items-center gap-2">
                                 <Button
                                   onClick={() => handleReviewAction(activeMatch.id, 'shortlist')}
+                                  disabled={Boolean(activeReviewActionPending)}
                                   className="bg-proofound-forest hover:bg-proofound-forest/90 text-white rounded-full text-xs font-semibold px-4 py-2 flex-1 sm:flex-initial"
                                 >
-                                  Shortlist
+                                  {activeReviewActionPending?.action === 'shortlist'
+                                    ? 'Saving...'
+                                    : 'Shortlist'}
                                 </Button>
                                 <Button
                                   onClick={() => handleReviewAction(activeMatch.id, 'pass')}
                                   variant="outline"
+                                  disabled={Boolean(activeReviewActionPending)}
                                   className="border-proofound-stone text-proofound-charcoal bg-white rounded-full text-xs font-semibold px-4 py-2 flex-1 sm:flex-initial"
                                 >
-                                  Decline
+                                  {activeReviewActionPending?.action === 'pass'
+                                    ? 'Saving...'
+                                    : 'Decline'}
                                 </Button>
                               </div>
                             ) : (
@@ -802,11 +845,16 @@ export function MatchingOrganizationView({
                                     onClick={() =>
                                       handleReviewAction(activeMatch.id, 'request_intro')
                                     }
-                                    disabled={activeMatch.canRequestIntro === false}
+                                    disabled={
+                                      activeMatch.canRequestIntro === false ||
+                                      Boolean(activeReviewActionPending)
+                                    }
                                     className="min-h-9 w-full rounded-full bg-proofound-forest px-4 py-2 text-xs font-semibold text-white hover:bg-proofound-forest/90"
                                   >
                                     <Lock className="w-3.5 h-3.5 mr-1.5" />
-                                    Request intro
+                                    {activeReviewActionPending?.action === 'request_intro'
+                                      ? 'Saving...'
+                                      : 'Request intro'}
                                   </Button>
                                 )}
                                 {activeMatch.canRequestIntro === false &&
@@ -827,12 +875,47 @@ export function MatchingOrganizationView({
                                 <Button
                                   onClick={() => handleReviewAction(activeMatch.id, 'pass')}
                                   variant="ghost"
+                                  disabled={Boolean(activeReviewActionPending)}
                                   className="min-h-9 w-full rounded-full py-1.5 text-xs font-medium text-muted-foreground hover:bg-proofound-stone/20"
                                 >
-                                  Remove from shortlist
+                                  {activeReviewActionPending?.action === 'pass'
+                                    ? 'Saving...'
+                                    : 'Remove from shortlist'}
                                 </Button>
                               </div>
                             )}
+                            {activeReviewActionError ? (
+                              <div
+                                className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900"
+                                role="alert"
+                              >
+                                <p className="flex items-center gap-1.5 font-semibold">
+                                  <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
+                                  {REVIEW_ACTION_LABELS[activeReviewActionError.action]} did not
+                                  save
+                                </p>
+                                <p className="mt-1">{activeReviewActionError.message}</p>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  disabled={Boolean(activeReviewActionPending)}
+                                  onClick={() =>
+                                    handleReviewAction(
+                                      activeReviewActionError.matchId,
+                                      activeReviewActionError.action
+                                    )
+                                  }
+                                  className="mt-2 min-h-8 rounded-full border-amber-300 bg-white px-3 text-xs text-amber-950 hover:bg-amber-100"
+                                >
+                                  <RefreshCcw className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                                  Retry{' '}
+                                  {REVIEW_ACTION_LABELS[
+                                    activeReviewActionError.action
+                                  ].toLowerCase()}
+                                </Button>
+                              </div>
+                            ) : null}
                           </div>
                         </div>
 
