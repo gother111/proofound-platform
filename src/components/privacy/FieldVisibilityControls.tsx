@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -21,7 +21,16 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Eye, EyeOff, Lock, Globe, Users, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import {
+  Eye,
+  EyeOff,
+  Lock,
+  Globe,
+  Users,
+  AlertTriangle,
+  CheckCircle2,
+  RefreshCcw,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api/fetch';
 import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
@@ -144,28 +153,47 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
   const [redactMode, setRedactMode] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [activePreview, setActivePreview] = useState<'public' | 'network' | 'matched'>('public');
 
-  useEffect(() => {
-    fetchPrivacySettings();
-  }, [userId]);
-
-  const fetchPrivacySettings = async () => {
+  const fetchPrivacySettings = useCallback(async () => {
     try {
       setIsLoading(true);
+      setLoadError(null);
       const response = await apiFetch('/api/user/privacy-settings');
-      if (response.ok) {
-        const data = await response.json();
-        setFieldVisibility(data.fieldVisibility || {});
-        setRedactMode(data.redactMode || false);
+
+      if (!response.ok) {
+        let message = 'Privacy settings request failed';
+        try {
+          const data = await response.json();
+          if (typeof data?.error === 'string' && data.error.trim()) {
+            message = data.error;
+          }
+        } catch {
+          // Keep the generic diagnostic message if the response body is not JSON.
+        }
+        throw new Error(message);
       }
+
+      const data = await response.json();
+      setFieldVisibility(data.fieldVisibility || {});
+      setRedactMode(data.redactMode || false);
     } catch (error) {
       dispatchClientErrorDiagnostic('privacy.field_controls.load_failed', error);
-      toast.error('Failed to load privacy settings');
+      setLoadError(
+        'Your saved privacy choices could not be loaded. Retry before changing field visibility.'
+      );
+      toast.error('Failed to load privacy settings', {
+        description: 'Retry before changing field visibility.',
+      });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    void fetchPrivacySettings();
+  }, [fetchPrivacySettings, userId]);
 
   const handleFieldVisibilityChange = (fieldName: string, visibility: VisibilityLevel) => {
     setFieldVisibility((prev) => ({
@@ -263,6 +291,39 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
     return (
       <Card className="p-6">
         <p className="text-center text-muted-foreground">Loading privacy settings...</p>
+      </Card>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <Card
+        role="alert"
+        aria-live="assertive"
+        className="border-[#FCD34D] bg-[#FFFBEB] p-6 dark:border-yellow-800 dark:bg-yellow-950/20"
+      >
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+          <AlertTriangle className="h-5 w-5 flex-shrink-0 text-[#D97706]" aria-hidden="true" />
+          <div className="min-w-0 flex-1 space-y-3">
+            <div>
+              <h3 className="font-semibold text-[#92400E] dark:text-yellow-100">
+                Privacy field controls could not load
+              </h3>
+              <p className="mt-1 text-sm text-[#92400E] dark:text-yellow-200">{loadError}</p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                void fetchPrivacySettings();
+              }}
+              className="border-[#D97706] text-[#92400E] hover:bg-[#FEF3C7] dark:border-yellow-700 dark:text-yellow-100 dark:hover:bg-yellow-950/40"
+            >
+              <RefreshCcw className="h-4 w-4" aria-hidden="true" />
+              Retry privacy controls
+            </Button>
+          </div>
+        </div>
       </Card>
     );
   }
