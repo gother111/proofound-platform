@@ -207,11 +207,9 @@ export default async function OrganizationPortfolioPage({
                 </Link>
               </Button>
               <ShareLinkButton url={data.shareUrl} className="min-h-11 w-full sm:w-auto" />
-              <div className="hidden sm:contents">
-                {viewerIsMember ? (
-                  <DownloadOrganizationPdfButton slug={slug} className="min-h-11 sm:w-auto" />
-                ) : null}
-              </div>
+              {viewerIsMember ? (
+                <DownloadOrganizationPdfButton slug={slug} className="min-h-11 sm:w-auto" />
+              ) : null}
               {data.organization.website ? (
                 <a
                   href={data.organization.website}

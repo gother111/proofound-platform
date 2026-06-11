@@ -4,9 +4,11 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { FileDown, Loader2 } from 'lucide-react';
 import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { cn } from '@/lib/utils';
 
 type DownloadPdfButtonProps = {
   endpoint?: string;
+  className?: string;
 };
 
 type DownloadFeedback = {
@@ -14,7 +16,10 @@ type DownloadFeedback = {
   message: string;
 };
 
-export function DownloadPdfButton({ endpoint = '/api/portfolio/export' }: DownloadPdfButtonProps) {
+export function DownloadPdfButton({
+  endpoint = '/api/portfolio/export',
+  className,
+}: DownloadPdfButtonProps) {
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<DownloadFeedback | null>(null);
 
@@ -90,13 +95,13 @@ export function DownloadPdfButton({ endpoint = '/api/portfolio/export' }: Downlo
   };
 
   return (
-    <div className="inline-flex flex-col items-start gap-1.5">
+    <div className="flex w-full flex-col items-stretch gap-1.5 sm:w-auto sm:items-start">
       <Button
         variant="secondary"
         size="sm"
         onClick={handleDownload}
         disabled={loading}
-        className="gap-2"
+        className={cn('w-full justify-center gap-2 sm:w-auto', className)}
       >
         {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
         {loading ? 'Preparing...' : 'Download trust PDF'}

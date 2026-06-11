@@ -96,13 +96,16 @@ export function DownloadOrganizationPdfButton({
   };
 
   return (
-    <div className="inline-flex flex-col items-start gap-1.5">
+    <div className="flex w-full flex-col items-stretch gap-1.5 sm:w-auto sm:items-start">
       <Button
         variant="outline"
         size="sm"
         onClick={handleDownload}
         disabled={loading}
-        className={cn('inline-flex items-center gap-1.5', className)}
+        className={cn(
+          'inline-flex w-full items-center justify-center gap-1.5 sm:w-auto',
+          className
+        )}
       >
         {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
         {loading ? 'Preparing...' : 'Download organization PDF'}

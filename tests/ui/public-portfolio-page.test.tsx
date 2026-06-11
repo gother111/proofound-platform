@@ -314,10 +314,20 @@ describe('Public individual portfolio page', () => {
       screen.getByText(/skills are not shared publicly on this public page/i)
     ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /request introduction/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /copy proof summary/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /copy share link/i }).closest('.hidden')).toBeNull();
+    expect(
+      screen.getByRole('button', { name: /download trust pdf/i }).closest('.hidden')
+    ).toBeNull();
+    expect(
+      screen.getByRole('button', { name: /copy proof summary/i }).closest('.hidden')
+    ).toBeNull();
+    expect(
+      screen.getByText(/export and copy actions use only this page's public-safe details/i)
+    ).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: /copy recruiter summary/i })
     ).not.toBeInTheDocument();
+    expect(screen.queryByText(/wider screens/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/my next challenge/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/mission & vision/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/stockholm, sweden/i)).not.toBeInTheDocument();

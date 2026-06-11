@@ -196,12 +196,19 @@ export default async function PortfolioPage({
                   </Link>
                 </Button>
               ) : null}
-              <div className="flex w-full flex-wrap gap-2 sm:w-auto">
-                <ShareLinkButton url={data.shareUrl} />
-                <div className="hidden sm:contents">
-                  <DownloadPdfButton endpoint={viewerIsOwner ? undefined : publicExportEndpoint} />
-                  <CopyTextButton endpoint={viewerIsOwner ? undefined : publicSummaryEndpoint} />
-                </div>
+              <div className="grid w-full gap-2 sm:w-auto sm:grid-flow-col sm:auto-cols-max sm:items-start">
+                <ShareLinkButton
+                  url={data.shareUrl}
+                  className="min-h-11 w-full justify-center sm:w-auto"
+                />
+                <DownloadPdfButton
+                  endpoint={viewerIsOwner ? undefined : publicExportEndpoint}
+                  className="min-h-11"
+                />
+                <CopyTextButton
+                  endpoint={viewerIsOwner ? undefined : publicSummaryEndpoint}
+                  className="min-h-11"
+                />
               </div>
             </div>
           </div>
@@ -271,8 +278,8 @@ export default async function PortfolioPage({
                   <Link href={collaborationHref}>Request introduction</Link>
                 </Button>
                 <p className="text-xs leading-5 text-muted-foreground">
-                  Private details stay hidden unless the owner explicitly reveals them. More export
-                  and copy options appear on wider screens.
+                  Private details stay hidden unless the owner explicitly reveals them. Export and
+                  copy actions use only this page&apos;s public-safe details.
                 </p>
               </div>
             ) : null}

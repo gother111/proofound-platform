@@ -293,6 +293,37 @@ describe('Organization public portfolio page', () => {
     ).toBeInTheDocument();
   });
 
+  it('keeps member PDF export available on narrow organization portfolio layouts', async () => {
+    vi.mocked(createClient).mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'member-1' } } }),
+      },
+      from: vi.fn(() => ({
+        select: vi.fn(() => ({
+          eq: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockResolvedValue({ count: 1 }),
+            }),
+          }),
+        })),
+      })),
+    } as any);
+    vi.mocked(getPublicOrganizationPortfolioProjectionBySlug).mockResolvedValue(
+      buildProjection() as any
+    );
+
+    const element = await OrganizationPortfolioPublicPage({
+      params: Promise.resolve({ slug: 'acme' }),
+      searchParams: Promise.resolve({ returnTo: '/app/o/acme/home' }),
+    });
+
+    render(element);
+
+    const downloadButton = screen.getByRole('button', { name: /download organization pdf/i });
+    expect(downloadButton).toHaveClass('w-full');
+    expect(downloadButton.closest('.hidden')).toBeNull();
+  });
+
   it('returns generic noindex metadata by default', async () => {
     vi.mocked(getPublicOrganizationPortfolioProjectionBySlug).mockResolvedValue(
       buildProjection() as any
