@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { ConversationList, type Conversation } from '@/components/messaging/ConversationList';
@@ -40,5 +40,28 @@ describe('ConversationList', () => {
     expect(
       screen.queryByText('Conversations appear after a proof-safe introduction.')
     ).not.toBeInTheDocument();
+  });
+
+  it('shows a recoverable search empty state for conversation filters', () => {
+    render(
+      <ConversationList conversations={[baseConversation]} onSelect={vi.fn()} mode="individual" />
+    );
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Search conversations' }), {
+      target: { value: 'billing' },
+    });
+
+    expect(screen.getByText('No conversations match “billing”')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Search checks participant labels, assignment titles, and recent proof-corridor messages.'
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText(baseConversation.otherPartyName)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear search' }));
+
+    expect(screen.getByText(baseConversation.otherPartyName)).toBeInTheDocument();
+    expect(screen.queryByText('No conversations match “billing”')).not.toBeInTheDocument();
   });
 });

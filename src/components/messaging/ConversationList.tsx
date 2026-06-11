@@ -43,6 +43,8 @@ export function ConversationList({
 }: ConversationListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const hasConversations = conversations.length > 0;
+  const trimmedSearchQuery = searchQuery.trim();
+  const hasSearchQuery = trimmedSearchQuery.length > 0;
   const emptyCopy =
     mode === 'organization'
       ? {
@@ -58,16 +60,16 @@ export function ConversationList({
 
   // Filter conversations by search query
   const filteredConversations = useMemo(() => {
-    if (!searchQuery.trim()) return conversations;
+    if (!trimmedSearchQuery) return conversations;
 
-    const query = searchQuery.toLowerCase();
+    const query = trimmedSearchQuery.toLowerCase();
     return conversations.filter(
       (conv) =>
         conv.otherPartyName.toLowerCase().includes(query) ||
         conv.assignmentTitle?.toLowerCase().includes(query) ||
         conv.lastMessage.toLowerCase().includes(query)
     );
-  }, [conversations, searchQuery]);
+  }, [conversations, trimmedSearchQuery]);
 
   // Truncate message preview
   const truncateMessage = (message: string, maxLength: number = 60) => {
@@ -136,6 +138,7 @@ export function ConversationList({
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             type="text"
+            aria-label="Search conversations"
             placeholder="Search conversations"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -146,7 +149,7 @@ export function ConversationList({
 
       {/* Conversation list */}
       <div className="divide-y divide-proofound-stone/60">
-        {filteredConversations.length === 0 && !searchQuery && (
+        {filteredConversations.length === 0 && !hasSearchQuery && (
           <div className="mx-4 mt-4 rounded-2xl border border-dashed border-proofound-stone/80 bg-proofound-parchment/45 p-6 text-center">
             <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white text-proofound-forest">
               <MessageSquare className="h-5 w-5" />
@@ -161,11 +164,29 @@ export function ConversationList({
           </div>
         )}
 
-        {filteredConversations.length === 0 && searchQuery && (
-          <div className="p-8 text-center">
-            <p className="text-sm text-muted-foreground">
-              No conversations match &apos;{searchQuery}&apos;
+        {filteredConversations.length === 0 && hasSearchQuery && (
+          <div
+            className="mx-4 mt-4 rounded-2xl border border-dashed border-proofound-stone/80 bg-white/70 p-6 text-center"
+            role="status"
+            aria-live="polite"
+          >
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-proofound-parchment text-proofound-forest">
+              <Search className="h-5 w-5" />
+            </div>
+            <p className="text-sm font-medium text-proofound-charcoal">
+              No conversations match &ldquo;{trimmedSearchQuery}&rdquo;
             </p>
+            <p className="mx-auto mt-2 max-w-64 text-xs leading-5 text-muted-foreground">
+              Search checks participant labels, assignment titles, and recent proof-corridor
+              messages.
+            </p>
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="mt-4 rounded-full border border-proofound-stone bg-white px-3 py-1.5 text-xs font-medium text-proofound-forest transition-colors hover:border-proofound-forest hover:bg-proofound-parchment/30"
+            >
+              Clear search
+            </button>
           </div>
         )}
 
