@@ -184,6 +184,9 @@ describe('profile context CV import', () => {
     expect(screen.getByRole('alertdialog')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Delete Product Lead?' })).toBeInTheDocument();
     expect(screen.getByText(/removes this private work context/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Proof Packs, verification records, and privacy settings/i)
+    ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /Keep context/i }));
     expect(onDeleteExperience).not.toHaveBeenCalled();

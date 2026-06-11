@@ -175,9 +175,15 @@ function ItemActionButtons({
         <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete {deleteItemName}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This removes this private {deleteContextLabel} from your profile context. If it
-              anchors a Proof Pack, review that proof after deletion.
+            <AlertDialogDescription className="space-y-2">
+              <span className="block">
+                This removes this private {deleteContextLabel} from your profile context.
+              </span>
+              <span className="block">
+                Proof Packs, verification records, and privacy settings are not changed
+                automatically. Review any Proof Pack that used this context label before you publish
+                or share it.
+              </span>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
