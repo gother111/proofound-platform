@@ -16,6 +16,7 @@ import {
   Settings,
 } from 'lucide-react';
 import { DataBreakdown } from '@/components/privacy/DataBreakdown';
+import { DataExportFeedback } from '@/components/privacy/DataExportFeedback';
 import { AuditLogTable } from './AuditLogTable';
 import { DeleteAccount } from './DeleteAccount';
 import { VisibilitySettingsModal } from '../privacy/VisibilitySettingsModal';
@@ -35,6 +36,11 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [showVisibilitySettings, setShowVisibilitySettings] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [exportFeedback, setExportFeedback] = useState<{
+    kind: 'success' | 'error';
+    title: string;
+    message: string;
+  } | null>(null);
   const [privacySummaryEnabled, setPrivacySummaryEnabled] = useState(
     CLIENT_FF_DEFAULTS.privacySummary
   );
@@ -100,6 +106,7 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
 
   const handleExportData = async () => {
     setIsExporting(true);
+    setExportFeedback(null);
     try {
       const response = await fetch('/api/user/export');
       if (!response.ok) {
@@ -116,9 +123,19 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+      setExportFeedback({
+        kind: 'success',
+        title: 'Export started',
+        message:
+          'Your data export is downloading. Keep this file private because it can include personal, proof, and assignment-review records.',
+      });
     } catch (error) {
       dispatchClientErrorDiagnostic('settings.privacy_overview.export_failed', error);
-      alert('Failed to export data. Please try again.');
+      setExportFeedback({
+        kind: 'error',
+        title: 'Export could not start',
+        message: 'We could not prepare your data export. Please try again in a moment.',
+      });
     } finally {
       setIsExporting(false);
     }
@@ -203,6 +220,15 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
                   View account history
                 </Button>
               </div>
+              {exportFeedback ? (
+                <DataExportFeedback
+                  kind={exportFeedback.kind}
+                  title={exportFeedback.title}
+                  className="mt-4"
+                >
+                  {exportFeedback.message}
+                </DataExportFeedback>
+              ) : null}
             </div>
           </div>
         </CardContent>

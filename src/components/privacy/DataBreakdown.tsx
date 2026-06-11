@@ -20,6 +20,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Download, User, Briefcase, MessageSquare, BarChart3, Shield } from 'lucide-react';
+import { DataExportFeedback } from '@/components/privacy/DataExportFeedback';
 import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { buildUserExportDownloadFilename } from '@/lib/privacy/export-download';
 
@@ -42,6 +43,11 @@ export function DataBreakdown() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [exportFeedback, setExportFeedback] = useState<{
+    kind: 'success' | 'error';
+    title: string;
+    message: string;
+  } | null>(null);
 
   useEffect(() => {
     const fetchDataBreakdown = async () => {
@@ -72,6 +78,7 @@ export function DataBreakdown() {
   const handleExportData = async () => {
     try {
       setExporting(true);
+      setExportFeedback(null);
 
       const response = await fetch('/api/user/export');
       if (!response.ok) throw new Error('Export failed');
@@ -85,9 +92,19 @@ export function DataBreakdown() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+      setExportFeedback({
+        kind: 'success',
+        title: 'Export started',
+        message:
+          'Your data export is downloading. Keep this file private because it can include personal, proof, and assignment-review records.',
+      });
     } catch (error) {
       dispatchClientErrorDiagnostic('privacy.data_breakdown.export_failed', error);
-      alert('Failed to export data. Please try again.');
+      setExportFeedback({
+        kind: 'error',
+        title: 'Export could not start',
+        message: 'We could not prepare your data export. Please try again in a moment.',
+      });
     } finally {
       setExporting(false);
     }
@@ -153,6 +170,15 @@ export function DataBreakdown() {
             {error}
           </div>
         )}
+        {exportFeedback ? (
+          <DataExportFeedback
+            kind={exportFeedback.kind}
+            title={exportFeedback.title}
+            className="mb-4"
+          >
+            {exportFeedback.message}
+          </DataExportFeedback>
+        ) : null}
         <Accordion type="single" collapsible className="w-full">
           {categories.map((category) => (
             <AccordionItem key={category.id} value={category.id}>

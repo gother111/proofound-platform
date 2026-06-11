@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { DataBreakdown } from '@/components/privacy/DataBreakdown';
@@ -77,5 +77,20 @@ describe('privacy data breakdown', () => {
       reason: 'privacy.data_breakdown.load_failed',
       error: 'Data inventory unavailable',
     });
+  });
+
+  it('shows inline export failure feedback instead of a native alert', async () => {
+    const alertSpy = vi.fn();
+    vi.stubGlobal('alert', alertSpy);
+
+    render(<DataBreakdown />);
+
+    fireEvent.click(await screen.findByRole('button', { name: /Download my data/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Export could not start');
+    expect(alert).toHaveTextContent('We could not prepare your data export');
+    expect(alertSpy).not.toHaveBeenCalled();
+    expect(global.fetch).toHaveBeenCalledWith('/api/user/export');
   });
 });

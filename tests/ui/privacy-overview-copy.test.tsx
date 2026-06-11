@@ -1,6 +1,6 @@
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PrivacyOverview } from '@/components/settings/PrivacyOverview';
 
@@ -47,6 +47,10 @@ describe('PrivacyOverview copy', () => {
         },
       }),
     });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it('shows plain-language data classification labels without tier wording', () => {
@@ -117,5 +121,41 @@ describe('PrivacyOverview copy', () => {
     expect(await screen.findByText('Your data')).toBeInTheDocument();
     expect(global.fetch).toHaveBeenCalledWith('/api/user/data-inventory');
     expect(global.fetch).not.toHaveBeenCalledWith('/api/user/export');
+  });
+
+  it('shows inline export failure feedback instead of a native alert', async () => {
+    const alertSpy = vi.fn();
+    vi.stubGlobal('alert', alertSpy);
+
+    (global as any).fetch = vi.fn(async (url: string) => {
+      if (url === '/api/feature-flags') {
+        return {
+          ok: true,
+          json: async () => ({ flags: { privacySummary: true } }),
+        };
+      }
+
+      if (url === '/api/user/export') {
+        return {
+          ok: false,
+          json: async () => ({}),
+        };
+      }
+
+      return {
+        ok: true,
+        json: async () => ({}),
+      };
+    });
+
+    render(<PrivacyOverview userId="user-1" />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Download my data/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Export could not start');
+    expect(alert).toHaveTextContent('We could not prepare your data export');
+    expect(alertSpy).not.toHaveBeenCalled();
+    expect(global.fetch).toHaveBeenCalledWith('/api/user/export');
   });
 });
