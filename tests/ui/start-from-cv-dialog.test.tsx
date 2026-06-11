@@ -12,11 +12,61 @@ import { START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE } from '@/lib/ai/st
 
 const sessionId = '11111111-1111-4111-8111-111111111111';
 
+const extractedDraftPayload = {
+  importSessionId: sessionId,
+  sourceType: 'cv',
+  extractionStatus: 'completed',
+  privacyWarnings: [],
+  workContextDrafts: [
+    {
+      id: 'work-1',
+      organizationLabel: 'Acme',
+      roleTitle: 'Original role',
+      approximateDates: '2021 - 2024',
+      shortContextSummary: 'Original private context.',
+      possibleProjectOutcomeCandidates: [],
+      visibility: 'private',
+    },
+  ],
+  educationContextDrafts: [],
+  volunteeringContextDrafts: [],
+  proofPackIdeaDrafts: [],
+  artifactLinkDrafts: [],
+  unsupportedSkillDrafts: [
+    {
+      id: 'skill-1',
+      skillLabel: 'Original skill',
+      sourceContext: 'Mentioned in redacted CV text.',
+      status: 'unsupported_draft',
+      requiresProof: true,
+      requiresUserConfirmation: true,
+      noTrustLift: true,
+      noMatchingLift: true,
+      noVerificationState: true,
+    },
+  ],
+  discardedUnsafeItems: [],
+  requiresUserReview: true,
+};
+
 function jsonResponse(payload: unknown, ok = true) {
   return {
     ok,
     json: async () => payload,
   };
+}
+
+async function createPrivateDrafts() {
+  const file = new File(['%PDF-1.7'], 'candidate-cv.pdf', { type: 'application/pdf' });
+  fireEvent.change(screen.getByLabelText('CV file'), {
+    target: { files: [file] },
+  });
+  fireEvent.click(
+    screen.getByLabelText('I consent to optional CV processing for private draft suggestions.')
+  );
+  fireEvent.click(screen.getByRole('button', { name: /create private drafts/i }));
+
+  expect(await screen.findByDisplayValue('Original role')).toBeInTheDocument();
 }
 
 describe('StartFromCvDialog', () => {
@@ -39,44 +89,7 @@ describe('StartFromCvDialog', () => {
           requiresUserReview: true,
         })
       )
-      .mockResolvedValueOnce(
-        jsonResponse({
-          importSessionId: sessionId,
-          sourceType: 'cv',
-          extractionStatus: 'completed',
-          privacyWarnings: [],
-          workContextDrafts: [
-            {
-              id: 'work-1',
-              organizationLabel: 'Acme',
-              roleTitle: 'Original role',
-              approximateDates: '2021 - 2024',
-              shortContextSummary: 'Original private context.',
-              possibleProjectOutcomeCandidates: [],
-              visibility: 'private',
-            },
-          ],
-          educationContextDrafts: [],
-          volunteeringContextDrafts: [],
-          proofPackIdeaDrafts: [],
-          artifactLinkDrafts: [],
-          unsupportedSkillDrafts: [
-            {
-              id: 'skill-1',
-              skillLabel: 'Original skill',
-              sourceContext: 'Mentioned in redacted CV text.',
-              status: 'unsupported_draft',
-              requiresProof: true,
-              requiresUserConfirmation: true,
-              noTrustLift: true,
-              noMatchingLift: true,
-              noVerificationState: true,
-            },
-          ],
-          discardedUnsafeItems: [],
-          requiresUserReview: true,
-        })
-      )
+      .mockResolvedValueOnce(jsonResponse(extractedDraftPayload))
       .mockResolvedValueOnce(jsonResponse({ ok: true }));
   });
 
@@ -93,18 +106,9 @@ describe('StartFromCvDialog', () => {
       />
     );
 
-    const file = new File(['%PDF-1.7'], 'candidate-cv.pdf', { type: 'application/pdf' });
     expect(screen.getByText(/workflow decisions/i)).toBeInTheDocument();
     expect(screen.queryByText(/hiring decisions/i)).not.toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText('CV file'), {
-      target: { files: [file] },
-    });
-    fireEvent.click(
-      screen.getByLabelText('I consent to optional CV processing for private draft suggestions.')
-    );
-    fireEvent.click(screen.getByRole('button', { name: /create private drafts/i }));
-
-    expect(await screen.findByDisplayValue('Original role')).toBeInTheDocument();
+    await createPrivateDrafts();
     fireEvent.change(screen.getByLabelText('Work context drafts title'), {
       target: { value: 'Edited role' },
     });
@@ -129,5 +133,84 @@ describe('StartFromCvDialog', () => {
     ]);
     expect(acceptedPayload.accepted.unsupportedSkillDrafts).toEqual([]);
     expect(JSON.stringify(acceptedPayload)).not.toMatch(/score|rank|shortlist|verifiedAt/i);
+  });
+
+  it('confirms deletion before discarding a private CV import session', async () => {
+    const onApplyComplete = vi.fn();
+    render(
+      <StartFromCvDialog
+        surface={START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE}
+        onApplyComplete={onApplyComplete}
+      />
+    );
+
+    await createPrivateDrafts();
+
+    fireEvent.click(screen.getByRole('button', { name: /delete import session/i }));
+    const dialog = screen.getByRole('alertdialog');
+
+    expect(screen.getByRole('heading', { name: 'Delete import session?' })).toBeInTheDocument();
+    expect(dialog).toHaveTextContent(/private CV draft session/i);
+    expect(apiFetchMock).toHaveBeenCalledTimes(2);
+
+    fireEvent.click(screen.getByRole('button', { name: /keep drafts/i }));
+    expect(apiFetchMock).toHaveBeenCalledTimes(2);
+    expect(screen.getByDisplayValue('Original role')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /delete import session/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete session' }));
+
+    await waitFor(() => expect(onApplyComplete).toHaveBeenCalledTimes(1));
+    expect(apiFetchMock).toHaveBeenLastCalledWith(
+      `/api/ai/start-from-cv/sessions/${sessionId}/discard`,
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ deleteSession: true }),
+      })
+    );
+  });
+
+  it('keeps the delete confirmation open when discarding the import session fails', async () => {
+    apiFetchMock.mockReset();
+    apiFetchMock
+      .mockResolvedValueOnce(
+        jsonResponse({
+          importSessionId: sessionId,
+          sourceType: 'cv',
+          extractionStatus: 'not_started',
+          privacyWarnings: [],
+          workContextDrafts: [],
+          educationContextDrafts: [],
+          volunteeringContextDrafts: [],
+          proofPackIdeaDrafts: [],
+          artifactLinkDrafts: [],
+          unsupportedSkillDrafts: [],
+          discardedUnsafeItems: [],
+          requiresUserReview: true,
+        })
+      )
+      .mockResolvedValueOnce(jsonResponse(extractedDraftPayload))
+      .mockResolvedValueOnce(
+        jsonResponse({ error: 'Could not delete this private draft yet. Please try again.' }, false)
+      );
+    const onApplyComplete = vi.fn();
+    render(
+      <StartFromCvDialog
+        surface={START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE}
+        onApplyComplete={onApplyComplete}
+      />
+    );
+
+    await createPrivateDrafts();
+
+    fireEvent.click(screen.getByRole('button', { name: /delete import session/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete session' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Could not delete this private draft yet. Please try again.'
+    );
+    expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Original role')).toBeInTheDocument();
+    expect(onApplyComplete).not.toHaveBeenCalled();
   });
 });

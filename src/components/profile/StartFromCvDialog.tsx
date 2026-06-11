@@ -7,6 +7,16 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { apiFetch } from '@/lib/api/fetch';
 import { START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE } from '@/lib/ai/start-from-cv-contract';
 import type { StartFromCvDraftOutput } from '@/lib/ai/start-from-cv';
@@ -114,6 +124,7 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
   const [acceptedIds, setAcceptedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deleteSessionDialogOpen, setDeleteSessionDialogOpen] = useState(false);
 
   async function startExtraction() {
     if (!file || !consented) {
@@ -197,15 +208,40 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
   async function deleteSession() {
     if (!session) return;
     setLoading(true);
+    setError(null);
     try {
-      await apiFetch(`/api/ai/start-from-cv/sessions/${session.importSessionId}/discard`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ deleteSession: true }),
-      });
+      const response = await apiFetch(
+        `/api/ai/start-from-cv/sessions/${session.importSessionId}/discard`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ deleteSession: true }),
+        }
+      );
+      let payload: { error?: string } = {};
+      try {
+        payload = (await response.json()) as { error?: string };
+      } catch {
+        payload = {};
+      }
+      if (!response.ok) {
+        throw new Error(
+          userSafeCvError(payload.error, 'Import session could not be deleted. Please try again.')
+        );
+      }
       setSession(null);
       setAcceptedIds(new Set());
+      setDeleteSessionDialogOpen(false);
       onApplyComplete?.();
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? userSafeCvError(
+              caught.message,
+              'Import session could not be deleted. Please try again.'
+            )
+          : 'Import session could not be deleted. Please try again.'
+      );
     } finally {
       setLoading(false);
     }
@@ -298,7 +334,11 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
             />
             <span>I consent to optional CV processing for private draft suggestions.</span>
           </label>
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          {error ? (
+            <p className="text-sm text-destructive" role="alert">
+              {error}
+            </p>
+          ) : null}
           <div className="flex flex-wrap gap-2">
             <Button
               type="button"
@@ -387,7 +427,11 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
             );
           })}
 
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          {error ? (
+            <p className="text-sm text-destructive" role="alert">
+              {error}
+            </p>
+          ) : null}
           <div className="flex flex-wrap gap-2">
             <Button
               type="button"
@@ -399,10 +443,57 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
             <Button type="button" variant="outline" onClick={onApplyComplete}>
               Continue manually
             </Button>
-            <Button type="button" variant="outline" onClick={deleteSession} disabled={loading}>
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete import session
-            </Button>
+            <AlertDialog
+              open={deleteSessionDialogOpen}
+              onOpenChange={(open) => {
+                if (!loading) {
+                  setDeleteSessionDialogOpen(open);
+                }
+              }}
+            >
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setError(null);
+                  setDeleteSessionDialogOpen(true);
+                }}
+                disabled={loading}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete import session
+              </Button>
+              <AlertDialogContent className="max-w-md">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete import session?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This removes the private CV draft session and any unaccepted suggestions. It
+                    will not delete anything you already accepted into your profile.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                {error ? (
+                  <p
+                    className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
+                    role="alert"
+                  >
+                    {error}
+                  </p>
+                ) : null}
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={loading}>Keep drafts</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-destructive text-white hover:bg-destructive/90"
+                    disabled={loading}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      void deleteSession();
+                    }}
+                  >
+                    {loading ? 'Deleting session...' : 'Delete session'}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
       )}
