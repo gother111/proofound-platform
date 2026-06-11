@@ -17,6 +17,28 @@ describe('MessageThread', () => {
     vi.restoreAllMocks();
   });
 
+  it('frames empty masked threads as proof-safe review conversations', () => {
+    render(
+      <MessageThread
+        conversationId="conversation-1"
+        messages={[]}
+        currentUserId="user-1"
+        otherPartyName="Organization"
+        stage="masked"
+        onSendMessage={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText('No messages yet')).toBeInTheDocument();
+    expect(
+      screen.getByText(/keep the first note tied to the assignment, proof, or reveal step/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/text-only; paste\/drop disabled for proof-review privacy/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/say hello/i)).not.toBeInTheDocument();
+  });
+
   it('shows send failures inline and keeps the draft in the active thread composer', async () => {
     const alertSpy = vi.fn();
     vi.stubGlobal('alert', alertSpy);

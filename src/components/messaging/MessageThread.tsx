@@ -11,7 +11,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
-import { AlertTriangle, ArrowLeft, Check, CheckCheck, Loader2, Send } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Loader2, Lock, MessageSquare, Send } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -212,22 +212,15 @@ export function MessageThread({
                 visible: { opacity: 1, y: 0 },
               }}
             >
-              <div className="relative w-16 h-16 flex items-center justify-center">
-                <svg
-                  className="absolute inset-0 w-full h-full text-proofound-forest/20 animate-breathe"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                </svg>
+              <div className="relative flex h-16 w-16 items-center justify-center rounded-full border border-proofound-stone/70 bg-white text-proofound-forest shadow-sm">
+                <MessageSquare className="h-7 w-7" />
               </div>
-              <div className="space-y-1">
+              <div className="max-w-sm space-y-1">
                 <p className="text-base font-medium text-foreground">No messages yet</p>
-                <p className="text-sm text-muted-foreground">Say hello to start the conversation</p>
+                <p className="text-sm leading-6 text-muted-foreground">
+                  Keep the first note tied to the assignment, proof, or reveal step so the thread
+                  stays review-safe.
+                </p>
               </div>
             </motion.div>
           )}
@@ -352,8 +345,9 @@ export function MessageThread({
             </div>
 
             <div className="flex items-start justify-between gap-3 text-xs">
-              <span className="min-w-0 leading-5 text-muted-foreground">
-                <span aria-hidden="true">🔒 </span>Text-only; paste/drop disabled.
+              <span className="inline-flex min-w-0 items-start gap-1.5 leading-5 text-muted-foreground">
+                <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                <span>Text-only; paste/drop disabled for proof-review privacy.</span>
                 <span className="hidden sm:inline"> Press Enter to send.</span>
               </span>
               <span className={cn('flex-shrink-0 leading-5', characterCountColor())}>
