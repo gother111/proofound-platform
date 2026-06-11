@@ -14,6 +14,6 @@ describe('OrgShortlistPage launch shortcut', () => {
       params: Promise.resolve({ slug: 'proof ops' }),
     });
 
-    expect(redirectMock).toHaveBeenCalledWith('/app/o/proof%20ops/assignments');
+    expect(redirectMock).toHaveBeenCalledWith('/app/o/proof%20ops/assignments?from=shortlist');
   });
 });

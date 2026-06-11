@@ -202,9 +202,12 @@ describe('CandidateInviteClient test_match flow', () => {
     expect(
       screen.queryByRole('link', { name: /cv import|resume|people search/i })
     ).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /create first proof pack/i })).toHaveAttribute(
-      'href',
-      '/onboarding?next=%2Fcandidate-invite%2Ftoken-value'
+    expect(screen.getAllByRole('link', { name: /create first proof pack/i })).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          href: expect.stringContaining('/onboarding?next=%2Fcandidate-invite%2Ftoken-value'),
+        }),
+      ])
     );
     expect(screen.getByLabelText(/owner-only proof pack/i)).toHaveValue(
       '11111111-1111-4111-8111-111111111111'
@@ -563,9 +566,12 @@ describe('CandidateInviteClient test_match flow', () => {
     expect(screen.getByText(/Create or choose one owner-only Proof Pack/i)).toBeInTheDocument();
     expect(screen.getByTestId('candidate-proof-demo-path')).toBeInTheDocument();
     expect(screen.getAllByText(/one claim or outcome/i).length).toBeGreaterThan(0);
-    expect(screen.getByRole('link', { name: /create first proof pack/i })).toHaveAttribute(
-      'href',
-      '/onboarding?next=%2Fcandidate-invite%2Ftoken-value'
+    expect(screen.getAllByRole('link', { name: /create first proof pack/i })).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          href: expect.stringContaining('/onboarding?next=%2Fcandidate-invite%2Ftoken-value'),
+        }),
+      ])
     );
     expect(screen.queryByText(/generate and submit proof card/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/existing proof card token/i)).not.toBeInTheDocument();

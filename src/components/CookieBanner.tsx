@@ -117,13 +117,13 @@ export function CookieBanner() {
                 >
                   <Link
                     href="/privacy"
-                    className="rounded-sm text-proofound-forest underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+                    className="-mx-1.5 inline-flex min-h-9 items-center rounded-md px-1.5 text-proofound-forest underline-offset-4 transition-colors hover:bg-proofound-forest/5 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
                   >
                     Privacy Policy
                   </Link>
                   <Link
                     href="/cookies"
-                    className="rounded-sm text-proofound-forest underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+                    className="-mx-1.5 inline-flex min-h-9 items-center rounded-md px-1.5 text-proofound-forest underline-offset-4 transition-colors hover:bg-proofound-forest/5 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
                   >
                     Cookie Policy
                   </Link>
@@ -131,7 +131,7 @@ export function CookieBanner() {
                     href={`/cookies/settings?returnTo=${encodeURIComponent(
                       typeof window !== 'undefined' ? window.location.pathname : '/'
                     )}`}
-                    className="rounded-sm text-proofound-forest underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+                    className="-mx-1.5 inline-flex min-h-9 items-center rounded-md px-1.5 text-proofound-forest underline-offset-4 transition-colors hover:bg-proofound-forest/5 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
                   >
                     Cookie Settings
                   </Link>

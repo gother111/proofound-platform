@@ -399,11 +399,12 @@ function HeroResumePaperPile({ compact = false }: { compact?: boolean }) {
       <Image
         src="/hero-resume-stack/paper-pile.png"
         alt=""
-        fill
+        width={1122}
+        height={1402}
         sizes={compact ? '12.25rem' : '31rem'}
         fetchPriority="high"
         priority
-        className="pointer-events-none select-none object-contain drop-shadow-[0_32px_72px_rgba(55,45,30,0.18)]"
+        className="pointer-events-none absolute inset-0 h-full w-full select-none object-contain drop-shadow-[0_32px_72px_rgba(55,45,30,0.18)]"
       />
     </div>
   );
@@ -415,11 +416,12 @@ function HeroResumeSheet({ compact = false }: { compact?: boolean }) {
       <Image
         src="/hero-resume-stack/cv-sheet.png"
         alt=""
-        fill
+        width={1086}
+        height={1448}
         sizes={compact ? '10.5rem' : '22rem'}
         priority
         fetchPriority="high"
-        className="pointer-events-none select-none object-contain drop-shadow-[0_18px_40px_rgba(55,45,30,0.14)]"
+        className="pointer-events-none absolute inset-0 h-full w-full select-none object-contain drop-shadow-[0_18px_40px_rgba(55,45,30,0.14)]"
       />
     </div>
   );
@@ -2040,20 +2042,22 @@ function HeroToBlindBackground({
         <Image
           src="/hero-transition-video/hero-bg-first.png"
           alt=""
-          fill
+          width={1920}
+          height={1080}
           sizes={backgroundImageSizes}
           priority
-          className="object-cover object-center"
+          className="absolute inset-0 h-full w-full object-cover object-center"
           style={{ opacity: 1 - clampedProgress }}
         />
         {shouldRenderLastBackground ? (
           <Image
             src="/hero-transition-video/hero-bg-last.png"
             alt=""
-            fill
+            width={1920}
+            height={1080}
             sizes={backgroundImageSizes}
             loading="lazy"
-            className="object-cover object-center"
+            className="absolute inset-0 h-full w-full object-cover object-center"
             style={{ opacity: clampedProgress }}
           />
         ) : null}

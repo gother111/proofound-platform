@@ -73,6 +73,20 @@ describe('CookieBanner', () => {
     expect(close).toHaveClass('focus-visible:ring-proofound-forest');
   });
 
+  it('keeps legal and settings links finger-friendly when visible', () => {
+    usePathnameMock.mockReturnValue('/login');
+
+    render(<CookieBanner />);
+
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+
+    expect(screen.getByRole('link', { name: 'Privacy Policy' })).toHaveClass('min-h-9');
+    expect(screen.getByRole('link', { name: 'Cookie Policy' })).toHaveClass('min-h-9');
+    expect(screen.getByRole('link', { name: 'Cookie Settings' })).toHaveClass('min-h-9');
+  });
+
   it('does not render on snippet embed routes', () => {
     usePathnameMock.mockReturnValue('/p/demo/embed');
 

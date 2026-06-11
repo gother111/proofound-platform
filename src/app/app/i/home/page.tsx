@@ -270,7 +270,7 @@ export default async function IndividualHomePage() {
                           </Badge>
                           <Button
                             variant="link"
-                            className="p-0 h-auto text-xs text-proofound-forest font-semibold hover:text-proofound-forest/80 flex items-center gap-1"
+                            className="-mr-2 flex min-h-9 items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-proofound-forest hover:bg-proofound-forest/5 hover:text-proofound-forest/80 focus-visible:ring-proofound-forest"
                             asChild
                           >
                             <Link href={step.href}>
