@@ -102,7 +102,7 @@ describe('organization interviews page actions', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Loading interview workflow...');
   });
 
-  it('shows edit/cancel actions and uses in-app cancellation details before refresh', async () => {
+  it('uses in-app dialogs for interview outcome actions before refresh', async () => {
     const upcomingInterviewAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
     const fetchCalls: Array<{ url: string; init?: RequestInit }> = [];
 
@@ -162,6 +162,24 @@ describe('organization interviews page actions', () => {
           };
         }
 
+        if (url === '/api/interviews/complete') {
+          return {
+            ok: true,
+            json: async () => ({
+              success: true,
+            }),
+          };
+        }
+
+        if (url === '/api/interviews/no-show') {
+          return {
+            ok: true,
+            json: async () => ({
+              success: true,
+            }),
+          };
+        }
+
         return { ok: false, json: async () => ({ error: 'Unexpected route' }) };
       })
     );
@@ -212,8 +230,56 @@ describe('organization interviews page actions', () => {
     expect(confirmSpy).not.toHaveBeenCalled();
     expect(promptSpy).not.toHaveBeenCalled();
 
+    fireEvent.click(screen.getByRole('button', { name: /mark complete/i }));
+
+    const completeDialog = await screen.findByRole('dialog');
+    expect(
+      within(completeDialog).getByText(/The decision step becomes available next/i)
+    ).toBeInTheDocument();
+    expect(
+      within(completeDialog).getByText(/Completion moves the corridor forward/i)
+    ).toBeInTheDocument();
+    fireEvent.click(
+      within(completeDialog).getByRole('button', { name: /mark interview complete/i })
+    );
+
     await waitFor(() => {
-      expect(getInterviewCorridorItemsMock.mock.calls.length).toBeGreaterThanOrEqual(3);
+      expect(fetchCalls.some((call) => call.url === '/api/interviews/complete')).toBe(true);
+    });
+    const completeCall = fetchCalls.find((call) => call.url === '/api/interviews/complete');
+    expect(completeCall?.init?.body).toBe(
+      JSON.stringify({
+        interviewId: 'interview-1',
+      })
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /mark no-show/i }));
+
+    const noShowDialog = await screen.findByRole('dialog');
+    expect(
+      within(noShowDialog).getByText(/replacement interview path is clear/i)
+    ).toBeInTheDocument();
+    expect(within(noShowDialog).getByText(/No-show pauses the decision path/i)).toBeInTheDocument();
+    fireEvent.change(within(noShowDialog).getByLabelText(/reason/i), {
+      target: { value: 'Candidate missed the scheduled call' },
+    });
+    fireEvent.click(within(noShowDialog).getByRole('button', { name: /record no-show/i }));
+
+    await waitFor(() => {
+      expect(fetchCalls.some((call) => call.url === '/api/interviews/no-show')).toBe(true);
+    });
+    const noShowCall = fetchCalls.find((call) => call.url === '/api/interviews/no-show');
+    expect(noShowCall?.init?.body).toBe(
+      JSON.stringify({
+        interviewId: 'interview-1',
+        reason: 'Candidate missed the scheduled call',
+      })
+    );
+    expect(confirmSpy).not.toHaveBeenCalled();
+    expect(promptSpy).not.toHaveBeenCalled();
+
+    await waitFor(() => {
+      expect(getInterviewCorridorItemsMock.mock.calls.length).toBeGreaterThanOrEqual(5);
     });
   });
 

@@ -95,7 +95,10 @@ export default function OrganizationInterviewsPage() {
   const [selectedInterview, setSelectedInterview] = useState<Interview | null>(null);
   const [editingInterview, setEditingInterview] = useState<Interview | null>(null);
   const [cancelInterview, setCancelInterview] = useState<Interview | null>(null);
+  const [completeInterview, setCompleteInterview] = useState<Interview | null>(null);
+  const [noShowInterview, setNoShowInterview] = useState<Interview | null>(null);
   const [cancelReason, setCancelReason] = useState('');
+  const [noShowReason, setNoShowReason] = useState('');
   const [editDate, setEditDate] = useState('');
   const [editTime, setEditTime] = useState('');
   const [editReason, setEditReason] = useState('');
@@ -218,6 +221,26 @@ export default function OrganizationInterviewsPage() {
     setCancelReason('');
   };
 
+  const openCompleteDialog = (interview: Interview) => {
+    setCompleteInterview(interview);
+  };
+
+  const closeCompleteDialog = () => {
+    if (isCompletingInterviewId) return;
+    setCompleteInterview(null);
+  };
+
+  const openNoShowDialog = (interview: Interview) => {
+    setNoShowInterview(interview);
+    setNoShowReason('');
+  };
+
+  const closeNoShowDialog = () => {
+    if (isMarkingNoShowInterviewId) return;
+    setNoShowInterview(null);
+    setNoShowReason('');
+  };
+
   const handleSaveInterviewEdit = async () => {
     if (!editingInterview?.interview) return;
     if (!editDate || !editTime) {
@@ -292,22 +315,18 @@ export default function OrganizationInterviewsPage() {
     }
   };
 
-  const handleCompleteInterview = async (interview: Interview) => {
-    if (!interview.interview) {
+  const handleConfirmCompleteInterview = async () => {
+    if (!completeInterview?.interview) {
       return;
     }
 
-    if (!confirm('Mark this interview as completed? This will make the decision step available.')) {
-      return;
-    }
-
-    setIsCompletingInterviewId(interview.interview.id);
+    setIsCompletingInterviewId(completeInterview.interview.id);
     try {
       const response = await apiFetch('/api/interviews/complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          interviewId: interview.interview.id,
+          interviewId: completeInterview.interview.id,
         }),
       });
 
@@ -317,6 +336,7 @@ export default function OrganizationInterviewsPage() {
       }
 
       toast.success('Interview marked complete');
+      setCompleteInterview(null);
       await loadInterviews();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to mark interview complete');
@@ -325,29 +345,20 @@ export default function OrganizationInterviewsPage() {
     }
   };
 
-  const handleMarkNoShow = async (interview: Interview) => {
-    if (!interview.interview) {
+  const handleConfirmMarkNoShow = async () => {
+    if (!noShowInterview?.interview) {
       return;
     }
 
-    if (
-      !confirm(
-        'Mark this interview as a no-show? The corridor will require a replacement interview.'
-      )
-    ) {
-      return;
-    }
+    const reason = noShowReason.trim();
 
-    const reasonInput = window.prompt('Optional no-show reason:');
-    const reason = typeof reasonInput === 'string' ? reasonInput.trim() : '';
-
-    setIsMarkingNoShowInterviewId(interview.interview.id);
+    setIsMarkingNoShowInterviewId(noShowInterview.interview.id);
     try {
       const response = await apiFetch('/api/interviews/no-show', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          interviewId: interview.interview.id,
+          interviewId: noShowInterview.interview.id,
           ...(reason ? { reason } : {}),
         }),
       });
@@ -358,6 +369,8 @@ export default function OrganizationInterviewsPage() {
       }
 
       toast.success('Interview marked no-show');
+      setNoShowInterview(null);
+      setNoShowReason('');
       await loadInterviews();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to mark no-show');
@@ -726,7 +739,7 @@ export default function OrganizationInterviewsPage() {
                           <Button
                             variant="default"
                             size="sm"
-                            onClick={() => handleCompleteInterview(interview)}
+                            onClick={() => openCompleteDialog(interview)}
                             disabled={isCompletingInterviewId === interview.interview?.id}
                             className="flex min-h-10 w-full items-center justify-center gap-2 bg-proofound-forest text-white hover:bg-proofound-forest/90"
                           >
@@ -738,7 +751,7 @@ export default function OrganizationInterviewsPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleMarkNoShow(interview)}
+                            onClick={() => openNoShowDialog(interview)}
                             disabled={isMarkingNoShowInterviewId === interview.interview?.id}
                             className="flex min-h-10 w-full items-center justify-center gap-2"
                           >
@@ -898,6 +911,114 @@ export default function OrganizationInterviewsPage() {
             onDecisionMade={handleDecisionMade}
           />
         ) : null}
+
+        <Dialog
+          open={Boolean(completeInterview)}
+          onOpenChange={(open) => !open && closeCompleteDialog()}
+        >
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-proofound-forest">
+                <FileCheck className="h-5 w-5" />
+                Mark interview complete
+              </DialogTitle>
+              <DialogDescription>
+                Confirm this only after the interview has finished. The decision step becomes
+                available next.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="rounded-lg border border-[#d8e6d2] bg-[#f5faf1] p-3 text-sm text-proofound-forest">
+              <p className="font-medium">Completion moves the corridor forward.</p>
+              <p className="mt-1">
+                The interview will be recorded as complete and the organization can record the
+                workflow decision for this proof-review participant.
+              </p>
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={closeCompleteDialog}
+                disabled={Boolean(isCompletingInterviewId)}
+              >
+                Keep scheduled
+              </Button>
+              <Button
+                onClick={() => {
+                  void handleConfirmCompleteInterview();
+                }}
+                disabled={Boolean(isCompletingInterviewId)}
+                className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
+              >
+                {isCompletingInterviewId ? 'Marking complete...' : 'Mark interview complete'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog
+          open={Boolean(noShowInterview)}
+          onOpenChange={(open) => !open && closeNoShowDialog()}
+        >
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-[#A03A2A]">
+                <AlertTriangle className="h-5 w-5" />
+                Record no-show
+              </DialogTitle>
+              <DialogDescription>
+                Use this when the scheduled call did not happen. Add context so the replacement
+                interview path is clear.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div className="rounded-lg border border-[#E0C9C1] bg-[#fff8f3] p-3 text-sm text-[#6f2f22]">
+                <p className="font-medium">No-show pauses the decision path.</p>
+                <p className="mt-1">
+                  The corridor will require a replacement interview before a decision can be
+                  recorded.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="no-show-interview-reason">Reason (optional)</Label>
+                <Textarea
+                  id="no-show-interview-reason"
+                  value={noShowReason}
+                  onChange={(event) => setNoShowReason(event.target.value)}
+                  rows={3}
+                  disabled={Boolean(isMarkingNoShowInterviewId)}
+                  aria-describedby="no-show-interview-reason-help"
+                  placeholder="Add what happened and what should happen next..."
+                />
+                <p id="no-show-interview-reason-help" className="text-xs text-muted-foreground">
+                  Keep this factual and suitable for conversation history.
+                </p>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={closeNoShowDialog}
+                disabled={Boolean(isMarkingNoShowInterviewId)}
+              >
+                Keep scheduled
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  void handleConfirmMarkNoShow();
+                }}
+                disabled={Boolean(isMarkingNoShowInterviewId)}
+              >
+                {isMarkingNoShowInterviewId ? 'Recording no-show...' : 'Record no-show'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <Dialog
           open={Boolean(cancelInterview)}
