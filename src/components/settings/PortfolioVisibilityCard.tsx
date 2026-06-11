@@ -32,6 +32,11 @@ type PrivacyPreflightPayload = {
   fallbackAvailable?: boolean;
 };
 
+type SaveFeedback = {
+  tone: 'success' | 'error';
+  message: string;
+};
+
 const defaults: VisibilityFlags = {
   header: true,
   proofBar: true,
@@ -71,6 +76,7 @@ export function PortfolioVisibilityCard() {
   const [saving, setSaving] = useState(false);
   const [checking, setChecking] = useState(false);
   const [preflightMessage, setPreflightMessage] = useState<string | null>(null);
+  const [saveFeedback, setSaveFeedback] = useState<SaveFeedback | null>(null);
 
   useEffect(() => {
     const run = async () => {
@@ -92,11 +98,13 @@ export function PortfolioVisibilityCard() {
   }, []);
 
   const toggle = (key: keyof VisibilityFlags) => {
+    setSaveFeedback(null);
     setFlags((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   const save = async () => {
     setSaving(true);
+    setSaveFeedback(null);
     try {
       const res = await apiFetch('/api/portfolio/visibility', {
         method: 'POST',
@@ -108,9 +116,18 @@ export function PortfolioVisibilityCard() {
         }),
       });
       if (!res.ok) throw new Error('Save failed');
+      setSaveFeedback({
+        tone: 'success',
+        message: publicPageEnabled
+          ? 'Visibility saved. Your Public Page remains shareable by direct link.'
+          : 'Visibility saved. Your Public Page is now unavailable from the public route.',
+      });
     } catch (e) {
       dispatchClientErrorDiagnostic('settings.portfolio_visibility.save_failed', e);
-      alert('Could not save visibility. Please try again.');
+      setSaveFeedback({
+        tone: 'error',
+        message: 'Visibility could not be saved. Your previous settings are unchanged.',
+      });
     } finally {
       setSaving(false);
     }
@@ -169,7 +186,10 @@ export function PortfolioVisibilityCard() {
               label="Public page enabled"
               description="Anyone with the link can view your Public Page."
               checked={publicPageEnabled}
-              onCheckedChange={() => setPublicPageEnabled((prev) => !prev)}
+              onCheckedChange={() => {
+                setSaveFeedback(null);
+                setPublicPageEnabled((prev) => !prev);
+              }}
             />
             <VisibilityRow
               label="Header (name, handle, headline)"
@@ -231,6 +251,20 @@ export function PortfolioVisibilityCard() {
             {preflightMessage ? (
               <p className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
                 {preflightMessage}
+              </p>
+            ) : null}
+
+            {saveFeedback ? (
+              <p
+                className={
+                  saveFeedback.tone === 'error'
+                    ? 'rounded-md border border-[#E9C9B8] bg-[#FFF6F0] px-3 py-2 text-xs leading-5 text-[#8A3F21]'
+                    : 'rounded-md border border-proofound-sage/50 bg-proofound-parchment/50 px-3 py-2 text-xs leading-5 text-proofound-forest'
+                }
+                role={saveFeedback.tone === 'error' ? 'alert' : 'status'}
+                aria-live={saveFeedback.tone === 'error' ? 'assertive' : 'polite'}
+              >
+                {saveFeedback.message}
               </p>
             ) : null}
 

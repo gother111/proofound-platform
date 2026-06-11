@@ -1,6 +1,6 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PortfolioVisibilityCard } from '@/components/settings/PortfolioVisibilityCard';
 
@@ -53,6 +53,10 @@ describe('PortfolioVisibilityCard AI privacy preflight', () => {
         flags: [],
       }),
     });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('names the visibility loading state while controls are loading', async () => {
@@ -174,6 +178,52 @@ describe('PortfolioVisibilityCard AI privacy preflight', () => {
     expect(screen.getByRole('switch', { name: /proof bar block/i })).toBeInTheDocument();
     expect(screen.getByRole('switch', { name: /contact section/i })).toBeInTheDocument();
     expect(screen.queryByRole('switch', { name: /LinkedIn/i })).not.toBeInTheDocument();
+  });
+
+  it('confirms visibility saves inline without a browser alert', async () => {
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => undefined);
+
+    render(<PortfolioVisibilityCard />);
+
+    fireEvent.click(await screen.findByRole('button', { name: /save visibility/i }));
+
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'Visibility saved. Your Public Page remains shareable by direct link.'
+    );
+    expect(apiFetchMock).toHaveBeenCalledWith(
+      '/api/portfolio/visibility',
+      expect.objectContaining({ method: 'POST' })
+    );
+    expect(alertSpy).not.toHaveBeenCalled();
+  });
+
+  it('shows recoverable visibility save failure inline without a browser alert', async () => {
+    apiFetchMock.mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({ error: 'save failed' }),
+    });
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => undefined);
+
+    render(<PortfolioVisibilityCard />);
+
+    fireEvent.click(await screen.findByRole('button', { name: /save visibility/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Visibility could not be saved. Your previous settings are unchanged.'
+    );
+    expect(alertSpy).not.toHaveBeenCalled();
+  });
+
+  it('clears stale save confirmation when visibility is edited again', async () => {
+    render(<PortfolioVisibilityCard />);
+
+    fireEvent.click(await screen.findByRole('button', { name: /save visibility/i }));
+
+    expect(await screen.findByText(/Visibility saved/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('switch', { name: /public page enabled/i }));
+
+    expect(screen.queryByText(/Visibility saved/i)).not.toBeInTheDocument();
   });
 
   it('reports precise high-risk privacy concerns without claiming safety', async () => {
