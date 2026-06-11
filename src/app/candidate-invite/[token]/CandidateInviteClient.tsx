@@ -738,6 +738,25 @@ export function CandidateInviteClient({
           id="apply"
           className="grid gap-5 rounded-lg border border-proofound-forest/30 bg-proofound-parchment/80 p-5 md:grid-cols-[1fr_auto] md:items-center"
         >
+          {error ? (
+            <div
+              role="alert"
+              className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-900 md:col-span-2"
+            >
+              {error}
+            </div>
+          ) : null}
+
+          {successMessage ? (
+            <div
+              role="status"
+              aria-live="polite"
+              className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-900 md:col-span-2"
+            >
+              {successMessage}
+            </div>
+          ) : null}
+
           {assignmentUnavailable ? (
             <>
               <div className="space-y-2">

@@ -237,6 +237,9 @@ describe('CandidateInviteClient test_match flow', () => {
       proofPackId: '11111111-1111-4111-8111-111111111111',
       reviewConfirmed: true,
     });
+    expect(screen.getByRole('status')).toHaveTextContent(
+      /Assignment proof submitted for blind-first review\. No verification emails were sent\./i
+    );
     expect(apiFetchMock.mock.calls.some(([url]) => url === '/api/profile/snippet')).toBe(false);
   });
 
@@ -595,6 +598,9 @@ describe('CandidateInviteClient test_match flow', () => {
       );
     });
 
+    expect(screen.getByRole('status')).toHaveTextContent(
+      /Assignment proof submitted for blind-first review\. No verification emails were sent\./i
+    );
     expect(apiFetchMock).not.toHaveBeenCalledWith('/api/profile/snippet', expect.anything());
   });
 
