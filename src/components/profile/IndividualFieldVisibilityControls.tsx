@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export type IndividualVisibilityLevel = 'public' | 'network_only' | 'match_only' | 'private';
 
@@ -151,6 +152,11 @@ export function IndividualFieldVisibilityControls({
 
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [saveFeedback, setSaveFeedback] = useState<{
+    tone: 'success' | 'error';
+    message: string;
+    description: string;
+  } | null>(null);
 
   const handleFieldChange = (
     field: keyof IndividualFieldVisibility,
@@ -158,6 +164,7 @@ export function IndividualFieldVisibilityControls({
   ) => {
     setVisibility((prev) => ({ ...prev, [field]: value }));
     setHasChanges(true);
+    setSaveFeedback(null);
   };
 
   const handleSave = async () => {
@@ -165,11 +172,25 @@ export function IndividualFieldVisibilityControls({
     try {
       await onSave(visibility);
       setHasChanges(false);
+      setSaveFeedback({
+        tone: 'success',
+        message: 'Privacy settings saved',
+        description:
+          'Your Public Page and assignment-review visibility preferences are up to date.',
+      });
       toast.success('Privacy settings saved', {
         description: 'Your field visibility preferences have been updated',
       });
     } catch (error) {
       dispatchClientErrorDiagnostic('privacy.field_visibility.save_failed', error);
+      setSaveFeedback({
+        tone: 'error',
+        message: 'Privacy settings were not saved',
+        description:
+          error instanceof Error && error.message
+            ? error.message
+            : 'Please try again before leaving this page.',
+      });
       toast.error('Failed to save settings', {
         description: 'Please try again',
       });
@@ -274,7 +295,13 @@ export function IndividualFieldVisibilityControls({
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          aria-label={`Show recommendation for ${field.label}`}
+                        >
                           <Info className="h-4 w-4 text-muted-foreground" />
                         </Button>
                       </TooltipTrigger>
@@ -298,7 +325,7 @@ export function IndividualFieldVisibilityControls({
 
         {/* Save Button */}
         <div className="flex flex-col gap-3 border-t border-proofound-stone pt-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground" role="status" aria-live="polite">
             {hasChanges ? 'You have unsaved changes' : 'All changes saved'}
           </p>
           <Button
@@ -309,6 +336,27 @@ export function IndividualFieldVisibilityControls({
             {saving ? 'Saving...' : 'Save privacy settings'}
           </Button>
         </div>
+
+        {saveFeedback ? (
+          saveFeedback.tone === 'error' ? (
+            <Alert variant="destructive">
+              <Info className="h-4 w-4" />
+              <AlertTitle>{saveFeedback.message}</AlertTitle>
+              <AlertDescription>{saveFeedback.description}</AlertDescription>
+            </Alert>
+          ) : (
+            <div
+              role="status"
+              aria-live="polite"
+              className="rounded-lg border border-proofound-forest/20 bg-proofound-success-tint p-4 text-sm text-proofound-forest"
+            >
+              <p className="font-medium">{saveFeedback.message}</p>
+              <p className="mt-1 text-xs leading-5 text-proofound-charcoal/70">
+                {saveFeedback.description}
+              </p>
+            </div>
+          )
+        ) : null}
 
         {/* Privacy Note */}
         <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">

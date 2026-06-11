@@ -7,6 +7,33 @@ import { PrivacySettingsClient } from '@/app/app/i/settings/privacy/PrivacySetti
 import { DeferredVerificationsClient } from '@/app/app/i/verifications/DeferredVerificationsClient';
 import { DeferredSettingsContent } from '@/components/settings/DeferredSettingsContent';
 
+vi.mock('sonner', () => ({
+  toast: {
+    error: vi.fn(),
+    success: vi.fn(),
+  },
+}));
+
+vi.mock('@/components/settings/PrivacyOverview', () => ({
+  PrivacyOverview: () => <div data-testid="privacy-overview" />,
+}));
+
+vi.mock('@/components/privacy/DataBreakdown', () => ({
+  DataBreakdown: () => <div data-testid="data-breakdown" />,
+}));
+
+vi.mock('@/components/privacy/AuditLogTable', () => ({
+  AuditLogTable: () => <div data-testid="audit-log" />,
+}));
+
+vi.mock('@/components/privacy/DeleteAccountSection', () => ({
+  DeleteAccountSection: () => <div data-testid="delete-account" />,
+}));
+
+vi.mock('@/components/profile/IndividualFieldVisibilityControls', () => ({
+  IndividualFieldVisibilityControls: () => <div data-testid="visibility-controls" />,
+}));
+
 describe('deferred settings loaders', () => {
   it('announces privacy controls while they load', () => {
     const loadPrivacySettingsView = vi.fn(() => new Promise<never>(() => {}));
@@ -25,6 +52,23 @@ describe('deferred settings loaders', () => {
 
     expect(screen.getByRole('heading', { level: 1, name: 'Privacy settings' })).toBeInTheDocument();
     expect(screen.getByRole('status')).toHaveTextContent('Preparing privacy settings...');
+
+    global.fetch = originalFetch;
+  });
+
+  it('keeps privacy controls visible with an inline warning when saved visibility fails to load', async () => {
+    const originalFetch = global.fetch;
+    global.fetch = vi.fn(async () => ({
+      ok: false,
+      json: async () => ({}),
+    })) as typeof fetch;
+
+    render(<PrivacySettingsClient />);
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Privacy preferences need a refresh');
+    expect(alert).toHaveTextContent('safe defaults');
+    expect(screen.getByTestId('visibility-controls')).toBeInTheDocument();
 
     global.fetch = originalFetch;
   });

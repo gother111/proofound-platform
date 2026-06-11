@@ -10,22 +10,32 @@ import { toast } from 'sonner';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { PrivacySettingsLoadingShell } from './PrivacySettingsLoadingShell';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
 
 export function PrivacySettingsClient() {
   const [initialVisibility, setInitialVisibility] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [visibilityLoadError, setVisibilityLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     // Fetch existing visibility settings
     async function fetchVisibility() {
       try {
+        setVisibilityLoadError(null);
         const response = await fetch('/api/profile/visibility');
-        if (response.ok) {
-          const data = await response.json();
-          setInitialVisibility(data);
+        if (!response.ok) {
+          throw new Error('Visibility preferences could not be loaded.');
         }
+        const data = await response.json();
+        setInitialVisibility(data);
       } catch (error) {
         dispatchClientErrorDiagnostic('privacy_settings.client.visibility_fetch_failed', error);
+        setVisibilityLoadError(
+          error instanceof Error && error.message
+            ? error.message
+            : 'Visibility preferences could not be loaded.'
+        );
         toast.error('Failed to load privacy settings');
       } finally {
         setLoading(false);
@@ -69,6 +79,17 @@ export function PrivacySettingsClient() {
         </div>
 
         <div className="space-y-6">
+          {visibilityLoadError ? (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Privacy preferences need a refresh</AlertTitle>
+              <AlertDescription>
+                {visibilityLoadError} The controls below are showing safe defaults until the latest
+                saved preferences can be loaded.
+              </AlertDescription>
+            </Alert>
+          ) : null}
+
           {/* Privacy Overview */}
           <PrivacyOverview userId="current" fullPageNavigation />
 
