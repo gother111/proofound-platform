@@ -149,7 +149,9 @@ function MessagesPageContent() {
 
       if (!response.ok) {
         const data = await response.json().catch(() => null);
-        throw new Error(data?.error || 'Failed to send message');
+        throw new Error(
+          typeof data?.message === 'string' ? data.message : data?.error || 'Failed to send message'
+        );
       }
 
       const data = await response.json();

@@ -4,7 +4,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { MessageThread, type Message as ThreadMessage } from './MessageThread';
 import { useRealtimeMessages, type Message as RealtimeMessage } from '@/hooks/useRealtimeMessages';
 import { RevealIdentityCard } from './RevealIdentityCard';
-import { toast } from 'sonner';
 import { Wifi, WifiOff } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { apiFetch } from '@/lib/api/fetch';
@@ -207,7 +206,7 @@ export function RealtimeMessageThread({
       setMessages((prev) => [...prev, optimisticMessage]);
     } catch (error) {
       dispatchClientErrorDiagnostic('messages.thread.send_failed', error);
-      toast.error('Failed to send message. Please try again.');
+      throw error;
     }
   };
 

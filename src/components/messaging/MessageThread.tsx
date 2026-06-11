@@ -11,8 +11,9 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
-import { ArrowLeft, Check, CheckCheck, Loader2, Send } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Check, CheckCheck, Loader2, Send } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -39,7 +40,7 @@ interface MessageThreadProps {
   otherPartyAvatar?: string;
   stage: 'masked' | 'revealed';
   isTyping?: boolean;
-  onSendMessage: (content: string) => void;
+  onSendMessage: (content: string) => void | Promise<void>;
   onBack?: () => void;
 }
 
@@ -58,6 +59,7 @@ export function MessageThread({
 }: MessageThreadProps) {
   const [messageText, setMessageText] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -90,6 +92,11 @@ export function MessageThread({
     e.preventDefault();
   };
 
+  const handleMessageTextChange = (value: string) => {
+    setMessageText(value);
+    setSendError(null);
+  };
+
   // Handle send
   const handleSend = async () => {
     const trimmedText = messageText.trim();
@@ -105,15 +112,16 @@ export function MessageThread({
     }
 
     setIsSending(true);
+    setSendError(null);
     try {
       await onSendMessage(trimmedText);
       setMessageText('');
     } catch (error) {
-      toast({
-        title: 'Failed to send',
-        description: 'Please try again.',
-        variant: 'destructive',
-      });
+      setSendError(
+        error instanceof Error && error.message
+          ? error.message
+          : 'Message could not be sent. Please try again.'
+      );
     } finally {
       setIsSending(false);
     }
@@ -305,10 +313,18 @@ export function MessageThread({
         {/* Compose */}
         <div className="border-t bg-background p-4 pb-5 md:pb-4">
           <div className="space-y-2">
+            {sendError ? (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Message not sent</AlertTitle>
+                <AlertDescription>{sendError}</AlertDescription>
+              </Alert>
+            ) : null}
+
             <div className="flex gap-2">
               <Textarea
                 value={messageText}
-                onChange={(e) => setMessageText(e.target.value)}
+                onChange={(e) => handleMessageTextChange(e.target.value)}
                 onPaste={handlePaste}
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
@@ -319,10 +335,12 @@ export function MessageThread({
                 disabled={isSending}
               />
               <Button
+                type="button"
                 onClick={handleSend}
                 disabled={
                   !messageText.trim() || isSending || messageText.length > MAX_MESSAGE_LENGTH
                 }
+                aria-label={isSending ? 'Sending message' : 'Send message'}
                 className="bg-proofound-forest hover:bg-proofound-forest/90 h-auto px-4"
               >
                 {isSending ? (
