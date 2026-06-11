@@ -19,6 +19,16 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { apiFetch } from '@/lib/api/fetch';
 import type {
@@ -168,6 +178,9 @@ export function VerificationsClient({
   const [respondAction, setRespondAction] = useState<'accept' | 'decline'>('accept');
   const [bundleDialogOpen, setBundleDialogOpen] = useState(false);
   const [bundleRequestId, setBundleRequestId] = useState<string | null>(null);
+  const [deleteConfirmRequest, setDeleteConfirmRequest] = useState<VerificationRequest | null>(
+    null
+  );
   const [composerOpen, setComposerOpen] = useState(false);
   const [deletingRequestIds, setDeletingRequestIds] = useState<Record<string, boolean>>({});
   const [resendingRequestIds, setResendingRequestIds] = useState<Record<string, boolean>>({});
@@ -257,7 +270,7 @@ export function VerificationsClient({
     }
   };
 
-  const handleDeleteSentRequest = async (request: VerificationRequest) => {
+  const openDeleteSentRequestDialog = (request: VerificationRequest) => {
     if (!canDeleteSentRequest(request)) {
       return;
     }
@@ -269,6 +282,14 @@ export function VerificationsClient({
 
     if (request.subjectType === 'skill' && request.bundleId) {
       openBundleCancelDialog(request.bundleId);
+      return;
+    }
+
+    setDeleteConfirmRequest(request);
+  };
+
+  const handleDeleteSentRequest = async (request: VerificationRequest) => {
+    if (!canDeleteSentRequest(request)) {
       return;
     }
 
@@ -292,11 +313,13 @@ export function VerificationsClient({
 
       if (response.ok) {
         setSentRequests((prev) => prev.filter((item) => item.id !== request.id));
+        setDeleteConfirmRequest(null);
         toast.success('Verification request deleted.');
         return;
       }
 
       if (response.status === 409 && body.code === 'BUNDLED_REQUEST' && body.customRequestId) {
+        setDeleteConfirmRequest(null);
         openBundleCancelDialog(body.customRequestId);
         return;
       }
@@ -704,7 +727,7 @@ export function VerificationsClient({
                 size="sm"
                 variant="outline"
                 onClick={() => {
-                  void handleDeleteSentRequest(request);
+                  openDeleteSentRequestDialog(request);
                 }}
                 disabled={Boolean(deletingRequestIds[request.id])}
                 className="border-[#C76B4A] text-[#8B4A36] hover:bg-[#FFF0F0] text-xs px-3 h-8"
@@ -961,6 +984,54 @@ export function VerificationsClient({
         requestId={bundleRequestId}
         onCanceled={handleBundleItemsCanceled}
       />
+      <AlertDialog
+        open={Boolean(deleteConfirmRequest)}
+        onOpenChange={(open) => {
+          if (!open && !deleteConfirmRequest?.id) {
+            setDeleteConfirmRequest(null);
+            return;
+          }
+          if (!open && !deletingRequestIds[deleteConfirmRequest?.id ?? '']) {
+            setDeleteConfirmRequest(null);
+          }
+        }}
+      >
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete verification request?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes the pending request sent to{' '}
+              <span className="font-medium text-proofound-charcoal">
+                {deleteConfirmRequest?.verifierEmail ?? 'this verifier'}
+              </span>{' '}
+              for {deleteConfirmRequest ? getRequestSubject(deleteConfirmRequest) : 'this proof'}.
+              Accepted verification records are not changed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              disabled={Boolean(deletingRequestIds[deleteConfirmRequest?.id ?? ''])}
+            >
+              Keep request
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-white hover:bg-destructive/90"
+              disabled={Boolean(deletingRequestIds[deleteConfirmRequest?.id ?? ''])}
+              onClick={(event) => {
+                if (!deleteConfirmRequest) {
+                  return;
+                }
+                event.preventDefault();
+                void handleDeleteSentRequest(deleteConfirmRequest);
+              }}
+            >
+              {deletingRequestIds[deleteConfirmRequest?.id ?? '']
+                ? 'Deleting request...'
+                : 'Delete request'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <VerificationRequestComposerDialog
         open={composerOpen}
         onOpenChange={setComposerOpen}

@@ -528,7 +528,27 @@ describe('VerificationsClient', () => {
     fireEvent.click(sentTab);
     fireEvent.keyDown(sentTab, { key: 'Enter' });
     await waitFor(() => expect(screen.getByText('mentor@company.com')).toBeInTheDocument());
+
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    const deleteDialog = screen.getByRole('alertdialog');
+
+    expect(
+      within(deleteDialog).getByRole('heading', { name: 'Delete verification request?' })
+    ).toBeInTheDocument();
+    expect(within(deleteDialog).getByText(/mentor@company.com/)).toBeInTheDocument();
+    expect(
+      within(deleteDialog).getByText(/Accepted verification records are not changed/i)
+    ).toBeInTheDocument();
+    expect(apiFetchMock).not.toHaveBeenCalled();
+
+    fireEvent.click(within(deleteDialog).getByRole('button', { name: 'Keep request' }));
+    expect(apiFetchMock).not.toHaveBeenCalled();
+    expect(screen.getByText('mentor@company.com')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    fireEvent.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete request' })
+    );
 
     await waitFor(() =>
       expect(apiFetchMock).toHaveBeenCalledWith(
