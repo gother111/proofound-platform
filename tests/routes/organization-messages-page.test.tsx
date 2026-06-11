@@ -44,8 +44,19 @@ vi.mock('@/components/messaging/ConversationList', () => ({
 }));
 
 vi.mock('@/components/messaging/RealtimeMessageThread', () => ({
-  RealtimeMessageThread: ({ conversationId }: { conversationId: string }) => (
-    <div data-testid="message-thread">{conversationId}</div>
+  RealtimeMessageThread: ({
+    conversationId,
+    initialMessages,
+  }: {
+    conversationId: string;
+    initialMessages: Array<{ content: string }>;
+  }) => (
+    <div data-testid="message-thread">
+      <p>{conversationId}</p>
+      {initialMessages.map((message) => (
+        <p key={message.content}>{message.content}</p>
+      ))}
+    </div>
   ),
 }));
 
@@ -152,6 +163,77 @@ describe('organization messages page', () => {
     await waitFor(() => {
       expect(screen.getByText('Submission Retry')).toBeInTheDocument();
     });
+  });
+
+  it('shows a recoverable selected organization thread load failure', async () => {
+    searchParamsValue = 'conversation=conversation-a';
+    let messageRequests = 0;
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        if (url === '/api/conversations') {
+          return {
+            ok: true,
+            json: async () => ({
+              conversations: [
+                {
+                  id: 'conversation-a',
+                  otherParty: { displayName: 'Submission A', displayAvatar: null },
+                  createdAt: '2026-01-01T00:00:00.000Z',
+                  matchId: 'match-a',
+                  assignmentRole: 'Evidence systems consultant',
+                  stage: 'masked',
+                },
+              ],
+            }),
+          };
+        }
+
+        if (url === '/api/conversations/conversation-a/messages') {
+          messageRequests += 1;
+          if (messageRequests === 1) {
+            return {
+              ok: false,
+              json: async () => ({ error: 'temporarily unavailable' }),
+            };
+          }
+
+          return {
+            ok: true,
+            json: async () => ({
+              messages: [
+                {
+                  id: 'message-1',
+                  senderId: 'user-1',
+                  content: 'Recovered org proof note',
+                  sentAt: '2026-01-01T00:05:00.000Z',
+                },
+              ],
+            }),
+          };
+        }
+
+        throw new Error(`Unexpected fetch URL: ${url}`);
+      }) as any
+    );
+
+    render(<OrgMessagesClient currentUserId="user-1" />);
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Thread messages could not load');
+    expect(alert).toHaveTextContent(
+      'This assignment thread did not finish loading. Messages, reveal requests, and review context are still safe; retry before replying.'
+    );
+    expect(screen.queryByTestId('message-thread')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retry thread messages' }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('message-thread')).toHaveTextContent('conversation-a');
+    });
+    expect(screen.getByTestId('message-thread')).toHaveTextContent('Recovered org proof note');
+    expect(messageRequests).toBe(2);
   });
 
   it('uses the server org-member persona as the current user source', async () => {

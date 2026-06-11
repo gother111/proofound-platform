@@ -12,6 +12,7 @@
 import { useState, useEffect, Suspense, useCallback, type ComponentType } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ConversationList, type Conversation } from '@/components/messaging/ConversationList';
+import { MessageThreadLoadFailure } from '@/components/messaging/MessageThreadLoadFailure';
 import type { RealtimeMessageThreadProps } from '@/components/messaging/RealtimeMessageThread';
 import { type Message } from '@/components/messaging/MessageThread';
 import { Lock, MessageSquare } from 'lucide-react';
@@ -33,6 +34,7 @@ function MessagesPageContent() {
   const [isLoadingConversations, setIsLoadingConversations] = useState(true);
   const [conversationLoadError, setConversationLoadError] = useState<string | null>(null);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [messageLoadError, setMessageLoadError] = useState<string | null>(null);
   const [hasAutoSelected, setHasAutoSelected] = useState(false);
   const [RealtimeThread, setRealtimeThread] =
     useState<ComponentType<RealtimeMessageThreadProps> | null>(null);
@@ -93,26 +95,34 @@ function MessagesPageContent() {
   const loadMessages = useCallback(
     async (conversationId: string) => {
       setIsLoadingMessages(true);
+      setMessageLoadError(null);
+      setMessages([]);
       try {
         const response = await fetch(`/api/conversations/${conversationId}/messages`);
-        if (response.ok) {
-          const data = await response.json();
-          // Transform messages to have Date objects for RealtimeMessageThread
-          const transformedMessages = (data.messages || []).map((msg: any) => ({
-            id: msg.id,
-            senderId:
-              msg.senderId ||
-              msg.sender_id ||
-              msg.sender?.id ||
-              (msg.isOwnMessage ? currentUserId : 'unknown'),
-            content: msg.content,
-            sentAt: new Date(msg.sentAt || msg.sent_at),
-            readAt: msg.readAt || msg.read_at ? new Date(msg.readAt || msg.read_at) : undefined,
-          }));
-          setMessages(transformedMessages);
+        if (!response.ok) {
+          throw new Error('Thread message request failed');
         }
+
+        const data = await response.json();
+        // Transform messages to have Date objects for RealtimeMessageThread
+        const transformedMessages = (data.messages || []).map((msg: any) => ({
+          id: msg.id,
+          senderId:
+            msg.senderId ||
+            msg.sender_id ||
+            msg.sender?.id ||
+            (msg.isOwnMessage ? currentUserId : 'unknown'),
+          content: msg.content,
+          sentAt: new Date(msg.sentAt || msg.sent_at),
+          readAt: msg.readAt || msg.read_at ? new Date(msg.readAt || msg.read_at) : undefined,
+        }));
+        setMessages(transformedMessages);
       } catch (error) {
         dispatchClientErrorDiagnostic('messages.individual.thread_load_failed', error);
+        setMessages([]);
+        setMessageLoadError(
+          'This thread did not finish loading. Your messages, reveal requests, and privacy state are still safe; retry before replying.'
+        );
       } finally {
         setIsLoadingMessages(false);
       }
@@ -184,8 +194,18 @@ function MessagesPageContent() {
 
   const selectedConversation = conversations.find((c) => c.id === selectedConversationId);
 
+  const handleSelectConversation = (conversationId: string) => {
+    if (conversationId !== selectedConversationId) {
+      setMessages([]);
+      setMessageLoadError(null);
+    }
+    setSelectedConversationId(conversationId);
+  };
+
   const handleBackToConversationList = () => {
     setSelectedConversationId(undefined);
+    setMessages([]);
+    setMessageLoadError(null);
     router.replace(pathname ?? '/app/i/messages');
   };
 
@@ -208,7 +228,7 @@ function MessagesPageContent() {
         <ConversationList
           conversations={conversations}
           selectedId={selectedConversationId}
-          onSelect={setSelectedConversationId}
+          onSelect={handleSelectConversation}
           isLoading={isLoadingConversations}
           mode="individual"
           loadError={conversationLoadError}
@@ -224,7 +244,18 @@ function MessagesPageContent() {
           !selectedConversationId ? 'hidden md:flex md:items-center md:justify-center' : 'flex'
         }`}
       >
-        {selectedConversation && RealtimeThread ? (
+        {selectedConversation && messageLoadError ? (
+          <MessageThreadLoadFailure
+            description={messageLoadError}
+            isRetrying={isLoadingMessages}
+            onBack={handleBackToConversationList}
+            onRetry={() => {
+              void loadMessages(selectedConversation.id);
+            }}
+          />
+        ) : selectedConversation && (isLoadingMessages || !RealtimeThread) ? (
+          <LoadingIndividualMessages />
+        ) : selectedConversation && RealtimeThread ? (
           <RealtimeThread
             conversationId={selectedConversation.id}
             initialMessages={messages}
@@ -235,8 +266,6 @@ function MessagesPageContent() {
             onSendMessage={handleSendMessage}
             onBack={handleBackToConversationList}
           />
-        ) : selectedConversation ? (
-          <LoadingIndividualMessages />
         ) : (
           <div className="mx-6 max-w-md rounded-2xl border border-proofound-stone/70 bg-white/60 p-8 text-center shadow-sm">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-proofound-parchment text-proofound-forest">

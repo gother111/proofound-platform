@@ -23,6 +23,23 @@ vi.mock('date-fns', () => ({
   formatDistanceToNow: () => '15 minutes ago',
 }));
 
+vi.mock('@/components/messaging/RealtimeMessageThread', () => ({
+  RealtimeMessageThread: ({
+    conversationId,
+    initialMessages,
+  }: {
+    conversationId: string;
+    initialMessages: Array<{ content: string }>;
+  }) => (
+    <div data-testid="message-thread">
+      <p>{conversationId}</p>
+      {initialMessages.map((message) => (
+        <p key={message.content}>{message.content}</p>
+      ))}
+    </div>
+  ),
+}));
+
 import { MessagesClient } from '@/app/app/i/messages/MessagesClient';
 
 describe('individual messages page', () => {
@@ -97,5 +114,78 @@ describe('individual messages page', () => {
       expect(fetch).toHaveBeenCalledTimes(2);
     });
     expect(await screen.findByText('No conversations yet')).toBeInTheDocument();
+  });
+
+  it('shows a recoverable selected-thread load failure instead of an empty message thread', async () => {
+    let messageRequests = 0;
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        if (url === '/api/conversations') {
+          return {
+            ok: true,
+            json: async () => ({
+              conversations: [
+                {
+                  id: 'conversation-a',
+                  otherParty: { displayName: 'Organization A', displayAvatar: null },
+                  lastMessage: { content: 'Proof-corridor update' },
+                  lastMessageAt: '2026-01-01T00:00:00.000Z',
+                  matchId: 'match-a',
+                  assignmentRole: 'Evidence systems consultant',
+                  stage: 'masked',
+                },
+              ],
+            }),
+          };
+        }
+
+        if (url === '/api/conversations/conversation-a/messages') {
+          messageRequests += 1;
+          if (messageRequests === 1) {
+            return {
+              ok: false,
+              json: async () => ({ error: 'temporarily unavailable' }),
+            };
+          }
+
+          return {
+            ok: true,
+            json: async () => ({
+              messages: [
+                {
+                  id: 'message-1',
+                  senderId: 'user-1',
+                  content: 'Recovered proof update',
+                  sentAt: '2026-01-01T00:05:00.000Z',
+                },
+              ],
+            }),
+          };
+        }
+
+        throw new Error(`Unexpected fetch URL: ${url}`);
+      }) as any
+    );
+
+    render(<MessagesClient />);
+
+    fireEvent.click(await screen.findByRole('button', { name: /Organization A/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Thread messages could not load');
+    expect(alert).toHaveTextContent(
+      'This thread did not finish loading. Your messages, reveal requests, and privacy state are still safe; retry before replying.'
+    );
+    expect(screen.queryByTestId('message-thread')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retry thread messages' }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('message-thread')).toHaveTextContent('conversation-a');
+    });
+    expect(screen.getByTestId('message-thread')).toHaveTextContent('Recovered proof update');
+    expect(messageRequests).toBe(2);
   });
 });
