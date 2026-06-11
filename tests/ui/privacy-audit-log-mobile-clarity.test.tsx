@@ -1,6 +1,6 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AuditLogTable } from '@/components/privacy/AuditLogTable';
 import { apiFetch } from '@/lib/api/fetch';
@@ -12,6 +12,10 @@ vi.mock('@/lib/api/fetch', () => ({
 const apiFetchMock = vi.mocked(apiFetch);
 
 describe('privacy audit log mobile clarity', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('renders user-facing audit events as mobile cards instead of a cramped table', async () => {
     apiFetchMock.mockResolvedValueOnce({
       ok: true,
@@ -45,5 +49,40 @@ describe('privacy audit log mobile clarity', () => {
     expect(mobileCard.parentElement).toHaveClass('md:hidden');
     expect(screen.getAllByText('Persona').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Individual').length).toBeGreaterThan(0);
+  });
+
+  it('keeps account history load failures separate from the empty history state', async () => {
+    apiFetchMock.mockRejectedValueOnce(new Error('network unavailable')).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        events: [
+          {
+            id: 'event-1',
+            timestamp: '2026-05-16T01:30:00.000Z',
+            eventType: 'profile_created',
+            eventDescription: 'Created profile',
+            ipHash: 'protected...',
+          },
+        ],
+        hasMore: false,
+      }),
+    } as Response);
+
+    render(<AuditLogTable />);
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Account history could not load');
+    expect(alert).toHaveTextContent('Your privacy records are still safe');
+    expect(screen.queryByText('No activity recorded yet')).not.toBeInTheDocument();
+
+    fireEvent.click(within(alert).getByRole('button', { name: 'Retry account history' }));
+
+    await waitFor(() => {
+      expect(screen.getAllByText('Created profile').length).toBeGreaterThan(0);
+    });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(apiFetchMock).toHaveBeenCalledTimes(2);
+    expect(apiFetchMock).toHaveBeenNthCalledWith(1, '/api/user/audit-log?offset=0&limit=20');
+    expect(apiFetchMock).toHaveBeenNthCalledWith(2, '/api/user/audit-log?offset=0&limit=20');
   });
 });

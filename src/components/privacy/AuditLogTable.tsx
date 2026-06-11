@@ -9,7 +9,7 @@
  * Reference: DATA_SECURITY_PRIVACY_ARCHITECTURE.md Section 13.3
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,7 +21,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, Activity } from 'lucide-react';
+import { AlertTriangle, ChevronLeft, ChevronRight, Activity, RefreshCcw } from 'lucide-react';
 import { format } from 'date-fns';
 import { apiFetch } from '@/lib/api/fetch';
 import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
@@ -48,30 +48,45 @@ export function AuditLogTable({ title = 'Account history' }: AuditLogTableProps)
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const requestIdRef = useRef(0);
   const pageSize = 20;
 
-  useEffect(() => {
-    fetchAuditLog();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page]);
+  const fetchAuditLog = useCallback(async () => {
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
 
-  const fetchAuditLog = async () => {
     try {
       setLoading(true);
+      setLoadError(null);
 
       const offset = (page - 1) * pageSize;
       const response = await apiFetch(`/api/user/audit-log?offset=${offset}&limit=${pageSize}`);
       if (!response.ok) throw new Error('Failed to fetch account history');
 
       const data = await response.json();
+      if (requestId !== requestIdRef.current) return;
+
       setLogs(data.events || []);
       setHasMore(data.hasMore || false);
     } catch (error) {
+      if (requestId !== requestIdRef.current) return;
+
       dispatchClientErrorDiagnostic('privacy.audit_log.load_failed', error);
+      setLoadError(
+        'Account history could not load. Your privacy records are still safe; retry this section to refresh recent activity.'
+      );
+      setHasMore(false);
     } finally {
-      setLoading(false);
+      if (requestId === requestIdRef.current) {
+        setLoading(false);
+      }
     }
-  };
+  }, [page]);
+
+  useEffect(() => {
+    void fetchAuditLog();
+  }, [fetchAuditLog]);
 
   const getEventBadgeColor = (eventType: string) => {
     if (eventType.includes('login') || eventType.includes('auth')) {
@@ -183,98 +198,129 @@ export function AuditLogTable({ title = 'Account history' }: AuditLogTableProps)
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {logs.length === 0 ? (
+        {loadError ? (
+          <div
+            className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-100"
+            role="alert"
+          >
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex gap-2">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                <p>{loadError}</p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => void fetchAuditLog()}
+                disabled={loading}
+                className="min-h-10 w-full gap-2 bg-white/70 sm:w-auto"
+              >
+                <RefreshCcw className="h-4 w-4" aria-hidden="true" />
+                Retry account history
+              </Button>
+            </div>
+          </div>
+        ) : null}
+
+        {logs.length === 0 && !loadError ? (
           <p className="text-center text-muted-foreground py-8">No activity recorded yet</p>
         ) : (
           <>
-            <div className="space-y-3 md:hidden">
-              {logs.map((log) => {
-                const eventType = normalizeEventType(log);
-                return (
-                  <article key={log.id} className="rounded-xl border bg-white p-4">
-                    <div className="flex flex-col gap-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge className={getEventBadgeColor(eventType)} variant="secondary">
-                          {formatEventType(eventType)}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {formatTimestamp(log.timestamp)}
-                        </span>
-                      </div>
-                      <p className="text-sm font-medium text-foreground">
-                        {normalizeEventDescription(log)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Access detail: {log.ipHash ? 'Protected' : 'Not recorded'}
-                      </p>
-                      {renderMetadataDetails(log)}
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-
-            <div className="hidden overflow-x-auto rounded-md border md:block">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[200px]">Date and time</TableHead>
-                    <TableHead>Event</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead className="w-[150px]">Access detail</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {logs.map((log) => {
-                    const eventType = normalizeEventType(log);
-                    return (
-                      <TableRow key={log.id}>
-                        <TableCell className="font-mono text-xs">
-                          {formatTimestamp(log.timestamp)}
-                        </TableCell>
-                        <TableCell>
+            {logs.length > 0 ? (
+              <div className="space-y-3 md:hidden">
+                {logs.map((log) => {
+                  const eventType = normalizeEventType(log);
+                  return (
+                    <article key={log.id} className="rounded-xl border bg-white p-4">
+                      <div className="flex flex-col gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <Badge className={getEventBadgeColor(eventType)} variant="secondary">
                             {formatEventType(eventType)}
                           </Badge>
-                        </TableCell>
-                        <TableCell className="max-w-md">
-                          <span className="text-sm">{normalizeEventDescription(log)}</span>
-                          {renderMetadataDetails(log)}
-                        </TableCell>
-                        <TableCell className="text-xs text-muted-foreground">
-                          {log.ipHash ? 'Protected' : 'Not recorded'}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
+                          <span className="text-xs text-muted-foreground">
+                            {formatTimestamp(log.timestamp)}
+                          </span>
+                        </div>
+                        <p className="text-sm font-medium text-foreground">
+                          {normalizeEventDescription(log)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Access detail: {log.ipHash ? 'Protected' : 'Not recorded'}
+                        </p>
+                        {renderMetadataDetails(log)}
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            ) : null}
+
+            {logs.length > 0 ? (
+              <div className="hidden overflow-x-auto rounded-md border md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[200px]">Date and time</TableHead>
+                      <TableHead>Event</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead className="w-[150px]">Access detail</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {logs.map((log) => {
+                      const eventType = normalizeEventType(log);
+                      return (
+                        <TableRow key={log.id}>
+                          <TableCell className="font-mono text-xs">
+                            {formatTimestamp(log.timestamp)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={getEventBadgeColor(eventType)} variant="secondary">
+                              {formatEventType(eventType)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="max-w-md">
+                            <span className="text-sm">{normalizeEventDescription(log)}</span>
+                            {renderMetadataDetails(log)}
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {log.ipHash ? 'Protected' : 'Not recorded'}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : null}
 
             {/* Pagination */}
-            <div className="flex items-center justify-between mt-4">
-              <div className="text-sm text-muted-foreground">Showing page {page} of activity</div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page === 1 || loading}
-                >
-                  <ChevronLeft className="h-4 w-4 mr-1" />
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => p + 1)}
-                  disabled={!hasMore || loading}
-                >
-                  Next
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
+            {logs.length > 0 ? (
+              <div className="flex items-center justify-between mt-4">
+                <div className="text-sm text-muted-foreground">Showing page {page} of activity</div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1 || loading}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1" />
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage((p) => p + 1)}
+                    disabled={!hasMore || loading}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
               </div>
-            </div>
+            ) : null}
 
             <div className="mt-4 rounded-lg border bg-muted/50 p-3 text-xs text-muted-foreground">
               <p className="font-semibold mb-1">Privacy note:</p>
