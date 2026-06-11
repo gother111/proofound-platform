@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { Loader2, MailCheck, Send } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { AlertTriangle, Loader2, MailCheck, RefreshCcw, Send } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
@@ -65,6 +65,17 @@ const GROUP_LABELS: Record<ArtifactType, string> = {
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+function emptyArtifactsByGroup(): Record<ArtifactType, Artifact[]> {
+  return {
+    skill: [],
+    experience: [],
+    education: [],
+    impact_story: [],
+    project: [],
+    volunteering: [],
+  };
+}
+
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -73,15 +84,10 @@ type Props = {
 
 export function CustomVerificationRequestDialog({ open, onOpenChange, onCreated }: Props) {
   const [loadingArtifacts, setLoadingArtifacts] = useState(false);
+  const [artifactLoadError, setArtifactLoadError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [artifactsByGroup, setArtifactsByGroup] = useState<Record<ArtifactType, Artifact[]>>({
-    skill: [],
-    experience: [],
-    education: [],
-    impact_story: [],
-    project: [],
-    volunteering: [],
-  });
+  const [artifactsByGroup, setArtifactsByGroup] =
+    useState<Record<ArtifactType, Artifact[]>>(emptyArtifactsByGroup);
 
   const [verifierEmail, setVerifierEmail] = useState('');
   const [relationship, setRelationship] =
@@ -94,55 +100,41 @@ export function CustomVerificationRequestDialog({ open, onOpenChange, onCreated 
 
   const selectedCount = useMemo(() => Object.keys(selectedArtifacts).length, [selectedArtifacts]);
 
-  useEffect(() => {
+  const loadArtifacts = useCallback(async () => {
     if (!open) {
       return;
     }
 
-    let active = true;
+    setLoadingArtifacts(true);
+    setArtifactLoadError(null);
 
-    const loadArtifacts = async () => {
-      setLoadingArtifacts(true);
-      try {
-        const response = await fetch('/api/verification/requests/custom/artifacts', {
-          cache: 'no-store',
-        });
+    try {
+      const response = await fetch('/api/verification/requests/custom/artifacts', {
+        cache: 'no-store',
+      });
 
-        if (!response.ok) {
-          throw new Error('Could not load artifacts');
-        }
-
-        const data = (await response.json()) as ArtifactsResponse;
-        if (!active) {
-          return;
-        }
-
-        setArtifactsByGroup(
-          data.artifacts || {
-            skill: [],
-            experience: [],
-            education: [],
-            impact_story: [],
-            project: [],
-            volunteering: [],
-          }
-        );
-      } catch (error) {
-        dispatchClientErrorDiagnostic('verifications.custom_dialog.artifacts_load_failed', error);
-        toast.error('Could not load unverified artifacts. Please try again.');
-      } finally {
-        if (active) {
-          setLoadingArtifacts(false);
-        }
+      if (!response.ok) {
+        throw new Error('Could not load artifacts');
       }
-    };
 
-    loadArtifacts();
-
-    return () => {
-      active = false;
-    };
+      const data = (await response.json()) as ArtifactsResponse;
+      setArtifactsByGroup(data.artifacts || emptyArtifactsByGroup());
+    } catch (error) {
+      dispatchClientErrorDiagnostic('verifications.custom_dialog.artifacts_load_failed', error);
+      setArtifactsByGroup(emptyArtifactsByGroup());
+      setSelectedArtifacts({});
+      setArtifactLoadError(
+        'Your verification drafts are still safe. Retry artifact loading before sending this request.'
+      );
+      toast.error('Could not load unverified artifacts. Please try again.');
+    } finally {
+      setLoadingArtifacts(false);
+    }
   }, [open]);
+
+  useEffect(() => {
+    void loadArtifacts();
+  }, [loadArtifacts]);
 
   useEffect(() => {
     if (!open) {
@@ -215,6 +207,7 @@ export function CustomVerificationRequestDialog({ open, onOpenChange, onCreated 
     setSelectedArtifacts({});
     setEmailHint(null);
     setLoadingHint(false);
+    setArtifactLoadError(null);
   };
 
   const handleSubmit = async () => {
@@ -350,6 +343,30 @@ export function CustomVerificationRequestDialog({ open, onOpenChange, onCreated 
                 >
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Loading artifacts...
+                </div>
+              ) : artifactLoadError ? (
+                <div className="py-8 text-center" role="alert">
+                  <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[#fff1d6] text-[#8a5b00]">
+                    <AlertTriangle className="h-4 w-4" aria-hidden="true" />
+                  </div>
+                  <p className="text-sm font-medium" style={{ color: '#2D3330' }}>
+                    Verification artifacts could not load
+                  </p>
+                  <p
+                    className="mx-auto mt-2 max-w-sm text-xs leading-5"
+                    style={{ color: '#6B7470' }}
+                  >
+                    {artifactLoadError}
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => void loadArtifacts()}
+                    className="mt-4 min-h-9 rounded-full border-proofound-stone/85 bg-white px-3 text-xs text-proofound-forest hover:border-proofound-forest hover:bg-proofound-parchment/30"
+                  >
+                    <RefreshCcw className="mr-2 h-3.5 w-3.5" aria-hidden="true" />
+                    Retry artifacts
+                  </Button>
                 </div>
               ) : allArtifacts.length === 0 ? (
                 <div className="py-8 text-center text-sm" style={{ color: '#6B7470' }}>

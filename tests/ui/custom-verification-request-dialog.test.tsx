@@ -56,6 +56,50 @@ describe('CustomVerificationRequestDialog', () => {
     }) as any;
   });
 
+  it('shows a retryable artifact load failure instead of the empty artifact state', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: 'artifact loader unavailable' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          artifacts: {
+            skill: [{ id: 'skill-1', type: 'skill', label: 'TypeScript' }],
+            experience: [],
+            education: [],
+            impact_story: [],
+            project: [],
+            volunteering: [],
+          },
+          total: 1,
+        }),
+      });
+
+    global.fetch = fetchMock as any;
+
+    render(<CustomVerificationRequestDialog open onOpenChange={vi.fn()} />);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Verification artifacts could not load'
+    );
+    expect(screen.getByText(/Your verification drafts are still safe/i)).toBeInTheDocument();
+    expect(
+      screen.queryByText('No unverified artifacts are currently available.')
+    ).not.toBeInTheDocument();
+    expect(errorToast).toHaveBeenCalledWith(
+      'Could not load unverified artifacts. Please try again.'
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Retry artifacts/i }));
+
+    expect(await screen.findByText('TypeScript')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
   it('loads artifacts, shows email hint, and submits selected artifacts', async () => {
     const onCreated = vi.fn();
     render(<CustomVerificationRequestDialog open onOpenChange={vi.fn()} onCreated={onCreated} />);
