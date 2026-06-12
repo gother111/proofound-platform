@@ -212,6 +212,11 @@ export function PrivacySettingsClient() {
               userId="current"
               initialVisibility={initialVisibility || {}}
               onSave={handleSave}
+              controlsDisabledReason={
+                visibilityLoadError
+                  ? 'Saved privacy preferences did not load, so Proofound is showing safe defaults here. Retry privacy preferences before editing to avoid overwriting saved visibility choices.'
+                  : null
+              }
             />
           </section>
 

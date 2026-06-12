@@ -43,6 +43,7 @@ interface IndividualFieldVisibilityControlsProps {
   userId: string;
   initialVisibility: Partial<IndividualFieldVisibility>;
   onSave: (visibility: IndividualFieldVisibility) => Promise<void>;
+  controlsDisabledReason?: string | null;
 }
 
 const VISIBILITY_OPTIONS = [
@@ -140,6 +141,7 @@ export function IndividualFieldVisibilityControls({
   userId,
   initialVisibility,
   onSave,
+  controlsDisabledReason,
 }: IndividualFieldVisibilityControlsProps) {
   const [visibility, setVisibility] = useState<IndividualFieldVisibility>({
     displayName: initialVisibility.displayName || 'public',
@@ -160,11 +162,13 @@ export function IndividualFieldVisibilityControls({
     message: string;
     description: string;
   } | null>(null);
+  const controlsDisabled = Boolean(controlsDisabledReason);
 
   const handleFieldChange = (
     field: keyof IndividualFieldVisibility,
     value: IndividualVisibilityLevel
   ) => {
+    if (controlsDisabled) return;
     setVisibility((prev) => ({ ...prev, [field]: value }));
     setHasChanges(true);
     setSaveFeedback(null);
@@ -209,6 +213,12 @@ export function IndividualFieldVisibilityControls({
   const getVisibilityLabel = (level: string) =>
     VISIBILITY_OPTIONS.find((option) => option.value === level)?.label ?? 'Not set';
 
+  const saveStatusMessage = controlsDisabled
+    ? 'Retry privacy preferences before editing. Saved choices were not loaded.'
+    : hasChanges
+      ? 'You have unsaved changes'
+      : 'All changes saved';
+
   return (
     <Card className="border-proofound-stone">
       <CardHeader>
@@ -236,6 +246,14 @@ export function IndividualFieldVisibilityControls({
 
         {/* Field Controls */}
         <div className="space-y-4">
+          {controlsDisabledReason ? (
+            <Alert>
+              <Info className="h-4 w-4" />
+              <AlertTitle>Visibility controls are paused</AlertTitle>
+              <AlertDescription>{controlsDisabledReason}</AlertDescription>
+            </Alert>
+          ) : null}
+
           {FIELDS.map((field) => {
             const currentVisibility = visibility[field.key as keyof IndividualFieldVisibility];
             return (
@@ -267,6 +285,7 @@ export function IndividualFieldVisibilityControls({
                 <div className="flex w-full items-center gap-2 sm:w-auto">
                   <Select
                     value={currentVisibility}
+                    disabled={controlsDisabled}
                     onValueChange={(value) =>
                       handleFieldChange(
                         field.key as keyof IndividualFieldVisibility,
@@ -326,11 +345,11 @@ export function IndividualFieldVisibilityControls({
         {/* Save Button */}
         <div className="flex flex-col gap-3 border-t border-proofound-stone pt-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-muted-foreground" role="status" aria-live="polite">
-            {hasChanges ? 'You have unsaved changes' : 'All changes saved'}
+            {saveStatusMessage}
           </p>
           <Button
             onClick={handleSave}
-            disabled={!hasChanges || saving}
+            disabled={controlsDisabled || !hasChanges || saving}
             className="w-full bg-proofound-forest text-white hover:bg-proofound-forest/90 sm:w-auto"
           >
             {saving ? 'Saving...' : 'Save privacy settings'}

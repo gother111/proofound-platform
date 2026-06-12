@@ -18,17 +18,26 @@ vi.mock('@/lib/client-diagnostics', () => ({
 }));
 
 vi.mock('@/components/ui/select', () => ({
-  Select: ({ children, value, onValueChange }: any) => (
+  Select: ({ children, value, onValueChange, disabled }: any) => (
     <div data-current-value={value}>
       {React.Children.map(children, (child) =>
         React.isValidElement(child)
-          ? React.cloneElement(child as React.ReactElement<any>, { value, onValueChange })
+          ? React.cloneElement(child as React.ReactElement<any>, {
+              value,
+              onValueChange,
+              disabled,
+            })
           : child
       )}
     </div>
   ),
-  SelectTrigger: ({ id, value, onValueChange }: any) => (
-    <select id={id} value={value} onChange={(event) => onValueChange(event.target.value)}>
+  SelectTrigger: ({ id, value, onValueChange, disabled }: any) => (
+    <select
+      id={id}
+      value={value}
+      disabled={disabled}
+      onChange={(event) => onValueChange(event.target.value)}
+    >
       <option value="public">Public</option>
       <option value="network_only">Trusted review context</option>
       <option value="match_only">Assignment review</option>
@@ -126,5 +135,36 @@ describe('privacy visibility copy', () => {
     expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
       'The privacy service is unavailable.'
     );
+  });
+
+  it('pauses visibility edits when saved privacy preferences did not load', async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <IndividualFieldVisibilityControls
+        userId="user-1"
+        initialVisibility={{}}
+        onSave={onSave}
+        controlsDisabledReason="Saved privacy preferences did not load. Retry before editing."
+      />
+    );
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Visibility controls are paused');
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Saved privacy preferences did not load. Retry before editing.'
+    );
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Retry privacy preferences before editing. Saved choices were not loaded.'
+    );
+    expect(screen.getByLabelText('Location')).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Save privacy settings' })).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText('Location'), {
+      target: { value: 'private' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save privacy settings' }));
+
+    expect(onSave).not.toHaveBeenCalled();
+    expect(screen.queryByText('You have unsaved changes')).not.toBeInTheDocument();
   });
 });

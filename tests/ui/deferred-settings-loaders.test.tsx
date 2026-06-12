@@ -31,9 +31,18 @@ vi.mock('@/components/privacy/DeleteAccountSection', () => ({
 }));
 
 vi.mock('@/components/profile/IndividualFieldVisibilityControls', () => ({
-  IndividualFieldVisibilityControls: ({ initialVisibility }: { initialVisibility?: any }) => (
+  IndividualFieldVisibilityControls: ({
+    initialVisibility,
+    controlsDisabledReason,
+  }: {
+    initialVisibility?: any;
+    controlsDisabledReason?: string | null;
+  }) => (
     <div data-testid="visibility-controls">
       {initialVisibility?.profile ? 'Loaded profile preferences' : 'Safe visibility defaults'}
+      {controlsDisabledReason ? (
+        <p data-testid="visibility-controls-disabled-reason">{controlsDisabledReason}</p>
+      ) : null}
     </div>
   ),
 }));
@@ -81,6 +90,9 @@ describe('deferred settings loaders', () => {
       expect(alert).toHaveTextContent('safe defaults');
       expect(screen.getByTestId('visibility-controls')).toBeInTheDocument();
       expect(screen.getByText('Safe visibility defaults')).toBeInTheDocument();
+      expect(screen.getByTestId('visibility-controls-disabled-reason')).toHaveTextContent(
+        'Retry privacy preferences before editing'
+      );
 
       fireEvent.click(screen.getByRole('button', { name: /retry privacy preferences/i }));
 
@@ -88,6 +100,7 @@ describe('deferred settings loaders', () => {
         expect(screen.queryByRole('alert')).not.toBeInTheDocument();
       });
       expect(screen.getByText('Loaded profile preferences')).toBeInTheDocument();
+      expect(screen.queryByTestId('visibility-controls-disabled-reason')).not.toBeInTheDocument();
       expect(global.fetch).toHaveBeenCalledTimes(2);
     } finally {
       global.fetch = originalFetch;
@@ -113,6 +126,9 @@ describe('deferred settings loaders', () => {
       expect(alert).toHaveTextContent('safe defaults');
       expect(screen.queryByText(rawFailure)).not.toBeInTheDocument();
       expect(screen.getByText('Safe visibility defaults')).toBeInTheDocument();
+      expect(screen.getByTestId('visibility-controls-disabled-reason')).toHaveTextContent(
+        'Saved privacy preferences did not load'
+      );
 
       fireEvent.click(screen.getByRole('button', { name: /retry privacy preferences/i }));
 
@@ -120,6 +136,7 @@ describe('deferred settings loaders', () => {
         expect(screen.queryByRole('alert')).not.toBeInTheDocument();
       });
       expect(screen.getByText('Loaded profile preferences')).toBeInTheDocument();
+      expect(screen.queryByTestId('visibility-controls-disabled-reason')).not.toBeInTheDocument();
       expect(global.fetch).toHaveBeenCalledTimes(2);
     } finally {
       global.fetch = originalFetch;
