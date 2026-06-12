@@ -16,6 +16,9 @@ type CopyFeedback = {
   message: string;
 };
 
+const ORGANIZATION_SETUP_RETRY_MESSAGE =
+  'Organization setup could not be saved. Your details are still here; please try again.';
+
 export function OrganizationSetup() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -113,7 +116,7 @@ export function OrganizationSetup() {
       setIsLoading(false);
     } catch (err) {
       dispatchClientErrorDiagnostic('onboarding.organization.submit_failed', err);
-      setError('Something went wrong. Please try again.');
+      setError(ORGANIZATION_SETUP_RETRY_MESSAGE);
       setIsLoading(false);
     }
   }

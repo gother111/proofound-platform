@@ -100,7 +100,10 @@ describe('OrganizationSetup portfolio link feedback', () => {
 
     await submitOrganizationSetup();
 
-    expect(screen.getByRole('alert')).toHaveTextContent('Something went wrong. Please try again.');
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Organization setup could not be saved. Your details are still here; please try again.'
+    );
+    expect(screen.queryByText('Something went wrong. Please try again.')).not.toBeInTheDocument();
     expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
       'onboarding.organization.submit_failed',
       submitError
