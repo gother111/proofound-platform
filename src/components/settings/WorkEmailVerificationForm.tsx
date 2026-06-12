@@ -26,6 +26,23 @@ interface Organization {
   slug: string;
 }
 
+const WORK_EMAIL_SEND_RETRY_MESSAGE =
+  'Confirmation email could not be sent. Your work email and organization choice are still here; please try again.';
+
+function workEmailSendError(error?: string | null) {
+  const normalized = error?.trim();
+
+  if (
+    normalized &&
+    !/^Failed to (send verification email|save work email)\.?$/i.test(normalized) &&
+    !/^Internal server error\.?$/i.test(normalized)
+  ) {
+    return normalized;
+  }
+
+  return WORK_EMAIL_SEND_RETRY_MESSAGE;
+}
+
 export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFormProps) {
   const [workEmail, setWorkEmail] = useState('');
   const [selectedOrgId, setSelectedOrgId] = useState<string>('none');
@@ -138,10 +155,11 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
         }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => null);
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to send verification email');
+        setError(workEmailSendError(data?.error));
+        return;
       }
 
       setSuccess(true);
@@ -151,7 +169,8 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
         onSuccess();
       }, 3000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send verification email');
+      dispatchClientErrorDiagnostic('settings.work_email.send_failed', err);
+      setError(WORK_EMAIL_SEND_RETRY_MESSAGE);
     } finally {
       setSubmitting(false);
     }

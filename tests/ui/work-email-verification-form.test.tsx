@@ -137,4 +137,73 @@ describe('WorkEmailVerificationForm', () => {
     expect(vi.mocked(apiFetch)).toHaveBeenCalledTimes(1);
     expect(vi.mocked(apiFetch)).toHaveBeenCalledWith('/api/organizations');
   });
+
+  it('keeps work email retryable when confirmation send fails', async () => {
+    vi.mocked(apiFetch).mockImplementation(async (url: string) => {
+      if (url === '/api/organizations') {
+        return {
+          ok: true,
+          json: async () => ({ organizations: [] }),
+        } as Response;
+      }
+
+      if (url === '/api/verification/work-email/send') {
+        throw new Error('verification email service unavailable');
+      }
+
+      throw new Error(`Unexpected url: ${url}`);
+    });
+
+    render(<WorkEmailVerificationForm onSuccess={vi.fn()} />);
+
+    await screen.findByText(/No organizations are available/i);
+
+    fireEvent.change(screen.getByLabelText(/work email address/i), {
+      target: { value: 'person@acme.org' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /send confirmation email/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Confirmation email could not be sent. Your work email and organization choice are still here; please try again.'
+    );
+    expect(screen.getByLabelText(/work email address/i)).toHaveValue('person@acme.org');
+    expect(screen.getByRole('button', { name: /send confirmation email/i })).toBeEnabled();
+  });
+
+  it('uses retry copy for unreadable generic send errors without clearing the email', async () => {
+    vi.mocked(apiFetch).mockImplementation(async (url: string) => {
+      if (url === '/api/organizations') {
+        return {
+          ok: true,
+          json: async () => ({ organizations: [] }),
+        } as Response;
+      }
+
+      if (url === '/api/verification/work-email/send') {
+        return {
+          ok: false,
+          json: async () => {
+            throw new Error('invalid json');
+          },
+        } as unknown as Response;
+      }
+
+      throw new Error(`Unexpected url: ${url}`);
+    });
+
+    render(<WorkEmailVerificationForm onSuccess={vi.fn()} />);
+
+    await screen.findByText(/No organizations are available/i);
+
+    fireEvent.change(screen.getByLabelText(/work email address/i), {
+      target: { value: 'person@acme.org' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /send confirmation email/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Confirmation email could not be sent. Your work email and organization choice are still here; please try again.'
+    );
+    expect(screen.getByLabelText(/work email address/i)).toHaveValue('person@acme.org');
+    expect(screen.getByRole('button', { name: /send confirmation email/i })).toBeEnabled();
+  });
 });
