@@ -84,6 +84,10 @@ const ARTIFACT_KIND_OPTIONS: ImpactStoryArtifactKind[] = [
 ];
 const IMPACT_ARTIFACT_UPLOAD_RETRY_MESSAGE =
   'Artifact upload could not be saved. Your story details are still here; try again or choose another file.';
+const IMPACT_STORY_SAVE_RETRY_MESSAGE =
+  'Impact story could not be saved. Your story details are still here; review them and try again.';
+const IMPACT_STORY_VERIFICATION_RETRY_MESSAGE =
+  'Proof confirmation request could not be sent. Your story details are still here; review the verifier details and try again.';
 const IMPACT_ARTIFACT_SAFE_UPLOAD_ERRORS = new Set([
   'The uploaded file type did not match its file signature.',
   'The uploaded file is not allowed for this proof or document flow.',
@@ -556,11 +560,8 @@ export function ImpactStoryForm({
       setSubmitMessage('');
       onOpenChange(false);
     } catch (error) {
-      setSubmitMessage(
-        error instanceof Error && error.message
-          ? error.message
-          : 'Unable to save impact story. Please try again.'
-      );
+      dispatchClientErrorDiagnostic('profile.impact_story.save_failed', error);
+      setSubmitMessage(IMPACT_STORY_SAVE_RETRY_MESSAGE);
     } finally {
       setIsSaving(false);
     }
@@ -623,11 +624,8 @@ export function ImpactStoryForm({
           : 'Proof confirmation request sent. Status is now pending.'
       );
     } catch (error) {
-      setVerificationFeedbackMessage(
-        error instanceof Error && error.message
-          ? error.message
-          : 'Failed to send verification request. Please try again.'
-      );
+      dispatchClientErrorDiagnostic('profile.impact_story.verification_send_failed', error);
+      setVerificationFeedbackMessage(IMPACT_STORY_VERIFICATION_RETRY_MESSAGE);
     } finally {
       setIsSendingVerification(false);
     }
@@ -1245,7 +1243,7 @@ export function ImpactStoryForm({
 
           <DialogFooter>
             {submitMessage && (
-              <p className="w-full text-sm text-red-600" role="status">
+              <p className="w-full text-sm text-red-600" role="alert">
                 {submitMessage}
               </p>
             )}

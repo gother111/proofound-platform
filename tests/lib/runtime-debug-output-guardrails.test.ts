@@ -327,6 +327,8 @@ describe('runtime debug output guardrails', () => {
     expect(sources).toContain('IMPACT_ARTIFACT_SAFE_UPLOAD_ERRORS');
     expect(sources).toContain('profile.impact_story.artifact_upload_returned_error');
     expect(sources).toContain('profile.impact_story.artifact_upload_failed');
+    expect(sources).toContain('profile.impact_story.save_failed');
+    expect(sources).toContain('profile.impact_story.verification_send_failed');
     expect(sources).toContain('profile.hero.average_color_failed');
     expect(sources).not.toContain('decision.window.fetch.failed');
     expect(sources).not.toContain('decision.submit.failed');
@@ -349,6 +351,9 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Failed to load privacy summary feature flag');
     expect(sources).not.toContain('Failed to load privacy settings:');
     expect(sources).not.toContain("error: result.error || result.message || 'Upload failed'");
+    expect(sources).not.toContain(
+      'error instanceof Error && error.message\n          ? error.message'
+    );
     expect(sources).not.toContain('Failed to extract average color');
   });
 
