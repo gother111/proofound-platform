@@ -920,7 +920,11 @@ export function IndividualSetup({
                       Uploading proof...
                     </p>
                   ) : null}
-                  {uploadError ? <p className="text-sm text-red-600">{uploadError}</p> : null}
+                  {uploadError ? (
+                    <p className="text-sm text-red-600" role="alert" aria-live="assertive">
+                      {uploadError}
+                    </p>
+                  ) : null}
                 </div>
               )}
 
@@ -1325,7 +1329,11 @@ export function IndividualSetup({
               </div>
 
               {error ? (
-                <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950/30 dark:text-red-300">
+                <p
+                  className="rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950/30 dark:text-red-300"
+                  role="alert"
+                  aria-live="assertive"
+                >
                   {error}
                 </p>
               ) : null}

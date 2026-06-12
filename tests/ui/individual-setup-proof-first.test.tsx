@@ -327,6 +327,64 @@ describe('IndividualSetup first-proof flow', () => {
     expect(payload.get('proofContributionMode')).toBe('team');
   });
 
+  it('announces invalid first-proof files as recoverable upload alerts', async () => {
+    validateFileMock.mockReturnValueOnce({
+      valid: false,
+      error: 'Choose a PDF, image, or document under the upload limit.',
+    });
+
+    render(<IndividualSetup />);
+
+    fillBasicDetails();
+    fireEvent.click(screen.getByRole('radio', { name: /file upload/i }));
+
+    const file = new File(['proof'], 'starter-proof.exe', {
+      type: 'application/octet-stream',
+    });
+    fireEvent.change(screen.getByLabelText('Proof file *'), {
+      target: { files: [file] },
+    });
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Choose a PDF, image, or document under the upload limit.'
+    );
+    expect(uploadFileMock).not.toHaveBeenCalled();
+  });
+
+  it('announces failed first-proof uploads and keeps the file step retryable', async () => {
+    uploadFileMock.mockResolvedValueOnce({
+      success: false,
+      error: 'Upload service unavailable. Please try again.',
+    });
+
+    render(<IndividualSetup />);
+
+    fillBasicDetails();
+    fireEvent.click(screen.getByRole('radio', { name: /file upload/i }));
+
+    const file = new File(['proof'], 'starter-proof.pdf', { type: 'application/pdf' });
+    fireEvent.change(screen.getByLabelText('Proof file *'), {
+      target: { files: [file] },
+    });
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Upload service unavailable. Please try again.'
+    );
+    expect(screen.getByLabelText('Proof file *')).toBeEnabled();
+  });
+
+  it('announces first-proof save validation errors as recoverable alerts', async () => {
+    render(<IndividualSetup />);
+
+    fillBasicDetails();
+    fireEvent.submit(
+      screen.getByRole('button', { name: /save first proof pack/i }).closest('form')!
+    );
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Add one proof link before saving.');
+    expect(screen.getByRole('button', { name: /save first proof pack/i })).toBeEnabled();
+  });
+
   it('saves an optional scoped verification request preview without sending', async () => {
     render(<IndividualSetup />);
 
