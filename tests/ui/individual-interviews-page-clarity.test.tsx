@@ -102,7 +102,11 @@ describe('individual interviews page clarity', () => {
       ).toBeInTheDocument();
     });
 
-    const nextAction = screen.getByRole('link', { name: /review matching/i });
+    expect(
+      screen.getByText(/when an organization moves a proof submission into interview coordination/i)
+    ).toBeInTheDocument();
+
+    const nextAction = screen.getByRole('link', { name: /open assignment reviews/i });
     expect(nextAction).toHaveAttribute('href', '/app/i/matching');
   });
 

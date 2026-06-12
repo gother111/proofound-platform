@@ -123,7 +123,9 @@ describe('organization interviews page actions', () => {
     expect(
       screen.getByRole('heading', { name: 'Interview workflow is loading' })
     ).toBeInTheDocument();
-    expect(screen.getByRole('status')).toHaveTextContent('Loading interview workflow...');
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Loading proof-review interview workflow...'
+    );
   });
 
   it('keeps load failures separate from the empty workflow state and retries', async () => {
@@ -152,6 +154,9 @@ describe('organization interviews page actions', () => {
     });
     expect(
       await screen.findByRole('heading', { name: /no active interview workflow yet/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/once a proof submission moves into interview coordination/i)
     ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /review assignment queue/i })).toHaveAttribute(
       'href',

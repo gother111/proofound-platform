@@ -685,7 +685,7 @@ export default function OrganizationInterviewsPage() {
               this organization workspace.
             </p>
             <p className="mt-3 text-sm text-muted-foreground" role="status">
-              Loading interview workflow...
+              Loading proof-review interview workflow...
             </p>
           </section>
           <PageIntroSkeleton showAction={false} />
@@ -717,8 +717,8 @@ export default function OrganizationInterviewsPage() {
                   Interviews
                 </h1>
                 <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-                  Track the staged workflow from shortlist through decision and engagement
-                  verification.
+                  Track the proof-review workflow from approved introduction through interview,
+                  decision, and engagement verification.
                 </p>
               </div>
             </div>
@@ -765,8 +765,8 @@ export default function OrganizationInterviewsPage() {
               No active interview workflow yet
             </h2>
             <p className="mb-6 max-w-md text-sm text-muted-foreground">
-              Once an introduction is approved, this page will show each workflow stage, the privacy
-              status, and the next action.
+              Once a proof submission moves into interview coordination, this page will show each
+              workflow stage, the privacy status, and the next action.
             </p>
             {assignmentsHref ? (
               <Button asChild variant="outline" size="sm" className="min-h-10">

@@ -5526,6 +5526,7 @@ describe('launch gate package configuration', () => {
 
   it('keeps active interview pages workflow-led instead of generic hiring-corridor led', () => {
     const interviewPages = [
+      'src/app/app/i/interviews/loading.tsx',
       'src/app/app/i/interviews/IndividualInterviewsPage.tsx',
       'src/app/app/o/[slug]/interviews/page.tsx',
     ]
@@ -5549,14 +5550,17 @@ describe('launch gate package configuration', () => {
     );
 
     expect(interviewPages).toContain('Interview workflow is loading');
-    expect(interviewPages).toContain('Loading interview workflow');
-    expect(interviewPages).toContain('Track the staged workflow');
+    expect(interviewPages).toContain('Loading proof-review interview workflow');
+    expect(interviewPages).toContain('Track the proof-review workflow');
     expect(interviewPages).toContain('No active interview workflow yet');
+    expect(interviewPages).toContain('Open assignment reviews');
     expect(interviewPages).toContain('workflow stage');
     expect(interviewPages).toContain('workflow messaging');
     expect(interviewPages).not.toContain('Track the full hiring corridor');
+    expect(interviewPages).not.toContain('Track the staged workflow');
     expect(interviewPages).not.toContain('No active hiring corridor yet');
     expect(interviewPages).not.toContain('Loading interview corridor');
+    expect(interviewPages).not.toContain('Loading interview workflow');
     expect(interviewPages).not.toContain('Interview corridor is loading');
     expect(interviewPages).not.toContain('candidate via messaging');
     expect(hiringCorridorSnapshot).toContain('proof-review participant');

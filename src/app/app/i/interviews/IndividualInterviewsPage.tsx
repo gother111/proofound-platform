@@ -258,7 +258,7 @@ export default function IndividualInterviewsPage() {
       <AppSurface>
         <div className="max-w-4xl mx-auto space-y-6">
           <p className="text-sm text-muted-foreground" role="status" aria-live="polite">
-            Loading interview workflow...
+            Loading proof-review interview workflow...
           </p>
           <PageIntroSkeleton showAction={false} />
           <CardListSkeleton count={3} />
@@ -276,8 +276,8 @@ export default function IndividualInterviewsPage() {
             Interviews
           </h1>
           <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-            Track the staged workflow from shortlist through interview, decision, and engagement
-            verification.
+            Track the proof-review workflow from approved introduction through interview, decision,
+            and engagement verification.
           </p>
         </div>
 
@@ -322,11 +322,12 @@ export default function IndividualInterviewsPage() {
               No active interview workflow yet
             </h2>
             <p className="mb-6 max-w-md text-sm leading-6 text-muted-foreground">
-              Nothing needs scheduling right now. When an organization shortlists you, this page
-              will show the next step and the full proof-safe timeline.
+              Nothing needs scheduling right now. When an organization moves a proof submission into
+              interview coordination, this page will show the next step and the full proof-safe
+              timeline.
             </p>
             <Button asChild variant="outline" size="sm">
-              <Link href="/app/i/matching">Review matching</Link>
+              <Link href="/app/i/matching">Open assignment reviews</Link>
             </Button>
           </div>
         ) : (
