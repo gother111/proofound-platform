@@ -168,7 +168,7 @@ describe('matching paused/hidden manager launch safety', () => {
     });
   });
 
-  it('keeps paused matches inside the active matching route and avoids detail links', async () => {
+  it('keeps paused assignment reviews inside the active matching route and avoids detail links', async () => {
     apiFetchMock.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
@@ -238,7 +238,7 @@ describe('matching paused/hidden manager launch safety', () => {
     expect(document.body.innerHTML).not.toContain('93%');
   });
 
-  it('keeps the empty paused state inside the matching route without a full reload', async () => {
+  it('keeps the empty paused review state inside the matching route without a full reload', async () => {
     apiFetchMock.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ matches: [] }),
@@ -246,7 +246,7 @@ describe('matching paused/hidden manager launch safety', () => {
 
     render(<SnoozedMatchesList />);
 
-    expect(await screen.findByText('No paused matches right now')).toBeInTheDocument();
+    expect(await screen.findByText('No paused assignment reviews right now')).toBeInTheDocument();
     expect(
       screen.getByText(
         'Assignment reviews you pause will appear here until you restore them or the pause period ends.'
@@ -258,7 +258,7 @@ describe('matching paused/hidden manager launch safety', () => {
     expect(pushMock).toHaveBeenCalledWith('/app/i/matching');
   });
 
-  it('shows a recoverable paused-match load error and retries in place', async () => {
+  it('shows a recoverable paused-review load error and retries in place', async () => {
     apiFetchMock.mockRejectedValueOnce(new Error('network unavailable')).mockResolvedValueOnce({
       ok: true,
       json: async () => ({ matches: [] }),
@@ -266,16 +266,18 @@ describe('matching paused/hidden manager launch safety', () => {
 
     render(<SnoozedMatchesList />);
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Paused matches could not load');
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Paused assignment reviews could not load'
+    );
     expect(
       screen.getByText(
         'Your paused assignment reviews are unchanged. Retry this panel to refresh the list.'
       )
     ).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Retry paused matches' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Retry paused reviews' }));
 
-    expect(await screen.findByText('No paused matches right now')).toBeInTheDocument();
+    expect(await screen.findByText('No paused assignment reviews right now')).toBeInTheDocument();
     expect(apiFetchMock).toHaveBeenCalledTimes(2);
   });
 
@@ -317,7 +319,7 @@ describe('matching paused/hidden manager launch safety', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Restore' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Match could not be restored. It is still paused, and you can try again.'
+      'Assignment review could not be restored. It is still paused, and you can try again.'
     );
     expect(screen.getByText('Paused assignment to restore')).toBeInTheDocument();
     expect(onRestored).not.toHaveBeenCalled();

@@ -1,7 +1,7 @@
 /**
- * Snoozed Matches List Component
+ * Paused assignment reviews list.
  *
- * Displays all currently snoozed matches with unsnooze actions
+ * Displays paused assignment reviews with restore actions.
  */
 
 'use client';
@@ -61,15 +61,15 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
         setMatches(data.matches || []);
       } else {
         const text = await response.text().catch(() => '');
-        setError('Paused matches could not load');
-        toast.error('Paused matches could not load', {
+        setError('Paused assignment reviews could not load');
+        toast.error('Paused assignment reviews could not load', {
           description: text || 'You can retry without leaving matching.',
         });
       }
     } catch (error) {
       dispatchClientErrorDiagnostic('matching.snoozed_matches.load_failed', error);
-      setError('Paused matches could not load');
-      toast.error('Paused matches could not load', {
+      setError('Paused assignment reviews could not load');
+      toast.error('Paused assignment reviews could not load', {
         description: 'You can retry without leaving matching.',
       });
     } finally {
@@ -94,7 +94,7 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
         throw new Error('Failed to unsnooze');
       }
 
-      toast.success('Match unsnoozed', {
+      toast.success('Assignment review restored', {
         description: 'This assignment review will reappear in matching.',
       });
 
@@ -116,8 +116,10 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
       dispatchClientErrorDiagnostic('matching.snoozed_matches.unsnooze_failed', error);
       // Rollback optimistic removal if API failed
       setMatches(prevMatches);
-      setRestoreError('Match could not be restored. It is still paused, and you can try again.');
-      toast.error('Failed to unsnooze match', {
+      setRestoreError(
+        'Assignment review could not be restored. It is still paused, and you can try again.'
+      );
+      toast.error('Assignment review could not be restored', {
         description: 'Please try again',
       });
     } finally {
@@ -165,7 +167,7 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
           Your paused assignment reviews are unchanged. Retry this panel to refresh the list.
         </p>
         <Button size="sm" variant="outline" onClick={fetchSnoozedMatches} className="text-xs">
-          Retry paused matches
+          Retry paused reviews
         </Button>
       </Card>
     );
@@ -175,7 +177,9 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
     return (
       <Card variant="bento" className="p-12 text-center">
         <Clock className="h-16 w-16 mx-auto mb-4 text-[#A8B69D]" />
-        <h3 className="text-lg font-semibold text-foreground mb-2">No paused matches right now</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-2">
+          No paused assignment reviews right now
+        </h3>
         <p className="text-sm text-muted-foreground mb-6">
           Assignment reviews you pause will appear here until you restore them or the pause period
           ends.

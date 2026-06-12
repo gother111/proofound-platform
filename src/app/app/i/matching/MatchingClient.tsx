@@ -527,8 +527,8 @@ export function MatchingClient() {
             className="text-sm text-proofound-forest underline flex items-center gap-2"
           >
             {showManageHiddenSnoozed
-              ? 'Hide paused/hidden manager'
-              : 'Manage paused or hidden matches'}
+              ? 'Hide paused/hidden review manager'
+              : 'Manage paused or hidden reviews'}
           </button>
 
           {showManageHiddenSnoozed && (

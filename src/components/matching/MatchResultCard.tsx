@@ -756,11 +756,15 @@ export function MatchResultCard({
                 }
               }}
               disabled={!result.id}
-              title={!result.id ? 'Snooze becomes available once this match is saved' : undefined}
+              title={
+                !result.id
+                  ? 'Pause becomes available once this assignment review is saved'
+                  : undefined
+              }
               className="text-xs text-muted-foreground hover:bg-japandi-bg"
             >
               <BellOff className="w-3.5 h-3.5 mr-1.5" />
-              Snooze
+              Pause
             </Button>
           </div>
         )}
