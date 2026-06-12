@@ -85,6 +85,7 @@ export function FeedbackForm({
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<FormMessage | null>(null);
   const [questionErrors, setQuestionErrors] = useState<QuestionErrors>({});
+  const [submitted, setSubmitted] = useState(false);
 
   const orderedQuestions = useMemo(
     () => [...template.questions].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)),
@@ -152,6 +153,7 @@ export function FeedbackForm({
       clientFeedbackVisualFixturesEnabled() &&
       token === VISUAL_FEEDBACK_TOKENS.pendingCandidateToOrg
     ) {
+      setSubmitted(true);
       setMessage({ tone: 'success', text: 'Feedback submitted. Thank you!' });
       setSubmitting(false);
       onSubmitted?.();
@@ -171,6 +173,7 @@ export function FeedbackForm({
         return;
       }
 
+      setSubmitted(true);
       setMessage({ tone: 'success', text: 'Feedback submitted. Thank you!' });
       onSubmitted?.();
       router.refresh();
@@ -212,7 +215,20 @@ export function FeedbackForm({
       </CardHeader>
       <CardContent className={contentClassName}>
         {alreadySubmitted ? (
-          <p className="text-sm text-emerald-700">You already submitted feedback for this side.</p>
+          <p role="status" className="text-sm text-emerald-700">
+            You already submitted feedback for this side.
+          </p>
+        ) : submitted ? (
+          <div
+            role="status"
+            aria-live="polite"
+            className="rounded-xl border border-[#D7E8DE] bg-[#F3FAF6] px-4 py-3 text-sm leading-6 text-proofound-forest"
+          >
+            <p className="font-semibold">Feedback submitted. Thank you!</p>
+            <p className="mt-1">
+              Your response is recorded for this interview side. You can close this page.
+            </p>
+          </div>
         ) : (
           // Use custom validation messaging instead of native HTML5 validation popups.
           <form className="space-y-6" onSubmit={handleSubmit} noValidate>

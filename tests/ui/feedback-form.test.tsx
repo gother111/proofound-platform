@@ -188,6 +188,8 @@ describe('FeedbackForm', () => {
     expect(payload.token).toBe('token-1');
     expect(payload.answers[0].score).toBe(5);
     expect(await screen.findByText(/Feedback submitted/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /submit feedback/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
   });
 
   it('keeps answers retryable when feedback submission fails', async () => {
@@ -248,6 +250,8 @@ describe('FeedbackForm', () => {
     fireEvent.click(screen.getByRole('button', { name: /submit feedback/i }));
 
     expect(await screen.findByRole('status')).toHaveTextContent(/Feedback submitted/i);
+    expect(screen.queryByRole('button', { name: /submit feedback/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
     expect(global.fetch).not.toHaveBeenCalled();
   });
 
