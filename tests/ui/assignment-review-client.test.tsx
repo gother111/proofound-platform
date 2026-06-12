@@ -203,7 +203,14 @@ describe('AssignmentReviewClient', () => {
     expect(
       screen.getByText(/Remove unsupported trust requirements before publishing this assignment/i)
     ).toBeInTheDocument();
+    expect(screen.getByText('1 item needs review.')).toBeInTheDocument();
+    expect(screen.getByText('Trust requirements')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Publish Assignment/i })).toBeDisabled();
     expect(document.body.textContent ?? '').not.toMatch(/LinkedIn/i);
+
+    fireEvent.click(screen.getByRole('button', { name: /Edit missing items/i }));
+
+    expect(pushMock).toHaveBeenCalledWith('/app/o/acme/assignments/new?draftId=assignment-1');
   });
 
   it('shows a privacy-safe unavailable state when assignment review cannot load', async () => {

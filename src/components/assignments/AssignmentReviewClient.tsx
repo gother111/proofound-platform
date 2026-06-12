@@ -76,8 +76,7 @@ function hasText(value: unknown) {
 
 function getReviewItems(assignment: Assignment): ReviewItem[] {
   const outcomes = assignment.expectedOutcomes || assignment.outcomes || [];
-
-  return [
+  const items: ReviewItem[] = [
     {
       label: 'Role purpose',
       ready:
@@ -106,6 +105,16 @@ function getReviewItems(assignment: Assignment): ReviewItem[] {
       detail: 'Attach the skills reviewers should use as anchors.',
     },
   ];
+
+  if (hasUnsupportedVerificationGates(assignment.verificationGates)) {
+    items.push({
+      label: 'Trust requirements',
+      ready: false,
+      detail: 'Remove unsupported trust requirements before publishing.',
+    });
+  }
+
+  return items;
 }
 
 function getSupportedVerificationGates(gates: string[] | undefined) {
