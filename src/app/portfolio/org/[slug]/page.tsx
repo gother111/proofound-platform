@@ -2,9 +2,8 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { permanentRedirect } from 'next/navigation';
-import { ArrowLeft, Building2, Globe2 } from 'lucide-react';
+import { ArrowLeft, Building2, EyeOff, Globe2, Link2, ShieldCheck } from 'lucide-react';
 
-import { PublicProfileEmptyState } from '@/components/public-profile/PublicProfileEmptyState';
 import { PublicProfileSection } from '@/components/public-profile/PublicProfileSection';
 import { PublicProfileShell } from '@/components/public-profile/PublicProfileShell';
 import { JsonLdScripts } from '@/components/seo/JsonLdScripts';
@@ -34,22 +33,93 @@ import { createClient } from '@/lib/supabase/server';
 import { ShareLinkButton } from '../../[handle]/ShareLinkButton';
 import { DownloadOrganizationPdfButton } from './DownloadOrganizationPdfButton';
 
-function renderUnavailablePage(slug: string) {
+function renderUnavailablePage(
+  slug: string,
+  {
+    returnHref = '/',
+    returnLabel = 'Return home',
+  }: { returnHref?: string; returnLabel?: string } = {}
+) {
   return (
     <PublicProfileShell
       maxWidthClassName="max-w-4xl"
       footer={
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <span>proofound.io/portfolio/org/{slug}</span>
           <span>Organization portfolio unavailable</span>
         </div>
       }
     >
-      <PublicProfileSection title="Organization portfolio unavailable" titleLevel={1}>
-        <PublicProfileEmptyState message="This organization link is unavailable. It may be hidden, retired, or not yet ready for public sharing." />
-        <div className="mt-4">
-          <Button asChild>
-            <Link href="/">Return home</Link>
+      <PublicProfileSection
+        title="Organization portfolio unavailable"
+        titleLevel={1}
+        right={
+          <Badge variant="outline" className="border-[#D9D5CC] text-muted-foreground">
+            Trust-page gate
+          </Badge>
+        }
+        contentClassName="space-y-4"
+      >
+        <div className="space-y-3">
+          <p className="text-sm leading-6 text-foreground">
+            This organization link is unavailable. It may be hidden, retired, or not yet ready for
+            public sharing.
+          </p>
+
+          <div
+            role="status"
+            aria-live="polite"
+            className="border-l-4 border-proofound-forest bg-[#F3FAF6] px-4 py-3 text-sm leading-6 text-proofound-charcoal"
+          >
+            <div className="flex min-w-0 gap-3">
+              <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/80 text-proofound-forest">
+                <ShieldCheck className="h-5 w-5" />
+              </span>
+              <div className="min-w-0">
+                <p className="font-semibold text-proofound-forest">
+                  No organization trust details were shown from this link.
+                </p>
+                <p className="mt-1 text-muted-foreground">
+                  Organization trust pages only load selected public-safe basics when the owner has
+                  an active direct-link page.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <ul className="space-y-2 text-sm">
+            <li className="flex min-w-0 gap-2">
+              <span className="mt-1 shrink-0 text-proofound-forest">
+                <Link2 className="h-4 w-4 text-proofound-forest" />
+              </span>
+              <p className="min-w-0 leading-6 text-muted-foreground">
+                <span className="font-semibold text-proofound-charcoal">Link inactive.</span> The
+                organization may have hidden, retired, or not yet published this trust page.
+              </p>
+            </li>
+            <li className="flex min-w-0 gap-2">
+              <span className="mt-1 shrink-0 text-proofound-forest">
+                <EyeOff className="h-4 w-4 text-proofound-forest" />
+              </span>
+              <p className="min-w-0 leading-6 text-muted-foreground">
+                <span className="font-semibold text-proofound-charcoal">Details protected.</span>{' '}
+                Assignments, member details, and review context stay hidden until a public trust
+                page is active.
+              </p>
+            </li>
+            <li className="flex min-w-0 gap-2">
+              <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-proofound-forest" />
+              <p className="min-w-0 leading-6 text-muted-foreground">
+                <span className="font-semibold text-proofound-charcoal">Next step.</span> Ask the
+                organization for a fresh public trust page link if you expected access.
+              </p>
+            </li>
+          </ul>
+        </div>
+
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button asChild className="bg-proofound-forest text-white hover:bg-[#163d2f]">
+            <Link href={returnHref}>{returnLabel}</Link>
           </Button>
         </div>
       </PublicProfileSection>
@@ -106,13 +176,13 @@ export default async function OrganizationPortfolioPage({
         permanentRedirect(`/portfolio/org/${encodeURIComponent(redirectTarget)}`);
       }
 
-      return renderUnavailablePage(slug);
+      return renderUnavailablePage(slug, { returnHref: returnPath, returnLabel });
     }
-    return renderUnavailablePage(slug);
+    return renderUnavailablePage(slug, { returnHref: returnPath, returnLabel });
   }
 
   if (!isAccessiblePublicPortfolioState(data.effectiveState)) {
-    return renderUnavailablePage(slug);
+    return renderUnavailablePage(slug, { returnHref: returnPath, returnLabel });
   }
 
   const assignmentSnapshot = data.assignmentSnapshot;

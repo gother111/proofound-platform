@@ -377,7 +377,42 @@ describe('Organization public portfolio page', () => {
       screen.getByRole('heading', { name: 'Organization portfolio unavailable' })
     ).toBeInTheDocument();
     expect(screen.getByText(/this organization link is unavailable/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/No organization trust details were shown from this link/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/only load selected public-safe basics when the owner has an active/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Assignments, member details, and review context stay hidden/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Ask the organization for a fresh public trust page link/i)
+    ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Return home' })).toHaveAttribute('href', '/');
     expect(notFoundMock).not.toHaveBeenCalled();
+  });
+
+  it('keeps unavailable organization previews on the safe in-app return path', async () => {
+    vi.mocked(getPublicOrganizationPortfolioProjectionBySlug).mockResolvedValue(null);
+
+    const element = await OrganizationPortfolioPublicPage({
+      params: Promise.resolve({ slug: 'acme' }),
+      searchParams: Promise.resolve({ returnTo: '/app/o/acme/home' }),
+    });
+
+    render(element);
+
+    expect(
+      screen.getByRole('heading', { name: 'Organization portfolio unavailable' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /return to menu/i })).toHaveAttribute(
+      'href',
+      '/app/o/acme/home'
+    );
+    expect(screen.queryByRole('link', { name: 'Return home' })).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/No organization trust details were shown from this link/i)
+    ).toBeInTheDocument();
   });
 });
