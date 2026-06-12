@@ -885,9 +885,12 @@ describe('runtime debug output guardrails', () => {
     expect(sources).toContain('verifications.bundle_cancel.details_load_failed');
     expect(sources).toContain('verifications.bundle_cancel.selected_cancel_failed');
     expect(sources).toContain('verifications.respond.submit_failed');
+    expect(sources).toContain('verifications.respond.returned_error');
+    expect(sources).toContain('Verification response could not be sent');
     expect(sources).not.toContain('Failed to load bundle cancellation details:');
     expect(sources).not.toContain('Failed to cancel selected bundle artifacts:');
     expect(sources).not.toContain('Error responding to verification:');
+    expect(sources).not.toContain('setError(errorData.error');
   });
 
   it('keeps verification composer dialog failures on client diagnostics without console output', () => {

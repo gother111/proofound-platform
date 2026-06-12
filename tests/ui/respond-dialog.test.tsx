@@ -16,6 +16,13 @@ vi.mock('@/lib/client-diagnostics', () => ({
   dispatchClientErrorDiagnostic: (...args: unknown[]) => diagnosticMock(...args),
 }));
 
+function jsonResponse(payload: unknown, ok = false) {
+  return {
+    ok,
+    json: vi.fn().mockResolvedValue(payload),
+  };
+}
+
 function renderRespondDialog(overrides = {}) {
   const request = {
     id: 'request-1',
@@ -76,5 +83,66 @@ describe('RespondDialog', () => {
       expect(within(dialog).getByRole('button', { name: /Confirm attestation/i })).toBeEnabled();
     });
     expect(diagnosticMock).toHaveBeenCalledWith('verifications.respond.submit_failed', submitError);
+  });
+
+  it('preserves known completed-response failures without dropping the draft', async () => {
+    apiFetchMock.mockResolvedValueOnce(
+      jsonResponse({ error: 'This verification request has already been accepted' })
+    );
+
+    renderRespondDialog();
+
+    const dialog = screen.getByRole('dialog');
+    fireEvent.change(within(dialog).getByLabelText(/Add a message/i), {
+      target: { value: 'I already reviewed this claim.' },
+    });
+
+    fireEvent.click(within(dialog).getByRole('button', { name: /Confirm attestation/i }));
+
+    const alert = await within(dialog).findByRole('alert');
+    expect(alert).toHaveTextContent('This verification request has already been accepted');
+    expect(within(dialog).getByDisplayValue('I already reviewed this claim.')).toBeInTheDocument();
+    expect(diagnosticMock).not.toHaveBeenCalledWith(
+      'verifications.respond.returned_error',
+      expect.any(Error)
+    );
+  });
+
+  it('maps validation failures to reviewable attestation copy', async () => {
+    apiFetchMock.mockResolvedValueOnce(jsonResponse({ error: 'Validation failed' }));
+
+    renderRespondDialog();
+
+    const dialog = screen.getByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: /Confirm attestation/i }));
+
+    const alert = await within(dialog).findByRole('alert');
+    expect(alert).toHaveTextContent('Review the required attestation details before submitting.');
+  });
+
+  it('keeps unexpected returned response failures safe and diagnostic', async () => {
+    const rawError = 'Postgres update failed: policy stack detail';
+    apiFetchMock.mockResolvedValueOnce(jsonResponse({ error: rawError }));
+
+    renderRespondDialog();
+
+    const dialog = screen.getByRole('dialog');
+    fireEvent.change(within(dialog).getByLabelText(/Add a message/i), {
+      target: { value: 'I directly reviewed this claim.' },
+    });
+
+    fireEvent.click(within(dialog).getByRole('button', { name: /Confirm attestation/i }));
+
+    const alert = await within(dialog).findByRole('alert');
+    expect(alert).toHaveTextContent(
+      'Verification response could not be sent. Your response is still here; please try again.'
+    );
+    expect(alert).not.toHaveTextContent(rawError);
+    expect(within(dialog).getByDisplayValue('I directly reviewed this claim.')).toBeInTheDocument();
+    expect(diagnosticMock).toHaveBeenCalledWith(
+      'verifications.respond.returned_error',
+      expect.any(Error)
+    );
+    expect((diagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(rawError);
   });
 });

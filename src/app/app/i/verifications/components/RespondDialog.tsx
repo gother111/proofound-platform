@@ -36,6 +36,47 @@ interface RespondDialogProps {
 
 const VERIFICATION_RESPONSE_RETRY_MESSAGE =
   'Verification response could not be sent. Your response is still here; please try again.';
+const VERIFICATION_RESPONSE_ERROR_MESSAGES = new Map([
+  [
+    'Unauthorized',
+    'Please sign in again before responding to this verification request. Your response is still here.',
+  ],
+  ['Invalid JSON body', VERIFICATION_RESPONSE_RETRY_MESSAGE],
+  ['Verification request not found', 'This verification request is no longer available.'],
+  [
+    'Not authorized to respond to this verification request',
+    'You are not authorized to respond to this verification request.',
+  ],
+  [
+    'This attestation request is missing its bounded skill scope.',
+    'This attestation request is missing its bounded skill scope.',
+  ],
+  ['Validation failed', 'Review the required attestation details before submitting.'],
+  [
+    'Structured attestations marked accept must use verdict yes or partly.',
+    'Structured attestations marked accept must use verdict yes or partly.',
+  ],
+  [
+    'Structured attestations marked decline must use verdict no.',
+    'Structured attestations marked decline must use verdict no.',
+  ],
+  ['Failed to update verification request', VERIFICATION_RESPONSE_RETRY_MESSAGE],
+  ['Internal server error', VERIFICATION_RESPONSE_RETRY_MESSAGE],
+]);
+
+function verificationResponseErrorMessage(message: string) {
+  if (/^This verification request has already been \w+/.test(message)) {
+    return message;
+  }
+
+  const safeMessage = VERIFICATION_RESPONSE_ERROR_MESSAGES.get(message);
+  if (safeMessage) {
+    return safeMessage;
+  }
+
+  dispatchClientErrorDiagnostic('verifications.respond.returned_error', new Error(message));
+  return VERIFICATION_RESPONSE_RETRY_MESSAGE;
+}
 
 export function RespondDialog({
   open,
@@ -106,7 +147,11 @@ export function RespondDialog({
         setResponseMessage('');
       } else {
         const errorData = await response.json();
-        setError(errorData.error || VERIFICATION_RESPONSE_RETRY_MESSAGE);
+        setError(
+          typeof errorData.error === 'string'
+            ? verificationResponseErrorMessage(errorData.error)
+            : VERIFICATION_RESPONSE_RETRY_MESSAGE
+        );
       }
     } catch (err) {
       dispatchClientErrorDiagnostic('verifications.respond.submit_failed', err);
