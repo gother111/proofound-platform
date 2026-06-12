@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { apiFetch } from '@/lib/api/fetch';
 import { START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE } from '@/lib/ai/start-from-cv-contract';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import type { StartFromCvDraftOutput } from '@/lib/ai/start-from-cv';
 import type { StartFromCvScaffoldingSurface } from '@/lib/ai/start-from-cv-contract';
 
@@ -63,7 +64,14 @@ const DRAFT_BODY_FIELDS: Record<DraftBucket, { key: string; list?: true }> = {
 };
 
 const TECHNICAL_ERROR_TERMS =
-  /\b(api|backend|database|schema|endpoint|supabase|worker|python|typescript|gemini|uuid|tenant|cron|migration|rls|queue|job|extract|extraction)\b|[a-z]+_[a-z_]+/i;
+  /\b(api|backend|database|schema|endpoint|supabase|worker|python|typescript|gemini|uuid|tenant|cron|migration|rls|queue|job|extract|extraction|fetch|network|provider|token|service|route|status|json|http)\b|[a-z]+_[a-z_]+/i;
+
+const START_FROM_CV_DRAFTS_FAILED_MESSAGE =
+  'Start from CV could not create private drafts. Your profile is unchanged; try again or continue manually.';
+const START_FROM_CV_ACCEPT_FAILED_MESSAGE =
+  'Selected drafts could not be accepted. Your private drafts are still here; review them and try again.';
+const START_FROM_CV_DELETE_FAILED_MESSAGE =
+  'Import session could not be deleted. Your private drafts are still here; please try again.';
 
 function userSafeCvError(value: unknown, fallback: string): string {
   if (typeof value !== 'string') {
@@ -166,7 +174,12 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
       setSession(extracted);
       setAcceptedIds(new Set());
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Start from CV failed.');
+      dispatchClientErrorDiagnostic('start_from_cv.private_drafts.create_failed', caught);
+      setError(
+        caught instanceof Error
+          ? userSafeCvError(caught.message, START_FROM_CV_DRAFTS_FAILED_MESSAGE)
+          : START_FROM_CV_DRAFTS_FAILED_MESSAGE
+      );
     } finally {
       setLoading(false);
     }
@@ -195,11 +208,16 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
       );
       const payload = await response.json();
       if (!response.ok) {
-        throw new Error(payload.error || 'Selected drafts could not be accepted.');
+        throw new Error(payload.error || START_FROM_CV_ACCEPT_FAILED_MESSAGE);
       }
       onApplyComplete?.();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Selected drafts could not be accepted.');
+      dispatchClientErrorDiagnostic('start_from_cv.private_drafts.accept_failed', caught);
+      setError(
+        caught instanceof Error
+          ? userSafeCvError(caught.message, START_FROM_CV_ACCEPT_FAILED_MESSAGE)
+          : START_FROM_CV_ACCEPT_FAILED_MESSAGE
+      );
     } finally {
       setLoading(false);
     }
@@ -225,22 +243,18 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
         payload = {};
       }
       if (!response.ok) {
-        throw new Error(
-          userSafeCvError(payload.error, 'Import session could not be deleted. Please try again.')
-        );
+        throw new Error(userSafeCvError(payload.error, START_FROM_CV_DELETE_FAILED_MESSAGE));
       }
       setSession(null);
       setAcceptedIds(new Set());
       setDeleteSessionDialogOpen(false);
       onApplyComplete?.();
     } catch (caught) {
+      dispatchClientErrorDiagnostic('start_from_cv.private_drafts.delete_failed', caught);
       setError(
         caught instanceof Error
-          ? userSafeCvError(
-              caught.message,
-              'Import session could not be deleted. Please try again.'
-            )
-          : 'Import session could not be deleted. Please try again.'
+          ? userSafeCvError(caught.message, START_FROM_CV_DELETE_FAILED_MESSAGE)
+          : START_FROM_CV_DELETE_FAILED_MESSAGE
       );
     } finally {
       setLoading(false);

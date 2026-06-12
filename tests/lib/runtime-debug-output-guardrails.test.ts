@@ -177,6 +177,22 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Failed to load assistive AI feature flag');
   });
 
+  it('keeps Start from CV private draft failures safe and diagnostic', () => {
+    const source = readSource('src/components/profile/StartFromCvDialog.tsx');
+
+    expect(source).toContain(
+      "import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics'"
+    );
+    expect(source).toContain('start_from_cv.private_drafts.create_failed');
+    expect(source).toContain('start_from_cv.private_drafts.accept_failed');
+    expect(source).toContain('start_from_cv.private_drafts.delete_failed');
+    expect(source).toContain('Your profile is unchanged; try again or continue manually.');
+    expect(source).toContain('Your private drafts are still here; review them and try again.');
+    expect(source).toContain('Your private drafts are still here; please try again.');
+    expect(source).not.toContain('setError(caught instanceof Error ? caught.message');
+    expect(source).not.toContain("throw new Error(payload.error || 'Selected drafts");
+  });
+
   it('keeps client recovery and dashboard telemetry on client diagnostics without console output', () => {
     const sources = [
       readSource('src/hooks/useDashboardLoadTime.ts'),
