@@ -262,6 +262,7 @@ describe('runtime debug output guardrails', () => {
     expect(sources).toContain('profile.hero.average_color_failed');
     expect(sources).not.toContain('decision.window.fetch.failed');
     expect(sources).not.toContain('decision.submit.failed');
+    expect(sources).not.toContain('Failed to record decision');
     expect(sources).not.toContain('Failed to toggle redact mode:');
     expect(sources).not.toContain('.catch(console.error)');
     expect(sources).not.toContain('Failed to fetch privacy settings:');

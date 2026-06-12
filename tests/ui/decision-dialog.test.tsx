@@ -143,4 +143,55 @@ describe('DecisionDialog', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(onDecisionMade).toHaveBeenCalledTimes(1);
   });
+
+  it('keeps failed decision submissions visible and retryable without raw service text', async () => {
+    mockDecisionWindowFetch([
+      new Response(
+        JSON.stringify({
+          hoursRemaining: 18.5,
+          isOverdue: false,
+          deadline: '2026-03-13T12:00:00.000Z',
+        }),
+        { status: 200 }
+      ),
+    ]);
+    apiFetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({ error: 'Decision transition blocked by policy guard' }), {
+        status: 500,
+      })
+    );
+    const onDecisionMade = vi.fn();
+    const onClose = vi.fn();
+
+    renderDecisionDialog({ onDecisionMade, onClose });
+
+    expect(await screen.findByText('18h 30m remaining')).toBeInTheDocument();
+
+    const feedback = 'Hold until the hiring team reviews the last proof artifact.';
+    fireEvent.click(screen.getByRole('button', { name: 'Hold' }));
+    fireEvent.change(screen.getByLabelText(/Feedback/i), {
+      target: { value: feedback },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm Workflow Decision' }));
+
+    await waitFor(() => {
+      expect(toastMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Decision not recorded',
+          description:
+            'Decision could not be recorded. Your selected outcome and notes are still here; please try again.',
+          variant: 'destructive',
+        })
+      );
+    });
+    expect(
+      toastMock.mock.calls.some((call) =>
+        JSON.stringify(call[0]).includes('Decision transition blocked by policy guard')
+      )
+    ).toBe(false);
+    expect(screen.getByRole('button', { name: 'Hold' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByLabelText(/Feedback/i)).toHaveValue(feedback);
+    expect(onClose).not.toHaveBeenCalled();
+    expect(onDecisionMade).not.toHaveBeenCalled();
+  });
 });

@@ -35,6 +35,9 @@ interface DecisionDialogProps {
 
 type DecisionType = 'hire' | 'advance' | 'hold' | 'reject' | 'withdraw';
 
+const DECISION_SUBMIT_RETRY_MESSAGE =
+  'Decision could not be recorded. Your selected outcome and notes are still here; please try again.';
+
 interface DecisionWindow {
   hoursRemaining: number;
   isOverdue: boolean;
@@ -122,7 +125,7 @@ export function DecisionDialog({
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to record decision');
+        throw new Error(error.error || 'Decision submit request failed');
       }
 
       const data = await response.json();
@@ -149,8 +152,8 @@ export function DecisionDialog({
         error: error instanceof Error ? error.message : 'Unknown error',
       });
       toast({
-        title: 'Failed to record decision',
-        description: error instanceof Error ? error.message : 'Please try again',
+        title: 'Decision not recorded',
+        description: DECISION_SUBMIT_RETRY_MESSAGE,
         variant: 'destructive',
       });
     } finally {
