@@ -6,6 +6,8 @@ import { ShareProfileDialog } from '@/components/profile/ShareProfileDialog';
 const toastMock = vi.fn();
 const apiFetchMock = vi.fn();
 const clipboardWriteTextMock = vi.fn();
+const dispatchClientDiagnosticMock = vi.fn();
+const dispatchClientErrorDiagnosticMock = vi.fn();
 
 vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({ toast: toastMock }),
@@ -13,6 +15,11 @@ vi.mock('@/hooks/use-toast', () => ({
 
 vi.mock('@/lib/api/fetch', () => ({
   apiFetch: (...args: any[]) => apiFetchMock(...args),
+}));
+
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientDiagnostic: (...args: any[]) => dispatchClientDiagnosticMock(...args),
+  dispatchClientErrorDiagnostic: (...args: any[]) => dispatchClientErrorDiagnosticMock(...args),
 }));
 
 vi.mock('@/hooks/use-responsive-modal-mode', () => ({
@@ -171,6 +178,44 @@ describe('ShareProfileDialog', () => {
       )
     ).toBeInTheDocument();
     expect(document.body.textContent ?? '').not.toMatch(/LinkedIn|Twitter|social/i);
+    expect(apiFetchMock).not.toHaveBeenCalledWith('/api/profile/snippet', expect.anything());
+  });
+
+  it('keeps failed share-link generation retryable without raw URL text', async () => {
+    render(
+      <ShareProfileDialog
+        isOpen={true}
+        onClose={() => {}}
+        userName="Jane Doe"
+        userHeadline="Proof operations lead"
+        publicPagePath="http://["
+      />
+    );
+
+    fireEvent.change(screen.getByPlaceholderText(/Days until link expires/i), {
+      target: { value: '30' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /generate shareable link/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(
+      'Public Page link could not be created. Your sharing options are still here; please try again.'
+    );
+    expect(alert).not.toHaveTextContent('Invalid URL');
+    expect(screen.getByPlaceholderText(/Days until link expires/i)).toHaveValue(30);
+    expect(screen.getByRole('button', { name: /generate shareable link/i })).toBeEnabled();
+    expect(screen.queryByDisplayValue(/http:\/\/\[/)).not.toBeInTheDocument();
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith('profile.snippet.generate_failed', {
+      error: expect.stringContaining('Invalid URL'),
+    });
+    expect(toastMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Share link not created',
+        description:
+          'Public Page link could not be created. Your sharing options are still here; please try again.',
+        variant: 'destructive',
+      })
+    );
     expect(apiFetchMock).not.toHaveBeenCalledWith('/api/profile/snippet', expect.anything());
   });
 

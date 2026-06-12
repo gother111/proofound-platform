@@ -120,6 +120,13 @@ type CopyFeedback = {
   message: string;
 };
 
+const SHARE_LINK_RETRY_COPY: Record<ProfileType, string> = {
+  individual:
+    'Public Page link could not be created. Your sharing options are still here; please try again.',
+  organization:
+    'Organization Trust Page link could not be created. Your sharing options are still here; please try again.',
+};
+
 export function ShareProfileDialog({
   isOpen,
   onClose,
@@ -143,6 +150,7 @@ export function ShareProfileDialog({
   } | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const [copyFeedback, setCopyFeedback] = useState<CopyFeedback | null>(null);
+  const [generationError, setGenerationError] = useState<string | null>(null);
   const copyResetTimerRef = useRef<number | null>(null);
 
   const { toast } = useToast();
@@ -171,6 +179,7 @@ export function ShareProfileDialog({
   const handleGenerate = async () => {
     try {
       setIsGenerating(true);
+      setGenerationError(null);
 
       if (!publicPagePath) {
         toast({
@@ -202,9 +211,10 @@ export function ShareProfileDialog({
       dispatchClientDiagnostic('profile.snippet.generate_failed', {
         error: error instanceof Error ? error.message : 'Unknown error',
       });
+      setGenerationError(SHARE_LINK_RETRY_COPY[profileType]);
       toast({
-        title: 'Failed to create snippet',
-        description: error instanceof Error ? error.message : 'Please try again',
+        title: 'Share link not created',
+        description: SHARE_LINK_RETRY_COPY[profileType],
         variant: 'destructive',
       });
     } finally {
@@ -316,6 +326,17 @@ export function ShareProfileDialog({
               max={365}
             />
           </div>
+
+          {generationError ? (
+            <p
+              className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900"
+              role="alert"
+              aria-live="assertive"
+            >
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <span>{generationError}</span>
+            </p>
+          ) : null}
         </div>
       ) : (
         <Tabs defaultValue="link" className="w-full">
