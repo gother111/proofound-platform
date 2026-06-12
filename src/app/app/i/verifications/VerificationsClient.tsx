@@ -81,6 +81,10 @@ type RequestSummary = {
   pending: number;
   needsAttention: number;
 };
+type SentRequestActionError = {
+  action: 'delete' | 'resend';
+  message: string;
+};
 
 const STATUS_FILTERS: Array<{ value: RequestStatusFilter; label: string }> = [
   { value: 'all', label: 'All' },
@@ -184,10 +188,24 @@ export function VerificationsClient({
   const [composerOpen, setComposerOpen] = useState(false);
   const [deletingRequestIds, setDeletingRequestIds] = useState<Record<string, boolean>>({});
   const [resendingRequestIds, setResendingRequestIds] = useState<Record<string, boolean>>({});
+  const [sentRequestActionErrors, setSentRequestActionErrors] = useState<
+    Record<string, SentRequestActionError>
+  >({});
   const [incomingFilter, setIncomingFilter] = useState<RequestStatusFilter>('all');
   const [sentFilter, setSentFilter] = useState<RequestStatusFilter>('all');
   const [sortMode, setSortMode] = useState<RequestSortMode>('recency');
   const nowMs = Date.now();
+
+  const clearSentRequestActionError = (requestId: string) => {
+    setSentRequestActionErrors((prev) => {
+      if (!prev[requestId]) {
+        return prev;
+      }
+      const next = { ...prev };
+      delete next[requestId];
+      return next;
+    });
+  };
 
   const summarizeRequests = (requests: VerificationRequest[]): RequestSummary => ({
     total: requests.length,
@@ -294,6 +312,7 @@ export function VerificationsClient({
     }
 
     setDeletingRequestIds((prev) => ({ ...prev, [request.id]: true }));
+    clearSentRequestActionError(request.id);
     try {
       const response = await apiFetch(
         `/api/verification/requests/${
@@ -313,6 +332,7 @@ export function VerificationsClient({
 
       if (response.ok) {
         setSentRequests((prev) => prev.filter((item) => item.id !== request.id));
+        clearSentRequestActionError(request.id);
         setDeleteConfirmRequest(null);
         toast.success('Verification request deleted.');
         return;
@@ -324,10 +344,21 @@ export function VerificationsClient({
         return;
       }
 
-      toast.error(body.error || 'Failed to delete verification request.');
+      const message =
+        body.error || 'Verification request could not be deleted. Your request is unchanged.';
+      setSentRequestActionErrors((prev) => ({
+        ...prev,
+        [request.id]: { action: 'delete', message },
+      }));
+      toast.error(message);
     } catch (error) {
       dispatchClientErrorDiagnostic('verifications.client.sent_request_delete_failed', error);
-      toast.error('Failed to delete verification request.');
+      const message = 'Verification request could not be deleted. Your request is unchanged.';
+      setSentRequestActionErrors((prev) => ({
+        ...prev,
+        [request.id]: { action: 'delete', message },
+      }));
+      toast.error(message);
     } finally {
       setDeletingRequestIds((prev) => {
         const next = { ...prev };
@@ -343,6 +374,7 @@ export function VerificationsClient({
     }
 
     setResendingRequestIds((prev) => ({ ...prev, [request.id]: true }));
+    clearSentRequestActionError(request.id);
     try {
       const response = await apiFetch(
         `/api/verification/requests/${
@@ -365,7 +397,14 @@ export function VerificationsClient({
       }
 
       if (!response.ok) {
-        toast.error(body.error || 'Failed to resend verification request.');
+        const message =
+          body.error ||
+          'Verification request could not be resent. The original request is still active.';
+        setSentRequestActionErrors((prev) => ({
+          ...prev,
+          [request.id]: { action: 'resend', message },
+        }));
+        toast.error(message);
         return;
       }
 
@@ -382,9 +421,16 @@ export function VerificationsClient({
           ? 'Bundled verification request resent.'
           : 'Verification request resent.'
       );
+      clearSentRequestActionError(request.id);
     } catch (error) {
       dispatchClientErrorDiagnostic('verifications.client.sent_request_resend_failed', error);
-      toast.error('Failed to resend verification request.');
+      const message =
+        'Verification request could not be resent. The original request is still active.';
+      setSentRequestActionErrors((prev) => ({
+        ...prev,
+        [request.id]: { action: 'resend', message },
+      }));
+      toast.error(message);
     } finally {
       setResendingRequestIds((prev) => {
         const next = { ...prev };
@@ -663,88 +709,126 @@ export function VerificationsClient({
     </Card>
   );
 
-  const renderSentRequestCard = (request: VerificationRequest) => (
-    <Card
-      variant="bento"
-      key={`${request.subjectType}-${request.id}`}
-      className="p-4 sm:p-5"
-      role="listitem"
-      data-testid="verification-request-row"
-    >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex min-w-0 items-start gap-3 sm:items-center">
-          <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-[#eef3e8] text-proofound-forest">
-            <Mail className="h-5 w-5" />
+  const renderSentRequestCard = (request: VerificationRequest) => {
+    const actionError = sentRequestActionErrors[request.id];
+
+    return (
+      <Card
+        variant="bento"
+        key={`${request.subjectType}-${request.id}`}
+        className="p-4 sm:p-5"
+        role="listitem"
+        data-testid="verification-request-row"
+      >
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-start gap-3 sm:items-center">
+            <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-[#eef3e8] text-proofound-forest">
+              <Mail className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="font-semibold text-sm text-proofound-charcoal dark:text-foreground truncate">
+                {request.verifierEmail}
+              </h3>
+              <p className="text-xs leading-5 text-muted-foreground sm:truncate">
+                Verification subject:{' '}
+                <span className="font-medium text-proofound-charcoal">
+                  {getRequestSubject(request)}
+                </span>
+              </p>
+              {request.subjectType === 'custom_bundle' ? (
+                <p className="mt-1 text-xs text-proofound-forest">Proof Pack bundle request sent</p>
+              ) : null}
+              {request.claimSummary ? (
+                <div className="mt-2 rounded-md border border-proofound-stone/60 bg-white/70 p-2 text-xs leading-5 text-muted-foreground break-words">
+                  <span className="font-medium text-proofound-charcoal">Claim</span>
+                  <span className="mx-1">-</span>
+                  {request.claimSummary}
+                </div>
+              ) : null}
+            </div>
           </div>
-          <div className="min-w-0">
-            <h3 className="font-semibold text-sm text-proofound-charcoal dark:text-foreground truncate">
-              {request.verifierEmail}
-            </h3>
-            <p className="text-xs leading-5 text-muted-foreground sm:truncate">
-              Verification subject:{' '}
-              <span className="font-medium text-proofound-charcoal">
-                {getRequestSubject(request)}
-              </span>
-            </p>
-            {request.subjectType === 'custom_bundle' ? (
-              <p className="mt-1 text-xs text-proofound-forest">Proof Pack bundle request sent</p>
-            ) : null}
-            {request.claimSummary ? (
-              <div className="mt-2 rounded-md border border-proofound-stone/60 bg-white/70 p-2 text-xs leading-5 text-muted-foreground break-words">
-                <span className="font-medium text-proofound-charcoal">Claim</span>
-                <span className="mx-1">-</span>
-                {request.claimSummary}
-              </div>
-            ) : null}
+
+          <div className="flex w-full flex-wrap items-center justify-start gap-3 sm:w-auto sm:justify-end sm:shrink-0">
+            {renderStatusBadge(request)}
+            <div className="flex flex-wrap items-center gap-2">
+              {canResendSentRequest(request) && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    void handleResendSentRequest(request);
+                  }}
+                  disabled={Boolean(resendingRequestIds[request.id])}
+                  className="border-proofound-forest text-proofound-forest hover:bg-[#E8F5E9] text-xs px-3 h-8"
+                >
+                  {resendingRequestIds[request.id]
+                    ? 'Resending...'
+                    : request.subjectType === 'custom_bundle' ||
+                        (request.subjectType === 'skill' && request.bundleId)
+                      ? 'Resend bundle'
+                      : 'Resend request'}
+                </Button>
+              )}
+              {canDeleteSentRequest(request) && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    openDeleteSentRequestDialog(request);
+                  }}
+                  disabled={Boolean(deletingRequestIds[request.id])}
+                  className="border-[#C76B4A] text-[#8B4A36] hover:bg-[#FFF0F0] text-xs px-3 h-8"
+                >
+                  {deletingRequestIds[request.id]
+                    ? 'Deleting...'
+                    : request.subjectType === 'custom_bundle' ||
+                        (request.subjectType === 'skill' && request.bundleId)
+                      ? 'Manage bundle'
+                      : 'Delete'}
+                </Button>
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="flex w-full flex-wrap items-center justify-start gap-3 sm:w-auto sm:justify-end sm:shrink-0">
-          {renderStatusBadge(request)}
-          <div className="flex flex-wrap items-center gap-2">
-            {canResendSentRequest(request) && (
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => {
+        {actionError ? (
+          <div
+            className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900"
+            role="alert"
+          >
+            <p className="font-semibold">
+              {actionError.action === 'resend'
+                ? 'Verification request could not be resent'
+                : 'Verification request could not be deleted'}
+            </p>
+            <p>{actionError.message}</p>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                if (actionError.action === 'resend') {
                   void handleResendSentRequest(request);
-                }}
-                disabled={Boolean(resendingRequestIds[request.id])}
-                className="border-proofound-forest text-proofound-forest hover:bg-[#E8F5E9] text-xs px-3 h-8"
-              >
-                {resendingRequestIds[request.id]
-                  ? 'Resending...'
-                  : request.subjectType === 'custom_bundle' ||
-                      (request.subjectType === 'skill' && request.bundleId)
-                    ? 'Resend bundle'
-                    : 'Resend request'}
-              </Button>
-            )}
-            {canDeleteSentRequest(request) && (
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  openDeleteSentRequestDialog(request);
-                }}
-                disabled={Boolean(deletingRequestIds[request.id])}
-                className="border-[#C76B4A] text-[#8B4A36] hover:bg-[#FFF0F0] text-xs px-3 h-8"
-              >
-                {deletingRequestIds[request.id]
-                  ? 'Deleting...'
-                  : request.subjectType === 'custom_bundle' ||
-                      (request.subjectType === 'skill' && request.bundleId)
-                    ? 'Manage bundle'
-                    : 'Delete'}
-              </Button>
-            )}
+                  return;
+                }
+                openDeleteSentRequestDialog(request);
+              }}
+              disabled={
+                actionError.action === 'resend'
+                  ? Boolean(resendingRequestIds[request.id])
+                  : Boolean(deletingRequestIds[request.id])
+              }
+              className="mt-2 h-8 rounded-full border-amber-300 bg-white px-3 text-xs font-semibold text-amber-950 hover:bg-amber-100"
+            >
+              {actionError.action === 'resend' ? 'Retry resend' : 'Review delete'}
+            </Button>
           </div>
-        </div>
-      </div>
-    </Card>
-  );
+        ) : null}
+      </Card>
+    );
+  };
 
   const renderEmptyState = (status: RequestStatusFilter, mode: 'incoming' | 'sent') => {
     const statusText = status === 'all' ? '' : `${status} `;
@@ -1008,6 +1092,16 @@ export function VerificationsClient({
               Accepted verification records are not changed.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {deleteConfirmRequest &&
+          sentRequestActionErrors[deleteConfirmRequest.id]?.action === 'delete' ? (
+            <div
+              className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900"
+              role="alert"
+            >
+              <p className="font-semibold">Verification request could not be deleted</p>
+              <p>{sentRequestActionErrors[deleteConfirmRequest.id].message}</p>
+            </div>
+          ) : null}
           <AlertDialogFooter>
             <AlertDialogCancel
               disabled={Boolean(deletingRequestIds[deleteConfirmRequest?.id ?? ''])}

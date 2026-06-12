@@ -594,6 +594,110 @@ describe('VerificationsClient', () => {
     );
   });
 
+  it('keeps resend failures visible and retryable on the sent request row', async () => {
+    const sentRequests = [
+      makeRequest({
+        id: 'sent-resend-retry-1',
+        verifierEmail: 'mentor@company.com',
+        status: 'pending',
+      }),
+    ];
+    apiFetchMock
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: 'Mailbox provider rejected the resend.' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true }),
+      });
+
+    render(
+      <VerificationsClient
+        incomingRequests={[]}
+        sentRequests={sentRequests}
+        userEmail="me@proofound.io"
+      />
+    );
+
+    const sentTab = screen.getByRole('tab', { name: /^Sent/i });
+    fireEvent.mouseDown(sentTab);
+    fireEvent.click(sentTab);
+    fireEvent.keyDown(sentTab, { key: 'Enter' });
+    await waitFor(() => expect(screen.getByText('mentor@company.com')).toBeInTheDocument());
+
+    fireEvent.click(screen.getByRole('button', { name: 'Resend request' }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Verification request could not be resent');
+    expect(alert).toHaveTextContent('Mailbox provider rejected the resend.');
+    expect(screen.getByText('mentor@company.com')).toBeInTheDocument();
+
+    fireEvent.click(within(alert).getByRole('button', { name: 'Retry resend' }));
+
+    await waitFor(() => expect(apiFetchMock).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
+  });
+
+  it('keeps failed delete attempts visible without removing the sent request', async () => {
+    const sentRequests = [
+      makeRequest({
+        id: 'sent-delete-retry-1',
+        verifierEmail: 'mentor@company.com',
+        status: 'pending',
+      }),
+    ];
+    apiFetchMock
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: 'Verification service is temporarily unavailable.' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true }),
+      });
+
+    render(
+      <VerificationsClient
+        incomingRequests={[]}
+        sentRequests={sentRequests}
+        userEmail="me@proofound.io"
+      />
+    );
+
+    const sentTab = screen.getByRole('tab', { name: /^Sent/i });
+    fireEvent.mouseDown(sentTab);
+    fireEvent.click(sentTab);
+    fireEvent.keyDown(sentTab, { key: 'Enter' });
+    await waitFor(() => expect(screen.getByText('mentor@company.com')).toBeInTheDocument());
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    fireEvent.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete request' })
+    );
+
+    const dialogAlert = await within(screen.getByRole('alertdialog')).findByRole('alert');
+    expect(dialogAlert).toHaveTextContent('Verification request could not be deleted');
+    expect(dialogAlert).toHaveTextContent('Verification service is temporarily unavailable.');
+    expect(screen.getAllByText('mentor@company.com').length).toBeGreaterThan(0);
+
+    fireEvent.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Keep request' })
+    );
+
+    const rowAlert = await screen.findByRole('alert');
+    expect(rowAlert).toHaveTextContent('Verification request could not be deleted');
+    fireEvent.click(within(rowAlert).getByRole('button', { name: 'Review delete' }));
+    fireEvent.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete request' })
+    );
+
+    await waitFor(() => expect(apiFetchMock).toHaveBeenCalledTimes(2));
+    await waitFor(() => {
+      expect(screen.queryByText('mentor@company.com')).not.toBeInTheDocument();
+    });
+  });
+
   it('opens bundle cancellation dialog for bundled pending sent skill request', async () => {
     const sentRequests = [
       makeRequest({
