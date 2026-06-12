@@ -42,6 +42,25 @@ describe('ConversationList', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('normalizes missing masked participant labels in the list row', () => {
+    const { container } = render(
+      <ConversationList
+        conversations={[
+          {
+            ...baseConversation,
+            otherPartyName: 'Unknown',
+          },
+        ]}
+        onSelect={vi.fn()}
+        mode="individual"
+      />
+    );
+
+    expect(screen.getByText('Masked participant')).toBeInTheDocument();
+    expect(screen.getByText('MP')).toBeInTheDocument();
+    expect(container).not.toHaveTextContent('Unknown');
+  });
+
   it('shows a recoverable search empty state for conversation filters', () => {
     render(
       <ConversationList conversations={[baseConversation]} onSelect={vi.fn()} mode="individual" />

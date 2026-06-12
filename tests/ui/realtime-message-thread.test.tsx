@@ -35,26 +35,31 @@ vi.mock('@/components/messaging/RevealIdentityCard', () => ({
 
 vi.mock('@/components/messaging/MessageThread', () => ({
   MessageThread: ({
+    otherPartyName,
     onSendMessage,
   }: {
+    otherPartyName: string;
     onSendMessage: (content: string) => void | Promise<void>;
   }) => (
-    <button
-      type="button"
-      onClick={async () => {
-        try {
-          await onSendMessage('Proof review follow-up');
-        } catch (error) {
-          window.dispatchEvent(
-            new CustomEvent('realtime-send-rejected', {
-              detail: error instanceof Error ? error.message : String(error),
-            })
-          );
-        }
-      }}
-    >
-      Send through thread
-    </button>
+    <div>
+      <p data-testid="other-party-name">{otherPartyName}</p>
+      <button
+        type="button"
+        onClick={async () => {
+          try {
+            await onSendMessage('Proof review follow-up');
+          } catch (error) {
+            window.dispatchEvent(
+              new CustomEvent('realtime-send-rejected', {
+                detail: error instanceof Error ? error.message : String(error),
+              })
+            );
+          }
+        }}
+      >
+        Send through thread
+      </button>
+    </div>
   ),
 }));
 
@@ -96,5 +101,40 @@ describe('RealtimeMessageThread', () => {
     expect(mocks.diagnostic).toHaveBeenCalledWith('messages.thread.send_failed', expect.any(Error));
 
     window.removeEventListener('realtime-send-rejected', listener);
+  });
+
+  it('normalizes placeholder participant names after conversation refresh', async () => {
+    mocks.apiFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        conversation: {
+          stage: 'masked',
+          currentUserWantsReveal: false,
+          otherUserWantsReveal: false,
+          canReveal: true,
+        },
+        otherParticipant: {
+          displayName: 'Unknown',
+          handle: null,
+          avatarUrl: null,
+        },
+      }),
+    });
+
+    render(
+      <RealtimeMessageThread
+        conversationId="conversation-1"
+        initialMessages={[]}
+        currentUserId="user-1"
+        otherPartyName="Unknown"
+        stage="masked"
+        onSendMessage={vi.fn()}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('other-party-name')).toHaveTextContent('Masked participant');
+    });
+    expect(screen.queryByText('Unknown')).not.toBeInTheDocument();
   });
 });

@@ -128,6 +128,44 @@ describe('organization messages page', () => {
     expect(screen.queryByText(/^loading\.\.\.$/i)).not.toBeInTheDocument();
   });
 
+  it('maps legacy missing organization-side participant labels to a masked privacy state', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        if (url === '/api/conversations') {
+          return {
+            ok: true,
+            json: async () => ({
+              conversations: [
+                {
+                  id: 'conversation-masked',
+                  otherParty: { displayName: 'Unknown', displayAvatar: null },
+                  createdAt: '2026-01-01T00:00:00.000Z',
+                  matchId: 'match-masked',
+                  stage: 'masked',
+                },
+              ],
+            }),
+          };
+        }
+
+        if (url.startsWith('/api/conversations/') && url.endsWith('/messages')) {
+          return {
+            ok: true,
+            json: async () => ({ messages: [] }),
+          };
+        }
+
+        throw new Error(`Unexpected fetch URL: ${url}`);
+      }) as any
+    );
+
+    const { container } = render(<OrgMessagesClient currentUserId="user-1" />);
+
+    expect(await screen.findByText('Masked participant')).toBeInTheDocument();
+    expect(container).not.toHaveTextContent('Unknown');
+  });
+
   it('shows a recoverable organization conversation load failure instead of an empty list', async () => {
     vi.stubGlobal(
       'fetch',

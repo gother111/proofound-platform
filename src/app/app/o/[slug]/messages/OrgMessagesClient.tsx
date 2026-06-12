@@ -19,6 +19,7 @@ import { Lock, MessageSquare } from 'lucide-react';
 import { apiFetch } from '@/lib/api/fetch';
 import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { LoadingOrganizationMessages } from './DeferredOrgMessagesClient';
+import { getConversationParticipantLabel } from '@/lib/messaging/participant-label';
 
 type OrgMessagesClientProps = {
   currentUserId: string;
@@ -52,17 +53,24 @@ function OrganizationMessagesPageContent({ currentUserId, hideHeader }: OrgMessa
 
       const data = await response.json();
       // Transform API response to match ConversationList component interface
-      const transformedConversations = (data.conversations || []).map((conv: any) => ({
-        id: conv.id,
-        otherPartyName: conv.otherParty?.displayName || 'Unknown',
-        otherPartyAvatar: conv.otherParty?.displayAvatar,
-        lastMessage: conv.lastMessage?.content || '',
-        lastMessageAt: conv.lastMessageAt || conv.createdAt,
-        unreadCount: conv.unreadCount || 0,
-        matchId: conv.matchId,
-        assignmentTitle: conv.assignmentRole,
-        stage: conv.stage === 'revealed' ? 'revealed' : 'masked',
-      }));
+      const transformedConversations = (data.conversations || []).map((conv: any) => {
+        const stage = conv.stage === 'revealed' ? 'revealed' : 'masked';
+
+        return {
+          id: conv.id,
+          otherPartyName: getConversationParticipantLabel({
+            stage,
+            displayName: conv.otherParty?.displayName,
+          }),
+          otherPartyAvatar: conv.otherParty?.displayAvatar,
+          lastMessage: conv.lastMessage?.content || '',
+          lastMessageAt: conv.lastMessageAt || conv.createdAt,
+          unreadCount: conv.unreadCount || 0,
+          matchId: conv.matchId,
+          assignmentTitle: conv.assignmentRole,
+          stage,
+        };
+      });
       setConversations(transformedConversations);
     } catch (error) {
       dispatchClientErrorDiagnostic('messages.organization.conversations_load_failed', error);

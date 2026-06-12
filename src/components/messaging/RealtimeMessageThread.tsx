@@ -8,6 +8,7 @@ import { Wifi, WifiOff } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { apiFetch } from '@/lib/api/fetch';
 import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { getConversationParticipantLabel } from '@/lib/messaging/participant-label';
 
 export interface RealtimeMessageThreadProps {
   conversationId: string;
@@ -65,12 +66,18 @@ export function RealtimeMessageThread({
       if (!response.ok) return;
 
       const data = await response.json();
+      const nextStage = data.conversation?.stage === 'revealed' ? 'revealed' : 'masked';
       setConversationState({
-        stage: data.conversation?.stage === 'revealed' ? 'revealed' : 'masked',
+        stage: nextStage,
         currentUserWantsReveal: Boolean(data.conversation?.currentUserWantsReveal),
         otherUserWantsReveal: Boolean(data.conversation?.otherUserWantsReveal),
         canReveal: Boolean(data.conversation?.canReveal),
-        otherPartyName: data.otherParticipant?.displayName || otherPartyName,
+        otherPartyName: getConversationParticipantLabel({
+          stage: nextStage,
+          displayName: data.otherParticipant?.displayName,
+          handle: data.otherParticipant?.handle,
+          fallbackName: otherPartyName,
+        }),
         otherPartyAvatar: data.otherParticipant?.avatarUrl || otherPartyAvatar,
       });
     } catch (error) {
@@ -143,7 +150,10 @@ export function RealtimeMessageThread({
       ...prev,
       stage,
       canReveal: stage === 'masked',
-      otherPartyName,
+      otherPartyName: getConversationParticipantLabel({
+        stage,
+        displayName: otherPartyName,
+      }),
       otherPartyAvatar,
     }));
   }, [otherPartyAvatar, otherPartyName, stage]);

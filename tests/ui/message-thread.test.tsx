@@ -40,6 +40,24 @@ describe('MessageThread', () => {
     expect(screen.queryByText(/say hello/i)).not.toBeInTheDocument();
   });
 
+  it('shows missing masked participant details as an intentional privacy state', () => {
+    const { container } = render(
+      <MessageThread
+        conversationId="conversation-1"
+        messages={[]}
+        currentUserId="user-1"
+        otherPartyName="Unknown"
+        stage="masked"
+        onSendMessage={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText('Masked participant')).toBeInTheDocument();
+    expect(screen.getByText('MP')).toBeInTheDocument();
+    expect(screen.getByText('Identity protected until reveal approval')).toBeInTheDocument();
+    expect(container).not.toHaveTextContent('Unknown');
+  });
+
   it('explains blocked paste and drop actions without internal policy codes', () => {
     const { container } = render(
       <>

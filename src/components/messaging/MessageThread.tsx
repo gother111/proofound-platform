@@ -23,6 +23,10 @@ import { useToast } from '@/hooks/use-toast';
 import { DataErrorBoundary } from '@/components/ErrorBoundary';
 import { TypingIndicator } from './TypingIndicator';
 import { ReadReceipt } from './ReadReceipt';
+import {
+  getConversationParticipantInitials,
+  getConversationParticipantLabel,
+} from '@/lib/messaging/participant-label';
 
 export interface Message {
   id: string;
@@ -136,17 +140,11 @@ export function MessageThread({
   };
 
   // Get display name
-  const displayName = otherPartyName;
-  const getInitials = (name: string) => {
-    if (name === 'Submission') return 'S';
-    if (name === 'Organization') return 'O';
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
-  };
+  const displayName = getConversationParticipantLabel({
+    stage,
+    displayName: otherPartyName,
+  });
+  const participantInitials = getConversationParticipantInitials(displayName, stage);
 
   // Character count color
   const characterCountColor = () => {
@@ -177,7 +175,7 @@ export function MessageThread({
                 <AvatarImage src={otherPartyAvatar} alt={displayName} />
               ) : null}
               <AvatarFallback className="bg-proofound-forest text-white">
-                {getInitials(displayName)}
+                {participantInitials}
               </AvatarFallback>
             </Avatar>
             <div>
@@ -247,7 +245,7 @@ export function MessageThread({
                         <AvatarImage src={otherPartyAvatar} alt={displayName} />
                       ) : null}
                       <AvatarFallback className="bg-proofound-forest text-white text-xs">
-                        {getInitials(displayName)}
+                        {participantInitials}
                       </AvatarFallback>
                     </Avatar>
                   )}

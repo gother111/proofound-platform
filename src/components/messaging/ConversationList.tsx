@@ -6,13 +6,17 @@
 
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { AlertTriangle, MessageSquare, RefreshCcw, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import {
+  getConversationParticipantInitials,
+  getConversationParticipantLabel,
+} from '@/lib/messaging/participant-label';
 
 export interface Conversation {
   id: string;
@@ -63,6 +67,14 @@ export function ConversationList({
           helper: 'Your identity remains private until the reveal step.',
         };
 
+  // Get display name based on stage
+  const getDisplayName = useCallback((conv: Conversation) => {
+    return getConversationParticipantLabel({
+      stage: conv.stage,
+      displayName: conv.otherPartyName,
+    });
+  }, []);
+
   // Filter conversations by search query
   const filteredConversations = useMemo(() => {
     if (!trimmedSearchQuery) return conversations;
@@ -70,11 +82,11 @@ export function ConversationList({
     const query = trimmedSearchQuery.toLowerCase();
     return conversations.filter(
       (conv) =>
-        conv.otherPartyName.toLowerCase().includes(query) ||
+        getDisplayName(conv).toLowerCase().includes(query) ||
         conv.assignmentTitle?.toLowerCase().includes(query) ||
         conv.lastMessage.toLowerCase().includes(query)
     );
-  }, [conversations, trimmedSearchQuery]);
+  }, [conversations, getDisplayName, trimmedSearchQuery]);
 
   // Truncate message preview
   const truncateMessage = (message: string, maxLength: number = 60) => {
@@ -85,23 +97,6 @@ export function ConversationList({
   // Format timestamp
   const formatTimestamp = (date: Date) => {
     return formatDistanceToNow(new Date(date), { addSuffix: true });
-  };
-
-  // Get display name based on stage
-  const getDisplayName = (conv: Conversation) => {
-    return conv.otherPartyName;
-  };
-
-  // Get avatar initials
-  const getInitials = (name: string) => {
-    if (name === 'Submission') return 'S';
-    if (name === 'Organization') return 'O';
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
   };
 
   if (isLoading) {
@@ -239,7 +234,10 @@ export function ConversationList({
                   />
                 ) : null}
                 <AvatarFallback className="bg-proofound-forest text-white">
-                  {getInitials(getDisplayName(conversation))}
+                  {getConversationParticipantInitials(
+                    getDisplayName(conversation),
+                    conversation.stage
+                  )}
                 </AvatarFallback>
               </Avatar>
 
