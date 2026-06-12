@@ -64,7 +64,19 @@ function ResponseList({
   templates: FeedbackTemplate[];
 }) {
   if (!responses.length) {
-    return <p className="text-sm text-muted-foreground">No feedback shared yet.</p>;
+    return (
+      <Card className="border-dashed border-proofound-stone/80 bg-white/75">
+        <CardContent className="space-y-2 p-4 sm:p-5">
+          <p className="text-sm font-semibold text-proofound-charcoal">
+            Feedback is waiting on submissions
+          </p>
+          <p className="text-sm leading-6 text-muted-foreground">
+            Submit the relevant feedback form above. Once feedback is shared, anonymized responses
+            appear here for the interview record.
+          </p>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
