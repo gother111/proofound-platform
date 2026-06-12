@@ -461,10 +461,13 @@ describe('runtime debug output guardrails', () => {
 
   it('keeps client verification link fixtures behind the explicit visual fixture gate', () => {
     const fixtureSource = readSource('src/lib/verification/visual-link-fixtures.ts');
+    const resetConfirmSource = readSource(
+      'src/app/(auth)/reset-password/confirm/ConfirmResetPasswordForm.tsx'
+    );
     const pageSources = [
       readSource('src/app/verify-work-email/VerifyWorkEmailContent.tsx'),
       readSource('src/app/(auth)/verify-email/VerifyEmailContent.tsx'),
-      readSource('src/app/(auth)/reset-password/confirm/ConfirmResetPasswordForm.tsx'),
+      resetConfirmSource,
       readSource('src/app/verify/[token]/page.tsx'),
       readSource('src/app/verify/custom/[token]/page.tsx'),
     ].join('\n');
@@ -478,6 +481,9 @@ describe('runtime debug output guardrails', () => {
     expect(pageSources).not.toContain(
       "return process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true';"
     );
+    expect(resetConfirmSource).toContain('auth.reset_password.confirm_failed');
+    expect(resetConfirmSource).toContain('Your existing password is unchanged');
+    expect(resetConfirmSource).not.toContain('setFormError(result.error)');
   });
 
   it('keeps visual fixture runtime gates preview and staging sensitive', () => {

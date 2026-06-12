@@ -14,6 +14,10 @@ import {
   clientVerificationLinkVisualFixturesEnabled,
   isVisualResetPasswordToken,
 } from '@/lib/verification/visual-link-fixtures';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+
+const PASSWORD_RESET_CONFIRM_FAILED_MESSAGE =
+  'Password was not reset. Your existing password is unchanged; request a new link or try again.';
 
 export function ConfirmResetPasswordForm() {
   const router = useRouter();
@@ -167,7 +171,9 @@ export function ConfirmResetPasswordForm() {
     const result = visualResetMode ? { success: true } : await confirmPasswordReset(formData);
 
     if (result.error) {
-      setFormError(result.error);
+      const resetError = new Error(result.error);
+      dispatchClientErrorDiagnostic('auth.reset_password.confirm_failed', resetError);
+      setFormError(PASSWORD_RESET_CONFIRM_FAILED_MESSAGE);
       setIsLoading(false);
     } else {
       setIsSuccess(true);

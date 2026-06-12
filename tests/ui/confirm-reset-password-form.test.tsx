@@ -4,6 +4,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import { confirmPasswordReset } from '@/actions/auth';
 import { ConfirmResetPasswordForm } from '@/app/(auth)/reset-password/confirm/ConfirmResetPasswordForm';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { VISUAL_VERIFY_TOKENS } from '@/lib/verification/visual-link-fixtures';
 
 const routerPush = vi.fn();
@@ -24,7 +25,12 @@ vi.mock('@/actions/auth', () => ({
   confirmPasswordReset: vi.fn(),
 }));
 
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientErrorDiagnostic: vi.fn(),
+}));
+
 const confirmPasswordResetMock = vi.mocked(confirmPasswordReset);
+const dispatchClientErrorDiagnosticMock = vi.mocked(dispatchClientErrorDiagnostic);
 
 describe('ConfirmResetPasswordForm', () => {
   beforeEach(() => {
@@ -108,6 +114,42 @@ describe('ConfirmResetPasswordForm', () => {
       '/login'
     );
     expect(confirmPasswordResetMock).not.toHaveBeenCalled();
+    expect(routerPush).not.toHaveBeenCalled();
+  });
+
+  it('keeps failed reset confirmation retryable without raw auth service text', async () => {
+    const rawFailure = 'Auth provider token expired with stack detail';
+    searchParamsGet.mockReturnValue(null);
+    confirmPasswordResetMock.mockResolvedValueOnce({ error: rawFailure });
+
+    render(<ConfirmResetPasswordForm />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Set new password')).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText('New password'), {
+      target: { value: 'Proofound123' },
+    });
+    fireEvent.change(screen.getByLabelText('Confirm password'), {
+      target: { value: 'Proofound123' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /reset password/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(
+      'Password was not reset. Your existing password is unchanged; request a new link or try again.'
+    );
+    expect(alert).not.toHaveTextContent(rawFailure);
+    expect(screen.getByLabelText('New password')).toHaveValue('Proofound123');
+    expect(screen.getByLabelText('Confirm password')).toHaveValue('Proofound123');
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'auth.reset_password.confirm_failed',
+      expect.any(Error)
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
+      rawFailure
+    );
     expect(routerPush).not.toHaveBeenCalled();
   });
 });
