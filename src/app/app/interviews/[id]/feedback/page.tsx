@@ -1,6 +1,6 @@
-import { notFound } from 'next/navigation';
 import FeedbackForm from '@/components/feedback/FeedbackForm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 type FeedbackQuestion = {
   id: string;
@@ -51,9 +51,50 @@ function feedbackDirectionLabel(direction: FeedbackResponse['direction']) {
 
 async function loadFeedback(interviewId: string): Promise<FeedbackApiResponse | null> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
-  const res = await fetch(`${baseUrl}/api/feedback/${interviewId}`, { cache: 'no-store' });
-  if (!res.ok) return null;
-  return res.json();
+  try {
+    const res = await fetch(`${baseUrl}/api/feedback/${interviewId}`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
+}
+
+function FeedbackUnavailableState({ interviewId }: { interviewId: string }) {
+  return (
+    <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-8">
+      <Card className="border-amber-200 bg-white/90">
+        <CardHeader className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-proofound-forest">
+            Interview feedback
+          </p>
+          <CardTitle>Interview feedback could not load</CardTitle>
+          <p className="text-sm leading-6 text-muted-foreground">
+            Feedback forms and shared responses are unavailable right now. No feedback was submitted
+            from this page, and private interview feedback remains hidden until the record can be
+            loaded.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div
+            role="alert"
+            className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-amber-950"
+          >
+            <p className="font-semibold">Feedback record unavailable</p>
+            <p className="mt-1">
+              Retry this feedback page from the current interview workflow before submitting or
+              reviewing feedback.
+            </p>
+            <Button asChild variant="outline" size="sm" className="mt-4 bg-white">
+              <a href={`/app/interviews/${encodeURIComponent(interviewId)}/feedback`}>
+                Retry feedback
+              </a>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
 
 function ResponseList({
@@ -127,7 +168,7 @@ export default async function InterviewFeedbackPage({
   const data = await loadFeedback(id);
 
   if (!data) {
-    notFound();
+    return <FeedbackUnavailableState interviewId={id} />;
   }
 
   const yourResponses = new Set(

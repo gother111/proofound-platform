@@ -63,4 +63,31 @@ describe('InterviewFeedbackPage', () => {
     expect(screen.getByText(/Submit the relevant feedback form above/i)).toBeInTheDocument();
     expect(screen.queryByText('No feedback shared yet.')).not.toBeInTheDocument();
   });
+
+  it('shows a privacy-safe unavailable state when feedback cannot load', async () => {
+    const fetchMock = vi.fn(async () => ({
+      ok: false,
+      json: async () => ({ error: 'temporary feedback outage' }),
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    render(
+      await InterviewFeedbackPage({
+        params: Promise.resolve({ id: 'interview-1' }),
+      })
+    );
+
+    expect(
+      screen.getByRole('heading', { name: /interview feedback could not load/i })
+    ).toBeInTheDocument();
+    const alert = screen.getByRole('alert');
+    expect(alert).toHaveTextContent('Feedback record unavailable');
+    expect(screen.getByText(/No feedback was submitted from this page/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /retry feedback/i })).toHaveAttribute(
+      'href',
+      '/app/interviews/interview-1/feedback'
+    );
+    expect(screen.queryByTestId('feedback-form-candidate_to_org')).not.toBeInTheDocument();
+    expect(screen.queryByText(/temporary feedback outage/i)).not.toBeInTheDocument();
+  });
 });
