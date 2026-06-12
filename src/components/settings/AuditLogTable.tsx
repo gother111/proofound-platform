@@ -3,8 +3,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Download } from 'lucide-react';
+import { AlertTriangle, Loader2, Download, RefreshCcw } from 'lucide-react';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 interface AuditLogTableProps {
   userId: string;
@@ -27,6 +28,9 @@ interface AuditLogResponse {
   hasMore: boolean;
 }
 
+const ACCOUNT_HISTORY_LOAD_RETRY_COPY =
+  'Account history could not load. Your privacy records are still safe; retry this section to refresh recent activity.';
+
 export function AuditLogTable({ userId }: AuditLogTableProps) {
   const [data, setData] = useState<AuditLogResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -42,10 +46,11 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
       } else {
         setLoading(true);
       }
+      setError(null);
 
       const response = await apiFetch(`/api/user/audit-log?limit=${limit}&offset=${newOffset}`);
       if (!response.ok) {
-        throw new Error('Failed to fetch account history');
+        throw new Error('settings_account_history_request_failed');
       }
 
       const auditData: AuditLogResponse = await response.json();
@@ -64,7 +69,8 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
 
       setOffset(newOffset);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load account history');
+      dispatchClientErrorDiagnostic('settings.account_history.load_failed', err);
+      setError(ACCOUNT_HISTORY_LOAD_RETRY_COPY);
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -155,14 +161,35 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
     );
   }
 
-  if (error || !data) {
+  const renderLoadError = () => (
+    <div
+      className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-100"
+      role="alert"
+    >
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex gap-2">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <p>{error || ACCOUNT_HISTORY_LOAD_RETRY_COPY}</p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => fetchAuditLog(0)}
+          disabled={loading}
+          className="min-h-10 w-full gap-2 bg-white/70 sm:w-auto"
+        >
+          <RefreshCcw className="h-4 w-4" aria-hidden="true" />
+          Retry account history
+        </Button>
+      </div>
+    </div>
+  );
+
+  if (!data) {
     return (
-      <Card variant="bento" className="border-red-200 dark:border-red-900 rounded-2xl">
-        <CardContent className="pt-6">
-          <p className="text-red-600 dark:text-red-400">
-            {error || 'Failed to load account history. Please try again.'}
-          </p>
-        </CardContent>
+      <Card variant="bento" className="border-amber-200 dark:border-amber-900 rounded-2xl">
+        <CardContent className="pt-6">{renderLoadError()}</CardContent>
       </Card>
     );
   }
@@ -191,6 +218,8 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
           </div>
         </CardHeader>
         <CardContent>
+          {error ? <div className="mb-4">{renderLoadError()}</div> : null}
+
           {data.events.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-proofound-charcoal/60 dark:text-muted-foreground">
