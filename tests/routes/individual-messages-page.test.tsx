@@ -468,4 +468,23 @@ describe('individual messages page', () => {
       { scroll: false }
     );
   });
+
+  it('explains stale individual conversation links without hiding privacy state', async () => {
+    pathnameValue = '/app/i/communications';
+    searchParamsValue = 'section=messages&conversation=missing-conversation';
+
+    render(<MessagesClient />);
+
+    const status = await screen.findByRole('status');
+    expect(status).toHaveTextContent('Conversation link unavailable');
+    expect(status).toHaveTextContent('no longer available to your account');
+    expect(status).toHaveTextContent('Private messages and reveal details remain protected');
+    expect(screen.queryByTestId('message-thread')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show available conversations' }));
+
+    expect(replaceMock).toHaveBeenCalledWith('/app/i/communications?section=messages', {
+      scroll: false,
+    });
+  });
 });

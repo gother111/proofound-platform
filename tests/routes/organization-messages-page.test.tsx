@@ -351,4 +351,23 @@ describe('organization messages page', () => {
       { scroll: false }
     );
   });
+
+  it('explains stale organization conversation links without hiding reveal state safety', async () => {
+    pathnameValue = '/app/o/acme/communications';
+    searchParamsValue = 'section=messages&conversation=missing-conversation';
+
+    render(<OrgMessagesClient currentUserId="user-1" />);
+
+    const status = await screen.findByRole('status');
+    expect(status).toHaveTextContent('Assignment thread link unavailable');
+    expect(status).toHaveTextContent('no longer available to this workspace');
+    expect(status).toHaveTextContent('Review details and reveal state remain protected');
+    expect(screen.queryByTestId('message-thread')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show available conversations' }));
+
+    expect(replaceMock).toHaveBeenCalledWith('/app/o/acme/communications?section=messages', {
+      scroll: false,
+    });
+  });
 });

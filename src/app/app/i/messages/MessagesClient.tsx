@@ -15,7 +15,7 @@ import { ConversationList, type Conversation } from '@/components/messaging/Conv
 import { MessageThreadLoadFailure } from '@/components/messaging/MessageThreadLoadFailure';
 import type { RealtimeMessageThreadProps } from '@/components/messaging/RealtimeMessageThread';
 import { type Message } from '@/components/messaging/MessageThread';
-import { Lock, MessageSquare } from 'lucide-react';
+import { AlertTriangle, Lock, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import LoadingIndividualMessages from './loading';
 import { apiFetch } from '@/lib/api/fetch';
@@ -213,6 +213,9 @@ function MessagesPageContent() {
   };
 
   const selectedConversation = conversations.find((c) => c.id === selectedConversationId);
+  const hasUnavailableConversationLink = Boolean(
+    conversationParam && !isLoadingConversations && !conversationLoadError && !selectedConversation
+  );
 
   const conversationRoute = useCallback(
     (conversationId?: string) => {
@@ -277,10 +280,42 @@ function MessagesPageContent() {
       {/* Right: Message Thread or Empty State */}
       <div
         className={`h-full min-h-0 min-w-0 flex-1 ${rightPaneBgClass} ${
-          !selectedConversationId ? 'hidden md:flex md:items-center md:justify-center' : 'flex'
+          !selectedConversationId && !hasUnavailableConversationLink
+            ? 'hidden md:flex md:items-center md:justify-center'
+            : 'flex'
         }`}
       >
-        {selectedConversation && messageLoadError ? (
+        {hasUnavailableConversationLink ? (
+          <div
+            role="status"
+            aria-live="polite"
+            className="m-auto mx-6 max-w-md rounded-2xl border border-proofound-stone/70 bg-white/70 p-8 text-center shadow-sm"
+          >
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#fff1d6] text-[#8a5b00]">
+              <AlertTriangle className="h-6 w-6" />
+            </div>
+            <div className="space-y-3">
+              <p className="font-display text-xl font-semibold text-proofound-charcoal">
+                Conversation link unavailable
+              </p>
+              <p className="text-sm leading-6 text-muted-foreground">
+                The thread from this link is no longer available to your account. It may have
+                closed, expired, or require a different role.
+              </p>
+              <p className="inline-flex items-center justify-center gap-2 text-xs font-medium text-proofound-charcoal/70">
+                <Lock className="h-3.5 w-3.5" />
+                Private messages and reveal details remain protected
+              </p>
+              <button
+                type="button"
+                onClick={handleBackToConversationList}
+                className="mt-2 inline-flex min-h-10 items-center justify-center rounded-md border border-proofound-stone/80 bg-white px-4 text-sm font-medium text-proofound-forest transition-colors hover:border-proofound-forest hover:bg-proofound-parchment/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+              >
+                Show available conversations
+              </button>
+            </div>
+          </div>
+        ) : selectedConversation && messageLoadError ? (
           <MessageThreadLoadFailure
             description={messageLoadError}
             isRetrying={isLoadingMessages}
