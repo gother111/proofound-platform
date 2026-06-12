@@ -160,8 +160,78 @@ describe('PrivacyOverview copy', () => {
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Export could not start');
     expect(alert).toHaveTextContent('We could not prepare your data export');
+    expect(screen.getByRole('button', { name: /Retry export/i })).toBeInTheDocument();
     expect(alertSpy).not.toHaveBeenCalled();
     expect(global.fetch).toHaveBeenCalledWith('/api/user/export');
+  });
+
+  it('keeps overview data exports retryable after a failed download start', async () => {
+    const createObjectURLMock = vi.fn(() => 'blob:privacy-overview-export');
+    const revokeObjectURLMock = vi.fn();
+    const anchorClickMock = vi.fn();
+    const originalCreateObjectURL = URL.createObjectURL;
+    const originalRevokeObjectURL = URL.revokeObjectURL;
+    const originalCreateElement = document.createElement.bind(document);
+    let exportAttempts = 0;
+
+    URL.createObjectURL = createObjectURLMock;
+    URL.revokeObjectURL = revokeObjectURLMock;
+    vi.spyOn(document, 'createElement').mockImplementation((tagName: string) => {
+      const element = originalCreateElement(tagName);
+      if (tagName.toLowerCase() === 'a') {
+        element.click = anchorClickMock;
+      }
+      return element;
+    });
+
+    (global as any).fetch = vi.fn(async (url: string) => {
+      if (url === '/api/feature-flags') {
+        return {
+          ok: true,
+          json: async () => ({ flags: { privacySummary: true } }),
+        };
+      }
+
+      if (url === '/api/user/export') {
+        exportAttempts += 1;
+        if (exportAttempts === 1) {
+          return {
+            ok: false,
+            json: async () => ({}),
+          };
+        }
+
+        return {
+          ok: true,
+          blob: async () => new Blob(['{"ok":true}'], { type: 'application/json' }),
+        };
+      }
+
+      return {
+        ok: true,
+        json: async () => ({}),
+      };
+    });
+
+    try {
+      render(<PrivacyOverview userId="user-1" />);
+
+      fireEvent.click(screen.getByRole('button', { name: /Download my data/i }));
+
+      const alert = await screen.findByRole('alert');
+      expect(alert).toHaveTextContent('Export could not start');
+
+      fireEvent.click(screen.getByRole('button', { name: /Retry export/i }));
+
+      expect(await screen.findByRole('status')).toHaveTextContent('Export started');
+      expect(exportAttempts).toBe(2);
+      expect(anchorClickMock).toHaveBeenCalled();
+      expect(createObjectURLMock).toHaveBeenCalled();
+      expect(revokeObjectURLMock).toHaveBeenCalledWith('blob:privacy-overview-export');
+    } finally {
+      URL.createObjectURL = originalCreateObjectURL;
+      URL.revokeObjectURL = originalRevokeObjectURL;
+    }
   });
 
   it('does not present zero visibility counts when the summary fails to load', async () => {

@@ -90,7 +90,84 @@ describe('privacy data breakdown', () => {
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Export could not start');
     expect(alert).toHaveTextContent('We could not prepare your data export');
+    expect(screen.getByRole('button', { name: /Retry export/i })).toBeInTheDocument();
     expect(alertSpy).not.toHaveBeenCalled();
     expect(global.fetch).toHaveBeenCalledWith('/api/user/export');
+  });
+
+  it('keeps failed exports retryable without leaving the data view', async () => {
+    const createObjectURLMock = vi.fn(() => 'blob:proofound-export');
+    const revokeObjectURLMock = vi.fn();
+    const anchorClickMock = vi.fn();
+    const originalCreateObjectURL = URL.createObjectURL;
+    const originalRevokeObjectURL = URL.revokeObjectURL;
+    const originalCreateElement = document.createElement.bind(document);
+    let exportAttempts = 0;
+
+    URL.createObjectURL = createObjectURLMock;
+    URL.revokeObjectURL = revokeObjectURLMock;
+    vi.spyOn(document, 'createElement').mockImplementation((tagName: string) => {
+      const element = originalCreateElement(tagName);
+      if (tagName.toLowerCase() === 'a') {
+        element.click = anchorClickMock;
+      }
+      return element;
+    });
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url === '/api/user/data-inventory') {
+          return {
+            ok: true,
+            json: async () => ({
+              counts: {
+                profile: 2,
+                professional: 6,
+                proof: 6,
+                matching: 3,
+                activity: 1,
+              },
+            }),
+          };
+        }
+
+        if (url === '/api/user/export') {
+          exportAttempts += 1;
+          if (exportAttempts === 1) {
+            return { ok: false, json: async () => ({}) };
+          }
+
+          return {
+            ok: true,
+            blob: async () => new Blob(['{"ok":true}'], { type: 'application/json' }),
+          };
+        }
+
+        return { ok: false, json: async () => ({}) };
+      }) as unknown as typeof fetch
+    );
+
+    try {
+      render(<DataBreakdown />);
+
+      fireEvent.click(await screen.findByRole('button', { name: /Download my data/i }));
+
+      const alert = await screen.findByRole('alert');
+      expect(alert).toHaveTextContent('Export could not start');
+
+      fireEvent.click(screen.getByRole('button', { name: /Retry export/i }));
+
+      expect(await screen.findByRole('status')).toHaveTextContent('Export started');
+      expect(exportAttempts).toBe(2);
+      expect(anchorClickMock).toHaveBeenCalled();
+      expect(createObjectURLMock).toHaveBeenCalled();
+      expect(revokeObjectURLMock).toHaveBeenCalledWith('blob:proofound-export');
+      expect(screen.getByText('Proof and verification')).toBeInTheDocument();
+    } finally {
+      URL.createObjectURL = originalCreateObjectURL;
+      URL.revokeObjectURL = originalRevokeObjectURL;
+    }
   });
 });

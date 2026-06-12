@@ -175,6 +175,9 @@ export function DataBreakdown() {
             kind={exportFeedback.kind}
             title={exportFeedback.title}
             className="mb-4"
+            actionLabel={exportFeedback.kind === 'error' ? 'Retry export' : undefined}
+            actionDisabled={exporting}
+            onAction={exportFeedback.kind === 'error' ? handleExportData : undefined}
           >
             {exportFeedback.message}
           </DataExportFeedback>

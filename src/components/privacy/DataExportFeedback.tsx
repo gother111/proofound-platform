@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface DataExportFeedbackProps {
@@ -10,9 +11,20 @@ interface DataExportFeedbackProps {
   title: string;
   children: ReactNode;
   className?: string;
+  actionLabel?: string;
+  actionDisabled?: boolean;
+  onAction?: () => void;
 }
 
-export function DataExportFeedback({ kind, title, children, className }: DataExportFeedbackProps) {
+export function DataExportFeedback({
+  kind,
+  title,
+  children,
+  className,
+  actionLabel,
+  actionDisabled,
+  onAction,
+}: DataExportFeedbackProps) {
   const Icon = kind === 'error' ? AlertCircle : CheckCircle2;
 
   return (
@@ -32,6 +44,23 @@ export function DataExportFeedback({ kind, title, children, className }: DataExp
         <div className="min-w-0">
           <p className="font-medium">{title}</p>
           <p className="mt-1 leading-5">{children}</p>
+          {onAction && actionLabel ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onAction}
+              disabled={actionDisabled}
+              className={cn(
+                'mt-3 h-8 rounded-full bg-white px-3 text-xs font-semibold',
+                kind === 'error'
+                  ? 'border-[#F0D2B8] text-[#7A3A18] hover:bg-[#FFF1E3]'
+                  : 'border-[#d8e6d2] text-proofound-forest hover:bg-[#edf7e8]'
+              )}
+            >
+              {actionDisabled ? 'Trying again...' : actionLabel}
+            </Button>
+          ) : null}
         </div>
       </div>
     </div>

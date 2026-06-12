@@ -259,6 +259,9 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
                   kind={exportFeedback.kind}
                   title={exportFeedback.title}
                   className="mt-4"
+                  actionLabel={exportFeedback.kind === 'error' ? 'Retry export' : undefined}
+                  actionDisabled={isExporting}
+                  onAction={exportFeedback.kind === 'error' ? handleExportData : undefined}
                 >
                   {exportFeedback.message}
                 </DataExportFeedback>
