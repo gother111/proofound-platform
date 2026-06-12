@@ -52,4 +52,22 @@ describe('CookieSettingsPage', () => {
       '/app/i/settings?tab=privacy'
     );
   });
+
+  it('explains privacy-safe defaults before granular controls', async () => {
+    render(
+      await CookieSettingsPage({
+        searchParams: Promise.resolve({}),
+      })
+    );
+
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Privacy-safe defaults' })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Essential only by default/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Optional analytics and marketing cookies stay off/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Change or withdraw prior choices/i)).toBeInTheDocument();
+    expect(screen.queryByText(/GDPR regulations/i)).not.toBeInTheDocument();
+  });
 });
