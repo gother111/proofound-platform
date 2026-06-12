@@ -4,11 +4,13 @@ import type { ComponentProps } from 'react';
 
 import { VerificationsClient } from '@/app/app/i/verifications/VerificationsClient';
 
-const { refreshMock, apiFetchMock, bundleDialogSpy } = vi.hoisted(() => ({
-  refreshMock: vi.fn(),
-  apiFetchMock: vi.fn(),
-  bundleDialogSpy: vi.fn(),
-}));
+const { refreshMock, apiFetchMock, bundleDialogSpy, dispatchClientErrorDiagnosticMock } =
+  vi.hoisted(() => ({
+    refreshMock: vi.fn(),
+    apiFetchMock: vi.fn(),
+    bundleDialogSpy: vi.fn(),
+    dispatchClientErrorDiagnosticMock: vi.fn(),
+  }));
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
@@ -18,6 +20,10 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('@/lib/api/fetch', () => ({
   apiFetch: (...args: any[]) => apiFetchMock(...args),
+}));
+
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientErrorDiagnostic: (...args: unknown[]) => dispatchClientErrorDiagnosticMock(...args),
 }));
 
 vi.mock('sonner', () => ({
@@ -793,7 +799,7 @@ describe('VerificationsClient', () => {
     );
   });
 
-  it('keeps resend failures visible and retryable on the sent request row', async () => {
+  it('keeps resend failures safe, visible, and retryable on the sent request row', async () => {
     const sentRequests = [
       makeRequest({
         id: 'sent-resend-retry-1',
@@ -829,8 +835,18 @@ describe('VerificationsClient', () => {
 
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Verification request could not be resent');
-    expect(alert).toHaveTextContent('Mailbox provider rejected the resend.');
+    expect(alert).toHaveTextContent(
+      'The original request is still active; retry before creating a new request.'
+    );
+    expect(alert).not.toHaveTextContent('Mailbox provider rejected the resend.');
     expect(screen.getByText('mentor@company.com')).toBeInTheDocument();
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'verifications.client.sent_request_resend_failed',
+      expect.any(Error)
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
+      'Mailbox provider rejected the resend.'
+    );
 
     fireEvent.click(within(alert).getByRole('button', { name: 'Retry resend' }));
 
@@ -838,7 +854,7 @@ describe('VerificationsClient', () => {
     await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
   });
 
-  it('keeps failed delete attempts visible without removing the sent request', async () => {
+  it('keeps failed delete attempts safe and visible without removing the sent request', async () => {
     const sentRequests = [
       makeRequest({
         id: 'sent-delete-retry-1',
@@ -877,8 +893,16 @@ describe('VerificationsClient', () => {
 
     const dialogAlert = await within(screen.getByRole('alertdialog')).findByRole('alert');
     expect(dialogAlert).toHaveTextContent('Verification request could not be deleted');
-    expect(dialogAlert).toHaveTextContent('Verification service is temporarily unavailable.');
+    expect(dialogAlert).toHaveTextContent('Your request is unchanged; review it and try again.');
+    expect(dialogAlert).not.toHaveTextContent('Verification service is temporarily unavailable.');
     expect(screen.getAllByText('mentor@company.com').length).toBeGreaterThan(0);
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'verifications.client.sent_request_delete_failed',
+      expect.any(Error)
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
+      'Verification service is temporarily unavailable.'
+    );
 
     fireEvent.click(
       within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Keep request' })
@@ -886,6 +910,8 @@ describe('VerificationsClient', () => {
 
     const rowAlert = await screen.findByRole('alert');
     expect(rowAlert).toHaveTextContent('Verification request could not be deleted');
+    expect(rowAlert).toHaveTextContent('Your request is unchanged; review it and try again.');
+    expect(rowAlert).not.toHaveTextContent('Verification service is temporarily unavailable.');
     fireEvent.click(within(rowAlert).getByRole('button', { name: 'Review delete' }));
     fireEvent.click(
       within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete request' })

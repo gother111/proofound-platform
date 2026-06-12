@@ -109,6 +109,10 @@ const REVOKED_OR_CORRECTED_STATUSES = new Set<VerificationRequest['status']>([
 const MISSING_REQUESTER_LABEL = 'Requester details pending';
 const MISSING_SKILL_LABEL = 'Skill details pending';
 const MISSING_COMPETENCY_LABEL = 'Level not specified';
+const SENT_REQUEST_DELETE_FAILED_MESSAGE =
+  'Verification request could not be deleted. Your request is unchanged; review it and try again.';
+const SENT_REQUEST_RESEND_FAILED_MESSAGE =
+  'Verification request could not be resent. The original request is still active; retry before creating a new request.';
 
 function parseTime(value: string | null | undefined): number {
   if (!value) return 0;
@@ -347,8 +351,13 @@ export function VerificationsClient({
         return;
       }
 
-      const message =
-        body.error || 'Verification request could not be deleted. Your request is unchanged.';
+      if (body.error) {
+        dispatchClientErrorDiagnostic(
+          'verifications.client.sent_request_delete_failed',
+          new Error(body.error)
+        );
+      }
+      const message = SENT_REQUEST_DELETE_FAILED_MESSAGE;
       setSentRequestActionErrors((prev) => ({
         ...prev,
         [request.id]: { action: 'delete', message },
@@ -356,7 +365,7 @@ export function VerificationsClient({
       toast.error(message);
     } catch (error) {
       dispatchClientErrorDiagnostic('verifications.client.sent_request_delete_failed', error);
-      const message = 'Verification request could not be deleted. Your request is unchanged.';
+      const message = SENT_REQUEST_DELETE_FAILED_MESSAGE;
       setSentRequestActionErrors((prev) => ({
         ...prev,
         [request.id]: { action: 'delete', message },
@@ -400,9 +409,13 @@ export function VerificationsClient({
       }
 
       if (!response.ok) {
-        const message =
-          body.error ||
-          'Verification request could not be resent. The original request is still active.';
+        if (body.error) {
+          dispatchClientErrorDiagnostic(
+            'verifications.client.sent_request_resend_failed',
+            new Error(body.error)
+          );
+        }
+        const message = SENT_REQUEST_RESEND_FAILED_MESSAGE;
         setSentRequestActionErrors((prev) => ({
           ...prev,
           [request.id]: { action: 'resend', message },
@@ -427,8 +440,7 @@ export function VerificationsClient({
       clearSentRequestActionError(request.id);
     } catch (error) {
       dispatchClientErrorDiagnostic('verifications.client.sent_request_resend_failed', error);
-      const message =
-        'Verification request could not be resent. The original request is still active.';
+      const message = SENT_REQUEST_RESEND_FAILED_MESSAGE;
       setSentRequestActionErrors((prev) => ({
         ...prev,
         [request.id]: { action: 'resend', message },
