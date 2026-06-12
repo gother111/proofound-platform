@@ -2,6 +2,7 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ImpactStoryForm } from '@/components/profile/forms/ImpactStoryForm';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 const IMPACT_STORY_CONFIRMATION_BUTTON_LABEL = /ask to confirm this proof/i;
 
@@ -11,6 +12,10 @@ const validateFileMock = vi.fn();
 vi.mock('@/lib/upload', () => ({
   uploadFile: (...args: any[]) => uploadFileMock(...args),
   validateFile: (...args: any[]) => validateFileMock(...args),
+}));
+
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientErrorDiagnostic: vi.fn(),
 }));
 
 vi.mock('@/components/ui/dialog', () => ({
@@ -56,6 +61,8 @@ vi.mock('@/components/ui/checkbox', () => ({
 vi.mock('@/components/ui/badge', () => ({
   Badge: ({ children }: any) => <span>{children}</span>,
 }));
+
+const dispatchClientErrorDiagnosticMock = vi.mocked(dispatchClientErrorDiagnostic);
 
 function fillRequiredFields() {
   fireEvent.change(screen.getByLabelText(/^Title \*$/i), {
@@ -154,6 +161,88 @@ describe('ImpactStoryForm', () => {
       expect(screen.getByText(/Unit\/type is required when value is provided/i)).toBeTruthy();
     });
     expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it('keeps unexpected artifact upload return errors safe, diagnostic, and retryable', async () => {
+    const rawFailure = 'storage policy denied: artifact bucket detail';
+    uploadFileMock.mockResolvedValueOnce({
+      success: false,
+      error: rawFailure,
+    });
+
+    const { container } = render(
+      <ImpactStoryForm
+        open={true}
+        onOpenChange={vi.fn()}
+        onSave={vi.fn()}
+        onSendVerificationRequest={vi.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /add artifact/i }));
+    fireEvent.change(screen.getByDisplayValue('link'), {
+      target: { value: 'file' },
+    });
+
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+    expect(fileInput).toBeTruthy();
+
+    fireEvent.change(fileInput, {
+      target: {
+        files: [new File(['artifact'], 'impact-report.pdf', { type: 'application/pdf' })],
+      },
+    });
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(
+      'Artifact upload could not be saved. Your story details are still here; try again or choose another file.'
+    );
+    expect(screen.queryByText(rawFailure)).not.toBeInTheDocument();
+    expect(screen.queryByText('Uploading...')).not.toBeInTheDocument();
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'profile.impact_story.artifact_upload_returned_error',
+      expect.any(Error)
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
+      rawFailure
+    );
+  });
+
+  it('clears artifact uploading state when upload throws', async () => {
+    const thrownFailure = new Error('network layer exposed storage endpoint');
+    uploadFileMock.mockRejectedValueOnce(thrownFailure);
+
+    const { container } = render(
+      <ImpactStoryForm
+        open={true}
+        onOpenChange={vi.fn()}
+        onSave={vi.fn()}
+        onSendVerificationRequest={vi.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /add artifact/i }));
+    fireEvent.change(screen.getByDisplayValue('link'), {
+      target: { value: 'file' },
+    });
+
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+    fireEvent.change(fileInput, {
+      target: {
+        files: [new File(['artifact'], 'impact-report.pdf', { type: 'application/pdf' })],
+      },
+    });
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(
+      'Artifact upload could not be saved. Your story details are still here; try again or choose another file.'
+    );
+    expect(screen.queryByText(thrownFailure.message)).not.toBeInTheDocument();
+    expect(screen.queryByText('Uploading...')).not.toBeInTheDocument();
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'profile.impact_story.artifact_upload_failed',
+      thrownFailure
+    );
   });
 
   it('requires valid verifier email for send request button', async () => {

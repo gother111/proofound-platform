@@ -304,6 +304,7 @@ describe('runtime debug output guardrails', () => {
       readSource('src/components/profile/AvatarUpload.tsx'),
       readSource('src/components/profile/ShareProfileDialog.tsx'),
       readSource('src/components/profile/PrivacySettings.tsx'),
+      readSource('src/components/profile/forms/ImpactStoryForm.tsx'),
       readSource('src/components/profile/editable-profile/ProfileHeroSection.tsx'),
     ].join('\n');
 
@@ -323,6 +324,9 @@ describe('runtime debug output guardrails', () => {
     expect(sources).toContain('profile.privacy_summary_flag.load_failed');
     expect(sources).toContain('profile.privacy_settings.load_failed');
     expect(sources).toContain('profile.privacy_settings.save_failed');
+    expect(sources).toContain('IMPACT_ARTIFACT_SAFE_UPLOAD_ERRORS');
+    expect(sources).toContain('profile.impact_story.artifact_upload_returned_error');
+    expect(sources).toContain('profile.impact_story.artifact_upload_failed');
     expect(sources).toContain('profile.hero.average_color_failed');
     expect(sources).not.toContain('decision.window.fetch.failed');
     expect(sources).not.toContain('decision.submit.failed');
@@ -344,6 +348,7 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('profile.snippet.generate.failed');
     expect(sources).not.toContain('Failed to load privacy summary feature flag');
     expect(sources).not.toContain('Failed to load privacy settings:');
+    expect(sources).not.toContain("error: result.error || result.message || 'Upload failed'");
     expect(sources).not.toContain('Failed to extract average color');
   });
 
