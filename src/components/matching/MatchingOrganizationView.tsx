@@ -105,6 +105,9 @@ type ReviewActionError = ReviewActionState & {
   message: string;
 };
 
+const REVIEW_ACTION_FAILED_MESSAGE =
+  'No shortlist, decline, or intro action was changed. Retry this action before moving to the next submission.';
+
 const REVIEW_ACTION_LABELS: Record<ReviewAction, string> = {
   shortlist: 'Shortlist',
   pass: 'Decline',
@@ -438,15 +441,11 @@ export function MatchingOrganizationView({
       }
     } catch (error) {
       dispatchClientErrorDiagnostic('matching.organization_view.review_action_failed', error);
-      const message =
-        error instanceof Error && error.message
-          ? error.message
-          : 'Review action could not be saved';
       setReviewActionError({
         matchId,
         action,
         label: actionLabel,
-        message: `${message}. No shortlist, decline, or intro action was changed.`,
+        message: REVIEW_ACTION_FAILED_MESSAGE,
       });
       toast.error('Review action did not save', {
         description: 'No shortlist, decline, or intro action was changed.',

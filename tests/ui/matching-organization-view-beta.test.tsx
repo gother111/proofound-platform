@@ -6,6 +6,7 @@ import { MatchingOrganizationView } from '@/components/matching/MatchingOrganiza
 
 const apiFetchMock = vi.fn();
 const pushMock = vi.fn();
+const dispatchClientErrorDiagnosticMock = vi.fn();
 let searchParamAssignment = '';
 
 vi.mock('next/navigation', () => ({
@@ -18,6 +19,10 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('@/lib/api/fetch', () => ({
   apiFetch: (...args: any[]) => apiFetchMock(...args),
+}));
+
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientErrorDiagnostic: (...args: unknown[]) => dispatchClientErrorDiagnosticMock(...args),
 }));
 
 vi.mock('@/components/matching/MatchResultCard', () => ({
@@ -152,7 +157,7 @@ describe('MatchingOrganizationView launch corridor', () => {
     expect(apiFetchMock).toHaveBeenCalledTimes(2);
   });
 
-  it('keeps failed review actions visible and retryable without changing the queue', async () => {
+  it('keeps failed review actions safe, visible, and retryable without changing the queue', async () => {
     apiFetchMock
       .mockResolvedValueOnce({
         ok: true,
@@ -203,9 +208,18 @@ describe('MatchingOrganizationView launch corridor', () => {
 
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Shortlist did not save');
-    expect(alert).toHaveTextContent('Review service temporarily unavailable');
-    expect(alert).toHaveTextContent('No shortlist, decline, or intro action was changed.');
+    expect(alert).toHaveTextContent(
+      'No shortlist, decline, or intro action was changed. Retry this action before moving to the next submission.'
+    );
+    expect(alert).not.toHaveTextContent('Review service temporarily unavailable');
     expect(screen.getAllByText('Submission A7F2').length).toBeGreaterThan(0);
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'matching.organization_view.review_action_failed',
+      expect.any(Error)
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
+      'Review service temporarily unavailable'
+    );
 
     fireEvent.click(screen.getByRole('button', { name: /retry shortlist/i }));
 
@@ -263,9 +277,16 @@ describe('MatchingOrganizationView launch corridor', () => {
 
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Remove from shortlist did not save');
-    expect(alert).toHaveTextContent('Review service temporarily unavailable');
+    expect(alert).toHaveTextContent(
+      'No shortlist, decline, or intro action was changed. Retry this action before moving to the next submission.'
+    );
+    expect(alert).not.toHaveTextContent('Review service temporarily unavailable');
     expect(screen.getByRole('button', { name: /retry remove from shortlist/i })).toBeEnabled();
     expect(screen.queryByText('Decline did not save')).not.toBeInTheDocument();
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'matching.organization_view.review_action_failed',
+      expect.any(Error)
+    );
     expect(apiFetchMock).toHaveBeenCalledWith(
       '/api/org/org-1/matches/match-shortlisted/review',
       expect.objectContaining({
