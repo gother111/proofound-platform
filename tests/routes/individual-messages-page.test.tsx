@@ -2,12 +2,14 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+let searchParamsValue = '';
+
 vi.mock('next/navigation', () => ({
   usePathname: () => '/app/i/messages',
   useRouter: () => ({
     replace: vi.fn(),
   }),
-  useSearchParams: () => new URLSearchParams(''),
+  useSearchParams: () => new URLSearchParams(searchParamsValue),
 }));
 
 vi.mock('@/hooks/useAuth', () => ({
@@ -45,6 +47,7 @@ import { MessagesClient } from '@/app/app/i/messages/MessagesClient';
 describe('individual messages page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    searchParamsValue = '';
     vi.stubGlobal(
       'fetch',
       vi.fn(async (url: string) => {
@@ -227,5 +230,91 @@ describe('individual messages page', () => {
     });
     expect(screen.getByTestId('message-thread')).toHaveTextContent('Recovered proof update');
     expect(messageRequests).toBe(2);
+  });
+
+  it('tracks conversation query parameter changes after initial selection', async () => {
+    searchParamsValue = 'conversation=conversation-a';
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        if (url === '/api/conversations') {
+          return {
+            ok: true,
+            json: async () => ({
+              conversations: [
+                {
+                  id: 'conversation-a',
+                  otherParty: { displayName: 'Organization A', displayAvatar: null },
+                  lastMessage: { content: 'First proof-corridor update' },
+                  lastMessageAt: '2026-01-01T00:00:00.000Z',
+                  matchId: 'match-a',
+                  assignmentRole: 'Evidence systems consultant',
+                  stage: 'masked',
+                },
+                {
+                  id: 'conversation-b',
+                  otherParty: { displayName: 'Organization B', displayAvatar: null },
+                  lastMessage: { content: 'Second proof-corridor update' },
+                  lastMessageAt: '2026-01-02T00:00:00.000Z',
+                  matchId: 'match-b',
+                  assignmentRole: 'Proof operations lead',
+                  stage: 'masked',
+                },
+              ],
+            }),
+          };
+        }
+
+        if (url === '/api/conversations/conversation-a/messages') {
+          return {
+            ok: true,
+            json: async () => ({
+              messages: [
+                {
+                  id: 'message-a',
+                  senderId: 'user-1',
+                  content: 'First selected thread',
+                  sentAt: '2026-01-01T00:05:00.000Z',
+                },
+              ],
+            }),
+          };
+        }
+
+        if (url === '/api/conversations/conversation-b/messages') {
+          return {
+            ok: true,
+            json: async () => ({
+              messages: [
+                {
+                  id: 'message-b',
+                  senderId: 'user-1',
+                  content: 'Second selected thread',
+                  sentAt: '2026-01-02T00:05:00.000Z',
+                },
+              ],
+            }),
+          };
+        }
+
+        throw new Error(`Unexpected fetch URL: ${url}`);
+      }) as any
+    );
+
+    const { rerender } = render(<MessagesClient />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('message-thread')).toHaveTextContent('conversation-a');
+    });
+    expect(screen.getByTestId('message-thread')).toHaveTextContent('First selected thread');
+
+    searchParamsValue = 'conversation=conversation-b';
+    rerender(<MessagesClient />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('message-thread')).toHaveTextContent('conversation-b');
+    });
+    expect(screen.getByTestId('message-thread')).toHaveTextContent('Second selected thread');
   });
 });
