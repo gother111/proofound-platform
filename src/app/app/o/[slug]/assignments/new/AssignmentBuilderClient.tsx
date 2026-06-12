@@ -97,9 +97,24 @@ type ImportedDraftNotice = {
   niceToHaveLabels: string[];
 };
 
+type AssignmentWorkflowFeedback = {
+  kind: 'draft_load' | 'draft_save' | 'review_save';
+  title: string;
+  message: string;
+  actionLabel: string;
+};
+
 type AssignmentBuilderClientProps = {
   slug: string;
 };
+
+function getAssignmentErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+
+  return fallback;
+}
 
 function dedupeAssignmentOutcomes(outcomes: AssignmentFormData['outcomes'] = []) {
   const seen = new Set<string>();
@@ -141,6 +156,8 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
   const [currentStep, setCurrentStep] = useState(1);
   const [isAdvancing, setIsAdvancing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isHydratingDraft, setIsHydratingDraft] = useState(Boolean(draftId));
+  const [workflowFeedback, setWorkflowFeedback] = useState<AssignmentWorkflowFeedback | null>(null);
   const [assignmentId, setAssignmentId] = useState<string | null>(null);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [orgId, setOrgId] = useState<string | null>(null);
@@ -188,6 +205,8 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
       setLoadedAssignmentCreationStatus(null);
       setLastSaved(null);
       setHasHydratedDraft(false);
+      setIsHydratingDraft(false);
+      setWorkflowFeedback(null);
       setImportedDraftNotice(null);
     }
 
@@ -206,6 +225,9 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
     if (!draftId || hasHydratedDraft) return;
 
     const hydrateDraft = async () => {
+      setIsHydratingDraft(true);
+      setWorkflowFeedback(null);
+
       try {
         const response = await fetch(`/api/assignments/${draftId}${assignmentOrgQuery}`);
         if (!response.ok) {
@@ -258,9 +280,16 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
         setCurrentStep(resolveDraftResumeStep(assignment));
       } catch (error) {
         dispatchClientErrorDiagnostic('assignment_builder.client.draft_load_failed', error);
-        toast.error('Could not load existing draft');
+        setWorkflowFeedback({
+          kind: 'draft_load',
+          title: 'Draft did not load',
+          message:
+            'Your saved assignment has not been changed. Retry loading before editing so you do not overwrite the draft.',
+          actionLabel: 'Retry draft load',
+        });
       } finally {
         setHasHydratedDraft(true);
+        setIsHydratingDraft(false);
       }
     };
 
@@ -550,6 +579,7 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
     setIsAdvancing(true);
 
     try {
+      setWorkflowFeedback(null);
       const persisted = await persistDraft({
         status: 'draft',
         creationStatus: 'draft',
@@ -558,7 +588,16 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
       setCurrentStep((step) => Math.min(step + 1, 4));
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to save draft');
+      dispatchClientErrorDiagnostic('assignment_builder.client.draft_save_failed', error);
+      setWorkflowFeedback({
+        kind: 'draft_save',
+        title: 'Draft was not saved',
+        message: `${getAssignmentErrorMessage(
+          error,
+          'Failed to save draft'
+        )}. Your changes are still on this page. Retry the draft save before moving on.`,
+        actionLabel: 'Retry draft save',
+      });
     } finally {
       transitionLockRef.current = false;
       setIsAdvancing(false);
@@ -577,6 +616,7 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
     transitionLockRef.current = true;
     setIsSaving(true);
     try {
+      setWorkflowFeedback(null);
       const persisted = await persistDraft({
         status: 'draft',
         creationStatus: 'review_ready',
@@ -586,7 +626,15 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
       router.push(`/app/o/${slug}/assignments/${persisted.assignmentId}/review`);
     } catch (error) {
       dispatchClientErrorDiagnostic('assignment_builder.client.review_save_failed', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to save assignment');
+      setWorkflowFeedback({
+        kind: 'review_save',
+        title: 'Assignment was not saved for review',
+        message: `${getAssignmentErrorMessage(
+          error,
+          'Failed to save assignment'
+        )}. Your draft is still on this page. Retry before leaving for internal review.`,
+        actionLabel: 'Retry review save',
+      });
     } finally {
       transitionLockRef.current = false;
       setIsSaving(false);
@@ -610,6 +658,22 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
       transitionLockRef.current = false;
     }
   }, [isAdvancing, isSaving, persistDraft, syncRelatedData]);
+
+  const handleRetryWorkflowFeedback = () => {
+    if (!workflowFeedback || transitionLockRef.current || isAdvancing || isSaving) return;
+
+    if (workflowFeedback.kind === 'draft_load') {
+      setHasHydratedDraft(false);
+      return;
+    }
+
+    if (workflowFeedback.kind === 'draft_save') {
+      void handleNext();
+      return;
+    }
+
+    void handleSubmit();
+  };
 
   let renderedStep;
   switch (currentStep) {
@@ -651,6 +715,9 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
       break;
   }
 
+  const isDraftLoadBlocked = workflowFeedback?.kind === 'draft_load';
+  const shouldShowBuilderSections = !isHydratingDraft && !isDraftLoadBlocked;
+
   return (
     <AppSurface>
       <div className="mx-auto flex min-w-0 max-w-4xl flex-col gap-6">
@@ -667,234 +734,280 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
           </p>
         </header>
 
-        <section className="rounded-xl border border-proofound-stone/70 bg-white/75 p-4">
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(220px,0.6fr)] lg:items-center">
-            <div className="space-y-1">
-              <h2 className="text-sm font-semibold text-foreground">
-                What this assignment path proves
-              </h2>
-              <p className="text-sm leading-6 text-muted-foreground">
-                The company turns a vague role into measurable outcomes and proof-based requirements
-                before inviting proof submissions.
-              </p>
-            </div>
-            <div
-              className="grid grid-cols-3 gap-2 text-center text-[11px] font-semibold uppercase tracking-[0.12em] text-proofound-forest"
-              data-testid="assignment-demo-path"
-            >
-              <span className="rounded-md border border-proofound-stone/70 bg-[#f8f6f1] px-2 py-2">
-                Start
-              </span>
-              <span className="rounded-md border border-proofound-stone/70 bg-[#f8f6f1] px-2 py-2">
-                Middle
-              </span>
-              <span className="rounded-md border border-proofound-stone/70 bg-[#f8f6f1] px-2 py-2">
-                Finish
-              </span>
-            </div>
-          </div>
-        </section>
-
-        <Card className="min-w-0 p-4">
-          <div className="flex flex-col gap-4">
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-foreground">Start from scratch or import</p>
-              <p className="text-xs leading-5 text-muted-foreground">
-                Keep the corridor narrow: one structured assignment, then internal review before
-                publish.
-              </p>
-            </div>
-
-            <div className="grid gap-3 lg:grid-cols-2">
-              <Button
-                type="button"
-                variant={entryMode === 'scratch' ? 'default' : 'outline'}
-                className="justify-start"
-                onClick={() => {
-                  setEntryMode('scratch');
-                  setJobDescriptionImportError(null);
-                }}
-              >
-                <PencilLine className="mr-2 h-4 w-4" />
-                Create from scratch
-              </Button>
-              <Button
-                type="button"
-                variant={entryMode === 'import' ? 'default' : 'outline'}
-                className="justify-start"
-                onClick={() => setEntryMode('import')}
-              >
-                <FileText className="mr-2 h-4 w-4" />
-                Import existing assignment brief
-              </Button>
-            </div>
-
-            {entryMode === 'import' ? (
-              <div className="space-y-3 rounded-md border bg-muted/30 p-4">
-                <div className="space-y-1">
-                  <label
-                    htmlFor="job-description-import"
-                    className="text-sm font-medium text-foreground"
-                  >
-                    Existing assignment brief
-                  </label>
-                  <p className="text-xs text-muted-foreground">
-                    Paste the source text. It will be split into draft fields for review.
-                  </p>
-                </div>
-                <Textarea
-                  id="job-description-import"
-                  value={jobDescriptionSource}
-                  onChange={(event) => setJobDescriptionSource(event.target.value)}
-                  className="min-h-[220px]"
-                  placeholder="Paste the existing assignment brief here..."
-                />
-                {jobDescriptionImportError ? (
-                  <div className="flex gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
-                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-                    <div className="space-y-1">
-                      <p className="font-medium">{jobDescriptionImportError}</p>
-                      {jobDescriptionImportGuidance.map((item) => (
-                        <p key={item}>{item}</p>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-                <div className="flex justify-end">
-                  <Button type="button" onClick={handleImportJobDescription}>
-                    <Wand2 className="mr-2 h-4 w-4" />
-                    Convert to structured draft
-                  </Button>
-                </div>
-              </div>
-            ) : null}
-          </div>
-        </Card>
-
-        {importedDraftNotice ? (
-          <Card className="p-4">
+        {workflowFeedback ? (
+          <div
+            role="alert"
+            aria-live="assertive"
+            className="flex flex-col gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-950 sm:flex-row sm:items-start sm:justify-between"
+          >
             <div className="flex gap-3">
-              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#5D7B5A]" />
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <p className="text-sm font-semibold text-foreground">
-                    Imported draft ready for review
-                  </p>
-                  {importedDraftNotice.guidance.map((item) => (
-                    <p key={item} className="text-xs text-muted-foreground">
-                      {item}
-                    </p>
-                  ))}
-                </div>
-                {importedDraftNotice.mustHaveLabels.length > 0 ||
-                importedDraftNotice.niceToHaveLabels.length > 0 ? (
-                  <div className="grid gap-3 text-xs text-muted-foreground sm:grid-cols-2">
-                    {importedDraftNotice.mustHaveLabels.length > 0 ? (
-                      <div>
-                        <p className="font-medium text-foreground">Must-have capabilities</p>
-                        <p>{importedDraftNotice.mustHaveLabels.join(', ')}</p>
-                      </div>
-                    ) : null}
-                    {importedDraftNotice.niceToHaveLabels.length > 0 ? (
-                      <div>
-                        <p className="font-medium text-foreground">Secondary capabilities</p>
-                        <p>{importedDraftNotice.niceToHaveLabels.join(', ')}</p>
-                      </div>
-                    ) : null}
-                  </div>
-                ) : null}
-                {importedDraftNotice.missingFields.length > 0 ? (
-                  <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-xs text-amber-950">
-                    <p className="font-medium">Missing or unclear fields</p>
-                    <p>{importedDraftNotice.missingFields.join(', ')}</p>
-                  </div>
-                ) : null}
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              <div className="space-y-1">
+                <p className="text-sm font-semibold">{workflowFeedback.title}</p>
+                <p className="text-sm leading-6">{workflowFeedback.message}</p>
               </div>
             </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="shrink-0 border-amber-700 text-amber-950 hover:bg-amber-100"
+              onClick={handleRetryWorkflowFeedback}
+              disabled={isAdvancing || isSaving}
+            >
+              {workflowFeedback.actionLabel}
+            </Button>
+          </div>
+        ) : null}
+
+        {isHydratingDraft ? (
+          <Card
+            className="p-5 text-sm leading-6 text-muted-foreground"
+            role="status"
+            aria-live="polite"
+          >
+            Loading saved assignment draft...
           </Card>
         ) : null}
 
-        <div className="rounded-2xl border border-proofound-stone/70 bg-white/75 p-4 lg:hidden">
-          <div className="mb-3 flex items-center justify-between text-xs font-semibold text-proofound-forest">
-            <span>
-              Step {currentStep} of {STEPS.length - 1}
-            </span>
-            <span>{Math.round((currentStep / (STEPS.length - 1)) * 100)}% drafted</span>
-          </div>
-          <div className="mb-3 h-1 overflow-hidden rounded-full bg-proofound-stone/30">
-            <div
-              className="h-full bg-proofound-forest transition-all duration-300"
-              style={{ width: `${(currentStep / (STEPS.length - 1)) * 100}%` }}
-            />
-          </div>
-          <p className="mt-1 font-display text-xl font-semibold text-proofound-charcoal">
-            {STEPS.find((step) => step.id === currentStep)?.name}
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {STEPS.find((step) => step.id === currentStep)?.description}
-          </p>
-        </div>
-
-        <div className="hidden items-center justify-between lg:flex">
-          {STEPS.map((step, index) => {
-            const isCurrent = currentStep === step.id;
-            const isCompleted = currentStep > step.id;
-            const isPendingReview = step.id === 5;
-
-            return (
-              <div key={step.id} className="flex flex-1 items-center">
-                <div className="flex flex-col items-center">
-                  <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-full font-semibold ${
-                      isCurrent
-                        ? 'bg-proofound-forest text-white'
-                        : isCompleted || (isPendingReview && currentStep === 4)
-                          ? 'bg-[#7A9278] text-white'
-                          : 'bg-gray-200 text-gray-600'
-                    }`}
-                  >
-                    {step.id}
-                  </div>
-                  <div className="mt-2 text-center">
-                    <p className="text-xs font-medium text-foreground">{step.name}</p>
-                    <p className="text-xs text-muted-foreground">{step.description}</p>
-                  </div>
+        {shouldShowBuilderSections ? (
+          <>
+            <section className="rounded-xl border border-proofound-stone/70 bg-white/75 p-4">
+              <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(220px,0.6fr)] lg:items-center">
+                <div className="space-y-1">
+                  <h2 className="text-sm font-semibold text-foreground">
+                    What this assignment path proves
+                  </h2>
+                  <p className="text-sm leading-6 text-muted-foreground">
+                    The company turns a vague role into measurable outcomes and proof-based
+                    requirements before inviting proof submissions.
+                  </p>
                 </div>
-                {index < STEPS.length - 1 ? (
-                  <div
-                    className={`mx-2 h-1 flex-1 ${
-                      currentStep > step.id ? 'bg-[#7A9278]' : 'bg-gray-200'
-                    }`}
-                  />
+                <div
+                  className="grid grid-cols-3 gap-2 text-center text-[11px] font-semibold uppercase tracking-[0.12em] text-proofound-forest"
+                  data-testid="assignment-demo-path"
+                >
+                  <span className="rounded-md border border-proofound-stone/70 bg-[#f8f6f1] px-2 py-2">
+                    Start
+                  </span>
+                  <span className="rounded-md border border-proofound-stone/70 bg-[#f8f6f1] px-2 py-2">
+                    Middle
+                  </span>
+                  <span className="rounded-md border border-proofound-stone/70 bg-[#f8f6f1] px-2 py-2">
+                    Finish
+                  </span>
+                </div>
+              </div>
+            </section>
+
+            <Card className="min-w-0 p-4">
+              <div className="flex flex-col gap-4">
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold text-foreground">
+                    Start from scratch or import
+                  </p>
+                  <p className="text-xs leading-5 text-muted-foreground">
+                    Keep the corridor narrow: one structured assignment, then internal review before
+                    publish.
+                  </p>
+                </div>
+
+                <div className="grid gap-3 lg:grid-cols-2">
+                  <Button
+                    type="button"
+                    variant={entryMode === 'scratch' ? 'default' : 'outline'}
+                    className="justify-start"
+                    onClick={() => {
+                      setEntryMode('scratch');
+                      setJobDescriptionImportError(null);
+                      setWorkflowFeedback(null);
+                    }}
+                  >
+                    <PencilLine className="mr-2 h-4 w-4" />
+                    Create from scratch
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={entryMode === 'import' ? 'default' : 'outline'}
+                    className="justify-start"
+                    onClick={() => {
+                      setEntryMode('import');
+                      setWorkflowFeedback(null);
+                    }}
+                  >
+                    <FileText className="mr-2 h-4 w-4" />
+                    Import existing assignment brief
+                  </Button>
+                </div>
+
+                {entryMode === 'import' ? (
+                  <div className="space-y-3 rounded-md border bg-muted/30 p-4">
+                    <div className="space-y-1">
+                      <label
+                        htmlFor="job-description-import"
+                        className="text-sm font-medium text-foreground"
+                      >
+                        Existing assignment brief
+                      </label>
+                      <p className="text-xs text-muted-foreground">
+                        Paste the source text. It will be split into draft fields for review.
+                      </p>
+                    </div>
+                    <Textarea
+                      id="job-description-import"
+                      value={jobDescriptionSource}
+                      onChange={(event) => setJobDescriptionSource(event.target.value)}
+                      className="min-h-[220px]"
+                      placeholder="Paste the existing assignment brief here..."
+                    />
+                    {jobDescriptionImportError ? (
+                      <div className="flex gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
+                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                        <div className="space-y-1">
+                          <p className="font-medium">{jobDescriptionImportError}</p>
+                          {jobDescriptionImportGuidance.map((item) => (
+                            <p key={item}>{item}</p>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+                    <div className="flex justify-end">
+                      <Button type="button" onClick={handleImportJobDescription}>
+                        <Wand2 className="mr-2 h-4 w-4" />
+                        Convert to structured draft
+                      </Button>
+                    </div>
+                  </div>
                 ) : null}
               </div>
-            );
-          })}
-        </div>
+            </Card>
 
-        <Card className="min-w-0 p-5 sm:p-8">{renderedStep}</Card>
-
-        <AssignmentClarityAssistant
-          form={form}
-          assignmentId={assignmentId}
-          orgId={orgId}
-          orgSlug={slug}
-          onEnsureDraft={ensureClarityDraft}
-        />
-
-        <div className="text-center text-sm text-muted-foreground">
-          <p>
-            Drafts auto-save every 30 seconds.
-            {lastSaved ? (
-              <span className="ml-2 text-green-600">
-                • Last saved {lastSaved.toLocaleTimeString()}
-              </span>
+            {importedDraftNotice ? (
+              <Card className="p-4">
+                <div className="flex gap-3">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#5D7B5A]" />
+                  <div className="space-y-3">
+                    <div className="space-y-1">
+                      <p className="text-sm font-semibold text-foreground">
+                        Imported draft ready for review
+                      </p>
+                      {importedDraftNotice.guidance.map((item) => (
+                        <p key={item} className="text-xs text-muted-foreground">
+                          {item}
+                        </p>
+                      ))}
+                    </div>
+                    {importedDraftNotice.mustHaveLabels.length > 0 ||
+                    importedDraftNotice.niceToHaveLabels.length > 0 ? (
+                      <div className="grid gap-3 text-xs text-muted-foreground sm:grid-cols-2">
+                        {importedDraftNotice.mustHaveLabels.length > 0 ? (
+                          <div>
+                            <p className="font-medium text-foreground">Must-have capabilities</p>
+                            <p>{importedDraftNotice.mustHaveLabels.join(', ')}</p>
+                          </div>
+                        ) : null}
+                        {importedDraftNotice.niceToHaveLabels.length > 0 ? (
+                          <div>
+                            <p className="font-medium text-foreground">Secondary capabilities</p>
+                            <p>{importedDraftNotice.niceToHaveLabels.join(', ')}</p>
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : null}
+                    {importedDraftNotice.missingFields.length > 0 ? (
+                      <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-xs text-amber-950">
+                        <p className="font-medium">Missing or unclear fields</p>
+                        <p>{importedDraftNotice.missingFields.join(', ')}</p>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              </Card>
             ) : null}
-            {isSaving ? (
-              <span className="ml-2 text-muted-foreground">• Saving review draft…</span>
-            ) : null}
-          </p>
-        </div>
+
+            <div className="rounded-2xl border border-proofound-stone/70 bg-white/75 p-4 lg:hidden">
+              <div className="mb-3 flex items-center justify-between text-xs font-semibold text-proofound-forest">
+                <span>
+                  Step {currentStep} of {STEPS.length - 1}
+                </span>
+                <span>{Math.round((currentStep / (STEPS.length - 1)) * 100)}% drafted</span>
+              </div>
+              <div className="mb-3 h-1 overflow-hidden rounded-full bg-proofound-stone/30">
+                <div
+                  className="h-full bg-proofound-forest transition-all duration-300"
+                  style={{ width: `${(currentStep / (STEPS.length - 1)) * 100}%` }}
+                />
+              </div>
+              <p className="mt-1 font-display text-xl font-semibold text-proofound-charcoal">
+                {STEPS.find((step) => step.id === currentStep)?.name}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {STEPS.find((step) => step.id === currentStep)?.description}
+              </p>
+            </div>
+
+            <div className="hidden items-center justify-between lg:flex">
+              {STEPS.map((step, index) => {
+                const isCurrent = currentStep === step.id;
+                const isCompleted = currentStep > step.id;
+                const isPendingReview = step.id === 5;
+
+                return (
+                  <div key={step.id} className="flex flex-1 items-center">
+                    <div className="flex flex-col items-center">
+                      <div
+                        className={`flex h-10 w-10 items-center justify-center rounded-full font-semibold ${
+                          isCurrent
+                            ? 'bg-proofound-forest text-white'
+                            : isCompleted || (isPendingReview && currentStep === 4)
+                              ? 'bg-[#7A9278] text-white'
+                              : 'bg-gray-200 text-gray-600'
+                        }`}
+                      >
+                        {step.id}
+                      </div>
+                      <div className="mt-2 text-center">
+                        <p className="text-xs font-medium text-foreground">{step.name}</p>
+                        <p className="text-xs text-muted-foreground">{step.description}</p>
+                      </div>
+                    </div>
+                    {index < STEPS.length - 1 ? (
+                      <div
+                        className={`mx-2 h-1 flex-1 ${
+                          currentStep > step.id ? 'bg-[#7A9278]' : 'bg-gray-200'
+                        }`}
+                      />
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+
+            <Card className="min-w-0 p-5 sm:p-8">{renderedStep}</Card>
+
+            <AssignmentClarityAssistant
+              form={form}
+              assignmentId={assignmentId}
+              orgId={orgId}
+              orgSlug={slug}
+              onEnsureDraft={ensureClarityDraft}
+            />
+
+            <div className="text-center text-sm text-muted-foreground">
+              <p>
+                Drafts auto-save every 30 seconds.
+                {lastSaved ? (
+                  <span className="ml-2 text-green-600">
+                    • Last saved {lastSaved.toLocaleTimeString()}
+                  </span>
+                ) : null}
+                {isSaving ? (
+                  <span className="ml-2 text-muted-foreground">• Saving review draft…</span>
+                ) : null}
+              </p>
+            </div>
+          </>
+        ) : null}
       </div>
     </AppSurface>
   );

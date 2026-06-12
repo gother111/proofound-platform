@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import AssignmentBuilderPage from '@/app/app/o/[slug]/assignments/new/page';
@@ -80,9 +80,21 @@ async function renderAssignmentBuilderPage() {
 
 type FetchFixture = {
   draftAssignment?: Record<string, unknown> | null;
+  failDraftLoadOnce?: boolean;
+  failDraftSaveOnce?: boolean;
+  failReviewSaveOnce?: boolean;
 };
 
-function setupFetch({ draftAssignment = null }: FetchFixture = {}) {
+function setupFetch({
+  draftAssignment = null,
+  failDraftLoadOnce = false,
+  failDraftSaveOnce = false,
+  failReviewSaveOnce = false,
+}: FetchFixture = {}) {
+  let draftLoadAttempts = 0;
+  let draftSaveAttempts = 0;
+  let reviewSaveAttempts = 0;
+
   const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input);
     const requestUrl = new URL(url, 'http://localhost');
@@ -101,6 +113,15 @@ function setupFetch({ draftAssignment = null }: FetchFixture = {}) {
       requestPath === `/api/assignments/${mockDraftId}` &&
       (!init || init.method === undefined)
     ) {
+      draftLoadAttempts += 1;
+
+      if (failDraftLoadOnce && draftLoadAttempts === 1) {
+        return {
+          ok: false,
+          json: async () => ({ error: 'Draft temporarily unavailable' }),
+        };
+      }
+
       return {
         ok: true,
         json: async () => ({ assignment: draftAssignment }),
@@ -113,6 +134,26 @@ function setupFetch({ draftAssignment = null }: FetchFixture = {}) {
     ) {
       const requestBody =
         typeof init?.body === 'string' ? JSON.parse(init.body) : (init?.body ?? {});
+      const isReviewSave = requestBody.creationStatus === 'review_ready';
+
+      if (isReviewSave) {
+        reviewSaveAttempts += 1;
+        if (failReviewSaveOnce && reviewSaveAttempts === 1) {
+          return {
+            ok: false,
+            json: async () => ({ message: 'Review save temporarily unavailable' }),
+          };
+        }
+      } else {
+        draftSaveAttempts += 1;
+        if (failDraftSaveOnce && draftSaveAttempts === 1) {
+          return {
+            ok: false,
+            json: async () => ({ message: 'Draft save temporarily unavailable' }),
+          };
+        }
+      }
+
       return {
         ok: true,
         json: async () => ({
@@ -311,6 +352,79 @@ Full-time
       expect(pushMock).toHaveBeenCalledWith('/app/o/acme/assignments/draft-1/review');
     });
     expect(toastSuccessMock).toHaveBeenCalledWith('Assignment saved for internal review');
+  });
+
+  it('blocks editing and lets the user retry when an existing draft fails to load', async () => {
+    mockDraftId = 'draft-1';
+    setupFetch({
+      failDraftLoadOnce: true,
+      draftAssignment: {
+        id: 'draft-1',
+        orgId: 'org-1',
+        role: 'Founding operator',
+        businessValue: 'Tighten proof quality',
+        description: 'Run the day-to-day assignment and review loop.',
+        expectedImpact: '',
+        outcomes: [],
+        requiredSkills: [],
+      },
+    });
+
+    render(await renderAssignmentBuilderPage());
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Draft did not load');
+    expect(alert).toHaveTextContent('Retry loading before editing');
+    expect(screen.queryByText('Step 1 content')).not.toBeInTheDocument();
+
+    fireEvent.click(within(alert).getByRole('button', { name: 'Retry draft load' }));
+
+    expect(await screen.findByText('Step 2 content')).toBeInTheDocument();
+  });
+
+  it('keeps draft save failures visible and retryable without losing the current step', async () => {
+    setupFetch({ failDraftSaveOnce: true });
+
+    render(await renderAssignmentBuilderPage());
+
+    fireEvent.click(await screen.findByRole('button', { name: 'next-step-1' }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Draft was not saved');
+    expect(alert).toHaveTextContent('Draft save temporarily unavailable');
+    expect(screen.getByText('Step 1 content')).toBeInTheDocument();
+
+    fireEvent.click(within(alert).getByRole('button', { name: 'Retry draft save' }));
+
+    expect(await screen.findByText('Step 2 content')).toBeInTheDocument();
+  });
+
+  it('keeps review-save failures visible and retryable before routing to review', async () => {
+    setupFetch({ failReviewSaveOnce: true });
+
+    render(await renderAssignmentBuilderPage());
+
+    fireEvent.click(await screen.findByRole('button', { name: 'next-step-1' }));
+    expect(await screen.findByText('Step 2 content')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'next-step-2' }));
+    expect(await screen.findByText('Step 3 content')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'next-step-3' }));
+    expect(await screen.findByText('Step 4 content')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'continue-to-review' }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Assignment was not saved for review');
+    expect(alert).toHaveTextContent('Review save temporarily unavailable');
+    expect(pushMock).not.toHaveBeenCalled();
+
+    fireEvent.click(within(alert).getByRole('button', { name: 'Retry review save' }));
+
+    await waitFor(() => {
+      expect(pushMock).toHaveBeenCalledWith('/app/o/acme/assignments/draft-1/review');
+    });
   });
 
   it('ignores duplicate next clicks while a draft save is already in flight', async () => {
