@@ -9,7 +9,7 @@
 
 'use client';
 
-import { useState, useEffect, Suspense, useCallback, type ComponentType } from 'react';
+import { useState, useEffect, Suspense, useCallback, useRef, type ComponentType } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ConversationList, type Conversation } from '@/components/messaging/ConversationList';
 import { MessageThreadLoadFailure } from '@/components/messaging/MessageThreadLoadFailure';
@@ -28,6 +28,7 @@ function MessagesPageContent() {
   const conversationParam = searchParams?.get('conversation');
   const pathname = usePathname();
   const router = useRouter();
+  const appliedConversationParamRef = useRef<string | null>(null);
 
   const { userId: currentUserId, isLoading: isAuthLoading } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -49,10 +50,20 @@ function MessagesPageContent() {
 
   // Auto-select conversation from URL param after conversations are loaded
   useEffect(() => {
-    if (conversationParam && conversations.length > 0) {
-      // Check if the conversation exists in the list
-      const exists = conversations.some((c) => c.id === conversationParam);
-      if (exists && selectedConversationId !== conversationParam) {
+    if (!conversationParam) {
+      appliedConversationParamRef.current = null;
+      return;
+    }
+
+    if (conversations.length === 0 || conversationParam === appliedConversationParamRef.current) {
+      return;
+    }
+
+    // Check if the conversation exists in the list
+    const exists = conversations.some((c) => c.id === conversationParam);
+    if (exists) {
+      appliedConversationParamRef.current = conversationParam;
+      if (selectedConversationId !== conversationParam) {
         setSelectedConversationId(conversationParam);
       }
     }

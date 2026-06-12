@@ -330,4 +330,25 @@ describe('organization messages page', () => {
       { scroll: false }
     );
   });
+
+  it('keeps a manual organization selection after starting from a conversation deep link', async () => {
+    pathnameValue = '/app/o/acme/communications';
+    searchParamsValue = 'section=messages&conversation=conversation-a';
+
+    render(<OrgMessagesClient currentUserId="user-1" />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('selected-conversation')).toHaveTextContent('conversation-a');
+    });
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Submission B' }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('selected-conversation')).toHaveTextContent('conversation-b');
+    });
+    expect(replaceMock).toHaveBeenCalledWith(
+      '/app/o/acme/communications?section=messages&conversation=conversation-b',
+      { scroll: false }
+    );
+  });
 });

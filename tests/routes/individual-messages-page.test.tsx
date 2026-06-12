@@ -379,4 +379,93 @@ describe('individual messages page', () => {
       { scroll: false }
     );
   });
+
+  it('keeps a manual selection after starting from a conversation deep link', async () => {
+    pathnameValue = '/app/i/communications';
+    searchParamsValue = 'section=messages&conversation=conversation-a';
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        if (url === '/api/conversations') {
+          return {
+            ok: true,
+            json: async () => ({
+              conversations: [
+                {
+                  id: 'conversation-a',
+                  otherParty: { displayName: 'Organization A', displayAvatar: null },
+                  lastMessage: { content: 'First proof-corridor update' },
+                  lastMessageAt: '2026-01-01T00:00:00.000Z',
+                  matchId: 'match-a',
+                  assignmentRole: 'Evidence systems consultant',
+                  stage: 'masked',
+                },
+                {
+                  id: 'conversation-b',
+                  otherParty: { displayName: 'Organization B', displayAvatar: null },
+                  lastMessage: { content: 'Second proof-corridor update' },
+                  lastMessageAt: '2026-01-02T00:00:00.000Z',
+                  matchId: 'match-b',
+                  assignmentRole: 'Proof operations lead',
+                  stage: 'masked',
+                },
+              ],
+            }),
+          };
+        }
+
+        if (url === '/api/conversations/conversation-a/messages') {
+          return {
+            ok: true,
+            json: async () => ({
+              messages: [
+                {
+                  id: 'message-a',
+                  senderId: 'user-1',
+                  content: 'First selected thread',
+                  sentAt: '2026-01-01T00:05:00.000Z',
+                },
+              ],
+            }),
+          };
+        }
+
+        if (url === '/api/conversations/conversation-b/messages') {
+          return {
+            ok: true,
+            json: async () => ({
+              messages: [
+                {
+                  id: 'message-b',
+                  senderId: 'user-1',
+                  content: 'Second selected thread',
+                  sentAt: '2026-01-02T00:05:00.000Z',
+                },
+              ],
+            }),
+          };
+        }
+
+        throw new Error(`Unexpected fetch URL: ${url}`);
+      }) as any
+    );
+
+    render(<MessagesClient />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('message-thread')).toHaveTextContent('conversation-a');
+    });
+
+    fireEvent.click(await screen.findByRole('button', { name: /Organization B/i }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('message-thread')).toHaveTextContent('conversation-b');
+      expect(screen.getByTestId('message-thread')).toHaveTextContent('Second selected thread');
+    });
+    expect(replaceMock).toHaveBeenCalledWith(
+      '/app/i/communications?section=messages&conversation=conversation-b',
+      { scroll: false }
+    );
+  });
 });
