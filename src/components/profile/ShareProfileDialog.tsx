@@ -6,7 +6,7 @@
 
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -37,11 +37,12 @@ import {
   ExternalLink,
   Link as LinkIcon,
   MessageSquareText,
+  AlertTriangle,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { generateEmbedCodeFromUrl, generateShareText } from '@/lib/profile/snippet-generator';
 import { useResponsiveModalMode } from '@/hooks/use-responsive-modal-mode';
-import { dispatchClientDiagnostic } from '@/lib/client-diagnostics';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 type ProfileType = 'individual' | 'organization';
 
@@ -114,6 +115,11 @@ interface ShareProfileDialogProps {
   publicPagePath?: string | null;
 }
 
+type CopyFeedback = {
+  kind: 'success' | 'error';
+  message: string;
+};
+
 export function ShareProfileDialog({
   isOpen,
   onClose,
@@ -136,12 +142,22 @@ export function ShareProfileDialog({
     shareToken: string;
   } | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [copyFeedback, setCopyFeedback] = useState<CopyFeedback | null>(null);
+  const copyResetTimerRef = useRef<number | null>(null);
 
   const { toast } = useToast();
   const fieldLabels = useMemo(
     () => (profileType === 'organization' ? ORGANIZATION_FIELD_LABELS : INDIVIDUAL_FIELD_LABELS),
     [profileType]
   );
+
+  useEffect(() => {
+    return () => {
+      if (copyResetTimerRef.current !== null) {
+        window.clearTimeout(copyResetTimerRef.current);
+      }
+    };
+  }, []);
 
   const handleFieldToggle = (field: string) => {
     setFields((prev) => {
@@ -196,14 +212,38 @@ export function ShareProfileDialog({
     }
   };
 
-  const handleCopy = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(label);
-    setTimeout(() => setCopied(null), 2000);
-    toast({
-      title: 'Copied to clipboard',
-      description: `${label} copied`,
-    });
+  const handleCopy = async (text: string, label: string) => {
+    if (copyResetTimerRef.current !== null) {
+      window.clearTimeout(copyResetTimerRef.current);
+    }
+
+    try {
+      setCopyFeedback(null);
+      await navigator.clipboard.writeText(text);
+      setCopied(label);
+      setCopyFeedback({ kind: 'success', message: `${label} copied to clipboard.` });
+      copyResetTimerRef.current = window.setTimeout(() => {
+        setCopied(null);
+        setCopyFeedback(null);
+        copyResetTimerRef.current = null;
+      }, 2000);
+      toast({
+        title: 'Copied to clipboard',
+        description: `${label} copied`,
+      });
+    } catch (error) {
+      dispatchClientErrorDiagnostic('profile.share_dialog.copy_failed', error);
+      setCopied(null);
+      setCopyFeedback({
+        kind: 'error',
+        message: `${label} could not be copied. Select the text manually or try again.`,
+      });
+      toast({
+        title: 'Copy did not work',
+        description: 'The share text stayed visible so you can copy it manually or retry.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const shareTexts = generateShareText({ name: userName, headline: userHeadline });
@@ -300,11 +340,15 @@ export function ShareProfileDialog({
               <div className="flex gap-2 mt-2">
                 <Input value={generatedSnippet.url} readOnly />
                 <Button
+                  type="button"
                   size="icon"
                   variant="outline"
-                  onClick={() => handleCopy(generatedSnippet.url, 'URL')}
+                  aria-label={
+                    copied === 'Shareable URL' ? 'Shareable URL copied' : 'Copy shareable URL'
+                  }
+                  onClick={() => void handleCopy(generatedSnippet.url, 'Shareable URL')}
                 >
-                  {copied === 'URL' ? (
+                  {copied === 'Shareable URL' ? (
                     <CheckCircle2 className="h-4 w-4 text-green-600" />
                   ) : (
                     <Copy className="h-4 w-4" />
@@ -332,9 +376,10 @@ export function ShareProfileDialog({
                   readOnly
                 />
                 <Button
+                  type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => handleCopy(embedCode, 'Embed code')}
+                  onClick={() => void handleCopy(embedCode, 'Embed code')}
                   className="w-full"
                 >
                   {copied === 'Embed code' ? (
@@ -355,9 +400,13 @@ export function ShareProfileDialog({
                 <div className="flex gap-2 mt-2">
                   <Input value={shareTexts.outreach} readOnly />
                   <Button
+                    type="button"
                     size="icon"
                     variant="outline"
-                    onClick={() => handleCopy(shareTexts.outreach, 'Outreach copy')}
+                    aria-label={
+                      copied === 'Outreach copy' ? 'Outreach copy copied' : 'Copy outreach copy'
+                    }
+                    onClick={() => void handleCopy(shareTexts.outreach, 'Outreach copy')}
                   >
                     {copied === 'Outreach copy' ? (
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
@@ -369,6 +418,23 @@ export function ShareProfileDialog({
               </div>
             </div>
           </TabsContent>
+
+          {copyFeedback ? (
+            <p
+              className={
+                copyFeedback.kind === 'error'
+                  ? 'mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900'
+                  : 'mt-3 text-xs leading-5 text-proofound-forest'
+              }
+              role={copyFeedback.kind === 'error' ? 'alert' : 'status'}
+              aria-live={copyFeedback.kind === 'error' ? 'assertive' : 'polite'}
+            >
+              {copyFeedback.kind === 'error' ? (
+                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              ) : null}
+              <span>{copyFeedback.message}</span>
+            </p>
+          ) : null}
         </Tabs>
       )}
     </>

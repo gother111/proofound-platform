@@ -5,6 +5,7 @@ import { ShareProfileDialog } from '@/components/profile/ShareProfileDialog';
 
 const toastMock = vi.fn();
 const apiFetchMock = vi.fn();
+const clipboardWriteTextMock = vi.fn();
 
 vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({ toast: toastMock }),
@@ -73,6 +74,13 @@ vi.mock('@/components/ui/tabs', () => ({
 describe('ShareProfileDialog', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    clipboardWriteTextMock.mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: {
+        writeText: clipboardWriteTextMock,
+      },
+    });
   });
 
   it('builds embed code from the launch Public Page URL without calling archived snippet APIs', async () => {
@@ -153,9 +161,9 @@ describe('ShareProfileDialog', () => {
     expect(document.body.textContent ?? '').not.toMatch(/professional profile/i);
 
     fireEvent.click(screen.getByRole('button', { name: /generate shareable link/i }));
-    await waitFor(() => expect(screen.getByRole('button', { name: /outreach/i })).toBeVisible());
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Outreach' })).toBeVisible());
 
-    expect(screen.getByRole('button', { name: /outreach/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Outreach' })).toBeInTheDocument();
     expect(screen.getByText('Proof-safe outreach copy')).toBeInTheDocument();
     expect(
       screen.getByDisplayValue(
@@ -164,5 +172,61 @@ describe('ShareProfileDialog', () => {
     ).toBeInTheDocument();
     expect(document.body.textContent ?? '').not.toMatch(/LinkedIn|Twitter|social/i);
     expect(apiFetchMock).not.toHaveBeenCalledWith('/api/profile/snippet', expect.anything());
+  });
+
+  it('copies the shareable URL with visible confirmation', async () => {
+    render(
+      <ShareProfileDialog
+        isOpen={true}
+        onClose={() => {}}
+        userName="Jane Doe"
+        userHeadline="Proof operations lead"
+        publicPagePath="/portfolio/jane-doe"
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /generate shareable link/i }));
+    await waitFor(() => expect(screen.getByDisplayValue(/\/portfolio\/jane-doe$/)).toBeVisible());
+
+    fireEvent.click(screen.getByRole('button', { name: 'Copy shareable URL' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('status')).toHaveTextContent('Shareable URL copied to clipboard.');
+    });
+    expect(clipboardWriteTextMock).toHaveBeenCalledWith(
+      expect.stringMatching(/\/portfolio\/jane-doe$/)
+    );
+  });
+
+  it('keeps failed copy actions visible and retryable without hiding the share URL', async () => {
+    clipboardWriteTextMock.mockRejectedValueOnce(new Error('Clipboard permission denied'));
+
+    render(
+      <ShareProfileDialog
+        isOpen={true}
+        onClose={() => {}}
+        userName="Jane Doe"
+        userHeadline="Proof operations lead"
+        publicPagePath="/portfolio/jane-doe"
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /generate shareable link/i }));
+    await waitFor(() => expect(screen.getByDisplayValue(/\/portfolio\/jane-doe$/)).toBeVisible());
+
+    fireEvent.click(screen.getByRole('button', { name: 'Copy shareable URL' }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(
+      'Shareable URL could not be copied. Select the text manually or try again.'
+    );
+    expect(screen.getByDisplayValue(/\/portfolio\/jane-doe$/)).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Copy shareable URL' })).toBeEnabled();
+    expect(toastMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Copy did not work',
+        variant: 'destructive',
+      })
+    );
   });
 });
