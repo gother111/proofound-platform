@@ -34,6 +34,9 @@ interface RespondDialogProps {
   getCompetencyLabel: (level: number) => string;
 }
 
+const VERIFICATION_RESPONSE_RETRY_MESSAGE =
+  'Verification response could not be sent. Your response is still here; please try again.';
+
 export function RespondDialog({
   open,
   onOpenChange,
@@ -103,11 +106,11 @@ export function RespondDialog({
         setResponseMessage('');
       } else {
         const errorData = await response.json();
-        setError(errorData.error || 'Failed to respond to verification request');
+        setError(errorData.error || VERIFICATION_RESPONSE_RETRY_MESSAGE);
       }
     } catch (err) {
       dispatchClientErrorDiagnostic('verifications.respond.submit_failed', err);
-      setError('Failed to respond to verification request. Please try again.');
+      setError(VERIFICATION_RESPONSE_RETRY_MESSAGE);
     } finally {
       setIsSubmitting(false);
     }
@@ -220,7 +223,10 @@ export function RespondDialog({
         )}
 
         {error && (
-          <div className="flex items-center gap-2 p-3 rounded bg-red-50 border border-red-200">
+          <div
+            role="alert"
+            className="flex items-center gap-2 p-3 rounded bg-red-50 border border-red-200"
+          >
             <AlertCircle className="w-4 h-4 text-red-600" />
             <p className="text-sm text-red-600">{error}</p>
           </div>
