@@ -1438,6 +1438,21 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Error updating visibility settings:');
   });
 
+  it('keeps organization trust profile save failures on client diagnostics and safe copy', () => {
+    const source = readSource('src/components/organization/OrgTrustProfileEditor.tsx');
+
+    expect(source).toContain(
+      "import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics'"
+    );
+    expect(source).toContain('organization.trust_profile.save_failed');
+    expect(source).toContain('Organization trust page was not saved');
+    expect(source).toContain('Your published trust page was not changed');
+    expect(source).not.toContain(
+      "description: error instanceof Error ? error.message : 'Unknown error'"
+    );
+    expect(source).not.toContain('Failed to update organization trust page');
+  });
+
   it('keeps current-user and consent-check failures on structured server logging', () => {
     const sources = [
       readSource('src/app/api/user/me/route.ts'),

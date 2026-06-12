@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 type OrgTrustProfileEditorProps = {
   org: {
@@ -103,7 +104,7 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
 
       if (!response.ok) {
         const error = await response.json().catch(() => ({}));
-        throw new Error(error.error || error.message || 'Failed to update organization trust page');
+        throw new Error(error.error || error.message || 'organization trust page update failed');
       }
 
       toast({
@@ -112,9 +113,11 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
       });
       router.refresh();
     } catch (error) {
+      dispatchClientErrorDiagnostic('organization.trust_profile.save_failed', error);
       toast({
-        title: 'Unable to save organization trust page',
-        description: error instanceof Error ? error.message : 'Unknown error',
+        title: 'Organization trust page was not saved',
+        description:
+          'Your published trust page was not changed. The edited fields are still here; please try again before continuing.',
         variant: 'destructive',
       });
     } finally {
