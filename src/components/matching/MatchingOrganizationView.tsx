@@ -98,6 +98,7 @@ type ReviewAction = 'shortlist' | 'pass' | 'request_intro';
 type ReviewActionState = {
   matchId: string;
   action: ReviewAction;
+  label: string;
 };
 
 type ReviewActionError = ReviewActionState & {
@@ -109,6 +110,22 @@ const REVIEW_ACTION_LABELS: Record<ReviewAction, string> = {
   pass: 'Decline',
   request_intro: 'Request intro',
 };
+
+const REVIEW_ACTION_SEGMENT_LABELS: Record<
+  'queue' | 'shortlist',
+  Partial<Record<ReviewAction, string>>
+> = {
+  queue: {
+    pass: 'Decline',
+  },
+  shortlist: {
+    pass: 'Remove from shortlist',
+  },
+};
+
+function reviewActionLabel(action: ReviewAction, segment: 'queue' | 'shortlist') {
+  return REVIEW_ACTION_SEGMENT_LABELS[segment][action] ?? REVIEW_ACTION_LABELS[action];
+}
 
 function readableMatchLabel(value?: string | null, labels: Record<string, string> = {}) {
   if (!value) return null;
@@ -315,12 +332,21 @@ export function MatchingOrganizationView({
   }, [activeMatchId, explanations]);
 
   const handleReviewAction = async (matchId: string, action: ReviewAction) => {
+    const actionLabel = reviewActionLabel(action, activeSegment);
+
     if (!matchId || !currentAssignment?.orgId) {
+      setReviewActionError({
+        matchId,
+        action,
+        label: actionLabel,
+        message:
+          'Review context could not be found. No shortlist, decline, or intro action was changed.',
+      });
       toast.error('Match context not found');
       return;
     }
 
-    setReviewActionPending({ matchId, action });
+    setReviewActionPending({ matchId, action, label: actionLabel });
     setReviewActionError(null);
 
     // Determine the next match to select for auto-advance UX
@@ -419,6 +445,7 @@ export function MatchingOrganizationView({
       setReviewActionError({
         matchId,
         action,
+        label: actionLabel,
         message: `${message}. No shortlist, decline, or intro action was changed.`,
       });
       toast.error('Review action did not save', {
@@ -891,8 +918,7 @@ export function MatchingOrganizationView({
                               >
                                 <p className="flex items-center gap-1.5 font-semibold">
                                   <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
-                                  {REVIEW_ACTION_LABELS[activeReviewActionError.action]} did not
-                                  save
+                                  {activeReviewActionError.label} did not save
                                 </p>
                                 <p className="mt-1">{activeReviewActionError.message}</p>
                                 <Button
@@ -909,10 +935,7 @@ export function MatchingOrganizationView({
                                   className="mt-2 min-h-8 rounded-full border-amber-300 bg-white px-3 text-xs text-amber-950 hover:bg-amber-100"
                                 >
                                   <RefreshCcw className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
-                                  Retry{' '}
-                                  {REVIEW_ACTION_LABELS[
-                                    activeReviewActionError.action
-                                  ].toLowerCase()}
+                                  Retry {activeReviewActionError.label.toLowerCase()}
                                 </Button>
                               </div>
                             ) : null}

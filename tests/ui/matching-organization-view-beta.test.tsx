@@ -222,6 +222,59 @@ describe('MatchingOrganizationView launch corridor', () => {
     expect(apiFetchMock).toHaveBeenCalledTimes(3);
   });
 
+  it('uses shortlist-specific recovery copy when removing a shortlisted submission fails', async () => {
+    apiFetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          items: [
+            {
+              id: 'match-shortlisted',
+              assignmentId: 'assignment-1',
+              reviewStage: 'shortlisted',
+              revealScope: 'shortlist_identity',
+              corridorState: 'shortlist',
+              canRequestIntro: true,
+              reviewCard: {
+                candidateLabel: 'Submission B8K4',
+                fitSummary: {
+                  headline: 'Proof signals are ready for intro review.',
+                  bullets: [],
+                  reasonCodes: [],
+                },
+              },
+              profile: {
+                skills: {},
+              },
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: 'Review service temporarily unavailable' }),
+      });
+
+    render(<MatchingOrganizationView assignments={assignments as any} onCreateNew={vi.fn()} />);
+
+    fireEvent.click(await screen.findByRole('button', { name: /shortlist and intros/i }));
+    expect((await screen.findAllByText('Submission B8K4')).length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole('button', { name: 'Remove from shortlist' }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Remove from shortlist did not save');
+    expect(alert).toHaveTextContent('Review service temporarily unavailable');
+    expect(screen.getByRole('button', { name: /retry remove from shortlist/i })).toBeEnabled();
+    expect(screen.queryByText('Decline did not save')).not.toBeInTheDocument();
+    expect(apiFetchMock).toHaveBeenCalledWith(
+      '/api/org/org-1/matches/match-shortlisted/review',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ action: 'pass' }),
+      })
+    );
+  });
+
   it('opens assignment-specific matching from the assignment card', async () => {
     apiFetchMock.mockResolvedValue({
       ok: true,
