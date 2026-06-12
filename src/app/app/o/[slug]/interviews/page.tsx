@@ -7,7 +7,9 @@
 
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import {
   Calendar,
   Clock,
@@ -105,6 +107,7 @@ type InterviewDialogFeedback = {
 };
 
 export default function OrganizationInterviewsPage() {
+  const params = useParams<{ slug?: string | string[] }>();
   const [interviews, setInterviews] = useState<Interview[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -131,6 +134,10 @@ export default function OrganizationInterviewsPage() {
   const [engagementTypeSelections, setEngagementTypeSelections] = useState<Record<string, string>>(
     {}
   );
+  const rawOrgSlug = Array.isArray(params?.slug) ? params.slug[0] : params?.slug;
+  const assignmentsHref = rawOrgSlug
+    ? `/app/o/${encodeURIComponent(rawOrgSlug)}/assignments`
+    : null;
 
   useEffect(() => {
     void loadInterviews();
@@ -757,6 +764,11 @@ export default function OrganizationInterviewsPage() {
               Once an introduction is approved, this page will show each workflow stage, the privacy
               status, and the next action.
             </p>
+            {assignmentsHref ? (
+              <Button asChild variant="outline" size="sm" className="min-h-10">
+                <Link href={assignmentsHref}>Review assignment queue</Link>
+              </Button>
+            ) : null}
           </div>
         ) : (
           <div className="space-y-4">

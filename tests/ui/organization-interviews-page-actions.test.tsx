@@ -16,7 +16,12 @@ vi.mock('@/components/ui/v2/AppSurface', () => ({
 }));
 
 vi.mock('@/components/ui/button', () => ({
-  Button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+  Button: ({ asChild, children, ...props }: any) =>
+    asChild && React.isValidElement(children) ? (
+      React.cloneElement(children, props)
+    ) : (
+      <button {...props}>{children}</button>
+    ),
 }));
 
 vi.mock('@/components/decisions/DecisionDialog', () => ({
@@ -38,6 +43,10 @@ vi.mock('@/components/ui/dialog', () => ({
   DialogFooter: ({ children, ...props }: any) => <div {...props}>{children}</div>,
   DialogTitle: ({ children, ...props }: any) => <h2 {...props}>{children}</h2>,
   DialogDescription: ({ children, ...props }: any) => <p {...props}>{children}</p>,
+}));
+
+vi.mock('next/navigation', () => ({
+  useParams: () => ({ slug: 'acme' }),
 }));
 
 vi.mock('sonner', () => ({
@@ -129,6 +138,10 @@ describe('organization interviews page actions', () => {
     expect(
       await screen.findByRole('heading', { name: /no active interview workflow yet/i })
     ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /review assignment queue/i })).toHaveAttribute(
+      'href',
+      '/app/o/acme/assignments'
+    );
   });
 
   it('uses in-app dialogs for interview outcome actions before refresh', async () => {
