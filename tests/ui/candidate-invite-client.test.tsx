@@ -5,8 +5,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CandidateInviteClient } from '@/app/candidate-invite/[token]/CandidateInviteClient';
 import { apiFetch } from '@/lib/api/fetch';
 
+const { dispatchClientErrorDiagnosticMock } = vi.hoisted(() => ({
+  dispatchClientErrorDiagnosticMock: vi.fn(),
+}));
+
 vi.mock('@/lib/api/fetch', () => ({
   apiFetch: vi.fn(),
+}));
+
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientErrorDiagnostic: dispatchClientErrorDiagnosticMock,
 }));
 
 const apiFetchMock = vi.mocked(apiFetch);
@@ -30,6 +38,52 @@ const structuredAssignment = {
   startLatest: '2026-06-15',
   verificationGates: ['identity', 'work_email'],
 };
+
+const availableProofPack = {
+  id: '11111111-1111-4111-8111-111111111111',
+  title: 'Service design proof pack',
+  summary: 'One owner-only proof pack for this assignment.',
+  evidenceSummary: 'Private evidence stays in the assignment packet.',
+  outcomesSummary: null,
+  verificationSummary: null,
+  updatedAt: new Date().toISOString(),
+};
+
+function renderClaimedProofCardInvite() {
+  render(
+    <CandidateInviteClient
+      token="token-value"
+      initialState={{
+        invite: {
+          id: 'invite-1',
+          status: 'claimed',
+          flowType: 'proof_card',
+          assignmentId: 'assignment-1',
+          maskedEmail: 'ca***@example.com',
+          expiresAt: new Date(Date.now() + 3600_000).toISOString(),
+          claimedAt: new Date().toISOString(),
+          claimedByCurrentUser: true,
+          acceptedAt: null,
+          acceptedByCurrentUser: false,
+          communicationsUrl: null,
+          proofSubmittedAt: null,
+        },
+        organization: {
+          id: 'org-1',
+          slug: 'acme',
+          displayName: 'Acme Org',
+          logoUrl: null,
+        },
+        assignment: structuredAssignment,
+        currentUser: {
+          id: 'user-1',
+          email: 'candidate@example.com',
+        },
+        availableProofPacks: [availableProofPack],
+      }}
+    />
+  );
+}
 
 describe('CandidateInviteClient test_match flow', () => {
   beforeEach(() => {
@@ -839,6 +893,62 @@ describe('CandidateInviteClient test_match flow', () => {
     expect(screen.getAllByText(/Service design proof pack/i).length).toBeGreaterThan(0);
     expect(screen.getByLabelText(/I reviewed the visibility summary/i)).toBeChecked();
     expect(screen.getByRole('button', { name: /submit reviewed proof/i })).toBeEnabled();
+  });
+
+  it('maps returned proof-card validation failures to safe candidate copy', async () => {
+    apiFetchMock.mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({ error: 'Invalid proof card payload' }),
+    } as Response);
+
+    renderClaimedProofCardInvite();
+
+    fireEvent.click(screen.getByRole('button', { name: /review assignment proof/i }));
+    fireEvent.click(screen.getByLabelText(/I reviewed the visibility summary/i));
+    fireEvent.click(screen.getByRole('button', { name: /submit reviewed proof/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Review the selected Proof Pack and visibility confirmation before submitting.'
+    );
+    expect(
+      screen.getByText(
+        'Your selected Proof Pack and visibility review are still here. Check the summary, then try submitting again.'
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Final review before submission/i)).toBeInTheDocument();
+    expect(dispatchClientErrorDiagnosticMock).not.toHaveBeenCalledWith(
+      'candidate_invite.client.proof_submit_returned_error',
+      expect.any(Error)
+    );
+  });
+
+  it('keeps unexpected returned proof-card failures safe and diagnostic', async () => {
+    const rawError = 'database insert failed: policy stack detail';
+    apiFetchMock.mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({ error: rawError }),
+    } as Response);
+
+    renderClaimedProofCardInvite();
+
+    fireEvent.click(screen.getByRole('button', { name: /review assignment proof/i }));
+    fireEvent.click(screen.getByLabelText(/I reviewed the visibility summary/i));
+    fireEvent.click(screen.getByRole('button', { name: /submit reviewed proof/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Assignment proof could not be submitted.');
+    expect(alert).not.toHaveTextContent(rawError);
+    expect(
+      screen.getByText(
+        'Your selected Proof Pack and visibility review are still here. Check the summary, then try submitting again.'
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Final review before submission/i)).toBeInTheDocument();
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'candidate_invite.client.proof_submit_returned_error',
+      expect.any(Error)
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(rawError);
   });
 
   it('supports local visual initial state without calling the public token API', async () => {

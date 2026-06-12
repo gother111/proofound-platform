@@ -843,9 +843,12 @@ describe('runtime debug output guardrails', () => {
     expect(source).toContain('candidate_invite.client.load_failed');
     expect(source).toContain('candidate_invite.client.claim_failed');
     expect(source).toContain('candidate_invite.client.proof_submit_failed');
+    expect(source).toContain('candidate_invite.client.proof_submit_returned_error');
+    expect(source).toContain('candidateInviteProofSubmitError');
     expect(source).not.toContain('Failed to load submission invite state:');
     expect(source).not.toContain('Failed to claim invite:');
     expect(source).not.toContain('Failed to submit assignment proof:');
+    expect(source).not.toContain('setError(payload?.error');
   });
 
   it('keeps assignment builder client failures on client diagnostics without console output', () => {

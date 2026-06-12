@@ -216,6 +216,49 @@ const CANDIDATE_INVITE_CLAIM_RETRY_MESSAGE =
 const CANDIDATE_INVITE_CLAIM_RETRY_DETAIL =
   'No proof was submitted, no visibility changed, and the invitation can be retried from this page.';
 
+const CANDIDATE_INVITE_PROOF_SUBMIT_RETRY_MESSAGE = 'Assignment proof could not be submitted.';
+
+const CANDIDATE_INVITE_PROOF_SUBMIT_ERROR_MESSAGES = new Map([
+  [
+    'Unauthorized',
+    'Please sign in again before submitting assignment proof. Your selected Proof Pack and visibility review are still here.',
+  ],
+  [
+    'Invalid JSON body',
+    'Review the selected Proof Pack and visibility confirmation before submitting.',
+  ],
+  [
+    'Invalid proof card payload',
+    'Review the selected Proof Pack and visibility confirmation before submitting.',
+  ],
+  ['Invite not found', 'This invitation link is invalid, expired, or no longer available.'],
+  [
+    'Proof Card submission is not required for this invite.',
+    'This invite does not require an assignment proof submission.',
+  ],
+  ['Invite must be claimed first.', 'Accept this invite before submitting assignment proof.'],
+  [
+    'This invite is missing assignment context.',
+    'This invite is missing assignment context. Ask the organization to send a new assignment-bound invite.',
+  ],
+  ['Assignment not found.', 'This assignment context is no longer available.'],
+  [
+    'This invite is unavailable because the organization is currently restricted.',
+    'This invite is unavailable because the organization is currently restricted.',
+  ],
+  [
+    'This invite is temporarily unavailable pending policy review.',
+    'This invite is temporarily unavailable pending policy review.',
+  ],
+  ['Invite is not in a submittable state.', 'This invite is not ready for proof submission.'],
+  ['Proof Pack not found.', 'Choose an owner-only Proof Pack before submitting assignment proof.'],
+  [
+    'Assignment proof submissions can only submit an owner-only Proof Pack. Public pages and share links are not accepted for this flow.',
+    'Assignment proof submissions can only use an owner-only Proof Pack. Public pages and share links are not accepted for this flow.',
+  ],
+  ['Failed to submit Proof Card', CANDIDATE_INVITE_PROOF_SUBMIT_RETRY_MESSAGE],
+]);
+
 function candidateInviteClaimError(error?: string | null) {
   const normalized = error?.trim();
 
@@ -224,6 +267,24 @@ function candidateInviteClaimError(error?: string | null) {
   }
 
   return CANDIDATE_INVITE_CLAIM_RETRY_MESSAGE;
+}
+
+function candidateInviteProofSubmitError(error?: string | null) {
+  const normalized = error?.trim();
+  if (!normalized) {
+    return CANDIDATE_INVITE_PROOF_SUBMIT_RETRY_MESSAGE;
+  }
+
+  const safeMessage = CANDIDATE_INVITE_PROOF_SUBMIT_ERROR_MESSAGES.get(normalized);
+  if (safeMessage) {
+    return safeMessage;
+  }
+
+  dispatchClientErrorDiagnostic(
+    'candidate_invite.client.proof_submit_returned_error',
+    new Error(normalized)
+  );
+  return CANDIDATE_INVITE_PROOF_SUBMIT_RETRY_MESSAGE;
 }
 
 export function CandidateInviteClient({
@@ -424,7 +485,7 @@ export function CandidateInviteClient({
 
       const payload = await response.json().catch(() => null);
       if (!response.ok) {
-        setError(payload?.error ?? 'Assignment proof could not be submitted.');
+        setError(candidateInviteProofSubmitError(payload?.error));
         setErrorDetail(
           'Your selected Proof Pack and visibility review are still here. Check the summary, then try submitting again.'
         );
