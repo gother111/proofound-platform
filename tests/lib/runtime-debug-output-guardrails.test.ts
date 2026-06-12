@@ -1495,8 +1495,10 @@ describe('runtime debug output guardrails', () => {
     expect(source).toContain(
       "import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics'"
     );
+    expect(source).toContain('PRIVACY_VISIBILITY_LOAD_RETRY_MESSAGE');
     expect(source).toContain('privacy_settings.client.visibility_fetch_failed');
     expect(source).toContain('privacy_settings.client.visibility_save_failed');
+    expect(source).not.toContain('setVisibilityLoadError(error instanceof Error');
     expect(source).not.toContain('Failed to fetch visibility settings:');
     expect(source).not.toContain('Failed to save visibility settings:');
   });

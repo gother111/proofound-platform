@@ -21,6 +21,7 @@ const PRIVACY_SECTION_IDS = new Set([
   'privacy-delete',
 ]);
 const PRIVACY_ANCHOR_OFFSET_PX = 24;
+const PRIVACY_VISIBILITY_LOAD_RETRY_MESSAGE = 'Saved privacy preferences could not be loaded.';
 
 function getScrollableParent(element: HTMLElement): HTMLElement | null {
   let parent = element.parentElement;
@@ -66,11 +67,7 @@ export function PrivacySettingsClient() {
       setVisibilityLoadError(null);
     } catch (error) {
       dispatchClientErrorDiagnostic('privacy_settings.client.visibility_fetch_failed', error);
-      setVisibilityLoadError(
-        error instanceof Error && error.message
-          ? error.message
-          : 'Visibility preferences could not be loaded.'
-      );
+      setVisibilityLoadError(PRIVACY_VISIBILITY_LOAD_RETRY_MESSAGE);
       toast.error('Failed to load privacy settings');
     } finally {
       if (initial) {

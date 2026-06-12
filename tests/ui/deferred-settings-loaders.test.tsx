@@ -94,6 +94,38 @@ describe('deferred settings loaders', () => {
     }
   });
 
+  it('keeps thrown privacy visibility load failures safe and retryable', async () => {
+    const originalFetch = global.fetch;
+    const rawFailure = 'network layer exposed profile visibility endpoint';
+    global.fetch = vi
+      .fn()
+      .mockRejectedValueOnce(new Error(rawFailure))
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ profile: true }),
+      }) as typeof fetch;
+
+    try {
+      render(<PrivacySettingsClient />);
+
+      const alert = await screen.findByRole('alert');
+      expect(alert).toHaveTextContent('Saved privacy preferences could not be loaded.');
+      expect(alert).toHaveTextContent('safe defaults');
+      expect(screen.queryByText(rawFailure)).not.toBeInTheDocument();
+      expect(screen.getByText('Safe visibility defaults')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: /retry privacy preferences/i }));
+
+      await waitFor(() => {
+        expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      });
+      expect(screen.getByText('Loaded profile preferences')).toBeInTheDocument();
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+    } finally {
+      global.fetch = originalFetch;
+    }
+  });
+
   it('focuses anchored privacy sections after deferred visibility settings load', async () => {
     const originalFetch = global.fetch;
     const originalPath = window.location.href;
