@@ -1,9 +1,15 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { completeOrganizationOnboardingMock, createClientMock, pushMock } = vi.hoisted(() => ({
+const {
+  completeOrganizationOnboardingMock,
+  createClientMock,
+  dispatchClientErrorDiagnosticMock,
+  pushMock,
+} = vi.hoisted(() => ({
   completeOrganizationOnboardingMock: vi.fn(),
   createClientMock: vi.fn(),
+  dispatchClientErrorDiagnosticMock: vi.fn(),
   pushMock: vi.fn(),
 }));
 
@@ -22,7 +28,7 @@ vi.mock('@/lib/supabase/client', () => ({
 }));
 
 vi.mock('@/lib/client-diagnostics', () => ({
-  dispatchClientErrorDiagnostic: vi.fn(),
+  dispatchClientErrorDiagnostic: dispatchClientErrorDiagnosticMock,
 }));
 
 import { OrganizationSetup } from '@/components/onboarding/OrganizationSetup';
@@ -52,7 +58,7 @@ describe('OrganizationSetup portfolio link feedback', () => {
     delete (navigator as Partial<Navigator>).clipboard;
   });
 
-  async function renderSuccessScreen() {
+  async function submitOrganizationSetup() {
     render(<OrganizationSetup />);
 
     await screen.findByText('Create your organization');
@@ -68,8 +74,39 @@ describe('OrganizationSetup portfolio link feedback', () => {
     fireEvent.submit(screen.getByRole('button', { name: /create organization/i }).closest('form')!);
 
     await waitFor(() => expect(completeOrganizationOnboardingMock).toHaveBeenCalledTimes(1));
+  }
+
+  async function renderSuccessScreen() {
+    await submitOrganizationSetup();
     await screen.findByText('Organization link ready');
   }
+
+  it('shows returned organization creation errors as a retryable alert', async () => {
+    completeOrganizationOnboardingMock.mockResolvedValueOnce({
+      error: 'Organization slug already taken. Please choose another.',
+    });
+
+    await submitOrganizationSetup();
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Organization slug already taken. Please choose another.'
+    );
+    expect(screen.getByRole('button', { name: /create organization/i })).toBeEnabled();
+  });
+
+  it('logs unexpected organization creation failures and keeps retry available', async () => {
+    const submitError = new Error('Action failed');
+    completeOrganizationOnboardingMock.mockRejectedValueOnce(submitError);
+
+    await submitOrganizationSetup();
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Something went wrong. Please try again.');
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'onboarding.organization.submit_failed',
+      submitError
+    );
+    expect(screen.getByRole('button', { name: /create organization/i })).toBeEnabled();
+  });
 
   it('confirms organization portfolio copy inline', async () => {
     await renderSuccessScreen();

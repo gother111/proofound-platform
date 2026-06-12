@@ -104,8 +104,15 @@ export function OrganizationSetup() {
         const orgName = formData.get('displayName') as string;
         const portfolioUrl = `${window.location.origin}/portfolio/org/${result.orgSlug}`;
         setSuccess({ orgName, orgSlug: result.orgSlug, portfolioUrl });
+        return;
       }
+
+      setError(
+        'Organization was created, but the public link did not finish. Refresh and try again.'
+      );
+      setIsLoading(false);
     } catch (err) {
+      dispatchClientErrorDiagnostic('onboarding.organization.submit_failed', err);
       setError('Something went wrong. Please try again.');
       setIsLoading(false);
     }
@@ -332,11 +339,15 @@ export function OrganizationSetup() {
             </p>
           </div>
 
-          {error && (
-            <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-xl text-destructive text-sm">
+          {error ? (
+            <div
+              className="p-4 bg-destructive/10 border border-destructive/30 rounded-xl text-destructive text-sm"
+              role="alert"
+              aria-live="assertive"
+            >
               {error}
             </div>
-          )}
+          ) : null}
 
           <div className="flex justify-end gap-4">
             <Button
