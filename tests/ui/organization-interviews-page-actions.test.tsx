@@ -312,6 +312,106 @@ describe('organization interviews page actions', () => {
     });
   });
 
+  it('keeps failed interview edits visible and retryable', async () => {
+    const upcomingInterviewAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    let editAttempts = 0;
+
+    getInterviewCorridorItemsMock.mockResolvedValue({
+      items: [
+        buildInterviewItem({
+          interview: {
+            id: 'interview-1',
+            scheduledAt: upcomingInterviewAt,
+            duration: 30,
+            platform: 'manual',
+            meetingUrl: 'https://example.com/manual-room',
+            manualMeetingProvider: null,
+            rescheduleCount: 0,
+            status: 'scheduled',
+            completedAt: null,
+            cancelledAt: null,
+            noShowAt: null,
+          },
+        }),
+      ],
+    });
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string | URL) => {
+        const url = typeof input === 'string' ? input : input.toString();
+
+        if (url.startsWith('/api/csrf-token')) {
+          return {
+            ok: true,
+            json: async () => ({ token: 'csrf-token' }),
+          };
+        }
+
+        if (url === '/api/interviews/edit') {
+          editAttempts += 1;
+
+          if (editAttempts === 1) {
+            return {
+              ok: false,
+              json: async () => ({
+                error: 'Interview update is temporarily unavailable.',
+              }),
+            };
+          }
+
+          return {
+            ok: true,
+            json: async () => ({ success: true }),
+          };
+        }
+
+        return { ok: false, json: async () => ({ error: 'Unexpected route' }) };
+      })
+    );
+
+    render(<OrganizationInterviewsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /edit interview/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /edit interview/i }));
+
+    const editDialog = await screen.findByRole('dialog');
+    const dateField = within(editDialog).getByLabelText('Date') as HTMLInputElement;
+    const reasonField = within(editDialog).getByLabelText(/reason/i) as HTMLTextAreaElement;
+    const originalDate = dateField.value;
+
+    fireEvent.change(dateField, { target: { value: '' } });
+    fireEvent.click(within(editDialog).getByRole('button', { name: /save changes/i }));
+
+    let alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Choose a date and time');
+    expect(alert).toHaveTextContent('Select both date and time before saving.');
+    expect(editAttempts).toBe(0);
+
+    fireEvent.change(dateField, { target: { value: originalDate } });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+
+    fireEvent.change(reasonField, {
+      target: { value: 'Moving to the reviewer availability window' },
+    });
+    fireEvent.click(within(editDialog).getByRole('button', { name: /save changes/i }));
+
+    alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Interview update could not be saved');
+    expect(alert).toHaveTextContent('Interview update is temporarily unavailable.');
+    expect(reasonField).toHaveValue('Moving to the reviewer availability window');
+
+    fireEvent.click(within(alert).getByRole('button', { name: /retry update/i }));
+
+    await waitFor(() => {
+      expect(editAttempts).toBe(2);
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+  });
+
   it('keeps failed interview outcome dialogs visible and retryable', async () => {
     const upcomingInterviewAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
     const actionAttempts: Record<string, number> = {};

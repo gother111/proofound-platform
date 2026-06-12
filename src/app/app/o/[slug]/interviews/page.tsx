@@ -98,7 +98,7 @@ type WorkflowActionFeedback = {
 };
 
 type InterviewDialogFeedback = {
-  kind: 'cancel' | 'complete' | 'no_show';
+  kind: 'edit' | 'cancel' | 'complete' | 'no_show';
   interviewId: string;
   title: string;
   message: string;
@@ -226,6 +226,7 @@ export default function OrganizationInterviewsPage() {
     setEditDate(localDate);
     setEditTime(localTime);
     setEditReason('');
+    setInterviewDialogFeedback(null);
   };
 
   const closeEditDialog = () => {
@@ -234,6 +235,7 @@ export default function OrganizationInterviewsPage() {
     setEditTime('');
     setEditReason('');
     setIsSavingEdit(false);
+    setInterviewDialogFeedback(null);
   };
 
   const openCancelDialog = (interview: Interview) => {
@@ -276,17 +278,32 @@ export default function OrganizationInterviewsPage() {
   const handleSaveInterviewEdit = async () => {
     if (!editingInterview?.interview) return;
     if (!editDate || !editTime) {
-      toast.error('Select both date and time before saving');
+      const message = 'Select both date and time before saving.';
+      setInterviewDialogFeedback({
+        kind: 'edit',
+        interviewId: editingInterview.interview.id,
+        title: 'Choose a date and time',
+        message,
+      });
+      toast.error(message);
       return;
     }
 
     const editedAt = new Date(`${editDate}T${editTime}:00`);
     if (Number.isNaN(editedAt.getTime())) {
-      toast.error('Invalid date or time');
+      const message = 'Choose a valid interview date and time before saving.';
+      setInterviewDialogFeedback({
+        kind: 'edit',
+        interviewId: editingInterview.interview.id,
+        title: 'Interview time is invalid',
+        message,
+      });
+      toast.error(message);
       return;
     }
 
     setIsSavingEdit(true);
+    setInterviewDialogFeedback(null);
     try {
       const response = await apiFetch('/api/interviews/edit', {
         method: 'POST',
@@ -308,7 +325,17 @@ export default function OrganizationInterviewsPage() {
       closeEditDialog();
       await loadInterviews();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to update interview');
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Interview update could not be saved. The workflow is unchanged.';
+      setInterviewDialogFeedback({
+        kind: 'edit',
+        interviewId: editingInterview.interview.id,
+        title: 'Interview update could not be saved',
+        message,
+      });
+      toast.error(message);
       setIsSavingEdit(false);
     }
   };
@@ -1050,7 +1077,12 @@ export default function OrganizationInterviewsPage() {
                   id="edit-interview-date"
                   type="date"
                   value={editDate}
-                  onChange={(event) => setEditDate(event.target.value)}
+                  onChange={(event) => {
+                    setEditDate(event.target.value);
+                    if (getInterviewDialogFeedback('edit', editingInterview)) {
+                      setInterviewDialogFeedback(null);
+                    }
+                  }}
                   className="h-10 w-full rounded-md border border-proofound-stone/70 px-3 text-sm"
                 />
               </div>
@@ -1066,7 +1098,12 @@ export default function OrganizationInterviewsPage() {
                   id="edit-interview-time"
                   type="time"
                   value={editTime}
-                  onChange={(event) => setEditTime(event.target.value)}
+                  onChange={(event) => {
+                    setEditTime(event.target.value);
+                    if (getInterviewDialogFeedback('edit', editingInterview)) {
+                      setInterviewDialogFeedback(null);
+                    }
+                  }}
                   className="h-10 w-full rounded-md border border-proofound-stone/70 px-3 text-sm"
                 />
               </div>
@@ -1081,12 +1118,26 @@ export default function OrganizationInterviewsPage() {
                 <textarea
                   id="edit-interview-reason"
                   value={editReason}
-                  onChange={(event) => setEditReason(event.target.value)}
+                  onChange={(event) => {
+                    setEditReason(event.target.value);
+                    if (getInterviewDialogFeedback('edit', editingInterview)) {
+                      setInterviewDialogFeedback(null);
+                    }
+                  }}
                   rows={3}
                   className="w-full rounded-md border border-proofound-stone/70 px-3 py-2 text-sm"
                   placeholder="Add context for the update..."
                 />
               </div>
+
+              {renderInterviewDialogFeedback({
+                feedback: getInterviewDialogFeedback('edit', editingInterview),
+                retryLabel: 'Retry update',
+                isRetrying: isSavingEdit,
+                onRetry: () => {
+                  void handleSaveInterviewEdit();
+                },
+              })}
             </div>
 
             <div className="flex items-center justify-end gap-2">
