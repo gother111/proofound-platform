@@ -4,7 +4,17 @@ import { useEffect, useState, type ComponentType } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { MapPin, Clock, DollarSign, Shield, Eye, EyeOff, BellOff, Loader2 } from 'lucide-react';
+import {
+  MapPin,
+  Clock,
+  DollarSign,
+  Shield,
+  Eye,
+  EyeOff,
+  BellOff,
+  Loader2,
+  AlertCircle,
+} from 'lucide-react';
 import { VerificationGatesWarning } from './VerificationGatesWarning';
 import { apiFetch } from '@/lib/api/fetch';
 import {
@@ -51,6 +61,10 @@ const REVIEW_STATE_LABELS: Record<string, string> = {
   intro_hold_privacy_or_policy_review: 'Privacy or policy hold',
   intro_hold_not_match_visible: 'Discovery only',
 };
+
+const MATCH_EXPLAINER_LOADING_LABEL = 'Loading proof reasoning...';
+const MATCH_EXPLAINER_ERROR_MESSAGE =
+  'Proof reasoning could not load. Your match review is unchanged; try again.';
 
 function reviewStateLabel(value?: string | null): string | null {
   if (!value) return null;
@@ -144,6 +158,7 @@ export function MatchResultCard({
   const data = isOrgView ? result.profile : result.assignment;
   const [matchExplanation, setMatchExplanation] = useState<any>(null);
   const [isLoadingExplanation, setIsLoadingExplanation] = useState(false);
+  const [explanationError, setExplanationError] = useState<string | null>(null);
   const [isSnoozeDialogOpen, setIsSnoozeDialogOpen] = useState(false);
   const [showGatesWarning, setShowGatesWarning] = useState(false);
   const [gateCheckResult, setGateCheckResult] = useState<any>(null);
@@ -226,14 +241,18 @@ export function MatchResultCard({
     if (!result.id || matchExplanation) return; // Already loaded
 
     setIsLoadingExplanation(true);
+    setExplanationError(null);
     try {
       const response = await apiFetch(`/api/match/explain/${result.id}`);
-      if (response.ok) {
-        const data = await response.json();
-        setMatchExplanation(data);
+      if (!response.ok) {
+        throw new Error('match_explanation_request_failed');
       }
+
+      const data = await response.json();
+      setMatchExplanation(data);
     } catch (error) {
       dispatchClientErrorDiagnostic('matching.result_card.explanation_fetch_failed', error);
+      setExplanationError(MATCH_EXPLAINER_ERROR_MESSAGE);
     } finally {
       setIsLoadingExplanation(false);
     }
@@ -343,6 +362,15 @@ export function MatchResultCard({
   const orgPrimaryLabel = result.reviewStage === 'shortlisted' ? 'Request intro' : 'Shortlist';
   const orgPrimaryDisabled =
     result.reviewStage === 'shortlisted' && result.canRequestIntro === false;
+  const explanationErrorAlert = explanationError ? (
+    <div
+      className="mt-2 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-950"
+      role="alert"
+    >
+      <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+      <span>{explanationError}</span>
+    </div>
+  ) : null;
 
   if (isOrgView) {
     return (
@@ -401,7 +429,7 @@ export function MatchResultCard({
                   aria-haspopup="dialog"
                 >
                   <Loader2 className="w-3 h-3 animate-spin" />
-                  Loading...
+                  {MATCH_EXPLAINER_LOADING_LABEL}
                 </Button>
               ) : (
                 <Button
@@ -416,7 +444,7 @@ export function MatchResultCard({
                   {isLoadingExplanation ? (
                     <>
                       <Loader2 className="w-3 h-3 animate-spin" />
-                      Loading...
+                      {MATCH_EXPLAINER_LOADING_LABEL}
                     </>
                   ) : (
                     MATCH_EXPLAINER_TRIGGER_LABEL
@@ -425,6 +453,8 @@ export function MatchResultCard({
               )
             ) : null}
           </div>
+
+          {explanationErrorAlert}
 
           {result.supplyState === 'browse_only_low_candidate_supply' ? (
             <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
@@ -586,7 +616,7 @@ export function MatchResultCard({
                     aria-haspopup="dialog"
                   >
                     <Loader2 className="w-3 h-3 animate-spin" />
-                    Loading...
+                    {MATCH_EXPLAINER_LOADING_LABEL}
                   </Button>
                 ) : (
                   <Button
@@ -601,7 +631,7 @@ export function MatchResultCard({
                     {isLoadingExplanation ? (
                       <>
                         <Loader2 className="w-3 h-3 animate-spin" />
-                        Loading...
+                        {MATCH_EXPLAINER_LOADING_LABEL}
                       </>
                     ) : (
                       MATCH_EXPLAINER_TRIGGER_LABEL
@@ -610,6 +640,7 @@ export function MatchResultCard({
                 )}
               </div>
             )}
+            {explanationErrorAlert}
           </div>
         </div>
 

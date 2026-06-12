@@ -1,9 +1,19 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { MatchResultCard } from '@/components/matching/MatchResultCard';
+import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { MATCH_EXPLAINER_TRIGGER_LABEL } from '@/lib/matching/explainer-contract';
+
+vi.mock('@/lib/api/fetch', () => ({
+  apiFetch: vi.fn(),
+}));
+
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientErrorDiagnostic: vi.fn(),
+}));
 
 vi.mock('framer-motion', () => ({
   motion: {
@@ -33,7 +43,14 @@ vi.mock('@/components/matching/ConsentToShareDialog', () => ({
   ConsentToShareDialog: () => <div>Consent dialog</div>,
 }));
 
+const apiFetchMock = vi.mocked(apiFetch);
+const dispatchClientErrorDiagnosticMock = vi.mocked(dispatchClientErrorDiagnostic);
+
 describe('MatchResultCard', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('uses human match breakdown labels for individual assignment review cards', () => {
     render(
       <MatchResultCard
@@ -169,6 +186,61 @@ describe('MatchResultCard', () => {
     expect(screen.queryByText(/complex hiring workflow/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/candidate identity masked/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /snooze/i })).not.toBeInTheDocument();
+  });
+
+  it('names the explainer loading state as proof reasoning work', async () => {
+    apiFetchMock.mockReturnValue(new Promise(() => undefined));
+
+    render(
+      <MatchResultCard
+        result={{
+          id: 'match-loading',
+          assignmentId: 'assignment-loading',
+          assignment: {
+            role: 'Proof operations lead',
+          },
+          proofSignals: [{ key: 'proof_fit', support: 'Primary reason' }],
+        }}
+        variant="blind"
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: MATCH_EXPLAINER_TRIGGER_LABEL }));
+
+    expect(await screen.findByRole('button', { name: /loading proof reasoning/i })).toBeDisabled();
+    expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+  });
+
+  it('keeps match explainer failures visible and retryable', async () => {
+    apiFetchMock.mockResolvedValueOnce({
+      ok: false,
+      json: vi.fn().mockResolvedValue({ error: 'Failed to build summary' }),
+    } as any);
+
+    render(
+      <MatchResultCard
+        result={{
+          id: 'match-explainer-failure',
+          assignmentId: 'assignment-failure',
+          assignment: {
+            role: 'Proof operations lead',
+          },
+          proofSignals: [{ key: 'proof_fit', support: 'Primary reason' }],
+        }}
+        variant="blind"
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: MATCH_EXPLAINER_TRIGGER_LABEL }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Proof reasoning could not load');
+    expect(alert).toHaveTextContent('Your match review is unchanged; try again.');
+    expect(screen.getByRole('button', { name: MATCH_EXPLAINER_TRIGGER_LABEL })).toBeEnabled();
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'matching.result_card.explanation_fetch_failed',
+      expect.any(Error)
+    );
   });
 
   it('shows fallback explanation signals when org match review bullets are sparse', () => {
