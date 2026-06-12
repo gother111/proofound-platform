@@ -349,7 +349,7 @@ export function MatchResultCard({
       : 'Practical fit is kept separate from identity-bearing profile details.',
     orgReviewCard?.verification?.summaryLabel
       ? `Trust signal: ${orgReviewCard.verification.summaryLabel}.`
-      : 'Blind-by-default review keeps identity details hidden until candidate consent.',
+      : 'Blind-by-default review keeps identity details hidden until the proof-review participant consents to reveal.',
   ];
   const orgFitBullets =
     orgReviewCard?.fitSummary.bullets && orgReviewCard.fitSummary.bullets.length > 0

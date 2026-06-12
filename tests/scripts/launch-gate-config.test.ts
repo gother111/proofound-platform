@@ -4591,6 +4591,9 @@ describe('launch gate package configuration', () => {
       'Identity stays protected until the corridor is ready.'
     );
     expect(activeMatchingReviewText).toContain('Identity remains protected before reveal');
+    expect(activeMatchingReviewText).toContain(
+      'Blind-by-default review keeps identity details hidden until the proof-review participant consents to reveal.'
+    );
     expect(activeMatchingReviewText).toContain('Submission #');
     expect(activeMatchingReviewText).toContain('Submission Lvl');
     expect(activeMatchingReviewText).not.toContain(
@@ -4659,6 +4662,7 @@ describe('launch gate package configuration', () => {
       expect(content).not.toContain('Candidate signals');
       expect(content).not.toContain('Candidate identity stays protected');
       expect(content).not.toContain('Candidate identity remains protected');
+      expect(content).not.toContain('until candidate consent');
       expect(content).not.toContain('Candidate #');
       expect(content).not.toContain('Candidate Lvl');
       expect(content).not.toContain('Candidate has: Lvl');

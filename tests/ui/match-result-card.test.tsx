@@ -387,8 +387,11 @@ describe('MatchResultCard', () => {
     expect(screen.getByText(/Matched skills: Program management/i)).toBeInTheDocument();
     expect(screen.getByText(/Practical fit is checked/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/Blind-by-default review keeps identity details hidden/i)
+      screen.getByText(
+        'Blind-by-default review keeps identity details hidden until the proof-review participant consents to reveal.'
+      )
     ).toBeInTheDocument();
+    expect(screen.queryByText(/candidate consent/i)).not.toBeInTheDocument();
     expect(screen.getByText('skills')).toBeInTheDocument();
     expect(screen.getByText('proof')).toBeInTheDocument();
     expect(screen.getByText('constraints')).toBeInTheDocument();
