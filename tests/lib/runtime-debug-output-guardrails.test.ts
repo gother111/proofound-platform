@@ -367,6 +367,20 @@ describe('runtime debug output guardrails', () => {
     expect(errorHandlerSource).not.toContain('console.error(`[${context}]`');
   });
 
+  it('keeps cookie preference save failures safe and diagnostic', () => {
+    const source = readSource('src/components/cookies/CookiePreferences.tsx');
+
+    expect(source).toContain(
+      "import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics'"
+    );
+    expect(source).toContain('cookies.preferences.save_failed');
+    expect(source).toContain('Cookie preferences could not be fully saved');
+    expect(source).toContain('Your choices are still shown here');
+    expect(source).not.toContain('getUserErrorMessage');
+    expect(source).not.toContain('CookiePreferences.handleSave');
+    expect(source).not.toContain('toast.error(errorMessage)');
+  });
+
   it('keeps active launch copy free of unfinished beta and mock wording', () => {
     const sources = [
       readSource('src/app/api/proof-artifacts/[artifactId]/text-extraction/route.ts'),

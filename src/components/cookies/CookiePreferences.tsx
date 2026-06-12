@@ -15,14 +15,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { Lock, TrendingUp, Megaphone, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle, Lock, TrendingUp, Megaphone, CheckCircle2 } from 'lucide-react';
 import {
   getCookiePreferences,
   saveCookiePreferences,
   CookiePreferences as CookiePreferencesType,
 } from '@/lib/cookies/consent';
 import { toast } from 'sonner';
-import { getUserErrorMessage, logError } from '@/lib/error-handler';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 // Cookie category configuration
 const COOKIE_CATEGORIES = [
@@ -55,6 +55,9 @@ const COOKIE_CATEGORIES = [
   },
 ];
 
+const COOKIE_PREFERENCES_SAVE_FAILED_MESSAGE =
+  'Cookie preferences could not be fully saved. Your choices are still shown here; please try again before leaving.';
+
 interface CookiePreferencesProps {
   onSave?: () => void;
 }
@@ -64,6 +67,7 @@ export function CookiePreferences({ onSave }: CookiePreferencesProps) {
   const [preferences, setPreferences] = useState<CookiePreferencesType | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Load preferences on mount
   useEffect(() => {
@@ -86,6 +90,7 @@ export function CookiePreferences({ onSave }: CookiePreferencesProps) {
       [categoryId]: !preferences[categoryId],
     });
     setHasChanges(true);
+    setSaveError(null);
   };
 
   // Handle save
@@ -93,6 +98,7 @@ export function CookiePreferences({ onSave }: CookiePreferencesProps) {
     if (!preferences) return;
 
     setIsSaving(true);
+    setSaveError(null);
     try {
       await saveCookiePreferences({
         essential: true,
@@ -102,18 +108,16 @@ export function CookiePreferences({ onSave }: CookiePreferencesProps) {
 
       toast.success('Cookie preferences saved successfully');
       setHasChanges(false);
+      setSaveError(null);
 
       // Callback for parent component
       if (onSave) {
         onSave();
       }
     } catch (error) {
-      logError('CookiePreferences.handleSave', error);
-      const errorMessage = getUserErrorMessage(
-        error,
-        'Failed to save preferences. Please try again.'
-      );
-      toast.error(errorMessage);
+      dispatchClientErrorDiagnostic('cookies.preferences.save_failed', error);
+      setSaveError(COOKIE_PREFERENCES_SAVE_FAILED_MESSAGE);
+      toast.error(COOKIE_PREFERENCES_SAVE_FAILED_MESSAGE);
     } finally {
       setIsSaving(false);
     }
@@ -130,6 +134,7 @@ export function CookiePreferences({ onSave }: CookiePreferencesProps) {
       marketing: true,
     });
     setHasChanges(true);
+    setSaveError(null);
   };
 
   // Handle reject all (except essential)
@@ -143,6 +148,7 @@ export function CookiePreferences({ onSave }: CookiePreferencesProps) {
       marketing: false,
     });
     setHasChanges(true);
+    setSaveError(null);
   };
 
   if (!preferences) {
@@ -227,6 +233,16 @@ export function CookiePreferences({ onSave }: CookiePreferencesProps) {
           );
         })}
       </div>
+
+      {saveError ? (
+        <div
+          role="alert"
+          className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
+        >
+          <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+          <p>{saveError}</p>
+        </div>
+      ) : null}
 
       {/* Save button */}
       <div className="flex items-center justify-between pt-4 border-t">

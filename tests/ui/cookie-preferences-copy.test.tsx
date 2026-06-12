@@ -1,22 +1,52 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CookiePreferences } from '@/components/cookies/CookiePreferences';
 
+const {
+  dispatchClientErrorDiagnosticMock,
+  getCookiePreferencesMock,
+  saveCookiePreferencesMock,
+  toastErrorMock,
+  toastSuccessMock,
+} = vi.hoisted(() => ({
+  dispatchClientErrorDiagnosticMock: vi.fn(),
+  getCookiePreferencesMock: vi.fn(),
+  saveCookiePreferencesMock: vi.fn(),
+  toastErrorMock: vi.fn(),
+  toastSuccessMock: vi.fn(),
+}));
+
 vi.mock('sonner', () => ({
   toast: {
-    error: vi.fn(),
-    success: vi.fn(),
+    error: toastErrorMock,
+    success: toastSuccessMock,
   },
 }));
 
-vi.mock('@/lib/error-handler', () => ({
-  getUserErrorMessage: vi.fn((_error, fallback: string) => fallback),
-  logError: vi.fn(),
+vi.mock('@/lib/cookies/consent', () => ({
+  getCookiePreferences: getCookiePreferencesMock,
+  saveCookiePreferences: saveCookiePreferencesMock,
+}));
+
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientErrorDiagnostic: (...args: unknown[]) => dispatchClientErrorDiagnosticMock(...args),
 }));
 
 describe('CookiePreferences copy', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    getCookiePreferencesMock.mockReturnValue({
+      version: 'v1.1.2026-02-12',
+      essential: true,
+      analytics: false,
+      marketing: false,
+      timestamp: '2026-06-12T12:00:00.000Z',
+    });
+    saveCookiePreferencesMock.mockResolvedValue(undefined);
+  });
+
   afterEach(() => {
     localStorage.clear();
   });
@@ -28,5 +58,33 @@ describe('CookiePreferences copy', () => {
     expect(screen.getByText(/relevant Proofound updates/i)).toBeInTheDocument();
     expect(screen.queryByText(/use our platform/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Ad targeting/i)).not.toBeInTheDocument();
+  });
+
+  it('keeps failed preference saves safe, diagnostic, and retryable', async () => {
+    const rawFailure = new Error('localStorage quota leaked-ish');
+    saveCookiePreferencesMock.mockRejectedValueOnce(rawFailure);
+
+    render(<CookiePreferences />);
+
+    fireEvent.click(screen.getByRole('switch', { name: /toggle analytics cookies/i }));
+    fireEvent.click(screen.getByRole('button', { name: /save preferences/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Cookie preferences could not be fully saved');
+    expect(alert).toHaveTextContent('Your choices are still shown here');
+    expect(document.body.textContent ?? '').not.toContain(rawFailure.message);
+    expect(toastErrorMock).toHaveBeenCalledWith(
+      'Cookie preferences could not be fully saved. Your choices are still shown here; please try again before leaving.'
+    );
+    expect(JSON.stringify(toastErrorMock.mock.calls)).not.toContain(rawFailure.message);
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'cookies.preferences.save_failed',
+      rawFailure
+    );
+    expect(toastSuccessMock).not.toHaveBeenCalled();
+    expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /save preferences/i })).toBeEnabled()
+    );
   });
 });
