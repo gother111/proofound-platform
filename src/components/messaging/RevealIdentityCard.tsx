@@ -24,6 +24,7 @@ import {
 import { Eye, EyeOff, Clock, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ConsentExplainer } from '@/components/workflow/ConsentExplainer';
+import { getRevealIdentityErrorCopy } from '@/lib/messaging/reveal-errors';
 
 interface RevealIdentityCardProps {
   currentUserWantsReveal: boolean;
@@ -68,9 +69,10 @@ export function RevealIdentityCard({
         });
       }
     } catch (err) {
+      const isApproval = otherUserWantsReveal && !currentUserWantsReveal;
       toast({
-        title: 'Reveal request failed',
-        description: err instanceof Error ? err.message : 'Failed to request reveal',
+        title: isApproval ? 'Reveal approval not recorded' : 'Reveal request not sent',
+        description: getRevealIdentityErrorCopy({ isApproval }),
         variant: 'destructive',
       });
     } finally {

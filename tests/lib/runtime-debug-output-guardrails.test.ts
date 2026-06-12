@@ -695,6 +695,7 @@ describe('runtime debug output guardrails', () => {
     expect(sources).toContain('messages.realtime.mark_all_read_failed');
     expect(sources).toContain('messages.realtime.mark_all_read_unexpected_failed');
     expect(sources).toContain('messages.thread.conversation_refresh_failed');
+    expect(sources).toContain('messages.thread.reveal_failed');
     expect(sources).toContain('messages.thread.send_failed');
     expect(sources).not.toContain('User joined:');
     expect(sources).not.toContain('User left:');
@@ -705,6 +706,7 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Error marking all messages as read:');
     expect(sources).not.toContain('Failed to refresh conversation state:');
     expect(sources).not.toContain('Failed to send message:');
+    expect(sources).not.toContain('Failed to request reveal:');
   });
 
   it('keeps candidate invite client failures on client diagnostics without console output', () => {

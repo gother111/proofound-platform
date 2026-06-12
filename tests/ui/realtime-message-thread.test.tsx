@@ -30,7 +30,25 @@ vi.mock('@/hooks/useRealtimeMessages', () => ({
 }));
 
 vi.mock('@/components/messaging/RevealIdentityCard', () => ({
-  RevealIdentityCard: () => <div data-testid="reveal-card" />,
+  RevealIdentityCard: ({ onReveal }: { onReveal: () => Promise<unknown> }) => (
+    <button
+      data-testid="reveal-card"
+      type="button"
+      onClick={async () => {
+        try {
+          await onReveal();
+        } catch (error) {
+          window.dispatchEvent(
+            new CustomEvent('realtime-reveal-rejected', {
+              detail: error instanceof Error ? error.message : String(error),
+            })
+          );
+        }
+      }}
+    >
+      Request reveal from mock
+    </button>
+  ),
 }));
 
 vi.mock('@/components/messaging/MessageThread', () => ({
@@ -138,5 +156,60 @@ describe('RealtimeMessageThread', () => {
       expect(screen.getByTestId('other-party-name')).toHaveTextContent('Masked participant');
     });
     expect(screen.queryByText('Unknown')).not.toBeInTheDocument();
+  });
+
+  it('rethrows reveal failures with safe retry copy after recording diagnostics', async () => {
+    const rejectedReveals: string[] = [];
+    const listener = (event: Event) => {
+      rejectedReveals.push((event as CustomEvent<string>).detail);
+    };
+    window.addEventListener('realtime-reveal-rejected', listener);
+
+    mocks.apiFetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          conversation: {
+            stage: 'masked',
+            currentUserWantsReveal: false,
+            otherUserWantsReveal: false,
+            canReveal: true,
+          },
+          otherParticipant: {
+            displayName: 'Organization',
+            handle: null,
+            avatarUrl: null,
+          },
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: 'Conversation not found' }),
+      });
+
+    render(
+      <RealtimeMessageThread
+        conversationId="conversation-1"
+        initialMessages={[]}
+        currentUserId="user-1"
+        otherPartyName="Organization"
+        stage="masked"
+        onSendMessage={vi.fn()}
+      />
+    );
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Request reveal from mock' }));
+
+    await waitFor(() => {
+      expect(rejectedReveals).toEqual([
+        'Reveal request could not be sent. The thread remains masked; please try again.',
+      ]);
+    });
+    expect(mocks.diagnostic).toHaveBeenCalledWith(
+      'messages.thread.reveal_failed',
+      expect.any(Error)
+    );
+
+    window.removeEventListener('realtime-reveal-rejected', listener);
   });
 });

@@ -86,4 +86,56 @@ describe('RevealIdentityCard', () => {
       )
     ).toBeInTheDocument();
   });
+
+  it('keeps reveal request failures retryable without exposing raw service text', async () => {
+    const onReveal = vi.fn().mockRejectedValue(new Error('Conversation not found'));
+
+    render(
+      <>
+        <RevealIdentityCard
+          currentUserWantsReveal={false}
+          otherUserWantsReveal={false}
+          onReveal={onReveal}
+        />
+        <Toaster />
+      </>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Request Identity Reveal' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Confirm & Request' }));
+
+    expect(await screen.findByText('Reveal request not sent')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Reveal request could not be sent. The thread remains masked; please try again.'
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Conversation not found')).not.toBeInTheDocument();
+  });
+
+  it('keeps reveal approval failures retryable without exposing raw service text', async () => {
+    const onReveal = vi.fn().mockRejectedValue(new Error('Reveal state transition denied'));
+
+    render(
+      <>
+        <RevealIdentityCard
+          currentUserWantsReveal={false}
+          otherUserWantsReveal={true}
+          onReveal={onReveal}
+        />
+        <Toaster />
+      </>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Agree To Reveal Approved Fields' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Reveal Approved Fields' }));
+
+    expect(await screen.findByText('Reveal approval not recorded')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Reveal approval could not be recorded. The thread remains masked; please try again.'
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Reveal state transition denied')).not.toBeInTheDocument();
+  });
 });

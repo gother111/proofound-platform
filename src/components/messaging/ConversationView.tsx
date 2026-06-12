@@ -19,6 +19,8 @@ import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { CheckCheck, Check, Mail, Phone, Link2, Lock } from 'lucide-react';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { createRevealIdentityRetryError } from '@/lib/messaging/reveal-errors';
 import { createMessageSendRetryError } from '@/lib/messaging/send-errors';
 
 interface Message {
@@ -154,6 +156,9 @@ export function ConversationView({ conversationId }: ConversationViewProps) {
   };
 
   const handleRevealIdentities = async () => {
+    const isApproval =
+      Boolean(conversation?.otherUserWantsReveal) && !Boolean(conversation?.currentUserWantsReveal);
+
     try {
       const res = await apiFetch(`/api/conversations/${conversationId}/reveal`, {
         method: 'POST',
@@ -162,7 +167,7 @@ export function ConversationView({ conversationId }: ConversationViewProps) {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to request reveal');
+        throw new Error(data.error || 'Reveal identity request failed');
       }
 
       // Refresh conversation to get updated reveal status
@@ -170,7 +175,8 @@ export function ConversationView({ conversationId }: ConversationViewProps) {
 
       return data;
     } catch (err) {
-      throw err;
+      dispatchClientErrorDiagnostic('messages.conversation_view.reveal_failed', err);
+      throw createRevealIdentityRetryError({ isApproval });
     }
   };
 

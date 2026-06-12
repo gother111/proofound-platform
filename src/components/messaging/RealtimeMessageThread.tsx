@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { apiFetch } from '@/lib/api/fetch';
 import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { getConversationParticipantLabel } from '@/lib/messaging/participant-label';
+import { createRevealIdentityRetryError } from '@/lib/messaging/reveal-errors';
 import { createMessageSendRetryError } from '@/lib/messaging/send-errors';
 
 export interface RealtimeMessageThreadProps {
@@ -87,18 +88,31 @@ export function RealtimeMessageThread({
   }, [conversationId, otherPartyAvatar, otherPartyName]);
 
   const handleRevealIdentities = useCallback(async () => {
-    const response = await apiFetch(`/api/conversations/${conversationId}/reveal`, {
-      method: 'POST',
-    });
-    const data = await response.json();
+    const isApproval =
+      conversationState.otherUserWantsReveal && !conversationState.currentUserWantsReveal;
 
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to request reveal');
+    try {
+      const response = await apiFetch(`/api/conversations/${conversationId}/reveal`, {
+        method: 'POST',
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Reveal identity request failed');
+      }
+
+      await refreshConversationState();
+      return data;
+    } catch (error) {
+      dispatchClientErrorDiagnostic('messages.thread.reveal_failed', error);
+      throw createRevealIdentityRetryError({ isApproval });
     }
-
-    await refreshConversationState();
-    return data;
-  }, [conversationId, refreshConversationState]);
+  }, [
+    conversationId,
+    conversationState.currentUserWantsReveal,
+    conversationState.otherUserWantsReveal,
+    refreshConversationState,
+  ]);
 
   // Real-time messaging hook
   const { isConnected, startTyping, stopTyping, markAsRead, markAllAsRead } = useRealtimeMessages({
