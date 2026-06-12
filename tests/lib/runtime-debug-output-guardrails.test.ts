@@ -367,6 +367,8 @@ describe('runtime debug output guardrails', () => {
 
     expect(sources).toContain('admin.operations_queues.load_failed');
     expect(sources).toContain('admin.operations_queues.update_failed');
+    expect(sources).toContain('OPERATIONS_QUEUE_LOAD_RETRY_MESSAGE');
+    expect(sources).toContain('OPERATIONS_QUEUE_UPDATE_RETRY_MESSAGE');
     expect(sources).toContain('admin.audit_history.load_failed');
     expect(sources).toContain('admin.break_glass_org_audit.preview_failed');
     expect(sources).toContain('assignment_review.client_fetch_failed');
@@ -374,6 +376,7 @@ describe('runtime debug output guardrails', () => {
     expect(sources).toContain('spotlight.provider_missing');
     expect(sources).not.toContain("console.error('Failed to load operations queues'");
     expect(sources).not.toContain("console.error('Failed to update operations queue item'");
+    expect(sources).not.toContain('toast.error(error instanceof Error ? error.message');
     expect(sources).not.toContain("console.error('Audit history load failed'");
     expect(sources).not.toContain("console.error('break_glass_org_audit.preview.failed'");
     expect(sources).not.toContain("console.error('Client fetch failed'");

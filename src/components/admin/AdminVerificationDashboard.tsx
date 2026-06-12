@@ -124,6 +124,10 @@ const PRIORITY_FILTER_OPTIONS: Array<{ value: PriorityFilter; label: string }> =
 ];
 
 const REPO_DOC_BASE_URL = 'https://github.com/gother111/proofound-platform/blob/master';
+const OPERATIONS_QUEUE_LOAD_RETRY_MESSAGE =
+  'Operations queues could not be loaded. Refresh the queues before taking review action.';
+const OPERATIONS_QUEUE_UPDATE_RETRY_MESSAGE =
+  'Queue item could not be updated. The item stayed in review; check the note and try again.';
 
 const QUEUE_SOP_LINKS = {
   verification: {
@@ -472,7 +476,7 @@ export function AdminVerificationDashboard() {
           errorName: error instanceof Error ? error.name : typeof error,
         });
         if (mounted) {
-          toast.error(error instanceof Error ? error.message : 'Failed to load operations queues');
+          toast.error(OPERATIONS_QUEUE_LOAD_RETRY_MESSAGE);
         }
       } finally {
         if (mounted) {
@@ -541,7 +545,7 @@ export function AdminVerificationDashboard() {
       dispatchClientDiagnostic('admin.operations_queues.update_failed', {
         errorName: error instanceof Error ? error.name : typeof error,
       });
-      toast.error(error instanceof Error ? error.message : 'Failed to update queue item');
+      toast.error(OPERATIONS_QUEUE_UPDATE_RETRY_MESSAGE);
       return false;
     } finally {
       setPendingAction(null);

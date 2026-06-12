@@ -166,6 +166,21 @@ describe('AdminVerificationDashboard', () => {
     );
   });
 
+  it('keeps queue load failures safe for operators', async () => {
+    const rawFailure = 'database relation internal_ops_queue leaked detail';
+    apiFetchMock.mockResolvedValue(buildJsonResponse({ error: rawFailure }, false));
+
+    render(<AdminVerificationDashboard />);
+
+    await waitFor(() => {
+      expect(toastErrorMock).toHaveBeenCalledWith(
+        'Operations queues could not be loaded. Refresh the queues before taking review action.'
+      );
+    });
+    expect(toastErrorMock).not.toHaveBeenCalledWith(rawFailure);
+    expect(screen.queryByText(rawFailure)).not.toBeInTheDocument();
+  });
+
   it.each([
     [
       'privacy_reveal_exception',
@@ -283,6 +298,34 @@ describe('AdminVerificationDashboard', () => {
     expect(confirmSpy).not.toHaveBeenCalled();
 
     confirmSpy.mockRestore();
+  });
+
+  it('keeps queue update failures safe and leaves the confirmation open', async () => {
+    const rawFailure = 'update failed: queue transition policy detail';
+    apiFetchMock
+      .mockResolvedValueOnce(buildJsonResponse(actionableQueuePayload))
+      .mockResolvedValueOnce(buildJsonResponse({ error: rawFailure }, false));
+
+    render(<AdminVerificationDashboard />);
+
+    await screen.findByText('Risky evidence upload held for privacy-safe review.');
+
+    fireEvent.change(screen.getByLabelText(/operator note/i), {
+      target: { value: 'Reviewed minimum necessary context.' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Resolve' }));
+
+    const resolveDialog = await screen.findByRole('alertdialog', { name: 'Resolve queue item?' });
+    fireEvent.click(within(resolveDialog).getByRole('button', { name: 'Confirm resolve' }));
+
+    await waitFor(() => {
+      expect(toastErrorMock).toHaveBeenCalledWith(
+        'Queue item could not be updated. The item stayed in review; check the note and try again.'
+      );
+    });
+    expect(toastErrorMock).not.toHaveBeenCalledWith(rawFailure);
+    expect(screen.queryByText(rawFailure)).not.toBeInTheDocument();
+    expect(screen.getByRole('alertdialog', { name: 'Resolve queue item?' })).toBeInTheDocument();
   });
 
   it('lets operators filter queue items by active status and priority', async () => {
