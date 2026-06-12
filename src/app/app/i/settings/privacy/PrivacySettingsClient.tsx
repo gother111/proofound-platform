@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { IndividualFieldVisibilityControls } from '@/components/profile/IndividualFieldVisibilityControls';
 import { PrivacyOverview } from '@/components/settings/PrivacyOverview';
 import { DataBreakdown } from '@/components/privacy/DataBreakdown';
@@ -11,7 +11,8 @@ import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { PrivacySettingsLoadingShell } from './PrivacySettingsLoadingShell';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, RefreshCcw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const PRIVACY_SECTION_IDS = new Set([
   'privacy-data',
@@ -41,34 +42,48 @@ function getScrollableParent(element: HTMLElement): HTMLElement | null {
 export function PrivacySettingsClient() {
   const [initialVisibility, setInitialVisibility] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [visibilityRefreshing, setVisibilityRefreshing] = useState(false);
   const [visibilityLoadError, setVisibilityLoadError] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Fetch existing visibility settings
-    async function fetchVisibility() {
-      try {
-        setVisibilityLoadError(null);
-        const response = await fetch('/api/profile/visibility');
-        if (!response.ok) {
-          throw new Error('Visibility preferences could not be loaded.');
-        }
-        const data = await response.json();
-        setInitialVisibility(data);
-      } catch (error) {
-        dispatchClientErrorDiagnostic('privacy_settings.client.visibility_fetch_failed', error);
-        setVisibilityLoadError(
-          error instanceof Error && error.message
-            ? error.message
-            : 'Visibility preferences could not be loaded.'
-        );
-        toast.error('Failed to load privacy settings');
-      } finally {
-        setLoading(false);
-      }
+  const fetchVisibility = useCallback(async ({ initial = false }: { initial?: boolean } = {}) => {
+    if (initial) {
+      setLoading(true);
+    } else {
+      setVisibilityRefreshing(true);
     }
 
-    fetchVisibility();
+    try {
+      if (initial) {
+        setVisibilityLoadError(null);
+      }
+
+      const response = await fetch('/api/profile/visibility');
+      if (!response.ok) {
+        throw new Error('Visibility preferences could not be loaded.');
+      }
+      const data = await response.json();
+      setInitialVisibility(data);
+      setVisibilityLoadError(null);
+    } catch (error) {
+      dispatchClientErrorDiagnostic('privacy_settings.client.visibility_fetch_failed', error);
+      setVisibilityLoadError(
+        error instanceof Error && error.message
+          ? error.message
+          : 'Visibility preferences could not be loaded.'
+      );
+      toast.error('Failed to load privacy settings');
+    } finally {
+      if (initial) {
+        setLoading(false);
+      } else {
+        setVisibilityRefreshing(false);
+      }
+    }
   }, []);
+
+  useEffect(() => {
+    void fetchVisibility({ initial: true });
+  }, [fetchVisibility]);
 
   useEffect(() => {
     if (loading || typeof window === 'undefined') return;
@@ -167,8 +182,21 @@ export function PrivacySettingsClient() {
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Privacy preferences need a refresh</AlertTitle>
               <AlertDescription>
-                {visibilityLoadError} The controls below are showing safe defaults until the latest
-                saved preferences can be loaded.
+                <span>
+                  {visibilityLoadError} The controls below are showing safe defaults until the
+                  latest saved preferences can be loaded.
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void fetchVisibility()}
+                  disabled={visibilityRefreshing}
+                  className="mt-3 min-h-10 w-full gap-2 bg-white/70 sm:w-auto"
+                >
+                  <RefreshCcw className="h-4 w-4" aria-hidden="true" />
+                  {visibilityRefreshing ? 'Retrying...' : 'Retry privacy preferences'}
+                </Button>
               </AlertDescription>
             </Alert>
           ) : null}

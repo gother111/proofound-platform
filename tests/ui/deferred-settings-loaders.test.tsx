@@ -31,7 +31,11 @@ vi.mock('@/components/privacy/DeleteAccountSection', () => ({
 }));
 
 vi.mock('@/components/profile/IndividualFieldVisibilityControls', () => ({
-  IndividualFieldVisibilityControls: () => <div data-testid="visibility-controls" />,
+  IndividualFieldVisibilityControls: ({ initialVisibility }: { initialVisibility?: any }) => (
+    <div data-testid="visibility-controls">
+      {initialVisibility?.profile ? 'Loaded profile preferences' : 'Safe visibility defaults'}
+    </div>
+  ),
 }));
 
 describe('deferred settings loaders', () => {
@@ -56,21 +60,38 @@ describe('deferred settings loaders', () => {
     global.fetch = originalFetch;
   });
 
-  it('keeps privacy controls visible with an inline warning when saved visibility fails to load', async () => {
+  it('keeps privacy controls visible and retryable when saved visibility fails to load', async () => {
     const originalFetch = global.fetch;
-    global.fetch = vi.fn(async () => ({
-      ok: false,
-      json: async () => ({}),
-    })) as typeof fetch;
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({}),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ profile: true }),
+      }) as typeof fetch;
 
-    render(<PrivacySettingsClient />);
+    try {
+      render(<PrivacySettingsClient />);
 
-    const alert = await screen.findByRole('alert');
-    expect(alert).toHaveTextContent('Privacy preferences need a refresh');
-    expect(alert).toHaveTextContent('safe defaults');
-    expect(screen.getByTestId('visibility-controls')).toBeInTheDocument();
+      const alert = await screen.findByRole('alert');
+      expect(alert).toHaveTextContent('Privacy preferences need a refresh');
+      expect(alert).toHaveTextContent('safe defaults');
+      expect(screen.getByTestId('visibility-controls')).toBeInTheDocument();
+      expect(screen.getByText('Safe visibility defaults')).toBeInTheDocument();
 
-    global.fetch = originalFetch;
+      fireEvent.click(screen.getByRole('button', { name: /retry privacy preferences/i }));
+
+      await waitFor(() => {
+        expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      });
+      expect(screen.getByText('Loaded profile preferences')).toBeInTheDocument();
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+    } finally {
+      global.fetch = originalFetch;
+    }
   });
 
   it('focuses anchored privacy sections after deferred visibility settings load', async () => {
