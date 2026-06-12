@@ -107,6 +107,13 @@ describe('MatchingProfileSetup single-page form', () => {
 
     render(<MatchingProfileSetup onComplete={onComplete} onCancel={vi.fn()} />);
 
+    expect(screen.getByText('Set up assignment review preferences')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Save your focus, proof emphasis, and work preferences so assignment reviews stay relevant.'
+      )
+    ).toBeInTheDocument();
+
     fireEvent.click(screen.getByRole('button', { name: 'set focus' }));
     fireEvent.change(screen.getByLabelText('Proof vs skills weighting'), {
       target: { value: '80' },
@@ -124,6 +131,9 @@ describe('MatchingProfileSetup single-page form', () => {
     await waitFor(() => {
       expect(onComplete).toHaveBeenCalled();
     });
+    expect(toastSuccessMock).toHaveBeenCalledWith(
+      'Preferences saved. You can keep using assignment reviews while you finish setup.'
+    );
 
     const putCall = apiFetchMock.mock.calls.find(
       ([url, options]) => url === '/api/matching-profile' && options?.method === 'PUT'
@@ -233,11 +243,11 @@ describe('MatchingProfileSetup single-page form', () => {
     fireEvent.click(screen.getByRole('button', { name: /save and continue/i }));
 
     const alert = await screen.findByRole('alert');
-    expect(alert).toHaveTextContent('Matching profile was not saved');
+    expect(alert).toHaveTextContent('Assignment review preferences were not saved');
     expect(alert).toHaveTextContent('Your preferences are still here');
     expect(document.body.textContent ?? '').not.toContain(rawFailure);
     expect(toastErrorMock).toHaveBeenCalledWith(
-      'Matching profile was not saved. Your preferences are still here; please review and try again.'
+      'Assignment review preferences were not saved. Your preferences are still here; please review and try again.'
     );
     expect(JSON.stringify(toastErrorMock.mock.calls)).not.toContain(rawFailure);
     expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(

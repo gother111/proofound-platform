@@ -10,7 +10,7 @@ interface IndividualMatchingEmptyProps {
 }
 
 /**
- * Empty state for individuals who haven't set up matching yet.
+ * Empty state for individuals who haven't set up assignment review preferences yet.
  */
 export function IndividualMatchingEmpty({ onSetup }: IndividualMatchingEmptyProps) {
   const router = useRouter();
@@ -18,20 +18,20 @@ export function IndividualMatchingEmpty({ onSetup }: IndividualMatchingEmptyProp
   const remediationActions = [
     {
       id: 'setup-matching',
-      title: 'Set up matching profile',
-      description: 'Add constraints and preferences to make matching ready.',
+      title: 'Set review preferences',
+      description: 'Add constraints and preferences so assignment reviews stay relevant.',
       onClick: onSetup,
     },
     {
       id: 'strengthen-portfolio',
       title: 'Review proof readiness',
-      description: 'Refresh proof-backed work examples before opening matching further.',
+      description: 'Refresh proof-backed work examples before opening assignment reviews further.',
       onClick: () => router.push('/app/i/profile?profileView=full&tab=proof_packs'),
     },
     {
       id: 'review-privacy',
       title: 'Review privacy first',
-      description: 'Confirm what is public, private, and only visible after a match.',
+      description: 'Confirm what is public, private, and only visible after review-stage reveal.',
       onClick: () => router.push('/app/i/settings/privacy'),
     },
   ] as const;
@@ -65,11 +65,11 @@ export function IndividualMatchingEmpty({ onSetup }: IndividualMatchingEmptyProp
 
             <div className="space-y-3">
               <h2 className="font-display text-3xl font-semibold tracking-tight text-proofound-charcoal">
-                Prepare matching at your pace
+                Prepare assignment reviews at your pace
               </h2>
               <p className="max-w-xl text-base leading-relaxed text-muted-foreground">
                 Add the constraints that matter first. Proofound keeps identity and personal context
-                protected while you shape what kind of work should reach you.
+                protected while you decide which assignments should reach you.
               </p>
             </div>
 
@@ -79,17 +79,17 @@ export function IndividualMatchingEmpty({ onSetup }: IndividualMatchingEmptyProp
                 onClick={onSetup}
                 className="w-full bg-proofound-forest text-white shadow-sm hover:bg-proofound-forest/90 sm:w-auto"
               >
-                Set up matching
+                Set review preferences
               </Button>
               <p className="text-xs font-medium text-muted-foreground">
-                Takes about five minutes. Anonymous by default.
+                Takes about five minutes. Blind by default.
               </p>
             </div>
           </div>
 
           <div className="rounded-2xl border border-proofound-stone/70 bg-white/65 p-4">
             <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-proofound-charcoal/60">
-              Matching opens in order
+              Assignment reviews open in order
             </p>
             <div className="space-y-3">
               {readinessSteps.map((step) => {

@@ -4957,6 +4957,11 @@ describe('launch gate package configuration', () => {
 
     expect(activeReadinessCopy).toContain('Day 1 proof link ready');
     expect(activeReadinessCopy).toContain('build matching readiness');
+    expect(activeReadinessCopy).toContain('Prepare assignment reviews at your pace');
+    expect(activeReadinessCopy).toContain('Assignment reviews open in order');
+    expect(activeReadinessCopy).toContain('Set up assignment review preferences');
+    expect(activeReadinessCopy).toContain('assignment reviews stay relevant');
+    expect(activeReadinessCopy).toContain('review-stage reveal');
     expect(activeReadinessCopy).toContain('Introductions need stronger proof first');
     expect(activeReadinessCopy).toContain('introductions are available');
     expect(activeReadinessCopy).toContain('Verification is still in progress for this review set.');
@@ -4986,6 +4991,14 @@ describe('launch gate package configuration', () => {
       'unlock the decision step',
       'unlock personalized browse results',
       'candidate set',
+      'Prepare matching at your pace',
+      'Set up matching profile',
+      'Matching opens in order',
+      'make matching ready',
+      'opening matching further',
+      'visible after a match',
+      'Set up your matching profile',
+      'make better matches available',
     ]) {
       expect(activeReadinessCopy).not.toContain(staleCopy);
     }

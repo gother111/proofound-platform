@@ -22,7 +22,7 @@ interface MatchingProfileSetupProps {
 }
 
 const MATCHING_PROFILE_SAVE_FAILED_MESSAGE =
-  'Matching profile was not saved. Your preferences are still here; please review and try again.';
+  'Assignment review preferences were not saved. Your preferences are still here; please review and try again.';
 
 /**
  * Single-page setup for individual matching preferences.
@@ -190,7 +190,9 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
         return;
       }
 
-      toast.success('Profile saved. You can keep using matching while you finish setup.');
+      toast.success(
+        'Preferences saved. You can keep using assignment reviews while you finish setup.'
+      );
       onComplete();
       router.refresh();
     } catch (error) {
@@ -206,10 +208,10 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
     <div className="max-w-3xl mx-auto px-4 py-6">
       <div className="mb-6">
         <h2 className="text-2xl font-semibold mb-2" style={{ color: '#2D3330' }}>
-          Set up your matching profile
+          Set up assignment review preferences
         </h2>
         <p className="text-sm" style={{ color: '#6B6760' }}>
-          Save your focus, proof emphasis, and work preferences to make better matches available.
+          Save your focus, proof emphasis, and work preferences so assignment reviews stay relevant.
         </p>
       </div>
 
