@@ -205,6 +205,7 @@ describe('runtime debug output guardrails', () => {
       readSource('src/components/tour/GuidedTour.tsx'),
       readSource('src/components/settings/SettingsContent.tsx'),
       readSource('src/components/settings/WorkEmailVerificationForm.tsx'),
+      readSource('src/components/settings/VerificationStatus.tsx'),
       readSource('src/components/settings/AuditLogViewer.tsx'),
       readSource('src/components/settings/AuditLogTable.tsx'),
       readSource('src/components/settings/DeleteAccount.tsx'),
@@ -219,6 +220,8 @@ describe('runtime debug output guardrails', () => {
     expect(sources).toContain('settings.user_email.fetch_failed');
     expect(sources).toContain('settings.tour_reset_failed');
     expect(sources).toContain('settings.work_email.organizations_fetch_failed');
+    expect(sources).toContain('settings.verification_status.load_failed');
+    expect(sources).toContain('Verification status could not load');
     expect(sources).toContain('settings.audit_log.load_failed');
     expect(sources).toContain('settings.account_history.load_failed');
     expect(sources).toContain('settings.delete_account.status_load_failed');
@@ -239,6 +242,9 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Tour reset error:');
     expect(sources).not.toContain('Failed to reset tour:');
     expect(sources).not.toContain('Error fetching organizations:');
+    expect(sources).not.toContain('Check your browser console');
+    expect(sources).not.toContain('Failed to fetch verification status');
+    expect(sources).not.toContain('Failed to load verification status');
     expect(sources).not.toContain('audit_log.load.failed');
     expect(sources).not.toContain('audit_log.export.failed');
     expect(sources).not.toContain('Failed to fetch account history');

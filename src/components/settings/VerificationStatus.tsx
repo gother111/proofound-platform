@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect, type ReactNode } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, Mail, Loader2, AlertCircle, Linkedin } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Linkedin, Loader2, Mail, RefreshCw } from 'lucide-react';
 import { WorkEmailVerificationForm } from './WorkEmailVerificationForm';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { internalValueLabel } from '@/lib/copy/labels';
 
 interface VerificationStatusData {
@@ -83,6 +84,12 @@ interface VerificationStatusData {
 }
 
 type SignalTone = 'neutral' | 'positive' | 'warning' | 'negative';
+
+const VERIFICATION_STATUS_LOAD_FAILED_MESSAGE =
+  'Verification status could not load. Your account signals were not changed; retry when you are ready.';
+
+const VERIFICATION_STATUS_TIMEOUT_MESSAGE =
+  'Verification status took too long to load. Your account signals were not changed; retry when your connection settles.';
 
 function getLinkedInStatusText(status: VerificationStatusData) {
   if (status.channels.linkedin.state === 'pending') {
@@ -514,48 +521,59 @@ export function VerificationStatus() {
   const [error, setError] = useState<string | null>(null);
   const [showWorkEmailForm, setShowWorkEmailForm] = useState(false);
 
-  useEffect(() => {
-    fetchStatus();
-  }, []);
+  const fetchStatus = useCallback(async () => {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
-  const fetchStatus = async () => {
     try {
       setLoading(true);
       setError(null);
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      timeoutId = setTimeout(() => controller.abort(), 10000);
 
       const response = await fetch('/api/verification/status', {
         signal: controller.signal,
       });
 
-      clearTimeout(timeoutId);
-
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        const errorData = (await response.json().catch(() => ({}))) as {
+          error?: unknown;
+          details?: unknown;
+        };
         const errorMessage =
-          errorData.error || `Failed to fetch verification status (${response.status})`;
-        const errorDetails = errorData.details ? `: ${errorData.details}` : '';
+          typeof errorData.error === 'string' && errorData.error.trim().length > 0
+            ? errorData.error
+            : `Verification status request failed with status ${response.status}`;
+        const errorDetails =
+          typeof errorData.details === 'string' && errorData.details.trim().length > 0
+            ? `: ${errorData.details}`
+            : '';
         throw new Error(`${errorMessage}${errorDetails}`);
       }
 
       const data = await response.json();
       setStatus(data);
     } catch (err) {
+      dispatchClientErrorDiagnostic('settings.verification_status.load_failed', err);
+
       if (err instanceof Error && err.name === 'AbortError') {
-        const timeoutMessage = 'Request timed out. Please check your connection and try again.';
-        setError(timeoutMessage);
+        setError(VERIFICATION_STATUS_TIMEOUT_MESSAGE);
         setStatus(getDefaultStatus());
       } else {
-        const errorMessage =
-          err instanceof Error ? err.message : 'Failed to load verification status';
-        setError(errorMessage);
+        setError(VERIFICATION_STATUS_LOAD_FAILED_MESSAGE);
       }
     } finally {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchStatus();
+  }, [fetchStatus]);
 
   const handleVerificationSuccess = () => {
     setShowWorkEmailForm(false);
@@ -577,15 +595,14 @@ export function VerificationStatus() {
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             {error}
-            <br />
-            <span className="text-xs mt-2 block">
-              Check your browser console (F12) for more details.
+            <span className="mt-2 block text-xs text-muted-foreground">
+              No verification, public trust, or intro-readiness state changed.
             </span>
           </AlertDescription>
         </Alert>
         <Button onClick={fetchStatus} variant="outline" className="w-full">
-          <Loader2 className="w-4 h-4 mr-2" />
-          Retry
+          <RefreshCw className="mr-2 h-4 w-4" />
+          Retry verification status
         </Button>
       </div>
     );
@@ -611,7 +628,7 @@ export function VerificationStatus() {
       <VerificationOverview status={status} onWorkEmail={() => setShowWorkEmailForm(true)} />
       <div className="flex justify-end">
         <Button onClick={fetchStatus} variant="outline">
-          <Loader2 className="mr-2 h-4 w-4" />
+          <RefreshCw className="mr-2 h-4 w-4" />
           Refresh status
         </Button>
       </div>
