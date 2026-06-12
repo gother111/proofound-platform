@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { type FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,11 @@ import { completeOrganizationOnboarding } from '@/actions/onboarding';
 import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { createClient } from '@/lib/supabase/client';
 import { CheckCircle, Copy, ExternalLink } from 'lucide-react';
+
+type CopyFeedback = {
+  kind: 'success' | 'error';
+  message: string;
+};
 
 export function OrganizationSetup() {
   const router = useRouter();
@@ -22,6 +27,7 @@ export function OrganizationSetup() {
     portfolioUrl: string;
   } | null>(null);
   const [copied, setCopied] = useState(false);
+  const [copyFeedback, setCopyFeedback] = useState<CopyFeedback | null>(null);
 
   // Check if user already has an organization on mount
   useEffect(() => {
@@ -78,11 +84,13 @@ export function OrganizationSetup() {
     );
   }
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     setIsLoading(true);
     setError(null);
 
     try {
+      const formData = new FormData(event.currentTarget);
       const result = await completeOrganizationOnboarding(formData);
 
       if (result.error) {
@@ -107,11 +115,21 @@ export function OrganizationSetup() {
   if (success) {
     const handleCopy = async () => {
       try {
+        setCopyFeedback(null);
         await navigator.clipboard.writeText(success.portfolioUrl);
         setCopied(true);
-        setTimeout(() => setCopied(false), 1500);
-      } catch {
+        setCopyFeedback({ kind: 'success', message: 'Organization portfolio link copied.' });
+        setTimeout(() => {
+          setCopied(false);
+          setCopyFeedback(null);
+        }, 1500);
+      } catch (err) {
+        dispatchClientErrorDiagnostic('onboarding.organization.copy_portfolio_link_failed', err);
         setCopied(false);
+        setCopyFeedback({
+          kind: 'error',
+          message: 'Organization portfolio link could not be copied. Try again.',
+        });
       }
     };
 
@@ -142,12 +160,37 @@ export function OrganizationSetup() {
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center justify-center gap-3">
-              <Button type="button" variant="outline" className="gap-2" onClick={handleCopy}>
-                <Copy className="h-4 w-4" />
-                {copied ? 'Copied' : 'Copy link'}
-              </Button>
-              <Button asChild type="button" variant="outline" className="gap-2">
+            <div className="flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:flex-wrap sm:items-start">
+              <div className="flex w-full flex-col items-stretch gap-1.5 sm:w-auto sm:items-start">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-center gap-2 sm:w-auto"
+                  onClick={handleCopy}
+                >
+                  <Copy className="h-4 w-4" />
+                  {copied ? 'Copied' : 'Copy link'}
+                </Button>
+                {copyFeedback ? (
+                  <p
+                    className={
+                      copyFeedback.kind === 'error'
+                        ? 'max-w-64 text-xs leading-5 text-[#8A3F21]'
+                        : 'max-w-64 text-xs leading-5 text-proofound-forest'
+                    }
+                    role={copyFeedback.kind === 'error' ? 'alert' : 'status'}
+                    aria-live={copyFeedback.kind === 'error' ? 'assertive' : 'polite'}
+                  >
+                    {copyFeedback.message}
+                  </p>
+                ) : null}
+              </div>
+              <Button
+                asChild
+                type="button"
+                variant="outline"
+                className="w-full justify-center gap-2 sm:w-auto"
+              >
                 <a href={success.portfolioUrl} target="_blank" rel="noreferrer">
                   <ExternalLink className="h-4 w-4" />
                   Open portfolio
@@ -156,6 +199,7 @@ export function OrganizationSetup() {
               <Button
                 type="button"
                 onClick={() => router.push(`/app/o/${success.orgSlug}/assignments/new`)}
+                className="w-full sm:w-auto"
               >
                 Create first assignment
               </Button>
@@ -177,7 +221,7 @@ export function OrganizationSetup() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form action={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <Label htmlFor="displayName" className="text-proofound-charcoal dark:text-foreground">
               Organization Name *
