@@ -73,7 +73,7 @@ describe('BundleCancelDialog', () => {
     );
   });
 
-  it('keeps failed selected-artifact cancellations visible and retryable', async () => {
+  it('keeps failed selected-artifact cancellations safe, visible, and retryable', async () => {
     const onCanceled = vi.fn();
     const onOpenChange = vi.fn();
     apiFetchMock
@@ -121,9 +121,19 @@ describe('BundleCancelDialog', () => {
 
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Selected artifacts could not be canceled');
-    expect(alert).toHaveTextContent('Bundle cancellation is temporarily unavailable.');
+    expect(alert).toHaveTextContent(
+      'Your bundle request is unchanged; review the selected items and try again.'
+    );
+    expect(alert).not.toHaveTextContent('Bundle cancellation is temporarily unavailable.');
     expect(screen.getByText('TypeScript proof pack')).toBeInTheDocument();
     expect(screen.getByRole('checkbox')).toBeChecked();
+    expect(diagnosticMock).toHaveBeenCalledWith(
+      'verifications.bundle_cancel.selected_cancel_failed',
+      expect.any(Error)
+    );
+    expect((diagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
+      'Bundle cancellation is temporarily unavailable.'
+    );
 
     fireEvent.click(screen.getByRole('button', { name: 'Retry cancel' }));
 

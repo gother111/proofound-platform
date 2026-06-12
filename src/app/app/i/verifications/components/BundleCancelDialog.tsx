@@ -56,6 +56,9 @@ type BundleCancelDialogProps = {
   onCanceled: (removedSkillRequestIds: string[]) => void;
 };
 
+const SELECTED_CANCEL_FAILED_MESSAGE =
+  'Selected artifacts could not be canceled. Your bundle request is unchanged; review the selected items and try again.';
+
 function artifactLabel(type: BundleItem['artifact_type']) {
   switch (type) {
     case 'skill':
@@ -176,9 +179,13 @@ export function BundleCancelDialog({
       const body = (await response.json()) as { error?: string } & CancelResponse;
 
       if (!response.ok) {
-        const message =
-          body.error ||
-          'Selected artifacts could not be canceled. Your bundle request is unchanged.';
+        if (body.error) {
+          dispatchClientErrorDiagnostic(
+            'verifications.bundle_cancel.selected_cancel_failed',
+            new Error(body.error)
+          );
+        }
+        const message = SELECTED_CANCEL_FAILED_MESSAGE;
         setCancelFeedback({
           title: 'Selected artifacts could not be canceled',
           message,
@@ -199,7 +206,7 @@ export function BundleCancelDialog({
       onOpenChange(false);
     } catch (error) {
       dispatchClientErrorDiagnostic('verifications.bundle_cancel.selected_cancel_failed', error);
-      const message = 'Selected artifacts could not be canceled. Your bundle request is unchanged.';
+      const message = SELECTED_CANCEL_FAILED_MESSAGE;
       setCancelFeedback({
         title: 'Selected artifacts could not be canceled',
         message,
