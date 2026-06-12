@@ -3,10 +3,11 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const replaceMock = vi.fn();
+let pathnameValue = '/app/o/acme/messages';
 let searchParamsValue = '';
 
 vi.mock('next/navigation', () => ({
-  usePathname: () => '/app/o/acme/messages',
+  usePathname: () => pathnameValue,
   useRouter: () => ({
     replace: replaceMock,
   }),
@@ -18,11 +19,13 @@ vi.mock('@/components/messaging/ConversationList', () => ({
     conversations,
     loadError,
     onRetry,
+    onSelect,
     selectedId,
   }: {
     conversations: any[];
     loadError?: string | null;
     onRetry?: () => void;
+    onSelect: (id: string) => void;
     selectedId?: string;
   }) => (
     <div>
@@ -37,7 +40,9 @@ vi.mock('@/components/messaging/ConversationList', () => ({
         </div>
       ) : null}
       {conversations.map((conversation) => (
-        <p key={conversation.id}>{conversation.otherPartyName}</p>
+        <button key={conversation.id} type="button" onClick={() => onSelect(conversation.id)}>
+          {conversation.otherPartyName}
+        </button>
       ))}
     </div>
   ),
@@ -72,6 +77,7 @@ import { requirePersona } from '@/lib/auth';
 describe('organization messages page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    pathnameValue = '/app/o/acme/messages';
     searchParamsValue = '';
     vi.stubGlobal(
       'fetch',
@@ -306,5 +312,22 @@ describe('organization messages page', () => {
     await waitFor(() => {
       expect(screen.getByTestId('selected-conversation')).toHaveTextContent('conversation-b');
     });
+  });
+
+  it('writes selected conversations into the organization communications URL without dropping section context', async () => {
+    pathnameValue = '/app/o/acme/communications';
+    searchParamsValue = 'section=messages';
+
+    render(<OrgMessagesClient currentUserId="user-1" />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Submission B' }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('selected-conversation')).toHaveTextContent('conversation-b');
+    });
+    expect(replaceMock).toHaveBeenCalledWith(
+      '/app/o/acme/communications?section=messages&conversation=conversation-b',
+      { scroll: false }
+    );
   });
 });

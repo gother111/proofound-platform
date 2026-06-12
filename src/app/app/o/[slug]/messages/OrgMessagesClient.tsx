@@ -203,19 +203,35 @@ function OrganizationMessagesPageContent({ currentUserId, hideHeader }: OrgMessa
 
   const selectedConversation = conversations.find((c) => c.id === selectedConversationId);
 
+  const conversationRoute = useCallback(
+    (conversationId?: string) => {
+      const params = new URLSearchParams(searchParams?.toString());
+      if (conversationId) {
+        params.set('conversation', conversationId);
+      } else {
+        params.delete('conversation');
+      }
+
+      const query = params.toString();
+      return `${pathname ?? '/app'}${query ? `?${query}` : ''}`;
+    },
+    [pathname, searchParams]
+  );
+
   const handleSelectConversation = (conversationId: string) => {
     if (conversationId !== selectedConversationId) {
       setMessages([]);
       setMessageLoadError(null);
     }
     setSelectedConversationId(conversationId);
+    router.replace(conversationRoute(conversationId), { scroll: false });
   };
 
   const handleBackToConversationList = () => {
     setSelectedConversationId(undefined);
     setMessages([]);
     setMessageLoadError(null);
-    router.replace(pathname ?? '/app');
+    router.replace(conversationRoute(), { scroll: false });
   };
 
   const isV2 = process.env.NEXT_PUBLIC_UI_REFACTOR_V2 === 'true';

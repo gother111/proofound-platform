@@ -2,12 +2,14 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+const replaceMock = vi.fn();
+let pathnameValue = '/app/i/messages';
 let searchParamsValue = '';
 
 vi.mock('next/navigation', () => ({
-  usePathname: () => '/app/i/messages',
+  usePathname: () => pathnameValue,
   useRouter: () => ({
-    replace: vi.fn(),
+    replace: replaceMock,
   }),
   useSearchParams: () => new URLSearchParams(searchParamsValue),
 }));
@@ -47,6 +49,7 @@ import { MessagesClient } from '@/app/app/i/messages/MessagesClient';
 describe('individual messages page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    pathnameValue = '/app/i/messages';
     searchParamsValue = '';
     vi.stubGlobal(
       'fetch',
@@ -316,5 +319,64 @@ describe('individual messages page', () => {
       expect(screen.getByTestId('message-thread')).toHaveTextContent('conversation-b');
     });
     expect(screen.getByTestId('message-thread')).toHaveTextContent('Second selected thread');
+  });
+
+  it('writes selected conversations into the communications URL without dropping section context', async () => {
+    pathnameValue = '/app/i/communications';
+    searchParamsValue = 'section=messages';
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        if (url === '/api/conversations') {
+          return {
+            ok: true,
+            json: async () => ({
+              conversations: [
+                {
+                  id: 'conversation-a',
+                  otherParty: { displayName: 'Organization A', displayAvatar: null },
+                  lastMessage: { content: 'First proof-corridor update' },
+                  lastMessageAt: '2026-01-01T00:00:00.000Z',
+                  matchId: 'match-a',
+                  assignmentRole: 'Evidence systems consultant',
+                  stage: 'masked',
+                },
+                {
+                  id: 'conversation-b',
+                  otherParty: { displayName: 'Organization B', displayAvatar: null },
+                  lastMessage: { content: 'Second proof-corridor update' },
+                  lastMessageAt: '2026-01-02T00:00:00.000Z',
+                  matchId: 'match-b',
+                  assignmentRole: 'Proof operations lead',
+                  stage: 'masked',
+                },
+              ],
+            }),
+          };
+        }
+
+        if (url.startsWith('/api/conversations/') && url.endsWith('/messages')) {
+          return {
+            ok: true,
+            json: async () => ({ messages: [] }),
+          };
+        }
+
+        throw new Error(`Unexpected fetch URL: ${url}`);
+      }) as any
+    );
+
+    render(<MessagesClient />);
+
+    fireEvent.click(await screen.findByRole('button', { name: /Organization B/i }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('message-thread')).toHaveTextContent('conversation-b');
+    });
+    expect(replaceMock).toHaveBeenCalledWith(
+      '/app/i/communications?section=messages&conversation=conversation-b',
+      { scroll: false }
+    );
   });
 });

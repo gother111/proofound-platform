@@ -203,19 +203,35 @@ function MessagesPageContent() {
 
   const selectedConversation = conversations.find((c) => c.id === selectedConversationId);
 
+  const conversationRoute = useCallback(
+    (conversationId?: string) => {
+      const params = new URLSearchParams(searchParams?.toString());
+      if (conversationId) {
+        params.set('conversation', conversationId);
+      } else {
+        params.delete('conversation');
+      }
+
+      const query = params.toString();
+      return `${pathname ?? '/app/i/messages'}${query ? `?${query}` : ''}`;
+    },
+    [pathname, searchParams]
+  );
+
   const handleSelectConversation = (conversationId: string) => {
     if (conversationId !== selectedConversationId) {
       setMessages([]);
       setMessageLoadError(null);
     }
     setSelectedConversationId(conversationId);
+    router.replace(conversationRoute(conversationId), { scroll: false });
   };
 
   const handleBackToConversationList = () => {
     setSelectedConversationId(undefined);
     setMessages([]);
     setMessageLoadError(null);
-    router.replace(pathname ?? '/app/i/messages');
+    router.replace(conversationRoute(), { scroll: false });
   };
 
   // Show loading state if auth is not ready
