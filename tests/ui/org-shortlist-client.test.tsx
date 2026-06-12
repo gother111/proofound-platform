@@ -56,8 +56,12 @@ describe('OrgShortlistClient launch copy', () => {
     expect(screen.getByRole('option', { name: 'Review priority' })).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Submission label, role focus, reason')).toBeInTheDocument();
     expect(screen.getByText('1 proof submission')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Review proof submissions through proof, practical fit, and trust signals/i)
+    ).toBeInTheDocument();
     expect(screen.getByText('Policy check: pass')).toBeInTheDocument();
 
+    expect(screen.queryByText(/Review candidates through proof/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('option', { name: /rank band/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/fairness:/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/1 candidate/i)).not.toBeInTheDocument();
@@ -79,6 +83,10 @@ describe('OrgShortlistClient launch copy', () => {
     );
 
     expect(screen.getByText('Proof submission')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Reveal stays limited until the proof-review participant consents/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/until the candidate consents/i)).not.toBeInTheDocument();
     expect(screen.queryByText('Candidate')).not.toBeInTheDocument();
   });
 });

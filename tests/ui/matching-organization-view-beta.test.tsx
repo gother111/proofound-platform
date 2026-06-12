@@ -132,6 +132,52 @@ describe('MatchingOrganizationView launch corridor', () => {
     expect(
       screen.queryByText('All matching submissions for this assignment have been reviewed.')
     ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /shortlist and intros/i }));
+
+    expect(screen.queryByText('No submissions shortlisted yet')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Shortlist qualified submissions/i)).not.toBeInTheDocument();
+  });
+
+  it('keeps the empty shortlist tab proof-submission scoped', async () => {
+    apiFetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        items: [
+          {
+            id: 'match-reviewed',
+            assignmentId: 'assignment-1',
+            reviewStage: 'passed',
+            revealScope: 'blind',
+            corridorState: 'blind_review',
+            reviewCard: {
+              candidateLabel: 'Submission B8K4',
+              fitSummary: {
+                headline: 'Proof signals have already been reviewed.',
+                bullets: [],
+                reasonCodes: [],
+              },
+            },
+            profile: {
+              skills: {},
+            },
+          },
+        ],
+      }),
+    });
+
+    render(<MatchingOrganizationView assignments={assignments as any} onCreateNew={vi.fn()} />);
+
+    fireEvent.click(await screen.findByRole('button', { name: /shortlist and intros/i }));
+
+    expect(screen.getByText('No proof submissions shortlisted yet')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Shortlist qualified proof submissions to request introductions and reveal identities.'
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText('No submissions shortlisted yet')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Shortlist qualified submissions/i)).not.toBeInTheDocument();
   });
 
   it('stays on the assignment match API and never calls archived test-match endpoints', async () => {

@@ -676,12 +676,12 @@ export function MatchingOrganizationView({
                   <h4 className="text-sm font-semibold text-proofound-charcoal">
                     {activeSegment === 'queue'
                       ? 'Review queue is empty'
-                      : 'No submissions shortlisted yet'}
+                      : 'No proof submissions shortlisted yet'}
                   </h4>
                   <p className="text-xs text-muted-foreground mt-1 max-w-xs">
                     {activeSegment === 'queue'
                       ? 'All proof submissions for this assignment have been reviewed.'
-                      : 'Shortlist qualified submissions to request introductions and reveal identities.'}
+                      : 'Shortlist qualified proof submissions to request introductions and reveal identities.'}
                   </p>
                 </div>
               ) : (

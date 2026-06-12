@@ -123,7 +123,7 @@ export function OrgShortlistClient({ items }: Props) {
   const fallbackFitBullets = [
     'Proof evidence is available for assignment-specific review.',
     'Practical fit and constraints are shown separately from identity.',
-    'Reveal stays limited until the candidate consents to the next step.',
+    'Reveal stays limited until the proof-review participant consents to the next step.',
   ];
 
   return (
@@ -133,7 +133,8 @@ export function OrgShortlistClient({ items }: Props) {
           <div>
             <p className="font-semibold text-proofound-charcoal">Explainable shortlist</p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              Review candidates through proof, practical fit, and trust signals before any reveal.
+              Review proof submissions through proof, practical fit, and trust signals before any
+              reveal.
             </p>
           </div>
           <div className="grid gap-2 text-xs leading-5 text-proofound-charcoal/75 sm:grid-cols-3">

@@ -4533,8 +4533,14 @@ describe('launch gate package configuration', () => {
     );
 
     expect(orgShortlistClient).toContain('proof submission');
+    expect(orgShortlistClient).toContain('Review proof submissions through proof');
+    expect(orgShortlistClient).toContain(
+      'until the proof-review participant consents to the next step'
+    );
     expect(orgShortlistClient).toContain('Submission label, role focus, reason');
     expect(orgShortlistClient).toContain('No shortlisted proof submissions match these filters');
+    expect(orgShortlistClient).not.toContain('Review candidates through proof');
+    expect(orgShortlistClient).not.toContain('until the candidate consents');
     expect(orgShortlistClient).not.toContain('Candidate label, role focus, reason');
     expect(orgShortlistClient).not.toContain('No shortlisted candidates match');
     expect(orgShortlistClient).not.toContain("|| 'Candidate'");
@@ -4587,6 +4593,8 @@ describe('launch gate package configuration', () => {
     expect(activeMatchingReviewText).toContain('Verification support:');
     expect(activeMatchingReviewText).toContain('Review proof-backed submissions');
     expect(activeMatchingReviewText).toContain('start reviewing proof submissions');
+    expect(activeMatchingReviewText).toContain('No proof submissions shortlisted yet');
+    expect(activeMatchingReviewText).toContain('Shortlist qualified proof submissions');
     expect(activeMatchingReviewText).toContain(
       'All proof submissions for this assignment have been reviewed.'
     );
@@ -4617,6 +4625,8 @@ describe('launch gate package configuration', () => {
     expect(activeMatchingReviewText).not.toContain('proofSignalLabel(value)');
     expect(activeMatchingReviewText).not.toContain('contributions.map');
     expect(activeMatchingReviewText).not.toContain('matched submissions');
+    expect(activeMatchingReviewText).not.toContain('No submissions shortlisted yet');
+    expect(activeMatchingReviewText).not.toContain('Shortlist qualified submissions');
     expect(activeMatchingReviewText).not.toContain(
       'All matching submissions for this assignment have been reviewed.'
     );
