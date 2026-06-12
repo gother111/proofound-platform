@@ -36,6 +36,15 @@ function getRoleLabel(role: OrgRole) {
   }
 }
 
+function getAssignmentLaunchStatus(createdAt: string | null | undefined) {
+  if (!createdAt) return 'Launch date pending';
+
+  const date = new Date(createdAt);
+  if (Number.isNaN(date.getTime())) return 'Launch date pending';
+
+  return `Launched on ${date.toLocaleDateString()}`;
+}
+
 export default async function OrganizationHomePage({
   params,
 }: {
@@ -245,10 +254,7 @@ export default async function OrganizationHomePage({
                       any identity reveal request.
                     </p>
                     <div className="text-xs text-muted-foreground font-medium pt-2">
-                      Launched on{' '}
-                      {activeAssignment.created_at
-                        ? new Date(activeAssignment.created_at).toLocaleDateString()
-                        : 'N/A'}
+                      {getAssignmentLaunchStatus(activeAssignment.created_at)}
                     </div>
                   </div>
                 )}
