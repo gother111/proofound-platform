@@ -179,8 +179,7 @@ export function MessageInput({ onSend, disabled, conversationStage }: MessageInp
                 )}
               </div>
               <p className="mt-2 text-xs">
-                💡 Consider waiting until identities are revealed before sharing contact
-                information.
+                Consider waiting until identities are revealed before sharing contact information.
               </p>
             </AlertDescription>
           </Alert>
@@ -226,8 +225,8 @@ export function MessageInput({ onSend, disabled, conversationStage }: MessageInp
         {/* Character Counter */}
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>
-            {conversationStage === 'masked' && '🔒 Anonymous conversation'}
-            {conversationStage === 'revealed' && '✅ Identities revealed'}
+            {conversationStage === 'masked' && 'Masked thread: identity protected'}
+            {conversationStage === 'revealed' && 'Revealed thread: identities visible'}
           </span>
           <span className={charRemaining < 100 ? 'text-amber-600' : ''}>
             {charCount}/{charLimit}

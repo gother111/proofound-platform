@@ -14,7 +14,10 @@ describe('MessageInput', () => {
     vi.stubGlobal('alert', alertSpy);
     const onSend = vi.fn().mockRejectedValue(new Error('The message service is unavailable.'));
 
-    render(<MessageInput conversationStage="revealed" onSend={onSend} />);
+    const { container } = render(<MessageInput conversationStage="revealed" onSend={onSend} />);
+
+    expect(screen.getByText('Revealed thread: identities visible')).toBeInTheDocument();
+    expect(container).not.toHaveTextContent('✅');
 
     fireEvent.change(screen.getByPlaceholderText('Type your message...'), {
       target: { value: 'Can we keep the next step tied to the proof review?' },
@@ -45,7 +48,10 @@ describe('MessageInput', () => {
       )
       .mockRejectedValueOnce(new Error('Identity reveal approval is still required.'));
 
-    render(<MessageInput conversationStage="masked" onSend={onSend} />);
+    const { container } = render(<MessageInput conversationStage="masked" onSend={onSend} />);
+
+    expect(screen.getByText('Masked thread: identity protected')).toBeInTheDocument();
+    expect(container).not.toHaveTextContent('🔒 Anonymous conversation');
 
     fireEvent.change(
       screen.getByPlaceholderText(
@@ -60,6 +66,12 @@ describe('MessageInput', () => {
     expect(await screen.findByRole('alertdialog')).toHaveTextContent(
       'This conversation is still masked'
     );
+    expect(
+      screen.getByText(
+        'Consider waiting until identities are revealed before sharing contact information.'
+      )
+    ).toBeInTheDocument();
+    expect(container).not.toHaveTextContent('💡');
 
     fireEvent.click(screen.getByRole('button', { name: 'Send anyway' }));
 

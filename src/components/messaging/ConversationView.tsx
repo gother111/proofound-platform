@@ -17,7 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
-import { CheckCheck, Check, Mail, Phone, Link2 } from 'lucide-react';
+import { CheckCheck, Check, Mail, Phone, Link2, Lock } from 'lucide-react';
 import { apiFetch } from '@/lib/api/fetch';
 
 interface Message {
@@ -215,8 +215,9 @@ export function ConversationView({ conversationId }: ConversationViewProps) {
           <div className="flex-1">
             <h2 className="font-semibold">{otherParticipant.displayName || 'Unknown User'}</h2>
             {otherParticipant.masked && (
-              <Badge variant="secondary" className="mt-1">
-                🔒 Anonymous
+              <Badge variant="secondary" className="mt-1 gap-1">
+                <Lock className="h-3 w-3" />
+                Identity protected
               </Badge>
             )}
             {conversation.stage === 'revealed' && conversation.revealedAt && (
@@ -243,8 +244,12 @@ export function ConversationView({ conversationId }: ConversationViewProps) {
       <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
         <div className="space-y-4">
           {messages.length === 0 && (
-            <div className="text-center text-muted-foreground">
-              <p>No messages yet. Start the conversation!</p>
+            <div className="mx-auto max-w-sm rounded-lg border border-dashed border-border bg-muted/30 px-4 py-6 text-center">
+              <p className="text-sm font-medium text-foreground">No messages yet</p>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                Keep the first note tied to the assignment, proof, or reveal step so this thread
+                stays review-safe.
+              </p>
             </div>
           )}
 

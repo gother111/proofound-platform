@@ -19,7 +19,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { DataErrorBoundary } from '@/components/ErrorBoundary';
 import { TypingIndicator } from './TypingIndicator';
 import { ReadReceipt } from './ReadReceipt';
@@ -68,22 +68,22 @@ export function MessageThread({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
-  // Handle paste blocking (PRD I-20)
+  // Handle paste blocking for proof-review privacy.
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
     toast({
       title: 'Paste disabled',
-      description: 'For security and privacy, pasting is not allowed in messages (PRD I-20).',
+      description: 'Type the message directly so this proof-review thread stays text-only.',
       variant: 'destructive',
     });
   };
 
-  // Handle drag-drop blocking (PRD I-20)
+  // Handle drag-drop blocking for proof-review privacy.
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     toast({
       title: 'Drop disabled',
-      description: 'For security and privacy, drag-and-drop is not allowed (PRD I-20).',
+      description: 'Files and dropped content are blocked in proof-review messages.',
       variant: 'destructive',
     });
   };

@@ -3,6 +3,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { MessageThread } from '@/components/messaging/MessageThread';
+import { Toaster } from '@/components/ui/toaster';
 
 describe('MessageThread', () => {
   beforeEach(() => {
@@ -37,6 +38,49 @@ describe('MessageThread', () => {
       screen.getByText(/text-only; paste\/drop disabled for proof-review privacy/i)
     ).toBeInTheDocument();
     expect(screen.queryByText(/say hello/i)).not.toBeInTheDocument();
+  });
+
+  it('explains blocked paste and drop actions without internal policy codes', () => {
+    const { container } = render(
+      <>
+        <MessageThread
+          conversationId="conversation-1"
+          messages={[]}
+          currentUserId="user-1"
+          otherPartyName="Organization"
+          stage="masked"
+          onSendMessage={vi.fn()}
+        />
+        <Toaster />
+      </>
+    );
+
+    const composer = screen.getByPlaceholderText(
+      'Type your message... (paste and drag-drop disabled)'
+    );
+
+    fireEvent.paste(composer, {
+      clipboardData: {
+        getData: () => 'private proof note',
+      },
+    });
+
+    expect(screen.getByText('Paste disabled')).toBeInTheDocument();
+    expect(
+      screen.getByText('Type the message directly so this proof-review thread stays text-only.')
+    ).toBeInTheDocument();
+
+    fireEvent.drop(composer, {
+      dataTransfer: {
+        getData: () => 'dropped note',
+      },
+    });
+
+    expect(screen.getByText('Drop disabled')).toBeInTheDocument();
+    expect(
+      screen.getByText('Files and dropped content are blocked in proof-review messages.')
+    ).toBeInTheDocument();
+    expect(container).not.toHaveTextContent(/PRD I-20/i);
   });
 
   it('shows send failures inline and keeps the draft in the active thread composer', async () => {
