@@ -8,6 +8,24 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Lock, Loader2, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+
+const PASSWORD_UPDATE_FAILED_MESSAGE =
+  'Password was not updated. Your password has not changed; review the entries and try again.';
+
+function getSafePasswordUpdateError(error: unknown): string {
+  const message = error instanceof Error ? error.message : '';
+
+  if (/current password is incorrect/i.test(message)) {
+    return 'Current password is incorrect. Please re-enter it and try again.';
+  }
+
+  if (/unauthorized/i.test(message)) {
+    return 'Your session could not be confirmed. Sign in again, then update your password.';
+  }
+
+  return PASSWORD_UPDATE_FAILED_MESSAGE;
+}
 
 /**
  * PasswordChangeForm Component
@@ -82,10 +100,10 @@ export function PasswordChangeForm() {
         }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to update password');
+        throw new Error(data.error || 'password update failed');
       }
 
       toast.success('Password updated successfully');
@@ -96,9 +114,10 @@ export function PasswordChangeForm() {
       setConfirmPassword('');
       setIsChanging(false);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update password';
-      setError(errorMessage);
-      toast.error(errorMessage);
+      dispatchClientErrorDiagnostic('settings.password.update_failed', err);
+      const safeErrorMessage = getSafePasswordUpdateError(err);
+      setError(safeErrorMessage);
+      toast.error(safeErrorMessage);
     } finally {
       setIsLoading(false);
     }

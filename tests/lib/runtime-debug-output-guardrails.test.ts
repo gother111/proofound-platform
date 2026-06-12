@@ -1224,6 +1224,24 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('console.error(e)');
   });
 
+  it('keeps settings credential update failures safe and diagnostic', () => {
+    const sources = [
+      readSource('src/components/settings/PasswordChangeForm.tsx'),
+      readSource('src/components/settings/EmailManager.tsx'),
+    ].join('\n');
+
+    expect(sources).toContain(
+      "import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics'"
+    );
+    expect(sources).toContain('settings.password.update_failed');
+    expect(sources).toContain('settings.email.update_failed');
+    expect(sources).toContain('Password was not updated');
+    expect(sources).toContain('Email was not updated');
+    expect(sources).not.toContain('toast.error(errorMessage)');
+    expect(sources).not.toContain("throw new Error(data.error || 'Failed to update password')");
+    expect(sources).not.toContain("throw new Error(data.error || 'Failed to update email')");
+  });
+
   it('keeps organization visibility failures on structured server logging', () => {
     const source = readSource('src/app/api/organizations/[orgId]/visibility/route.ts');
 
