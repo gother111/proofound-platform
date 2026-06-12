@@ -196,6 +196,19 @@ function verificationLoadError(status: number, error?: string | null) {
   return 'We could not open this verification request right now.';
 }
 
+const VERIFICATION_RESPONSE_RETRY_MESSAGE =
+  'Verification response could not be recorded. Your note and review choices are still here; please try again.';
+
+function verificationSubmitError(error?: string | null) {
+  const normalized = error?.trim();
+
+  if (normalized && !/^Failed to submit response\.?$/i.test(normalized)) {
+    return normalized;
+  }
+
+  return VERIFICATION_RESPONSE_RETRY_MESSAGE;
+}
+
 export default function VerifySkillPage() {
   const params = useParams();
   const router = useRouter();
@@ -366,7 +379,7 @@ export default function VerifySkillPage() {
         ) {
           setAuthRequired(true);
         }
-        setError(errorData.error || 'Failed to submit response');
+        setError(verificationSubmitError(errorData.error));
         return;
       }
 
@@ -375,7 +388,7 @@ export default function VerifySkillPage() {
         humanObservedVerdict === 'partly' ? 'partly' : action === 'accept' ? 'accepted' : 'declined'
       );
     } catch {
-      setError('Failed to submit response');
+      setError(VERIFICATION_RESPONSE_RETRY_MESSAGE);
     } finally {
       setSubmitting(false);
     }
@@ -398,7 +411,7 @@ export default function VerifySkillPage() {
     );
   }
 
-  if (error) {
+  if (error && !data) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-proofound-parchment p-4 py-10">
         <Card className="w-full max-w-lg rounded-[24px] border-proofound-stone bg-white/95 shadow-[0_4px_24px_rgba(29,51,48,0.08)]">
@@ -753,7 +766,11 @@ export default function VerifySkillPage() {
             />
           )}
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && (
+            <p role="alert" className="text-sm text-red-600">
+              {error}
+            </p>
+          )}
 
           {authRequired && (
             <div className="flex flex-col gap-2 rounded-lg border border-proofound-forest/20 bg-japandi-bg p-3">

@@ -166,4 +166,108 @@ describe('verification link visual fixtures', () => {
 
     expect(screen.getByRole('heading', { name: /unable to load request/i })).toBeInTheDocument();
   });
+
+  it('keeps failed skill verification responses inline and retryable', async () => {
+    routeParams = { token: 'skill-response-token' };
+    vi.stubEnv('NEXT_PUBLIC_PROOFOUND_VISUAL_FIXTURES', 'false');
+    vi.stubEnv('PROOFOUND_VISUAL_FIXTURES', 'false');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({
+          verification: {
+            id: 'request-1',
+            verification_type: 'skill',
+            skill_name: 'TypeScript migration',
+            skill_code: 'typescript',
+            requester_name: 'Mika Andersson',
+            requester_email: 'mika@example.com',
+            verifier_source: 'peer',
+            verifier_relationship: 'peer',
+            status: 'pending',
+            created_at: '2026-03-01T10:00:00.000Z',
+            expires_at: '2026-03-15T10:00:00.000Z',
+          },
+        }),
+      }))
+    );
+    apiFetchMock.mockRejectedValueOnce(new Error('verification service unavailable'));
+
+    render(<VerifySkillPage />);
+
+    await screen.findByText('TypeScript migration');
+
+    fireEvent.change(screen.getByLabelText(/Add a note/i), {
+      target: { value: 'I directly reviewed this migration.' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Verify Skill/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Verification response could not be recorded. Your note and review choices are still here; please try again.'
+    );
+    expect(
+      screen.queryByRole('heading', { name: /unable to load request/i })
+    ).not.toBeInTheDocument();
+    expect(screen.getByDisplayValue('I directly reviewed this migration.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Verify Skill/i })).toBeEnabled();
+  });
+
+  it('keeps failed custom verification responses inline and retryable', async () => {
+    routeParams = { token: 'custom-response-token' };
+    vi.stubEnv('NEXT_PUBLIC_PROOFOUND_VISUAL_FIXTURES', 'false');
+    vi.stubEnv('PROOFOUND_VISUAL_FIXTURES', 'false');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({
+          request: {
+            id: 'custom-request-1',
+            requester_name: 'Elena Proof',
+            relationship: 'peer',
+            request_kind: 'generic_verification',
+            status: 'pending',
+            created_at: '2026-03-01T10:00:00.000Z',
+            expires_at: '2026-03-15T10:00:00.000Z',
+            items: [
+              {
+                id: 'item-1',
+                artifact_type: 'project',
+                artifact_id: 'project-1',
+                display_label: 'Launch proof packet',
+                claim_template: 'Can you verify this project?',
+                claim_label: 'Verify the launch proof packet.',
+                support_label: 'Direct review',
+                status: 'pending',
+              },
+            ],
+          },
+        }),
+      }))
+    );
+    apiFetchMock.mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({ error: 'Failed to submit response' }),
+    } as Response);
+
+    render(<VerifyCustomRequestPage />);
+
+    await screen.findByText('Verify the launch proof packet.');
+
+    fireEvent.change(screen.getByLabelText(/Add a note/i), {
+      target: { value: 'I reviewed the launch evidence.' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Verify Artifacts/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Verification response could not be recorded. Your note and review choices are still here; please try again.'
+    );
+    expect(
+      screen.queryByRole('heading', { name: /unable to load request/i })
+    ).not.toBeInTheDocument();
+    expect(screen.getByDisplayValue('I reviewed the launch evidence.')).toBeInTheDocument();
+    expect(screen.getByText('Verify the launch proof packet.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Verify Artifacts/i })).toBeEnabled();
+  });
 });
