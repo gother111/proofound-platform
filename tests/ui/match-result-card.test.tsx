@@ -28,7 +28,11 @@ vi.mock('framer-motion', () => ({
 }));
 
 vi.mock('@/components/matching/MatchExplainerModal', () => ({
-  MatchExplainerModal: () => <div>Match explainer modal</div>,
+  MatchExplainerModal: ({
+    reviewCard,
+  }: {
+    reviewCard?: { fitSummary?: { headline?: string } };
+  }) => <div>{reviewCard?.fitSummary?.headline ?? 'Match explainer modal'}</div>,
 }));
 
 vi.mock('@/components/matching/SnoozeDialog', () => ({
@@ -241,6 +245,58 @@ describe('MatchResultCard', () => {
       'matching.result_card.explanation_fetch_failed',
       expect.any(Error)
     );
+  });
+
+  it('passes proof-first review card content into individual explainers', async () => {
+    apiFetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        matchId: 'match-with-review-card',
+        reviewCard: {
+          candidateLabel: 'Proof operations lead',
+          strongestProof: {
+            summary:
+              'A recent Proof Pack shows structured proof operations work for a privacy-safe assignment review.',
+            outcome:
+              'Reviewer-facing proof, constraints, and privacy gates stay inspectable before reveal.',
+            ownership: 'Proof-review participant owned the supporting work.',
+            anchorContext: 'Proof Pack evidence',
+            freshnessLabel: 'Recent proof signal',
+          },
+          verification: {
+            summaryLabel: 'Privacy-ready proof signals present',
+            count: 2,
+          },
+          trustLabels: ['Blind by default', 'Privacy ready'],
+          fitBand: 'High-priority proof review',
+          fitSummary: {
+            headline: 'Strong proof signals align with this assignment review.',
+            bullets: ['Core assignment skills have proof-backed support.'],
+            reasonCodes: ['skills_fit_high'],
+          },
+        },
+      }),
+    } as any);
+
+    render(
+      <MatchResultCard
+        result={{
+          id: 'match-with-review-card',
+          assignmentId: 'assignment-with-review-card',
+          assignment: {
+            role: 'Proof operations lead',
+          },
+          proofSignals: [{ key: 'proof_fit', support: 'Primary reason' }],
+        }}
+        variant="blind"
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: MATCH_EXPLAINER_TRIGGER_LABEL }));
+
+    expect(
+      await screen.findByText('Strong proof signals align with this assignment review.')
+    ).toBeInTheDocument();
   });
 
   it('shows fallback explanation signals when org match review bullets are sparse', () => {

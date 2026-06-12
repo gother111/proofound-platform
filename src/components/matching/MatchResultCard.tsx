@@ -344,7 +344,7 @@ export function MatchResultCard({
     result.profile?.workMode || result.profile?.locationMode
       ? 'Practical fit is checked against the assignment work mode and constraints.'
       : 'Practical fit is kept separate from identity-bearing profile details.',
-    orgReviewCard?.verification.summaryLabel
+    orgReviewCard?.verification?.summaryLabel
       ? `Trust signal: ${orgReviewCard.verification.summaryLabel}.`
       : 'Blind-by-default review keeps identity details hidden until candidate consent.',
   ];
@@ -604,6 +604,7 @@ export function MatchResultCard({
                       proofSignals={matchExplanation.proofSignals}
                       skillsMatch={matchExplanation.skillsMatch}
                       constraints={matchExplanation.constraints}
+                      reviewCard={matchExplanation.reviewCard}
                     />
                   </>
                 ) : matchExplanation ? (

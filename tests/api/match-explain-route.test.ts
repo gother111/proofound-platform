@@ -231,6 +231,34 @@ describe('GET /api/match/explain/[matchId]', () => {
     expect(body.reasonSections.positive_match).toContain(
       'Core assignment skills have strong proof-backed support.'
     );
+    expect(body.reviewCard).toEqual(
+      expect.objectContaining({
+        candidateLabel: 'Proof operations lead for a privacy-safe assignment review',
+        strongestProof: expect.objectContaining({
+          summary:
+            'A recent Proof Pack shows structured proof operations work for a privacy-safe assignment review.',
+          outcome:
+            'Reviewer-facing proof, constraints, and privacy gates stay inspectable before reveal.',
+          ownership: 'Proof-review participant owned the supporting work.',
+          anchorContext: 'Proof Pack evidence',
+          freshnessLabel: 'Recent proof signal',
+        }),
+        verification: {
+          summaryLabel: 'Privacy-ready proof signals present',
+          count: 2,
+        },
+        trustLabels: ['Blind by default', 'Privacy ready'],
+        fitBand: 'High-priority proof review',
+        fitSummary: expect.objectContaining({
+          headline: 'Strong proof signals align with this assignment review.',
+          reasonCodes: ['skills_fit_high', 'recent_proof', 'privacy_ready'],
+        }),
+      })
+    );
+    expect(body.reviewCard.fitSummary.bullets).toContain(
+      'Core assignment skills have proof-backed support.'
+    );
+    expect(JSON.stringify(body.reviewCard)).not.toContain('http');
     expect(body.proofSignals).toEqual({
       skills: 'Strong proof support',
       constraints: 'Clear support',

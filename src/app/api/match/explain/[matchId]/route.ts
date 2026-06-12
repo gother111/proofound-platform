@@ -106,6 +106,52 @@ function visualReasonSections(match: { reasonCodes?: string[]; gaps?: Array<{ id
   return sections;
 }
 
+function buildVisualIndividualReviewCard(match: {
+  assignment: { role: string };
+  reasonCodes?: string[];
+  gaps?: Array<{ id: string }>;
+}) {
+  const hasGaps = match.gaps && match.gaps.length > 0;
+  const headline = hasGaps
+    ? 'Relevant proof signals with one reviewer judgment point.'
+    : 'Strong proof signals align with this assignment review.';
+  const bullets = [
+    'Core assignment skills have proof-backed support.',
+    'Recent proof signals support the assignment context.',
+    'Blind-by-default review keeps identity details masked until consent.',
+  ];
+
+  if (hasGaps) {
+    bullets.push(
+      `Reviewer judgment needed for: ${match.gaps!.map((gap) => gap.id.replace(/-/g, ' ')).join(', ')}.`
+    );
+  }
+
+  return {
+    candidateLabel: match.assignment.role,
+    strongestProof: {
+      summary:
+        'A recent Proof Pack shows structured proof operations work for a privacy-safe assignment review.',
+      outcome:
+        'Reviewer-facing proof, constraints, and privacy gates stay inspectable before reveal.',
+      ownership: 'Proof-review participant owned the supporting work.',
+      anchorContext: 'Proof Pack evidence',
+      freshnessLabel: 'Recent proof signal',
+    },
+    verification: {
+      summaryLabel: 'Privacy-ready proof signals present',
+      count: 2,
+    },
+    trustLabels: ['Blind by default', 'Privacy ready'],
+    fitBand: hasGaps ? 'Relevant proof review' : 'High-priority proof review',
+    fitSummary: {
+      headline,
+      bullets,
+      reasonCodes: match.reasonCodes ?? [],
+    },
+  };
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ matchId: string }> }
@@ -145,6 +191,7 @@ export async function GET(
       );
       const reasonSections = visualReasonSections(foundMock);
       const hasGaps = foundMock.gaps && foundMock.gaps.length > 0;
+      const reviewCard = buildVisualIndividualReviewCard(foundMock);
 
       return NextResponse.json({
         explainer: buildMatchExplainerContract(),
@@ -160,6 +207,7 @@ export async function GET(
           ? ['Relevant proof match with one reviewer judgment point.']
           : ['Strong proof-backed alignment with the assignment.'],
         reasonSections,
+        reviewCard,
         rank: undefined,
         totalCandidates: mockMatches.length,
         rankBand: hasGaps ? 'Relevant proof review' : 'High-priority proof review',
