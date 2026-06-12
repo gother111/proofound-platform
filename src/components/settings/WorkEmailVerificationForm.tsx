@@ -31,6 +31,7 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
   const [selectedOrgId, setSelectedOrgId] = useState<string>('none');
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loadingOrgs, setLoadingOrgs] = useState(true);
+  const [organizationLoadError, setOrganizationLoadError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -43,6 +44,7 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
   const fetchOrganizations = async () => {
     try {
       setLoadingOrgs(true);
+      setOrganizationLoadError(null);
       const response = await apiFetch('/api/organizations');
 
       if (!response.ok) {
@@ -62,7 +64,10 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
       setOrganizations(normalizedOrganizations);
     } catch (err) {
       dispatchClientErrorDiagnostic('settings.work_email.organizations_fetch_failed', err);
-      // Don't show error, just allow optional org selection
+      setOrganizations([]);
+      setOrganizationLoadError(
+        'Organization list could not load. You can still send the confirmation email now and link an organization later.'
+      );
     } finally {
       setLoadingOrgs(false);
     }
@@ -216,6 +221,21 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
         </Select>
         {loadingOrgs ? (
           <p className="text-xs text-muted-foreground">Loading organizations...</p>
+        ) : organizationLoadError ? (
+          <div
+            className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900"
+            role="alert"
+          >
+            <p>{organizationLoadError}</p>
+            <button
+              type="button"
+              onClick={() => void fetchOrganizations()}
+              disabled={loadingOrgs || submitting}
+              className="mt-2 inline-flex min-h-8 items-center rounded-full border border-amber-300 bg-white px-3 text-xs font-semibold text-amber-950 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Retry organization list
+            </button>
+          </div>
         ) : organizations.length === 0 ? (
           <p className="text-xs text-muted-foreground">
             No organizations are available for your account right now. You can still verify your

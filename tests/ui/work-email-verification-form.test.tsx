@@ -90,6 +90,33 @@ describe('WorkEmailVerificationForm', () => {
     ).toBeInTheDocument();
   });
 
+  it('keeps organization load failures visible and retryable without blocking email verification', async () => {
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({}),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          organizations: [{ id: 'org-1', slug: 'acme', display_name: 'Acme Org' }],
+        }),
+      } as Response);
+
+    render(<WorkEmailVerificationForm onSuccess={vi.fn()} />);
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Organization list could not load');
+    expect(alert).toHaveTextContent('You can still send the confirmation email now');
+    expect(screen.getByRole('button', { name: /send confirmation email/i })).toBeEnabled();
+
+    fireEvent.click(screen.getByRole('button', { name: /retry organization list/i }));
+
+    expect(await screen.findByText('Acme Org')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(apiFetch).toHaveBeenCalledTimes(2);
+  });
+
   it('blocks free email domains and does not call verification send endpoint', async () => {
     vi.mocked(apiFetch).mockResolvedValue({
       ok: true,
