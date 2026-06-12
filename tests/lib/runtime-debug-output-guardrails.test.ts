@@ -1428,10 +1428,13 @@ describe('runtime debug output guardrails', () => {
     const individualVisibilitySource = readSource(
       'src/components/profile/IndividualFieldVisibilityControls.tsx'
     );
+    const deleteAccountSectionSource = readSource(
+      'src/components/privacy/DeleteAccountSection.tsx'
+    );
     const sources = [
       readSource('src/components/privacy/DataBreakdown.tsx'),
       readSource('src/components/privacy/AuditLogTable.tsx'),
-      readSource('src/components/privacy/DeleteAccountSection.tsx'),
+      deleteAccountSectionSource,
       individualVisibilitySource,
     ].join('\n');
 
@@ -1445,6 +1448,8 @@ describe('runtime debug output guardrails', () => {
     expect(sources).toContain('privacy.field_visibility.save_failed');
     expect(individualVisibilitySource).toContain('Your Public Page visibility was not changed');
     expect(individualVisibilitySource).not.toContain('? error.message');
+    expect(deleteAccountSectionSource).toContain('Account deletion could not finish');
+    expect(deleteAccountSectionSource).not.toContain('? error.message');
     expect(sources).not.toContain('Failed to fetch data breakdown:');
     expect(sources).not.toContain('Export failed:');
     expect(sources).not.toContain('Failed to fetch account history:');

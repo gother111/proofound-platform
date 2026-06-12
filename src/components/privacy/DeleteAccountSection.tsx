@@ -46,6 +46,8 @@ const DELETION_REASONS = [
 ] as const;
 
 const CONFIRMATION_PHRASE = 'DELETE MY ACCOUNT';
+const ACCOUNT_DELETION_FAILED_MESSAGE =
+  'Account deletion could not finish. Check your password and confirmation phrase, then try again.';
 
 export function DeleteAccountSection() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -114,11 +116,7 @@ export function DeleteAccountSection() {
       router.refresh();
     } catch (error) {
       dispatchClientErrorDiagnostic('privacy.delete_account.request_failed', error);
-      setDeleteError(
-        error instanceof Error
-          ? error.message
-          : 'Account deletion could not finish. Check your password and try again.'
-      );
+      setDeleteError(ACCOUNT_DELETION_FAILED_MESSAGE);
     } finally {
       setDeleting(false);
     }

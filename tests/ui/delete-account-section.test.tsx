@@ -5,11 +5,19 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DeleteAccountSection } from '@/components/privacy/DeleteAccountSection';
 import { apiFetch } from '@/lib/api/fetch';
 
+const { dispatchClientErrorDiagnosticMock } = vi.hoisted(() => ({
+  dispatchClientErrorDiagnosticMock: vi.fn(),
+}));
+
 const pushMock = vi.fn();
 const refreshMock = vi.fn();
 
 vi.mock('@/lib/api/fetch', () => ({
   apiFetch: vi.fn(),
+}));
+
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientErrorDiagnostic: (...args: unknown[]) => dispatchClientErrorDiagnosticMock(...args),
 }));
 
 vi.mock('next/navigation', () => ({
@@ -42,13 +50,21 @@ describe('DeleteAccountSection', () => {
     fireEvent.click(screen.getByRole('button', { name: /^delete account$/i }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Password did not match your account.'
+      'Account deletion could not finish. Check your password and confirmation phrase, then try again.'
     );
+    expect(screen.getByRole('alert')).not.toHaveTextContent('Password did not match your account.');
     expect(
       screen.getByRole('heading', { name: /confirm permanent deletion/i })
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/password/i)).toHaveValue('incorrect-password');
     expect(screen.getByLabelText(/type delete my account/i)).toHaveValue('DELETE MY ACCOUNT');
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'privacy.delete_account.request_failed',
+      expect.any(Error)
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
+      'Password did not match your account.'
+    );
     expect(pushMock).not.toHaveBeenCalled();
     expect(refreshMock).not.toHaveBeenCalled();
   });
