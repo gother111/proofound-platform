@@ -23,10 +23,12 @@ interface AcceptInvitePageProps {
 
 function InviteUnavailableCard({
   title = 'Invite link is unavailable',
-  message = 'The invite may be expired, revoked, or invalid.',
+  message = 'The invite may be expired, revoked, or invalid. No organization membership was created from this page.',
+  guidance = 'Ask the organization to resend the invite if you still need access.',
 }: {
   title?: string;
   message?: string;
+  guidance?: string;
 }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-japandi-bg p-6">
@@ -42,7 +44,18 @@ function InviteUnavailableCard({
             {message}
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <div
+            role="alert"
+            aria-live="assertive"
+            className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-amber-950"
+          >
+            <p className="font-semibold">{title}</p>
+            <p className="mt-1">{guidance}</p>
+            <p className="mt-2 text-xs leading-5">
+              Your current account, role, and organization access are unchanged.
+            </p>
+          </div>
           <Button asChild variant="outline" className="w-full">
             <Link href="/">Return home</Link>
           </Button>
@@ -61,7 +74,8 @@ export default async function AcceptInvitePage({ searchParams }: AcceptInvitePag
     return (
       <InviteUnavailableCard
         title="Invite link is invalid"
-        message="This invite link is missing a token. Ask the organization to resend it."
+        message="This invite link is missing a token. No organization membership was created from this page."
+        guidance="Open the full invite link from your email, or ask the organization to resend it."
       />
     );
   }
@@ -139,7 +153,7 @@ export default async function AcceptInvitePage({ searchParams }: AcceptInvitePag
 
   return (
     <AppSurface>
-      <div className="flex items-center justify-center px-4 w-full h-[calc(100vh-8rem)]">
+      <div className="flex min-h-[calc(100vh-8rem)] w-full items-center justify-center px-4 py-8">
         <Card className="w-full max-w-md rounded-[24px] border-proofound-stone bg-white/90 shadow-[0_4px_24px_rgba(29,51,48,0.08)]">
           <CardHeader className="text-center">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-proofound-forest/10">
