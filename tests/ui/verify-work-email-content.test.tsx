@@ -4,6 +4,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import { VerifyWorkEmailContent } from '@/app/verify-work-email/VerifyWorkEmailContent';
 import { VISUAL_VERIFY_TOKENS } from '@/lib/verification/visual-link-fixtures';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 const routerPush = vi.fn();
 const searchParamsGet = vi.fn();
@@ -16,6 +17,12 @@ vi.mock('next/navigation', () => ({
     get: searchParamsGet,
   }),
 }));
+
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientErrorDiagnostic: vi.fn(),
+}));
+
+const dispatchClientErrorDiagnosticMock = vi.mocked(dispatchClientErrorDiagnostic);
 
 describe('VerifyWorkEmailContent', () => {
   beforeEach(() => {
@@ -100,5 +107,65 @@ describe('VerifyWorkEmailContent', () => {
     });
 
     expect(screen.getByText('real-check@example.com')).toBeInTheDocument();
+  });
+
+  it('keeps unexpected returned verification errors safe and diagnostic', async () => {
+    const rawFailure = 'database function leaked work_email_token_hash constraint detail';
+    vi.stubEnv('NEXT_PUBLIC_PROOFOUND_VISUAL_FIXTURES', 'false');
+    vi.stubEnv('PROOFOUND_VISUAL_FIXTURES', 'false');
+    searchParamsGet.mockImplementation((key: string) => (key === 'token' ? 'token-raw' : null));
+    vi.mocked(global.fetch).mockResolvedValue({
+      ok: false,
+      json: async () => ({ error: rawFailure }),
+    } as Response);
+
+    render(<VerifyWorkEmailContent />);
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { level: 1, name: 'Verification failed' })
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByText(
+        'Work-email verification could not be completed. Request a fresh link from settings and try again.'
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText(rawFailure)).not.toBeInTheDocument();
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'verification.work_email_verify.returned_error',
+      expect.any(Error)
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
+      rawFailure
+    );
+  });
+
+  it('keeps thrown verification failures safe and diagnostic', async () => {
+    const thrownFailure = new Error('network stack exposed verification endpoint');
+    vi.stubEnv('NEXT_PUBLIC_PROOFOUND_VISUAL_FIXTURES', 'false');
+    vi.stubEnv('PROOFOUND_VISUAL_FIXTURES', 'false');
+    searchParamsGet.mockImplementation((key: string) => (key === 'token' ? 'token-thrown' : null));
+    vi.mocked(global.fetch).mockRejectedValue(thrownFailure);
+
+    render(<VerifyWorkEmailContent />);
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { level: 1, name: 'Verification failed' })
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText(thrownFailure.message)).not.toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Work-email verification could not be completed. Request a fresh link from settings and try again.'
+      )
+    ).toBeInTheDocument();
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'verification.work_email_verify.client_failed',
+      thrownFailure
+    );
   });
 });

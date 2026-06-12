@@ -10,6 +10,48 @@ import {
   buildVisualWorkEmailVerificationResponse,
   clientVerificationLinkVisualFixturesEnabled,
 } from '@/lib/verification/visual-link-fixtures';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+
+const WORK_EMAIL_VERIFY_RETRY_MESSAGE =
+  'Work-email verification could not be completed. Request a fresh link from settings and try again.';
+const WORK_EMAIL_VERIFY_SAFE_ERRORS = new Map([
+  [
+    'Verification token is required',
+    'Verification token is missing. Please check your email for the correct link.',
+  ],
+  [
+    'Invalid or expired verification token',
+    'This work-email link is invalid or expired. Request a fresh link from settings.',
+  ],
+  [
+    'Verification token has expired. Please request a new one.',
+    'This work-email link has expired. Request a fresh link from settings.',
+  ],
+  [
+    'This work email is already verified by another account',
+    'This work email is already verified by another account.',
+  ],
+  ['Failed to verify work email', WORK_EMAIL_VERIFY_RETRY_MESSAGE],
+  ['Internal server error', WORK_EMAIL_VERIFY_RETRY_MESSAGE],
+]);
+
+function workEmailVerifyErrorMessage(error?: string | null) {
+  const normalized = error?.trim();
+  if (!normalized) {
+    return WORK_EMAIL_VERIFY_RETRY_MESSAGE;
+  }
+
+  const safeMessage = WORK_EMAIL_VERIFY_SAFE_ERRORS.get(normalized);
+  if (safeMessage) {
+    return safeMessage;
+  }
+
+  dispatchClientErrorDiagnostic(
+    'verification.work_email_verify.returned_error',
+    new Error(normalized)
+  );
+  return WORK_EMAIL_VERIFY_RETRY_MESSAGE;
+}
 
 export function VerifyWorkEmailContent() {
   const searchParams = useSearchParams();
@@ -48,11 +90,12 @@ export function VerifyWorkEmailContent() {
           }, 3000);
         } else {
           setStatus('error');
-          setMessage(data.error || 'Failed to verify work email');
+          setMessage(workEmailVerifyErrorMessage(data?.error));
         }
       } catch (error) {
+        dispatchClientErrorDiagnostic('verification.work_email_verify.client_failed', error);
         setStatus('error');
-        setMessage('An error occurred while verifying your email. Please try again.');
+        setMessage(WORK_EMAIL_VERIFY_RETRY_MESSAGE);
       }
     },
     [router]
