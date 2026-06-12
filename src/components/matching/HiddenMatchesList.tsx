@@ -1,6 +1,6 @@
 /**
- * Hidden Matches List
- * Shows matches the user hid and allows restoring them.
+ * Hidden assignment reviews list.
+ * Shows assignment reviews the user hid and allows restoring them.
  */
 
 'use client';
@@ -56,15 +56,15 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
         setHidden(data.matches || []);
       } else {
         const text = await response.text().catch(() => '');
-        setError('Hidden matches could not load');
-        toast.error('Hidden matches could not load', {
+        setError('Hidden assignment reviews could not load');
+        toast.error('Hidden assignment reviews could not load', {
           description: text || 'You can retry without leaving matching.',
         });
       }
     } catch (error) {
       dispatchClientErrorDiagnostic('matching.hidden_matches.load_failed', error);
-      setError('Hidden matches could not load');
-      toast.error('Hidden matches could not load', {
+      setError('Hidden assignment reviews could not load');
+      toast.error('Hidden assignment reviews could not load', {
         description: 'You can retry without leaving matching.',
       });
     } finally {
@@ -89,9 +89,11 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
         method: 'DELETE',
       });
       if (!response.ok) {
-        throw new Error('Failed to unhide match');
+        throw new Error('hidden_assignment_review_restore_failed');
       }
-      toast.success('Match restored', { description: 'It will reappear in your matches list.' });
+      toast.success('Assignment review restored', {
+        description: 'It will reappear in your assignment reviews.',
+      });
 
       // Kick off parallel refreshes so Matching updates immediately
       const warmMatches = apiFetch('/api/match/profile', {
@@ -111,8 +113,10 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
       dispatchClientErrorDiagnostic('matching.hidden_matches.unhide_failed', error);
       // Roll back optimistic removal
       setHidden(prevHidden);
-      setRestoreError('Match could not be restored. It is still hidden, and you can try again.');
-      toast.error('Failed to unhide match');
+      setRestoreError(
+        'Assignment review could not be restored. It is still hidden, and you can try again.'
+      );
+      toast.error('Assignment review could not be restored');
     } finally {
       setUnhidingId(null);
     }
@@ -125,7 +129,7 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
           <h3 className="text-sm font-medium text-foreground">Hidden</h3>
           <Loader2 className="w-4 h-4 animate-spin text-proofound-forest" />
         </div>
-        <p className="text-xs text-muted-foreground">Loading hidden matches…</p>
+        <p className="text-xs text-muted-foreground">Loading hidden assignment reviews...</p>
       </Card>
     );
   }
@@ -142,7 +146,7 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
           Your hidden assignment reviews are unchanged. Retry this panel to refresh the list.
         </p>
         <Button size="sm" variant="outline" onClick={fetchHidden} className="text-xs">
-          Retry hidden matches
+          Retry hidden reviews
         </Button>
       </Card>
     );
@@ -155,7 +159,7 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
           <EyeOff className="w-4 h-4 text-muted-foreground" />
           <h3 className="text-sm font-medium text-foreground">Hidden</h3>
         </div>
-        <p className="text-xs text-muted-foreground">No hidden matches right now.</p>
+        <p className="text-xs text-muted-foreground">No hidden assignment reviews right now.</p>
       </Card>
     );
   }

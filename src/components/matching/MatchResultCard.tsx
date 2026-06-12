@@ -799,7 +799,7 @@ export function MatchResultCard({
             matchId={result.id}
             assignmentTitle={result.assignment?.role || 'This assignment review'}
             onSnoozed={() => {
-              // Refresh matches list or remove from current view
+              // Refresh assignment reviews or remove this card from the current view.
               if (onHide) onHide();
             }}
           />

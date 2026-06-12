@@ -33,7 +33,7 @@ describe('matching paused/hidden manager launch safety', () => {
     vi.clearAllMocks();
   });
 
-  it('keeps hidden matches inside the active matching route without score badges', async () => {
+  it('keeps hidden assignment reviews inside the active matching route without score badges', async () => {
     apiFetchMock.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
@@ -64,7 +64,7 @@ describe('matching paused/hidden manager launch safety', () => {
     expect(document.body.innerHTML).not.toContain('/app/i/matching/assignment-1');
   });
 
-  it('keeps untitled hidden matches assignment-scoped instead of opportunity-scoped', async () => {
+  it('keeps untitled hidden assignment reviews assignment-scoped instead of opportunity-scoped', async () => {
     apiFetchMock.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
@@ -90,7 +90,7 @@ describe('matching paused/hidden manager launch safety', () => {
     expect(screen.queryByText('Opportunity')).not.toBeInTheDocument();
   });
 
-  it('shows a recoverable hidden-match load error and retries in place', async () => {
+  it('shows a recoverable hidden-review load error and retries in place', async () => {
     apiFetchMock.mockRejectedValueOnce(new Error('network unavailable')).mockResolvedValueOnce({
       ok: true,
       json: async () => ({
@@ -112,21 +112,23 @@ describe('matching paused/hidden manager launch safety', () => {
 
     render(<HiddenMatchesList />);
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Hidden matches could not load');
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Hidden assignment reviews could not load'
+    );
     expect(
       screen.getByText(
         'Your hidden assignment reviews are unchanged. Retry this panel to refresh the list.'
       )
     ).toBeInTheDocument();
-    expect(screen.queryByText('No hidden matches right now.')).not.toBeInTheDocument();
+    expect(screen.queryByText('No hidden assignment reviews right now.')).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Retry hidden matches' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Retry hidden reviews' }));
 
     expect(await screen.findByText('Restored hidden assignment')).toBeInTheDocument();
     expect(apiFetchMock).toHaveBeenCalledTimes(2);
   });
 
-  it('rolls back and announces a failed hidden-match restore', async () => {
+  it('rolls back and announces a failed hidden-review restore', async () => {
     const onRestored = vi.fn();
 
     apiFetchMock
@@ -159,13 +161,25 @@ describe('matching paused/hidden manager launch safety', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Unhide' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Match could not be restored. It is still hidden, and you can try again.'
+      'Assignment review could not be restored. It is still hidden, and you can try again.'
     );
     expect(screen.getByText('Hidden assignment to restore')).toBeInTheDocument();
     expect(onRestored).not.toHaveBeenCalled();
     expect(apiFetchMock).toHaveBeenLastCalledWith('/api/match/hide?matchId=match-with%2Fslash', {
       method: 'DELETE',
     });
+  });
+
+  it('keeps the empty hidden state assignment-review scoped', async () => {
+    apiFetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ matches: [] }),
+    });
+
+    render(<HiddenMatchesList />);
+
+    expect(await screen.findByText('No hidden assignment reviews right now.')).toBeInTheDocument();
+    expect(screen.queryByText('No hidden matches right now.')).not.toBeInTheDocument();
   });
 
   it('keeps paused assignment reviews inside the active matching route and avoids detail links', async () => {
