@@ -16,6 +16,9 @@ type DownloadFeedback = {
   message: string;
 };
 
+const TRUST_PDF_RETRY_MESSAGE =
+  'Trust PDF could not be downloaded. Your public portfolio is still live; please try again.';
+
 export function DownloadPdfButton({
   endpoint = '/api/portfolio/export',
   className,
@@ -45,7 +48,7 @@ export function DownloadPdfButton({
       return 'Your profile is not ready for PDF export yet. Refresh and try again.';
     }
 
-    return payloadMessage || 'Could not download PDF. Please try again.';
+    return payloadMessage || TRUST_PDF_RETRY_MESSAGE;
   };
 
   const handleDownload = async () => {
@@ -84,10 +87,7 @@ export function DownloadPdfButton({
       dispatchClientErrorDiagnostic('portfolio.public_pdf.download_failed', err);
       setFeedback({
         kind: 'error',
-        message:
-          err instanceof Error && err.message
-            ? err.message
-            : 'Could not download PDF. Please try again.',
+        message: err instanceof Error && err.message ? err.message : TRUST_PDF_RETRY_MESSAGE,
       });
     } finally {
       setLoading(false);

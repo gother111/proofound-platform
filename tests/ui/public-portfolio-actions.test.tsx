@@ -103,6 +103,21 @@ describe('public portfolio action feedback', () => {
     expect(alertSpy).not.toHaveBeenCalled();
   });
 
+  it('keeps individual PDF fallback failures specific to the public portfolio', async () => {
+    fetchMock.mockResolvedValueOnce(new Response('', { status: 500 }));
+
+    render(<DownloadPdfButton endpoint="/api/public-export" />);
+
+    fireEvent.click(screen.getByRole('button', { name: /download trust pdf/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(
+      'Trust PDF could not be downloaded. Your public portfolio is still live; please try again.'
+    );
+    expect(alert).not.toHaveTextContent('Could not download PDF. Please try again.');
+    expect(alertSpy).not.toHaveBeenCalled();
+  });
+
   it('shows organization PDF permission errors inline without a browser alert', async () => {
     fetchMock.mockResolvedValueOnce(new Response('', { status: 403 }));
 
@@ -117,6 +132,21 @@ describe('public portfolio action feedback', () => {
       method: 'GET',
       cache: 'no-store',
     });
+    expect(alertSpy).not.toHaveBeenCalled();
+  });
+
+  it('keeps organization PDF fallback failures specific to the trust page', async () => {
+    fetchMock.mockResolvedValueOnce(new Response('', { status: 500 }));
+
+    render(<DownloadOrganizationPdfButton slug="acme" />);
+
+    fireEvent.click(screen.getByRole('button', { name: /download organization pdf/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(
+      'Organization PDF could not be downloaded. The trust page is still live; please try again.'
+    );
+    expect(alert).not.toHaveTextContent('Could not download PDF. Please try again.');
     expect(alertSpy).not.toHaveBeenCalled();
   });
 });

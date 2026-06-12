@@ -11,6 +11,9 @@ type DownloadFeedback = {
   message: string;
 };
 
+const ORGANIZATION_PDF_RETRY_MESSAGE =
+  'Organization PDF could not be downloaded. The trust page is still live; please try again.';
+
 export function DownloadOrganizationPdfButton({
   slug,
   className,
@@ -46,7 +49,7 @@ export function DownloadOrganizationPdfButton({
       return 'Organization trust page is not ready for PDF export yet.';
     }
 
-    return payloadMessage || 'Could not download PDF. Please try again.';
+    return payloadMessage || ORGANIZATION_PDF_RETRY_MESSAGE;
   };
 
   const handleDownload = async () => {
@@ -85,10 +88,7 @@ export function DownloadOrganizationPdfButton({
       dispatchClientErrorDiagnostic('portfolio.organization_pdf.download_failed', err);
       setFeedback({
         kind: 'error',
-        message:
-          err instanceof Error && err.message
-            ? err.message
-            : 'Could not download PDF. Please try again.',
+        message: err instanceof Error && err.message ? err.message : ORGANIZATION_PDF_RETRY_MESSAGE,
       });
     } finally {
       setLoading(false);
