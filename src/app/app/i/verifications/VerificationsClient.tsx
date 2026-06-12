@@ -107,6 +107,8 @@ const REVOKED_OR_CORRECTED_STATUSES = new Set<VerificationRequest['status']>([
   'cancelled',
 ]);
 const MISSING_REQUESTER_LABEL = 'Requester details pending';
+const MISSING_SKILL_LABEL = 'Skill details pending';
+const MISSING_COMPETENCY_LABEL = 'Level not specified';
 
 function parseTime(value: string | null | undefined): number {
   if (!value) return 0;
@@ -443,23 +445,23 @@ export function VerificationsClient({
 
   const getSkillName = (request: VerificationRequest): string => {
     const skill = request.skills;
-    if (!skill) return 'Unknown Skill';
+    if (!skill) return MISSING_SKILL_LABEL;
 
     if (skill.name_i18n && typeof skill.name_i18n === 'object' && 'en' in skill.name_i18n) {
-      return String((skill.name_i18n as Record<string, unknown>).en || 'Unknown Skill');
+      return String((skill.name_i18n as Record<string, unknown>).en || MISSING_SKILL_LABEL);
     }
 
     if (skill.skills_taxonomy?.name_i18n) {
       const taxName = skill.skills_taxonomy.name_i18n;
       if (typeof taxName === 'object' && taxName && 'en' in taxName) {
-        return String((taxName as Record<string, unknown>).en || 'Unknown Skill');
+        return String((taxName as Record<string, unknown>).en || MISSING_SKILL_LABEL);
       }
       if (typeof taxName === 'string') {
-        return taxName;
+        return taxName.trim() || MISSING_SKILL_LABEL;
       }
     }
 
-    return 'Unknown Skill';
+    return MISSING_SKILL_LABEL;
   };
 
   const getRequestSubject = (request: VerificationRequest): string => {
@@ -573,7 +575,7 @@ export function VerificationsClient({
 
   const getCompetencyLabel = (level: number): string => {
     const labels = ['', 'Novice', 'Competent', 'Proficient', 'Advanced', 'Expert'];
-    return labels[level] || 'Unknown';
+    return labels[level] || MISSING_COMPETENCY_LABEL;
   };
 
   const getBreadcrumb = (request: VerificationRequest): string => {

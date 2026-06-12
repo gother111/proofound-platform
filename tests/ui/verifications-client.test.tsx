@@ -176,6 +176,53 @@ describe('VerificationsClient', () => {
     expect(within(requestRow).getByText('Scoped launch proof')).toBeInTheDocument();
   });
 
+  it('uses clear pending skill copy when the verification subject details are unavailable', async () => {
+    render(
+      <VerificationsClient
+        incomingRequests={[
+          makeRequest({
+            id: 'incoming-missing-skill',
+            skills: undefined,
+          }),
+        ]}
+        sentRequests={[]}
+        userEmail="me@proofound.io"
+      />
+    );
+    await settleAssistiveAiFlag();
+
+    const requestRow = screen.getByTestId('verification-request-row');
+    expect(within(requestRow).getByText('Skill details pending')).toBeInTheDocument();
+    expect(within(requestRow).queryByText('Unknown Skill')).not.toBeInTheDocument();
+  });
+
+  it('uses clear competency copy when the response dialog receives an unsupported level', async () => {
+    render(
+      <VerificationsClient
+        incomingRequests={[
+          makeRequest({
+            id: 'incoming-unsupported-competency',
+            skills: {
+              id: 'skill-1',
+              competency_level: 99,
+              name_i18n: { en: 'Proof systems' },
+            },
+          }),
+        ]}
+        sentRequests={[]}
+        userEmail="me@proofound.io"
+      />
+    );
+    await settleAssistiveAiFlag();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm' }));
+
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByText('Proof systems')).toBeInTheDocument();
+    expect(within(dialog).getByText('Level not specified')).toBeInTheDocument();
+    expect(within(dialog).queryByText('Unknown')).not.toBeInTheDocument();
+  });
+
   it('filters verification state buckets and sorts the list by scope', async () => {
     const incomingRequests = [
       makeRequest({
