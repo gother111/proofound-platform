@@ -267,6 +267,7 @@ describe('runtime debug output guardrails', () => {
     expect(sources).toContain('privacy.field_controls.save_failed');
     expect(sources).toContain('proofs.first_proof.upload_failed');
     expect(sources).toContain('proofs.first_proof.submit_failed');
+    expect(sources).toContain('Proof was not saved');
     expect(sources).toContain('profile.avatar.compression_failed');
     expect(sources).toContain('profile.snippet.generate_failed');
     expect(sources).toContain('profile.privacy_summary_flag.load_failed');
@@ -282,6 +283,10 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Failed to save privacy settings:');
     expect(sources).not.toContain('First proof upload failed:');
     expect(sources).not.toContain('First proof submit failed:');
+    expect(sources).not.toContain(
+      "setFormError(error.message || error.error || 'Failed to save proof. Please try again.')"
+    );
+    expect(sources).not.toContain('Failed to save proof. Please try again.');
     expect(sources).not.toContain('Image compression failed:');
     expect(sources).not.toContain('profile.snippet.generate.failed');
     expect(sources).not.toContain('Failed to load privacy summary feature flag');

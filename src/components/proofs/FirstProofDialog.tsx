@@ -55,6 +55,9 @@ const EMPTY_FORM = {
   fileName: '',
 };
 
+const FIRST_PROOF_SAVE_FAILED_MESSAGE =
+  'Proof was not saved. Your proof details are still here; review them and try again.';
+
 function deriveProofTitleFromUrl(rawUrl: string): string {
   try {
     const parsed = new URL(rawUrl);
@@ -220,11 +223,16 @@ export function FirstProofDialog({
         return;
       }
 
-      const error = (await response.json()) as { error?: string; message?: string };
-      setFormError(error.message || error.error || 'Failed to save proof. Please try again.');
+      const error = (await response.json().catch(() => ({}))) as {
+        error?: string;
+        message?: string;
+      };
+      const submitError = new Error(error.message || error.error || 'first proof save failed');
+      dispatchClientErrorDiagnostic('proofs.first_proof.submit_failed', submitError);
+      setFormError(FIRST_PROOF_SAVE_FAILED_MESSAGE);
     } catch (error) {
       dispatchClientErrorDiagnostic('proofs.first_proof.submit_failed', error);
-      setFormError('Failed to save proof. Please try again.');
+      setFormError(FIRST_PROOF_SAVE_FAILED_MESSAGE);
     } finally {
       setSubmitting(false);
     }
@@ -390,7 +398,10 @@ export function FirstProofDialog({
           ) : null}
 
           {formError ? (
-            <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            <p
+              role="alert"
+              className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+            >
               {formError}
             </p>
           ) : null}

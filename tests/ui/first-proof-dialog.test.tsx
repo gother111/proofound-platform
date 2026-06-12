@@ -1,8 +1,22 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { FirstProofDialog } from '@/components/proofs/FirstProofDialog';
+import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+
+vi.mock('@/lib/api/fetch', () => ({
+  apiFetch: vi.fn(),
+}));
+
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientErrorDiagnostic: vi.fn(),
+}));
+
+vi.mock('@/hooks/use-toast', () => ({
+  useToast: () => ({ toast: vi.fn() }),
+}));
 
 vi.mock('@/components/ui/dialog', () => ({
   Dialog: ({ children, open }: any) => (open ? <div role="dialog">{children}</div> : null),
@@ -13,24 +27,31 @@ vi.mock('@/components/ui/dialog', () => ({
   DialogTitle: ({ children }: any) => <h2>{children}</h2>,
 }));
 
+const apiFetchMock = vi.mocked(apiFetch);
+const dispatchClientErrorDiagnosticMock = vi.mocked(dispatchClientErrorDiagnostic);
+
+const firstProofProps = {
+  open: true,
+  onOpenChange: vi.fn(),
+  onProofAdded: vi.fn(),
+  skills: [{ id: 'skill-1', name: 'Systems thinking' }],
+  anchors: [
+    {
+      id: '11111111-1111-4111-8111-111111111111',
+      type: 'experience' as const,
+      label: 'Proof-first launch work',
+      detail: 'Proofound · 2026',
+    },
+  ],
+};
+
 describe('first proof entry point', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('opens the proof artifact dialog instead of the Add Skill to Atlas panel', () => {
-    render(
-      <FirstProofDialog
-        open
-        onOpenChange={vi.fn()}
-        onProofAdded={vi.fn()}
-        skills={[{ id: 'skill-1', name: 'Systems thinking' }]}
-        anchors={[
-          {
-            id: '11111111-1111-4111-8111-111111111111',
-            type: 'experience',
-            label: 'Proof-first launch work',
-            detail: 'Proofound · 2026',
-          },
-        ]}
-      />
-    );
+    render(<FirstProofDialog {...firstProofProps} />);
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Add your first proof' })).toBeInTheDocument();
@@ -43,5 +64,58 @@ describe('first proof entry point', () => {
       screen.getByRole('button', { name: 'Save first proof' }).closest('.overflow-y-auto')
     ).toHaveClass('max-h-[90vh]');
     expect(screen.queryByText('Add Skill to Atlas')).not.toBeInTheDocument();
+  });
+
+  it('keeps failed first proof saves safe, diagnostic, and retryable', async () => {
+    const rawFailure = 'storage policy leaked-ish';
+    const onOpenChange = vi.fn();
+    const onProofAdded = vi.fn();
+    apiFetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({ error: rawFailure }), { status: 500 })
+    );
+
+    render(
+      <FirstProofDialog
+        {...firstProofProps}
+        onOpenChange={onOpenChange}
+        onProofAdded={onProofAdded}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText('Proof title'), {
+      target: { value: 'Launch review artifact' },
+    });
+    fireEvent.change(screen.getByLabelText('Proof link'), {
+      target: { value: 'https://example.com/proofs/launch-review' },
+    });
+    fireEvent.change(screen.getByLabelText('Evidence note'), {
+      target: { value: 'Shows the real review work and outcome.' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save first proof' }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(
+      'Proof was not saved. Your proof details are still here; review them and try again.'
+    );
+    expect(screen.queryByText(rawFailure)).not.toBeInTheDocument();
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'proofs.first_proof.submit_failed',
+      expect.any(Error)
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
+      rawFailure
+    );
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Save first proof' })).toBeEnabled()
+    );
+    expect(screen.getByLabelText('Proof title')).toHaveValue('Launch review artifact');
+    expect(screen.getByLabelText('Proof link')).toHaveValue(
+      'https://example.com/proofs/launch-review'
+    );
+    expect(screen.getByLabelText('Evidence note')).toHaveValue(
+      'Shows the real review work and outcome.'
+    );
+    expect(onProofAdded).not.toHaveBeenCalled();
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
   });
 });
