@@ -325,16 +325,26 @@ Full-time
     fireEvent.click(
       await screen.findByRole('button', { name: /import existing assignment brief/i })
     );
-    fireEvent.change(screen.getByLabelText(/existing assignment brief/i), {
+    const importTextarea = screen.getByLabelText(/existing assignment brief/i);
+    fireEvent.change(importTextarea, {
       target: { value: 'Need a strong operator.' },
     });
     fireEvent.click(screen.getByRole('button', { name: /convert to structured draft/i }));
 
-    expect(
-      await screen.findByText(/too short to turn into a useful assignment draft/i)
-    ).toBeInTheDocument();
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Import needs a fuller brief');
+    expect(alert).toHaveTextContent(/too short to turn into a useful assignment draft/i);
     expect(screen.getByText(/Paste the full assignment brief/i)).toBeInTheDocument();
+    expect(screen.getByText(/Best conversion input includes/i)).toBeInTheDocument();
+    expect(screen.getByText(/Role title and why this assignment matters/i)).toBeInTheDocument();
+    expect(screen.getByText('Proof expectations', { selector: 'li' })).toBeInTheDocument();
     expect(screen.queryByText(/Paste the full job description/i)).not.toBeInTheDocument();
+
+    fireEvent.change(importTextarea, {
+      target: { value: 'Title: Partner launch lead\nOutcomes: Launch three partners.' },
+    });
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   it('advances through the lean corridor and ends in internal review routing', async () => {

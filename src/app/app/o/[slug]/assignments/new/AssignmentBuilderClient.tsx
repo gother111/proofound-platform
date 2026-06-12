@@ -112,6 +112,13 @@ const DRAFT_SAVE_FAILED_MESSAGE =
   'Your changes are still on this page. Retry the draft save before moving on.';
 const REVIEW_SAVE_FAILED_MESSAGE =
   'Your draft is still on this page. Retry before leaving for internal review.';
+const JOB_DESCRIPTION_IMPORT_CHECKLIST = [
+  'Role title and why this assignment matters',
+  'Main workstreams or first outcomes',
+  'Must-have capabilities',
+  'Proof expectations',
+  'Location, hours, compensation, or timing constraints',
+];
 
 function dedupeAssignmentOutcomes(outcomes: AssignmentFormData['outcomes'] = []) {
   const seen = new Set<string>();
@@ -390,6 +397,22 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
     setEntryMode('scratch');
     toast.success('Job description converted into editable assignment fields');
   }, [applyImportedDraft, jobDescriptionSource]);
+
+  const handleJobDescriptionSourceChange = useCallback(
+    (value: string) => {
+      setJobDescriptionSource(value);
+
+      if (jobDescriptionImportError) {
+        setJobDescriptionImportError(null);
+        setJobDescriptionImportGuidance([]);
+      }
+
+      if (importedDraftNotice) {
+        setImportedDraftNotice(null);
+      }
+    },
+    [importedDraftNotice, jobDescriptionImportError]
+  );
 
   const saveOutcomes = useCallback(
     async (targetAssignmentId: string) => {
@@ -847,15 +870,37 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
                     <Textarea
                       id="job-description-import"
                       value={jobDescriptionSource}
-                      onChange={(event) => setJobDescriptionSource(event.target.value)}
+                      onChange={(event) => handleJobDescriptionSourceChange(event.target.value)}
                       className="min-h-[220px]"
                       placeholder="Paste the existing assignment brief here..."
+                      aria-describedby={
+                        jobDescriptionImportError
+                          ? 'job-description-import-help job-description-import-error'
+                          : 'job-description-import-help'
+                      }
                     />
+                    <div
+                      id="job-description-import-help"
+                      className="rounded-md border border-proofound-stone/70 bg-white p-3 text-xs leading-5 text-muted-foreground"
+                    >
+                      <p className="font-medium text-foreground">Best conversion input includes:</p>
+                      <ul className="mt-1 list-disc space-y-1 pl-4">
+                        {JOB_DESCRIPTION_IMPORT_CHECKLIST.map((item) => (
+                          <li key={item}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
                     {jobDescriptionImportError ? (
-                      <div className="flex gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
-                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                      <div
+                        id="job-description-import-error"
+                        role="alert"
+                        aria-live="assertive"
+                        className="flex gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950"
+                      >
+                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
                         <div className="space-y-1">
-                          <p className="font-medium">{jobDescriptionImportError}</p>
+                          <p className="font-medium">Import needs a fuller brief</p>
+                          <p>{jobDescriptionImportError}</p>
                           {jobDescriptionImportGuidance.map((item) => (
                             <p key={item}>{item}</p>
                           ))}
