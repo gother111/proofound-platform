@@ -10,6 +10,7 @@ let mockDraftId: string | null = null;
 const pushMock = vi.fn();
 const toastSuccessMock = vi.fn();
 const toastErrorMock = vi.fn();
+const dispatchClientErrorDiagnosticMock = vi.fn();
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
@@ -26,6 +27,10 @@ vi.mock('sonner', () => ({
     success: (...args: any[]) => toastSuccessMock(...args),
     error: (...args: any[]) => toastErrorMock(...args),
   },
+}));
+
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientErrorDiagnostic: (...args: unknown[]) => dispatchClientErrorDiagnosticMock(...args),
 }));
 
 vi.mock('@/components/matching/assignment-steps', () => ({
@@ -382,7 +387,7 @@ Full-time
     expect(await screen.findByText('Step 2 content')).toBeInTheDocument();
   });
 
-  it('keeps draft save failures visible and retryable without losing the current step', async () => {
+  it('keeps draft save failures safe, visible, and retryable without losing the current step', async () => {
     setupFetch({ failDraftSaveOnce: true });
 
     render(await renderAssignmentBuilderPage());
@@ -391,15 +396,25 @@ Full-time
 
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Draft was not saved');
-    expect(alert).toHaveTextContent('Draft save temporarily unavailable');
+    expect(alert).toHaveTextContent(
+      'Your changes are still on this page. Retry the draft save before moving on.'
+    );
+    expect(alert).not.toHaveTextContent('Draft save temporarily unavailable');
     expect(screen.getByText('Step 1 content')).toBeInTheDocument();
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'assignment_builder.client.draft_save_failed',
+      expect.any(Error)
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
+      'Draft save temporarily unavailable'
+    );
 
     fireEvent.click(within(alert).getByRole('button', { name: 'Retry draft save' }));
 
     expect(await screen.findByText('Step 2 content')).toBeInTheDocument();
   });
 
-  it('keeps review-save failures visible and retryable before routing to review', async () => {
+  it('keeps review-save failures safe, visible, and retryable before routing to review', async () => {
     setupFetch({ failReviewSaveOnce: true });
 
     render(await renderAssignmentBuilderPage());
@@ -417,8 +432,18 @@ Full-time
 
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Assignment was not saved for review');
-    expect(alert).toHaveTextContent('Review save temporarily unavailable');
+    expect(alert).toHaveTextContent(
+      'Your draft is still on this page. Retry before leaving for internal review.'
+    );
+    expect(alert).not.toHaveTextContent('Review save temporarily unavailable');
     expect(pushMock).not.toHaveBeenCalled();
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'assignment_builder.client.review_save_failed',
+      expect.any(Error)
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
+      'Review save temporarily unavailable'
+    );
 
     fireEvent.click(within(alert).getByRole('button', { name: 'Retry review save' }));
 

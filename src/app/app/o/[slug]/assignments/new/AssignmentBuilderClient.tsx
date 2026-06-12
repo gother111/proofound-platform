@@ -108,13 +108,10 @@ type AssignmentBuilderClientProps = {
   slug: string;
 };
 
-function getAssignmentErrorMessage(error: unknown, fallback: string) {
-  if (error instanceof Error && error.message.trim()) {
-    return error.message;
-  }
-
-  return fallback;
-}
+const DRAFT_SAVE_FAILED_MESSAGE =
+  'Your changes are still on this page. Retry the draft save before moving on.';
+const REVIEW_SAVE_FAILED_MESSAGE =
+  'Your draft is still on this page. Retry before leaving for internal review.';
 
 function dedupeAssignmentOutcomes(outcomes: AssignmentFormData['outcomes'] = []) {
   const seen = new Set<string>();
@@ -592,10 +589,7 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
       setWorkflowFeedback({
         kind: 'draft_save',
         title: 'Draft was not saved',
-        message: `${getAssignmentErrorMessage(
-          error,
-          'Failed to save draft'
-        )}. Your changes are still on this page. Retry the draft save before moving on.`,
+        message: DRAFT_SAVE_FAILED_MESSAGE,
         actionLabel: 'Retry draft save',
       });
     } finally {
@@ -629,10 +623,7 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
       setWorkflowFeedback({
         kind: 'review_save',
         title: 'Assignment was not saved for review',
-        message: `${getAssignmentErrorMessage(
-          error,
-          'Failed to save assignment'
-        )}. Your draft is still on this page. Retry before leaving for internal review.`,
+        message: REVIEW_SAVE_FAILED_MESSAGE,
         actionLabel: 'Retry review save',
       });
     } finally {
