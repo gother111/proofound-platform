@@ -23,7 +23,10 @@ import {
 } from '@/lib/matching/review-contract';
 import { buildMatchExplainerContract } from '@/lib/matching/explainer-contract';
 import { isMockSupabaseEnabled, visualFixturesRuntimeAllowed } from '@/lib/env';
-import { buildVisualOrgMatches } from '@/lib/matching/visual-fixtures';
+import {
+  buildVisualIndividualMatches,
+  buildVisualOrgMatches,
+} from '@/lib/matching/visual-fixtures';
 import { log } from '@/lib/log';
 
 const visualAssignmentFixturesEnabled = () =>
@@ -67,6 +70,42 @@ function toProofSignals(subscores: Record<string, unknown> | null | undefined) {
   };
 }
 
+function visualProofSignalLabel(value: unknown) {
+  const normalized = Number(value);
+  if (!Number.isFinite(normalized)) return 'Not available';
+  if (normalized >= 0.85) return 'Strong proof support';
+  if (normalized >= 0.65) return 'Clear support';
+  if (normalized >= 0.4) return 'Needs reviewer judgment';
+  return 'Limited signal';
+}
+
+function visualReasonSections(match: { reasonCodes?: string[]; gaps?: Array<{ id: string }> }) {
+  const sections: Record<string, string[]> = {
+    positive_match: [],
+    constraint_mismatch: [],
+    workflow_decision: ['Blind-by-default review keeps identity details masked until consent.'],
+    fairness: [],
+    manual_override: [],
+  };
+
+  if (match.reasonCodes?.includes('skills_fit_high')) {
+    sections.positive_match.push('Core assignment skills have strong proof-backed support.');
+  }
+  if (match.reasonCodes?.includes('recent_proof')) {
+    sections.positive_match.push('Recent proof signals support the assignment context.');
+  }
+  if (match.reasonCodes?.includes('privacy_ready')) {
+    sections.fairness.push('Privacy gates are ready for proof-first review.');
+  }
+  if (match.gaps && match.gaps.length > 0) {
+    sections.constraint_mismatch.push(
+      `Reviewer judgment needed for: ${match.gaps.map((gap) => gap.id.replace(/-/g, ' ')).join(', ')}.`
+    );
+  }
+
+  return sections;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ matchId: string }> }
@@ -81,6 +120,75 @@ export async function GET(
 
     if (!matchId) {
       return NextResponse.json({ error: 'Match ID required' }, { status: 400 });
+    }
+
+    if (visualAssignmentFixturesEnabled() && matchId.startsWith('visual-individual-match-')) {
+      const mockMatches = buildVisualIndividualMatches();
+      const foundMock = mockMatches.find((match) => match.id === matchId);
+      if (!foundMock) {
+        return NextResponse.json({ error: 'Match not found' }, { status: 404 });
+      }
+
+      const skillsMatch = Object.entries(foundMock.assignment.skills).map(
+        ([skillName, detail]: [string, any]) => {
+          const gap = foundMock.gaps?.find((item: { id: string }) => item.id === skillName);
+          const requiredLevel = gap?.required ?? detail.level ?? 0;
+          const yourLevel = gap?.have ?? detail.level ?? 0;
+
+          return {
+            skillName: skillName.replace(/-/g, ' '),
+            requiredLevel,
+            yourLevel,
+            met: yourLevel >= requiredLevel,
+          };
+        }
+      );
+      const reasonSections = visualReasonSections(foundMock);
+      const hasGaps = foundMock.gaps && foundMock.gaps.length > 0;
+
+      return NextResponse.json({
+        explainer: buildMatchExplainerContract(),
+        matchId: foundMock.id,
+        reasonCodes: foundMock.reasonCodes,
+        generatedAt: new Date().toISOString(),
+        fairness: {
+          status: 'pass',
+          evaluatedAt: new Date().toISOString(),
+          warning: null,
+        },
+        reasonSummary: hasGaps
+          ? ['Relevant proof match with one reviewer judgment point.']
+          : ['Strong proof-backed alignment with the assignment.'],
+        reasonSections,
+        rank: undefined,
+        totalCandidates: mockMatches.length,
+        rankBand: hasGaps ? 'Relevant proof review' : 'High-priority proof review',
+        rankMode: 'band',
+        exactRankAvailable: false,
+        scoreVisibility: 'internal_ordering_only',
+        proofSignals: {
+          skills: visualProofSignalLabel(foundMock.contributions?.skills_fit),
+          constraints: visualProofSignalLabel(foundMock.contributions?.constraints_fit),
+          recency: visualProofSignalLabel(foundMock.contributions?.proof_fit),
+          evidence: visualProofSignalLabel(foundMock.contributions?.proof_fit),
+        },
+        skillsMatch: {
+          required: skillsMatch,
+          nice: [],
+        },
+        constraints: {
+          location: { match: true, details: foundMock.assignment.locationMode },
+          salary: {
+            match: true,
+            details: `${foundMock.assignment.currency} ${foundMock.assignment.compMin}-${foundMock.assignment.compMax}`,
+          },
+          hours: {
+            match: true,
+            details: `${foundMock.assignment.hoursMin}-${foundMock.assignment.hoursMax} hours/week`,
+          },
+          workMode: { match: true, details: foundMock.assignment.workMode },
+        },
+      });
     }
 
     if (visualAssignmentFixturesEnabled() && matchId.startsWith('visual-match-')) {

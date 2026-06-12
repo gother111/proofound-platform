@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 import {
   MATCH_EXPLAINER_DIALOG_DESCRIPTION,
@@ -196,6 +196,64 @@ describe('GET /api/match/explain/[matchId]', () => {
         { code: 'sql', name: 'SQL' },
       ])
       .mockResolvedValueOnce(buildRankRows());
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('serves individual visual fixture explanations without touching the database', async () => {
+    vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'true');
+    vi.stubEnv('PROOFOUND_VISUAL_FIXTURES', 'true');
+
+    const response = await GET(
+      new NextRequest('https://example.com/api/match/explain/visual-individual-match-1'),
+      {
+        params: Promise.resolve({ matchId: 'visual-individual-match-1' }),
+      }
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.matchId).toBe('visual-individual-match-1');
+    expect(body.explainer).toEqual({
+      title: MATCH_EXPLAINER_TITLE,
+      triggerLabel: MATCH_EXPLAINER_TRIGGER_LABEL,
+      triggerAriaLabel: MATCH_EXPLAINER_TRIGGER_ARIA_LABEL,
+      dialogDescription: MATCH_EXPLAINER_DIALOG_DESCRIPTION,
+      testIds: MATCH_EXPLAINER_TEST_IDS,
+    });
+    expect(body.rank).toBeUndefined();
+    expect(body.rankMode).toBe('band');
+    expect(body.exactRankAvailable).toBe(false);
+    expect(body.scoreVisibility).toBe('internal_ordering_only');
+    expect(body.reasonSummary).toContain('Strong proof-backed alignment with the assignment.');
+    expect(body.reasonSections.positive_match).toContain(
+      'Core assignment skills have strong proof-backed support.'
+    );
+    expect(body.proofSignals).toEqual({
+      skills: 'Strong proof support',
+      constraints: 'Clear support',
+      recency: 'Strong proof support',
+      evidence: 'Strong proof support',
+    });
+    expect(body.skillsMatch.required).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          skillName: 'proof systems',
+          requiredLevel: 4,
+          yourLevel: 4,
+          met: true,
+        }),
+      ])
+    );
+    expect(body.constraints).toEqual(
+      expect.objectContaining({
+        location: { match: true, details: 'remote' },
+        workMode: { match: true, details: 'contract' },
+      })
+    );
+    expect(mocks.dbExecute).not.toHaveBeenCalled();
   });
 
   it('suppresses exact rank for reviewers even when rankMode=exact is requested', async () => {
