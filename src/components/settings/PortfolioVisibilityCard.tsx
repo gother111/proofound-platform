@@ -111,6 +111,7 @@ export function PortfolioVisibilityCard() {
       return;
     }
     setSaveFeedback(null);
+    setPreflightMessage(null);
     setFlags((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
@@ -201,6 +202,7 @@ export function PortfolioVisibilityCard() {
               checked={publicPageEnabled}
               onCheckedChange={() => {
                 setSaveFeedback(null);
+                setPreflightMessage(null);
                 setPublicPageEnabled((prev) => !prev);
               }}
             />

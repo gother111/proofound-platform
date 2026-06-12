@@ -287,6 +287,38 @@ describe('PortfolioVisibilityCard AI privacy preflight', () => {
     expect(screen.queryByText(/Visibility saved/i)).not.toBeInTheDocument();
   });
 
+  it('clears stale privacy preflight guidance when visible fields change', async () => {
+    render(<PortfolioVisibilityCard />);
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: /check privacy before publishing/i })
+    );
+
+    expect(
+      await screen.findByText(/No high-risk privacy concerns were found/i)
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('switch', { name: /contact section/i }));
+
+    expect(screen.queryByText(/No high-risk privacy concerns were found/i)).not.toBeInTheDocument();
+  });
+
+  it('clears stale privacy preflight guidance when Public Page access changes', async () => {
+    render(<PortfolioVisibilityCard />);
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: /check privacy before publishing/i })
+    );
+
+    expect(
+      await screen.findByText(/No high-risk privacy concerns were found/i)
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('switch', { name: /public page enabled/i }));
+
+    expect(screen.queryByText(/No high-risk privacy concerns were found/i)).not.toBeInTheDocument();
+  });
+
   it('reports precise high-risk privacy concerns without claiming safety', async () => {
     apiFetchMock.mockResolvedValueOnce({
       ok: true,
