@@ -81,6 +81,42 @@ describe('OrganizationSetup portfolio link feedback', () => {
     await screen.findByText('Organization link ready');
   }
 
+  it('keeps a failed existing-organization check visible and retryable', async () => {
+    const membershipQuery = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockRejectedValue(new Error('membership lookup failed')),
+    };
+
+    createClientMock.mockReturnValueOnce({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null }),
+      },
+      from: vi.fn().mockReturnValue(membershipQuery),
+    });
+
+    render(<OrganizationSetup />);
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Checking organization access...');
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(
+      'We could not confirm whether your account already belongs to an organization.'
+    );
+    expect(alert).toHaveTextContent('Retry this check before creating a new organization');
+    expect(screen.getByRole('button', { name: /create organization/i })).toBeEnabled();
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'onboarding.organization.existing_check_failed',
+      expect.any(Error)
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /retry organization check/i }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
+    expect(screen.getByRole('button', { name: /create organization/i })).toBeEnabled();
+  });
+
   it('shows returned organization creation errors as a retryable alert', async () => {
     completeOrganizationOnboardingMock.mockResolvedValueOnce({
       error: 'Organization slug already taken. Please choose another.',

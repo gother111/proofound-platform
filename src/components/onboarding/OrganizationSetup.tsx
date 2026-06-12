@@ -1,6 +1,6 @@
 'use client';
 
-import { type FormEvent, useEffect, useState } from 'react';
+import { type FormEvent, useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { completeOrganizationOnboarding } from '@/actions/onboarding';
 import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { createClient } from '@/lib/supabase/client';
-import { CheckCircle, Copy, ExternalLink } from 'lucide-react';
+import { AlertCircle, CheckCircle, Copy, ExternalLink } from 'lucide-react';
 
 type CopyFeedback = {
   kind: 'success' | 'error';
@@ -18,6 +18,8 @@ type CopyFeedback = {
 
 const ORGANIZATION_SETUP_RETRY_MESSAGE =
   'Organization setup could not be saved. Your details are still here; please try again.';
+const ORGANIZATION_EXISTING_CHECK_FAILED_MESSAGE =
+  'We could not confirm whether your account already belongs to an organization. Retry this check before creating a new organization if you expected an existing workspace.';
 
 const ORGANIZATION_SETUP_SAFE_ACTION_ERRORS = new Set([
   'Organization name, slug, and type are required',
@@ -38,10 +40,11 @@ function organizationSetupActionErrorMessage(message: string) {
 }
 
 export function OrganizationSetup() {
-  const router = useRouter();
+  const { push } = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [checkingExisting, setCheckingExisting] = useState(true);
+  const [existingCheckError, setExistingCheckError] = useState<string | null>(null);
   const [success, setSuccess] = useState<{
     orgName: string;
     orgSlug: string;
@@ -50,55 +53,61 @@ export function OrganizationSetup() {
   const [copied, setCopied] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState<CopyFeedback | null>(null);
 
-  // Check if user already has an organization on mount
-  useEffect(() => {
-    async function checkExistingOrg() {
-      try {
-        const supabase = createClient();
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
+  const checkExistingOrg = useCallback(async () => {
+    try {
+      setCheckingExisting(true);
+      setExistingCheckError(null);
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-        if (!user) {
-          setCheckingExisting(false);
+      if (!user) {
+        return;
+      }
+
+      const { data: existingMemberships } = await supabase
+        .from('organization_members')
+        .select('org_id')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .limit(1);
+
+      if (existingMemberships && existingMemberships.length > 0) {
+        const { data: orgData } = await supabase
+          .from('organizations')
+          .select('slug')
+          .eq('id', existingMemberships[0].org_id)
+          .single();
+
+        if (orgData?.slug) {
+          push(`/app/o/${orgData.slug}/home`);
           return;
         }
-
-        const { data: existingMemberships } = await supabase
-          .from('organization_members')
-          .select('org_id')
-          .eq('user_id', user.id)
-          .eq('status', 'active')
-          .limit(1);
-
-        if (existingMemberships && existingMemberships.length > 0) {
-          const { data: orgData } = await supabase
-            .from('organizations')
-            .select('slug')
-            .eq('id', existingMemberships[0].org_id)
-            .single();
-
-          if (orgData?.slug) {
-            router.push(`/app/o/${orgData.slug}/home`);
-            return;
-          }
-        }
-      } catch (err) {
-        dispatchClientErrorDiagnostic('onboarding.organization.existing_check_failed', err);
-      } finally {
-        setCheckingExisting(false);
       }
+    } catch (err) {
+      dispatchClientErrorDiagnostic('onboarding.organization.existing_check_failed', err);
+      setExistingCheckError(ORGANIZATION_EXISTING_CHECK_FAILED_MESSAGE);
+    } finally {
+      setCheckingExisting(false);
     }
+  }, [push]);
 
-    checkExistingOrg();
-  }, [router]);
+  // Check if user already has an organization on mount
+  useEffect(() => {
+    void checkExistingOrg();
+  }, [checkExistingOrg]);
 
   if (checkingExisting) {
     return (
       <Card className="max-w-2xl mx-auto border-proofound-stone dark:border-border rounded-2xl">
         <CardContent className="py-8 text-center">
-          <div className="animate-pulse text-proofound-charcoal/70 dark:text-muted-foreground">
-            Loading...
+          <div
+            className="animate-pulse text-proofound-charcoal/70 dark:text-muted-foreground"
+            role="status"
+            aria-live="polite"
+          >
+            Checking organization access...
           </div>
         </CardContent>
       </Card>
@@ -226,7 +235,7 @@ export function OrganizationSetup() {
               </Button>
               <Button
                 type="button"
-                onClick={() => router.push(`/app/o/${success.orgSlug}/assignments/new`)}
+                onClick={() => push(`/app/o/${success.orgSlug}/assignments/new`)}
                 className="w-full sm:w-auto"
               >
                 Create first assignment
@@ -250,6 +259,29 @@ export function OrganizationSetup() {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
+          {existingCheckError ? (
+            <div
+              className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950"
+              role="alert"
+            >
+              <div className="flex gap-3">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                <div className="space-y-3">
+                  <p>{existingCheckError}</p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void checkExistingOrg()}
+                    className="min-h-10 bg-white/80"
+                  >
+                    Retry organization check
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
           <div>
             <Label htmlFor="displayName" className="text-proofound-charcoal dark:text-foreground">
               Organization Name *
