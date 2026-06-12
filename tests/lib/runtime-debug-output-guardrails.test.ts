@@ -1294,28 +1294,36 @@ describe('runtime debug output guardrails', () => {
   });
 
   it('keeps matching client failures on client diagnostics without console output', () => {
-    const source = readSource('src/app/app/i/matching/MatchingClient.tsx');
+    const sources = [
+      readSource('src/app/app/i/matching/MatchingClient.tsx'),
+      readSource('src/components/matching/MatchingProfileSetup.tsx'),
+    ].join('\n');
 
-    expect(source).toContain(
+    expect(sources).toContain(
       "import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics'"
     );
-    expect(source).toContain('matching.client.profile_load_failed');
-    expect(source).toContain('matching.client.matches_load_failed');
-    expect(source).toContain('matching.client.load_timeout');
-    expect(source).toContain('matching.client.load_failed');
-    expect(source).toContain('matching.client.restore_refresh_failed');
-    expect(source).toContain('matching.client.hide_failed');
-    expect(source).toContain(
+    expect(sources).toContain('matching.client.profile_load_failed');
+    expect(sources).toContain('matching.client.matches_load_failed');
+    expect(sources).toContain('matching.client.load_timeout');
+    expect(sources).toContain('matching.client.load_failed');
+    expect(sources).toContain('matching.client.restore_refresh_failed');
+    expect(sources).toContain('matching.client.hide_failed');
+    expect(sources).toContain('matching.profile_setup.save_failed');
+    expect(sources).toContain('Matching profile was not saved');
+    expect(sources).toContain('Your preferences are still here');
+    expect(sources).toContain(
       'Matching could not load. Your profile, proof records, and paused or hidden choices are still safe; retry this section before acting on assignment reviews.'
     );
-    expect(source).not.toContain('Failed to load matching profile');
-    expect(source).not.toContain('Failed to load matches');
-    expect(source).not.toContain('Failed to load matching profile:');
-    expect(source).not.toContain('Failed to load matches:');
-    expect(source).not.toContain('Matching data request timed out');
-    expect(source).not.toContain('Error loading matching data:');
-    expect(source).not.toContain('Failed to refresh matches after restore:');
-    expect(source).not.toContain('Failed to hide match:');
+    expect(sources).not.toContain('Failed to load matching profile');
+    expect(sources).not.toContain('Failed to load matches');
+    expect(sources).not.toContain('Failed to load matching profile:');
+    expect(sources).not.toContain('Failed to load matches:');
+    expect(sources).not.toContain('Failed to save matching profile');
+    expect(sources).not.toContain('Matching data request timed out');
+    expect(sources).not.toContain('Error loading matching data:');
+    expect(sources).not.toContain('Failed to refresh matches after restore:');
+    expect(sources).not.toContain('Failed to hide match:');
+    expect(sources).not.toContain('toast.error(errorMessage)');
   });
 
   it('keeps matching interaction failures on client diagnostics without console output', () => {

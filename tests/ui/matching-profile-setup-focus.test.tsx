@@ -4,7 +4,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { MatchingProfileSetup } from '@/components/matching/MatchingProfileSetup';
 
-const apiFetchMock = vi.fn();
+const { apiFetchMock, dispatchClientErrorDiagnosticMock, toastErrorMock, toastSuccessMock } =
+  vi.hoisted(() => ({
+    apiFetchMock: vi.fn(),
+    dispatchClientErrorDiagnosticMock: vi.fn(),
+    toastErrorMock: vi.fn(),
+    toastSuccessMock: vi.fn(),
+  }));
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
@@ -16,10 +22,14 @@ vi.mock('@/lib/api/fetch', () => ({
   apiFetch: (...args: any[]) => apiFetchMock(...args),
 }));
 
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientErrorDiagnostic: (...args: unknown[]) => dispatchClientErrorDiagnosticMock(...args),
+}));
+
 vi.mock('sonner', () => ({
   toast: {
-    success: vi.fn(),
-    error: vi.fn(),
+    success: toastSuccessMock,
+    error: toastErrorMock,
   },
 }));
 
@@ -194,5 +204,56 @@ describe('MatchingProfileSetup single-page form', () => {
     expect(
       screen.queryByRole('button', { name: /save .* continue later/i })
     ).not.toBeInTheDocument();
+  });
+
+  it('keeps failed matching profile saves safe, diagnostic, and retryable', async () => {
+    const rawFailure = 'database matching profile leaked-ish';
+    apiFetchMock.mockImplementation(async (url: string, options?: any) => {
+      if (url === '/api/matching-profile' && options?.method === 'PUT') {
+        return {
+          ok: false,
+          status: 500,
+          json: async () => ({ message: rawFailure }),
+        };
+      }
+
+      return { ok: true, json: async () => ({}) };
+    });
+
+    const onComplete = vi.fn();
+    render(<MatchingProfileSetup onComplete={onComplete} onCancel={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'set focus' }));
+    fireEvent.change(screen.getByLabelText('Minimum desired'), { target: { value: '24' } });
+    fireEvent.change(screen.getByLabelText('Maximum desired'), { target: { value: '32' } });
+    fireEvent.change(screen.getByLabelText('Engagement preference'), {
+      target: { value: 'contract_consulting' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /save and continue/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Matching profile was not saved');
+    expect(alert).toHaveTextContent('Your preferences are still here');
+    expect(document.body.textContent ?? '').not.toContain(rawFailure);
+    expect(toastErrorMock).toHaveBeenCalledWith(
+      'Matching profile was not saved. Your preferences are still here; please review and try again.'
+    );
+    expect(JSON.stringify(toastErrorMock.mock.calls)).not.toContain(rawFailure);
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'matching.profile_setup.save_failed',
+      expect.any(Error)
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
+      rawFailure
+    );
+    expect(onComplete).not.toHaveBeenCalled();
+    expect(toastSuccessMock).not.toHaveBeenCalled();
+    expect(screen.getByLabelText('Minimum desired')).toHaveValue(24);
+    expect(screen.getByLabelText('Maximum desired')).toHaveValue(32);
+    expect(screen.getByLabelText('Engagement preference')).toHaveValue('contract_consulting');
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /save and continue/i })).toBeEnabled()
+    );
   });
 });
