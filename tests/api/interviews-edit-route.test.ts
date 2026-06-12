@@ -346,6 +346,7 @@ describe('POST /api/interviews/edit', () => {
 
     expect(response.status).toBe(400);
     expect(body.error).toContain('Maximum 1 reschedule');
+    expect(body.error).not.toContain('PRD');
     expect(update).not.toHaveBeenCalled();
     expect(recordInterviewRescheduleAudit).not.toHaveBeenCalled();
   });

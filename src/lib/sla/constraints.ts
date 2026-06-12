@@ -52,7 +52,7 @@ export function validateInterviewSchedule(
   // Check duration (must be ≤ 30 minutes)
   if (duration > INTERVIEW_CONSTRAINTS.MAX_DURATION_MINUTES) {
     errors.push(
-      `Interview duration cannot exceed ${INTERVIEW_CONSTRAINTS.MAX_DURATION_MINUTES} minutes (PRD I-21)`
+      `Interview duration cannot exceed ${INTERVIEW_CONSTRAINTS.MAX_DURATION_MINUTES} minutes`
     );
   }
 
@@ -67,7 +67,7 @@ export function validateInterviewSchedule(
 
   if (daysSinceMatch > INTERVIEW_CONSTRAINTS.MAX_DAYS_FROM_MATCH) {
     errors.push(
-      `Interview must be scheduled within ${INTERVIEW_CONSTRAINTS.MAX_DAYS_FROM_MATCH} days of match agreement (currently ${daysSinceMatch} days) (PRD I-21)`
+      `Interview must be scheduled within ${INTERVIEW_CONSTRAINTS.MAX_DAYS_FROM_MATCH} days of match agreement; this time is ${daysSinceMatch} days after agreement`
     );
   }
 
@@ -98,7 +98,7 @@ export function canReschedule(rescheduleCount: number): SLAValidation {
     return {
       valid: false,
       errors: [
-        `Maximum ${INTERVIEW_CONSTRAINTS.ALLOWED_RESCHEDULES} reschedule(s) allowed (PRD I-21)`,
+        `Maximum ${INTERVIEW_CONSTRAINTS.ALLOWED_RESCHEDULES} reschedule allowed. This interview has already used its reschedule.`,
       ],
     };
   }
@@ -119,7 +119,7 @@ export function validateDecisionWindow(interviewCompletedAt: Date): SLAValidatio
     return {
       valid: false,
       errors: [
-        `Decision window expired. Decisions must be made within ${DECISION_CONSTRAINTS.WINDOW_HOURS} hours of interview completion (PRD I-22)`,
+        `Decision window expired. Decisions must be made within ${DECISION_CONSTRAINTS.WINDOW_HOURS} hours of interview completion.`,
       ],
     };
   }
@@ -148,7 +148,7 @@ export function validateMatchReviewWindow(matchCreatedAt: Date): SLAValidation {
     return {
       valid: false,
       errors: [
-        `Match review window expired. Matches should be reviewed within ${MATCHING_CONSTRAINTS.REVIEW_WINDOW_HOURS} hours (PRD I-23)`,
+        `Match review window expired. Matches should be reviewed within ${MATCHING_CONSTRAINTS.REVIEW_WINDOW_HOURS} hours.`,
       ],
     };
   }
