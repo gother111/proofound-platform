@@ -219,6 +219,8 @@ describe('runtime debug output guardrails', () => {
     expect(sources).toContain('tour.joyride_error');
     expect(sources).toContain('settings.user_email.fetch_failed');
     expect(sources).toContain('settings.tour_reset_failed');
+    expect(sources).toContain('Tour could not restart');
+    expect(sources).toContain('Your account settings were not changed');
     expect(sources).toContain('settings.work_email.organizations_fetch_failed');
     expect(sources).toContain('settings.verification_status.load_failed');
     expect(sources).toContain('Verification status could not load');
@@ -241,6 +243,8 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Failed to fetch user email:');
     expect(sources).not.toContain('Tour reset error:');
     expect(sources).not.toContain('Failed to reset tour:');
+    expect(sources).not.toContain('settings.tour_reset_unexpected_failed');
+    expect(sources).not.toContain('toast.error(errorMessage)');
     expect(sources).not.toContain('Error fetching organizations:');
     expect(sources).not.toContain('Check your browser console');
     expect(sources).not.toContain('Failed to fetch verification status');

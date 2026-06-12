@@ -1,7 +1,15 @@
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { SettingsContent } from '@/components/settings/SettingsContent';
+
+const { dispatchClientErrorDiagnosticMock, resetTourMock, toastErrorMock, toastSuccessMock } =
+  vi.hoisted(() => ({
+    dispatchClientErrorDiagnosticMock: vi.fn(),
+    resetTourMock: vi.fn(async () => ({ success: true })),
+    toastErrorMock: vi.fn(),
+    toastSuccessMock: vi.fn(),
+  }));
 
 const pushMock = vi.fn();
 const refreshMock = vi.fn();
@@ -17,14 +25,18 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('@/actions/tour', () => ({
-  resetTour: vi.fn(async () => ({ success: true })),
+  resetTour: resetTourMock,
 }));
 
 vi.mock('sonner', () => ({
   toast: {
-    success: vi.fn(),
-    error: vi.fn(),
+    success: toastSuccessMock,
+    error: toastErrorMock,
   },
+}));
+
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientErrorDiagnostic: (...args: unknown[]) => dispatchClientErrorDiagnosticMock(...args),
 }));
 
 vi.mock('@/components/settings/VerificationStatus', () => ({
@@ -49,6 +61,8 @@ vi.mock('@/components/settings/PortfolioVisibilityCard', () => ({
 
 describe('Settings mobile tab targets', () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+    resetTourMock.mockResolvedValue({ success: true });
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => ({
@@ -72,5 +86,35 @@ describe('Settings mobile tab targets', () => {
     expect(accountTab).toHaveClass('min-h-11');
     expect(interviewsTab).toHaveClass('min-h-11');
     expect(privacyTab).toHaveClass('min-h-11');
+  });
+
+  it('keeps failed tour resets safe, diagnostic, and retryable', async () => {
+    const rawFailure = 'database tour reset leaked-ish';
+    resetTourMock.mockResolvedValueOnce({ success: false, error: rawFailure });
+
+    render(<SettingsContent userId="user-1" />);
+
+    const restartButton = await screen.findByRole('button', { name: /restart tour/i });
+    fireEvent.click(restartButton);
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Tour could not restart');
+    expect(alert).toHaveTextContent('Your account settings were not changed');
+    expect(document.body.textContent ?? '').not.toContain(rawFailure);
+    expect(toastErrorMock).toHaveBeenCalledWith(
+      'Tour could not restart. Your account settings were not changed; please try again.'
+    );
+    expect(JSON.stringify(toastErrorMock.mock.calls)).not.toContain(rawFailure);
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'settings.tour_reset_failed',
+      expect.any(Error)
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
+      rawFailure
+    );
+    expect(toastSuccessMock).not.toHaveBeenCalled();
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /restart tour/i })).toBeEnabled()
+    );
   });
 });

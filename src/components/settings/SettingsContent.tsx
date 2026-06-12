@@ -9,10 +9,10 @@ import { VerificationStatus } from './VerificationStatus';
 import { EmailManager } from './EmailManager';
 import { PasswordChangeForm } from './PasswordChangeForm';
 import { resetTour } from '@/actions/tour';
-import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
-import { RotateCcw, Loader2, Calendar, Shield } from 'lucide-react';
+import { AlertCircle, RotateCcw, Loader2, Calendar, Shield } from 'lucide-react';
 import { PortfolioVisibilityCard } from './PortfolioVisibilityCard';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 
@@ -23,9 +23,13 @@ interface SettingsContentProps {
 const ALLOWED_TABS = ['account', 'interviews', 'privacy'] as const;
 type AllowedTab = (typeof ALLOWED_TABS)[number];
 
+const TOUR_RESET_FAILED_MESSAGE =
+  'Tour could not restart. Your account settings were not changed; please try again.';
+
 export function SettingsContent({ userId }: SettingsContentProps) {
   const [activeTab, setActiveTab] = useState('account');
   const [isResettingTour, setIsResettingTour] = useState(false);
+  const [tourResetError, setTourResetError] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [isLoadingEmail, setIsLoadingEmail] = useState(true);
   const router = useRouter();
@@ -59,9 +63,11 @@ export function SettingsContent({ userId }: SettingsContentProps) {
 
   const handleRestartTour = async () => {
     setIsResettingTour(true);
+    setTourResetError(null);
     try {
       const result = await resetTour();
       if (result.success) {
+        setTourResetError(null);
         toast.success('Tour reset successfully!', {
           description: 'Redirecting to overview to start the tour...',
         });
@@ -71,19 +77,18 @@ export function SettingsContent({ userId }: SettingsContentProps) {
           router.refresh();
         }, 1000);
       } else {
-        const errorMessage = result.error || 'Failed to reset tour. Please try again.';
-        dispatchClientDiagnostic('settings.tour_reset_failed', {
-          error: errorMessage,
-        });
-        toast.error(errorMessage);
+        dispatchClientErrorDiagnostic(
+          'settings.tour_reset_failed',
+          new Error(result.error || 'Tour reset failed')
+        );
+        setTourResetError(TOUR_RESET_FAILED_MESSAGE);
+        toast.error(TOUR_RESET_FAILED_MESSAGE);
         setIsResettingTour(false);
       }
     } catch (error) {
-      dispatchClientErrorDiagnostic('settings.tour_reset_unexpected_failed', error);
-      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
-      toast.error('Failed to reset tour', {
-        description: errorMessage,
-      });
+      dispatchClientErrorDiagnostic('settings.tour_reset_failed', error);
+      setTourResetError(TOUR_RESET_FAILED_MESSAGE);
+      toast.error(TOUR_RESET_FAILED_MESSAGE);
       setIsResettingTour(false);
     }
   };
@@ -226,6 +231,15 @@ export function SettingsContent({ userId }: SettingsContentProps) {
                   <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground mb-3">
                     Want a refresher? Restart the guided tour to learn about key features again.
                   </p>
+                  {tourResetError ? (
+                    <div
+                      role="alert"
+                      className="mb-3 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
+                    >
+                      <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                      <p>{tourResetError}</p>
+                    </div>
+                  ) : null}
                   <Button
                     variant="outline"
                     onClick={handleRestartTour}
