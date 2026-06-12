@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { apiFetch } from '@/lib/api/fetch';
 import { useAssistiveAiFlag } from '@/hooks/useAssistiveAiFlag';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 type AssignmentClaritySuggestion = {
   suggestionId?: string | null;
@@ -65,6 +66,10 @@ const FORM_FIELD_BY_REWRITE_FIELD: Record<EditableField, string> = {
   outcomeSummary: 'description',
   proofExpectations: 'expectedImpact',
 };
+
+const ASSIGNMENT_CLARITY_MANUAL_RETRY_REASON =
+  'Guided suggestions could not load; manual editing still works.';
+const ASSIGNMENT_CLARITY_SAVE_DRAFT_MESSAGE = 'Save a draft before clarifying this assignment.';
 
 function buildOutcomeSummary(outcomes: any[] = []) {
   return outcomes
@@ -182,8 +187,22 @@ export function AssignmentClarityAssistant({
     setIsClarifying(true);
     setAcceptedFields(new Set());
     setDismissedFields(new Set());
+    let latestValues: any | null = null;
+
+    const showManualChecklist = (values: any, reason = ASSIGNMENT_CLARITY_MANUAL_RETRY_REASON) => {
+      const payload = buildManualAssignmentClaritySuggestion(values, reason);
+      setSuggestion(payload);
+      setDraft({
+        title: payload.suggestedRewrite.title || '',
+        rolePurpose: payload.suggestedRewrite.rolePurpose || '',
+        outcomeSummary: payload.suggestedRewrite.outcomeSummary || '',
+        proofExpectations: payload.suggestedRewrite.proofExpectations || '',
+      });
+    };
 
     try {
+      const values = form.getValues();
+      latestValues = values;
       const persisted = assignmentId
         ? { assignmentId, orgId }
         : onEnsureDraft
@@ -191,10 +210,9 @@ export function AssignmentClarityAssistant({
           : null;
 
       if (!persisted?.assignmentId) {
-        throw new Error('Save a draft before clarifying this assignment.');
+        throw new Error(ASSIGNMENT_CLARITY_SAVE_DRAFT_MESSAGE);
       }
 
-      const values = form.getValues();
       const outcomeSummary = [values.description, buildOutcomeSummary(values.outcomes || [])]
         .filter(Boolean)
         .join('\n');
@@ -235,20 +253,15 @@ export function AssignmentClarityAssistant({
           fallbackAvailable?: boolean;
         };
         if (errorData.fallbackAvailable) {
-          const payload = buildManualAssignmentClaritySuggestion(
+          showManualChecklist(
             values,
             'AI suggestions are temporarily unavailable; manual editing still works.'
           );
-          setSuggestion(payload);
-          setDraft({
-            title: payload.suggestedRewrite.title || '',
-            rolePurpose: payload.suggestedRewrite.rolePurpose || '',
-            outcomeSummary: payload.suggestedRewrite.outcomeSummary || '',
-            proofExpectations: payload.suggestedRewrite.proofExpectations || '',
-          });
           return;
         }
-        throw new Error(errorData.message || errorData.error || 'Assignment clarity failed.');
+        throw new Error(
+          errorData.message || errorData.error || 'assignment_clarity_request_failed'
+        );
       }
 
       const payload = (await response.json()) as AssignmentClaritySuggestion;
@@ -260,7 +273,15 @@ export function AssignmentClarityAssistant({
         proofExpectations: payload.suggestedRewrite.proofExpectations || '',
       });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Assignment clarity failed.');
+      if (error instanceof Error && error.message === ASSIGNMENT_CLARITY_SAVE_DRAFT_MESSAGE) {
+        toast.error(ASSIGNMENT_CLARITY_SAVE_DRAFT_MESSAGE);
+      } else if (latestValues) {
+        dispatchClientErrorDiagnostic('assignments.clarity_assistant.request_failed', error);
+        showManualChecklist(latestValues);
+        toast.error('Guided suggestions could not load. Manual checklist is ready.');
+      } else {
+        toast.error(ASSIGNMENT_CLARITY_SAVE_DRAFT_MESSAGE);
+      }
     } finally {
       setIsClarifying(false);
     }

@@ -34,10 +34,16 @@ describe('runtime debug output guardrails', () => {
   });
 
   it('keeps assignment clarity on the authorized deterministic fallback path', () => {
-    const source = readSource('src/app/api/ai/assignments/clarify/route.ts');
+    const source = [
+      readSource('src/app/api/ai/assignments/clarify/route.ts'),
+      readSource('src/components/assignments/AssignmentClarityAssistant.tsx'),
+    ].join('\n');
 
+    expect(source).toContain('assignments.clarity_assistant.request_failed');
+    expect(source).toContain('Guided suggestions could not load; manual editing still works.');
     expect(source).not.toContain('mock-assignment-clarity');
     expect(source).not.toContain('isMockSupabaseEnabled');
+    expect(source).not.toContain('Assignment clarity failed.');
   });
 
   it('keeps verification composer on the owned Proof Pack composer path', () => {
