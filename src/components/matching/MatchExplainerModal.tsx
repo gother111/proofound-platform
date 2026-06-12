@@ -98,6 +98,7 @@ interface MatchExplainerProps {
   };
 
   trigger?: React.ReactNode;
+  defaultOpen?: boolean;
 }
 
 function fitBandLabel(label?: string | null): string {
@@ -131,8 +132,9 @@ export function MatchExplainerModal({
   fairnessWarning,
   reviewCard,
   trigger,
+  defaultOpen = false,
 }: MatchExplainerProps) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const explainerContract = buildMatchExplainerContract();
   const fitBand = fitBandLabel(reviewCard?.fitBand ?? rankBand);
   const warning = privacySafeWarning(fairnessWarning);

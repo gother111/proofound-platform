@@ -29,10 +29,17 @@ vi.mock('framer-motion', () => ({
 
 vi.mock('@/components/matching/MatchExplainerModal', () => ({
   MatchExplainerModal: ({
+    defaultOpen,
     reviewCard,
   }: {
+    defaultOpen?: boolean;
     reviewCard?: { fitSummary?: { headline?: string } };
-  }) => <div>{reviewCard?.fitSummary?.headline ?? 'Match explainer modal'}</div>,
+  }) => (
+    <div>
+      {defaultOpen ? 'Match explainer opened from first click' : 'Match explainer modal'}
+      {reviewCard?.fitSummary?.headline ? <span>{reviewCard.fitSummary.headline}</span> : null}
+    </div>
+  ),
 }));
 
 vi.mock('@/components/matching/SnoozeDialog', () => ({
@@ -297,6 +304,57 @@ describe('MatchResultCard', () => {
     expect(
       await screen.findByText('Strong proof signals align with this assignment review.')
     ).toBeInTheDocument();
+  });
+
+  it('opens the proof explainer from the first successful click', async () => {
+    apiFetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        matchId: 'match-first-click',
+        reviewCard: {
+          candidateLabel: 'Proof operations lead',
+          strongestProof: {
+            summary:
+              'A recent Proof Pack shows structured proof operations work for a privacy-safe assignment review.',
+            outcome:
+              'Reviewer-facing proof, constraints, and privacy gates stay inspectable before reveal.',
+            ownership: 'Proof-review participant owned the supporting work.',
+            anchorContext: 'Proof Pack evidence',
+            freshnessLabel: 'Recent proof signal',
+          },
+          verification: {
+            summaryLabel: 'Privacy-ready proof signals present',
+            count: 2,
+          },
+          trustLabels: ['Blind by default', 'Privacy ready'],
+          fitBand: 'High-priority proof review',
+          fitSummary: {
+            headline: 'Strong proof signals align with this assignment review.',
+            bullets: ['Core assignment skills have proof-backed support.'],
+            reasonCodes: ['skills_fit_high'],
+          },
+        },
+      }),
+    } as any);
+
+    render(
+      <MatchResultCard
+        result={{
+          id: 'match-first-click',
+          assignmentId: 'assignment-first-click',
+          assignment: {
+            role: 'Proof operations lead',
+          },
+          proofSignals: [{ key: 'proof_fit', support: 'Primary reason' }],
+        }}
+        variant="blind"
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: MATCH_EXPLAINER_TRIGGER_LABEL }));
+
+    expect(await screen.findByText('Match explainer opened from first click')).toBeInTheDocument();
+    expect(apiFetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('shows fallback explanation signals when org match review bullets are sparse', () => {

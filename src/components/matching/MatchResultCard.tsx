@@ -159,6 +159,7 @@ export function MatchResultCard({
   const [matchExplanation, setMatchExplanation] = useState<any>(null);
   const [isLoadingExplanation, setIsLoadingExplanation] = useState(false);
   const [explanationError, setExplanationError] = useState<string | null>(null);
+  const [openExplanationWhenReady, setOpenExplanationWhenReady] = useState(false);
   const [isSnoozeDialogOpen, setIsSnoozeDialogOpen] = useState(false);
   const [showGatesWarning, setShowGatesWarning] = useState(false);
   const [gateCheckResult, setGateCheckResult] = useState<any>(null);
@@ -242,6 +243,7 @@ export function MatchResultCard({
 
     setIsLoadingExplanation(true);
     setExplanationError(null);
+    setOpenExplanationWhenReady(true);
     try {
       const response = await apiFetch(`/api/match/explain/${result.id}`);
       if (!response.ok) {
@@ -253,6 +255,7 @@ export function MatchResultCard({
     } catch (error) {
       dispatchClientErrorDiagnostic('matching.result_card.explanation_fetch_failed', error);
       setExplanationError(MATCH_EXPLAINER_ERROR_MESSAGE);
+      setOpenExplanationWhenReady(false);
     } finally {
       setIsLoadingExplanation(false);
     }
@@ -418,6 +421,7 @@ export function MatchResultCard({
                   skillsMatch={matchExplanation.skillsMatch}
                   constraints={matchExplanation.constraints}
                   reviewCard={matchExplanation.reviewCard}
+                  defaultOpen={openExplanationWhenReady}
                 />
               ) : matchExplanation ? (
                 <Button
@@ -605,6 +609,7 @@ export function MatchResultCard({
                       skillsMatch={matchExplanation.skillsMatch}
                       constraints={matchExplanation.constraints}
                       reviewCard={matchExplanation.reviewCard}
+                      defaultOpen={openExplanationWhenReady}
                     />
                   </>
                 ) : matchExplanation ? (
