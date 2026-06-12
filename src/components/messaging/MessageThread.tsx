@@ -27,6 +27,7 @@ import {
   getConversationParticipantInitials,
   getConversationParticipantLabel,
 } from '@/lib/messaging/participant-label';
+import { getMessageSendErrorCopy } from '@/lib/messaging/send-errors';
 
 export interface Message {
   id: string;
@@ -121,11 +122,7 @@ export function MessageThread({
       await onSendMessage(trimmedText);
       setMessageText('');
     } catch (error) {
-      setSendError(
-        error instanceof Error && error.message
-          ? error.message
-          : 'Message could not be sent. Please try again.'
-      );
+      setSendError(getMessageSendErrorCopy(error));
     } finally {
       setIsSending(false);
     }

@@ -19,6 +19,7 @@ import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { CheckCheck, Check, Mail, Phone, Link2, Lock } from 'lucide-react';
 import { apiFetch } from '@/lib/api/fetch';
+import { createMessageSendRetryError } from '@/lib/messaging/send-errors';
 
 interface Message {
   id: string;
@@ -139,7 +140,7 @@ export function ConversationView({ conversationId }: ConversationViewProps) {
       }
 
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to send message');
+        throw createMessageSendRetryError();
       }
 
       // Add message to list

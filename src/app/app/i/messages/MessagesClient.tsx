@@ -21,6 +21,7 @@ import LoadingIndividualMessages from './loading';
 import { apiFetch } from '@/lib/api/fetch';
 import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { getConversationParticipantLabel } from '@/lib/messaging/participant-label';
+import { createMessageSendRetryError } from '@/lib/messaging/send-errors';
 
 function MessagesPageContent() {
   const searchParams = useSearchParams();
@@ -176,7 +177,9 @@ function MessagesPageContent() {
       if (!response.ok) {
         const data = await response.json().catch(() => null);
         throw new Error(
-          typeof data?.message === 'string' ? data.message : data?.error || 'Failed to send message'
+          typeof data?.message === 'string'
+            ? data.message
+            : data?.error || 'Message send request failed'
         );
       }
 
@@ -196,7 +199,7 @@ function MessagesPageContent() {
       }
     } catch (error) {
       dispatchClientErrorDiagnostic('messages.individual.send_failed', error);
-      throw error;
+      throw createMessageSendRetryError();
     }
   };
 

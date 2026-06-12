@@ -129,7 +129,10 @@ describe('MessageThread', () => {
 
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Message not sent');
-    expect(alert).toHaveTextContent('The message service is unavailable.');
+    expect(alert).toHaveTextContent(
+      'Message could not be sent. Your draft is still here; please try again.'
+    );
+    expect(alert).not.toHaveTextContent('The message service is unavailable.');
     expect(
       screen.getByPlaceholderText('Type your message... (paste and drag-drop disabled)')
     ).toHaveValue('Can we keep the next step tied to the proof review?');
@@ -165,8 +168,9 @@ describe('MessageThread', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Send message' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Reveal approval is still required.'
+      'Message could not be sent. Your draft is still here; please try again.'
     );
+    expect(screen.queryByText('Reveal approval is still required.')).not.toBeInTheDocument();
 
     fireEvent.change(composer, {
       target: { value: 'Here is a cleaner follow-up.' },

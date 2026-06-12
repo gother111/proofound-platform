@@ -28,6 +28,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Send, AlertTriangle, Mail, Phone, Link2 } from 'lucide-react';
 import { detectPII, PIIDetectionResult } from '@/lib/privacy/pii-detection';
+import { getMessageSendErrorCopy, parsePiiDetectedSendError } from '@/lib/messaging/send-errors';
 
 interface MessageInputProps {
   onSend: (content: string, piiWarningShown?: boolean) => Promise<void>;
@@ -80,28 +81,13 @@ export function MessageInput({ onSend, disabled, conversationStage }: MessageInp
       setPiiDetection(null);
       textareaRef.current?.focus();
     } catch (err) {
-      // Check if error is PII detection warning
-      if (err instanceof Error) {
-        try {
-          const errorData = JSON.parse(err.message);
-          if (errorData.type === 'PII_DETECTED') {
-            // Show PII warning dialog
-            setPiiWarningMessage(errorData.message);
-            setShowPiiWarning(true);
-            return;
-          }
-          setSendError(
-            typeof errorData.message === 'string'
-              ? errorData.message
-              : 'Message could not be sent. Please try again.'
-          );
-          return;
-        } catch {
-          setSendError(err.message || 'Message could not be sent. Please try again.');
-          return;
-        }
+      const piiWarning = parsePiiDetectedSendError(err);
+      if (piiWarning) {
+        setPiiWarningMessage(piiWarning);
+        setShowPiiWarning(true);
+        return;
       }
-      setSendError('Message could not be sent. Please try again.');
+      setSendError(getMessageSendErrorCopy(err));
     } finally {
       setSending(false);
     }
@@ -119,11 +105,7 @@ export function MessageInput({ onSend, disabled, conversationStage }: MessageInp
       setPiiDetection(null);
       textareaRef.current?.focus();
     } catch (err) {
-      setSendError(
-        err instanceof Error && err.message
-          ? err.message
-          : 'Message could not be sent. Please try again.'
-      );
+      setSendError(getMessageSendErrorCopy(err));
     } finally {
       setSending(false);
     }

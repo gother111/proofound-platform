@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { apiFetch } from '@/lib/api/fetch';
 import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { getConversationParticipantLabel } from '@/lib/messaging/participant-label';
+import { createMessageSendRetryError } from '@/lib/messaging/send-errors';
 
 export interface RealtimeMessageThreadProps {
   conversationId: string;
@@ -216,7 +217,7 @@ export function RealtimeMessageThread({
       setMessages((prev) => [...prev, optimisticMessage]);
     } catch (error) {
       dispatchClientErrorDiagnostic('messages.thread.send_failed', error);
-      throw error;
+      throw createMessageSendRetryError();
     }
   };
 

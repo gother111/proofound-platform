@@ -26,7 +26,10 @@ describe('MessageInput', () => {
 
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Message not sent');
-    expect(alert).toHaveTextContent('The message service is unavailable.');
+    expect(alert).toHaveTextContent(
+      'Message could not be sent. Your draft is still here; please try again.'
+    );
+    expect(alert).not.toHaveTextContent('The message service is unavailable.');
     expect(screen.getByPlaceholderText('Type your message...')).toHaveValue(
       'Can we keep the next step tied to the proof review?'
     );
@@ -83,9 +86,14 @@ describe('MessageInput', () => {
     expect(alerts.some((alert) => alert.textContent?.includes('Message not sent'))).toBe(true);
     expect(
       alerts.some((alert) =>
-        alert.textContent?.includes('Identity reveal approval is still required.')
+        alert.textContent?.includes(
+          'Message could not be sent. Your draft is still here; please try again.'
+        )
       )
     ).toBe(true);
+    expect(
+      screen.queryByText('Identity reveal approval is still required.')
+    ).not.toBeInTheDocument();
     expect(onSend).toHaveBeenNthCalledWith(
       1,
       'Reach me at person@example.com after review.',

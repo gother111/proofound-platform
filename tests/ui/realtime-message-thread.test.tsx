@@ -95,7 +95,9 @@ describe('RealtimeMessageThread', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Send through thread' }));
 
     await waitFor(() => {
-      expect(rejectedMessages).toEqual(['Conversation not found']);
+      expect(rejectedMessages).toEqual([
+        'Message could not be sent. Your draft is still here; please try again.',
+      ]);
     });
     expect(mocks.stopTyping).toHaveBeenCalled();
     expect(mocks.diagnostic).toHaveBeenCalledWith('messages.thread.send_failed', expect.any(Error));
