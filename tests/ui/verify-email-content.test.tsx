@@ -4,6 +4,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 
 import { VerifyEmailContent } from '@/app/(auth)/verify-email/VerifyEmailContent';
 import { verifyEmail } from '@/actions/auth';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { VISUAL_VERIFY_TOKENS } from '@/lib/verification/visual-link-fixtures';
 
 const routerPush = vi.fn();
@@ -22,7 +23,12 @@ vi.mock('@/actions/auth', () => ({
   verifyEmail: vi.fn(),
 }));
 
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientErrorDiagnostic: vi.fn(),
+}));
+
 const verifyEmailMock = vi.mocked(verifyEmail);
+const dispatchClientErrorDiagnosticMock = vi.mocked(dispatchClientErrorDiagnostic);
 
 describe('VerifyEmailContent', () => {
   beforeEach(() => {
@@ -109,5 +115,79 @@ describe('VerifyEmailContent', () => {
     expect(
       screen.getByRole('heading', { level: 1, name: 'Verification failed' })
     ).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent('No verification token provided');
+    expect(verifyEmailMock).not.toHaveBeenCalled();
+  });
+
+  it('preserves known expired-link verification copy', async () => {
+    searchParamsGet.mockImplementation((key: string) => {
+      if (key === 'token') return 'expired-token';
+      if (key === 'type') return 'email';
+      return null;
+    });
+    verifyEmailMock.mockResolvedValue({ error: 'Invalid or expired verification link' });
+
+    render(<VerifyEmailContent />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('verify-email-error')).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Invalid or expired verification link');
+    expect(dispatchClientErrorDiagnosticMock).not.toHaveBeenCalledWith(
+      'auth.verify_email.returned_error',
+      expect.any(Error)
+    );
+  });
+
+  it('keeps unexpected returned verification errors safe and diagnostic', async () => {
+    const rawError = 'Supabase verifyOtp failed: token_hash stack detail';
+    searchParamsGet.mockImplementation((key: string) => {
+      if (key === 'token') return 'real-token';
+      if (key === 'type') return 'email';
+      return null;
+    });
+    verifyEmailMock.mockResolvedValue({ error: rawError });
+
+    render(<VerifyEmailContent />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('verify-email-error')).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'We could not verify this email link. The link may be expired; try signing up again or go to login.'
+    );
+    expect(screen.queryByText(rawError)).not.toBeInTheDocument();
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'auth.verify_email.returned_error',
+      expect.any(Error)
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(rawError);
+  });
+
+  it('keeps thrown verification failures safe and diagnostic', async () => {
+    const thrownError = new Error('network failed while verifying email token');
+    searchParamsGet.mockImplementation((key: string) => {
+      if (key === 'token') return 'real-token';
+      if (key === 'type') return 'signup';
+      return null;
+    });
+    verifyEmailMock.mockRejectedValue(thrownError);
+
+    render(<VerifyEmailContent />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('verify-email-error')).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'We could not verify this email link. The link may be expired; try signing up again or go to login.'
+    );
+    expect(screen.queryByText(thrownError.message)).not.toBeInTheDocument();
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'auth.verify_email.failed',
+      thrownError
+    );
   });
 });

@@ -519,6 +519,19 @@ describe('runtime debug output guardrails', () => {
     expect(source).not.toContain('setError(result.error)');
   });
 
+  it('keeps email verification client failures safe and diagnostic', () => {
+    const source = readSource('src/app/(auth)/verify-email/VerifyEmailContent.tsx');
+
+    expect(source).toContain(
+      "import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics'"
+    );
+    expect(source).toContain('VERIFY_EMAIL_SAFE_ACTION_ERRORS');
+    expect(source).toContain('auth.verify_email.returned_error');
+    expect(source).toContain('auth.verify_email.failed');
+    expect(source).toContain('We could not verify this email link');
+    expect(source).not.toContain('setError(result.error)');
+  });
+
   it('keeps visual fixture runtime gates preview and staging sensitive', () => {
     const sources = [
       'src/lib/org-invites/visual-fixtures.ts',

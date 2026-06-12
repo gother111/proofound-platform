@@ -6,11 +6,28 @@ import Link from 'next/link';
 import { Card, CardHeader, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { verifyEmail } from '@/actions/auth';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import {
   clientVerificationLinkVisualFixturesEnabled,
   isVisualEmailVerificationToken,
 } from '@/lib/verification/visual-link-fixtures';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
+
+const VERIFY_EMAIL_RETRY_MESSAGE =
+  'We could not verify this email link. The link may be expired; try signing up again or go to login.';
+const VERIFY_EMAIL_SAFE_ACTION_ERRORS = new Set([
+  'No verification token provided',
+  'Invalid or expired verification link',
+]);
+
+function verifyEmailErrorMessage(message: string) {
+  if (VERIFY_EMAIL_SAFE_ACTION_ERRORS.has(message)) {
+    return message;
+  }
+
+  dispatchClientErrorDiagnostic('auth.verify_email.returned_error', new Error(message));
+  return VERIFY_EMAIL_RETRY_MESSAGE;
+}
 
 export function VerifyEmailContent() {
   const router = useRouter();
@@ -40,16 +57,21 @@ export function VerifyEmailContent() {
       formData.append('token', token!);
       formData.append('type', verificationType);
 
-      const result = await verifyEmail(formData);
-
-      if (result.error) {
+      try {
+        const result = await verifyEmail(formData);
+        if (result.error) {
+          setStatus('error');
+          setError(verifyEmailErrorMessage(result.error));
+        } else {
+          setStatus('success');
+          setTimeout(() => {
+            router.push('/login');
+          }, 3000);
+        }
+      } catch (caught) {
+        dispatchClientErrorDiagnostic('auth.verify_email.failed', caught);
         setStatus('error');
-        setError(result.error);
-      } else {
-        setStatus('success');
-        setTimeout(() => {
-          router.push('/login');
-        }, 3000);
+        setError(VERIFY_EMAIL_RETRY_MESSAGE);
       }
     }
 
@@ -93,7 +115,11 @@ export function VerifyEmailContent() {
             <h1 className="font-display text-2xl font-semibold leading-none tracking-tight text-proofound-charcoal dark:text-foreground">
               Verification failed
             </h1>
-            <CardDescription className="leading-6 text-proofound-charcoal/70 dark:text-muted-foreground">
+            <CardDescription
+              className="leading-6 text-proofound-charcoal/70 dark:text-muted-foreground"
+              role="alert"
+              aria-live="assertive"
+            >
               {error || 'We couldn&apos;t verify your email address'}
             </CardDescription>
           </CardHeader>
