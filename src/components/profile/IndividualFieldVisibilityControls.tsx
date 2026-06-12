@@ -133,6 +133,9 @@ const FIELDS = [
   },
 ];
 
+const PRIVACY_VISIBILITY_SAVE_FAILED_DESCRIPTION =
+  'Your Public Page visibility was not changed. Review the selected fields and retry before leaving this page.';
+
 export function IndividualFieldVisibilityControls({
   userId,
   initialVisibility,
@@ -186,10 +189,7 @@ export function IndividualFieldVisibilityControls({
       setSaveFeedback({
         tone: 'error',
         message: 'Privacy settings were not saved',
-        description:
-          error instanceof Error && error.message
-            ? error.message
-            : 'Please try again before leaving this page.',
+        description: PRIVACY_VISIBILITY_SAVE_FAILED_DESCRIPTION,
       });
       toast.error('Failed to save settings', {
         description: 'Please try again',

@@ -9,6 +9,14 @@ vi.mock('sonner', () => ({
   },
 }));
 
+const { dispatchClientErrorDiagnosticMock } = vi.hoisted(() => ({
+  dispatchClientErrorDiagnosticMock: vi.fn(),
+}));
+
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientErrorDiagnostic: (...args: unknown[]) => dispatchClientErrorDiagnosticMock(...args),
+}));
+
 vi.mock('@/components/ui/select', () => ({
   Select: ({ children, value, onValueChange }: any) => (
     <div data-current-value={value}>
@@ -107,6 +115,16 @@ describe('privacy visibility copy', () => {
 
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Privacy settings were not saved');
-    expect(alert).toHaveTextContent('The privacy service is unavailable.');
+    expect(alert).toHaveTextContent(
+      'Your Public Page visibility was not changed. Review the selected fields and retry before leaving this page.'
+    );
+    expect(alert).not.toHaveTextContent('The privacy service is unavailable.');
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'privacy.field_visibility.save_failed',
+      expect.any(Error)
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
+      'The privacy service is unavailable.'
+    );
   });
 });

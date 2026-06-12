@@ -1425,11 +1425,14 @@ describe('runtime debug output guardrails', () => {
   });
 
   it('keeps privacy settings child failures on client diagnostics without console output', () => {
+    const individualVisibilitySource = readSource(
+      'src/components/profile/IndividualFieldVisibilityControls.tsx'
+    );
     const sources = [
       readSource('src/components/privacy/DataBreakdown.tsx'),
       readSource('src/components/privacy/AuditLogTable.tsx'),
       readSource('src/components/privacy/DeleteAccountSection.tsx'),
-      readSource('src/components/profile/IndividualFieldVisibilityControls.tsx'),
+      individualVisibilitySource,
     ].join('\n');
 
     expect(sources).toContain(
@@ -1440,6 +1443,8 @@ describe('runtime debug output guardrails', () => {
     expect(sources).toContain('privacy.audit_log.load_failed');
     expect(sources).toContain('privacy.delete_account.request_failed');
     expect(sources).toContain('privacy.field_visibility.save_failed');
+    expect(individualVisibilitySource).toContain('Your Public Page visibility was not changed');
+    expect(individualVisibilitySource).not.toContain('? error.message');
     expect(sources).not.toContain('Failed to fetch data breakdown:');
     expect(sources).not.toContain('Export failed:');
     expect(sources).not.toContain('Failed to fetch account history:');
