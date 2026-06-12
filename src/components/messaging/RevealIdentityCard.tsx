@@ -5,12 +5,6 @@
  *
  * UI for requesting identity reveal in masked conversations.
  *
- * States:
- * 1. Neither requested: Show "Reveal my identity" button
- * 2. Current user requested: Show "Waiting for other person" state
- * 3. Other user requested: Show "They want to reveal" with button
- * 4. Both agreed: Transition to revealed (handled by parent)
- *
  * Reference: DATA_SECURITY_PRIVACY_ARCHITECTURE.md Section 10.4
  */
 
@@ -66,7 +60,6 @@ export function RevealIdentityCard({
           duration: 5000,
         });
       } else {
-        // Request sent - waiting for other person
         toast({
           title: 'Reveal request sent',
           description:
@@ -76,7 +69,7 @@ export function RevealIdentityCard({
       }
     } catch (err) {
       toast({
-        title: 'Error',
+        title: 'Reveal request failed',
         description: err instanceof Error ? err.message : 'Failed to request reveal',
         variant: 'destructive',
       });
@@ -93,7 +86,7 @@ export function RevealIdentityCard({
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <EyeOff className="h-5 w-5" />
-              Anonymous Conversation
+              Masked review thread
             </CardTitle>
             <CardDescription>
               Identity-bearing fields are currently hidden. You can keep talking in the masked
@@ -132,15 +125,17 @@ export function RevealIdentityCard({
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Request Identity Reveal?</AlertDialogTitle>
-              <AlertDialogDescription className="space-y-3">
-                <p>This asks the other person to approve identity-bearing reveal.</p>
-                <p>
-                  If they agree, both of you can see the allowed identity fields now, while direct
-                  contact details still stay hidden until interview coordination requires them.
-                </p>
-                <p className="text-sm font-semibold">
-                  Blind review remains in place until the other person approves this request.
-                </p>
+              <AlertDialogDescription asChild>
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <p>This asks the other person to approve identity-bearing reveal.</p>
+                  <p>
+                    If they agree, both of you can see the allowed identity fields now, while direct
+                    contact details still stay hidden until interview coordination requires them.
+                  </p>
+                  <p className="font-semibold text-foreground">
+                    Blind review remains in place until the other person approves this request.
+                  </p>
+                </div>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -160,17 +155,17 @@ export function RevealIdentityCard({
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg text-amber-900 dark:text-amber-100">
             <Clock className="h-5 w-5" />
-            Waiting for Response
+            Reveal request pending
           </CardTitle>
           <CardDescription className="text-amber-800 dark:text-amber-200">
-            You've requested the reveal step. The other person will be notified and can choose to
-            approve approved identity fields or keep the thread masked.
+            You've requested the reveal step. The other person can approve the stage-scoped identity
+            fields or keep the thread masked.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-2 text-sm text-amber-900 dark:text-amber-100">
             <CheckCircle2 className="h-4 w-4 text-green-600" />
-            <span>Approved identity fields become visible only when they agree</span>
+            <span>Approved identity fields become visible only when the other person agrees</span>
           </div>
         </CardContent>
       </Card>
@@ -185,7 +180,7 @@ export function RevealIdentityCard({
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg text-blue-900 dark:text-blue-100">
               <Eye className="h-5 w-5" />
-              Identity Reveal Requested
+              Reveal approval requested
             </CardTitle>
             <CardDescription className="text-blue-800 dark:text-blue-200">
               The other person has requested identity reveal. If you agree, both sides can see the
@@ -214,7 +209,7 @@ export function RevealIdentityCard({
             </Button>
 
             <p className="text-xs text-center text-muted-foreground">
-              You can continue the conversation anonymously if you prefer
+              You can keep the thread masked if you prefer
             </p>
           </CardContent>
         </Card>
@@ -224,18 +219,20 @@ export function RevealIdentityCard({
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Reveal Approved Identity Fields?</AlertDialogTitle>
-              <AlertDialogDescription className="space-y-3">
-                <p>
-                  By agreeing, both of you will be able to see the approved identity-bearing fields
-                  now, including names and other permitted public information.
-                </p>
-                <p>
-                  Direct contact details and scheduling logistics still stay hidden until interview
-                  coordination requires them.
-                </p>
-                <p className="text-sm font-semibold">
-                  Public Page publication does not widen this reveal by itself.
-                </p>
+              <AlertDialogDescription asChild>
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <p>
+                    By agreeing, both of you will be able to see the approved identity-bearing
+                    fields now, including names and other permitted public information.
+                  </p>
+                  <p>
+                    Direct contact details and scheduling logistics still stay hidden until
+                    interview coordination requires them.
+                  </p>
+                  <p className="font-semibold text-foreground">
+                    Public Page publication does not widen this reveal by itself.
+                  </p>
+                </div>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
