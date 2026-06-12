@@ -150,8 +150,9 @@ describe('CandidateInviteClient test_match flow', () => {
     render(<CandidateInviteClient token="token-value" />);
 
     await waitFor(() => {
-      expect(screen.getByText(/trial match accepted/i)).toBeInTheDocument();
+      expect(screen.getByText(/assignment review invite accepted/i)).toBeInTheDocument();
     });
+    expect(screen.queryByText(/trial match/i)).not.toBeInTheDocument();
 
     expect(screen.getByRole('link', { name: /open communications/i })).toHaveAttribute(
       'href',

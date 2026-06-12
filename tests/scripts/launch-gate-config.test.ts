@@ -4472,6 +4472,8 @@ describe('launch gate package configuration', () => {
     expect(combined).toContain('Submit reviewed proof');
     expect(combined).toContain('Owner-only proof-submission packet');
     expect(combined).toContain('No owner-only Proof Pack is ready for this assignment yet.');
+    expect(combined).toContain('Assignment review invite accepted');
+    expect(combined).toContain('Accept assignment review');
     expect(combined).toContain(
       'Assignment proof submissions can only submit an owner-only Proof Pack'
     );
@@ -4494,6 +4496,9 @@ describe('launch gate package configuration', () => {
     expect(combined).not.toContain(
       'Assignment applications can only submit an owner-only Proof Pack'
     );
+    expect(combined).not.toContain('Trial match');
+    expect(combined).not.toContain('trial match');
+    expect(combined).not.toContain('Accept this trial match');
     expect(combined).not.toContain('Owner-only Proof Pack ID');
     expect(combined).not.toContain('00000000-0000-0000-0000-000000000000');
   });

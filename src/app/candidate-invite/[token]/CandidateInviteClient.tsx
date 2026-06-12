@@ -617,12 +617,12 @@ export function CandidateInviteClient({
   const selectedProofPack = availableProofPacks.find((pack) => pack.id === proofPackId);
   const reviewProofPack = availableProofPacks.find((pack) => pack.id === reviewProofPackId);
   const headline = isTestFlow
-    ? `Trial match for ${assignmentTitle}`
+    ? `Assignment review for ${assignmentTitle}`
     : assignment
       ? assignmentTitle
       : 'Submission invite';
   const inviteDescription = isTestFlow
-    ? `${organization.displayName} invited ${invite.maskedEmail} to start a trial match after reviewing this assignment context.`
+    ? `${organization.displayName} invited ${invite.maskedEmail} to review this assignment context before an intro or reveal step can move forward.`
     : assignment
       ? `${organization.displayName} invited ${invite.maskedEmail} to submit assignment-specific proof grounded in this role.`
       : `${organization.displayName} invited ${invite.maskedEmail} to submit scoped proof.`;
@@ -990,7 +990,9 @@ export function CandidateInviteClient({
                 <div className="space-y-3 rounded-lg border border-proofound-stone bg-white/75 p-4">
                   <div className="space-y-1">
                     <p className="text-sm font-semibold text-proofound-charcoal">
-                      {isTestFlow ? 'Accept this trial match' : 'Start proof submission'}
+                      {isTestFlow
+                        ? 'Accept this assignment review invite'
+                        : 'Start proof submission'}
                     </p>
                     <p className="text-sm leading-6 text-proofound-charcoal/70">
                       {isTestFlow
@@ -1006,10 +1008,10 @@ export function CandidateInviteClient({
                   >
                     {submitting
                       ? isTestFlow
-                        ? 'Accepting trial match...'
+                        ? 'Accepting assignment review...'
                         : 'Starting proof submission...'
                       : isTestFlow
-                        ? 'Accept trial match'
+                        ? 'Accept assignment review'
                         : 'Start proof submission'}
                   </Button>
                 </div>
@@ -1202,7 +1204,7 @@ export function CandidateInviteClient({
               {isTestFlow && isClaimedByCurrentUser ? (
                 <div className="space-y-3">
                   <p className="text-sm text-emerald-700">
-                    Trial match accepted. You can now use messages and matching.
+                    Assignment review invite accepted. You can now use messages and matching.
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {invite.communicationsUrl ? (
