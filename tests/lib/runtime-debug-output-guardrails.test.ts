@@ -486,6 +486,17 @@ describe('runtime debug output guardrails', () => {
     expect(resetConfirmSource).not.toContain('setFormError(result.error)');
   });
 
+  it('keeps reset password client failures safe and diagnostic', () => {
+    const source = readSource('src/app/(auth)/reset-password/ResetPasswordForm.tsx');
+
+    expect(source).toContain(
+      "import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics'"
+    );
+    expect(source).toContain('auth.reset_password.request_failed');
+    expect(source).toContain('Your account is unchanged; check the email and try again.');
+    expect(source).not.toContain('setError(result.error)');
+  });
+
   it('keeps visual fixture runtime gates preview and staging sensitive', () => {
     const sources = [
       'src/lib/org-invites/visual-fixtures.ts',

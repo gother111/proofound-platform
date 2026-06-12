@@ -7,7 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { requestPasswordReset } from '@/actions/auth';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { Mail, ArrowLeft } from 'lucide-react';
+
+const PASSWORD_RESET_REQUEST_FAILED_MESSAGE =
+  'Reset link could not be sent. Your account is unchanged; check the email and try again.';
 
 export function ResetPasswordForm() {
   const [email, setEmail] = useState('');
@@ -41,13 +45,21 @@ export function ResetPasswordForm() {
     const formData = new FormData();
     formData.append('email', normalizedEmail);
 
-    const result = await requestPasswordReset(formData);
+    try {
+      const result = await requestPasswordReset(formData);
 
-    if (result.error) {
-      setError(result.error);
-      setIsLoading(false);
-    } else {
+      if (result.error) {
+        const resetError = new Error(result.error);
+        dispatchClientErrorDiagnostic('auth.reset_password.request_failed', resetError);
+        setError(PASSWORD_RESET_REQUEST_FAILED_MESSAGE);
+        return;
+      }
+
       setIsSuccess(true);
+    } catch (caught) {
+      dispatchClientErrorDiagnostic('auth.reset_password.request_failed', caught);
+      setError(PASSWORD_RESET_REQUEST_FAILED_MESSAGE);
+    } finally {
       setIsLoading(false);
     }
   }
@@ -132,6 +144,7 @@ export function ResetPasswordForm() {
 
             {error && (
               <div
+                role="alert"
                 className="p-4 bg-destructive/10 border border-destructive/30 rounded-xl text-destructive text-sm"
                 data-testid="reset-password-error"
               >
