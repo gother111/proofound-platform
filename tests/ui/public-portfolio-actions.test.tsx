@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CopyTextButton } from '@/app/portfolio/[handle]/CopyTextButton';
 import { DownloadPdfButton } from '@/app/portfolio/[handle]/DownloadPdfButton';
 import { DownloadOrganizationPdfButton } from '@/app/portfolio/org/[slug]/DownloadOrganizationPdfButton';
+import { ShareLinkButton } from '@/app/portfolio/[handle]/ShareLinkButton';
 
 vi.mock('@/lib/client-diagnostics', () => ({
   dispatchClientErrorDiagnostic: vi.fn(),
@@ -45,6 +46,29 @@ describe('public portfolio action feedback', () => {
       'Proof summary copied to clipboard.'
     );
     expect(clipboardWriteText).toHaveBeenCalledWith('Proof summary text');
+    expect(alertSpy).not.toHaveBeenCalled();
+  });
+
+  it('confirms share-link copy inline instead of using a browser alert', async () => {
+    render(<ShareLinkButton url="https://proofound.io/portfolio/jane" />);
+
+    fireEvent.click(screen.getByRole('button', { name: /copy share link/i }));
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Public page link copied.');
+    expect(clipboardWriteText).toHaveBeenCalledWith('https://proofound.io/portfolio/jane');
+    expect(alertSpy).not.toHaveBeenCalled();
+  });
+
+  it('shows recoverable inline share-link failure without a browser alert', async () => {
+    clipboardWriteText.mockRejectedValueOnce(new Error('Clipboard unavailable'));
+
+    render(<ShareLinkButton url="https://proofound.io/portfolio/jane" />);
+
+    fireEvent.click(screen.getByRole('button', { name: /copy share link/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Public page link could not be copied. Try again.'
+    );
     expect(alertSpy).not.toHaveBeenCalled();
   });
 
