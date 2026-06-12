@@ -3,13 +3,20 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PublicPortfolioReadyStep } from '@/components/onboarding/PublicPortfolioReadyStep';
 
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientErrorDiagnostic: vi.fn(),
+}));
+
 describe('PublicPortfolioReadyStep', () => {
+  let clipboardWriteText: ReturnType<typeof vi.fn>;
+
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
+    clipboardWriteText = vi.fn().mockResolvedValue(undefined);
     Object.assign(navigator, {
       clipboard: {
-        writeText: vi.fn().mockResolvedValue(undefined),
+        writeText: clipboardWriteText,
       },
     });
   });
@@ -38,15 +45,36 @@ describe('PublicPortfolioReadyStep', () => {
       fireEvent.click(screen.getByRole('button', { name: /copy link/i }));
       await Promise.resolve();
     });
-    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-      'https://proofound.io/portfolio/jane'
-    );
+    expect(clipboardWriteText).toHaveBeenCalledWith('https://proofound.io/portfolio/jane');
+    expect(screen.getByRole('status')).toHaveTextContent('Portfolio link copied.');
     act(() => {
       vi.runAllTimers();
     });
 
     fireEvent.click(screen.getByRole('button', { name: /continue to app/i }));
     expect(onContinue).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows a recoverable inline copy failure', async () => {
+    clipboardWriteText.mockRejectedValueOnce(new Error('Clipboard unavailable'));
+
+    render(
+      <PublicPortfolioReadyStep
+        persona="individual"
+        publicPortfolioUrl="https://proofound.io/portfolio/jane"
+        onContinue={vi.fn()}
+      />
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /copy link/i }));
+      await Promise.resolve();
+    });
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Portfolio link could not be copied. Try again.'
+    );
+    expect(screen.getByRole('button', { name: /copy link/i })).toBeEnabled();
   });
 
   it('renders organization copy and continues to app', () => {

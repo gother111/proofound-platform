@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle2, Copy, ExternalLink } from 'lucide-react';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 type PersonaType = 'individual' | 'organization';
 
@@ -14,6 +15,11 @@ interface PublicPortfolioReadyStepProps {
   onContinue: () => void;
   continueLabel?: string;
 }
+
+type CopyFeedback = {
+  kind: 'success' | 'error';
+  message: string;
+};
 
 function normalizePortfolioUrl(input: string): string {
   const trimmed = input.trim();
@@ -37,6 +43,7 @@ export function PublicPortfolioReadyStep({
   continueLabel = 'Continue to app',
 }: PublicPortfolioReadyStepProps) {
   const [copied, setCopied] = useState(false);
+  const [copyFeedback, setCopyFeedback] = useState<CopyFeedback | null>(null);
   const resolvedUrl = useMemo(
     () => normalizePortfolioUrl(publicPortfolioUrl),
     [publicPortfolioUrl]
@@ -52,11 +59,21 @@ export function PublicPortfolioReadyStep({
 
   async function handleCopy() {
     try {
+      setCopyFeedback(null);
       await navigator.clipboard.writeText(resolvedUrl);
       setCopied(true);
-      window.setTimeout(() => setCopied(false), 1600);
-    } catch {
+      setCopyFeedback({ kind: 'success', message: 'Portfolio link copied.' });
+      window.setTimeout(() => {
+        setCopied(false);
+        setCopyFeedback(null);
+      }, 1600);
+    } catch (error) {
+      dispatchClientErrorDiagnostic('onboarding.public_portfolio_ready.copy_failed', error);
       setCopied(false);
+      setCopyFeedback({
+        kind: 'error',
+        message: 'Portfolio link could not be copied. Try again.',
+      });
     }
   }
 
@@ -81,12 +98,37 @@ export function PublicPortfolioReadyStep({
           <p className="break-all font-mono text-sm">{resolvedUrl}</p>
         </div>
 
-        <div className="flex flex-wrap gap-3">
-          <Button type="button" variant="outline" onClick={handleCopy} className="gap-2">
-            <Copy className="h-4 w-4" />
-            {copied ? 'Copied' : 'Copy link'}
-          </Button>
-          <Button type="button" variant="outline" asChild className="gap-2">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+          <div className="flex w-full flex-col items-stretch gap-1.5 sm:w-auto sm:items-start">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCopy}
+              className="w-full justify-center gap-2 sm:w-auto"
+            >
+              <Copy className="h-4 w-4" />
+              {copied ? 'Copied' : 'Copy link'}
+            </Button>
+            {copyFeedback ? (
+              <p
+                className={
+                  copyFeedback.kind === 'error'
+                    ? 'max-w-64 text-xs leading-5 text-[#8A3F21]'
+                    : 'max-w-64 text-xs leading-5 text-proofound-forest'
+                }
+                role={copyFeedback.kind === 'error' ? 'alert' : 'status'}
+                aria-live={copyFeedback.kind === 'error' ? 'assertive' : 'polite'}
+              >
+                {copyFeedback.message}
+              </p>
+            ) : null}
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            asChild
+            className="w-full justify-center gap-2 sm:w-auto"
+          >
             <Link href={resolvedUrl} target="_blank" rel="noopener noreferrer">
               <ExternalLink className="h-4 w-4" />
               {persona === 'organization' ? 'Preview portfolio' : 'Preview Public Page'}
@@ -95,7 +137,7 @@ export function PublicPortfolioReadyStep({
           <Button
             type="button"
             onClick={onContinue}
-            className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
+            className="w-full bg-proofound-forest text-white hover:bg-proofound-forest/90 sm:w-auto"
           >
             {continueLabel}
           </Button>
