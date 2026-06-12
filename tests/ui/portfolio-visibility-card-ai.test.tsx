@@ -275,6 +275,44 @@ describe('PortfolioVisibilityCard AI privacy preflight', () => {
     expect(alertSpy).not.toHaveBeenCalled();
   });
 
+  it('explains when privacy review blocks a visibility save', async () => {
+    apiFetchMock.mockResolvedValueOnce({
+      ok: false,
+      status: 409,
+      json: async () => ({
+        error: 'Privacy review required',
+        privacyPreflight: {
+          riskLevel: 'high',
+          safeToPublishSuggestion:
+            'Review required before publishing. Remove or rewrite the flagged private details first.',
+          flags: [
+            {
+              field: 'public bio',
+              message: 'Email-like contact information appears in text intended for publication.',
+            },
+          ],
+        },
+      }),
+    });
+
+    render(<PortfolioVisibilityCard />);
+
+    fireEvent.click(await screen.findByRole('button', { name: /save visibility/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Visibility was not saved because privacy review is required.'
+    );
+    expect(screen.getByText(/1 privacy concern found/i)).toBeInTheDocument();
+    expect(screen.getByText(/public bio: Email-like contact information/i)).toBeInTheDocument();
+    expect(
+      screen.queryByText('Visibility could not be saved. Your previous settings are unchanged.')
+    ).not.toBeInTheDocument();
+    expect(apiFetchMock).toHaveBeenCalledWith(
+      '/api/portfolio/visibility',
+      expect.objectContaining({ method: 'POST' })
+    );
+  });
+
   it('clears stale save confirmation when visibility is edited again', async () => {
     render(<PortfolioVisibilityCard />);
 

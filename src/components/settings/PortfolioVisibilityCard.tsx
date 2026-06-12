@@ -37,6 +37,10 @@ type SaveFeedback = {
   message: string;
 };
 
+type VisibilitySaveErrorPayload = {
+  privacyPreflight?: PrivacyPreflightPayload;
+};
+
 const defaults: VisibilityFlags = {
   header: true,
   proofBar: true,
@@ -75,6 +79,10 @@ function formatPrivacyPreflightMessage(payload: PrivacyPreflightPayload) {
     payload.safeToPublishSuggestion ||
     'No high-risk privacy concerns were found. This is not a privacy guarantee.'
   );
+}
+
+async function readVisibilitySaveErrorPayload(res: Response) {
+  return (await res.json().catch(() => null)) as VisibilitySaveErrorPayload | null;
 }
 
 export function PortfolioVisibilityCard() {
@@ -129,7 +137,19 @@ export function PortfolioVisibilityCard() {
           ...normalizedFlags,
         }),
       });
-      if (!res.ok) throw new Error('Save failed');
+      if (!res.ok) {
+        const payload = await readVisibilitySaveErrorPayload(res);
+        if (payload?.privacyPreflight) {
+          setPreflightMessage(formatPrivacyPreflightMessage(payload.privacyPreflight));
+          setSaveFeedback({
+            tone: 'error',
+            message:
+              'Visibility was not saved because privacy review is required. Review the privacy check details above, then remove or rewrite flagged private details before saving again.',
+          });
+          return;
+        }
+        throw new Error('Save failed');
+      }
       setSaveFeedback({
         tone: 'success',
         message: publicPageEnabled
