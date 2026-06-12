@@ -154,6 +154,28 @@ describe('VerificationsClient', () => {
     expect(screen.getAllByText('All').length).toBeGreaterThan(0);
   });
 
+  it('uses clear pending requester copy when profile details are unavailable', async () => {
+    render(
+      <VerificationsClient
+        incomingRequests={[
+          makeRequest({
+            id: 'incoming-missing-profile',
+            profiles: undefined,
+            proofLabel: 'Scoped launch proof',
+          }),
+        ]}
+        sentRequests={[]}
+        userEmail="me@proofound.io"
+      />
+    );
+    await settleAssistiveAiFlag();
+
+    const requestRow = screen.getByTestId('verification-request-row');
+    expect(within(requestRow).getByText('Requester details pending')).toBeInTheDocument();
+    expect(within(requestRow).queryByText('Unknown User')).not.toBeInTheDocument();
+    expect(within(requestRow).getByText('Scoped launch proof')).toBeInTheDocument();
+  });
+
   it('filters verification state buckets and sorts the list by scope', async () => {
     const incomingRequests = [
       makeRequest({

@@ -106,6 +106,7 @@ const REVOKED_OR_CORRECTED_STATUSES = new Set<VerificationRequest['status']>([
   'corrected',
   'cancelled',
 ]);
+const MISSING_REQUESTER_LABEL = 'Requester details pending';
 
 function parseTime(value: string | null | undefined): number {
   if (!value) return 0;
@@ -557,7 +558,7 @@ export function VerificationsClient({
 
   const getRequesterName = (request: VerificationRequest): string => {
     const profile = request.profiles;
-    return profile?.display_name || profile?.handle || 'Unknown User';
+    return profile?.display_name || profile?.handle || MISSING_REQUESTER_LABEL;
   };
 
   const getRequesterInitials = (request: VerificationRequest): string => {
