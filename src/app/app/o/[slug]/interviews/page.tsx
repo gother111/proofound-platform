@@ -97,12 +97,21 @@ type WorkflowActionFeedback = {
   message: string;
 };
 
+type InterviewDialogFeedback = {
+  kind: 'cancel' | 'complete' | 'no_show';
+  interviewId: string;
+  title: string;
+  message: string;
+};
+
 export default function OrganizationInterviewsPage() {
   const [interviews, setInterviews] = useState<Interview[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [workflowActionFeedback, setWorkflowActionFeedback] =
     useState<WorkflowActionFeedback | null>(null);
+  const [interviewDialogFeedback, setInterviewDialogFeedback] =
+    useState<InterviewDialogFeedback | null>(null);
   const [decisionDialogOpen, setDecisionDialogOpen] = useState(false);
   const [selectedInterview, setSelectedInterview] = useState<Interview | null>(null);
   const [editingInterview, setEditingInterview] = useState<Interview | null>(null);
@@ -230,32 +239,38 @@ export default function OrganizationInterviewsPage() {
   const openCancelDialog = (interview: Interview) => {
     setCancelInterview(interview);
     setCancelReason('');
+    setInterviewDialogFeedback(null);
   };
 
   const closeCancelDialog = () => {
     if (isCancellingInterviewId) return;
     setCancelInterview(null);
     setCancelReason('');
+    setInterviewDialogFeedback(null);
   };
 
   const openCompleteDialog = (interview: Interview) => {
     setCompleteInterview(interview);
+    setInterviewDialogFeedback(null);
   };
 
   const closeCompleteDialog = () => {
     if (isCompletingInterviewId) return;
     setCompleteInterview(null);
+    setInterviewDialogFeedback(null);
   };
 
   const openNoShowDialog = (interview: Interview) => {
     setNoShowInterview(interview);
     setNoShowReason('');
+    setInterviewDialogFeedback(null);
   };
 
   const closeNoShowDialog = () => {
     if (isMarkingNoShowInterviewId) return;
     setNoShowInterview(null);
     setNoShowReason('');
+    setInterviewDialogFeedback(null);
   };
 
   const handleSaveInterviewEdit = async () => {
@@ -306,6 +321,7 @@ export default function OrganizationInterviewsPage() {
     const reason = cancelReason.trim();
 
     setIsCancellingInterviewId(cancelInterview.interview.id);
+    setInterviewDialogFeedback(null);
     try {
       const response = await apiFetch('/api/interviews/cancel', {
         method: 'POST',
@@ -326,7 +342,17 @@ export default function OrganizationInterviewsPage() {
       setCancelReason('');
       await loadInterviews();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to cancel interview');
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Interview cancellation could not be recorded. The workflow is unchanged.';
+      setInterviewDialogFeedback({
+        kind: 'cancel',
+        interviewId: cancelInterview.interview.id,
+        title: 'Interview cancellation could not be recorded',
+        message,
+      });
+      toast.error(message);
     } finally {
       setIsCancellingInterviewId(null);
     }
@@ -338,6 +364,7 @@ export default function OrganizationInterviewsPage() {
     }
 
     setIsCompletingInterviewId(completeInterview.interview.id);
+    setInterviewDialogFeedback(null);
     try {
       const response = await apiFetch('/api/interviews/complete', {
         method: 'POST',
@@ -356,7 +383,17 @@ export default function OrganizationInterviewsPage() {
       setCompleteInterview(null);
       await loadInterviews();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to mark interview complete');
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Interview completion could not be recorded. The workflow is unchanged.';
+      setInterviewDialogFeedback({
+        kind: 'complete',
+        interviewId: completeInterview.interview.id,
+        title: 'Interview completion could not be recorded',
+        message,
+      });
+      toast.error(message);
     } finally {
       setIsCompletingInterviewId(null);
     }
@@ -370,6 +407,7 @@ export default function OrganizationInterviewsPage() {
     const reason = noShowReason.trim();
 
     setIsMarkingNoShowInterviewId(noShowInterview.interview.id);
+    setInterviewDialogFeedback(null);
     try {
       const response = await apiFetch('/api/interviews/no-show', {
         method: 'POST',
@@ -390,7 +428,17 @@ export default function OrganizationInterviewsPage() {
       setNoShowReason('');
       await loadInterviews();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to mark no-show');
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'No-show could not be recorded. The workflow is unchanged.';
+      setInterviewDialogFeedback({
+        kind: 'no_show',
+        interviewId: noShowInterview.interview.id,
+        title: 'No-show could not be recorded',
+        message,
+      });
+      toast.error(message);
     } finally {
       setIsMarkingNoShowInterviewId(null);
     }
@@ -528,6 +576,60 @@ export default function OrganizationInterviewsPage() {
     interview.corridor.nextAction.id === 'advance_to_next_interview'
       ? new Date()
       : new Date(interview.introAcceptedAt ?? Date.now());
+
+  const getInterviewDialogFeedback = (
+    kind: InterviewDialogFeedback['kind'],
+    interview: Interview | null
+  ) => {
+    if (!interview?.interview?.id) {
+      return null;
+    }
+
+    if (
+      interviewDialogFeedback?.kind === kind &&
+      interviewDialogFeedback.interviewId === interview.interview.id
+    ) {
+      return interviewDialogFeedback;
+    }
+
+    return null;
+  };
+
+  const renderInterviewDialogFeedback = ({
+    feedback,
+    retryLabel,
+    isRetrying,
+    onRetry,
+  }: {
+    feedback: InterviewDialogFeedback | null;
+    retryLabel: string;
+    isRetrying: boolean;
+    onRetry: () => void;
+  }) => {
+    if (!feedback) {
+      return null;
+    }
+
+    return (
+      <div
+        role="alert"
+        className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm leading-5 text-amber-900"
+      >
+        <p className="font-semibold">{feedback.title}</p>
+        <p className="mt-1">{feedback.message}</p>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={onRetry}
+          disabled={isRetrying}
+          className="mt-3 h-8 rounded-full border-amber-300 bg-white px-3 text-xs font-semibold text-amber-950 hover:bg-amber-100"
+        >
+          {isRetrying ? 'Retrying...' : retryLabel}
+        </Button>
+      </div>
+    );
+  };
 
   if (isLoading) {
     return (
@@ -1035,6 +1137,15 @@ export default function OrganizationInterviewsPage() {
               </p>
             </div>
 
+            {renderInterviewDialogFeedback({
+              feedback: getInterviewDialogFeedback('complete', completeInterview),
+              retryLabel: 'Retry completion',
+              isRetrying: Boolean(isCompletingInterviewId),
+              onRetry: () => {
+                void handleConfirmCompleteInterview();
+              },
+            })}
+
             <DialogFooter>
               <Button
                 variant="outline"
@@ -1086,7 +1197,12 @@ export default function OrganizationInterviewsPage() {
                 <Textarea
                   id="no-show-interview-reason"
                   value={noShowReason}
-                  onChange={(event) => setNoShowReason(event.target.value)}
+                  onChange={(event) => {
+                    setNoShowReason(event.target.value);
+                    if (getInterviewDialogFeedback('no_show', noShowInterview)) {
+                      setInterviewDialogFeedback(null);
+                    }
+                  }}
                   rows={3}
                   disabled={Boolean(isMarkingNoShowInterviewId)}
                   aria-describedby="no-show-interview-reason-help"
@@ -1096,6 +1212,15 @@ export default function OrganizationInterviewsPage() {
                   Keep this factual and suitable for conversation history.
                 </p>
               </div>
+
+              {renderInterviewDialogFeedback({
+                feedback: getInterviewDialogFeedback('no_show', noShowInterview),
+                retryLabel: 'Retry no-show',
+                isRetrying: Boolean(isMarkingNoShowInterviewId),
+                onRetry: () => {
+                  void handleConfirmMarkNoShow();
+                },
+              })}
             </div>
 
             <DialogFooter>
@@ -1149,7 +1274,12 @@ export default function OrganizationInterviewsPage() {
                 <Textarea
                   id="cancel-interview-reason"
                   value={cancelReason}
-                  onChange={(event) => setCancelReason(event.target.value)}
+                  onChange={(event) => {
+                    setCancelReason(event.target.value);
+                    if (getInterviewDialogFeedback('cancel', cancelInterview)) {
+                      setInterviewDialogFeedback(null);
+                    }
+                  }}
                   rows={3}
                   disabled={Boolean(isCancellingInterviewId)}
                   aria-describedby="cancel-interview-reason-help"
@@ -1159,6 +1289,15 @@ export default function OrganizationInterviewsPage() {
                   Keep this concise and suitable for conversation history.
                 </p>
               </div>
+
+              {renderInterviewDialogFeedback({
+                feedback: getInterviewDialogFeedback('cancel', cancelInterview),
+                retryLabel: 'Retry cancellation',
+                isRetrying: Boolean(isCancellingInterviewId),
+                onRetry: () => {
+                  void handleConfirmCancelInterview();
+                },
+              })}
             </div>
 
             <DialogFooter>

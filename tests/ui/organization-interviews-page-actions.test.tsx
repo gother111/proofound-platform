@@ -312,6 +312,132 @@ describe('organization interviews page actions', () => {
     });
   });
 
+  it('keeps failed interview outcome dialogs visible and retryable', async () => {
+    const upcomingInterviewAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    const actionAttempts: Record<string, number> = {};
+
+    getInterviewCorridorItemsMock.mockResolvedValue({
+      items: [
+        buildInterviewItem({
+          interview: {
+            id: 'interview-1',
+            scheduledAt: upcomingInterviewAt,
+            duration: 30,
+            platform: 'manual',
+            meetingUrl: 'https://example.com/manual-room',
+            manualMeetingProvider: null,
+            rescheduleCount: 0,
+            status: 'scheduled',
+            completedAt: null,
+            cancelledAt: null,
+            noShowAt: null,
+          },
+        }),
+      ],
+    });
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string | URL) => {
+        const url = typeof input === 'string' ? input : input.toString();
+
+        if (url.startsWith('/api/csrf-token')) {
+          return {
+            ok: true,
+            json: async () => ({ token: 'csrf-token' }),
+          };
+        }
+
+        if (
+          url === '/api/interviews/cancel' ||
+          url === '/api/interviews/complete' ||
+          url === '/api/interviews/no-show'
+        ) {
+          actionAttempts[url] = (actionAttempts[url] ?? 0) + 1;
+
+          if (actionAttempts[url] === 1) {
+            return {
+              ok: false,
+              json: async () => ({
+                error: `${url} is temporarily unavailable.`,
+              }),
+            };
+          }
+
+          return {
+            ok: true,
+            json: async () => ({ success: true }),
+          };
+        }
+
+        return { ok: false, json: async () => ({ error: 'Unexpected route' }) };
+      })
+    );
+
+    render(<OrganizationInterviewsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /cancel interview/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /cancel interview/i }));
+    const cancelDialog = await screen.findByRole('dialog');
+    const cancelReasonField = within(cancelDialog).getByLabelText(/reason/i);
+    fireEvent.change(cancelReasonField, {
+      target: { value: 'Need to move due to conflict' },
+    });
+    fireEvent.click(within(cancelDialog).getByRole('button', { name: /^cancel interview$/i }));
+
+    let alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Interview cancellation could not be recorded');
+    expect(alert).toHaveTextContent('/api/interviews/cancel is temporarily unavailable.');
+    expect(cancelReasonField).toHaveValue('Need to move due to conflict');
+
+    fireEvent.click(within(alert).getByRole('button', { name: /retry cancellation/i }));
+
+    await waitFor(() => {
+      expect(actionAttempts['/api/interviews/cancel']).toBe(2);
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /mark complete/i }));
+    const completeDialog = await screen.findByRole('dialog');
+    fireEvent.click(
+      within(completeDialog).getByRole('button', { name: /mark interview complete/i })
+    );
+
+    alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Interview completion could not be recorded');
+    expect(alert).toHaveTextContent('/api/interviews/complete is temporarily unavailable.');
+
+    fireEvent.click(within(alert).getByRole('button', { name: /retry completion/i }));
+
+    await waitFor(() => {
+      expect(actionAttempts['/api/interviews/complete']).toBe(2);
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /mark no-show/i }));
+    const noShowDialog = await screen.findByRole('dialog');
+    const noShowReasonField = within(noShowDialog).getByLabelText(/reason/i);
+    fireEvent.change(noShowReasonField, {
+      target: { value: 'Candidate missed the scheduled call' },
+    });
+    fireEvent.click(within(noShowDialog).getByRole('button', { name: /record no-show/i }));
+
+    alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('No-show could not be recorded');
+    expect(alert).toHaveTextContent('/api/interviews/no-show is temporarily unavailable.');
+    expect(noShowReasonField).toHaveValue('Candidate missed the scheduled call');
+
+    fireEvent.click(within(alert).getByRole('button', { name: /retry no-show/i }));
+
+    await waitFor(() => {
+      expect(actionAttempts['/api/interviews/no-show']).toBe(2);
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+  });
+
   it('renders decision and engagement status separately and confirms engagement after hire', async () => {
     const upcomingInterviewAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
     const initialInterview = buildInterviewItem({
