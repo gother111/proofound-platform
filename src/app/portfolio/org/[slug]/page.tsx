@@ -46,12 +46,12 @@ function renderUnavailablePage(
       footer={
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span>proofound.io/portfolio/org/{slug}</span>
-          <span>Organization portfolio unavailable</span>
+          <span>Organization trust page unavailable</span>
         </div>
       }
     >
       <PublicProfileSection
-        title="Organization portfolio unavailable"
+        title="Organization trust page unavailable"
         titleLevel={1}
         right={
           <Badge variant="outline" className="border-[#D9D5CC] text-muted-foreground">
@@ -298,7 +298,7 @@ export default async function OrganizationPortfolioPage({
       footer={
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="min-w-0 break-words">proofound.io/portfolio/org/{slug}</span>
-          <span>Minimal trust page</span>
+          <span>Proof-first trust page</span>
         </div>
       }
     >
@@ -377,8 +377,26 @@ export default async function OrganizationPortfolioPage({
         </div>
 
         <div className="min-w-0 space-y-4">
-          <PublicProfileSection title="Seriousness of review">
+          <PublicProfileSection title="Proof-review readiness">
             <div className="min-w-0 space-y-3">
+              <div
+                role="status"
+                aria-live="polite"
+                className="rounded-xl border border-[#D7E8DE] bg-[#F3FAF6] px-3 py-2 text-proofound-charcoal shadow-sm"
+              >
+                <div className="flex min-w-0 gap-2">
+                  <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-proofound-forest" />
+                  <div className="min-w-0">
+                    <p className="font-medium text-proofound-forest">
+                      This page is public trust context, not the review workspace.
+                    </p>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                      Proof submissions, member details, and private review context stay inside the
+                      assignment workflow until consented reveal.
+                    </p>
+                  </div>
+                </div>
+              </div>
               {reviewSignals.map((signal) => (
                 <p
                   key={signal}

@@ -160,15 +160,21 @@ describe('Organization public portfolio page', () => {
     expect(screen.getByRole('heading', { name: 'Acme' })).toBeInTheDocument();
     expect(screen.getByText(/public organization trust page/i)).toBeInTheDocument();
     expect(screen.getByText('Shareable by direct link')).toBeInTheDocument();
-    expect(screen.getByText('Minimal trust page')).toBeInTheDocument();
+    expect(screen.getByText('Proof-first trust page')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /mission \/ purpose/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /what work is offered/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /assignment clarity/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /seriousness of review/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /proof-review readiness/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /organization basics/i })).toBeInTheDocument();
     expect(screen.getByText('acme.org')).toBeInTheDocument();
     expect(screen.getByText(/proof-first product designer/i)).toBeInTheDocument();
     expect(screen.getByText(/own the assignment review loop/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/this page is public trust context, not the review workspace/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/proof submissions, member details, and private review context stay inside/i)
+    ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /return to menu/i })).toHaveAttribute(
       'href',
       '/app/o/acme/home'
@@ -183,6 +189,10 @@ describe('Organization public portfolio page', () => {
     expect(screen.queryByText(/owner@|reviewer@|member@/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/public organization profile/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/minimal public profile/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/minimal trust page/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: /seriousness of review/i })
+    ).not.toBeInTheDocument();
     expect(screen.queryByText('Searchable')).not.toBeInTheDocument();
   });
 
@@ -374,7 +384,7 @@ describe('Organization public portfolio page', () => {
 
     expect(container.querySelectorAll('main')).toHaveLength(1);
     expect(
-      screen.getByRole('heading', { name: 'Organization portfolio unavailable' })
+      screen.getByRole('heading', { name: 'Organization trust page unavailable' })
     ).toBeInTheDocument();
     expect(screen.getByText(/this organization link is unavailable/i)).toBeInTheDocument();
     expect(
@@ -404,7 +414,7 @@ describe('Organization public portfolio page', () => {
     render(element);
 
     expect(
-      screen.getByRole('heading', { name: 'Organization portfolio unavailable' })
+      screen.getByRole('heading', { name: 'Organization trust page unavailable' })
     ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /return to menu/i })).toHaveAttribute(
       'href',
