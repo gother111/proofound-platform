@@ -5,10 +5,18 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import InterviewsPage from '@/app/app/i/interviews/IndividualInterviewsPage';
 import { __resetCsrfCacheForTests } from '@/lib/api/fetch';
 
+const { dispatchClientErrorDiagnosticMock } = vi.hoisted(() => ({
+  dispatchClientErrorDiagnosticMock: vi.fn(),
+}));
+
 const getInterviewCorridorItemsMock = vi.fn();
 
 vi.mock('@/app/actions/interviews', () => ({
   getInterviewCorridorItems: (...args: any[]) => getInterviewCorridorItemsMock(...args),
+}));
+
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientErrorDiagnostic: (...args: unknown[]) => dispatchClientErrorDiagnosticMock(...args),
 }));
 
 vi.mock('@/components/ui/v2/AppSurface', () => ({
@@ -75,6 +83,13 @@ describe('individual interviews page clarity', () => {
     __resetCsrfCacheForTests();
     getInterviewCorridorItemsMock.mockReset();
   });
+
+  const getDiagnosticErrorMessage = (reason: string) => {
+    const error = dispatchClientErrorDiagnosticMock.mock.calls.find(
+      ([diagnosticReason]) => diagnosticReason === reason
+    )?.[1];
+    return error instanceof Error ? error.message : String(error);
+  };
 
   it('gives the empty state one clear next action', async () => {
     getInterviewCorridorItemsMock.mockResolvedValue({ items: [] });
@@ -300,7 +315,17 @@ describe('individual interviews page clarity', () => {
 
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Engagement confirmation could not be recorded');
-    expect(alert).toHaveTextContent('Engagement confirmation is temporarily unavailable.');
+    expect(alert).toHaveTextContent(
+      'Your interview workflow is unchanged; retry before moving on.'
+    );
+    expect(alert).not.toHaveTextContent('Engagement confirmation is temporarily unavailable.');
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'interviews.individual.engagement_confirm_failed',
+      expect.any(Error)
+    );
+    expect(getDiagnosticErrorMessage('interviews.individual.engagement_confirm_failed')).toBe(
+      'Engagement confirmation is temporarily unavailable.'
+    );
     expect(screen.getByLabelText('Engagement type')).toHaveValue('full_time');
 
     fireEvent.click(within(alert).getByRole('button', { name: 'Retry confirmation' }));

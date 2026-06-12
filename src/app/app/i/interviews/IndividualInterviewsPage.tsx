@@ -77,6 +77,9 @@ type WorkflowActionFeedback = {
   message: string;
 };
 
+const ENGAGEMENT_CONFIRMATION_FAILED_MESSAGE =
+  'Engagement confirmation could not be recorded. Your interview workflow is unchanged; retry before moving on.';
+
 export default function IndividualInterviewsPage() {
   const [interviews, setInterviews] = useState<Interview[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -201,10 +204,8 @@ export default function IndividualInterviewsPage() {
       toast.success('Engagement confirmation recorded');
       await loadInterviews();
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : 'Engagement confirmation could not be recorded. Your interview workflow is unchanged.';
+      dispatchClientErrorDiagnostic('interviews.individual.engagement_confirm_failed', error);
+      const message = ENGAGEMENT_CONFIRMATION_FAILED_MESSAGE;
       setWorkflowActionFeedback({
         kind: 'engagement_confirmation',
         itemId: interview.id,

@@ -707,6 +707,7 @@ describe('runtime debug output guardrails', () => {
 
     expect(sources).toContain('proofound:client-diagnostic');
     expect(sources).toContain('interviews.individual.load_failed');
+    expect(sources).toContain('interviews.individual.engagement_confirm_failed');
     expect(sources).toContain('interviews.organization.load_failed');
     expect(sources).toContain('interviews.organization.edit_failed');
     expect(sources).toContain('interviews.organization.cancel_failed');
