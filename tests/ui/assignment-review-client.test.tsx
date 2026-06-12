@@ -119,6 +119,44 @@ describe('AssignmentReviewClient', () => {
     expect(confirmSpy).not.toHaveBeenCalled();
   });
 
+  it('keeps publish failures visible and retryable from the review page', async () => {
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ message: 'Organization trust review is still pending.' }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({}),
+      } as Response);
+
+    render(
+      <AssignmentReviewClient
+        initialAssignment={baseAssignment}
+        assignmentId="assignment-1"
+        slug="acme"
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Publish Assignment/i }));
+
+    const publishDialog = await screen.findByRole('dialog');
+    fireEvent.click(within(publishDialog).getByRole('button', { name: /^Publish assignment$/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Publishing is blocked');
+    expect(alert).toHaveTextContent('This assignment has not been published');
+    expect(alert).toHaveTextContent('Organization trust review is still pending.');
+    expect(pushMock).not.toHaveBeenCalled();
+
+    fireEvent.click(within(alert).getByRole('button', { name: 'Retry publish' }));
+
+    await waitFor(() => {
+      expect(apiFetch).toHaveBeenCalledTimes(2);
+    });
+    expect(pushMock).toHaveBeenCalledWith('/app/o/acme/assignments?matching=assignment-1');
+  });
+
   it('keeps publish disabled and routes users to missing draft details', () => {
     render(
       <AssignmentReviewClient

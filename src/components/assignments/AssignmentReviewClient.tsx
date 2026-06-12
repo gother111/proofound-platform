@@ -371,17 +371,36 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
         </Card>
 
         {publishBlocks.length > 0 ? (
-          <Card className="border-amber-300 bg-amber-50 p-5">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="mt-0.5 h-5 w-5 text-amber-700" />
-              <div className="space-y-2">
-                <h2 className="text-base font-semibold text-amber-900">Publishing is blocked</h2>
-                <ul className="space-y-1 text-sm text-amber-900">
-                  {publishBlocks.map((block) => (
-                    <li key={`${block.field}-${block.blockCode}`}>{block.message}</li>
-                  ))}
-                </ul>
+          <Card className="border-amber-300 bg-amber-50 p-5" role="alert" aria-live="assertive">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
+                <div className="space-y-2">
+                  <h2 className="text-base font-semibold text-amber-900">Publishing is blocked</h2>
+                  <p className="text-sm leading-6 text-amber-900">
+                    This assignment has not been published. Retry publish from here after the block
+                    clears, or edit the draft before trying again.
+                  </p>
+                  <ul className="space-y-1 text-sm text-amber-900">
+                    {publishBlocks.map((block) => (
+                      <li key={`${block.field}-${block.blockCode}`}>{block.message}</li>
+                    ))}
+                  </ul>
+                </div>
               </div>
+              {!isPublished && !isClosed && isReviewReady ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full shrink-0 border-amber-700 text-amber-950 hover:bg-amber-100 sm:w-auto"
+                  onClick={() => {
+                    void handlePublish();
+                  }}
+                  disabled={isPublishing}
+                >
+                  {isPublishing ? 'Retrying...' : 'Retry publish'}
+                </Button>
+              ) : null}
             </div>
           </Card>
         ) : null}
