@@ -372,17 +372,25 @@ describe('runtime debug output guardrails', () => {
   });
 
   it('keeps cookie preference save failures safe and diagnostic', () => {
-    const source = readSource('src/components/cookies/CookiePreferences.tsx');
+    const sources = [
+      readSource('src/components/CookieBanner.tsx'),
+      readSource('src/components/cookies/CookiePreferences.tsx'),
+    ].join('\n');
 
-    expect(source).toContain(
+    expect(sources).toContain(
       "import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics'"
     );
-    expect(source).toContain('cookies.preferences.save_failed');
-    expect(source).toContain('Cookie preferences could not be fully saved');
-    expect(source).toContain('Your choices are still shown here');
-    expect(source).not.toContain('getUserErrorMessage');
-    expect(source).not.toContain('CookiePreferences.handleSave');
-    expect(source).not.toContain('toast.error(errorMessage)');
+    expect(sources).toContain('cookies.banner.save_failed');
+    expect(sources).toContain('Cookie choice could not be saved');
+    expect(sources).toContain('Your choice was not recorded');
+    expect(sources).toContain('cookies.preferences.save_failed');
+    expect(sources).toContain('Cookie preferences could not be fully saved');
+    expect(sources).toContain('Your choices are still shown here');
+    expect(sources).not.toContain('getUserErrorMessage');
+    expect(sources).not.toContain('CookieBanner.handleAccept');
+    expect(sources).not.toContain('CookieBanner.handleDecline');
+    expect(sources).not.toContain('CookiePreferences.handleSave');
+    expect(sources).not.toContain('toast.error(errorMessage)');
   });
 
   it('keeps active launch copy free of unfinished beta and mock wording', () => {

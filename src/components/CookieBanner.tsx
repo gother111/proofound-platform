@@ -12,16 +12,20 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { X, Cookie } from 'lucide-react';
+import { AlertTriangle, X, Cookie } from 'lucide-react';
 import Link from 'next/link';
-import { logError } from '@/lib/error-handler';
 import { usePathname } from 'next/navigation';
 import { hasGivenConsent, saveCookiePreferences } from '@/lib/cookies/consent';
 import { cn } from '@/lib/utils';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+
+const COOKIE_BANNER_SAVE_FAILED_MESSAGE =
+  'Cookie choice could not be saved. Your choice was not recorded; please try again.';
 
 export function CookieBanner() {
   const [show, setShow] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const pathname = usePathname();
   const isSnippetEmbedRoute = /^\/p\/[^/]+\/embed\/?$/.test(pathname ?? '');
   const isMobileAppRoute = /^\/app\//.test(pathname ?? '');
@@ -40,16 +44,22 @@ export function CookieBanner() {
     }
   }, [isSnippetEmbedRoute]);
 
-  const persistChoice = (
-    preferences: { essential: boolean; analytics: boolean; marketing: boolean },
-    context: string
-  ) => {
+  const persistChoice = (preferences: {
+    essential: boolean;
+    analytics: boolean;
+    marketing: boolean;
+  }) => {
     setSaving(true);
-    setShow(false);
+    setSaveError(null);
 
     void saveCookiePreferences(preferences, false)
+      .then(() => {
+        setShow(false);
+      })
       .catch((error) => {
-        logError(context, error);
+        dispatchClientErrorDiagnostic('cookies.banner.save_failed', error);
+        setSaveError(COOKIE_BANNER_SAVE_FAILED_MESSAGE);
+        setShow(true);
       })
       .finally(() => {
         setSaving(false);
@@ -57,25 +67,19 @@ export function CookieBanner() {
   };
 
   const handleAccept = () => {
-    persistChoice(
-      {
-        essential: true,
-        analytics: true,
-        marketing: false,
-      },
-      'CookieBanner.handleAccept'
-    );
+    persistChoice({
+      essential: true,
+      analytics: true,
+      marketing: false,
+    });
   };
 
   const handleDecline = () => {
-    persistChoice(
-      {
-        essential: true,
-        analytics: false,
-        marketing: false,
-      },
-      'CookieBanner.handleDecline'
-    );
+    persistChoice({
+      essential: true,
+      analytics: false,
+      marketing: false,
+    });
   };
 
   if (isSnippetEmbedRoute || !show) return null;
@@ -136,6 +140,15 @@ export function CookieBanner() {
                     Cookie Settings
                   </Link>
                 </div>
+                {saveError ? (
+                  <div
+                    role="alert"
+                    className="mt-2 flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-2.5 py-2 text-xs text-destructive"
+                  >
+                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+                    <p>{saveError}</p>
+                  </div>
+                ) : null}
               </div>
             </div>
 

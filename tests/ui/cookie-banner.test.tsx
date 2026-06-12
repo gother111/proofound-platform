@@ -3,21 +3,24 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CookieBanner } from '@/components/CookieBanner';
+import * as cookieConsent from '@/lib/cookies/consent';
 import { PREFERENCES_KEY } from '@/lib/cookies/consent';
 
 const usePathnameMock = vi.fn();
+const dispatchClientErrorDiagnosticMock = vi.fn();
 
 vi.mock('next/navigation', () => ({
   usePathname: () => usePathnameMock(),
 }));
 
-vi.mock('@/lib/error-handler', () => ({
-  logError: vi.fn(),
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientErrorDiagnostic: (...args: unknown[]) => dispatchClientErrorDiagnosticMock(...args),
 }));
 
 describe('CookieBanner', () => {
   beforeEach(() => {
     vi.useFakeTimers();
+    vi.clearAllMocks();
     localStorage.clear();
     usePathnameMock.mockReturnValue('/app/i/home');
   });
@@ -97,5 +100,34 @@ describe('CookieBanner', () => {
     });
 
     expect(screen.queryByRole('heading', { name: /privacy choices/i })).not.toBeInTheDocument();
+  });
+
+  it('keeps failed first-visit cookie choices visible, safe, and retryable', async () => {
+    const rawFailure = new Error('localStorage cookie quota leaked-ish');
+    vi.spyOn(cookieConsent, 'saveCookiePreferences').mockRejectedValueOnce(rawFailure);
+
+    render(<CookieBanner />);
+
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Accept All' }));
+      await Promise.resolve();
+    });
+
+    expect(screen.getByRole('heading', { name: /privacy choices/i })).toBeInTheDocument();
+    const alert = screen.getByRole('alert');
+    expect(alert).toHaveTextContent('Cookie choice could not be saved');
+    expect(alert).toHaveTextContent('Your choice was not recorded');
+    expect(document.body.textContent ?? '').not.toContain(rawFailure.message);
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'cookies.banner.save_failed',
+      rawFailure
+    );
+    expect(screen.getByRole('button', { name: 'Accept All' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Essential Only' })).toBeEnabled();
+    expect(localStorage.getItem(PREFERENCES_KEY)).toBeNull();
   });
 });
