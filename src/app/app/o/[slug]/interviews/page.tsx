@@ -89,10 +89,20 @@ interface Interview {
   } | null;
 }
 
+type WorkflowActionFeedback = {
+  kind: 'engagement_confirmation';
+  itemId: string;
+  verificationId: string;
+  title: string;
+  message: string;
+};
+
 export default function OrganizationInterviewsPage() {
   const [interviews, setInterviews] = useState<Interview[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [workflowActionFeedback, setWorkflowActionFeedback] =
+    useState<WorkflowActionFeedback | null>(null);
   const [decisionDialogOpen, setDecisionDialogOpen] = useState(false);
   const [selectedInterview, setSelectedInterview] = useState<Interview | null>(null);
   const [editingInterview, setEditingInterview] = useState<Interview | null>(null);
@@ -120,6 +130,7 @@ export default function OrganizationInterviewsPage() {
   const loadInterviews = async () => {
     setIsLoading(true);
     setLoadError(null);
+    setWorkflowActionFeedback(null);
 
     try {
       const data = await getInterviewCorridorItems({ perspective: 'organization' });
@@ -404,11 +415,20 @@ export default function OrganizationInterviewsPage() {
 
     const engagementType = resolveEngagementTypeValue(interview);
     if (!engagementType) {
+      setWorkflowActionFeedback({
+        kind: 'engagement_confirmation',
+        itemId: interview.id,
+        verificationId: verification.id,
+        title: 'Choose an engagement type',
+        message:
+          'Select how the work will be structured before recording the engagement confirmation.',
+      });
       toast.error('Select an engagement type before confirming');
       return;
     }
 
     setIsConfirmingEngagementId(verification.id);
+    setWorkflowActionFeedback(null);
     try {
       const response = await apiFetch(`/api/engagement-verifications/${verification.id}`, {
         method: 'PATCH',
@@ -427,7 +447,18 @@ export default function OrganizationInterviewsPage() {
       toast.success('Engagement confirmation recorded');
       await loadInterviews();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to confirm engagement');
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Engagement confirmation could not be recorded. The workflow is unchanged.';
+      setWorkflowActionFeedback({
+        kind: 'engagement_confirmation',
+        itemId: interview.id,
+        verificationId: verification.id,
+        title: 'Engagement confirmation could not be recorded',
+        message,
+      });
+      toast.error(message);
     } finally {
       setIsConfirmingEngagementId(null);
     }
@@ -817,12 +848,18 @@ export default function OrganizationInterviewsPage() {
                           <select
                             aria-label="Engagement type"
                             value={resolveEngagementTypeValue(interview)}
-                            onChange={(event) =>
+                            onChange={(event) => {
+                              if (
+                                workflowActionFeedback?.kind === 'engagement_confirmation' &&
+                                workflowActionFeedback.verificationId === verification.id
+                              ) {
+                                setWorkflowActionFeedback(null);
+                              }
                               setEngagementTypeSelections((current) => ({
                                 ...current,
                                 [verification.id]: event.target.value,
-                              }))
-                            }
+                              }));
+                            }}
                             className="h-10 w-full rounded-md border border-gray-300 px-3 text-sm"
                           >
                             <option value="">Select engagement type</option>
@@ -843,6 +880,31 @@ export default function OrganizationInterviewsPage() {
                               ? 'Confirming...'
                               : 'Confirm Engagement'}
                           </Button>
+                          {workflowActionFeedback?.kind === 'engagement_confirmation' &&
+                          workflowActionFeedback.itemId === interview.id &&
+                          workflowActionFeedback.verificationId === verification.id ? (
+                            <div
+                              role="alert"
+                              className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900"
+                            >
+                              <p className="font-semibold">{workflowActionFeedback.title}</p>
+                              <p>{workflowActionFeedback.message}</p>
+                              {resolveEngagementTypeValue(interview) ? (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    void handleConfirmEngagement(interview);
+                                  }}
+                                  disabled={isConfirmingEngagementId === verification.id}
+                                  className="mt-2 h-8 rounded-full border-amber-300 bg-white px-3 text-xs font-semibold text-amber-950 hover:bg-amber-100"
+                                >
+                                  Retry confirmation
+                                </Button>
+                              ) : null}
+                            </div>
+                          ) : null}
                         </>
                       ) : null}
                     </div>

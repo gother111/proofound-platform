@@ -457,6 +457,155 @@ describe('organization interviews page actions', () => {
     });
   });
 
+  it('keeps failed engagement confirmations visible and retryable', async () => {
+    const upcomingInterviewAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    const initialInterview = buildInterviewItem({
+      interview: {
+        id: 'interview-1',
+        scheduledAt: upcomingInterviewAt,
+        duration: 30,
+        platform: 'manual',
+        meetingUrl: 'https://example.com/manual-room',
+        manualMeetingProvider: null,
+        rescheduleCount: 0,
+        status: 'completed',
+        completedAt: new Date().toISOString(),
+        cancelledAt: null,
+        noShowAt: null,
+      },
+      decisionState: 'hire',
+      corridor: buildCorridor({
+        nextAction: {
+          id: 'confirm_engagement',
+          label: 'Confirm engagement',
+        },
+        engagementVerification: {
+          id: 'engagement-1',
+          status: 'pending_both_confirmations',
+          statusLabel: 'Awaiting both confirmations',
+          engagementType: null,
+          candidateConfirmedAt: null,
+          organizationConfirmedAt: null,
+          uploadedEvidencePresent: false,
+          proofHookStatus: 'not_ready',
+          verifiedAt: null,
+        },
+      }),
+      engagementVerification: {
+        id: 'engagement-1',
+        status: 'pending_both_confirmations',
+        statusLabel: 'Awaiting both confirmations',
+        engagementType: null,
+        createdAt: new Date().toISOString(),
+        candidateConfirmedAt: null,
+        organizationConfirmedAt: null,
+        uploadedEvidencePresent: false,
+        proofHookStatus: 'not_ready',
+        verifiedAt: null,
+      },
+    });
+    const confirmedInterview = {
+      ...initialInterview,
+      corridor: buildCorridor({
+        nextAction: {
+          id: 'wait_for_engagement_confirmation',
+          label: 'Wait',
+        },
+        engagementVerification: {
+          ...initialInterview.engagementVerification,
+          status: 'pending_candidate_confirmation',
+          statusLabel: 'Awaiting proof-review participant confirmation',
+          engagementType: 'full_time',
+          organizationConfirmedAt: new Date().toISOString(),
+        },
+      }),
+      engagementVerification: {
+        ...initialInterview.engagementVerification,
+        status: 'pending_candidate_confirmation',
+        statusLabel: 'Awaiting proof-review participant confirmation',
+        engagementType: 'full_time',
+        organizationConfirmedAt: new Date().toISOString(),
+      },
+    };
+    const fetchCalls: Array<{ url: string; init?: RequestInit }> = [];
+    let loadCount = 0;
+    let engagementPatchCount = 0;
+
+    getInterviewCorridorItemsMock.mockImplementation(async () => {
+      loadCount += 1;
+      return {
+        items: [loadCount === 1 ? initialInterview : confirmedInterview],
+      };
+    });
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string | URL, init?: RequestInit) => {
+        const url = typeof input === 'string' ? input : input.toString();
+        fetchCalls.push({ url, init });
+
+        if (url.startsWith('/api/csrf-token')) {
+          return {
+            ok: true,
+            json: async () => ({ token: 'csrf-token' }),
+          };
+        }
+
+        if (url === '/api/engagement-verifications/engagement-1') {
+          engagementPatchCount += 1;
+
+          if (engagementPatchCount === 1) {
+            return {
+              ok: false,
+              json: async () => ({
+                error: 'Engagement confirmation is temporarily unavailable.',
+              }),
+            };
+          }
+
+          return {
+            ok: true,
+            json: async () => ({
+              success: true,
+              engagementVerification: confirmedInterview.engagementVerification,
+            }),
+          };
+        }
+
+        return { ok: false, json: async () => ({ error: 'Unexpected route' }) };
+      })
+    );
+
+    render(<OrganizationInterviewsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Engagement: Awaiting both confirmations')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /confirm engagement/i })).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText('Engagement type'), {
+      target: { value: 'full_time' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /confirm engagement/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Engagement confirmation could not be recorded');
+    expect(alert).toHaveTextContent('Engagement confirmation is temporarily unavailable.');
+    expect(screen.getByLabelText('Engagement type')).toHaveValue('full_time');
+
+    fireEvent.click(within(alert).getByRole('button', { name: 'Retry confirmation' }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('Engagement: Awaiting proof-review participant confirmation')
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      fetchCalls.filter((call) => call.url === '/api/engagement-verifications/engagement-1')
+    ).toHaveLength(2);
+  });
+
   it('shows reschedule history and blocks a second reschedule on the interviews surface', async () => {
     const upcomingInterviewAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
