@@ -138,6 +138,9 @@ export default function IndividualInterviewsPage() {
     return internalValueLabel(platform);
   };
 
+  const meetingDisplayLabel = (interview: Interview['interview']) =>
+    meetingPlatformLabel(interview?.manualMeetingProvider ?? interview?.platform);
+
   const toCalendarPayload = (interview: Interview): InterviewCalendarPayload => ({
     interviewId: interview.interview?.id ?? interview.id,
     scheduledAt: interview.interview?.scheduledAt ?? new Date().toISOString(),
@@ -375,42 +378,53 @@ export default function IndividualInterviewsPage() {
                         <div className="flex items-center gap-2">
                           <Video className="h-4 w-4 text-muted-foreground" />
                           <span className="text-sm text-muted-foreground">
-                            {meetingPlatformLabel(interview.interview.platform)}
+                            {meetingDisplayLabel(interview.interview)}
                           </span>
                         </div>
                       )}
                       {interview.interview?.meetingUrl &&
-                        interview.interview.meetingUrl !== 'pending' && (
-                          <>
-                            <a
-                              href={interview.interview.meetingUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-proofound-stone/80 bg-white px-3 text-sm font-medium text-proofound-forest hover:bg-proofound-parchment/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
-                            >
-                              Join Meeting
-                              <ExternalLink className="w-3 h-3" />
-                            </a>
-                            <a
-                              href={buildGoogleCalendarUrl(toCalendarPayload(interview))}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-proofound-stone/80 bg-white px-3 text-sm font-medium text-proofound-forest hover:bg-proofound-parchment/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
-                            >
-                              Add to calendar
-                              <CalendarPlus className="w-3 h-3" />
-                            </a>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="min-h-10 px-3 text-xs"
-                              onClick={() => downloadInterviewIcs(toCalendarPayload(interview))}
-                            >
-                              <Download className="w-3 h-3 mr-1" />
-                              .ics
-                            </Button>
-                          </>
-                        )}
+                      interview.interview.meetingUrl !== 'pending' ? (
+                        <>
+                          <a
+                            href={interview.interview.meetingUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-proofound-stone/80 bg-white px-3 text-sm font-medium text-proofound-forest hover:bg-proofound-parchment/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+                          >
+                            Join Meeting
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                          <a
+                            href={buildGoogleCalendarUrl(toCalendarPayload(interview))}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-proofound-stone/80 bg-white px-3 text-sm font-medium text-proofound-forest hover:bg-proofound-parchment/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+                          >
+                            Add to calendar
+                            <CalendarPlus className="w-3 h-3" />
+                          </a>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="min-h-10 px-3 text-xs"
+                            onClick={() => downloadInterviewIcs(toCalendarPayload(interview))}
+                          >
+                            <Download className="w-3 h-3 mr-1" />
+                            .ics
+                          </Button>
+                        </>
+                      ) : interview.interview?.scheduledAt ? (
+                        <div
+                          role="status"
+                          className="flex min-w-0 items-start gap-2 rounded-md border border-[#E4CF9D] bg-[#FFF8E8] px-3 py-2 text-sm leading-5 text-[#6f4a00]"
+                        >
+                          <Video className="mt-0.5 h-4 w-4 shrink-0" />
+                          <span>
+                            <span className="font-semibold">Meeting link pending.</span> Join and
+                            calendar controls appear once a usable meeting link is attached.
+                          </span>
+                        </div>
+                      ) : null}
                     </div>
 
                     {/* Status Badge */}

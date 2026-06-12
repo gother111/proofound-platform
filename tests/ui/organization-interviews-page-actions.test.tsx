@@ -159,6 +159,42 @@ describe('organization interviews page actions', () => {
     );
   });
 
+  it('makes scheduled interviews with pending meeting links explicit', async () => {
+    getInterviewCorridorItemsMock.mockResolvedValue({
+      items: [
+        buildInterviewItem({
+          interview: {
+            id: 'interview-1',
+            scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            duration: 30,
+            platform: 'manual',
+            meetingUrl: 'pending',
+            manualMeetingProvider: 'teams',
+            rescheduleCount: 0,
+            status: 'scheduled',
+            completedAt: null,
+            cancelledAt: null,
+            noShowAt: null,
+          },
+        }),
+      ],
+    });
+
+    render(<OrganizationInterviewsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Teams')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('Meeting link pending.')).toBeInTheDocument();
+    expect(
+      screen.getByText(/join and calendar controls appear once a usable meeting link is attached/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /join meeting/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /add to calendar/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('pending')).not.toBeInTheDocument();
+  });
+
   it('uses in-app dialogs for interview outcome actions before refresh', async () => {
     const upcomingInterviewAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
     const fetchCalls: Array<{ url: string; init?: RequestInit }> = [];

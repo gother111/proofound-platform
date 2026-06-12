@@ -191,7 +191,13 @@ describe('individual interviews page clarity', () => {
       'https://meet.google.com/example'
     );
     expect(screen.getByText('Google Meet')).toBeInTheDocument();
+    expect(screen.getByText('Teams')).toBeInTheDocument();
+    expect(screen.getByText('Meeting link pending.')).toBeInTheDocument();
+    expect(
+      screen.getByText(/join and calendar controls appear once a usable meeting link is attached/i)
+    ).toBeInTheDocument();
     expect(screen.queryByText('Google_meet')).not.toBeInTheDocument();
+    expect(screen.queryByText('pending')).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: /add to calendar/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/engagement type/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /confirm engagement/i })).toBeInTheDocument();

@@ -211,6 +211,9 @@ export default function OrganizationInterviewsPage() {
     return internalValueLabel(platform);
   };
 
+  const meetingDisplayLabel = (interview: Interview['interview']) =>
+    meetingPlatformLabel(interview?.manualMeetingProvider ?? interview?.platform);
+
   const toCalendarPayload = (interview: Interview): InterviewCalendarPayload => ({
     interviewId: interview.interview?.id ?? interview.id,
     scheduledAt: interview.interview?.scheduledAt ?? new Date().toISOString(),
@@ -835,7 +838,7 @@ export default function OrganizationInterviewsPage() {
                               <div className="flex items-center gap-2">
                                 <Video className="h-4 w-4" />
                                 <span className="text-sm capitalize">
-                                  {meetingPlatformLabel(interview.interview.platform)}
+                                  {meetingDisplayLabel(interview.interview)}
                                 </span>
                               </div>
                             ) : null}
@@ -871,7 +874,19 @@ export default function OrganizationInterviewsPage() {
                                   .ics
                                 </Button>
                               </>
-                            ) : null}
+                            ) : (
+                              <div
+                                role="status"
+                                className="flex min-w-0 items-start gap-2 rounded-md border border-[#E4CF9D] bg-[#FFF8E8] px-3 py-2 text-sm leading-5 text-[#6f4a00]"
+                              >
+                                <Video className="mt-0.5 h-4 w-4 shrink-0" />
+                                <span>
+                                  <span className="font-semibold">Meeting link pending.</span> Join
+                                  and calendar controls appear once a usable meeting link is
+                                  attached.
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       ) : null}
