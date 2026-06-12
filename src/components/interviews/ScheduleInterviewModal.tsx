@@ -39,6 +39,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { scheduleInterview } from '@/app/actions/interviews';
+import { dispatchClientDiagnostic } from '@/lib/client-diagnostics';
 
 interface ScheduleInterviewModalProps {
   isOpen: boolean;
@@ -50,6 +51,9 @@ interface ScheduleInterviewModalProps {
 }
 
 type ManualMeetingProvider = 'teams' | 'google_meet' | 'other';
+
+const INTERVIEW_SCHEDULE_RETRY_MESSAGE =
+  'Interview could not be saved. Your selected time and meeting link are still here; please try again.';
 
 export function ScheduleInterviewModal({
   isOpen,
@@ -192,7 +196,12 @@ export function ScheduleInterviewModal({
 
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      dispatchClientDiagnostic('interview.schedule_modal.submit_failed', {
+        error: err instanceof Error ? err.message : 'Unknown error',
+        isReschedule,
+        platform,
+      });
+      setError(INTERVIEW_SCHEDULE_RETRY_MESSAGE);
     } finally {
       setIsSubmitting(false);
     }

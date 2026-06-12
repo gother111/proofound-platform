@@ -4,9 +4,14 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { ScheduleInterviewModal } from '@/components/interviews/ScheduleInterviewModal';
 
 const scheduleInterviewMock = vi.fn();
+const dispatchClientDiagnosticMock = vi.fn();
 
 vi.mock('@/app/actions/interviews', () => ({
   scheduleInterview: (...args: any[]) => scheduleInterviewMock(...args),
+}));
+
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientDiagnostic: (...args: any[]) => dispatchClientDiagnosticMock(...args),
 }));
 
 vi.mock('@/hooks/use-media-query', () => ({
@@ -89,6 +94,7 @@ describe('ScheduleInterviewModal', () => {
   beforeEach(() => {
     vi.useRealTimers();
     scheduleInterviewMock.mockReset();
+    dispatchClientDiagnosticMock.mockReset();
   });
 
   afterEach(() => {
@@ -361,17 +367,18 @@ describe('ScheduleInterviewModal', () => {
     expect(optionValues).not.toContain('zoom');
   });
 
-  it('renders backend actionable message when schedule action returns an error', async () => {
-    scheduleInterviewMock.mockRejectedValue(
-      new Error('Retry with a valid manual meeting link or choose another secure URL.')
-    );
+  it('keeps failed schedule submissions retryable without raw service text', async () => {
+    scheduleInterviewMock.mockRejectedValue(new Error('Calendar provider token expired'));
 
+    const onClose = vi.fn();
+    const onScheduled = vi.fn();
     render(
       <ScheduleInterviewModal
         isOpen
-        onClose={vi.fn()}
+        onClose={onClose}
         matchId="6e704a5a-a89e-43cc-9f71-d1f29fd7f3dd"
         matchAgreedAt={new Date()}
+        onScheduled={onScheduled}
       />
     );
 
@@ -380,18 +387,30 @@ describe('ScheduleInterviewModal', () => {
     const timeSelect = findSelectByOption('09:00');
     const platformSelect = findSelectByOption('manual');
     const manualProviderSelect = findSelectByOption('teams');
+    const meetingLinkInput = screen.getByLabelText(/meeting link/i);
     fireEvent.change(dateSelect, { target: { value: dateSelect.options[0].value } });
     fireEvent.change(timeSelect, { target: { value: timeSelect.options[0].value } });
     fireEvent.change(platformSelect, { target: { value: 'manual' } });
     fireEvent.change(manualProviderSelect, { target: { value: 'teams' } });
-    fireEvent.change(screen.getByLabelText(/meeting link/i), {
-      target: { value: 'https://example.com/manual-room' },
-    });
+    fireEvent.change(meetingLinkInput, { target: { value: 'https://example.com/manual-room' } });
     fireEvent.click(screen.getByRole('button', { name: /schedule interview/i }));
 
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent(
-      'Retry with a valid manual meeting link or choose another secure URL.'
+      'Interview could not be saved. Your selected time and meeting link are still here; please try again.'
+    );
+    expect(alert).not.toHaveTextContent('Calendar provider token expired');
+    expect(meetingLinkInput).toHaveValue('https://example.com/manual-room');
+    expect(manualProviderSelect).toHaveValue('teams');
+    expect(onClose).not.toHaveBeenCalled();
+    expect(onScheduled).not.toHaveBeenCalled();
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
+      'interview.schedule_modal.submit_failed',
+      {
+        error: 'Calendar provider token expired',
+        isReschedule: false,
+        platform: 'manual',
+      }
     );
   });
 
