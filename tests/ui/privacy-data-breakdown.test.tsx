@@ -36,7 +36,7 @@ describe('privacy data breakdown', () => {
   it('builds the inventory from the owner export instead of placeholders', async () => {
     render(<DataBreakdown />);
 
-    expect(screen.getByText('Loading your data...')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Loading your data...');
 
     await waitFor(() => {
       expect(screen.getByText('Profile information')).toBeInTheDocument();
@@ -70,7 +70,8 @@ describe('privacy data breakdown', () => {
 
     render(<DataBreakdown />);
 
-    expect(await screen.findByText(/Your data inventory could not load/i)).toBeInTheDocument();
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(/Your data inventory could not load/i);
     expect(screen.getByRole('button', { name: /Download my data/i })).toBeInTheDocument();
     expect(screen.getAllByText('0 records').length).toBeGreaterThan(0);
     expect(diagnostics).toContainEqual({

@@ -142,7 +142,9 @@ export function DataBreakdown() {
     return (
       <Card>
         <CardContent className="pt-6">
-          <p className="text-center text-muted-foreground">Loading your data...</p>
+          <p className="text-center text-muted-foreground" role="status" aria-live="polite">
+            Loading your data...
+          </p>
         </CardContent>
       </Card>
     );
@@ -166,7 +168,11 @@ export function DataBreakdown() {
       </CardHeader>
       <CardContent>
         {error && (
-          <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-100">
+          <div
+            className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-100"
+            role="alert"
+            aria-live="assertive"
+          >
             {error}
           </div>
         )}
