@@ -56,6 +56,18 @@ describe('MatchingOrganizationView launch corridor', () => {
     });
   });
 
+  it('keeps the no-assignment prompt proof-submission scoped', () => {
+    render(<MatchingOrganizationView assignments={[]} onCreateNew={vi.fn()} />);
+
+    expect(screen.getByText('Select an assignment corridor')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Choose one assignment in the left sidebar to start reviewing proof submissions.'
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/matched submissions/i)).not.toBeInTheDocument();
+  });
+
   it('does not render the archived beta test initiation CTA', async () => {
     apiFetchMock.mockResolvedValue({
       ok: true,
@@ -82,6 +94,44 @@ describe('MatchingOrganizationView launch corridor', () => {
     expect(screen.queryByText(/balanced/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /weights & filters/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/shortlist fits/i)).not.toBeInTheDocument();
+  });
+
+  it('keeps the reviewed-empty queue proof-submission scoped', async () => {
+    apiFetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        items: [
+          {
+            id: 'match-reviewed',
+            assignmentId: 'assignment-1',
+            reviewStage: 'shortlisted',
+            revealScope: 'shortlist_identity',
+            corridorState: 'shortlist',
+            reviewCard: {
+              candidateLabel: 'Submission B8K4',
+              fitSummary: {
+                headline: 'Proof signals are ready for intro review.',
+                bullets: [],
+                reasonCodes: [],
+              },
+            },
+            profile: {
+              skills: {},
+            },
+          },
+        ],
+      }),
+    });
+
+    render(<MatchingOrganizationView assignments={assignments as any} onCreateNew={vi.fn()} />);
+
+    expect(await screen.findByText('Review queue is empty')).toBeInTheDocument();
+    expect(
+      screen.getByText('All proof submissions for this assignment have been reviewed.')
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText('All matching submissions for this assignment have been reviewed.')
+    ).not.toBeInTheDocument();
   });
 
   it('stays on the assignment match API and never calls archived test-match endpoints', async () => {
@@ -407,6 +457,44 @@ describe('MatchingOrganizationView launch corridor', () => {
 
     expect(await screen.findByText('Submission #1')).toBeInTheDocument();
     expect(screen.queryByText('Candidate #1')).not.toBeInTheDocument();
+  });
+
+  it('keeps low-supply discovery copy proof-submission scoped', async () => {
+    apiFetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        items: [
+          {
+            id: 'match-low-supply',
+            assignmentId: 'assignment-1',
+            reviewStage: 'blind_review',
+            revealScope: 'blind',
+            supplyState: 'browse_only_low_candidate_supply',
+            reviewCard: {
+              candidateLabel: 'Submission C9Q1',
+              fitSummary: {
+                headline: 'Broader proof review is available.',
+                bullets: [],
+                reasonCodes: [],
+              },
+            },
+            profile: {
+              skills: {},
+            },
+          },
+        ],
+      }),
+    });
+
+    render(<MatchingOrganizationView assignments={assignments as any} onCreateNew={vi.fn()} />);
+
+    expect(await screen.findByText('Submission C9Q1')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Low proof-submission supply is showing broader review possibilities. Intro gates are unchanged.'
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/broader possible matches/i)).not.toBeInTheDocument();
   });
 
   it('keeps required-skill explanation labels proof-submission scoped', async () => {

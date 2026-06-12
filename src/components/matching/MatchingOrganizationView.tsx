@@ -585,7 +585,7 @@ export function MatchingOrganizationView({
                 Select an assignment corridor
               </h3>
               <p className="text-sm text-muted-foreground mt-1 max-w-sm">
-                Choose one assignment in the left sidebar to start reviewing matched submissions.
+                Choose one assignment in the left sidebar to start reviewing proof submissions.
               </p>
             </div>
           ) : loadError ? (
@@ -680,7 +680,7 @@ export function MatchingOrganizationView({
                   </h4>
                   <p className="text-xs text-muted-foreground mt-1 max-w-xs">
                     {activeSegment === 'queue'
-                      ? 'All matching submissions for this assignment have been reviewed.'
+                      ? 'All proof submissions for this assignment have been reviewed.'
                       : 'Shortlist qualified submissions to request introductions and reveal identities.'}
                   </p>
                 </div>
@@ -943,8 +943,8 @@ export function MatchingOrganizationView({
 
                         {activeMatch.supplyState === 'browse_only_low_candidate_supply' && (
                           <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                            Low-supply discovery is showing broader possible matches. Intro gates
-                            are unchanged.
+                            Low proof-submission supply is showing broader review possibilities.
+                            Intro gates are unchanged.
                           </div>
                         )}
 

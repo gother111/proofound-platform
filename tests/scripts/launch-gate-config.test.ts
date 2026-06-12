@@ -4573,6 +4573,13 @@ describe('launch gate package configuration', () => {
     expect(activeMatchingReviewText).toContain('Proof freshness:');
     expect(activeMatchingReviewText).toContain('Verification support:');
     expect(activeMatchingReviewText).toContain('Review proof-backed submissions');
+    expect(activeMatchingReviewText).toContain('start reviewing proof submissions');
+    expect(activeMatchingReviewText).toContain(
+      'All proof submissions for this assignment have been reviewed.'
+    );
+    expect(activeMatchingReviewText).toContain(
+      'Low proof-submission supply is showing broader review possibilities.'
+    );
     expect(activeMatchingReviewText).toContain('proof-submission review console');
     expect(activeMatchingReviewText).toContain('This assignment review');
     expect(activeMatchingReviewText).toContain('assignment review evidence');
@@ -4593,6 +4600,11 @@ describe('launch gate package configuration', () => {
     expect(activeMatchingReviewText).not.toContain('result.score');
     expect(activeMatchingReviewText).not.toContain('proofSignalLabel(value)');
     expect(activeMatchingReviewText).not.toContain('contributions.map');
+    expect(activeMatchingReviewText).not.toContain('matched submissions');
+    expect(activeMatchingReviewText).not.toContain(
+      'All matching submissions for this assignment have been reviewed.'
+    );
+    expect(activeMatchingReviewText).not.toContain('broader possible matches');
     expect(activeMatchingReviewText).not.toContain('subscores={matchExplanation.subscores}');
     expect(activeMatchingReviewText).not.toContain('explanation.subscores');
     expect(activeMatchingReviewText).not.toContain('fallbackScore');
