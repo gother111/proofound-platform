@@ -1272,6 +1272,11 @@ describe('runtime debug output guardrails', () => {
     expect(source).toContain('matching.client.load_failed');
     expect(source).toContain('matching.client.restore_refresh_failed');
     expect(source).toContain('matching.client.hide_failed');
+    expect(source).toContain(
+      'Matching could not load. Your profile, proof records, and paused or hidden choices are still safe; retry this section before acting on assignment reviews.'
+    );
+    expect(source).not.toContain('Failed to load matching profile');
+    expect(source).not.toContain('Failed to load matches');
     expect(source).not.toContain('Failed to load matching profile:');
     expect(source).not.toContain('Failed to load matches:');
     expect(source).not.toContain('Matching data request timed out');

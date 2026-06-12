@@ -15,6 +15,10 @@ import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { Search } from 'lucide-react';
 
 const MATCHING_DATA_TIMEOUT_MS = 10000;
+const MATCHING_LOAD_RETRY_COPY =
+  'Matching could not load. Your profile, proof records, and paused or hidden choices are still safe; retry this section before acting on assignment reviews.';
+const MATCHING_LOAD_TOAST_DESCRIPTION =
+  'Retry matching without changing proof, preferences, or hidden assignment reviews.';
 
 type MatchabilityCriterion = {
   id: string;
@@ -140,7 +144,7 @@ export function MatchingClient() {
       if (!profileRes.ok) {
         const errorData = await profileRes.json().catch(() => ({}));
         dispatchClientErrorDiagnostic('matching.client.profile_load_failed', errorData);
-        throw new Error(errorData.message || 'Failed to load matching profile');
+        throw new Error('matching_profile_request_failed');
       }
 
       const profileData = await profileRes.json();
@@ -168,7 +172,7 @@ export function MatchingClient() {
         if (!matchesRes.ok) {
           const errorData = matchesPayload || {};
           dispatchClientErrorDiagnostic('matching.client.matches_load_failed', errorData);
-          throw new Error(errorData.message || 'Failed to load matches');
+          throw new Error('matching_results_request_failed');
         }
 
         const matchesData = matchesPayload || {};
@@ -187,10 +191,10 @@ export function MatchingClient() {
         );
       } else {
         dispatchClientErrorDiagnostic('matching.client.load_failed', error);
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to load matching data';
-        setLoadError(errorMessage);
-        toast.error(errorMessage);
+        setLoadError(MATCHING_LOAD_RETRY_COPY);
+        toast.error('Matching could not load', {
+          description: MATCHING_LOAD_TOAST_DESCRIPTION,
+        });
       }
     } finally {
       clearTimeout(timeoutId);
@@ -270,7 +274,10 @@ export function MatchingClient() {
   if (loadError) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-8">
-        <div className="rounded-2xl border border-proofound-stone/80 bg-white/75 p-5 shadow-sm sm:p-6">
+        <div
+          className="rounded-2xl border border-proofound-stone/80 bg-white/75 p-5 shadow-sm sm:p-6"
+          role="alert"
+        >
           <p className="text-sm font-medium text-muted-foreground">Matching</p>
           <h1 className="mt-2 font-display text-2xl font-semibold text-proofound-charcoal">
             Matching needs another moment
