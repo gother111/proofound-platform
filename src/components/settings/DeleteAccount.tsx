@@ -26,6 +26,12 @@ interface AccountStatus {
   deletionRequestedAt: string | null;
 }
 
+const ACCOUNT_STATUS_LOAD_RETRY_COPY =
+  'Account deletion status could not load. Your privacy controls are still available; retry this section before deleting.';
+
+const ACCOUNT_DELETE_RETRY_COPY =
+  'Account deletion could not finish. Check your password and confirmation phrase, then try again.';
+
 export function DeleteAccount({ userId }: DeleteAccountProps) {
   const [accountStatus, setAccountStatus] = useState<AccountStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,9 +55,10 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
       }
       const data = await response.json();
       setAccountStatus(data);
+      setError(null);
     } catch (err) {
       dispatchClientErrorDiagnostic('settings.delete_account.status_load_failed', err);
-      setError(err instanceof Error ? err.message : 'Failed to load account status');
+      setError(ACCOUNT_STATUS_LOAD_RETRY_COPY);
     } finally {
       setLoading(false);
     }
@@ -95,7 +102,7 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
       await fetchAccountStatus();
     } catch (err) {
       dispatchClientErrorDiagnostic('settings.delete_account.request_failed', err);
-      setError(err instanceof Error ? err.message : 'Failed to delete account');
+      setError(ACCOUNT_DELETE_RETRY_COPY);
     } finally {
       setDeleting(false);
     }
@@ -150,7 +157,18 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
           <CardContent className="pt-6">
             <div className="flex items-start gap-3">
               <XCircle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5" />
-              <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
+              <div className="space-y-3">
+                <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void fetchAccountStatus()}
+                  disabled={loading}
+                >
+                  Retry status
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

@@ -200,6 +200,7 @@ describe('runtime debug output guardrails', () => {
       readSource('src/components/settings/SettingsContent.tsx'),
       readSource('src/components/settings/WorkEmailVerificationForm.tsx'),
       readSource('src/components/settings/AuditLogViewer.tsx'),
+      readSource('src/components/settings/DeleteAccount.tsx'),
       readSource('src/components/matching/EnhancedMatchFilters.tsx'),
     ].join('\n');
 
@@ -212,6 +213,8 @@ describe('runtime debug output guardrails', () => {
     expect(sources).toContain('settings.tour_reset_failed');
     expect(sources).toContain('settings.work_email.organizations_fetch_failed');
     expect(sources).toContain('settings.audit_log.load_failed');
+    expect(sources).toContain('settings.delete_account.status_load_failed');
+    expect(sources).toContain('settings.delete_account.request_failed');
     expect(sources).toContain('matching.filters.saved_parse_failed');
     expect(sources).not.toContain('Failed to load profile data:');
     expect(sources).not.toContain('Profile action failed:');

@@ -27,18 +27,41 @@ describe('settings DeleteAccount', () => {
 
   it('announces account status load failures', async () => {
     const loadError = new Error('settings unavailable');
-    vi.mocked(apiFetch).mockRejectedValueOnce(loadError);
+    vi.mocked(apiFetch)
+      .mockRejectedValueOnce(loadError)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          accountStatus: 'active',
+          deletionRequestedAt: null,
+        }),
+      } as Response);
 
     render(<DeleteAccount userId="user-1" />);
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('settings unavailable');
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(
+      'Account deletion status could not load. Your privacy controls are still available; retry this section before deleting.'
+    );
+    expect(alert).not.toHaveTextContent('settings unavailable');
     expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
       'settings.delete_account.status_load_failed',
       loadError
     );
+
+    fireEvent.click(screen.getByRole('button', { name: /retry status/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.queryByText(
+          'Account deletion status could not load. Your privacy controls are still available; retry this section before deleting.'
+        )
+      ).not.toBeInTheDocument();
+    });
+    expect(apiFetch).toHaveBeenCalledTimes(2);
   });
 
-  it('keeps failed deletion recoverable inside the confirmation dialog', async () => {
+  it('keeps failed deletion recoverable inside the confirmation dialog without raw backend text', async () => {
     const deleteError = { message: 'Password did not match your account.' };
     vi.mocked(apiFetch)
       .mockResolvedValueOnce({
@@ -65,7 +88,10 @@ describe('settings DeleteAccount', () => {
     fireEvent.click(screen.getByRole('button', { name: /^delete account$/i }));
 
     const alert = await screen.findByRole('alert');
-    expect(alert).toHaveTextContent('Password did not match your account.');
+    expect(alert).toHaveTextContent(
+      'Account deletion could not finish. Check your password and confirmation phrase, then try again.'
+    );
+    expect(alert).not.toHaveTextContent('Password did not match your account.');
     expect(screen.getByRole('heading', { name: /confirm account deletion/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/enter your password to confirm/i)).toHaveValue(
       'incorrect-password'
