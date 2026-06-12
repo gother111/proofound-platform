@@ -44,6 +44,10 @@ type CancelResponse = {
   removedSkillRequestIds?: string[];
   requestExpired?: boolean;
 };
+type CancelFeedback = {
+  title: string;
+  message: string;
+};
 
 type BundleCancelDialogProps = {
   open: boolean;
@@ -80,6 +84,7 @@ export function BundleCancelDialog({
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [cancelFeedback, setCancelFeedback] = useState<CancelFeedback | null>(null);
   const [bundleRequest, setBundleRequest] = useState<BundleRequest | null>(null);
   const [selectedItemIds, setSelectedItemIds] = useState<Record<string, boolean>>({});
   const loadRequestTokenRef = useRef(0);
@@ -97,6 +102,7 @@ export function BundleCancelDialog({
     loadRequestTokenRef.current = loadToken;
     setLoading(true);
     setLoadError(null);
+    setCancelFeedback(null);
 
     try {
       const response = await apiFetch(`/api/verification/requests/bundles/${requestId}`, {
@@ -141,6 +147,7 @@ export function BundleCancelDialog({
     .filter((id) => Boolean(selectedItemIds[id]));
 
   const toggleItem = (itemId: string, checked: boolean | 'indeterminate') => {
+    setCancelFeedback(null);
     setSelectedItemIds((prev) => ({
       ...prev,
       [itemId]: checked === true,
@@ -153,6 +160,7 @@ export function BundleCancelDialog({
     }
 
     setSaving(true);
+    setCancelFeedback(null);
     try {
       const response = await apiFetch(`/api/verification/requests/bundles/${requestId}`, {
         method: 'PATCH',
@@ -168,10 +176,18 @@ export function BundleCancelDialog({
       const body = (await response.json()) as { error?: string } & CancelResponse;
 
       if (!response.ok) {
-        toast.error(body.error || 'Failed to cancel selected artifacts.');
+        const message =
+          body.error ||
+          'Selected artifacts could not be canceled. Your bundle request is unchanged.';
+        setCancelFeedback({
+          title: 'Selected artifacts could not be canceled',
+          message,
+        });
+        toast.error(message);
         return;
       }
 
+      setCancelFeedback(null);
       const removedSkillRequestIds = body.removedSkillRequestIds || [];
       onCanceled(removedSkillRequestIds);
 
@@ -183,7 +199,12 @@ export function BundleCancelDialog({
       onOpenChange(false);
     } catch (error) {
       dispatchClientErrorDiagnostic('verifications.bundle_cancel.selected_cancel_failed', error);
-      toast.error('Failed to cancel selected artifacts.');
+      const message = 'Selected artifacts could not be canceled. Your bundle request is unchanged.';
+      setCancelFeedback({
+        title: 'Selected artifacts could not be canceled',
+        message,
+      });
+      toast.error(message);
     } finally {
       setSaving(false);
     }
@@ -281,6 +302,26 @@ export function BundleCancelDialog({
                 No pending artifacts are available to cancel in this bundle.
               </p>
             )}
+
+            {cancelFeedback ? (
+              <div
+                className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900"
+                role="alert"
+              >
+                <p className="font-semibold">{cancelFeedback.title}</p>
+                <p>{cancelFeedback.message}</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void handleCancelSelected()}
+                  disabled={saving || selectedPendingIds.length === 0}
+                  className="mt-2 h-8 rounded-full border-amber-300 bg-white px-3 text-xs font-semibold text-amber-950 hover:bg-amber-100"
+                >
+                  Retry cancel
+                </Button>
+              </div>
+            ) : null}
           </div>
         )}
 

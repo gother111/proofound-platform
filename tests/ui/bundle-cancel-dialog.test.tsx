@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { BundleCancelDialog } from '@/app/app/i/verifications/components/BundleCancelDialog';
@@ -71,5 +71,66 @@ describe('BundleCancelDialog', () => {
       'verifications.bundle_cancel.details_load_failed',
       expect.any(Error)
     );
+  });
+
+  it('keeps failed selected-artifact cancellations visible and retryable', async () => {
+    const onCanceled = vi.fn();
+    const onOpenChange = vi.fn();
+    apiFetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          request: {
+            id: 'bundle-1',
+            verifier_email: 'mentor@example.com',
+            verifier_relationship: 'mentor_coach',
+            status: 'pending',
+            items: [
+              {
+                id: 'bundle-item-1',
+                artifact_type: 'skill',
+                artifact_id: 'skill-1',
+                display_label: 'TypeScript proof pack',
+                status: 'pending',
+              },
+            ],
+          },
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: 'Bundle cancellation is temporarily unavailable.' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ removedSkillRequestIds: ['skill-request-1'] }),
+      });
+
+    render(
+      <BundleCancelDialog
+        open
+        requestId="bundle-1"
+        onOpenChange={onOpenChange}
+        onCanceled={onCanceled}
+      />
+    );
+
+    await screen.findByText('TypeScript proof pack');
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('button', { name: /Cancel selected \(1\)/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Selected artifacts could not be canceled');
+    expect(alert).toHaveTextContent('Bundle cancellation is temporarily unavailable.');
+    expect(screen.getByText('TypeScript proof pack')).toBeInTheDocument();
+    expect(screen.getByRole('checkbox')).toBeChecked();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retry cancel' }));
+
+    await waitFor(() => {
+      expect(onCanceled).toHaveBeenCalledWith(['skill-request-1']);
+    });
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+    expect(apiFetchMock).toHaveBeenCalledTimes(3);
   });
 });

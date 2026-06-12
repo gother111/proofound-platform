@@ -53,6 +53,10 @@ type ArtifactsResponse = {
 };
 
 type EmailHintKind = 'verifier_email_ready';
+type SubmissionFeedback = {
+  title: string;
+  message: string;
+};
 
 const GROUP_LABELS: Record<ArtifactType, string> = {
   skill: 'Skills',
@@ -94,6 +98,7 @@ export function CustomVerificationRequestDialog({ open, onOpenChange, onCreated 
     useState<SelectableCustomVerificationRelationship>('peer');
   const [message, setMessage] = useState('');
   const [selectedArtifacts, setSelectedArtifacts] = useState<Record<string, Artifact>>({});
+  const [submissionFeedback, setSubmissionFeedback] = useState<SubmissionFeedback | null>(null);
 
   const [emailHint, setEmailHint] = useState<EmailHintKind | null>(null);
   const [loadingHint, setLoadingHint] = useState(false);
@@ -189,6 +194,7 @@ export function CustomVerificationRequestDialog({ open, onOpenChange, onCreated 
 
   const toggleArtifact = (artifact: Artifact) => {
     const key = `${artifact.type}:${artifact.id}`;
+    setSubmissionFeedback(null);
     setSelectedArtifacts((prev) => {
       const next = { ...prev };
       if (next[key]) {
@@ -208,20 +214,30 @@ export function CustomVerificationRequestDialog({ open, onOpenChange, onCreated 
     setEmailHint(null);
     setLoadingHint(false);
     setArtifactLoadError(null);
+    setSubmissionFeedback(null);
   };
 
   const handleSubmit = async () => {
     if (selectedCount === 0) {
+      setSubmissionFeedback({
+        title: 'Select at least one artifact',
+        message: 'Choose the proof artifacts this verifier can review before sending.',
+      });
       toast.error('Select at least one artifact.');
       return;
     }
 
     if (!EMAIL_REGEX.test(verifierEmail.trim())) {
+      setSubmissionFeedback({
+        title: 'Enter a valid verifier email',
+        message: 'Use a complete email address so Proofound can send this request.',
+      });
       toast.error('Enter a valid verifier email.');
       return;
     }
 
     setSubmitting(true);
+    setSubmissionFeedback(null);
 
     try {
       const payload = {
@@ -244,7 +260,14 @@ export function CustomVerificationRequestDialog({ open, onOpenChange, onCreated 
 
       const responseData = await response.json();
       if (!response.ok) {
-        toast.error(responseData.error || 'Failed to send request.');
+        const errorMessage =
+          responseData.error ||
+          'Custom verification request could not be sent. Your selections are unchanged.';
+        setSubmissionFeedback({
+          title: 'Request could not be sent',
+          message: errorMessage,
+        });
+        toast.error(errorMessage);
         return;
       }
 
@@ -254,7 +277,13 @@ export function CustomVerificationRequestDialog({ open, onOpenChange, onCreated 
       onCreated?.();
     } catch (error) {
       dispatchClientErrorDiagnostic('verifications.custom_dialog.send_failed', error);
-      toast.error('Failed to send custom verification request.');
+      const errorMessage =
+        'Custom verification request could not be sent. Your selections are unchanged.';
+      setSubmissionFeedback({
+        title: 'Request could not be sent',
+        message: errorMessage,
+      });
+      toast.error(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -291,7 +320,10 @@ export function CustomVerificationRequestDialog({ open, onOpenChange, onCreated 
               type="email"
               placeholder="colleague@example.com"
               value={verifierEmail}
-              onChange={(event) => setVerifierEmail(event.target.value)}
+              onChange={(event) => {
+                setVerifierEmail(event.target.value);
+                setSubmissionFeedback(null);
+              }}
               autoComplete="email"
             />
             <div className="h-5">
@@ -312,9 +344,10 @@ export function CustomVerificationRequestDialog({ open, onOpenChange, onCreated 
             <Label style={{ color: '#2D3330' }}>Relationship to requester</Label>
             <Select
               value={relationship}
-              onValueChange={(value) =>
-                setRelationship(value as SelectableCustomVerificationRelationship)
-              }
+              onValueChange={(value) => {
+                setRelationship(value as SelectableCustomVerificationRelationship);
+                setSubmissionFeedback(null);
+              }}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -433,10 +466,23 @@ export function CustomVerificationRequestDialog({ open, onOpenChange, onCreated 
               id="custom-request-message"
               rows={3}
               value={message}
-              onChange={(event) => setMessage(event.target.value)}
+              onChange={(event) => {
+                setMessage(event.target.value);
+                setSubmissionFeedback(null);
+              }}
               placeholder="Add context for the verifier..."
             />
           </div>
+
+          {submissionFeedback ? (
+            <div
+              className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900"
+              role="alert"
+            >
+              <p className="font-semibold">{submissionFeedback.title}</p>
+              <p>{submissionFeedback.message}</p>
+            </div>
+          ) : null}
         </div>
 
         <DialogFooter>

@@ -135,4 +135,60 @@ describe('CustomVerificationRequestDialog', () => {
     expect(body.artifacts).toEqual([{ type: 'skill', id: 'skill-1' }]);
     expect(onCreated).toHaveBeenCalledTimes(1);
   });
+
+  it('keeps failed custom request sends visible without clearing selections', async () => {
+    global.fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+
+      if (url.includes('/api/verification/requests/custom/artifacts')) {
+        return {
+          ok: true,
+          json: async () => ({
+            artifacts: {
+              skill: [{ id: 'skill-1', type: 'skill', label: 'TypeScript' }],
+              experience: [],
+              education: [],
+              impact_story: [],
+              project: [],
+              volunteering: [],
+            },
+            total: 1,
+          }),
+        } as Response;
+      }
+
+      if (url.includes('/api/verification/requests/email-hint')) {
+        return {
+          ok: true,
+          json: async () => ({ kind: 'verifier_email_ready' }),
+        } as Response;
+      }
+
+      if (url.includes('/api/verification/requests/custom') && init?.method === 'POST') {
+        return {
+          ok: false,
+          json: async () => ({ error: 'Verification delivery is temporarily unavailable.' }),
+        } as Response;
+      }
+
+      throw new Error(`Unexpected fetch call: ${url} (${init?.method || 'GET'})`);
+    }) as any;
+
+    render(<CustomVerificationRequestDialog open onOpenChange={vi.fn()} />);
+
+    await screen.findByText('TypeScript');
+
+    fireEvent.change(screen.getByLabelText(/Verifier email address/i), {
+      target: { value: 'mentor@example.com' },
+    });
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('button', { name: /Send request/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Request could not be sent');
+    expect(alert).toHaveTextContent('Verification delivery is temporarily unavailable.');
+    expect(screen.getByDisplayValue('mentor@example.com')).toBeInTheDocument();
+    expect(screen.getByRole('checkbox')).toBeChecked();
+    expect(screen.getByText('1 selected')).toBeInTheDocument();
+  });
 });
