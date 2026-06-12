@@ -5565,6 +5565,10 @@ describe('launch gate package configuration', () => {
       path.join(repoRoot, 'tests/ui/organization-interviews-page-actions.test.tsx'),
       'utf8'
     );
+    const organizationInterviewsPage = fs.readFileSync(
+      path.join(repoRoot, 'src/app/app/o/[slug]/interviews/page.tsx'),
+      'utf8'
+    );
 
     expect(interviewPages).toContain('Interview workflow is loading');
     expect(interviewPages).toContain('Loading proof-review interview workflow');
@@ -5598,6 +5602,12 @@ describe('launch gate package configuration', () => {
     expect(organizationInterviewsPageTest).toContain(
       'Engagement: Awaiting proof-review participant confirmation'
     );
+    expect(organizationInterviewsPage).toMatch(
+      /proof-review participant and workflow\s+record stay clear/
+    );
+    expect(organizationInterviewsPage).toContain(
+      'Add context for the proof-review participant and workflow record'
+    );
     expect(hiringCorridorSnapshot).not.toContain('The candidate is shortlisted');
     expect(hiringCorridorSnapshot).not.toContain('The candidate needs to accept');
     expect(hiringCorridorSnapshot).not.toContain('The candidate expressed interest');
@@ -5617,6 +5627,10 @@ describe('launch gate package configuration', () => {
       'At most one active intro may exist per candidate_profile_id and assignment_id.'
     );
     expect(organizationInterviewsPageTest).not.toContain('Awaiting candidate confirmation');
+    expect(organizationInterviewsPage).not.toContain('candidate and workflow record stay clear');
+    expect(organizationInterviewsPage).not.toContain(
+      'Add context for the candidate and workflow record'
+    );
     expect(hiringCorridorSnapshot).not.toContain('so the candidate can complete');
     expect(hiringCorridorSnapshot).not.toContain('hire decision');
     expect(hiringCorridorSnapshot).not.toContain('The decision is hire');

@@ -1334,8 +1334,8 @@ export default function OrganizationInterviewsPage() {
                 Cancel interview
               </DialogTitle>
               <DialogDescription>
-                Add a brief reason before cancelling so the candidate and workflow record stay
-                clear.
+                Add a brief reason before cancelling so the proof-review participant and workflow
+                record stay clear.
               </DialogDescription>
             </DialogHeader>
 
@@ -1362,7 +1362,7 @@ export default function OrganizationInterviewsPage() {
                   rows={3}
                   disabled={Boolean(isCancellingInterviewId)}
                   aria-describedby="cancel-interview-reason-help"
-                  placeholder="Add context for the candidate and workflow record..."
+                  placeholder="Add context for the proof-review participant and workflow record..."
                 />
                 <p id="cancel-interview-reason-help" className="text-xs text-muted-foreground">
                   Keep this concise and suitable for conversation history.

@@ -305,7 +305,10 @@ describe('organization interviews page actions', () => {
 
     const cancelDialog = await screen.findByRole('dialog');
     expect(
-      within(cancelDialog).getByText(/candidate and workflow record stay clear/i)
+      within(cancelDialog).getByText(/proof-review participant and workflow record stay clear/i)
+    ).toBeInTheDocument();
+    expect(
+      within(cancelDialog).getByPlaceholderText(/proof-review participant and workflow record/i)
     ).toBeInTheDocument();
     expect(
       within(cancelDialog).getByText(/Cancellation changes the active interview workflow/i)
