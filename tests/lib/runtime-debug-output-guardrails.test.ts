@@ -272,6 +272,15 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Failed to parse saved filters:');
   });
 
+  it('keeps organization onboarding returned action errors safe and diagnostic', () => {
+    const source = readSource('src/components/onboarding/OrganizationSetup.tsx');
+
+    expect(source).toContain('ORGANIZATION_SETUP_SAFE_ACTION_ERRORS');
+    expect(source).toContain('onboarding.organization.returned_error');
+    expect(source).toContain('Organization setup could not be saved');
+    expect(source).not.toContain('setError(result.error)');
+  });
+
   it('keeps active decision, proof, profile privacy, and share diagnostics off raw console output', () => {
     const sources = [
       readSource('src/components/decisions/DecisionDialog.tsx'),

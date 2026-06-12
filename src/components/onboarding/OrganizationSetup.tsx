@@ -19,6 +19,24 @@ type CopyFeedback = {
 const ORGANIZATION_SETUP_RETRY_MESSAGE =
   'Organization setup could not be saved. Your details are still here; please try again.';
 
+const ORGANIZATION_SETUP_SAFE_ACTION_ERRORS = new Set([
+  'Organization name, slug, and type are required',
+  'Slug can only contain lowercase letters, numbers, and hyphens',
+  'Invalid organization type',
+  'You are already connected to an organization. Please contact support to update your organization membership.',
+  'Organization slug already taken. Please choose another.',
+  'Failed to create organization. Please try again.',
+]);
+
+function organizationSetupActionErrorMessage(message: string) {
+  if (ORGANIZATION_SETUP_SAFE_ACTION_ERRORS.has(message)) {
+    return message;
+  }
+
+  dispatchClientErrorDiagnostic('onboarding.organization.returned_error', new Error(message));
+  return ORGANIZATION_SETUP_RETRY_MESSAGE;
+}
+
 export function OrganizationSetup() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -97,7 +115,7 @@ export function OrganizationSetup() {
       const result = await completeOrganizationOnboarding(formData);
 
       if (result.error) {
-        setError(result.error);
+        setError(organizationSetupActionErrorMessage(result.error));
         setIsLoading(false);
         return;
       }

@@ -94,6 +94,26 @@ describe('OrganizationSetup portfolio link feedback', () => {
     expect(screen.getByRole('button', { name: /create organization/i })).toBeEnabled();
   });
 
+  it('keeps unexpected returned organization errors safe and diagnostic', async () => {
+    const rawError = 'Supabase insert failed: duplicate key stack detail';
+    completeOrganizationOnboardingMock.mockResolvedValueOnce({
+      error: rawError,
+    });
+
+    await submitOrganizationSetup();
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Organization setup could not be saved. Your details are still here; please try again.'
+    );
+    expect(screen.queryByText(rawError)).not.toBeInTheDocument();
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'onboarding.organization.returned_error',
+      expect.any(Error)
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(rawError);
+    expect(screen.getByRole('button', { name: /create organization/i })).toBeEnabled();
+  });
+
   it('logs unexpected organization creation failures and keeps retry available', async () => {
     const submitError = new Error('Action failed');
     completeOrganizationOnboardingMock.mockRejectedValueOnce(submitError);
