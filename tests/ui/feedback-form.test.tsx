@@ -173,6 +173,45 @@ describe('FeedbackForm', () => {
     expect(await screen.findByText(/Feedback submitted/)).toBeInTheDocument();
   });
 
+  it('keeps answers retryable when feedback submission fails', async () => {
+    vi.mocked(global.fetch).mockRejectedValueOnce(new Error('feedback service unavailable'));
+
+    render(<FeedbackForm template={template} interviewId="interview-1" token="token-1" />);
+
+    fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '4' } });
+    fireEvent.change(screen.getByPlaceholderText(/Add details/), {
+      target: { value: 'The role expectations were clear.' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /submit feedback/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Feedback could not be submitted. Your answers are still here; please try again.'
+    );
+    expect(screen.getByRole('spinbutton')).toHaveValue(4);
+    expect(screen.getByDisplayValue('The role expectations were clear.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /submit feedback/i })).toBeEnabled();
+  });
+
+  it('uses retry copy when the feedback API returns an unreadable generic failure', async () => {
+    vi.mocked(global.fetch).mockResolvedValueOnce({
+      ok: false,
+      json: async () => {
+        throw new Error('invalid json');
+      },
+    } as any);
+
+    render(<FeedbackForm template={template} interviewId="interview-1" token="token-1" />);
+
+    fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '3' } });
+    fireEvent.click(screen.getByRole('button', { name: /submit feedback/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Feedback could not be submitted. Your answers are still here; please try again.'
+    );
+    expect(screen.getByRole('spinbutton')).toHaveValue(3);
+    expect(screen.getByRole('button', { name: /submit feedback/i })).toBeEnabled();
+  });
+
   it('records visual fixture feedback locally without calling the guarded submit API', async () => {
     vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'true');
     vi.stubEnv('NEXT_PUBLIC_PROOFOUND_VISUAL_FIXTURES', 'true');

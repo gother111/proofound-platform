@@ -56,6 +56,19 @@ type FormMessage = {
   text: string;
 };
 
+const FEEDBACK_SUBMIT_RETRY_MESSAGE =
+  'Feedback could not be submitted. Your answers are still here; please try again.';
+
+function feedbackSubmitError(error?: string | null) {
+  const normalized = error?.trim();
+
+  if (normalized && !/^Something went wrong\.? Please try again\.?$/i.test(normalized)) {
+    return normalized;
+  }
+
+  return FEEDBACK_SUBMIT_RETRY_MESSAGE;
+}
+
 export function FeedbackForm({
   template,
   interviewId,
@@ -120,23 +133,27 @@ export function FeedbackForm({
       return;
     }
 
-    const response = await fetch('/api/feedback/submit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
+    try {
+      const response = await fetch('/api/feedback/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
 
-    if (!response.ok) {
-      const error = await response.json();
-      setMessage({ tone: 'error', text: error.error || 'Something went wrong. Please try again.' });
+      if (!response.ok) {
+        const error = await response.json().catch(() => null);
+        setMessage({ tone: 'error', text: feedbackSubmitError(error?.error) });
+        return;
+      }
+
+      setMessage({ tone: 'success', text: 'Feedback submitted. Thank you!' });
+      onSubmitted?.();
+      router.refresh();
+    } catch {
+      setMessage({ tone: 'error', text: FEEDBACK_SUBMIT_RETRY_MESSAGE });
+    } finally {
       setSubmitting(false);
-      return;
     }
-
-    setMessage({ tone: 'success', text: 'Feedback submitted. Thank you!' });
-    setSubmitting(false);
-    onSubmitted?.();
-    router.refresh();
   };
 
   const clearMissingQuestion = (questionId: string) => {
