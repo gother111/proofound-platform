@@ -511,6 +511,13 @@ describe('Public individual portfolio page', () => {
     expect(screen.getByRole('heading', { name: 'Public page unavailable' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Return home' })).toHaveAttribute('href', '/');
     expect(screen.getByText(/this public page link is unavailable/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/No private profile details were shown from this link/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Public Pages only load selected public-safe Proof Packs/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Ask the owner for a fresh Public Page link/i)).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Jane Doe' })).not.toBeInTheDocument();
   });
 
@@ -530,6 +537,35 @@ describe('Public individual portfolio page', () => {
     expect(screen.getByRole('heading', { name: 'Public page unavailable' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Return home' })).toHaveAttribute('href', '/');
     expect(screen.getByText(/this public page link is unavailable/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Contact, identity, and proof details stay hidden/i)
+    ).toBeInTheDocument();
     expect(notFoundMock).not.toHaveBeenCalled();
+  });
+
+  it('keeps unavailable owner previews on the safe in-app return path', async () => {
+    vi.mocked(resolvePublicIndividualPortfolioAccessByHandle).mockResolvedValue({
+      status: 'unavailable',
+      projection: buildProjection({
+        effectiveState: 'unavailable',
+      }) as any,
+    });
+
+    const element = await PortfolioPage({
+      params: Promise.resolve({ handle: 'jane' }),
+      searchParams: Promise.resolve({ returnTo: '/app/i/home' }),
+    });
+
+    render(element);
+
+    expect(screen.getByRole('heading', { name: 'Public page unavailable' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /return to menu/i })).toHaveAttribute(
+      'href',
+      '/app/i/home'
+    );
+    expect(screen.queryByRole('link', { name: 'Return home' })).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/No private profile details were shown from this link/i)
+    ).toBeInTheDocument();
   });
 });

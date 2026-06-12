@@ -2,7 +2,16 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { permanentRedirect } from 'next/navigation';
-import { ArrowLeft, CheckCircle2, CircleDot, ExternalLink, Link2, Mail } from 'lucide-react';
+import {
+  ArrowLeft,
+  CheckCircle2,
+  CircleDot,
+  ExternalLink,
+  EyeOff,
+  Link2,
+  Mail,
+  ShieldCheck,
+} from 'lucide-react';
 
 import { Logo } from '@/components/brand/Logo';
 import { PublicProfileEmptyState } from '@/components/public-profile/PublicProfileEmptyState';
@@ -34,22 +43,92 @@ import { CopyTextButton } from './CopyTextButton';
 import { DownloadPdfButton } from './DownloadPdfButton';
 import { ShareLinkButton } from './ShareLinkButton';
 
-function renderUnavailablePage(handle: string) {
+function renderUnavailablePage(
+  handle: string,
+  {
+    returnHref = '/',
+    returnLabel = 'Return home',
+  }: { returnHref?: string; returnLabel?: string } = {}
+) {
   return (
     <PublicProfileShell
       maxWidthClassName="max-w-4xl"
       footer={
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <span>proofound.io/portfolio/{handle}</span>
           <span>Public page unavailable</span>
         </div>
       }
     >
-      <PublicProfileSection title="Public page unavailable" titleLevel={1}>
-        <PublicProfileEmptyState message="This Public Page link is unavailable. It may be hidden, retired, or not ready for launch-safe sharing." />
-        <div className="mt-4">
-          <Button asChild>
-            <Link href="/">Return home</Link>
+      <PublicProfileSection
+        title="Public page unavailable"
+        titleLevel={1}
+        right={
+          <Badge variant="outline" className="border-[#D9D5CC] text-muted-foreground">
+            Direct-link gate
+          </Badge>
+        }
+        contentClassName="space-y-4"
+      >
+        <div className="space-y-3">
+          <p className="text-sm leading-6 text-foreground">
+            This Public Page link is unavailable. It may be hidden, retired, or not ready for
+            launch-safe sharing.
+          </p>
+
+          <div
+            role="status"
+            aria-live="polite"
+            className="border-l-4 border-proofound-forest bg-[#F3FAF6] px-4 py-3 text-sm leading-6 text-proofound-charcoal"
+          >
+            <div className="flex min-w-0 gap-3">
+              <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/80 text-proofound-forest">
+                <ShieldCheck className="h-5 w-5" />
+              </span>
+              <div className="min-w-0">
+                <p className="font-semibold text-proofound-forest">
+                  No private profile details were shown from this link.
+                </p>
+                <p className="mt-1 text-muted-foreground">
+                  Public Pages only load selected public-safe Proof Packs when the owner has an
+                  active direct-link snapshot.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <ul className="space-y-2 text-sm">
+            <li className="flex min-w-0 gap-2">
+              <span className="mt-1 shrink-0 text-proofound-forest">
+                <Link2 className="h-4 w-4 text-proofound-forest" />
+              </span>
+              <p className="min-w-0 leading-6 text-muted-foreground">
+                <span className="font-semibold text-proofound-charcoal">Link inactive.</span> The
+                owner may have hidden, retired, or not yet published this snapshot.
+              </p>
+            </li>
+            <li className="flex min-w-0 gap-2">
+              <span className="mt-1 shrink-0 text-proofound-forest">
+                <EyeOff className="h-4 w-4 text-proofound-forest" />
+              </span>
+              <p className="min-w-0 leading-6 text-muted-foreground">
+                <span className="font-semibold text-proofound-charcoal">Details protected.</span>{' '}
+                Contact, identity, and proof details stay hidden until a public snapshot is active.
+              </p>
+            </li>
+            <li className="flex min-w-0 gap-2">
+              <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-proofound-forest" />
+              <p className="min-w-0 leading-6 text-muted-foreground">
+                <span className="font-semibold text-proofound-charcoal">Next step.</span> Ask the
+                owner for a fresh Public Page link if you expected access.
+              </p>
+            </li>
+          </ul>
+        </div>
+
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button asChild className="bg-proofound-forest text-white hover:bg-[#163d2f]">
+            <Link href={returnHref}>{returnLabel}</Link>
           </Button>
         </div>
       </PublicProfileSection>
@@ -109,13 +188,13 @@ export default async function PortfolioPage({
         permanentRedirect(`/portfolio/${encodeURIComponent(redirectTarget)}`);
       }
 
-      return renderUnavailablePage(handle);
+      return renderUnavailablePage(handle, { returnHref: returnPath, returnLabel });
     }
-    return renderUnavailablePage(handle);
+    return renderUnavailablePage(handle, { returnHref: returnPath, returnLabel });
   }
 
   if (access.status === 'unavailable') {
-    return renderUnavailablePage(handle);
+    return renderUnavailablePage(handle, { returnHref: returnPath, returnLabel });
   }
 
   const data = access.projection;

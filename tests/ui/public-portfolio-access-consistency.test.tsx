@@ -276,6 +276,10 @@ describe('public portfolio access consistency', () => {
     expect(container.querySelectorAll('main')).toHaveLength(1);
     expect(screen.getByRole('heading', { name: 'Public page unavailable' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Return home' })).toHaveAttribute('href', '/');
+    expect(
+      screen.getByText(/No private profile details were shown from this link/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Ask the owner for a fresh Public Page link/i)).toBeInTheDocument();
     expect(summaryResponse.status).toBe(404);
     expect(await summaryResponse.json()).toEqual({ error: 'Profile not found' });
     expect(exportResponse.status).toBe(404);
