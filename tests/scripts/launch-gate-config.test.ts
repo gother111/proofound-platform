@@ -5292,7 +5292,11 @@ describe('launch gate package configuration', () => {
     expect(workflowEntryCopy).toContain('proof-led assignment reviews');
     expect(workflowEntryCopy).toContain('assignment reviews');
     expect(workflowEntryCopy).toContain('Preparing privacy-safe assignment reviews');
+    expect(workflowEntryCopy).toContain('Preparing assignment reviews');
+    expect(workflowEntryCopy).toContain('No assignment reviews yet');
     expect(workflowEntryCopy).toContain('new assignment reviews can land cleanly');
+    expect(workflowEntryCopy).toContain('No assignment reviews fit the current filters');
+    expect(workflowEntryCopy).toContain('Hidden from assignment reviews');
     expect(workflowEntryCopy).toContain('Filter Assignment Reviews');
     expect(workflowEntryCopy).toContain('Narrow review context by skills');
     expect(workflowEntryCopy).toContain('to open proof-led assignment review');
@@ -5313,6 +5317,11 @@ describe('launch gate package configuration', () => {
       'opportunities aligned with your skills',
       'privacy-safe opportunities',
       'new opportunities can land cleanly',
+      'Preparing matches',
+      'No matches yet',
+      'No matches fit the current filters',
+      'Hidden from results',
+      'Could not refresh matches',
       'Filter Matches',
       'Narrow down opportunities',
       'proof-led hiring corridor',

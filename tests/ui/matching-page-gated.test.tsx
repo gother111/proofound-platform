@@ -193,9 +193,12 @@ describe('MatchingPage soft-gated state', () => {
     render(<MatchingPage />);
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'No matches yet' })).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { name: 'No assignment reviews yet' })
+      ).toBeInTheDocument();
     });
 
+    expect(screen.queryByRole('heading', { name: 'No matches yet' })).not.toBeInTheDocument();
     expect(
       screen.getByText(
         'Nothing needs your attention right now. Keep your proof and preferences current so new assignment reviews can land cleanly.'

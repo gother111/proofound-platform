@@ -214,7 +214,7 @@ export function MatchingClient() {
     refreshTimer.current = setTimeout(() => {
       fetchMatches().catch((err) => {
         dispatchClientErrorDiagnostic('matching.client.restore_refresh_failed', err);
-        toast.error('Could not refresh matches. Please try again.');
+        toast.error('Could not refresh assignment reviews. Please try again.');
       });
     }, 120);
   };
@@ -257,7 +257,7 @@ export function MatchingClient() {
     return (
       <div className="mx-auto max-w-5xl px-4 pb-28 pt-6 md:pb-6">
         <p className="mb-3 text-sm text-muted-foreground" role="status" aria-live="polite">
-          Preparing matches...
+          Preparing assignment reviews...
         </p>
         <div className="mb-6">
           <PageIntroSkeleton showAction={false} />
@@ -416,12 +416,12 @@ export function MatchingClient() {
             <Search className="h-8 w-8" />
           </div>
           <h2 className="mb-2 font-display text-xl font-semibold text-proofound-charcoal">
-            No matches yet
+            No assignment reviews yet
           </h2>
           <p className="mb-6 mx-auto max-w-md text-sm leading-6 text-muted-foreground">
             {matches.length === 0
               ? 'Nothing needs your attention right now. Keep your proof and preferences current so new assignment reviews can land cleanly.'
-              : 'No matches fit the current filters. Loosen one filter to widen the corridor.'}
+              : 'No assignment reviews fit the current filters. Loosen one filter to widen the corridor.'}
           </p>
           {ensureThreeActions(readinessActions).length > 0 ? (
             <div className="mx-auto w-full max-w-xl space-y-2 text-left mt-2">
@@ -513,7 +513,7 @@ export function MatchingClient() {
                 const updatedMatches = matches.filter(shouldKeep);
                 setMatches(updatedMatches);
                 setFilteredMatches((prev) => prev.filter(shouldKeep));
-                toast.success('Hidden from results');
+                toast.success('Hidden from assignment reviews');
               }}
             />
           ))}
