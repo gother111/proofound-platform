@@ -726,6 +726,11 @@ describe('launch gate package configuration', () => {
     expect(publicLandingCopy).toContain('organizations review assignment submissions');
     expect(publicLandingCopy).toContain('Proof-review participants add context');
     expect(publicLandingCopy).toContain('Proof-review participants flatten real ability');
+    expect(publicLandingCopy).toContain(
+      'The proof-review participant side no longer leads with identity'
+    );
+    expect(publicLandingCopy).toContain('Participant-side challenge');
+    expect(publicLandingCopy).toMatch(/problems proof-review\s+participants face/);
     expect(publicLandingCopy).toContain("candidateLabel: 'Submission A'");
     expect(publicLandingCopy).toContain('Proof-first assignment review should stay calm');
     expect(publicLandingCopy).toContain('privacy-safe assignment review');
@@ -745,6 +750,9 @@ describe('launch gate package configuration', () => {
       'clear assignment-based hiring',
       'Review proof-backed candidates',
       'clearer-evidence candidates',
+      'The candidate side no longer leads with identity',
+      'Candidate-side challenge',
+      'problems candidates face',
       'Candidates add context',
       'Candidates flatten real ability',
       'organizations find talent',

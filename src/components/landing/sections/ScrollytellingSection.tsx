@@ -1007,8 +1007,8 @@ function ProofPackCard({
             ) : (
               <div className="max-w-[18rem] space-y-2">
                 <p className="text-sm leading-6 text-muted-foreground">
-                  The candidate side no longer leads with identity. It shows the friction people
-                  carry through the current process.
+                  The proof-review participant side no longer leads with identity. It shows the
+                  friction people carry through the current process.
                 </p>
               </div>
             )}
@@ -1111,11 +1111,11 @@ function ProofPackCard({
                 >
                   <div className="space-y-2">
                     <p className="text-[0.68rem] uppercase tracking-[0.24em] text-foreground/45">
-                      Candidate-side challenge
+                      Participant-side challenge
                     </p>
                     <p className="text-sm leading-6 text-muted-foreground">
-                      The shell stays familiar. The content shifts to the problems candidates face
-                      in the current system.
+                      The shell stays familiar. The content shifts to the problems proof-review
+                      participants face in the current system.
                     </p>
                   </div>
 

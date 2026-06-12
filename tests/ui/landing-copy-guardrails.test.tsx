@@ -63,6 +63,9 @@ describe('landing copy guardrails', () => {
     expect(landingCopy).toMatch(/organizations review assignment submissions/i);
     expect(landingCopy).toMatch(/Proof-review participants add context/i);
     expect(landingCopy).toMatch(/Proof-review participants flatten real ability/i);
+    expect(landingCopy).toMatch(/proof-review participant side no longer leads with identity/i);
+    expect(landingCopy).toMatch(/Participant-side challenge/i);
+    expect(landingCopy).toMatch(/problems proof-review\s+participants face/i);
     expect(landingCopy).not.toMatch(/privacy-safe signal/i);
     expect(landingCopy).not.toMatch(/stronger signal than CVs/i);
     expect(landingCopy).not.toMatch(/weak CV signal/i);
@@ -79,6 +82,9 @@ describe('landing copy guardrails', () => {
     expect(landingCopy).not.toMatch(/Evidence-based hiring for a world/i);
     expect(landingCopy).not.toMatch(/Review proof-backed candidates/i);
     expect(landingCopy).not.toMatch(/clearer-evidence candidates/i);
+    expect(landingCopy).not.toMatch(/candidate side no longer leads with identity/i);
+    expect(landingCopy).not.toMatch(/Candidate-side challenge/i);
+    expect(landingCopy).not.toMatch(/problems candidates face/i);
     expect(landingCopy).not.toMatch(/Candidates add context/i);
     expect(landingCopy).not.toMatch(/Candidates flatten real ability/i);
     expect(landingCopy).not.toMatch(/organizations find talent/i);
