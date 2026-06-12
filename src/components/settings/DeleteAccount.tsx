@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { AlertTriangle, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 interface DeleteAccountProps {
   userId: string;
@@ -49,6 +50,7 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
       const data = await response.json();
       setAccountStatus(data);
     } catch (err) {
+      dispatchClientErrorDiagnostic('settings.delete_account.status_load_failed', err);
       setError(err instanceof Error ? err.message : 'Failed to load account status');
     } finally {
       setLoading(false);
@@ -92,6 +94,7 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
       setShowConfirmDialog(false);
       await fetchAccountStatus();
     } catch (err) {
+      dispatchClientErrorDiagnostic('settings.delete_account.request_failed', err);
       setError(err instanceof Error ? err.message : 'Failed to delete account');
     } finally {
       setDeleting(false);
@@ -137,10 +140,12 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
   // Show deletion form for active accounts
   return (
     <div className="space-y-4">
-      {error && (
+      {error && !showConfirmDialog && (
         <Card
           variant="bento"
           className="border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950 rounded-2xl"
+          role="alert"
+          aria-live="assertive"
         >
           <CardContent className="pt-6">
             <div className="flex items-start gap-3">
@@ -155,6 +160,8 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
         <Card
           variant="bento"
           className="border-green-200 dark:border-green-900 bg-green-50 dark:bg-green-950 rounded-2xl"
+          role="status"
+          aria-live="polite"
         >
           <CardContent className="pt-6">
             <div className="flex items-start gap-3">
@@ -259,7 +266,16 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
               />
             </div>
 
-            {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+            {error && (
+              <p
+                id="settings-delete-account-error"
+                className="text-sm text-red-600 dark:text-red-400"
+                role="alert"
+                aria-live="assertive"
+              >
+                {error}
+              </p>
+            )}
           </div>
 
           <DialogFooter>
@@ -280,6 +296,7 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
               variant="destructive"
               onClick={handleDeleteRequest}
               disabled={deleting || confirmText !== 'DELETE MY ACCOUNT' || !password}
+              aria-describedby={error ? 'settings-delete-account-error' : undefined}
             >
               {deleting ? (
                 <>
