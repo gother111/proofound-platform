@@ -4,6 +4,7 @@ import { visualFixturesRuntimeAllowed } from '@/lib/env';
 export const VISUAL_CANDIDATE_INVITE_TOKENS = {
   proofCardClaimed: 'visual-proof-card-claimed',
   proofCardPending: 'visual-proof-card-pending',
+  proofCardPendingSignedIn: 'visual-proof-card-pending-signed-in',
 } as const;
 
 const MOCK_USER_ID = '00000000-0000-4000-8000-000000000001';
@@ -54,12 +55,14 @@ function buildAssignment() {
 export function buildVisualCandidateInviteResponse(token: string) {
   if (
     token !== VISUAL_CANDIDATE_INVITE_TOKENS.proofCardClaimed &&
-    token !== VISUAL_CANDIDATE_INVITE_TOKENS.proofCardPending
+    token !== VISUAL_CANDIDATE_INVITE_TOKENS.proofCardPending &&
+    token !== VISUAL_CANDIDATE_INVITE_TOKENS.proofCardPendingSignedIn
   ) {
     return null;
   }
 
   const claimed = token === VISUAL_CANDIDATE_INVITE_TOKENS.proofCardClaimed;
+  const signedInPending = token === VISUAL_CANDIDATE_INVITE_TOKENS.proofCardPendingSignedIn;
 
   return {
     invite: {
@@ -76,6 +79,13 @@ export function buildVisualCandidateInviteResponse(token: string) {
       communicationsUrl: null,
       proofSubmittedAt: null,
     },
+    currentUser:
+      claimed || signedInPending
+        ? {
+            id: MOCK_USER_ID,
+            email: 'admin@test-org.com',
+          }
+        : null,
     organization: {
       id: 'visual-org-nordic-field',
       slug: 'nordic-field-systems',

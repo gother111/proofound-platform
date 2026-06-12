@@ -210,6 +210,22 @@ function candidateInviteLoadError(status: number, error?: string | null) {
   return 'We could not open this invitation right now.';
 }
 
+const CANDIDATE_INVITE_CLAIM_RETRY_MESSAGE =
+  'Invite could not be accepted. Your assignment context is still here; please try again.';
+
+const CANDIDATE_INVITE_CLAIM_RETRY_DETAIL =
+  'No proof was submitted, no visibility changed, and the invitation can be retried from this page.';
+
+function candidateInviteClaimError(error?: string | null) {
+  const normalized = error?.trim();
+
+  if (normalized && !/^Failed to claim invite\.?$/i.test(normalized)) {
+    return normalized;
+  }
+
+  return CANDIDATE_INVITE_CLAIM_RETRY_MESSAGE;
+}
+
 export function CandidateInviteClient({
   token,
   initialState,
@@ -323,8 +339,8 @@ export function CandidateInviteClient({
 
       const payload = await response.json().catch(() => null);
       if (!response.ok) {
-        setError(payload?.error ?? 'Failed to claim invite.');
-        setErrorDetail(null);
+        setError(candidateInviteClaimError(payload?.error));
+        setErrorDetail(CANDIDATE_INVITE_CLAIM_RETRY_DETAIL);
         return;
       }
 
@@ -337,8 +353,8 @@ export function CandidateInviteClient({
       await loadState();
     } catch (claimError) {
       dispatchClientErrorDiagnostic('candidate_invite.client.claim_failed', claimError);
-      setError('Failed to claim invite.');
-      setErrorDetail(null);
+      setError(CANDIDATE_INVITE_CLAIM_RETRY_MESSAGE);
+      setErrorDetail(CANDIDATE_INVITE_CLAIM_RETRY_DETAIL);
     } finally {
       setSubmitting(false);
     }
@@ -492,6 +508,7 @@ export function CandidateInviteClient({
   const isClaimedByCurrentUser = Boolean(
     invite.status === CANDIDATE_INVITE_STATUS.CLAIMED && currentUser && invite.claimedByCurrentUser
   );
+  const canClaimInvite = Boolean(currentUser && !isCompleted && !isClaimedByCurrentUser);
 
   const assignmentTitle = assignment?.role?.trim() || 'Untitled assignment';
   const assignmentSkills = assignment ? skillLabels(assignment.mustHaveSkills) : [];
@@ -867,6 +884,35 @@ export function CandidateInviteClient({
                       <Link href={`/login?next=${nextParam}`}>Sign in</Link>
                     </Button>
                   </div>
+                </div>
+              ) : null}
+
+              {canClaimInvite ? (
+                <div className="space-y-3 rounded-lg border border-proofound-stone bg-white/75 p-4">
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold text-proofound-charcoal">
+                      {isTestFlow ? 'Accept this trial match' : 'Start proof submission'}
+                    </p>
+                    <p className="text-sm leading-6 text-proofound-charcoal/70">
+                      {isTestFlow
+                        ? 'Accepting creates the private message thread for this assignment. Identity reveal still waits for the consented reveal step.'
+                        : 'Accepting this invite unlocks your owner-only Proof Pack selector for this assignment. It does not submit proof or publish a Public Page.'}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={claimInvite}
+                    disabled={submitting}
+                    className="w-full bg-proofound-forest text-white hover:bg-proofound-forest/90 sm:w-auto"
+                  >
+                    {submitting
+                      ? isTestFlow
+                        ? 'Accepting trial match...'
+                        : 'Starting proof submission...'
+                      : isTestFlow
+                        ? 'Accept trial match'
+                        : 'Start proof submission'}
+                  </Button>
                 </div>
               ) : null}
 

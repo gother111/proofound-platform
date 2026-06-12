@@ -363,6 +363,163 @@ describe('CandidateInviteClient test_match flow', () => {
     );
   });
 
+  it('lets a signed-in candidate accept a pending proof-card invite before choosing proof', async () => {
+    let claimed = false;
+    const proofPack = {
+      id: '11111111-1111-4111-8111-111111111111',
+      title: 'Service design proof pack',
+      summary: 'One owner-only proof pack for this assignment.',
+      evidenceSummary: null,
+      outcomesSummary: null,
+      verificationSummary: null,
+      updatedAt: new Date().toISOString(),
+    };
+    const fetchMock = vi.fn().mockImplementation(async (url: string) => {
+      if (url === '/api/candidate-invites/token-value') {
+        return {
+          ok: true,
+          json: async () => ({
+            invite: {
+              id: 'invite-1',
+              status: claimed ? 'claimed' : 'pending',
+              flowType: 'proof_card',
+              assignmentId: 'assignment-1',
+              maskedEmail: 'ca***@example.com',
+              expiresAt: new Date(Date.now() + 3600_000).toISOString(),
+              claimedAt: claimed ? new Date().toISOString() : null,
+              claimedByCurrentUser: claimed,
+              acceptedAt: null,
+              acceptedByCurrentUser: false,
+              communicationsUrl: null,
+              proofSubmittedAt: null,
+            },
+            organization: {
+              id: 'org-1',
+              slug: 'acme',
+              displayName: 'Acme Org',
+              logoUrl: null,
+            },
+            assignment: structuredAssignment,
+            availableProofPacks: claimed ? [proofPack] : [],
+          }),
+        };
+      }
+
+      if (url === '/api/user/me') {
+        return {
+          ok: true,
+          json: async () => ({
+            id: 'user-1',
+            email: 'candidate@example.com',
+          }),
+        };
+      }
+
+      throw new Error(`Unexpected fetch URL: ${url}`);
+    });
+    apiFetchMock.mockImplementation(async (url: string) => {
+      if (url === '/api/candidate-invites/token-value/claim') {
+        claimed = true;
+        return {
+          ok: true,
+          json: async () => ({ success: true, status: 'claimed' }),
+        } as Response;
+      }
+
+      throw new Error(`Unexpected apiFetch URL: ${url}`);
+    });
+
+    vi.stubGlobal('fetch', fetchMock as any);
+
+    render(<CandidateInviteClient token="token-value" />);
+
+    await screen.findByRole('heading', { name: /designer/i });
+
+    expect(screen.getByRole('button', { name: /start proof submission/i })).toBeInTheDocument();
+    expect(screen.queryByLabelText(/owner-only proof pack/i)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /start proof submission/i }));
+
+    await waitFor(() => {
+      expect(apiFetchMock).toHaveBeenCalledWith(
+        '/api/candidate-invites/token-value/claim',
+        expect.objectContaining({ method: 'POST' })
+      );
+    });
+    await waitFor(() => {
+      expect(screen.getByLabelText(/owner-only proof pack/i)).toHaveValue(proofPack.id);
+    });
+    expect(screen.getByRole('status')).toHaveTextContent(
+      /Application started\. Review visibility before you submit proof\./i
+    );
+    expect(
+      screen.queryByRole('button', { name: /start proof submission/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it('keeps pending invite acceptance retryable when claim fails', async () => {
+    const fetchMock = vi.fn().mockImplementation(async (url: string) => {
+      if (url === '/api/candidate-invites/token-value') {
+        return {
+          ok: true,
+          json: async () => ({
+            invite: {
+              id: 'invite-1',
+              status: 'pending',
+              flowType: 'proof_card',
+              assignmentId: 'assignment-1',
+              maskedEmail: 'ca***@example.com',
+              expiresAt: new Date(Date.now() + 3600_000).toISOString(),
+              claimedAt: null,
+              claimedByCurrentUser: false,
+              acceptedAt: null,
+              acceptedByCurrentUser: false,
+              communicationsUrl: null,
+              proofSubmittedAt: null,
+            },
+            organization: {
+              id: 'org-1',
+              slug: 'acme',
+              displayName: 'Acme Org',
+              logoUrl: null,
+            },
+            assignment: structuredAssignment,
+            availableProofPacks: [],
+          }),
+        };
+      }
+
+      if (url === '/api/user/me') {
+        return {
+          ok: true,
+          json: async () => ({
+            id: 'user-1',
+            email: 'candidate@example.com',
+          }),
+        };
+      }
+
+      throw new Error(`Unexpected fetch URL: ${url}`);
+    });
+    apiFetchMock.mockRejectedValueOnce(new Error('claim service unavailable'));
+
+    vi.stubGlobal('fetch', fetchMock as any);
+
+    render(<CandidateInviteClient token="token-value" />);
+
+    await screen.findByRole('heading', { name: /designer/i });
+
+    fireEvent.click(screen.getByRole('button', { name: /start proof submission/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Invite could not be accepted. Your assignment context is still here; please try again.'
+    );
+    expect(screen.getByText(/No proof was submitted, no visibility changed/i)).toBeInTheDocument();
+    expect(screen.getByText(/Improve submission review quality/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /start proof submission/i })).toBeEnabled();
+    expect(screen.queryByLabelText(/owner-only proof pack/i)).not.toBeInTheDocument();
+  });
+
   it('shows a neutral unavailable invitation state for invalid public tokens', async () => {
     const fetchMock = vi.fn().mockImplementation(async (url: string) => {
       if (url === '/api/candidate-invites/not-a-real-token') {
