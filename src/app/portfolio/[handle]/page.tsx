@@ -357,8 +357,9 @@ export default async function PortfolioPage({
                   <Link href={collaborationHref}>Request introduction</Link>
                 </Button>
                 <p className="text-xs leading-5 text-muted-foreground">
-                  Private details stay hidden unless the owner explicitly reveals them. Export and
-                  copy actions use only this page&apos;s public-safe details.
+                  Private details stay hidden unless the owner explicitly reveals them. Introduction
+                  requests stay routed through Proofound first. Export and copy actions use only
+                  this page&apos;s public-safe details.
                 </p>
               </div>
             ) : null}
@@ -455,9 +456,7 @@ export default async function PortfolioPage({
                 data.individual.work_email ? (
                   <ContactPill href={`mailto:${data.individual.work_email}`} label="Work email" />
                 ) : (
-                  <p className="rounded-xl border border-white/40 bg-white/40 px-3 py-2 text-muted-foreground shadow-sm">
-                    Contact hidden
-                  </p>
+                  <ContactHiddenNotice />
                 )}
                 <ContactPill
                   href={data.shareUrl}
@@ -482,6 +481,25 @@ export default async function PortfolioPage({
 
 function collaborationMailto({ subject, body }: { subject: string; body: string }): string {
   return `mailto:hello@proofound.io?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+function ContactHiddenNotice() {
+  return (
+    <div className="rounded-xl border border-[#D7E8DE] bg-[#F3FAF6] px-3 py-2 text-proofound-charcoal shadow-sm">
+      <div className="flex min-w-0 gap-2">
+        <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-proofound-forest" />
+        <div className="min-w-0">
+          <p className="font-medium text-proofound-forest">
+            Contact is hidden on this Public Page.
+          </p>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">
+            Request contact through Proofound; private details stay closed unless the owner chooses
+            to reveal them.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function TagPill({ label }: { label: string }) {

@@ -313,6 +313,10 @@ describe('Public individual portfolio page', () => {
     expect(
       screen.getByText(/skills are not shared publicly on this public page/i)
     ).toBeInTheDocument();
+    expect(screen.getByText(/contact is hidden on this public page/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/request contact through proofound; private details stay closed/i)
+    ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /request introduction/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /copy share link/i }).closest('.hidden')).toBeNull();
     expect(
@@ -325,8 +329,12 @@ describe('Public individual portfolio page', () => {
       screen.getByText(/export and copy actions use only this page's public-safe details/i)
     ).toBeInTheDocument();
     expect(
+      screen.getByText(/introduction requests stay routed through proofound first/i)
+    ).toBeInTheDocument();
+    expect(
       screen.queryByRole('button', { name: /copy recruiter summary/i })
     ).not.toBeInTheDocument();
+    expect(screen.queryByText(/^contact hidden$/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/wider screens/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/my next challenge/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/mission & vision/i)).not.toBeInTheDocument();
