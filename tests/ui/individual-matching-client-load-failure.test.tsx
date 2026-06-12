@@ -105,7 +105,7 @@ describe('individual matching load failure recovery', () => {
     render(<MatchingClient />);
 
     const alert = await screen.findByRole('alert');
-    expect(alert).toHaveTextContent('Matching needs another moment');
+    expect(alert).toHaveTextContent('Assignment reviews need another moment');
     expect(alert).toHaveTextContent('Your profile, proof records, and paused or hidden choices');
     expect(screen.queryByText(/database password leaked/i)).not.toBeInTheDocument();
     expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
@@ -117,14 +117,14 @@ describe('individual matching load failure recovery', () => {
       expect.any(Error)
     );
     expect(toastErrorMock).toHaveBeenCalledWith(
-      'Matching could not load',
+      'Assignment reviews could not load',
       expect.objectContaining({
         description:
-          'Retry matching without changing proof, preferences, or hidden assignment reviews.',
+          'Retry assignment reviews without changing proof, preferences, or hidden assignment reviews.',
       })
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Retry matching' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Retry assignment reviews' }));
 
     await waitFor(() => {
       expect(screen.getByText('Matching profile setup ready')).toBeInTheDocument();

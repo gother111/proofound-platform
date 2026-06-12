@@ -8,13 +8,13 @@ export default function LoadingIndividualMatching() {
           Matching
         </p>
         <h1 className="font-display text-3xl font-semibold tracking-tight text-proofound-charcoal">
-          Matching workspace
+          Assignment review workspace
         </h1>
         <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
           Preparing privacy-safe assignment reviews, readiness context, and next actions.
         </p>
         <p className="text-sm text-muted-foreground" role="status" aria-live="polite">
-          Preparing matching workspace...
+          Preparing assignment review workspace...
         </p>
       </div>
       <div className="mb-6" aria-hidden="true">

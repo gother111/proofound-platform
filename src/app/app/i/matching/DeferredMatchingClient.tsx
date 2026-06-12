@@ -43,16 +43,16 @@ export function DeferredMatchingClient({
     return (
       <div className="mx-auto max-w-3xl px-4 py-8">
         <div className="rounded-2xl border border-proofound-stone/80 bg-white/75 p-5 shadow-sm sm:p-6">
-          <p className="text-sm font-medium text-muted-foreground">Matching</p>
+          <p className="text-sm font-medium text-muted-foreground">Assignment reviews</p>
           <h1 className="mt-2 font-display text-2xl font-semibold text-proofound-charcoal">
-            Matching could not load
+            Assignment reviews could not load
           </h1>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">
-            Your profile and proof records are still safe. Retry this section to load matching
+            Your profile and proof records are still safe. Retry this section to load review
             preferences and assignment reviews.
           </p>
           <Button className="mt-5" variant="outline" onClick={() => setRetryKey((key) => key + 1)}>
-            Retry matching
+            Retry assignment reviews
           </Button>
         </div>
       </div>

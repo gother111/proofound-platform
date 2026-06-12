@@ -5317,7 +5317,11 @@ describe('launch gate package configuration', () => {
     expect(workflowEntryCopy).toContain('proof-led assignment reviews');
     expect(workflowEntryCopy).toContain('assignment reviews');
     expect(workflowEntryCopy).toContain('Preparing privacy-safe assignment reviews');
+    expect(workflowEntryCopy).toContain('Assignment review workspace');
+    expect(workflowEntryCopy).toContain('Preparing assignment review workspace');
     expect(workflowEntryCopy).toContain('Preparing assignment reviews');
+    expect(workflowEntryCopy).toContain('Assignment reviews could not load');
+    expect(workflowEntryCopy).toContain('Retry assignment reviews');
     expect(workflowEntryCopy).toContain('No assignment reviews yet');
     expect(workflowEntryCopy).toContain('new assignment reviews can land cleanly');
     expect(workflowEntryCopy).toContain('No assignment reviews fit the current filters');
@@ -5343,6 +5347,10 @@ describe('launch gate package configuration', () => {
       'privacy-safe opportunities',
       'new opportunities can land cleanly',
       'Preparing matches',
+      'Matching workspace',
+      'Preparing matching workspace',
+      'Matching could not load',
+      'Retry matching',
       'No matches yet',
       'No matches fit the current filters',
       'Hidden from results',

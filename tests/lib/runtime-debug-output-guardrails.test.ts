@@ -1437,10 +1437,10 @@ describe('runtime debug output guardrails', () => {
     expect(sources).toContain('matching.client.restore_refresh_failed');
     expect(sources).toContain('matching.client.hide_failed');
     expect(sources).toContain('matching.profile_setup.save_failed');
-    expect(sources).toContain('Matching profile was not saved');
+    expect(sources).toContain('Assignment review preferences were not saved');
     expect(sources).toContain('Your preferences are still here');
     expect(sources).toContain(
-      'Matching could not load. Your profile, proof records, and paused or hidden choices are still safe; retry this section before acting on assignment reviews.'
+      'Assignment reviews could not load. Your profile, proof records, and paused or hidden choices are still safe; retry this section before acting on assignment reviews.'
     );
     expect(sources).not.toContain('Failed to load matching profile');
     expect(sources).not.toContain('Failed to load matches');

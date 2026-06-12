@@ -11,9 +11,11 @@ describe('DeferredMatchingClient', () => {
     render(<DeferredMatchingClient loadMatchingView={loadMatchingView} />);
 
     expect(
-      screen.getByRole('heading', { level: 1, name: 'Matching workspace' })
+      screen.getByRole('heading', { level: 1, name: 'Assignment review workspace' })
     ).toBeInTheDocument();
-    expect(screen.getByRole('status')).toHaveTextContent('Preparing matching workspace...');
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Preparing assignment review workspace...'
+    );
   });
 
   it('lets users retry when the matching workspace chunk fails', async () => {
@@ -21,19 +23,19 @@ describe('DeferredMatchingClient', () => {
       .fn()
       .mockRejectedValueOnce(new Error('chunk missing'))
       .mockResolvedValueOnce({
-        MatchingClient: () => <div>Matching workspace ready</div>,
+        MatchingClient: () => <div>Assignment review workspace ready</div>,
       });
 
     render(<DeferredMatchingClient loadMatchingView={loadMatchingView} />);
 
-    expect(await screen.findByText('Matching could not load')).toBeInTheDocument();
-    expect(screen.getByText(/matching preferences and assignment reviews/i)).toBeInTheDocument();
+    expect(await screen.findByText('Assignment reviews could not load')).toBeInTheDocument();
+    expect(screen.getByText(/review preferences and assignment reviews/i)).toBeInTheDocument();
     expect(screen.queryByText(/preferences and opportunities/i)).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Retry matching' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Retry assignment reviews' }));
 
     await waitFor(() => {
-      expect(screen.getByText('Matching workspace ready')).toBeInTheDocument();
+      expect(screen.getByText('Assignment review workspace ready')).toBeInTheDocument();
     });
     expect(loadMatchingView).toHaveBeenCalledTimes(2);
   });

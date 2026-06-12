@@ -16,9 +16,9 @@ import { Search } from 'lucide-react';
 
 const MATCHING_DATA_TIMEOUT_MS = 10000;
 const MATCHING_LOAD_RETRY_COPY =
-  'Matching could not load. Your profile, proof records, and paused or hidden choices are still safe; retry this section before acting on assignment reviews.';
+  'Assignment reviews could not load. Your profile, proof records, and paused or hidden choices are still safe; retry this section before acting on assignment reviews.';
 const MATCHING_LOAD_TOAST_DESCRIPTION =
-  'Retry matching without changing proof, preferences, or hidden assignment reviews.';
+  'Retry assignment reviews without changing proof, preferences, or hidden assignment reviews.';
 
 type MatchabilityCriterion = {
   id: string;
@@ -192,7 +192,7 @@ export function MatchingClient() {
       } else {
         dispatchClientErrorDiagnostic('matching.client.load_failed', error);
         setLoadError(MATCHING_LOAD_RETRY_COPY);
-        toast.error('Matching could not load', {
+        toast.error('Assignment reviews could not load', {
           description: MATCHING_LOAD_TOAST_DESCRIPTION,
         });
       }
@@ -278,9 +278,9 @@ export function MatchingClient() {
           className="rounded-2xl border border-proofound-stone/80 bg-white/75 p-5 shadow-sm sm:p-6"
           role="alert"
         >
-          <p className="text-sm font-medium text-muted-foreground">Matching</p>
+          <p className="text-sm font-medium text-muted-foreground">Assignment reviews</p>
           <h1 className="mt-2 font-display text-2xl font-semibold text-proofound-charcoal">
-            Matching needs another moment
+            Assignment reviews need another moment
           </h1>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">{loadError}</p>
           <div className="mt-5 flex flex-col gap-2 sm:flex-row">
@@ -291,7 +291,7 @@ export function MatchingClient() {
               }}
               className="rounded-full bg-proofound-forest px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-proofound-forest/90"
             >
-              Retry matching
+              Retry assignment reviews
             </button>
             <button
               type="button"
@@ -338,7 +338,7 @@ export function MatchingClient() {
         <div className="mb-2 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 className="font-display text-3xl font-semibold text-proofound-charcoal dark:text-[#E8DCC4]">
-              Matching
+              Assignment reviews
             </h1>
             <p className="mt-1 text-sm leading-6 text-muted-foreground dark:text-[#8A8174]">
               {blockedState
