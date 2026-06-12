@@ -574,7 +574,7 @@ describe('CandidateInviteClient test_match flow', () => {
     expect(screen.queryByLabelText(/owner-only proof pack/i)).not.toBeInTheDocument();
   });
 
-  it('shows a neutral unavailable invitation state for invalid public tokens', async () => {
+  it('shows a neutral retry state when invitation verification is temporarily unavailable', async () => {
     const fetchMock = vi.fn().mockImplementation(async (url: string) => {
       if (url === '/api/candidate-invites/not-a-real-token') {
         return {
@@ -602,10 +602,45 @@ describe('CandidateInviteClient test_match flow', () => {
       expect(screen.getByRole('heading', { name: /invitation unavailable/i })).toBeInTheDocument();
     });
 
-    expect(
-      screen.getByText(/This invitation link is invalid, expired, or no longer available/i)
-    ).toBeInTheDocument();
+    const alert = screen.getByRole('alert');
+    expect(alert).toHaveTextContent('We could not verify this invitation right now.');
+    expect(alert).toHaveTextContent('No proof was submitted, no visibility changed');
+    expect(alert).toHaveTextContent('Refresh this page');
     expect(screen.queryByText(/Service temporarily unavailable/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /return home/i })).toHaveAttribute('href', '/');
+  });
+
+  it('keeps invalid public tokens safe without implying a temporary outage', async () => {
+    const fetchMock = vi.fn().mockImplementation(async (url: string) => {
+      if (url === '/api/candidate-invites/not-a-real-token') {
+        return {
+          ok: false,
+          status: 404,
+          json: async () => ({ error: 'Invite not found' }),
+        };
+      }
+
+      if (url === '/api/user/me') {
+        return {
+          ok: false,
+          json: async () => ({ error: 'Unauthorized' }),
+        };
+      }
+
+      throw new Error(`Unexpected fetch URL: ${url}`);
+    });
+
+    vi.stubGlobal('fetch', fetchMock as any);
+
+    render(<CandidateInviteClient token="not-a-real-token" />);
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(
+      'This invitation link is invalid, expired, or no longer available.'
+    );
+    expect(alert).toHaveTextContent('No proof was submitted, no visibility changed');
+    expect(alert).toHaveTextContent('Ask the company to send a fresh assignment invite');
+    expect(alert).not.toHaveTextContent('Invite not found');
   });
 
   it('pauses proof submission when an invite is missing structured assignment context', async () => {

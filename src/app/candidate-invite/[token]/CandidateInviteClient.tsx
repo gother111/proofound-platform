@@ -198,16 +198,48 @@ const DEFAULT_ACCOUNT_SAVE_CONTROLS: AccountSaveControls = {
   assignmentReviewUrl: '/app/i/matching',
 };
 
-function candidateInviteLoadError(status: number, error?: string | null) {
+type CandidateInviteLoadErrorState = {
+  message: string;
+  detail: string;
+};
+
+function candidateInviteLoadErrorState(
+  status: number,
+  error?: string | null
+): CandidateInviteLoadErrorState {
+  const unchangedDetail =
+    'No proof was submitted, no visibility changed, and no account action was taken from this page.';
+
+  if (
+    status === 503 ||
+    status === 502 ||
+    status === 504 ||
+    /temporarily|timeout/i.test(error ?? '')
+  ) {
+    return {
+      message: 'We could not verify this invitation right now.',
+      detail: `${unchangedDetail} Refresh this page, or ask the company to resend the invite if it keeps failing.`,
+    };
+  }
+
   if (status === 410 || /expired/i.test(error ?? '')) {
-    return 'This invitation has expired. Ask the company to send a new invite if needed.';
+    return {
+      message: 'This invitation has expired.',
+      detail: `${unchangedDetail} Ask the company to send a new invite if needed.`,
+    };
   }
 
   if (status === 404 || status === 400 || /not found|invalid|unavailable/i.test(error ?? '')) {
-    return 'This invitation link is invalid, expired, or no longer available.';
+    return {
+      message: 'This invitation link is invalid, expired, or no longer available.',
+      detail: `${unchangedDetail} Ask the company to send a fresh assignment invite if needed.`,
+    };
   }
 
-  return 'We could not open this invitation right now.';
+  return {
+    message: 'We could not open this invitation right now.',
+    detail: `${unchangedDetail} Refresh this page, or ask the company to resend the invite if it keeps failing.`,
+  };
 }
 
 const CANDIDATE_INVITE_CLAIM_RETRY_MESSAGE =
@@ -341,8 +373,9 @@ export function CandidateInviteClient({
 
       if (!inviteResponse.ok) {
         const payload = await inviteResponse.json().catch(() => null);
-        setError(candidateInviteLoadError(inviteResponse.status, payload?.error));
-        setErrorDetail(null);
+        const loadError = candidateInviteLoadErrorState(inviteResponse.status, payload?.error);
+        setError(loadError.message);
+        setErrorDetail(loadError.detail);
         return;
       }
 
@@ -376,8 +409,9 @@ export function CandidateInviteClient({
       }
     } catch (loadError) {
       dispatchClientErrorDiagnostic('candidate_invite.client.load_failed', loadError);
-      setError('This invitation link is invalid, expired, or no longer available.');
-      setErrorDetail(null);
+      const fallbackError = candidateInviteLoadErrorState(0);
+      setError(fallbackError.message);
+      setErrorDetail(fallbackError.detail);
     } finally {
       setLoading(false);
     }
@@ -547,10 +581,14 @@ export function CandidateInviteClient({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-center text-sm leading-6 text-muted-foreground">{error}</p>
-            <p className="text-center text-sm leading-6 text-muted-foreground">
-              Ask the company to send a new invite if needed.
-            </p>
+            <div
+              role="alert"
+              aria-live="assertive"
+              className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-amber-950"
+            >
+              <p className="font-semibold">{error}</p>
+              {errorDetail ? <p className="mt-2">{errorDetail}</p> : null}
+            </div>
             <Button asChild variant="outline" className="w-full">
               <Link href="/">Return home</Link>
             </Button>
