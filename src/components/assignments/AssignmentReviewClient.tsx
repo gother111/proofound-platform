@@ -250,8 +250,8 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
                   deleted, or no longer available to your current role.
                 </p>
                 <div className="rounded-lg border border-proofound-stone/70 bg-proofound-parchment/60 p-3 text-sm leading-6 text-muted-foreground">
-                  No proof submissions, candidate details, or review-stage data are shown from this
-                  unavailable state.
+                  No proof submissions, proof-review participant details, or review-stage data are
+                  shown from this unavailable state.
                 </div>
                 <div className="flex flex-col gap-2 sm:flex-row">
                   <Button onClick={() => router.push(`/app/o/${slug}/assignments`)}>

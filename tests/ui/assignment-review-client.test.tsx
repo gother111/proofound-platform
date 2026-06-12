@@ -231,7 +231,7 @@ describe('AssignmentReviewClient', () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        /No proof submissions, candidate details, or review-stage data are shown from this unavailable state/i
+        /No proof submissions, proof-review participant details, or review-stage data are shown from this unavailable state/i
       )
     ).toBeInTheDocument();
     expect(document.body.textContent ?? '').not.toMatch(/assignment-1/i);

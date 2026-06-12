@@ -4963,6 +4963,23 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps assignment review unavailable state proof-review participant scoped', () => {
+    const assignmentReviewClient = fs.readFileSync(
+      path.join(repoRoot, 'src/components/assignments/AssignmentReviewClient.tsx'),
+      'utf8'
+    );
+    const assignmentReviewClientTest = fs.readFileSync(
+      path.join(repoRoot, 'tests/ui/assignment-review-client.test.tsx'),
+      'utf8'
+    );
+    const unavailableStateCopy = `${assignmentReviewClient}\n${assignmentReviewClientTest}`;
+
+    expect(unavailableStateCopy).toContain(
+      'No proof submissions, proof-review participant details, or review-stage data are'
+    );
+    expect(unavailableStateCopy).not.toContain('No proof submissions, candidate details');
+  });
+
   it('keeps active readiness and intro copy eligibility-led instead of unlock-led', () => {
     const activeReadinessCopyFiles = [
       'src/app/app/i/home/page.tsx',
