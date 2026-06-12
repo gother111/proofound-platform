@@ -56,8 +56,11 @@ type FormMessage = {
   text: string;
 };
 
+type QuestionErrors = Record<string, string>;
+
 const FEEDBACK_SUBMIT_RETRY_MESSAGE =
   'Feedback could not be submitted. Your answers are still here; please try again.';
+const FEEDBACK_VALIDATION_MESSAGE = 'Please fix the highlighted questions before submitting.';
 
 function feedbackSubmitError(error?: string | null) {
   const normalized = error?.trim();
@@ -81,7 +84,7 @@ export function FeedbackForm({
   const [answers, setAnswers] = useState<AnswerState>({});
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<FormMessage | null>(null);
-  const [missingQuestionIds, setMissingQuestionIds] = useState<Set<string>>(() => new Set());
+  const [questionErrors, setQuestionErrors] = useState<QuestionErrors>({});
 
   const orderedQuestions = useMemo(
     () => [...template.questions].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)),
@@ -93,23 +96,45 @@ export function FeedbackForm({
     setSubmitting(true);
     setMessage(null);
 
-    const missingRequiredIds = orderedQuestions.flatMap((q) => {
-      const current = answers[q.id];
-      if (!q.required) return [];
-      if (q.question_type === 'scale') {
-        return current?.score === undefined || current?.score === null ? [q.id] : [];
-      }
-      return !current?.textAnswer?.trim() ? [q.id] : [];
-    });
+    const nextQuestionErrors = orderedQuestions.reduce<QuestionErrors>((errors, question) => {
+      const current = answers[question.id];
 
-    if (missingRequiredIds.length > 0) {
-      setMissingQuestionIds(new Set(missingRequiredIds));
-      setMessage({ tone: 'error', text: 'Please complete the required questions marked below.' });
+      if (question.question_type === 'scale') {
+        const min = question.scale_min ?? 1;
+        const max = question.scale_max ?? 5;
+        const score = current?.score;
+
+        if (question.required && (score === undefined || score === null)) {
+          errors[question.id] = 'Choose a rating to complete this required question.';
+          return errors;
+        }
+
+        if (
+          score !== undefined &&
+          score !== null &&
+          (!Number.isFinite(score) || score < min || score > max)
+        ) {
+          errors[question.id] = `Choose a rating between ${min} and ${max}.`;
+        }
+
+        return errors;
+      }
+
+      if (question.required && !current?.textAnswer?.trim()) {
+        errors[question.id] = 'Add a short answer to complete this required question.';
+      }
+
+      return errors;
+    }, {});
+
+    if (Object.keys(nextQuestionErrors).length > 0) {
+      setQuestionErrors(nextQuestionErrors);
+      setMessage({ tone: 'error', text: FEEDBACK_VALIDATION_MESSAGE });
       setSubmitting(false);
       return;
     }
 
-    setMissingQuestionIds(new Set());
+    setQuestionErrors({});
 
     const payload = {
       interviewId,
@@ -156,11 +181,11 @@ export function FeedbackForm({
     }
   };
 
-  const clearMissingQuestion = (questionId: string) => {
-    setMissingQuestionIds((current) => {
-      if (!current.has(questionId)) return current;
-      const next = new Set(current);
-      next.delete(questionId);
+  const clearQuestionError = (questionId: string) => {
+    setQuestionErrors((current) => {
+      if (!current[questionId]) return current;
+      const next = { ...current };
+      delete next[questionId];
       return next;
     });
   };
@@ -195,7 +220,8 @@ export function FeedbackForm({
               const inputId = `feedback-${question.id}`;
               const helperId = `${inputId}-helper`;
               const errorId = `${inputId}-error`;
-              const hasQuestionError = missingQuestionIds.has(question.id);
+              const questionError = questionErrors[question.id];
+              const hasQuestionError = Boolean(questionError);
               const describedBy = [
                 question.helper_text ? helperId : null,
                 hasQuestionError ? errorId : null,
@@ -238,12 +264,14 @@ export function FeedbackForm({
                       aria-describedby={describedBy || undefined}
                       value={answers[question.id]?.score ?? ''}
                       onChange={(e) => {
-                        clearMissingQuestion(question.id);
+                        clearQuestionError(question.id);
+                        const nextScore =
+                          e.target.value === '' ? undefined : Number(e.target.value);
                         setAnswers((prev) => ({
                           ...prev,
                           [question.id]: {
                             ...prev[question.id],
-                            score: Number(e.target.value),
+                            score: nextScore,
                           },
                         }));
                       }}
@@ -259,7 +287,7 @@ export function FeedbackForm({
                       aria-describedby={describedBy || undefined}
                       value={answers[question.id]?.textAnswer ?? ''}
                       onChange={(e) => {
-                        clearMissingQuestion(question.id);
+                        clearQuestionError(question.id);
                         setAnswers((prev) => ({
                           ...prev,
                           [question.id]: {
@@ -272,9 +300,7 @@ export function FeedbackForm({
                   )}
                   {hasQuestionError ? (
                     <p id={errorId} className="text-xs font-medium text-destructive">
-                      {question.question_type === 'scale'
-                        ? 'Choose a rating to complete this required question.'
-                        : 'Add a short answer to complete this required question.'}
+                      {questionError}
                     </p>
                   ) : null}
                 </div>

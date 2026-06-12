@@ -81,7 +81,7 @@ describe('FeedbackForm', () => {
     fireEvent.click(screen.getByRole('button', { name: /submit feedback/i }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      /Please complete the required questions marked below/i
+      /Please fix the highlighted questions before submitting/i
     );
     expect(screen.getByRole('spinbutton')).toHaveAttribute('aria-invalid', 'true');
     expect(
@@ -136,6 +136,23 @@ describe('FeedbackForm', () => {
       'aria-invalid',
       'true'
     );
+  });
+
+  it('blocks out-of-range scale ratings before calling the feedback API', async () => {
+    render(<FeedbackForm template={template} interviewId="interview-1" token="token-1" />);
+
+    fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '7' } });
+    fireEvent.click(screen.getByRole('button', { name: /submit feedback/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      /Please fix the highlighted questions before submitting/i
+    );
+    expect(screen.getByText('Choose a rating between 1 and 5.')).toBeInTheDocument();
+    expect(screen.getByRole('spinbutton')).toHaveAttribute('aria-invalid', 'true');
+    expect(global.fetch).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '5' } });
+    expect(screen.queryByText('Choose a rating between 1 and 5.')).not.toBeInTheDocument();
   });
 
   it('keeps organization feedback prompts workflow-scoped instead of candidate-led', () => {
