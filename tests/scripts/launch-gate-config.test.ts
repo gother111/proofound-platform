@@ -5421,7 +5421,7 @@ describe('launch gate package configuration', () => {
     expect(supportWorkflowCopy).toContain('real proof submissions');
     expect(supportWorkflowCopy).toContain('Proof packet redesign for proof review');
     expect(supportWorkflowCopy).toContain('review submissions through concrete work evidence');
-    expect(compactSupportWorkflowCopy).toContain('matching preferences and assignment reviews');
+    expect(compactSupportWorkflowCopy).toContain('review preferences and assignment reviews');
     expect(supportWorkflowCopy).toContain('proof based submission review');
     expect(supportWorkflowCopy).toContain('live assignment-review decision');
     expect(supportWorkflowCopy).toContain('proof submissions through the corridor');
@@ -5436,7 +5436,7 @@ describe('launch gate package configuration', () => {
     expect(supportWorkflowCopy).toContain('participant comms templates');
     expect(supportWorkflowCopy).toContain('Proof-first assignment-review research');
     expect(supportWorkflowCopy).toContain('assignment reviews');
-    expect(supportWorkflowCopy).toContain('Matches, proof submissions, conversations');
+    expect(supportWorkflowCopy).toContain('Assignment reviews, proof submissions, conversations');
     expect(supportWorkflowCopy).toContain('without asking participants to overshare');
 
     for (const staleCopy of [
@@ -5445,7 +5445,10 @@ describe('launch gate package configuration', () => {
       'better-fit opportunities',
       'relevant opportunities',
       'match you with opportunities',
+      'Help match you with',
       'Connect you with opportunities',
+      'Matches, proof submissions, conversations',
+      'Match history',
       'hiring corridor narrow',
       'live hiring corridor decision',
       'Proof-first hiring corridor readiness review',

@@ -66,10 +66,10 @@ describe('PrivacyOverview copy', () => {
     expect(screen.getByText('Operational')).toBeInTheDocument();
     expect(screen.queryByText('Operational (Pseudonymized)')).not.toBeInTheDocument();
     expect(
-      screen.getByText(/Create your profile and support assignment-review matching/i)
+      screen.getByText(/Create your profile and support assignment-review preferences/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/Help match you with proof-led assignment reviews/i)
+      screen.getByText(/Support proof-led assignment reviews with evidence you control/i)
     ).toBeInTheDocument();
     expect(screen.getByText('Trusted review context')).toBeInTheDocument();
     expect(screen.getByText('Assignment review')).toBeInTheDocument();
@@ -80,17 +80,25 @@ describe('PrivacyOverview copy', () => {
     expect(
       screen.getByText(/Provide context for Proof Packs and assignment-specific review/i)
     ).toBeInTheDocument();
-    expect(screen.getByText(/Matches, proof submissions, conversations/i)).toBeInTheDocument();
+    expect(screen.getByText('Assignment review history')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Assignment reviews, proof submissions, conversations/i)
+    ).toBeInTheDocument();
     expect(screen.getByText(/Connect you with assignment-review workflows/i)).toBeInTheDocument();
     expect(screen.queryByText('Connections')).not.toBeInTheDocument();
+    expect(screen.queryByText('Match history')).not.toBeInTheDocument();
     expect(screen.queryByText('After match')).not.toBeInTheDocument();
     expect(screen.queryByText(/Visible to matched organizations/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/sharing your profile/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Showcase your work and impact/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/relevant opportunities/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/match you with opportunities/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Help match you with/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Connect you with opportunities/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Matches, applications, conversations/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Matches, proof submissions, conversations/i)
+    ).not.toBeInTheDocument();
 
     expect(screen.queryByText(/Tier 1/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Tier 2/i)).not.toBeInTheDocument();

@@ -213,12 +213,12 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
       {/* Header */}
       <Card
         variant="bento"
-        className="border-proofound-stone dark:border-border rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-900"
+        className="border-proofound-stone dark:border-border rounded-2xl bg-gradient-to-br from-proofound-parchment to-white dark:from-slate-800 dark:to-slate-900"
       >
         <CardContent className="pt-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-            <div className="w-fit shrink-0 p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
-              <Shield className="h-6 w-6 text-blue-600 dark:text-blue-300" />
+            <div className="w-fit shrink-0 rounded-lg bg-proofound-forest/10 p-3 dark:bg-proofound-forest/20">
+              <Shield className="h-6 w-6 text-proofound-forest dark:text-proofound-parchment" />
             </div>
             <div className="min-w-0 flex-1">
               <h2 className="text-2xl font-['Crimson_Pro'] font-semibold text-proofound-charcoal dark:text-foreground mb-2">
@@ -399,8 +399,8 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
-                  <Database className="h-5 w-5 text-purple-600 dark:text-purple-300" />
+                <div className="rounded-lg bg-proofound-parchment p-2 dark:bg-proofound-parchment/10">
+                  <Database className="h-5 w-5 text-proofound-forest dark:text-proofound-parchment" />
                 </div>
                 <div>
                   <CardTitle className="text-lg font-['Crimson_Pro']">Profile data</CardTitle>
@@ -416,7 +416,8 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
               <strong>Includes:</strong> Name, email, location, bio, avatar
             </p>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground mb-3">
-              <strong>Purpose:</strong> Create your profile and support assignment-review matching
+              <strong>Purpose:</strong> Create your profile and support assignment-review
+              preferences
             </p>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
               <strong>Visibility:</strong> Controlled by your profile settings
@@ -432,8 +433,8 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
-                  <Target className="h-5 w-5 text-green-600 dark:text-green-300" />
+                <div className="rounded-lg bg-proofound-forest/10 p-2 dark:bg-proofound-forest/20">
+                  <Target className="h-5 w-5 text-proofound-forest dark:text-proofound-parchment" />
                 </div>
                 <div>
                   <CardTitle className="text-lg font-['Crimson_Pro']">
@@ -451,7 +452,8 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
               <strong>Includes:</strong> Skills, experience, education, proof, verifications
             </p>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground mb-3">
-              <strong>Purpose:</strong> Help match you with proof-led assignment reviews
+              <strong>Purpose:</strong> Support proof-led assignment reviews with evidence you
+              control
             </p>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
               <strong>Visibility:</strong> Available only inside assignment-review surfaces that
@@ -468,8 +470,8 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-amber-100 dark:bg-amber-900 rounded-lg">
-                  <FileText className="h-5 w-5 text-amber-600 dark:text-amber-300" />
+                <div className="rounded-lg bg-[#F8E7D4] p-2 dark:bg-proofound-terracotta/20">
+                  <FileText className="h-5 w-5 text-proofound-terracotta dark:text-proofound-parchment" />
                 </div>
                 <div>
                   <CardTitle className="text-lg font-['Crimson_Pro']">
@@ -496,7 +498,7 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
           </CardContent>
         </Card>
 
-        {/* Match History */}
+        {/* Assignment review history */}
         <Card
           variant="bento"
           className="border-proofound-stone dark:border-border rounded-xl hover:shadow-md transition-shadow"
@@ -504,11 +506,13 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                  <MessagesSquare className="h-5 w-5 text-blue-600 dark:text-blue-300" />
+                <div className="rounded-lg bg-proofound-stone/40 p-2 dark:bg-proofound-stone/10">
+                  <MessagesSquare className="h-5 w-5 text-proofound-forest dark:text-proofound-parchment" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg font-['Crimson_Pro']">Match history</CardTitle>
+                  <CardTitle className="text-lg font-['Crimson_Pro']">
+                    Assignment review history
+                  </CardTitle>
                   <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground mt-0.5">
                     Operational
                   </p>
@@ -518,7 +522,7 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
           </CardHeader>
           <CardContent>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground mb-3">
-              <strong>Includes:</strong> Matches, proof submissions, conversations
+              <strong>Includes:</strong> Assignment reviews, proof submissions, conversations
             </p>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground mb-3">
               <strong>Purpose:</strong> Connect you with assignment-review workflows
