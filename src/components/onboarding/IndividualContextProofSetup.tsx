@@ -30,6 +30,7 @@ import { StartFromCvDialog } from '@/components/profile/StartFromCvDialog';
 import { useStartFromCvBetaStatus } from '@/hooks/useStartFromCvBetaStatus';
 import { START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE } from '@/lib/ai/start-from-cv-contract';
 import type { StartFromCvScaffoldingSurface } from '@/lib/ai/start-from-cv-contract';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import {
   MAX_PROOF_UPLOAD_SIZE_BYTES,
   PROOF_ALLOWED_EXTENSIONS_LABEL,
@@ -376,7 +377,8 @@ export function IndividualSetup({
           result.fileName ||
           file.name.replace(/\.[^.]+$/, ''),
       }));
-    } catch {
+    } catch (uploadError) {
+      dispatchClientErrorDiagnostic('onboarding.individual.first_proof_upload_failed', uploadError);
       setUploadError('Upload failed. Please try again.');
     } finally {
       setIsUploading(false);
@@ -592,7 +594,8 @@ export function IndividualSetup({
       setPortfolioReadyAfterCompletion(Boolean(result.portfolioReady));
       setNextPath(completionPath || result.scaffoldProfilePath || '/app/i/profile');
       setPhase('success');
-    } catch {
+    } catch (submitError) {
+      dispatchClientErrorDiagnostic('onboarding.individual.first_proof_submit_failed', submitError);
       setError('Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);

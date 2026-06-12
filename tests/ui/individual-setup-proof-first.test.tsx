@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const {
   completeIndividualOnboardingMock,
+  dispatchClientErrorDiagnosticMock,
   fetchMock,
   pushMock,
   startFromCvStatus,
@@ -10,6 +11,7 @@ const {
   validateFileMock,
 } = vi.hoisted(() => ({
   completeIndividualOnboardingMock: vi.fn(),
+  dispatchClientErrorDiagnosticMock: vi.fn(),
   fetchMock: vi.fn(),
   pushMock: vi.fn(),
   startFromCvStatus: {
@@ -34,6 +36,10 @@ vi.mock('@/actions/onboarding', () => ({
 vi.mock('@/lib/upload', () => ({
   uploadFile: uploadFileMock,
   validateFile: validateFileMock,
+}));
+
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientErrorDiagnostic: dispatchClientErrorDiagnosticMock,
 }));
 
 vi.mock('@/hooks/useStartFromCvBetaStatus', () => ({
@@ -373,6 +379,28 @@ describe('IndividualSetup first-proof flow', () => {
     expect(screen.getByLabelText('Proof file *')).toBeEnabled();
   });
 
+  it('logs unexpected first-proof upload failures while keeping upload retryable', async () => {
+    const uploadError = new Error('network down');
+    uploadFileMock.mockRejectedValueOnce(uploadError);
+
+    render(<IndividualSetup />);
+
+    fillBasicDetails();
+    fireEvent.click(screen.getByRole('radio', { name: /file upload/i }));
+
+    const file = new File(['proof'], 'starter-proof.pdf', { type: 'application/pdf' });
+    fireEvent.change(screen.getByLabelText('Proof file *'), {
+      target: { files: [file] },
+    });
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Upload failed. Please try again.');
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'onboarding.individual.first_proof_upload_failed',
+      uploadError
+    );
+    expect(screen.getByLabelText('Proof file *')).toBeEnabled();
+  });
+
   it('announces first-proof save validation errors as recoverable alerts', async () => {
     render(<IndividualSetup />);
 
@@ -382,6 +410,28 @@ describe('IndividualSetup first-proof flow', () => {
     );
 
     expect(screen.getByRole('alert')).toHaveTextContent('Add one proof link before saving.');
+    expect(screen.getByRole('button', { name: /save first proof pack/i })).toBeEnabled();
+  });
+
+  it('logs unexpected first-proof save failures while keeping save retryable', async () => {
+    const submitError = new Error('action failed');
+    completeIndividualOnboardingMock.mockRejectedValueOnce(submitError);
+
+    render(<IndividualSetup />);
+
+    fillBasicDetails();
+    fillLinkProof();
+    fireEvent.submit(
+      screen.getByRole('button', { name: /save first proof pack/i }).closest('form')!
+    );
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Something went wrong. Please try again.'
+    );
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'onboarding.individual.first_proof_submit_failed',
+      submitError
+    );
     expect(screen.getByRole('button', { name: /save first proof pack/i })).toBeEnabled();
   });
 
