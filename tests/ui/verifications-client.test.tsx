@@ -564,7 +564,7 @@ describe('VerificationsClient', () => {
     expect((fallbackDraft as HTMLTextAreaElement).value).not.toContain('Nina Secret');
   });
 
-  it('keeps verification composer draft failures visible and retryable', async () => {
+  it('keeps verification composer draft failures safe, visible, and retryable', async () => {
     apiFetchMock
       .mockResolvedValueOnce({
         ok: false,
@@ -612,7 +612,15 @@ describe('VerificationsClient', () => {
 
     const alert = await within(dialog).findByRole('alert');
     expect(alert).toHaveTextContent('Draft could not be created');
-    expect(alert).toHaveTextContent('Drafting service is temporarily unavailable.');
+    expect(alert).toHaveTextContent('Review the selected public-safe fields and try again.');
+    expect(alert).not.toHaveTextContent('Drafting service is temporarily unavailable.');
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'verifications.composer.draft_failed',
+      expect.any(Error)
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
+      'Drafting service is temporarily unavailable.'
+    );
 
     fireEvent.click(within(dialog).getByRole('button', { name: /^Draft scoped request$/i }));
 
@@ -624,7 +632,7 @@ describe('VerificationsClient', () => {
     expect(within(dialog).queryByRole('alert')).not.toBeInTheDocument();
   });
 
-  it('keeps failed composer sends visible without clearing the reviewed draft', async () => {
+  it('keeps failed composer sends safe and visible without clearing the reviewed draft', async () => {
     apiFetchMock.mockImplementation(async (url: string) => {
       if (url === '/api/ai/verifications/compose') {
         return {
@@ -689,7 +697,17 @@ describe('VerificationsClient', () => {
 
     const alert = await within(dialog).findByRole('alert');
     expect(alert).toHaveTextContent('Request could not be sent');
-    expect(alert).toHaveTextContent('Verification email could not be delivered.');
+    expect(alert).toHaveTextContent('The reviewed draft is still here so you can retry.');
+    expect(alert).not.toHaveTextContent('Verification email could not be delivered.');
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'verifications.composer.send_failed',
+      expect.any(Error)
+    );
+    expect(
+      dispatchClientErrorDiagnosticMock.mock.calls.find(
+        ([reason]) => reason === 'verifications.composer.send_failed'
+      )?.[1]
+    ).toMatchObject({ message: 'Verification email could not be delivered.' });
     expect(draftMessage).toBeInTheDocument();
     expect(within(dialog).getByDisplayValue('mentor@example.com')).toBeInTheDocument();
   });

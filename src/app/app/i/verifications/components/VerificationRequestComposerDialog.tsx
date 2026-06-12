@@ -59,6 +59,10 @@ type Props = {
 };
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const COMPOSER_DRAFT_FAILED_MESSAGE =
+  'Verification request wording could not be drafted. Review the selected public-safe fields and try again.';
+const COMPOSER_SEND_FAILED_MESSAGE =
+  'Verification request could not be sent. The reviewed draft is still here so you can retry.';
 
 const FIELD_OPTIONS: Array<{ value: VerificationComposerField; label: string }> = [
   { value: 'title', label: 'Title' },
@@ -228,9 +232,13 @@ export function VerificationRequestComposerDialog({
           setFeedback(null);
           return;
         }
-        const message =
-          body.error ||
-          'Verification request wording could not be drafted. Review the selected fields and try again.';
+        if (body?.error) {
+          dispatchClientErrorDiagnostic(
+            'verifications.composer.draft_failed',
+            new Error(body.error)
+          );
+        }
+        const message = COMPOSER_DRAFT_FAILED_MESSAGE;
         setFeedback({
           title: 'Draft could not be created',
           message,
@@ -243,8 +251,7 @@ export function VerificationRequestComposerDialog({
       setFeedback(null);
     } catch (error) {
       dispatchClientErrorDiagnostic('verifications.composer.draft_failed', error);
-      const message =
-        'Verification request wording could not be drafted. Review the selected fields and try again.';
+      const message = COMPOSER_DRAFT_FAILED_MESSAGE;
       setFeedback({
         title: 'Draft could not be created',
         message,
@@ -294,9 +301,13 @@ export function VerificationRequestComposerDialog({
 
       const body = await response.json();
       if (!response.ok) {
-        const message =
-          body.error ||
-          'Verification request could not be sent. The draft is still here so you can retry.';
+        if (body?.error) {
+          dispatchClientErrorDiagnostic(
+            'verifications.composer.send_failed',
+            new Error(body.error)
+          );
+        }
+        const message = COMPOSER_SEND_FAILED_MESSAGE;
         setFeedback({
           title: 'Request could not be sent',
           message,
@@ -312,8 +323,7 @@ export function VerificationRequestComposerDialog({
       onSent?.();
     } catch (error) {
       dispatchClientErrorDiagnostic('verifications.composer.send_failed', error);
-      const message =
-        'Verification request could not be sent. The draft is still here so you can retry.';
+      const message = COMPOSER_SEND_FAILED_MESSAGE;
       setFeedback({
         title: 'Request could not be sent',
         message,
