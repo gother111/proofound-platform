@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { FirstProofDialog } from '@/components/proofs/FirstProofDialog';
 import { apiFetch } from '@/lib/api/fetch';
 import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { uploadFile } from '@/lib/upload';
 
 vi.mock('@/lib/api/fetch', () => ({
   apiFetch: vi.fn(),
@@ -13,6 +14,14 @@ vi.mock('@/lib/api/fetch', () => ({
 vi.mock('@/lib/client-diagnostics', () => ({
   dispatchClientErrorDiagnostic: vi.fn(),
 }));
+
+vi.mock('@/lib/upload', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/upload')>('@/lib/upload');
+  return {
+    ...actual,
+    uploadFile: vi.fn(),
+  };
+});
 
 vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({ toast: vi.fn() }),
@@ -29,6 +38,7 @@ vi.mock('@/components/ui/dialog', () => ({
 
 const apiFetchMock = vi.mocked(apiFetch);
 const dispatchClientErrorDiagnosticMock = vi.mocked(dispatchClientErrorDiagnostic);
+const uploadFileMock = vi.mocked(uploadFile);
 
 const firstProofProps = {
   open: true,
@@ -64,6 +74,43 @@ describe('first proof entry point', () => {
       screen.getByRole('button', { name: 'Save first proof' }).closest('.overflow-y-auto')
     ).toHaveClass('max-h-[90vh]');
     expect(screen.queryByText('Add Skill to Atlas')).not.toBeInTheDocument();
+  });
+
+  it('keeps unexpected upload return errors safe, diagnostic, and retryable', async () => {
+    const rawFailure = 'storage insert failed: bucket policy details';
+    uploadFileMock.mockResolvedValueOnce({
+      success: false,
+      error: rawFailure,
+    });
+
+    render(<FirstProofDialog {...firstProofProps} />);
+
+    fireEvent.change(screen.getByLabelText('Proof title'), {
+      target: { value: 'Launch review artifact' },
+    });
+    fireEvent.change(screen.getByLabelText('Upload proof file'), {
+      target: {
+        files: [new File(['proof'], 'launch-review.pdf', { type: 'application/pdf' })],
+      },
+    });
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(
+      'Upload could not be saved. Your proof details are still here; try again or choose another file.'
+    );
+    expect(screen.queryByText(rawFailure)).not.toBeInTheDocument();
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'proofs.first_proof.upload_returned_error',
+      expect.any(Error)
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
+      rawFailure
+    );
+    expect(screen.getByLabelText('Proof title')).toHaveValue('Launch review artifact');
+    expect(screen.getByText('Selected: launch-review.pdf')).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Save first proof' })).toBeEnabled()
+    );
   });
 
   it('keeps failed first proof saves safe, diagnostic, and retryable', async () => {

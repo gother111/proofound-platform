@@ -313,6 +313,8 @@ describe('runtime debug output guardrails', () => {
     expect(sources).toContain('privacy.visibility_modal.user_load_failed');
     expect(sources).toContain('privacy.field_controls.load_failed');
     expect(sources).toContain('privacy.field_controls.save_failed');
+    expect(sources).toContain('FIRST_PROOF_SAFE_UPLOAD_ERRORS');
+    expect(sources).toContain('proofs.first_proof.upload_returned_error');
     expect(sources).toContain('proofs.first_proof.upload_failed');
     expect(sources).toContain('proofs.first_proof.submit_failed');
     expect(sources).toContain('Proof was not saved');
@@ -331,6 +333,9 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Failed to save privacy settings:');
     expect(sources).not.toContain('First proof upload failed:');
     expect(sources).not.toContain('First proof submit failed:');
+    expect(sources).not.toContain(
+      "setUploadError(result.error || result.message || 'Upload failed')"
+    );
     expect(sources).not.toContain(
       "setFormError(error.message || error.error || 'Failed to save proof. Please try again.')"
     );

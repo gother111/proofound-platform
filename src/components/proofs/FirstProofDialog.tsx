@@ -57,6 +57,25 @@ const EMPTY_FORM = {
 
 const FIRST_PROOF_SAVE_FAILED_MESSAGE =
   'Proof was not saved. Your proof details are still here; review them and try again.';
+const FIRST_PROOF_UPLOAD_RETRY_MESSAGE =
+  'Upload could not be saved. Your proof details are still here; try again or choose another file.';
+const FIRST_PROOF_SAFE_UPLOAD_ERRORS = new Set([
+  'The uploaded file type did not match its file signature.',
+  'The uploaded file is not allowed for this proof or document flow.',
+  'The uploaded file is too large for this upload flow.',
+  'The upload could not be accepted for this flow.',
+  'Security token could not be initialized. Please refresh and try again.',
+  'Failed to upload file. Please try again.',
+]);
+
+function firstProofUploadErrorMessage(message: string) {
+  if (FIRST_PROOF_SAFE_UPLOAD_ERRORS.has(message)) {
+    return message;
+  }
+
+  dispatchClientErrorDiagnostic('proofs.first_proof.upload_returned_error', new Error(message));
+  return FIRST_PROOF_UPLOAD_RETRY_MESSAGE;
+}
 
 function deriveProofTitleFromUrl(rawUrl: string): string {
   try {
@@ -139,7 +158,8 @@ export function FirstProofDialog({
       });
 
       if (!result.success || !result.uploadedFileId) {
-        setUploadError(result.error || result.message || 'Upload failed');
+        const uploadMessage = result.message || result.error || FIRST_PROOF_UPLOAD_RETRY_MESSAGE;
+        setUploadError(firstProofUploadErrorMessage(uploadMessage));
         return;
       }
 
@@ -154,7 +174,7 @@ export function FirstProofDialog({
       }));
     } catch (error) {
       dispatchClientErrorDiagnostic('proofs.first_proof.upload_failed', error);
-      setUploadError('Upload failed. Please try again.');
+      setUploadError(FIRST_PROOF_UPLOAD_RETRY_MESSAGE);
     } finally {
       setUploading(false);
     }
@@ -344,7 +364,9 @@ export function FirstProofDialog({
               <p className="mt-2 text-xs text-muted-foreground">Selected: {form.fileName}</p>
             ) : null}
             {uploadError ? (
-              <p className="mt-2 text-xs text-proofound-terracotta">{uploadError}</p>
+              <p role="alert" className="mt-2 text-xs text-proofound-terracotta">
+                {uploadError}
+              </p>
             ) : null}
           </div>
 
