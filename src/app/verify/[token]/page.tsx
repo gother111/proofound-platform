@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { VerificationRequestStateCard } from '@/components/verification/VerificationRequestStateCard';
 import {
   CheckCircle2,
   XCircle,
@@ -413,22 +414,18 @@ export default function VerifySkillPage() {
 
   if (error && !data) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-proofound-parchment p-4 py-10">
-        <Card className="w-full max-w-lg rounded-[24px] border-proofound-stone bg-white/95 shadow-[0_4px_24px_rgba(29,51,48,0.08)]">
-          <CardContent className="pb-12 pt-12 text-center">
-            <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
-              <AlertCircle className="h-6 w-6 text-destructive" />
-            </span>
-            <h1 className="mb-2 font-display text-2xl font-semibold leading-none tracking-tight text-proofound-charcoal">
-              Unable to load request
-            </h1>
-            <p className="mb-6 text-sm leading-6 text-muted-foreground">{error}</p>
-            <Button variant="outline" onClick={() => router.push('/')}>
-              Return home
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <VerificationRequestStateCard
+        title="Unable to load request"
+        message={error}
+        Icon={AlertCircle}
+        iconClassName="text-destructive"
+        iconBgClassName="bg-destructive/10"
+        stateNote="No verification response was recorded from this page."
+        guidance="Ask the requester to send a fresh verification link if you still need to respond."
+        actionLabel="Return home"
+        onAction={() => router.push('/')}
+        noticeRole="alert"
+      />
     );
   }
 
@@ -444,6 +441,9 @@ export default function VerifySkillPage() {
         bgColor: 'bg-green-50',
         title: 'Already Verified',
         message: 'This verification request has already been completed.',
+        stateNote: 'No new verification response was recorded from this page.',
+        guidance:
+          'If you need to change your response, ask the requester to send a fresh verification request.',
       },
       declined: {
         icon: XCircle,
@@ -451,6 +451,9 @@ export default function VerifySkillPage() {
         bgColor: 'bg-red-50',
         title: 'Already Declined',
         message: 'This verification request has already been declined.',
+        stateNote: 'No new verification response was recorded from this page.',
+        guidance:
+          'If you need to change your response, ask the requester to send a fresh verification request.',
       },
       expired: {
         icon: Clock,
@@ -459,6 +462,9 @@ export default function VerifySkillPage() {
         title: 'Request Expired',
         message:
           'This verification request has expired. The requester will need to send a new request.',
+        stateNote: 'No verification response was recorded from this page.',
+        guidance:
+          'Ask the requester to send a fresh verification link if you still need to respond.',
       },
       failed: {
         icon: AlertCircle,
@@ -466,6 +472,9 @@ export default function VerifySkillPage() {
         bgColor: 'bg-amber-50',
         title: 'Request Failed',
         message: 'This verification request is no longer active.',
+        stateNote: 'No verification response was recorded from this page.',
+        guidance:
+          'Ask the requester to send a fresh verification link if you still need to respond.',
       },
       pending: {
         icon: Clock,
@@ -473,6 +482,8 @@ export default function VerifySkillPage() {
         bgColor: 'bg-amber-50',
         title: 'Pending',
         message: 'This verification request is still pending.',
+        stateNote: 'No verification response was recorded from this page.',
+        guidance: 'Refresh this link or ask the requester to resend it if the request looks stale.',
       },
     } as const;
 
@@ -480,21 +491,17 @@ export default function VerifySkillPage() {
     const Icon = config.icon;
 
     return (
-      <div className="flex min-h-screen items-center justify-center bg-proofound-parchment p-4 py-10">
-        <Card className="w-full max-w-lg rounded-[24px] border-proofound-stone bg-white/95 shadow-[0_4px_24px_rgba(29,51,48,0.08)]">
-          <CardContent className="pb-12 pt-12 text-center">
-            <span
-              className={`mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full ${config.bgColor}`}
-            >
-              <Icon className={`h-6 w-6 ${config.color}`} />
-            </span>
-            <h1 className="mb-2 font-display text-2xl font-semibold leading-none tracking-tight text-proofound-charcoal">
-              {config.title}
-            </h1>
-            <p className="text-sm leading-6 text-muted-foreground">{config.message}</p>
-          </CardContent>
-        </Card>
-      </div>
+      <VerificationRequestStateCard
+        title={config.title}
+        message={config.message}
+        Icon={Icon}
+        iconClassName={config.color}
+        iconBgClassName={config.bgColor}
+        stateNote={config.stateNote}
+        guidance={config.guidance}
+        actionLabel="Return home"
+        onAction={() => router.push('/')}
+      />
     );
   }
 

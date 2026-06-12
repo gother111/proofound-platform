@@ -116,6 +116,12 @@ describe('verification link visual fixtures', () => {
     expect(
       screen.getByText(/This verification link is invalid, expired, or no longer available/i)
     ).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'No verification response was recorded from this page.'
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Ask the requester to send a fresh verification link'
+    );
     expect(screen.queryByText(/Service temporarily unavailable/i)).not.toBeInTheDocument();
   });
 
@@ -140,7 +146,96 @@ describe('verification link visual fixtures', () => {
     expect(
       screen.getByText(/This verification link is invalid, expired, or no longer available/i)
     ).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'No verification response was recorded from this page.'
+    );
+    expect(screen.getByRole('button', { name: /return home/i })).toBeInTheDocument();
     expect(screen.queryByText(/Service temporarily unavailable/i)).not.toBeInTheDocument();
+  });
+
+  it('gives expired skill verification links a safe recovery action', async () => {
+    routeParams = { token: 'expired-skill-token' };
+    vi.stubEnv('NEXT_PUBLIC_PROOFOUND_VISUAL_FIXTURES', 'false');
+    vi.stubEnv('PROOFOUND_VISUAL_FIXTURES', 'false');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({
+          verification: {
+            id: 'request-expired-1',
+            verification_type: 'skill',
+            skill_name: 'Privacy-safe evidence review',
+            skill_code: 'privacy_review',
+            requester_name: 'Mika Andersson',
+            requester_email: 'mika@example.com',
+            verifier_source: 'peer',
+            verifier_relationship: 'peer',
+            status: 'expired',
+            created_at: '2026-03-01T10:00:00.000Z',
+            expires_at: '2026-03-15T10:00:00.000Z',
+          },
+        }),
+      }))
+    );
+
+    render(<VerifySkillPage />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /request expired/i })).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'No verification response was recorded from this page.'
+    );
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Ask the requester to send a fresh verification link'
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /return home/i }));
+    expect(routerPush).toHaveBeenCalledWith('/');
+  });
+
+  it('gives already-completed custom verification links a safe recovery action', async () => {
+    routeParams = { token: 'accepted-custom-token' };
+    vi.stubEnv('NEXT_PUBLIC_PROOFOUND_VISUAL_FIXTURES', 'false');
+    vi.stubEnv('PROOFOUND_VISUAL_FIXTURES', 'false');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({
+          request: {
+            id: 'custom-accepted-1',
+            requester_name: 'Elena Proof',
+            relationship: 'peer',
+            request_kind: 'generic_verification',
+            status: 'accepted',
+            created_at: '2026-03-01T10:00:00.000Z',
+            expires_at: '2026-03-15T10:00:00.000Z',
+            responded_at: '2026-03-02T10:00:00.000Z',
+            response_message: 'Looks accurate.',
+            items: [],
+          },
+        }),
+      }))
+    );
+
+    render(<VerifyCustomRequestPage />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /already verified/i })).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'No new verification response was recorded from this page.'
+    );
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'ask the requester to send a fresh verification request'
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /return home/i }));
+    expect(routerPush).toHaveBeenCalledWith('/');
   });
 
   it('keeps visual skill tokens on the guarded public API path in plain mock mode', async () => {
