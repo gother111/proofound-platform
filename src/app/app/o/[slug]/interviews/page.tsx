@@ -106,6 +106,17 @@ type InterviewDialogFeedback = {
   message: string;
 };
 
+const INTERVIEW_UPDATE_FAILED_MESSAGE =
+  'Interview update could not be saved. The interview workflow is unchanged; review the time and retry before closing.';
+const INTERVIEW_CANCEL_FAILED_MESSAGE =
+  'Interview cancellation could not be recorded. The interview remains scheduled; review the reason and retry.';
+const INTERVIEW_COMPLETE_FAILED_MESSAGE =
+  'Interview completion could not be recorded. The corridor is unchanged; retry before recording a decision.';
+const INTERVIEW_NO_SHOW_FAILED_MESSAGE =
+  'No-show could not be recorded. The interview workflow is unchanged; review the note and retry.';
+const ENGAGEMENT_CONFIRMATION_FAILED_MESSAGE =
+  'Engagement confirmation could not be recorded. The engagement state is unchanged; retry before moving on.';
+
 export default function OrganizationInterviewsPage() {
   const params = useParams<{ slug?: string | string[] }>();
   const [interviews, setInterviews] = useState<Interview[]>([]);
@@ -332,10 +343,8 @@ export default function OrganizationInterviewsPage() {
       closeEditDialog();
       await loadInterviews();
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : 'Interview update could not be saved. The workflow is unchanged.';
+      dispatchClientErrorDiagnostic('interviews.organization.edit_failed', error);
+      const message = INTERVIEW_UPDATE_FAILED_MESSAGE;
       setInterviewDialogFeedback({
         kind: 'edit',
         interviewId: editingInterview.interview.id,
@@ -376,10 +385,8 @@ export default function OrganizationInterviewsPage() {
       setCancelReason('');
       await loadInterviews();
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : 'Interview cancellation could not be recorded. The workflow is unchanged.';
+      dispatchClientErrorDiagnostic('interviews.organization.cancel_failed', error);
+      const message = INTERVIEW_CANCEL_FAILED_MESSAGE;
       setInterviewDialogFeedback({
         kind: 'cancel',
         interviewId: cancelInterview.interview.id,
@@ -417,10 +424,8 @@ export default function OrganizationInterviewsPage() {
       setCompleteInterview(null);
       await loadInterviews();
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : 'Interview completion could not be recorded. The workflow is unchanged.';
+      dispatchClientErrorDiagnostic('interviews.organization.complete_failed', error);
+      const message = INTERVIEW_COMPLETE_FAILED_MESSAGE;
       setInterviewDialogFeedback({
         kind: 'complete',
         interviewId: completeInterview.interview.id,
@@ -462,10 +467,8 @@ export default function OrganizationInterviewsPage() {
       setNoShowReason('');
       await loadInterviews();
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : 'No-show could not be recorded. The workflow is unchanged.';
+      dispatchClientErrorDiagnostic('interviews.organization.no_show_failed', error);
+      const message = INTERVIEW_NO_SHOW_FAILED_MESSAGE;
       setInterviewDialogFeedback({
         kind: 'no_show',
         interviewId: noShowInterview.interview.id,
@@ -529,10 +532,8 @@ export default function OrganizationInterviewsPage() {
       toast.success('Engagement confirmation recorded');
       await loadInterviews();
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : 'Engagement confirmation could not be recorded. The workflow is unchanged.';
+      dispatchClientErrorDiagnostic('interviews.organization.engagement_confirm_failed', error);
+      const message = ENGAGEMENT_CONFIRMATION_FAILED_MESSAGE;
       setWorkflowActionFeedback({
         kind: 'engagement_confirmation',
         itemId: interview.id,

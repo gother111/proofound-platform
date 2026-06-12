@@ -5,10 +5,18 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import OrganizationInterviewsPage from '@/app/app/o/[slug]/interviews/page';
 import { __resetCsrfCacheForTests } from '@/lib/api/fetch';
 
+const { diagnosticMock } = vi.hoisted(() => ({
+  diagnosticMock: vi.fn(),
+}));
+
 const getInterviewCorridorItemsMock = vi.fn();
 
 vi.mock('@/app/actions/interviews', () => ({
   getInterviewCorridorItems: (...args: any[]) => getInterviewCorridorItemsMock(...args),
+}));
+
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientErrorDiagnostic: (...args: unknown[]) => diagnosticMock(...args),
 }));
 
 vi.mock('@/components/ui/v2/AppSurface', () => ({
@@ -99,6 +107,13 @@ describe('organization interviews page actions', () => {
     __resetCsrfCacheForTests();
     getInterviewCorridorItemsMock.mockReset();
   });
+
+  const getDiagnosticErrorMessage = (reason: string) => {
+    const error = diagnosticMock.mock.calls.find(
+      ([diagnosticReason]) => diagnosticReason === reason
+    )?.[1];
+    return error instanceof Error ? error.message : String(error);
+  };
 
   it('explains the loading corridor before interview actions arrive', () => {
     getInterviewCorridorItemsMock.mockReturnValue(new Promise<never>(() => {}));
@@ -414,7 +429,17 @@ describe('organization interviews page actions', () => {
 
     alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Interview update could not be saved');
-    expect(alert).toHaveTextContent('Interview update is temporarily unavailable.');
+    expect(alert).toHaveTextContent(
+      'The interview workflow is unchanged; review the time and retry before closing.'
+    );
+    expect(alert).not.toHaveTextContent('Interview update is temporarily unavailable.');
+    expect(diagnosticMock).toHaveBeenCalledWith(
+      'interviews.organization.edit_failed',
+      expect.any(Error)
+    );
+    expect(getDiagnosticErrorMessage('interviews.organization.edit_failed')).toBe(
+      'Interview update is temporarily unavailable.'
+    );
     expect(reasonField).toHaveValue('Moving to the reviewer availability window');
 
     fireEvent.click(within(alert).getByRole('button', { name: /retry update/i }));
@@ -503,7 +528,17 @@ describe('organization interviews page actions', () => {
 
     let alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Interview cancellation could not be recorded');
-    expect(alert).toHaveTextContent('/api/interviews/cancel is temporarily unavailable.');
+    expect(alert).toHaveTextContent(
+      'The interview remains scheduled; review the reason and retry.'
+    );
+    expect(alert).not.toHaveTextContent('/api/interviews/cancel is temporarily unavailable.');
+    expect(diagnosticMock).toHaveBeenCalledWith(
+      'interviews.organization.cancel_failed',
+      expect.any(Error)
+    );
+    expect(getDiagnosticErrorMessage('interviews.organization.cancel_failed')).toBe(
+      '/api/interviews/cancel is temporarily unavailable.'
+    );
     expect(cancelReasonField).toHaveValue('Need to move due to conflict');
 
     fireEvent.click(within(alert).getByRole('button', { name: /retry cancellation/i }));
@@ -521,7 +556,17 @@ describe('organization interviews page actions', () => {
 
     alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Interview completion could not be recorded');
-    expect(alert).toHaveTextContent('/api/interviews/complete is temporarily unavailable.');
+    expect(alert).toHaveTextContent(
+      'The corridor is unchanged; retry before recording a decision.'
+    );
+    expect(alert).not.toHaveTextContent('/api/interviews/complete is temporarily unavailable.');
+    expect(diagnosticMock).toHaveBeenCalledWith(
+      'interviews.organization.complete_failed',
+      expect.any(Error)
+    );
+    expect(getDiagnosticErrorMessage('interviews.organization.complete_failed')).toBe(
+      '/api/interviews/complete is temporarily unavailable.'
+    );
 
     fireEvent.click(within(alert).getByRole('button', { name: /retry completion/i }));
 
@@ -540,7 +585,17 @@ describe('organization interviews page actions', () => {
 
     alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('No-show could not be recorded');
-    expect(alert).toHaveTextContent('/api/interviews/no-show is temporarily unavailable.');
+    expect(alert).toHaveTextContent(
+      'The interview workflow is unchanged; review the note and retry.'
+    );
+    expect(alert).not.toHaveTextContent('/api/interviews/no-show is temporarily unavailable.');
+    expect(diagnosticMock).toHaveBeenCalledWith(
+      'interviews.organization.no_show_failed',
+      expect.any(Error)
+    );
+    expect(getDiagnosticErrorMessage('interviews.organization.no_show_failed')).toBe(
+      '/api/interviews/no-show is temporarily unavailable.'
+    );
     expect(noShowReasonField).toHaveValue('Candidate missed the scheduled call');
 
     fireEvent.click(within(alert).getByRole('button', { name: /retry no-show/i }));
@@ -829,7 +884,15 @@ describe('organization interviews page actions', () => {
 
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Engagement confirmation could not be recorded');
-    expect(alert).toHaveTextContent('Engagement confirmation is temporarily unavailable.');
+    expect(alert).toHaveTextContent('The engagement state is unchanged; retry before moving on.');
+    expect(alert).not.toHaveTextContent('Engagement confirmation is temporarily unavailable.');
+    expect(diagnosticMock).toHaveBeenCalledWith(
+      'interviews.organization.engagement_confirm_failed',
+      expect.any(Error)
+    );
+    expect(getDiagnosticErrorMessage('interviews.organization.engagement_confirm_failed')).toBe(
+      'Engagement confirmation is temporarily unavailable.'
+    );
     expect(screen.getByLabelText('Engagement type')).toHaveValue('full_time');
 
     fireEvent.click(within(alert).getByRole('button', { name: 'Retry confirmation' }));
