@@ -112,7 +112,7 @@ describe('matching paused/hidden manager launch safety', () => {
 
     render(<HiddenMatchesList />);
 
-    expect(await screen.findByText('Hidden matches could not load')).toBeInTheDocument();
+    expect(await screen.findByRole('alert')).toHaveTextContent('Hidden matches could not load');
     expect(
       screen.getByText(
         'Your hidden assignment reviews are unchanged. Retry this panel to refresh the list.'
@@ -124,6 +124,48 @@ describe('matching paused/hidden manager launch safety', () => {
 
     expect(await screen.findByText('Restored hidden assignment')).toBeInTheDocument();
     expect(apiFetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('rolls back and announces a failed hidden-match restore', async () => {
+    const onRestored = vi.fn();
+
+    apiFetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          matches: [
+            {
+              id: 'match-with/slash',
+              assignment: {
+                title: 'Hidden assignment to restore',
+                locationMode: 'remote',
+                country: 'SE',
+              },
+              organization: {
+                name: 'Proofound Labs',
+              },
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+      });
+
+    render(<HiddenMatchesList onRestored={onRestored} />);
+
+    expect(await screen.findByText('Hidden assignment to restore')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Unhide' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Match could not be restored. It is still hidden, and you can try again.'
+    );
+    expect(screen.getByText('Hidden assignment to restore')).toBeInTheDocument();
+    expect(onRestored).not.toHaveBeenCalled();
+    expect(apiFetchMock).toHaveBeenLastCalledWith('/api/match/hide?matchId=match-with%2Fslash', {
+      method: 'DELETE',
+    });
   });
 
   it('keeps paused matches inside the active matching route and avoids detail links', async () => {
@@ -224,7 +266,7 @@ describe('matching paused/hidden manager launch safety', () => {
 
     render(<SnoozedMatchesList />);
 
-    expect(await screen.findByText('Paused matches could not load')).toBeInTheDocument();
+    expect(await screen.findByRole('alert')).toHaveTextContent('Paused matches could not load');
     expect(
       screen.getByText(
         'Your paused assignment reviews are unchanged. Retry this panel to refresh the list.'
@@ -235,5 +277,52 @@ describe('matching paused/hidden manager launch safety', () => {
 
     expect(await screen.findByText('No paused matches right now')).toBeInTheDocument();
     expect(apiFetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('rolls back and announces a failed paused-match restore', async () => {
+    const onRestored = vi.fn();
+
+    apiFetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          matches: [
+            {
+              id: 'paused/match-1',
+              proofFitLabel: 'Proof review needed',
+              snoozedUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+              assignment: {
+                id: 'assignment-paused-1',
+                title: 'Paused assignment to restore',
+                description: 'Keep this match paused when restore fails.',
+                status: 'active',
+              },
+              organization: {
+                id: 'org-1',
+                name: 'Proofound Labs',
+                logoUrl: null,
+              },
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+      });
+
+    render(<SnoozedMatchesList onRestored={onRestored} />);
+
+    expect(await screen.findByText('Paused assignment to restore')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Restore' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Match could not be restored. It is still paused, and you can try again.'
+    );
+    expect(screen.getByText('Paused assignment to restore')).toBeInTheDocument();
+    expect(onRestored).not.toHaveBeenCalled();
+    expect(apiFetchMock).toHaveBeenLastCalledWith('/api/matches/paused%2Fmatch-1/snooze', {
+      method: 'DELETE',
+    });
   });
 });

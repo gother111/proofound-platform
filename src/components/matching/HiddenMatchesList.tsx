@@ -43,11 +43,13 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
   const [loading, setLoading] = useState(true);
   const [unhidingId, setUnhidingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [restoreError, setRestoreError] = useState<string | null>(null);
 
   const fetchHidden = async () => {
     try {
       setLoading(true);
       setError(null);
+      setRestoreError(null);
       const response = await apiFetch('/api/match/hide');
       if (response.ok) {
         const data: HiddenMatchesResponse = await response.json();
@@ -76,13 +78,16 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
 
   const handleUnhide = async (matchId: string) => {
     setUnhidingId(matchId);
+    setRestoreError(null);
 
     // Optimistically remove the item; keep snapshot for rollback
     const prevHidden = hidden;
     setHidden((prev) => prev.filter((m) => m.id !== matchId));
 
     try {
-      const response = await apiFetch(`/api/match/hide?matchId=${matchId}`, { method: 'DELETE' });
+      const response = await apiFetch(`/api/match/hide?matchId=${encodeURIComponent(matchId)}`, {
+        method: 'DELETE',
+      });
       if (!response.ok) {
         throw new Error('Failed to unhide match');
       }
@@ -106,6 +111,7 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
       dispatchClientErrorDiagnostic('matching.hidden_matches.unhide_failed', error);
       // Roll back optimistic removal
       setHidden(prevHidden);
+      setRestoreError('Match could not be restored. It is still hidden, and you can try again.');
       toast.error('Failed to unhide match');
     } finally {
       setUnhidingId(null);
@@ -126,7 +132,7 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
 
   if (error) {
     return (
-      <Card variant="bento" className="p-4 border">
+      <Card variant="bento" className="p-4 border" role="alert" aria-live="assertive">
         <div className="flex items-center gap-2 mb-2 text-[#DC2626]">
           <EyeOff className="w-4 h-4" />
           <h3 className="text-sm font-medium">Hidden</h3>
@@ -163,6 +169,16 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
           {hidden.length}
         </Badge>
       </div>
+
+      {restoreError && (
+        <p
+          className="mb-3 rounded border border-[#FCA5A5] bg-[#FEF2F2] px-3 py-2 text-xs leading-5 text-[#B91C1C]"
+          role="alert"
+          aria-live="assertive"
+        >
+          {restoreError}
+        </p>
+      )}
 
       <div className="space-y-3">
         {hidden.map((match) => (

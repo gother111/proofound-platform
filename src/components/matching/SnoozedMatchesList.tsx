@@ -44,6 +44,7 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
   const [loading, setLoading] = useState(true);
   const [unsnoozing, setUnsnoozing] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [restoreError, setRestoreError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchSnoozedMatches();
@@ -53,6 +54,7 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
     try {
       setLoading(true);
       setError(null);
+      setRestoreError(null);
       const response = await apiFetch('/api/match/snoozed');
       if (response.ok) {
         const data = await response.json();
@@ -77,13 +79,14 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
 
   const handleUnsnooze = async (matchId: string) => {
     setUnsnoozing(matchId);
+    setRestoreError(null);
 
     // Optimistically remove from local list, keep snapshot for rollback
     const prevMatches = matches;
     setMatches((prev) => prev.filter((m) => m.id !== matchId));
 
     try {
-      const response = await apiFetch(`/api/matches/${matchId}/snooze`, {
+      const response = await apiFetch(`/api/matches/${encodeURIComponent(matchId)}/snooze`, {
         method: 'DELETE',
       });
 
@@ -113,6 +116,7 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
       dispatchClientErrorDiagnostic('matching.snoozed_matches.unsnooze_failed', error);
       // Rollback optimistic removal if API failed
       setMatches(prevMatches);
+      setRestoreError('Match could not be restored. It is still paused, and you can try again.');
       toast.error('Failed to unsnooze match', {
         description: 'Please try again',
       });
@@ -151,7 +155,7 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
 
   if (error) {
     return (
-      <Card variant="bento" className="border p-4">
+      <Card variant="bento" className="border p-4" role="alert" aria-live="assertive">
         <div className="mb-2 flex items-center gap-2 text-[#DC2626]">
           <Clock className="h-4 w-4" />
           <h3 className="text-sm font-medium">Paused</h3>
@@ -189,6 +193,16 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
 
   return (
     <div className="space-y-4">
+      {restoreError && (
+        <p
+          className="rounded border border-[#FCA5A5] bg-[#FEF2F2] px-3 py-2 text-xs leading-5 text-[#B91C1C]"
+          role="alert"
+          aria-live="assertive"
+        >
+          {restoreError}
+        </p>
+      )}
+
       {matches.map((match) => (
         <Card variant="bento" key={match.id} className="p-6">
           <div className="flex items-start justify-between gap-6">
