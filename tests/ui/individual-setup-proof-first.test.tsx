@@ -357,10 +357,11 @@ describe('IndividualSetup first-proof flow', () => {
     expect(uploadFileMock).not.toHaveBeenCalled();
   });
 
-  it('announces failed first-proof uploads and keeps the file step retryable', async () => {
+  it('keeps returned first-proof upload failures safe and retryable', async () => {
+    const rawError = 'Storage provider stack: insert failed for bucket proof-uploads';
     uploadFileMock.mockResolvedValueOnce({
       success: false,
-      error: 'Upload service unavailable. Please try again.',
+      error: rawError,
     });
 
     render(<IndividualSetup />);
@@ -374,7 +375,40 @@ describe('IndividualSetup first-proof flow', () => {
     });
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Upload service unavailable. Please try again.'
+      'Upload could not be saved. Your proof details are still here; try again or choose another file.'
+    );
+    expect(screen.queryByText(rawError)).not.toBeInTheDocument();
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'onboarding.individual.first_proof_upload_returned_error',
+      expect.any(Error)
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(rawError);
+    expect(screen.getByLabelText('Proof file *')).toBeEnabled();
+  });
+
+  it('preserves known first-proof upload rejection copy', async () => {
+    uploadFileMock.mockResolvedValueOnce({
+      success: false,
+      error: 'Invalid file type',
+      message: 'The uploaded file type did not match its file signature.',
+    });
+
+    render(<IndividualSetup />);
+
+    fillBasicDetails();
+    fireEvent.click(screen.getByRole('radio', { name: /file upload/i }));
+
+    const file = new File(['proof'], 'starter-proof.pdf', { type: 'application/pdf' });
+    fireEvent.change(screen.getByLabelText('Proof file *'), {
+      target: { files: [file] },
+    });
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'The uploaded file type did not match its file signature.'
+    );
+    expect(dispatchClientErrorDiagnosticMock).not.toHaveBeenCalledWith(
+      'onboarding.individual.first_proof_upload_returned_error',
+      expect.any(Error)
     );
     expect(screen.getByLabelText('Proof file *')).toBeEnabled();
   });
@@ -393,7 +427,9 @@ describe('IndividualSetup first-proof flow', () => {
       target: { files: [file] },
     });
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Upload failed. Please try again.');
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Upload could not be saved. Your proof details are still here; try again or choose another file.'
+    );
     expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
       'onboarding.individual.first_proof_upload_failed',
       uploadError
@@ -426,11 +462,58 @@ describe('IndividualSetup first-proof flow', () => {
     );
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Something went wrong. Please try again.'
+      'First Proof Pack could not be saved. Your details are still here; please try again.'
     );
     expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
       'onboarding.individual.first_proof_submit_failed',
       submitError
+    );
+    expect(screen.getByRole('button', { name: /save first proof pack/i })).toBeEnabled();
+  });
+
+  it('keeps returned first-proof save failures safe, diagnostic, and retryable', async () => {
+    const rawError = 'Database policy failed: proof_pack_items insert stack detail';
+    completeIndividualOnboardingMock.mockResolvedValueOnce({ error: rawError });
+
+    render(<IndividualSetup />);
+
+    fillBasicDetails();
+    fillLinkProof();
+    fireEvent.submit(
+      screen.getByRole('button', { name: /save first proof pack/i }).closest('form')!
+    );
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'First Proof Pack could not be saved. Your details are still here; please try again.'
+    );
+    expect(screen.queryByText(rawError)).not.toBeInTheDocument();
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'onboarding.individual.first_proof_returned_error',
+      expect.any(Error)
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(rawError);
+    expect(screen.getByRole('button', { name: /save first proof pack/i })).toBeEnabled();
+  });
+
+  it('preserves known first-proof save action copy', async () => {
+    completeIndividualOnboardingMock.mockResolvedValueOnce({
+      error: 'Uploaded file is awaiting privacy review or failed checks.',
+    });
+
+    render(<IndividualSetup />);
+
+    fillBasicDetails();
+    fillLinkProof();
+    fireEvent.submit(
+      screen.getByRole('button', { name: /save first proof pack/i }).closest('form')!
+    );
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Uploaded file is awaiting privacy review or failed checks.'
+    );
+    expect(dispatchClientErrorDiagnosticMock).not.toHaveBeenCalledWith(
+      'onboarding.individual.first_proof_returned_error',
+      expect.any(Error)
     );
     expect(screen.getByRole('button', { name: /save first proof pack/i })).toBeEnabled();
   });

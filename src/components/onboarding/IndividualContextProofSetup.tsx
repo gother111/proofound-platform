@@ -118,6 +118,63 @@ const NEXT_READINESS_STEPS = [
 const MAX_MEASURED_OUTCOMES = 3;
 const MAX_VERIFICATION_CONFIRMERS = 2;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const FIRST_PROOF_UPLOAD_RETRY_MESSAGE =
+  'Upload could not be saved. Your proof details are still here; try again or choose another file.';
+const FIRST_PROOF_SAVE_RETRY_MESSAGE =
+  'First Proof Pack could not be saved. Your details are still here; please try again.';
+const FIRST_PROOF_SAFE_UPLOAD_ERRORS = new Set([
+  'The uploaded file type did not match its file signature.',
+  'The uploaded file is not allowed for this proof or document flow.',
+  'The uploaded file is too large for this upload flow.',
+  'The upload could not be accepted for this flow.',
+  'Security token could not be initialized. Please refresh and try again.',
+  'Failed to upload file. Please try again.',
+]);
+const FIRST_PROOF_SAFE_ACTION_ERRORS = new Set([
+  'Choose one real context before publishing.',
+  'Finish the basic identity shell before saving your first Proof Pack.',
+  'Add your first proof before saving your first Proof Pack.',
+  'Structure your first Proof Pack before saving it.',
+  'Choose whether the proof was solo or team work and describe what you owned.',
+  'Add 3 to 5 skills this proof actually supports.',
+  'Handle can only contain letters, numbers, hyphens, and underscores',
+  'Handle already taken. Please choose another.',
+  'Failed to complete setup. Please try again.',
+  'Failed to save your work preferences. Please try again.',
+  'Failed to save your first context. Please try again.',
+  'Uploaded file is awaiting privacy review or failed checks.',
+  'Failed to save your first proof. Please try again.',
+  'Every Proof Pack must include a primary anchor.',
+  'Verification-bundle Proof Packs must anchor to experience, education, or volunteering.',
+  'Export Proof Packs must anchor to the owning profile or organization.',
+  'Export Proof Packs must use the owner as their structural anchor.',
+  'Failed to structure your first Proof Pack. Please try again.',
+  'Failed to finish your first Proof Pack. Please try again.',
+]);
+
+function firstProofUploadErrorMessage(message: string) {
+  if (FIRST_PROOF_SAFE_UPLOAD_ERRORS.has(message)) {
+    return message;
+  }
+
+  dispatchClientErrorDiagnostic(
+    'onboarding.individual.first_proof_upload_returned_error',
+    new Error(message)
+  );
+  return FIRST_PROOF_UPLOAD_RETRY_MESSAGE;
+}
+
+function firstProofActionErrorMessage(message: string) {
+  if (FIRST_PROOF_SAFE_ACTION_ERRORS.has(message)) {
+    return message;
+  }
+
+  dispatchClientErrorDiagnostic(
+    'onboarding.individual.first_proof_returned_error',
+    new Error(message)
+  );
+  return FIRST_PROOF_SAVE_RETRY_MESSAGE;
+}
 
 function createOutcomeDraft(index: number): MeasuredOutcomeDraft {
   return {
@@ -361,7 +418,8 @@ export function IndividualSetup({
       });
 
       if (!result.success || !result.uploadedFileId) {
-        setUploadError(result.message || result.error || 'Upload failed. Please try again.');
+        const uploadMessage = result.message || result.error || FIRST_PROOF_UPLOAD_RETRY_MESSAGE;
+        setUploadError(firstProofUploadErrorMessage(uploadMessage));
         return;
       }
 
@@ -379,7 +437,7 @@ export function IndividualSetup({
       }));
     } catch (uploadError) {
       dispatchClientErrorDiagnostic('onboarding.individual.first_proof_upload_failed', uploadError);
-      setUploadError('Upload failed. Please try again.');
+      setUploadError(FIRST_PROOF_UPLOAD_RETRY_MESSAGE);
     } finally {
       setIsUploading(false);
     }
@@ -540,7 +598,7 @@ export function IndividualSetup({
       const result = await completeIndividualOnboarding(onboardingData);
 
       if (result.error) {
-        setError(result.error);
+        setError(firstProofActionErrorMessage(result.error));
         return;
       }
 
@@ -596,7 +654,7 @@ export function IndividualSetup({
       setPhase('success');
     } catch (submitError) {
       dispatchClientErrorDiagnostic('onboarding.individual.first_proof_submit_failed', submitError);
-      setError('Something went wrong. Please try again.');
+      setError(FIRST_PROOF_SAVE_RETRY_MESSAGE);
     } finally {
       setIsLoading(false);
     }

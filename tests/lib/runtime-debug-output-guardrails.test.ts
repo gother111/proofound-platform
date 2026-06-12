@@ -281,6 +281,19 @@ describe('runtime debug output guardrails', () => {
     expect(source).not.toContain('setError(result.error)');
   });
 
+  it('keeps individual first-proof onboarding returned errors safe and diagnostic', () => {
+    const source = readSource('src/components/onboarding/IndividualContextProofSetup.tsx');
+
+    expect(source).toContain('FIRST_PROOF_SAFE_UPLOAD_ERRORS');
+    expect(source).toContain('FIRST_PROOF_SAFE_ACTION_ERRORS');
+    expect(source).toContain('onboarding.individual.first_proof_upload_returned_error');
+    expect(source).toContain('onboarding.individual.first_proof_returned_error');
+    expect(source).toContain('Your proof details are still here');
+    expect(source).toContain('Your details are still here');
+    expect(source).not.toContain('setUploadError(result.message || result.error');
+    expect(source).not.toContain('setError(result.error)');
+  });
+
   it('keeps active decision, proof, profile privacy, and share diagnostics off raw console output', () => {
     const sources = [
       readSource('src/components/decisions/DecisionDialog.tsx'),
