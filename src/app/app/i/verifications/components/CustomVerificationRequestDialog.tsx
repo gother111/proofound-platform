@@ -69,6 +69,9 @@ const GROUP_LABELS: Record<ArtifactType, string> = {
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+const CUSTOM_VERIFICATION_SEND_FAILED_MESSAGE =
+  'Custom verification request could not be sent. Your selections are unchanged; please try again.';
+
 function emptyArtifactsByGroup(): Record<ArtifactType, Artifact[]> {
   return {
     skill: [],
@@ -258,16 +261,21 @@ export function CustomVerificationRequestDialog({ open, onOpenChange, onCreated 
         body: JSON.stringify(payload),
       });
 
-      const responseData = await response.json();
+      const responseData = (await response.json().catch(() => ({}))) as { error?: unknown };
       if (!response.ok) {
-        const errorMessage =
-          responseData.error ||
-          'Custom verification request could not be sent. Your selections are unchanged.';
+        const diagnosticMessage =
+          typeof responseData.error === 'string' && responseData.error.trim().length > 0
+            ? responseData.error
+            : `Custom verification request failed with status ${response.status}`;
+        dispatchClientErrorDiagnostic(
+          'verifications.custom_dialog.send_failed',
+          new Error(diagnosticMessage)
+        );
         setSubmissionFeedback({
           title: 'Request could not be sent',
-          message: errorMessage,
+          message: CUSTOM_VERIFICATION_SEND_FAILED_MESSAGE,
         });
-        toast.error(errorMessage);
+        toast.error(CUSTOM_VERIFICATION_SEND_FAILED_MESSAGE);
         return;
       }
 
@@ -277,13 +285,11 @@ export function CustomVerificationRequestDialog({ open, onOpenChange, onCreated 
       onCreated?.();
     } catch (error) {
       dispatchClientErrorDiagnostic('verifications.custom_dialog.send_failed', error);
-      const errorMessage =
-        'Custom verification request could not be sent. Your selections are unchanged.';
       setSubmissionFeedback({
         title: 'Request could not be sent',
-        message: errorMessage,
+        message: CUSTOM_VERIFICATION_SEND_FAILED_MESSAGE,
       });
-      toast.error(errorMessage);
+      toast.error(CUSTOM_VERIFICATION_SEND_FAILED_MESSAGE);
     } finally {
       setSubmitting(false);
     }

@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CustomVerificationRequestDialog } from '@/app/app/i/verifications/components/CustomVerificationRequestDialog';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 const successToast = vi.fn();
 const errorToast = vi.fn();
@@ -13,6 +14,12 @@ vi.mock('sonner', () => ({
     error: (...args: unknown[]) => errorToast(...args),
   },
 }));
+
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientErrorDiagnostic: vi.fn(),
+}));
+
+const dispatchClientErrorDiagnosticMock = vi.mocked(dispatchClientErrorDiagnostic);
 
 describe('CustomVerificationRequestDialog', () => {
   beforeEach(() => {
@@ -136,7 +143,9 @@ describe('CustomVerificationRequestDialog', () => {
     expect(onCreated).toHaveBeenCalledTimes(1);
   });
 
-  it('keeps failed custom request sends visible without clearing selections', async () => {
+  it('keeps failed custom request sends safe and visible without clearing selections', async () => {
+    const rawFailure = 'Verification delivery is temporarily unavailable.';
+
     global.fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
 
@@ -167,7 +176,8 @@ describe('CustomVerificationRequestDialog', () => {
       if (url.includes('/api/verification/requests/custom') && init?.method === 'POST') {
         return {
           ok: false,
-          json: async () => ({ error: 'Verification delivery is temporarily unavailable.' }),
+          status: 503,
+          json: async () => ({ error: rawFailure }),
         } as Response;
       }
 
@@ -186,7 +196,22 @@ describe('CustomVerificationRequestDialog', () => {
 
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Request could not be sent');
-    expect(alert).toHaveTextContent('Verification delivery is temporarily unavailable.');
+    expect(alert).toHaveTextContent(
+      'Custom verification request could not be sent. Your selections are unchanged; please try again.'
+    );
+    expect(alert).not.toHaveTextContent(rawFailure);
+    expect(document.body.textContent ?? '').not.toContain(rawFailure);
+    expect(errorToast).toHaveBeenCalledWith(
+      'Custom verification request could not be sent. Your selections are unchanged; please try again.'
+    );
+    expect(JSON.stringify(errorToast.mock.calls)).not.toContain(rawFailure);
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'verifications.custom_dialog.send_failed',
+      expect.any(Error)
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
+      rawFailure
+    );
     expect(screen.getByDisplayValue('mentor@example.com')).toBeInTheDocument();
     expect(screen.getByRole('checkbox')).toBeChecked();
     expect(screen.getByText('1 selected')).toBeInTheDocument();
