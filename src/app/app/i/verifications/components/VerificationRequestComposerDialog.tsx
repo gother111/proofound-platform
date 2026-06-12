@@ -46,6 +46,11 @@ type ComposerDraft = {
   tooBroadWarnings: string[];
 };
 
+type ComposerFeedback = {
+  title: string;
+  message: string;
+};
+
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -145,6 +150,7 @@ export function VerificationRequestComposerDialog({
   const [drafting, setDrafting] = useState(false);
   const [sending, setSending] = useState(false);
   const [reviewed, setReviewed] = useState(false);
+  const [feedback, setFeedback] = useState<ComposerFeedback | null>(null);
 
   const selectedProofPack = useMemo(
     () => proofPacks.find((pack) => pack.proofPackId === proofPackId) || proofPacks[0] || null,
@@ -159,6 +165,7 @@ export function VerificationRequestComposerDialog({
     setVerifierEmail('');
     setDraft(null);
     setReviewed(false);
+    setFeedback(null);
   };
 
   const dismissDraft = () => {
@@ -170,6 +177,7 @@ export function VerificationRequestComposerDialog({
   const toggleField = (field: VerificationComposerField) => {
     setDraft(null);
     setReviewed(false);
+    setFeedback(null);
     setSelectedFields((current) => {
       if (current.includes(field)) {
         return current.length === 1 ? current : current.filter((item) => item !== field);
@@ -180,12 +188,17 @@ export function VerificationRequestComposerDialog({
 
   const handleDraft = async () => {
     if (!selectedProofPack) {
+      setFeedback({
+        title: 'Choose a Proof Pack before drafting',
+        message: 'Add or select one skill-linked Proof Pack before drafting a request.',
+      });
       toast.error('Choose one Proof Pack before drafting.');
       return;
     }
 
     setDrafting(true);
     setReviewed(false);
+    setFeedback(null);
     try {
       const response = await apiFetch('/api/ai/verifications/compose', {
         method: 'POST',
@@ -212,16 +225,31 @@ export function VerificationRequestComposerDialog({
               scope: verificationScope,
             })
           );
+          setFeedback(null);
           return;
         }
-        toast.error(body.error || 'Failed to draft verification request.');
+        const message =
+          body.error ||
+          'Verification request wording could not be drafted. Review the selected fields and try again.';
+        setFeedback({
+          title: 'Draft could not be created',
+          message,
+        });
+        toast.error(message);
         return;
       }
 
       setDraft(body as ComposerDraft);
+      setFeedback(null);
     } catch (error) {
       dispatchClientErrorDiagnostic('verifications.composer.draft_failed', error);
-      toast.error('Failed to draft verification request.');
+      const message =
+        'Verification request wording could not be drafted. Review the selected fields and try again.';
+      setFeedback({
+        title: 'Draft could not be created',
+        message,
+      });
+      toast.error(message);
     } finally {
       setDrafting(false);
     }
@@ -232,15 +260,24 @@ export function VerificationRequestComposerDialog({
       return;
     }
     if (!reviewed) {
+      setFeedback({
+        title: 'Review the draft before sending',
+        message: 'Confirm that the request is claim-scoped and safe before sending it.',
+      });
       toast.error('Review the draft before sending.');
       return;
     }
     if (!EMAIL_REGEX.test(verifierEmail.trim())) {
+      setFeedback({
+        title: 'Enter a valid verifier email',
+        message: 'Use the verifier email field below before sending this request.',
+      });
       toast.error('Enter a valid verifier email.');
       return;
     }
 
     setSending(true);
+    setFeedback(null);
     try {
       const response = await apiFetch('/api/verification/requests/skill', {
         method: 'POST',
@@ -257,7 +294,14 @@ export function VerificationRequestComposerDialog({
 
       const body = await response.json();
       if (!response.ok) {
-        toast.error(body.error || 'Failed to send verification request.');
+        const message =
+          body.error ||
+          'Verification request could not be sent. The draft is still here so you can retry.';
+        setFeedback({
+          title: 'Request could not be sent',
+          message,
+        });
+        toast.error(message);
         return;
       }
 
@@ -268,7 +312,13 @@ export function VerificationRequestComposerDialog({
       onSent?.();
     } catch (error) {
       dispatchClientErrorDiagnostic('verifications.composer.send_failed', error);
-      toast.error('Failed to send verification request.');
+      const message =
+        'Verification request could not be sent. The draft is still here so you can retry.';
+      setFeedback({
+        title: 'Request could not be sent',
+        message,
+      });
+      toast.error(message);
     } finally {
       setSending(false);
     }
@@ -304,6 +354,7 @@ export function VerificationRequestComposerDialog({
                 setProofPackId(value);
                 setDraft(null);
                 setReviewed(false);
+                setFeedback(null);
               }}
               disabled={noProofPacks}
             >
@@ -338,6 +389,7 @@ export function VerificationRequestComposerDialog({
                   setRelationship(value as SelectableCustomVerificationRelationship);
                   setDraft(null);
                   setReviewed(false);
+                  setFeedback(null);
                 }}
               >
                 <SelectTrigger>
@@ -361,6 +413,7 @@ export function VerificationRequestComposerDialog({
                   setVerificationScope(value as VerificationScope);
                   setDraft(null);
                   setReviewed(false);
+                  setFeedback(null);
                 }}
               >
                 <SelectTrigger>
@@ -397,6 +450,16 @@ export function VerificationRequestComposerDialog({
               ))}
             </div>
           </div>
+
+          {feedback ? (
+            <div
+              className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900"
+              role="alert"
+            >
+              <p className="font-semibold">{feedback.title}</p>
+              <p>{feedback.message}</p>
+            </div>
+          ) : null}
 
           <Button
             type="button"
@@ -486,7 +549,10 @@ export function VerificationRequestComposerDialog({
                   id="composer-verifier-email"
                   type="email"
                   value={verifierEmail}
-                  onChange={(event) => setVerifierEmail(event.target.value)}
+                  onChange={(event) => {
+                    setVerifierEmail(event.target.value);
+                    setFeedback(null);
+                  }}
                   placeholder="colleague@example.com"
                   autoComplete="email"
                 />

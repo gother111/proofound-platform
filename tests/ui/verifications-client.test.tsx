@@ -489,6 +489,136 @@ describe('VerificationsClient', () => {
     expect((fallbackDraft as HTMLTextAreaElement).value).not.toContain('Nina Secret');
   });
 
+  it('keeps verification composer draft failures visible and retryable', async () => {
+    apiFetchMock
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: 'Drafting service is temporarily unavailable.' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          suggestionId: '33333333-3333-4333-8333-333333333333',
+          subject: 'Can you confirm this TypeScript claim?',
+          message: 'Please confirm this one TypeScript claim from direct observation.',
+          claimScope: 'I used TypeScript in a production migration.',
+          verificationQuestions: ['Can you confirm this specific TypeScript claim?'],
+          privacyNotes: ['Uses selected public-safe fields only.'],
+          tooBroadWarnings: [],
+        }),
+      });
+
+    render(
+      <VerificationsClient
+        incomingRequests={[]}
+        sentRequests={[]}
+        userEmail="me@proofound.io"
+        composerProofPacks={[
+          {
+            proofPackId: '11111111-1111-4111-8111-111111111111',
+            claimId: '22222222-2222-4222-8222-222222222222',
+            title: 'TypeScript migration proof',
+            claimStatement: 'I used TypeScript in a production migration.',
+            ownershipStatement: 'I owned the migration plan.',
+            outcomeSummary: 'The migration shipped.',
+            timeframe: '2026 Q1',
+            evidenceTitles: ['Migration checklist'],
+            primarySubjectType: 'skill',
+            primarySubjectId: '22222222-2222-4222-8222-222222222222',
+          },
+        ]}
+      />
+    );
+
+    fireEvent.click(await screen.findByRole('button', { name: /^Draft scoped request$/i }));
+
+    const dialog = screen.getByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: /^Draft scoped request$/i }));
+
+    const alert = await within(dialog).findByRole('alert');
+    expect(alert).toHaveTextContent('Draft could not be created');
+    expect(alert).toHaveTextContent('Drafting service is temporarily unavailable.');
+
+    fireEvent.click(within(dialog).getByRole('button', { name: /^Draft scoped request$/i }));
+
+    expect(
+      await within(dialog).findByDisplayValue(
+        'Please confirm this one TypeScript claim from direct observation.'
+      )
+    ).toBeInTheDocument();
+    expect(within(dialog).queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('keeps failed composer sends visible without clearing the reviewed draft', async () => {
+    apiFetchMock.mockImplementation(async (url: string) => {
+      if (url === '/api/ai/verifications/compose') {
+        return {
+          ok: true,
+          json: async () => ({
+            suggestionId: '33333333-3333-4333-8333-333333333333',
+            subject: 'Can you confirm this TypeScript claim?',
+            message: 'Please confirm this one TypeScript claim from direct observation.',
+            claimScope: 'I used TypeScript in a production migration.',
+            verificationQuestions: ['Can you confirm this specific TypeScript claim?'],
+            privacyNotes: ['Uses selected public-safe fields only.'],
+            tooBroadWarnings: [],
+          }),
+        };
+      }
+
+      if (url === '/api/verification/requests/skill') {
+        return {
+          ok: false,
+          json: async () => ({ error: 'Verification email could not be delivered.' }),
+        };
+      }
+
+      throw new Error(`Unexpected API call: ${url}`);
+    });
+
+    render(
+      <VerificationsClient
+        incomingRequests={[]}
+        sentRequests={[]}
+        userEmail="me@proofound.io"
+        composerProofPacks={[
+          {
+            proofPackId: '11111111-1111-4111-8111-111111111111',
+            claimId: '22222222-2222-4222-8222-222222222222',
+            title: 'TypeScript migration proof',
+            claimStatement: 'I used TypeScript in a production migration.',
+            ownershipStatement: 'I owned the migration plan.',
+            outcomeSummary: 'The migration shipped.',
+            timeframe: '2026 Q1',
+            evidenceTitles: ['Migration checklist'],
+            primarySubjectType: 'skill',
+            primarySubjectId: '22222222-2222-4222-8222-222222222222',
+          },
+        ]}
+      />
+    );
+
+    fireEvent.click(await screen.findByRole('button', { name: /^Draft scoped request$/i }));
+
+    const dialog = screen.getByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: /^Draft scoped request$/i }));
+
+    const draftMessage = await within(dialog).findByDisplayValue(
+      'Please confirm this one TypeScript claim from direct observation.'
+    );
+    fireEvent.change(within(dialog).getByLabelText(/Verifier email address/i), {
+      target: { value: 'mentor@example.com' },
+    });
+    fireEvent.click(within(dialog).getByRole('checkbox', { name: /I reviewed this/i }));
+    fireEvent.click(within(dialog).getByRole('button', { name: /^Send request$/i }));
+
+    const alert = await within(dialog).findByRole('alert');
+    expect(alert).toHaveTextContent('Request could not be sent');
+    expect(alert).toHaveTextContent('Verification email could not be delivered.');
+    expect(draftMessage).toBeInTheDocument();
+    expect(within(dialog).getByDisplayValue('mentor@example.com')).toBeInTheDocument();
+  });
+
   it('hides the scoped request composer when assistive AI UI is disabled', async () => {
     (global.fetch as any).mockResolvedValueOnce({
       ok: true,
