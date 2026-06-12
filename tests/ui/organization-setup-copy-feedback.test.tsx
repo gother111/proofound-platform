@@ -117,6 +117,21 @@ describe('OrganizationSetup portfolio link feedback', () => {
     expect(screen.getByRole('button', { name: /create organization/i })).toBeEnabled();
   });
 
+  it('explains website use through the organization trust page without search exposure', async () => {
+    render(<OrganizationSetup />);
+
+    await screen.findByText('Create your organization');
+
+    expect(
+      screen.getByText(
+        'Supports your public organization trust page. Search engines stay off by default.'
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText('Used for trust basics. Search engines stay off by default.')
+    ).not.toBeInTheDocument();
+  });
+
   it('shows returned organization creation errors as a retryable alert', async () => {
     completeOrganizationOnboardingMock.mockResolvedValueOnce({
       error: 'Organization slug already taken. Please choose another.',

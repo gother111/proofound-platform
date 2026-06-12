@@ -5370,6 +5370,7 @@ describe('launch gate package configuration', () => {
     expect(workflowEntryCopy).toContain('new assignment reviews can land cleanly');
     expect(workflowEntryCopy).toContain('No assignment reviews fit the current filters');
     expect(workflowEntryCopy).toContain('Hidden from assignment reviews');
+    expect(workflowEntryCopy).toContain('Supports your public organization trust page');
     expect(workflowEntryCopy).toContain('Filter Assignment Reviews');
     expect(workflowEntryCopy).toContain('Narrow review context by skills');
     expect(workflowEntryCopy).toContain('to open proof-led assignment review');
@@ -5408,6 +5409,7 @@ describe('launch gate package configuration', () => {
       'Loading proof-aligned candidates',
       'published work and candidates',
       'candidates need to trust you',
+      'Used for trust basics. Search engines stay off by default.',
     ]) {
       expect(workflowEntryCopy).not.toContain(staleCopy);
     }
