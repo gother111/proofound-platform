@@ -810,12 +810,26 @@ describe('runtime debug output guardrails', () => {
     expect(sources).toContain('interviews.individual.load_failed');
     expect(sources).toContain('interviews.individual.engagement_confirm_failed');
     expect(sources).toContain('interviews.organization.load_failed');
+    expect(sources).toContain('interviews.organization.edit_returned_error');
     expect(sources).toContain('interviews.organization.edit_failed');
+    expect(sources).toContain('interviews.organization.cancel_returned_error');
     expect(sources).toContain('interviews.organization.cancel_failed');
+    expect(sources).toContain('interviews.organization.complete_returned_error');
     expect(sources).toContain('interviews.organization.complete_failed');
+    expect(sources).toContain('interviews.organization.no_show_returned_error');
     expect(sources).toContain('interviews.organization.no_show_failed');
+    expect(sources).toContain('interviews.organization.engagement_confirm_returned_error');
     expect(sources).toContain('interviews.organization.engagement_confirm_failed');
     expect(sources).not.toContain('Failed to load interviews:');
+    expect(sources).not.toContain("throw new Error(payload.error || 'Failed to update interview')");
+    expect(sources).not.toContain("throw new Error(payload.error || 'Failed to cancel interview')");
+    expect(sources).not.toContain(
+      "throw new Error(payload.error || 'Failed to mark interview complete')"
+    );
+    expect(sources).not.toContain("throw new Error(payload.error || 'Failed to mark no-show')");
+    expect(sources).not.toContain(
+      "throw new Error(payload.error || 'Failed to confirm engagement')"
+    );
   });
 
   it('keeps messages client failures on client diagnostics without console output', () => {

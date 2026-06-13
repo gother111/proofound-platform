@@ -50,7 +50,7 @@ import {
   type InterviewCalendarPayload,
 } from '@/lib/interviews/calendar';
 import { apiFetch } from '@/lib/api/fetch';
-import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { internalValueLabel } from '@/lib/copy/labels';
 import type { HiringCorridorSnapshot } from '@/lib/hiring-corridor/snapshot';
 
@@ -116,6 +116,33 @@ const INTERVIEW_NO_SHOW_FAILED_MESSAGE =
   'No-show could not be recorded. The interview workflow is unchanged; review the note and retry.';
 const ENGAGEMENT_CONFIRMATION_FAILED_MESSAGE =
   'Engagement confirmation could not be recorded. The engagement state is unchanged; retry before moving on.';
+
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function hasReturnedError(payload: unknown) {
+  return Boolean(
+    payload &&
+      typeof payload === 'object' &&
+      'error' in payload &&
+      typeof payload.error === 'string' &&
+      payload.error.trim().length > 0
+  );
+}
+
+function dispatchInterviewReturnedError(
+  reason: string,
+  response: Response,
+  payload: unknown,
+  detail: Record<string, unknown>
+) {
+  dispatchClientDiagnostic(reason, {
+    ...detail,
+    status: getResponseStatus(response),
+    hasReturnedError: hasReturnedError(payload),
+  });
+}
 
 export default function OrganizationInterviewsPage() {
   const params = useParams<{ slug?: string | string[] }>();
@@ -337,9 +364,17 @@ export default function OrganizationInterviewsPage() {
         }),
       });
 
-      const payload = await response.json();
+      const payload = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(payload.error || 'Failed to update interview');
+        dispatchInterviewReturnedError(
+          'interviews.organization.edit_returned_error',
+          response,
+          payload,
+          {
+            interviewId: editingInterview.interview.id,
+          }
+        );
+        throw new Error('interview_edit_request_failed');
       }
 
       toast.success('Interview updated');
@@ -378,9 +413,18 @@ export default function OrganizationInterviewsPage() {
         }),
       });
 
-      const payload = await response.json();
+      const payload = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(payload.error || 'Failed to cancel interview');
+        dispatchInterviewReturnedError(
+          'interviews.organization.cancel_returned_error',
+          response,
+          payload,
+          {
+            interviewId: cancelInterview.interview.id,
+            hasReason: Boolean(reason),
+          }
+        );
+        throw new Error('interview_cancel_request_failed');
       }
 
       toast.success('Interview cancelled');
@@ -418,9 +462,17 @@ export default function OrganizationInterviewsPage() {
         }),
       });
 
-      const payload = await response.json();
+      const payload = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(payload.error || 'Failed to mark interview complete');
+        dispatchInterviewReturnedError(
+          'interviews.organization.complete_returned_error',
+          response,
+          payload,
+          {
+            interviewId: completeInterview.interview.id,
+          }
+        );
+        throw new Error('interview_complete_request_failed');
       }
 
       toast.success('Interview marked complete');
@@ -460,9 +512,18 @@ export default function OrganizationInterviewsPage() {
         }),
       });
 
-      const payload = await response.json();
+      const payload = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(payload.error || 'Failed to mark no-show');
+        dispatchInterviewReturnedError(
+          'interviews.organization.no_show_returned_error',
+          response,
+          payload,
+          {
+            interviewId: noShowInterview.interview.id,
+            hasReason: Boolean(reason),
+          }
+        );
+        throw new Error('interview_no_show_request_failed');
       }
 
       toast.success('Interview marked no-show');
@@ -527,9 +588,18 @@ export default function OrganizationInterviewsPage() {
         }),
       });
 
-      const payload = await response.json();
+      const payload = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(payload.error || 'Failed to confirm engagement');
+        dispatchInterviewReturnedError(
+          'interviews.organization.engagement_confirm_returned_error',
+          response,
+          payload,
+          {
+            verificationId: verification.id,
+            engagementType,
+          }
+        );
+        throw new Error('engagement_confirmation_request_failed');
       }
 
       toast.success('Engagement confirmation recorded');

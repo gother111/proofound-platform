@@ -8,6 +8,9 @@ import { __resetCsrfCacheForTests } from '@/lib/api/fetch';
 const { diagnosticMock } = vi.hoisted(() => ({
   diagnosticMock: vi.fn(),
 }));
+const { clientDiagnosticMock } = vi.hoisted(() => ({
+  clientDiagnosticMock: vi.fn(),
+}));
 
 const getInterviewCorridorItemsMock = vi.fn();
 
@@ -16,6 +19,7 @@ vi.mock('@/app/actions/interviews', () => ({
 }));
 
 vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientDiagnostic: (...args: unknown[]) => clientDiagnosticMock(...args),
   dispatchClientErrorDiagnostic: (...args: unknown[]) => diagnosticMock(...args),
 }));
 
@@ -481,9 +485,26 @@ describe('organization interviews page actions', () => {
       'interviews.organization.edit_failed',
       expect.any(Error)
     );
-    expect(getDiagnosticErrorMessage('interviews.organization.edit_failed')).toBe(
-      'Interview update is temporarily unavailable.'
+    expect(clientDiagnosticMock).toHaveBeenCalledWith(
+      'interviews.organization.edit_returned_error',
+      expect.objectContaining({
+        interviewId: 'interview-1',
+        hasReturnedError: true,
+      })
     );
+    expect(getDiagnosticErrorMessage('interviews.organization.edit_failed')).toBe(
+      'interview_edit_request_failed'
+    );
+    expect(
+      diagnosticMock.mock.calls.some((call) =>
+        JSON.stringify(call).includes('Interview update is temporarily unavailable.')
+      )
+    ).toBe(false);
+    expect(
+      clientDiagnosticMock.mock.calls.some((call) =>
+        JSON.stringify(call).includes('Interview update is temporarily unavailable.')
+      )
+    ).toBe(false);
     expect(reasonField).toHaveValue('Moving to the reviewer availability window');
 
     fireEvent.click(within(alert).getByRole('button', { name: /retry update/i }));
@@ -580,9 +601,27 @@ describe('organization interviews page actions', () => {
       'interviews.organization.cancel_failed',
       expect.any(Error)
     );
-    expect(getDiagnosticErrorMessage('interviews.organization.cancel_failed')).toBe(
-      '/api/interviews/cancel is temporarily unavailable.'
+    expect(clientDiagnosticMock).toHaveBeenCalledWith(
+      'interviews.organization.cancel_returned_error',
+      expect.objectContaining({
+        interviewId: 'interview-1',
+        hasReason: true,
+        hasReturnedError: true,
+      })
     );
+    expect(getDiagnosticErrorMessage('interviews.organization.cancel_failed')).toBe(
+      'interview_cancel_request_failed'
+    );
+    expect(
+      diagnosticMock.mock.calls.some((call) =>
+        JSON.stringify(call).includes('/api/interviews/cancel is temporarily unavailable.')
+      )
+    ).toBe(false);
+    expect(
+      clientDiagnosticMock.mock.calls.some((call) =>
+        JSON.stringify(call).includes('/api/interviews/cancel is temporarily unavailable.')
+      )
+    ).toBe(false);
     expect(cancelReasonField).toHaveValue('Need to move due to conflict');
 
     fireEvent.click(within(alert).getByRole('button', { name: /retry cancellation/i }));
@@ -608,9 +647,26 @@ describe('organization interviews page actions', () => {
       'interviews.organization.complete_failed',
       expect.any(Error)
     );
-    expect(getDiagnosticErrorMessage('interviews.organization.complete_failed')).toBe(
-      '/api/interviews/complete is temporarily unavailable.'
+    expect(clientDiagnosticMock).toHaveBeenCalledWith(
+      'interviews.organization.complete_returned_error',
+      expect.objectContaining({
+        interviewId: 'interview-1',
+        hasReturnedError: true,
+      })
     );
+    expect(getDiagnosticErrorMessage('interviews.organization.complete_failed')).toBe(
+      'interview_complete_request_failed'
+    );
+    expect(
+      diagnosticMock.mock.calls.some((call) =>
+        JSON.stringify(call).includes('/api/interviews/complete is temporarily unavailable.')
+      )
+    ).toBe(false);
+    expect(
+      clientDiagnosticMock.mock.calls.some((call) =>
+        JSON.stringify(call).includes('/api/interviews/complete is temporarily unavailable.')
+      )
+    ).toBe(false);
 
     fireEvent.click(within(alert).getByRole('button', { name: /retry completion/i }));
 
@@ -637,9 +693,27 @@ describe('organization interviews page actions', () => {
       'interviews.organization.no_show_failed',
       expect.any(Error)
     );
-    expect(getDiagnosticErrorMessage('interviews.organization.no_show_failed')).toBe(
-      '/api/interviews/no-show is temporarily unavailable.'
+    expect(clientDiagnosticMock).toHaveBeenCalledWith(
+      'interviews.organization.no_show_returned_error',
+      expect.objectContaining({
+        interviewId: 'interview-1',
+        hasReason: true,
+        hasReturnedError: true,
+      })
     );
+    expect(getDiagnosticErrorMessage('interviews.organization.no_show_failed')).toBe(
+      'interview_no_show_request_failed'
+    );
+    expect(
+      diagnosticMock.mock.calls.some((call) =>
+        JSON.stringify(call).includes('/api/interviews/no-show is temporarily unavailable.')
+      )
+    ).toBe(false);
+    expect(
+      clientDiagnosticMock.mock.calls.some((call) =>
+        JSON.stringify(call).includes('/api/interviews/no-show is temporarily unavailable.')
+      )
+    ).toBe(false);
     expect(noShowReasonField).toHaveValue('Candidate missed the scheduled call');
 
     fireEvent.click(within(alert).getByRole('button', { name: /retry no-show/i }));
@@ -934,9 +1008,27 @@ describe('organization interviews page actions', () => {
       'interviews.organization.engagement_confirm_failed',
       expect.any(Error)
     );
-    expect(getDiagnosticErrorMessage('interviews.organization.engagement_confirm_failed')).toBe(
-      'Engagement confirmation is temporarily unavailable.'
+    expect(clientDiagnosticMock).toHaveBeenCalledWith(
+      'interviews.organization.engagement_confirm_returned_error',
+      expect.objectContaining({
+        verificationId: 'engagement-1',
+        engagementType: 'full_time',
+        hasReturnedError: true,
+      })
     );
+    expect(getDiagnosticErrorMessage('interviews.organization.engagement_confirm_failed')).toBe(
+      'engagement_confirmation_request_failed'
+    );
+    expect(
+      diagnosticMock.mock.calls.some((call) =>
+        JSON.stringify(call).includes('Engagement confirmation is temporarily unavailable.')
+      )
+    ).toBe(false);
+    expect(
+      clientDiagnosticMock.mock.calls.some((call) =>
+        JSON.stringify(call).includes('Engagement confirmation is temporarily unavailable.')
+      )
+    ).toBe(false);
     expect(screen.getByLabelText('Engagement type')).toHaveValue('full_time');
 
     fireEvent.click(within(alert).getByRole('button', { name: 'Retry confirmation' }));
