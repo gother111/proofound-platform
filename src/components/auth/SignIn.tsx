@@ -25,6 +25,26 @@ interface SignInProps {
 const INITIAL_STATE: SignInState = { error: null };
 type ClientErrorField = 'email' | 'password' | 'form';
 
+const OAUTH_CALLBACK_RETRY_MESSAGE =
+  'We could not finish that sign-in link. Please try again or use email and password.';
+
+function oauthCallbackErrorMessage(error?: string | null) {
+  const normalized = error?.trim();
+  if (!normalized) {
+    return OAUTH_CALLBACK_RETRY_MESSAGE;
+  }
+
+  if (/provider.*not.*available|not enabled/i.test(normalized)) {
+    return 'That sign-in provider is not available. Please use email and password instead.';
+  }
+
+  if (/expired|invalid|validate|authentication link/i.test(normalized)) {
+    return 'That sign-in link is invalid or expired. Please try signing in again.';
+  }
+
+  return OAUTH_CALLBACK_RETRY_MESSAGE;
+}
+
 function SignInSubmitButton() {
   const { pending } = useFormStatus();
 
@@ -56,7 +76,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
   useEffect(() => {
     const oauthError = searchParams?.get('error');
     if (oauthError) {
-      setClientError(oauthError);
+      setClientError(oauthCallbackErrorMessage(oauthError));
       setClientErrorField('form');
     }
   }, [searchParams]);

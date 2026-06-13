@@ -777,6 +777,9 @@ describe('runtime debug output guardrails', () => {
     expect(source).toContain('auth.fallback_link.email_send_failed');
     expect(source).toContain('auth.fallback_link.flow_failed');
     expect(source).toContain('auth.oauth.failed');
+    expect(source).not.toContain(
+      'We could not start the sign-in flow because the authentication service returned an unexpected error'
+    );
     expect(source).not.toContain('SignUp Validation Failed:');
     expect(source).not.toContain('Supabase SignUp Error:');
     expect(source).not.toContain('Profile trigger did not fire, creating profile manually');
@@ -1968,6 +1971,14 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Failed to load authenticated user for onboarding:');
     expect(sources).not.toContain('Auth callback contradiction reconciliation failed:');
     expect(sources).not.toContain('Failed to exchange OAuth code for session:');
+  });
+
+  it('keeps auth entry client OAuth callback errors safe', () => {
+    const source = readSource('src/components/auth/SignIn.tsx');
+
+    expect(source).toContain('oauthCallbackErrorMessage');
+    expect(source).toContain('OAUTH_CALLBACK_RETRY_MESSAGE');
+    expect(source).not.toContain('setClientError(oauthError)');
   });
 
   it('keeps organization helper drift warnings on structured server logging', () => {

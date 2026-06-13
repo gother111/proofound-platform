@@ -403,7 +403,9 @@ describe('Auth Actions', () => {
 
       const result = await signInWithOAuth(undefined, formData);
 
-      expect(result.error).toContain('OAuth exploded');
+      expect(result.error).toBe(
+        'We could not start the sign-in flow right now. Please try again or use email and password.'
+      );
       expect(log.error).toHaveBeenCalledWith('auth.oauth.failed', {
         error: expect.any(Error),
       });

@@ -4,6 +4,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { SignIn } from '@/components/auth/SignIn';
 
+const searchParamGetMock = vi.hoisted(() => vi.fn(() => null));
+
 vi.mock('react', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react')>();
   return {
@@ -25,7 +27,7 @@ vi.mock('next/navigation', () => ({
     push: vi.fn(),
   }),
   useSearchParams: () => ({
-    get: vi.fn(() => null),
+    get: searchParamGetMock,
   }),
 }));
 
@@ -61,6 +63,12 @@ window.scrollTo = vi.fn();
 HTMLElement.prototype.scrollIntoView = vi.fn();
 
 describe('signin mobile clarity', () => {
+  beforeEach(() => {
+    searchParamGetMock.mockReset();
+    searchParamGetMock.mockReturnValue(null);
+    vi.clearAllMocks();
+  });
+
   it('keeps the login shell stable and the remember control touch-friendly', () => {
     const { container } = render(<SignIn />);
 
@@ -86,5 +94,17 @@ describe('signin mobile clarity', () => {
     await waitFor(() => {
       expect(screen.getByTestId('login-error')).toHaveFocus();
     });
+  });
+
+  it('keeps OAuth callback errors safe on the login surface', () => {
+    const rawError = 'provider stack trace: oauth_client_secret leaked-ish';
+    searchParamGetMock.mockImplementation((key: string) => (key === 'error' ? rawError : null));
+
+    render(<SignIn />);
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'We could not finish that sign-in link. Please try again or use email and password.'
+    );
+    expect(screen.queryByText(rawError)).not.toBeInTheDocument();
   });
 });

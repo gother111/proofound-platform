@@ -856,7 +856,7 @@ function mapUnexpectedOAuthError(error: unknown) {
       return 'Authentication service is not configured correctly. Please contact support.';
     }
 
-    return `We could not start the sign-in flow because the authentication service returned an unexpected error: ${message}`;
+    return 'We could not start the sign-in flow right now. Please try again or use email and password.';
   }
 
   return 'We could not start the sign-in flow right now. Please try again.';
