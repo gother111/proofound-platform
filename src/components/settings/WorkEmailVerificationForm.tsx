@@ -28,18 +28,30 @@ interface Organization {
 
 const WORK_EMAIL_SEND_RETRY_MESSAGE =
   'Confirmation email could not be sent. Your work email and organization choice are still here; please try again.';
+const WORK_EMAIL_SEND_SAFE_ERRORS = new Map([
+  [
+    'This work email is already verified by another account',
+    'This work email is already verified by another account.',
+  ],
+  ['Failed to send verification email', WORK_EMAIL_SEND_RETRY_MESSAGE],
+  ['Failed to save work email', WORK_EMAIL_SEND_RETRY_MESSAGE],
+  ['Internal server error', WORK_EMAIL_SEND_RETRY_MESSAGE],
+]);
 
 function workEmailSendError(error?: string | null) {
   const normalized = error?.trim();
 
-  if (
-    normalized &&
-    !/^Failed to (send verification email|save work email)\.?$/i.test(normalized) &&
-    !/^Internal server error\.?$/i.test(normalized)
-  ) {
-    return normalized;
+  if (!normalized) {
+    return WORK_EMAIL_SEND_RETRY_MESSAGE;
   }
 
+  const normalizedKey = normalized.endsWith('.') ? normalized.slice(0, -1) : normalized;
+  const safeMessage = WORK_EMAIL_SEND_SAFE_ERRORS.get(normalizedKey);
+  if (safeMessage) {
+    return safeMessage;
+  }
+
+  dispatchClientErrorDiagnostic('settings.work_email.send_returned_error', new Error(normalized));
   return WORK_EMAIL_SEND_RETRY_MESSAGE;
 }
 

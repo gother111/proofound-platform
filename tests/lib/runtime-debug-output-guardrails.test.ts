@@ -238,6 +238,7 @@ describe('runtime debug output guardrails', () => {
     expect(sources).toContain('Tour could not restart');
     expect(sources).toContain('Your account settings were not changed');
     expect(sources).toContain('settings.work_email.organizations_fetch_failed');
+    expect(sources).toContain('settings.work_email.send_returned_error');
     expect(sources).toContain('settings.verification_status.load_failed');
     expect(sources).toContain('Verification status could not load');
     expect(sources).toContain('settings.audit_log.load_failed');

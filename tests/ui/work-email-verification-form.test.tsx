@@ -5,8 +5,16 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { WorkEmailVerificationForm } from '@/components/settings/WorkEmailVerificationForm';
 import { apiFetch } from '@/lib/api/fetch';
 
+const { dispatchClientErrorDiagnosticMock } = vi.hoisted(() => ({
+  dispatchClientErrorDiagnosticMock: vi.fn(),
+}));
+
 vi.mock('@/lib/api/fetch', () => ({
   apiFetch: vi.fn(),
+}));
+
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientErrorDiagnostic: (...args: unknown[]) => dispatchClientErrorDiagnosticMock(...args),
 }));
 
 vi.mock('@/components/ui/select', () => ({
@@ -205,5 +213,87 @@ describe('WorkEmailVerificationForm', () => {
     );
     expect(screen.getByLabelText(/work email address/i)).toHaveValue('person@acme.org');
     expect(screen.getByRole('button', { name: /send confirmation email/i })).toBeEnabled();
+  });
+
+  it('shows the safe already-verified account state without logging it as an unexpected error', async () => {
+    vi.mocked(apiFetch).mockImplementation(async (url: string) => {
+      if (url === '/api/organizations') {
+        return {
+          ok: true,
+          json: async () => ({ organizations: [] }),
+        } as Response;
+      }
+
+      if (url === '/api/verification/work-email/send') {
+        return {
+          ok: false,
+          json: async () => ({
+            error: 'This work email is already verified by another account',
+          }),
+        } as Response;
+      }
+
+      throw new Error(`Unexpected url: ${url}`);
+    });
+
+    render(<WorkEmailVerificationForm onSuccess={vi.fn()} />);
+
+    await screen.findByText(/No organizations are available/i);
+
+    fireEvent.change(screen.getByLabelText(/work email address/i), {
+      target: { value: 'person@acme.org' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /send confirmation email/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'This work email is already verified by another account.'
+    );
+    expect(dispatchClientErrorDiagnosticMock).not.toHaveBeenCalledWith(
+      'settings.work_email.send_returned_error',
+      expect.any(Error)
+    );
+  });
+
+  it('hides unexpected returned send errors while preserving diagnostics and retry state', async () => {
+    const rawError = 'SMTP_HOST=smtp.internal timeout for user person@acme.org';
+    vi.mocked(apiFetch).mockImplementation(async (url: string) => {
+      if (url === '/api/organizations') {
+        return {
+          ok: true,
+          json: async () => ({ organizations: [] }),
+        } as Response;
+      }
+
+      if (url === '/api/verification/work-email/send') {
+        return {
+          ok: false,
+          json: async () => ({ error: rawError }),
+        } as Response;
+      }
+
+      throw new Error(`Unexpected url: ${url}`);
+    });
+
+    render(<WorkEmailVerificationForm onSuccess={vi.fn()} />);
+
+    await screen.findByText(/No organizations are available/i);
+
+    fireEvent.change(screen.getByLabelText(/work email address/i), {
+      target: { value: 'person@acme.org' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /send confirmation email/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(
+      'Confirmation email could not be sent. Your work email and organization choice are still here; please try again.'
+    );
+    expect(alert).not.toHaveTextContent(rawError);
+    expect(screen.getByLabelText(/work email address/i)).toHaveValue('person@acme.org');
+    expect(screen.getByRole('button', { name: /send confirmation email/i })).toBeEnabled();
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'settings.work_email.send_returned_error',
+      expect.any(Error)
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(rawError);
   });
 });
