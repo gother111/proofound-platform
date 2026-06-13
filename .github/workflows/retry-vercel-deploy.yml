@@ -248,6 +248,14 @@ jobs:
           });
           NODE
 
+      - name: Check Vercel daily deployment quota
+        id: vercel_quota
+        if: steps.freshness.outputs.current == 'true' && steps.changes.outputs.should_build == 'true' && steps.repo.outputs.sha != steps.live.outputs.sha && steps.pending.outputs.exists != 'true'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: node ./scripts/vercel-deploy-quota-check.mjs >> "$GITHUB_OUTPUT"
+
       - name: Print sync status
         if: steps.freshness.outputs.current == 'true' && steps.changes.outputs.should_build == 'true'
         run: |
@@ -255,9 +263,16 @@ jobs:
           echo "Live SHA: ${{ steps.live.outputs.sha }}"
           echo "Live deployment: ${{ steps.live.outputs.deployment }}"
           echo "Active prebuilt deploy for repo SHA: ${{ steps.pending.outputs.exists }}"
+          echo "Vercel daily deployment quota available: ${{ steps.vercel_quota.outputs.available || 'not-checked' }}"
+          echo "Vercel daily deployment quota reason: ${{ steps.vercel_quota.outputs.reason || 'not-checked' }}"
+
+      - name: Explain Vercel deployment quota wait
+        if: steps.freshness.outputs.current == 'true' && steps.changes.outputs.should_build == 'true' && steps.vercel_quota.outputs.available == 'false'
+        run: |
+          echo "::notice title=Vercel deployment quota exhausted::Skipping production deploy retry because Vercel reports the project is already at the daily deployment limit. Re-run after the quota window resets."
 
       - name: Pull production Vercel environment
-        if: steps.freshness.outputs.current == 'true' && steps.changes.outputs.should_build == 'true' && steps.repo.outputs.sha != steps.live.outputs.sha && steps.pending.outputs.exists != 'true'
+        if: steps.freshness.outputs.current == 'true' && steps.changes.outputs.should_build == 'true' && steps.repo.outputs.sha != steps.live.outputs.sha && steps.pending.outputs.exists != 'true' && steps.vercel_quota.outputs.available != 'false'
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -265,7 +280,7 @@ jobs:
         run: npm run vercel:pull:production
 
       - name: Build production deployment output
-        if: steps.freshness.outputs.current == 'true' && steps.changes.outputs.should_build == 'true' && steps.repo.outputs.sha != steps.live.outputs.sha && steps.pending.outputs.exists != 'true'
+        if: steps.freshness.outputs.current == 'true' && steps.changes.outputs.should_build == 'true' && steps.repo.outputs.sha != steps.live.outputs.sha && steps.pending.outputs.exists != 'true' && steps.vercel_quota.outputs.available != 'false'
         env:
           NEXT_PUBLIC_SITE_URL: https://proofound.io
           SITE_URL: https://proofound.io
@@ -277,14 +292,14 @@ jobs:
         run: npm run vercel:build:production
 
       - name: Inspect prebuilt output
-        if: steps.freshness.outputs.current == 'true' && steps.changes.outputs.should_build == 'true' && steps.repo.outputs.sha != steps.live.outputs.sha && steps.pending.outputs.exists != 'true'
+        if: steps.freshness.outputs.current == 'true' && steps.changes.outputs.should_build == 'true' && steps.repo.outputs.sha != steps.live.outputs.sha && steps.pending.outputs.exists != 'true' && steps.vercel_quota.outputs.available != 'false'
         run: |
           test -f .vercel/output/config.json
           test -f .vercel/output/builds.json
 
       - name: Deploy production prebuilt output
         id: deploy
-        if: steps.freshness.outputs.current == 'true' && steps.changes.outputs.should_build == 'true' && steps.repo.outputs.sha != steps.live.outputs.sha && steps.pending.outputs.exists != 'true'
+        if: steps.freshness.outputs.current == 'true' && steps.changes.outputs.should_build == 'true' && steps.repo.outputs.sha != steps.live.outputs.sha && steps.pending.outputs.exists != 'true' && steps.vercel_quota.outputs.available != 'false'
         env:
           NEXT_PUBLIC_SITE_URL: https://proofound.io
           SITE_URL: https://proofound.io
@@ -311,6 +326,8 @@ jobs:
             echo "- Live production deployment SHA before workflow: \`${{ steps.live.outputs.sha || 'unknown' }}\`"
             echo "- Live production deployment id before workflow: \`${{ steps.live.outputs.deployment || 'unknown' }}\`"
             echo "- Active prebuilt deploy already running: \`${{ steps.pending.outputs.exists }}\`"
+            echo "- Vercel daily deployment quota available: \`${{ steps.vercel_quota.outputs.available || 'not-checked' }}\`"
+            echo "- Vercel daily deployment quota reason: \`${{ steps.vercel_quota.outputs.reason || 'not-checked' }}\`"
             if [ -n "${{ steps.deploy.outputs.url }}" ]; then
               echo "- Prebuilt deployment URL: ${{ steps.deploy.outputs.url }}"
             fi

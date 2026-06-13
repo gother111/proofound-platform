@@ -40,7 +40,9 @@ export function getConversationParticipantInitials(
   stage: ConversationStage
 ): string {
   if (label === 'Submission') return 'S';
+  if (label.startsWith('Submission #')) return 'S';
   if (label === 'Organization') return 'O';
+  if (label.startsWith('Organization #')) return 'O';
   if (label === MASKED_PARTICIPANT_LABEL) return 'MP';
   if (label === PARTICIPANT_DETAILS_PENDING_LABEL) return 'PD';
 

@@ -2110,6 +2110,31 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps the Vercel deployment quota helper importable and output-safe', () => {
+    const quotaSources = [
+      fs.readFileSync(path.join(repoRoot, 'scripts/vercel-deploy-quota-check.mjs'), 'utf8'),
+      fs.readFileSync(path.join(repoRoot, 'scripts/lib/vercel-deploy-quota-check.mjs'), 'utf8'),
+    ].join('\n');
+
+    expect(quotaSources).toContain("from './lib/vercel-deploy-quota-check.mjs'");
+    expect(quotaSources).toContain('checkDeploymentQuota');
+    expect(quotaSources).toContain('daily-limit-window-exhausted');
+    expect(quotaSources).toContain('VERCEL_DEPLOYMENT_DAILY_LIMIT');
+  });
+
+  it('keeps Vercel retry deploys from failing when daily deploy quota is exhausted', () => {
+    const workflow = fs.readFileSync(
+      path.join(repoRoot, '.github/workflows/retry-vercel-deploy.yml'),
+      'utf8'
+    );
+
+    expect(workflow).toContain('Check Vercel daily deployment quota');
+    expect(workflow).toContain('node ./scripts/vercel-deploy-quota-check.mjs >> "$GITHUB_OUTPUT"');
+    expect(workflow).toContain('Explain Vercel deployment quota wait');
+    expect(workflow).toContain("steps.vercel_quota.outputs.available != 'false'");
+    expect(workflow).toContain('Vercel daily deployment quota available');
+  });
+
   it('keeps the legacy Linear bulk import out of active launch operations', () => {
     const linearSetup = fs.readFileSync(
       path.join(repoRoot, 'LINEAR_SETUP_INSTRUCTIONS.md'),
@@ -4776,6 +4801,10 @@ describe('launch gate package configuration', () => {
       path.join(repoRoot, 'src/components/messaging/MessageThread.tsx'),
       'utf8'
     );
+    const participantLabel = fs.readFileSync(
+      path.join(repoRoot, 'src/lib/messaging/participant-label.ts'),
+      'utf8'
+    );
     const strictFixtures = fs.readFileSync(
       path.join(repoRoot, 'e2e/helpers/strict-fixtures.ts'),
       'utf8'
@@ -4801,6 +4830,7 @@ describe('launch gate package configuration', () => {
       organizationMessagesPageTest,
       conversationList,
       messageThread,
+      participantLabel,
       strictFixtures,
       crossUserHelpers,
       inviteClaimRoute,
@@ -4810,7 +4840,7 @@ describe('launch gate package configuration', () => {
     expect(activeConversationText).toContain('Submission #');
     expect(activeConversationText).toContain('Submission A');
     expect(activeConversationText).toContain('maskedHandleTwo ||');
-    expect(activeConversationText).toContain("if (name === 'Submission') return 'S'");
+    expect(participantLabel).toContain("if (label.startsWith('Submission #')) return 'S'");
     expect(inviteClaimRoute).toContain("makeMaskedHandleForPersona('individual')");
     expect(orgReviewRoute).toContain("makeMaskedHandleForPersona('individual')");
     expect(activeConversationText).not.toContain(
@@ -4818,7 +4848,7 @@ describe('launch gate package configuration', () => {
     );
     expect(activeConversationText).not.toContain('Candidate #');
     expect(activeConversationText).not.toContain('Candidate A');
-    expect(activeConversationText).not.toContain("if (name === 'Candidate') return 'C'");
+    expect(participantLabel).not.toContain("if (name === 'Candidate') return 'C'");
     expect(activeConversationText).not.toContain('maskedHandleOne: `Candidate');
   });
 
