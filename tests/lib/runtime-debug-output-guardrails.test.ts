@@ -40,10 +40,15 @@ describe('runtime debug output guardrails', () => {
     ].join('\n');
 
     expect(source).toContain('assignments.clarity_assistant.request_failed');
+    expect(source).toContain('assignments.clarity_assistant.returned_error');
+    expect(source).toContain('ASSIGNMENT_CLARITY_RETURNED_FALLBACK_REASON');
     expect(source).toContain('Guided suggestions could not load; manual editing still works.');
     expect(source).not.toContain('mock-assignment-clarity');
     expect(source).not.toContain('isMockSupabaseEnabled');
     expect(source).not.toContain('Assignment clarity failed.');
+    expect(source).not.toContain(
+      "errorData.message || errorData.error || 'assignment_clarity_request_failed'"
+    );
   });
 
   it('keeps verification composer on the owned Proof Pack composer path', () => {

@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { apiFetch } from '@/lib/api/fetch';
 import { useAssistiveAiFlag } from '@/hooks/useAssistiveAiFlag';
-import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 type AssignmentClaritySuggestion = {
   suggestionId?: string | null;
@@ -70,6 +70,8 @@ const FORM_FIELD_BY_REWRITE_FIELD: Record<EditableField, string> = {
 const ASSIGNMENT_CLARITY_MANUAL_RETRY_REASON =
   'Guided suggestions could not load; manual editing still works.';
 const ASSIGNMENT_CLARITY_SAVE_DRAFT_MESSAGE = 'Save a draft before clarifying this assignment.';
+const ASSIGNMENT_CLARITY_RETURNED_FALLBACK_REASON =
+  'Guided suggestions could not load; manual editing still works.';
 
 function buildOutcomeSummary(outcomes: any[] = []) {
   return outcomes
@@ -88,6 +90,19 @@ function responseBody(payload: unknown, status = 200) {
     status,
     json: async () => payload,
   };
+}
+
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function hasReturnedError(payload: unknown) {
+  if (!payload || typeof payload !== 'object') return false;
+  const record = payload as { error?: unknown; message?: unknown };
+  return (
+    (typeof record.error === 'string' && record.error.trim().length > 0) ||
+    (typeof record.message === 'string' && record.message.trim().length > 0)
+  );
 }
 
 function buildManualAssignmentClaritySuggestion(
@@ -259,9 +274,13 @@ export function AssignmentClarityAssistant({
           );
           return;
         }
-        throw new Error(
-          errorData.message || errorData.error || 'assignment_clarity_request_failed'
-        );
+        dispatchClientDiagnostic('assignments.clarity_assistant.returned_error', {
+          status: getResponseStatus(response),
+          hasReturnedError: hasReturnedError(errorData),
+        });
+        showManualChecklist(values, ASSIGNMENT_CLARITY_RETURNED_FALLBACK_REASON);
+        toast.error('Guided suggestions could not load. Manual checklist is ready.');
+        return;
       }
 
       const payload = (await response.json()) as AssignmentClaritySuggestion;
