@@ -1689,11 +1689,15 @@ describe('runtime debug output guardrails', () => {
     const source = readSource('src/components/organization/OrgTrustProfileEditor.tsx');
 
     expect(source).toContain(
-      "import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics'"
+      "import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics'"
     );
+    expect(source).toContain('organization.trust_profile.save_returned_error');
     expect(source).toContain('organization.trust_profile.save_failed');
     expect(source).toContain('Organization trust page was not saved');
     expect(source).toContain('Your published trust page was not changed');
+    expect(source).not.toContain(
+      "throw new Error(error.error || error.message || 'organization trust page update failed')"
+    );
     expect(source).not.toContain(
       "description: error instanceof Error ? error.message : 'Unknown error'"
     );

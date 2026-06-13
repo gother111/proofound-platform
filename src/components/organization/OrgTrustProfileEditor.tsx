@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { apiFetch } from '@/lib/api/fetch';
-import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 type OrgTrustProfileEditorProps = {
   org: {
@@ -24,6 +24,26 @@ type OrgTrustProfileEditorProps = {
   };
   canEdit: boolean;
 };
+
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function getReturnedError(payload: unknown) {
+  if (!payload || typeof payload !== 'object') {
+    return '';
+  }
+
+  if ('error' in payload && typeof payload.error === 'string') {
+    return payload.error.trim();
+  }
+
+  if ('message' in payload && typeof payload.message === 'string') {
+    return payload.message.trim();
+  }
+
+  return '';
+}
 
 export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorProps) {
   const router = useRouter();
@@ -103,8 +123,14 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
       });
 
       if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(error.error || error.message || 'organization trust page update failed');
+        const payload = await response.json().catch(() => null);
+        const returnedError = getReturnedError(payload);
+        dispatchClientDiagnostic('organization.trust_profile.save_returned_error', {
+          organizationId: org.id,
+          status: getResponseStatus(response),
+          hasReturnedError: returnedError.length > 0,
+        });
+        throw new Error('organization_trust_profile_save_request_failed');
       }
 
       toast({

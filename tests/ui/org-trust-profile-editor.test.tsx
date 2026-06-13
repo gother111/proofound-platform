@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { OrgTrustProfileEditor } from '@/components/organization/OrgTrustProfileEditor';
 import { apiFetch } from '@/lib/api/fetch';
-import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 const { refreshMock, toastMock } = vi.hoisted(() => ({
   refreshMock: vi.fn(),
@@ -24,10 +24,12 @@ vi.mock('@/lib/api/fetch', () => ({
 }));
 
 vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientDiagnostic: vi.fn(),
   dispatchClientErrorDiagnostic: vi.fn(),
 }));
 
 const apiFetchMock = vi.mocked(apiFetch);
+const dispatchClientDiagnosticMock = vi.mocked(dispatchClientDiagnostic);
 const dispatchClientErrorDiagnosticMock = vi.mocked(dispatchClientErrorDiagnostic);
 
 const editableOrg = {
@@ -70,13 +72,23 @@ describe('OrgTrustProfileEditor', () => {
     });
 
     expect(JSON.stringify(toastMock.mock.calls)).not.toContain(rawFailure);
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
+      'organization.trust_profile.save_returned_error',
+      {
+        organizationId: editableOrg.id,
+        status: 500,
+        hasReturnedError: true,
+      }
+    );
     expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
       'organization.trust_profile.save_failed',
       expect.any(Error)
     );
     expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
-      rawFailure
+      'organization_trust_profile_save_request_failed'
     );
+    expect(JSON.stringify(dispatchClientDiagnosticMock.mock.calls)).not.toContain(rawFailure);
+    expect(JSON.stringify(dispatchClientErrorDiagnosticMock.mock.calls)).not.toContain(rawFailure);
     expect(screen.getByLabelText('Mission')).toHaveValue(updatedMission);
     expect(screen.getByRole('button', { name: 'Save trust page' })).toBeEnabled();
     expect(refreshMock).not.toHaveBeenCalled();
