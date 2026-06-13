@@ -310,6 +310,7 @@ describe('runtime debug output guardrails', () => {
     ].join('\n');
 
     expect(sources).toContain('decision.window.fetch_failed');
+    expect(sources).toContain('decision.submit_returned_error');
     expect(sources).toContain('decision.submit_failed');
     expect(sources).toContain('privacy.redact_mode.toggle_failed');
     expect(sources).toContain('privacy.visibility_modal.user_load_failed');
@@ -333,6 +334,9 @@ describe('runtime debug output guardrails', () => {
     expect(sources).toContain('profile.hero.average_color_failed');
     expect(sources).not.toContain('decision.window.fetch.failed');
     expect(sources).not.toContain('decision.submit.failed');
+    expect(sources).not.toContain(
+      "throw new Error(error.error || 'Decision submit request failed')"
+    );
     expect(sources).not.toContain('Failed to record decision');
     expect(sources).not.toContain('Failed to toggle redact mode:');
     expect(sources).not.toContain('.catch(console.error)');

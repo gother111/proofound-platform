@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { DecisionDialog } from '@/components/decisions/DecisionDialog';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientDiagnostic } from '@/lib/client-diagnostics';
 import { useToast } from '@/hooks/use-toast';
 
 vi.mock('@/components/ui/dialog', () => ({
@@ -33,6 +34,7 @@ vi.mock('@/lib/client-diagnostics', () => ({
 
 const toastMock = vi.fn();
 const apiFetchMock = vi.mocked(apiFetch);
+const dispatchClientDiagnosticMock = vi.mocked(dispatchClientDiagnostic);
 const useToastMock = vi.mocked(useToast);
 
 function renderDecisionDialog(
@@ -188,6 +190,28 @@ describe('DecisionDialog', () => {
       toastMock.mock.calls.some((call) =>
         JSON.stringify(call[0]).includes('Decision transition blocked by policy guard')
       )
+    ).toBe(false);
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
+      'decision.submit_returned_error',
+      expect.objectContaining({
+        decision: 'hold',
+        status: 500,
+        error: 'Decision transition blocked by policy guard',
+      })
+    );
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
+      'decision.submit_failed',
+      expect.objectContaining({
+        decision: 'hold',
+        error: 'decision_submit_request_failed',
+      })
+    );
+    expect(
+      dispatchClientDiagnosticMock.mock.calls
+        .filter(([reason]) => reason === 'decision.submit_failed')
+        .some(([, detail]) =>
+          JSON.stringify(detail).includes('Decision transition blocked by policy guard')
+        )
     ).toBe(false);
     expect(screen.getByRole('button', { name: 'Hold' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByLabelText(/Feedback/i)).toHaveValue(feedback);

@@ -124,8 +124,16 @@ export function DecisionDialog({
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Decision submit request failed');
+        const error = await response.json().catch(() => null);
+        dispatchClientDiagnostic('decision.submit_returned_error', {
+          decision,
+          status: response.status,
+          error:
+            error && typeof error === 'object' && typeof error.error === 'string'
+              ? error.error
+              : 'Decision submit request failed',
+        });
+        throw new Error('decision_submit_request_failed');
       }
 
       const data = await response.json();
