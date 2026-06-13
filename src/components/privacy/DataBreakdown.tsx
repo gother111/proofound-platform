@@ -76,6 +76,9 @@ export function DataBreakdown() {
   }, []);
 
   const handleExportData = async () => {
+    let downloadUrl: string | null = null;
+    let downloadLink: HTMLAnchorElement | null = null;
+
     try {
       setExporting(true);
       setExportFeedback(null);
@@ -84,14 +87,12 @@ export function DataBreakdown() {
       if (!response.ok) throw new Error('Export failed');
 
       const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = buildUserExportDownloadFilename();
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      downloadUrl = window.URL.createObjectURL(blob);
+      downloadLink = document.createElement('a');
+      downloadLink.href = downloadUrl;
+      downloadLink.download = buildUserExportDownloadFilename();
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
       setExportFeedback({
         kind: 'success',
         title: 'Export started',
@@ -106,6 +107,12 @@ export function DataBreakdown() {
         message: 'We could not prepare your data export. Please try again in a moment.',
       });
     } finally {
+      if (downloadUrl) {
+        window.URL.revokeObjectURL(downloadUrl);
+      }
+      if (downloadLink?.parentNode) {
+        downloadLink.parentNode.removeChild(downloadLink);
+      }
       setExporting(false);
     }
   };

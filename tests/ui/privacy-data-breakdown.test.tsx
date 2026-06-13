@@ -30,6 +30,7 @@ describe('privacy data breakdown', () => {
   });
 
   afterEach(() => {
+    vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });
 
@@ -107,13 +108,15 @@ describe('privacy data breakdown', () => {
 
     URL.createObjectURL = createObjectURLMock;
     URL.revokeObjectURL = revokeObjectURLMock;
-    vi.spyOn(document, 'createElement').mockImplementation((tagName: string) => {
-      const element = originalCreateElement(tagName);
-      if (tagName.toLowerCase() === 'a') {
-        element.click = anchorClickMock;
-      }
-      return element;
-    });
+    const createElementSpy = vi
+      .spyOn(document, 'createElement')
+      .mockImplementation((tagName: string) => {
+        const element = originalCreateElement(tagName);
+        if (tagName.toLowerCase() === 'a') {
+          element.click = anchorClickMock;
+        }
+        return element;
+      });
 
     vi.stubGlobal(
       'fetch',
@@ -169,6 +172,105 @@ describe('privacy data breakdown', () => {
     } finally {
       URL.createObjectURL = originalCreateObjectURL;
       URL.revokeObjectURL = originalRevokeObjectURL;
+      createElementSpy.mockRestore();
+    }
+  });
+
+  it('cleans up failed browser downloads and keeps the owner export retryable', async () => {
+    const diagnostics: Array<Record<string, unknown>> = [];
+    window.addEventListener('proofound:client-diagnostic', ((event: CustomEvent) => {
+      diagnostics.push(event.detail);
+    }) as EventListener);
+
+    let createObjectUrlAttempts = 0;
+    const createObjectURLMock = vi.fn(() => {
+      createObjectUrlAttempts += 1;
+      return `blob:proofound-export-${createObjectUrlAttempts}`;
+    });
+    const revokeObjectURLMock = vi.fn();
+    let clickAttempts = 0;
+    let firstAnchor: HTMLAnchorElement | null = null;
+    const anchorClickMock = vi.fn(() => {
+      clickAttempts += 1;
+      if (clickAttempts === 1) {
+        throw new Error('raw browser click failure');
+      }
+    });
+    const originalCreateObjectURL = URL.createObjectURL;
+    const originalRevokeObjectURL = URL.revokeObjectURL;
+    const originalCreateElement = document.createElement.bind(document);
+    const createElementSpy = vi
+      .spyOn(document, 'createElement')
+      .mockImplementation((tagName: string) => {
+        const element = originalCreateElement(tagName);
+        if (tagName.toLowerCase() === 'a') {
+          if (!firstAnchor) {
+            firstAnchor = element as HTMLAnchorElement;
+          }
+          element.click = anchorClickMock;
+        }
+        return element;
+      });
+
+    URL.createObjectURL = createObjectURLMock;
+    URL.revokeObjectURL = revokeObjectURLMock;
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url === '/api/user/data-inventory') {
+          return {
+            ok: true,
+            json: async () => ({
+              counts: {
+                profile: 2,
+                professional: 6,
+                proof: 6,
+                matching: 3,
+                activity: 1,
+              },
+            }),
+          };
+        }
+
+        if (url === '/api/user/export') {
+          return {
+            ok: true,
+            blob: async () => new Blob(['{"ok":true}'], { type: 'application/json' }),
+          };
+        }
+
+        return { ok: false, json: async () => ({}) };
+      }) as unknown as typeof fetch
+    );
+
+    try {
+      render(<DataBreakdown />);
+
+      fireEvent.click(await screen.findByRole('button', { name: /Download my data/i }));
+
+      const alert = await screen.findByRole('alert');
+      expect(alert).toHaveTextContent('Export could not start');
+      expect(alert).toHaveTextContent('We could not prepare your data export');
+      expect(alert).not.toHaveTextContent('raw browser click failure');
+      expect(revokeObjectURLMock).toHaveBeenCalledWith('blob:proofound-export-1');
+      expect(firstAnchor?.isConnected).toBe(false);
+      expect(diagnostics).toContainEqual({
+        reason: 'privacy.data_breakdown.export_failed',
+        error: 'raw browser click failure',
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: /Retry export/i }));
+
+      expect(await screen.findByRole('status')).toHaveTextContent('Export started');
+      expect(anchorClickMock).toHaveBeenCalledTimes(2);
+      expect(revokeObjectURLMock).toHaveBeenCalledWith('blob:proofound-export-2');
+      expect(screen.getByText('Proof and verification')).toBeInTheDocument();
+    } finally {
+      URL.createObjectURL = originalCreateObjectURL;
+      URL.revokeObjectURL = originalRevokeObjectURL;
+      createElementSpy.mockRestore();
     }
   });
 });
