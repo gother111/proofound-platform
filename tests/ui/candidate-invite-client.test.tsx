@@ -5,7 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CandidateInviteClient } from '@/app/candidate-invite/[token]/CandidateInviteClient';
 import { apiFetch } from '@/lib/api/fetch';
 
-const { dispatchClientErrorDiagnosticMock } = vi.hoisted(() => ({
+const { dispatchClientDiagnosticMock, dispatchClientErrorDiagnosticMock } = vi.hoisted(() => ({
+  dispatchClientDiagnosticMock: vi.fn(),
   dispatchClientErrorDiagnosticMock: vi.fn(),
 }));
 
@@ -14,6 +15,7 @@ vi.mock('@/lib/api/fetch', () => ({
 }));
 
 vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientDiagnostic: dispatchClientDiagnosticMock,
   dispatchClientErrorDiagnostic: dispatchClientErrorDiagnosticMock,
 }));
 
@@ -622,6 +624,7 @@ describe('CandidateInviteClient test_match flow', () => {
     });
     apiFetchMock.mockResolvedValueOnce({
       ok: false,
+      status: 503,
       json: async () => ({ error: rawError }),
     } as Response);
 
@@ -641,11 +644,15 @@ describe('CandidateInviteClient test_match flow', () => {
     expect(screen.getByText(/No proof was submitted, no visibility changed/i)).toBeInTheDocument();
     expect(screen.getByText(/Improve submission review quality/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /start proof submission/i })).toBeEnabled();
-    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
       'candidate_invite.client.claim_returned_error',
-      expect.any(Error)
+      {
+        status: 503,
+        hasReturnedError: true,
+      }
     );
-    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(rawError);
+    expect(JSON.stringify(dispatchClientDiagnosticMock.mock.calls)).not.toContain(rawError);
+    expect(JSON.stringify(dispatchClientErrorDiagnosticMock.mock.calls)).not.toContain(rawError);
   });
 
   it('shows a neutral retry state when invitation verification is temporarily unavailable', async () => {
@@ -1035,6 +1042,7 @@ describe('CandidateInviteClient test_match flow', () => {
     const rawError = 'database insert failed: policy stack detail';
     apiFetchMock.mockResolvedValueOnce({
       ok: false,
+      status: 502,
       json: async () => ({ error: rawError }),
     } as Response);
 
@@ -1053,11 +1061,15 @@ describe('CandidateInviteClient test_match flow', () => {
       )
     ).toBeInTheDocument();
     expect(screen.getByText(/Final review before submission/i)).toBeInTheDocument();
-    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
       'candidate_invite.client.proof_submit_returned_error',
-      expect.any(Error)
+      {
+        status: 502,
+        hasReturnedError: true,
+      }
     );
-    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(rawError);
+    expect(JSON.stringify(dispatchClientDiagnosticMock.mock.calls)).not.toContain(rawError);
+    expect(JSON.stringify(dispatchClientErrorDiagnosticMock.mock.calls)).not.toContain(rawError);
   });
 
   it('supports local visual initial state without calling the public token API', async () => {

@@ -27,7 +27,7 @@ import {
   internalValueLabel,
   skillDisplayLabel,
 } from '@/lib/copy/labels';
-import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 type InviteState = {
   id: string;
@@ -307,7 +307,11 @@ const CANDIDATE_INVITE_PROOF_SUBMIT_ERROR_MESSAGES = new Map([
   ['Failed to submit Proof Card', CANDIDATE_INVITE_PROOF_SUBMIT_RETRY_MESSAGE],
 ]);
 
-function candidateInviteClaimError(error?: string | null) {
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function candidateInviteClaimError(error?: string | null, status: number | 'unknown' = 'unknown') {
   const normalized = error?.trim();
   if (!normalized) {
     return CANDIDATE_INVITE_CLAIM_RETRY_MESSAGE;
@@ -318,14 +322,17 @@ function candidateInviteClaimError(error?: string | null) {
     return safeMessage;
   }
 
-  dispatchClientErrorDiagnostic(
-    'candidate_invite.client.claim_returned_error',
-    new Error(normalized)
-  );
+  dispatchClientDiagnostic('candidate_invite.client.claim_returned_error', {
+    status,
+    hasReturnedError: true,
+  });
   return CANDIDATE_INVITE_CLAIM_RETRY_MESSAGE;
 }
 
-function candidateInviteProofSubmitError(error?: string | null) {
+function candidateInviteProofSubmitError(
+  error?: string | null,
+  status: number | 'unknown' = 'unknown'
+) {
   const normalized = error?.trim();
   if (!normalized) {
     return CANDIDATE_INVITE_PROOF_SUBMIT_RETRY_MESSAGE;
@@ -336,10 +343,10 @@ function candidateInviteProofSubmitError(error?: string | null) {
     return safeMessage;
   }
 
-  dispatchClientErrorDiagnostic(
-    'candidate_invite.client.proof_submit_returned_error',
-    new Error(normalized)
-  );
+  dispatchClientDiagnostic('candidate_invite.client.proof_submit_returned_error', {
+    status,
+    hasReturnedError: true,
+  });
   return CANDIDATE_INVITE_PROOF_SUBMIT_RETRY_MESSAGE;
 }
 
@@ -458,7 +465,7 @@ export function CandidateInviteClient({
 
       const payload = await response.json().catch(() => null);
       if (!response.ok) {
-        setError(candidateInviteClaimError(payload?.error));
+        setError(candidateInviteClaimError(payload?.error, getResponseStatus(response)));
         setErrorDetail(CANDIDATE_INVITE_CLAIM_RETRY_DETAIL);
         return;
       }
@@ -543,7 +550,7 @@ export function CandidateInviteClient({
 
       const payload = await response.json().catch(() => null);
       if (!response.ok) {
-        setError(candidateInviteProofSubmitError(payload?.error));
+        setError(candidateInviteProofSubmitError(payload?.error, getResponseStatus(response)));
         setErrorDetail(
           'Your selected Proof Pack and visibility review are still here. Check the summary, then try submitting again.'
         );
