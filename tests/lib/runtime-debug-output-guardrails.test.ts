@@ -321,6 +321,7 @@ describe('runtime debug output guardrails', () => {
     expect(sources).toContain('FIRST_PROOF_SAFE_UPLOAD_ERRORS');
     expect(sources).toContain('proofs.first_proof.upload_returned_error');
     expect(sources).toContain('proofs.first_proof.upload_failed');
+    expect(sources).toContain('proofs.first_proof.submit_returned_error');
     expect(sources).toContain('proofs.first_proof.submit_failed');
     expect(sources).toContain('Proof was not saved');
     expect(sources).toContain('profile.avatar.compression_failed');
@@ -351,6 +352,9 @@ describe('runtime debug output guardrails', () => {
     );
     expect(sources).not.toContain(
       "setFormError(error.message || error.error || 'Failed to save proof. Please try again.')"
+    );
+    expect(sources).not.toContain(
+      "new Error(error.message || error.error || 'first proof save failed')"
     );
     expect(sources).not.toContain('Failed to save proof. Please try again.');
     expect(sources).not.toContain('Image compression failed:');

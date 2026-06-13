@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { FirstProofDialog } from '@/components/proofs/FirstProofDialog';
 import { apiFetch } from '@/lib/api/fetch';
-import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { uploadFile } from '@/lib/upload';
 
 vi.mock('@/lib/api/fetch', () => ({
@@ -12,6 +12,7 @@ vi.mock('@/lib/api/fetch', () => ({
 }));
 
 vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientDiagnostic: vi.fn(),
   dispatchClientErrorDiagnostic: vi.fn(),
 }));
 
@@ -37,6 +38,7 @@ vi.mock('@/components/ui/dialog', () => ({
 }));
 
 const apiFetchMock = vi.mocked(apiFetch);
+const dispatchClientDiagnosticMock = vi.mocked(dispatchClientDiagnostic);
 const dispatchClientErrorDiagnosticMock = vi.mocked(dispatchClientErrorDiagnostic);
 const uploadFileMock = vi.mocked(uploadFile);
 
@@ -99,13 +101,15 @@ describe('first proof entry point', () => {
       'Upload could not be saved. Your proof details are still here; try again or choose another file.'
     );
     expect(screen.queryByText(rawFailure)).not.toBeInTheDocument();
-    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
       'proofs.first_proof.upload_returned_error',
-      expect.any(Error)
+      {
+        hasReturnedError: true,
+        errorKind: 'first_proof_upload_request_failed',
+      }
     );
-    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
-      rawFailure
-    );
+    expect(JSON.stringify(dispatchClientDiagnosticMock.mock.calls)).not.toContain(rawFailure);
+    expect(JSON.stringify(dispatchClientErrorDiagnosticMock.mock.calls)).not.toContain(rawFailure);
     expect(screen.getByLabelText('Proof title')).toHaveValue('Launch review artifact');
     expect(screen.getByText('Selected: launch-review.pdf')).toBeInTheDocument();
     await waitFor(() =>
@@ -150,8 +154,17 @@ describe('first proof entry point', () => {
       expect.any(Error)
     );
     expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
-      rawFailure
+      'first_proof_save_request_failed'
     );
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
+      'proofs.first_proof.submit_returned_error',
+      {
+        status: 500,
+        hasReturnedError: true,
+      }
+    );
+    expect(JSON.stringify(dispatchClientDiagnosticMock.mock.calls)).not.toContain(rawFailure);
+    expect(JSON.stringify(dispatchClientErrorDiagnosticMock.mock.calls)).not.toContain(rawFailure);
     await waitFor(() =>
       expect(screen.getByRole('button', { name: 'Save first proof' })).toBeEnabled()
     );

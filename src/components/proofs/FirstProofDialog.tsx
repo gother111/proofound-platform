@@ -22,7 +22,7 @@ import {
   PROOF_FILE_ACCEPT_ATTRIBUTE,
 } from '@/lib/proofs/constants';
 import { uploadFile, validateFile } from '@/lib/upload';
-import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 export type FirstProofSkillOption = {
   id: string;
@@ -68,12 +68,37 @@ const FIRST_PROOF_SAFE_UPLOAD_ERRORS = new Set([
   'Failed to upload file. Please try again.',
 ]);
 
-function firstProofUploadErrorMessage(message: string) {
-  if (FIRST_PROOF_SAFE_UPLOAD_ERRORS.has(message)) {
-    return message;
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function getReturnedError(payload: unknown) {
+  if (!payload || typeof payload !== 'object') {
+    return '';
   }
 
-  dispatchClientErrorDiagnostic('proofs.first_proof.upload_returned_error', new Error(message));
+  if ('message' in payload && typeof payload.message === 'string') {
+    return payload.message.trim();
+  }
+
+  if ('error' in payload && typeof payload.error === 'string') {
+    return payload.error.trim();
+  }
+
+  return '';
+}
+
+function firstProofUploadErrorMessage(message: string) {
+  const returnedError = message.trim();
+
+  if (FIRST_PROOF_SAFE_UPLOAD_ERRORS.has(returnedError)) {
+    return returnedError;
+  }
+
+  dispatchClientDiagnostic('proofs.first_proof.upload_returned_error', {
+    hasReturnedError: returnedError.length > 0,
+    errorKind: 'first_proof_upload_request_failed',
+  });
   return FIRST_PROOF_UPLOAD_RETRY_MESSAGE;
 }
 
@@ -207,7 +232,7 @@ export function FirstProofDialog({
       }
     }
 
-    const payload = {
+    const proofPayload = {
       proofType: form.proofType as 'link' | 'document',
       title: form.title.trim() || (form.url.trim() ? deriveProofTitleFromUrl(form.url.trim()) : ''),
       description: form.description.trim(),
@@ -229,7 +254,7 @@ export function FirstProofDialog({
       const response = await apiFetch(`/api/expertise/user-skills/${selectedSkillId}/proofs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(proofPayload),
       });
 
       if (response.ok) {
@@ -243,13 +268,13 @@ export function FirstProofDialog({
         return;
       }
 
-      const error = (await response.json().catch(() => ({}))) as {
-        error?: string;
-        message?: string;
-      };
-      const submitError = new Error(error.message || error.error || 'first proof save failed');
-      dispatchClientErrorDiagnostic('proofs.first_proof.submit_failed', submitError);
-      setFormError(FIRST_PROOF_SAVE_FAILED_MESSAGE);
+      const responsePayload = await response.json().catch(() => null);
+      const returnedError = getReturnedError(responsePayload);
+      dispatchClientDiagnostic('proofs.first_proof.submit_returned_error', {
+        status: getResponseStatus(response),
+        hasReturnedError: returnedError.length > 0,
+      });
+      throw new Error('first_proof_save_request_failed');
     } catch (error) {
       dispatchClientErrorDiagnostic('proofs.first_proof.submit_failed', error);
       setFormError(FIRST_PROOF_SAVE_FAILED_MESSAGE);
