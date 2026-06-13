@@ -60,6 +60,23 @@ describe('public portfolio action feedback', () => {
     expect(alertSpy).not.toHaveBeenCalled();
   });
 
+  it('uses organization trust-page copy for organization share links', async () => {
+    render(
+      <ShareLinkButton
+        url="https://proofound.io/portfolio/org/acme"
+        surface="organization-trust-page"
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /copy share link/i }));
+
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'Organization trust page link copied.'
+    );
+    expect(clipboardWriteText).toHaveBeenCalledWith('https://proofound.io/portfolio/org/acme');
+    expect(alertSpy).not.toHaveBeenCalled();
+  });
+
   it('shows recoverable inline share-link failure without a browser alert', async () => {
     clipboardWriteText.mockRejectedValueOnce(new Error('Clipboard unavailable'));
 
@@ -72,6 +89,27 @@ describe('public portfolio action feedback', () => {
     );
     expect(screen.getByLabelText('Share link for manual copy')).toHaveValue(
       'https://proofound.io/portfolio/jane'
+    );
+    expect(alertSpy).not.toHaveBeenCalled();
+  });
+
+  it('keeps organization trust-page share failures recoverable with the right label', async () => {
+    clipboardWriteText.mockRejectedValueOnce(new Error('Clipboard unavailable'));
+
+    render(
+      <ShareLinkButton
+        url="https://proofound.io/portfolio/org/acme"
+        surface="organization-trust-page"
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /copy share link/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Organization trust page link could not be copied. Try again.'
+    );
+    expect(screen.getByLabelText('Organization trust page link for manual copy')).toHaveValue(
+      'https://proofound.io/portfolio/org/acme'
     );
     expect(alertSpy).not.toHaveBeenCalled();
   });

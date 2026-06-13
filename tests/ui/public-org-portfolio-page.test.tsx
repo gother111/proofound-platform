@@ -1,6 +1,6 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const { notFoundMock } = vi.hoisted(() => ({
   notFoundMock: vi.fn(() => {
@@ -126,6 +126,10 @@ function buildProjection(overrides: Partial<any> = {}) {
 }
 
 describe('Organization public portfolio page', () => {
+  afterEach(() => {
+    delete (navigator as Partial<Navigator>).clipboard;
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(createClient).mockResolvedValue({
@@ -182,6 +186,20 @@ describe('Organization public portfolio page', () => {
       'href',
       '/app/o/acme/home'
     );
+
+    const clipboardWriteText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: {
+        writeText: clipboardWriteText,
+      },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /copy share link/i }));
+
+    expect(await screen.findByText('Organization trust page link copied.')).toBeInTheDocument();
+    expect(clipboardWriteText).toHaveBeenCalledWith('https://proofound.io/portfolio/org/acme');
+
     expect(screen.queryByRole('heading', { name: /values/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: /causes/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: /work culture/i })).not.toBeInTheDocument();

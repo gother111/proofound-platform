@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 type ShareLinkButtonProps = {
   url: string;
   className?: string;
+  surface?: 'public-page' | 'organization-trust-page';
 };
 
 type ShareFeedback = {
@@ -16,16 +17,30 @@ type ShareFeedback = {
   message: string;
 };
 
-export function ShareLinkButton({ url, className }: ShareLinkButtonProps) {
+const SHARE_LINK_COPY = {
+  'public-page': {
+    copied: 'Public page link copied.',
+    failed: 'Public page link could not be copied. Try again.',
+    manualLabel: 'Share link for manual copy',
+  },
+  'organization-trust-page': {
+    copied: 'Organization trust page link copied.',
+    failed: 'Organization trust page link could not be copied. Try again.',
+    manualLabel: 'Organization trust page link for manual copy',
+  },
+} as const;
+
+export function ShareLinkButton({ url, className, surface = 'public-page' }: ShareLinkButtonProps) {
   const [copied, setCopied] = useState(false);
   const [feedback, setFeedback] = useState<ShareFeedback | null>(null);
+  const copy = SHARE_LINK_COPY[surface];
 
   async function handleCopy() {
     try {
       setFeedback(null);
       await navigator.clipboard.writeText(url);
       setCopied(true);
-      setFeedback({ kind: 'success', message: 'Public page link copied.' });
+      setFeedback({ kind: 'success', message: copy.copied });
       setTimeout(() => {
         setCopied(false);
         setFeedback(null);
@@ -35,7 +50,7 @@ export function ShareLinkButton({ url, className }: ShareLinkButtonProps) {
       setCopied(false);
       setFeedback({
         kind: 'error',
-        message: 'Public page link could not be copied. Try again.',
+        message: copy.failed,
       });
     }
   }
@@ -66,7 +81,7 @@ export function ShareLinkButton({ url, className }: ShareLinkButtonProps) {
           </p>
           {feedback.kind === 'error' ? (
             <input
-              aria-label="Share link for manual copy"
+              aria-label={copy.manualLabel}
               className="min-h-10 w-full rounded-md border border-[#D9D5CC] bg-white px-2 text-xs text-foreground"
               onFocus={(event) => event.currentTarget.select()}
               readOnly

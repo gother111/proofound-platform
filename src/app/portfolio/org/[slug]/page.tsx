@@ -279,7 +279,11 @@ export default async function OrganizationPortfolioPage({
                   {returnLabel}
                 </Link>
               </Button>
-              <ShareLinkButton url={data.shareUrl} className="min-h-11 w-full sm:w-auto" />
+              <ShareLinkButton
+                url={data.shareUrl}
+                surface="organization-trust-page"
+                className="min-h-11 w-full sm:w-auto"
+              />
               {viewerIsMember ? (
                 <DownloadOrganizationPdfButton slug={slug} className="min-h-11 sm:w-auto" />
               ) : null}
