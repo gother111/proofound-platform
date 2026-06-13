@@ -347,6 +347,7 @@ describe('runtime debug output guardrails', () => {
     expect(sources).toContain('proofs.first_proof.submit_returned_error');
     expect(sources).toContain('proofs.first_proof.submit_failed');
     expect(sources).toContain('Proof was not saved');
+    expect(sources).toContain('profile.avatar.reader_failed');
     expect(sources).toContain('profile.avatar.compression_failed');
     expect(sources).toContain('profile.snippet.generate_failed');
     expect(sources).toContain('profile.privacy_summary_flag.load_failed');
@@ -370,6 +371,7 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('.catch(console.error)');
     expect(sources).not.toContain('Failed to fetch privacy settings:');
     expect(sources).not.toContain('Failed to save privacy settings:');
+    expect(sources).not.toContain('Failed to upload image');
     expect(sources).not.toContain('First proof upload failed:');
     expect(sources).not.toContain('First proof submit failed:');
     expect(sources).not.toContain(

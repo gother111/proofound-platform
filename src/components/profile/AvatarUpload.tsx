@@ -4,7 +4,7 @@ import { Upload, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import imageCompression from 'browser-image-compression';
 import { toast } from 'sonner';
-import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 interface AvatarUploadProps {
   avatar: string | null;
@@ -14,6 +14,10 @@ interface AvatarUploadProps {
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const WARNING_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 const ACCEPTED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+const AVATAR_READER_FAILED_MESSAGE =
+  'Image could not be read. Choose another JPG, PNG, or WebP file.';
+const AVATAR_COMPRESSION_FAILED_MESSAGE =
+  'Image could not be prepared. Choose another file or try a smaller image.';
 
 export function AvatarUpload({ avatar, onUpload }: AvatarUploadProps) {
   const [isHovering, setIsHovering] = useState(false);
@@ -24,6 +28,8 @@ export function AvatarUpload({ avatar, onUpload }: AvatarUploadProps) {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    setError(null);
 
     if (!ACCEPTED_TYPES.includes(file.type)) {
       setError('Please upload a JPG, PNG, or WebP image');
@@ -55,13 +61,17 @@ export function AvatarUpload({ avatar, onUpload }: AvatarUploadProps) {
         setIsUploading(false);
       };
       reader.onerror = () => {
-        setError('Failed to upload image');
+        dispatchClientDiagnostic('profile.avatar.reader_failed', {
+          fileType: file.type || 'unknown',
+          fileSize: file.size,
+        });
+        setError(AVATAR_READER_FAILED_MESSAGE);
         setIsUploading(false);
       };
       reader.readAsDataURL(compressed);
     } catch (compressionError) {
       dispatchClientErrorDiagnostic('profile.avatar.compression_failed', compressionError);
-      setError('Could not compress image for upload');
+      setError(AVATAR_COMPRESSION_FAILED_MESSAGE);
       setIsUploading(false);
     }
   };
@@ -74,11 +84,16 @@ export function AvatarUpload({ avatar, onUpload }: AvatarUploadProps) {
 
   return (
     <div className="relative">
-      <motion.div
+      <motion.button
+        type="button"
+        aria-label={avatar ? 'Change profile picture' : 'Upload profile picture'}
+        disabled={isUploading}
         whileHover={{ scale: 1.02 }}
         onHoverStart={() => setIsHovering(true)}
         onHoverEnd={() => setIsHovering(false)}
-        className={`group/avatar ${isUploading ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'}`}
+        className={`group/avatar relative block rounded-full border-0 bg-transparent p-0 text-left ${
+          isUploading ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'
+        }`}
         onClick={handleClick}
       >
         <Avatar className="w-24 h-24 sm:w-32 sm:h-32 border-4 border-card shadow-lg ring-2 ring-[#7A9278]/20 ring-offset-2 bg-[#F5F3EE]">
@@ -124,7 +139,7 @@ export function AvatarUpload({ avatar, onUpload }: AvatarUploadProps) {
             </div>
           </motion.div>
         )}
-      </motion.div>
+      </motion.button>
 
       <input
         ref={fileInputRef}
@@ -133,14 +148,14 @@ export function AvatarUpload({ avatar, onUpload }: AvatarUploadProps) {
         onChange={handleFileChange}
         className="hidden"
         disabled={isUploading}
-        aria-label="Upload profile picture"
+        aria-label="Choose profile picture file"
       />
 
       {error && (
         <motion.p
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="absolute top-full mt-2 text-xs text-red-500 whitespace-nowrap"
+          className="absolute top-full mt-2 max-w-[16rem] text-xs text-red-500"
         >
           {error}
         </motion.p>
