@@ -69,6 +69,9 @@ describe('public portfolio action feedback', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Public page link could not be copied. Try again.'
     );
+    expect(screen.getByLabelText('Share link for manual copy')).toHaveValue(
+      'https://proofound.io/portfolio/jane'
+    );
     expect(alertSpy).not.toHaveBeenCalled();
   });
 

@@ -187,6 +187,9 @@ export default async function OrganizationPortfolioPage({
 
   const assignmentSnapshot = data.assignmentSnapshot;
   const reviewSignals = [
+    data.effectiveState === 'public_indexable'
+      ? 'Search indexing is explicitly enabled for this organization trust page.'
+      : 'Search engines are off; only people with this link can open the trust page.',
     data.verifiedDomainPath
       ? `Verified domain path: ${data.verifiedDomainPath}`
       : 'Direct-link trust page only',

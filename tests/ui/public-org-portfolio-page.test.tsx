@@ -173,6 +173,9 @@ describe('Organization public portfolio page', () => {
       screen.getByText(/this page is public trust context, not the review workspace/i)
     ).toBeInTheDocument();
     expect(
+      screen.getByText(/search engines are off; only people with this link can open/i)
+    ).toBeInTheDocument();
+    expect(
       screen.getByText(/proof submissions, member details, and private review context stay inside/i)
     ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /return to menu/i })).toHaveAttribute(
@@ -370,6 +373,27 @@ describe('Organization public portfolio page', () => {
     expect(metadata.robots).toMatchObject({ index: true, follow: true });
     expect(metadata.title).toBe('Acme Labs | Proofound');
     expect(metadata.openGraph?.title).toBe('Acme Labs on Proofound');
+  });
+
+  it('explains when search indexing is explicitly enabled for public organization trust pages', async () => {
+    vi.mocked(getPublicOrganizationPortfolioProjectionBySlug).mockResolvedValue(
+      buildProjection({ effectiveState: 'public_indexable' }) as any
+    );
+
+    const element = await OrganizationPortfolioPublicPage({
+      params: Promise.resolve({ slug: 'acme' }),
+      searchParams: Promise.resolve({}),
+    });
+
+    render(element);
+
+    expect(screen.getByText('Indexing allowed')).toBeInTheDocument();
+    expect(
+      screen.getByText(/search indexing is explicitly enabled for this organization trust page/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/search engines are off; only people with this link can open/i)
+    ).not.toBeInTheDocument();
   });
 
   it('renders the generic unavailable state when slug has no public portfolio', async () => {

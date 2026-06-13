@@ -52,17 +52,28 @@ export function ShareLinkButton({ url, className }: ShareLinkButtonProps) {
         {copied ? 'Copied' : 'Copy share link'}
       </Button>
       {feedback ? (
-        <p
-          className={
-            feedback.kind === 'error'
-              ? 'max-w-64 text-xs leading-5 text-[#8A3F21]'
-              : 'max-w-64 text-xs leading-5 text-proofound-forest'
-          }
-          role={feedback.kind === 'error' ? 'alert' : 'status'}
-          aria-live={feedback.kind === 'error' ? 'assertive' : 'polite'}
-        >
-          {feedback.message}
-        </p>
+        <div className="max-w-64 space-y-1.5">
+          <p
+            className={
+              feedback.kind === 'error'
+                ? 'text-xs leading-5 text-[#8A3F21]'
+                : 'text-xs leading-5 text-proofound-forest'
+            }
+            role={feedback.kind === 'error' ? 'alert' : 'status'}
+            aria-live={feedback.kind === 'error' ? 'assertive' : 'polite'}
+          >
+            {feedback.message}
+          </p>
+          {feedback.kind === 'error' ? (
+            <input
+              aria-label="Share link for manual copy"
+              className="min-h-10 w-full rounded-md border border-[#D9D5CC] bg-white px-2 text-xs text-foreground"
+              onFocus={(event) => event.currentTarget.select()}
+              readOnly
+              value={url}
+            />
+          ) : null}
+        </div>
       ) : null}
     </div>
   );
