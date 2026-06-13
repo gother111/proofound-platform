@@ -724,6 +724,49 @@ describe('CandidateInviteClient test_match flow', () => {
     expect(alert).not.toHaveTextContent('Invite not found');
   });
 
+  it('keeps invite load status authoritative over returned server wording', async () => {
+    const rawError = 'Service temporarily unavailable for invite lookup: candidate_invites missing';
+    const fetchMock = vi.fn().mockImplementation(async (url: string) => {
+      if (url === '/api/candidate-invites/not-a-real-token') {
+        return {
+          ok: false,
+          status: 400,
+          json: async () => ({ error: rawError }),
+        };
+      }
+
+      if (url === '/api/user/me') {
+        return {
+          ok: false,
+          json: async () => ({ error: 'Unauthorized' }),
+        };
+      }
+
+      throw new Error(`Unexpected fetch URL: ${url}`);
+    });
+
+    vi.stubGlobal('fetch', fetchMock as any);
+
+    render(<CandidateInviteClient token="not-a-real-token" />);
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(
+      'This invitation link is invalid, expired, or no longer available.'
+    );
+    expect(alert).toHaveTextContent('No proof was submitted, no visibility changed');
+    expect(alert).not.toHaveTextContent(rawError);
+    expect(alert).not.toHaveTextContent('We could not verify this invitation right now.');
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
+      'candidate_invite.client.load_returned_error',
+      {
+        status: 400,
+        hasReturnedError: true,
+      }
+    );
+    expect(JSON.stringify(dispatchClientDiagnosticMock.mock.calls)).not.toContain(rawError);
+    expect(JSON.stringify(dispatchClientErrorDiagnosticMock.mock.calls)).not.toContain(rawError);
+  });
+
   it('pauses proof submission when an invite is missing structured assignment context', async () => {
     const fetchMock = vi.fn().mockImplementation(async (url: string) => {
       if (url === '/api/candidate-invites/token-value') {

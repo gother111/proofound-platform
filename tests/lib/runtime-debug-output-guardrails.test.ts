@@ -947,6 +947,7 @@ describe('runtime debug output guardrails', () => {
     expect(source).toContain('dispatchClientDiagnostic');
     expect(source).toContain('dispatchClientErrorDiagnostic');
     expect(source).toContain('candidate_invite.client.load_failed');
+    expect(source).toContain('candidate_invite.client.load_returned_error');
     expect(source).toContain('candidate_invite.client.claim_failed');
     expect(source).toContain('candidate_invite.client.claim_returned_error');
     expect(source).toContain('candidate_invite.client.proof_submit_failed');
@@ -956,6 +957,9 @@ describe('runtime debug output guardrails', () => {
     expect(source).not.toContain('Failed to load submission invite state:');
     expect(source).not.toContain('Failed to claim invite:');
     expect(source).not.toContain('Failed to submit assignment proof:');
+    expect(source).not.toContain(
+      'candidateInviteLoadErrorState(inviteResponse.status, payload?.error)'
+    );
     expect(source).not.toContain('setError(payload?.error');
     expect(source).not.toContain(
       "dispatchClientErrorDiagnostic(\n    'candidate_invite.client.claim_returned_error'"

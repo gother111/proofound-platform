@@ -203,33 +203,62 @@ type CandidateInviteLoadErrorState = {
   detail: string;
 };
 
+function getReturnedError(payload: unknown) {
+  if (!payload || typeof payload !== 'object') {
+    return '';
+  }
+
+  if ('error' in payload && typeof payload.error === 'string') {
+    return payload.error.trim();
+  }
+
+  return '';
+}
+
 function candidateInviteLoadErrorState(
   status: number,
-  error?: string | null
+  returnedError?: string | null
 ): CandidateInviteLoadErrorState {
+  const normalizedReturnedError = returnedError?.trim() ?? '';
   const unchangedDetail =
     'No proof was submitted, no visibility changed, and no account action was taken from this page.';
 
-  if (
-    status === 503 ||
-    status === 502 ||
-    status === 504 ||
-    /temporarily|timeout/i.test(error ?? '')
-  ) {
+  if (status === 503 || status === 502 || status === 504) {
     return {
       message: 'We could not verify this invitation right now.',
       detail: `${unchangedDetail} Refresh this page, or ask the company to resend the invite if it keeps failing.`,
     };
   }
 
-  if (status === 410 || /expired/i.test(error ?? '')) {
+  if (status === 410) {
     return {
       message: 'This invitation has expired.',
       detail: `${unchangedDetail} Ask the company to send a new invite if needed.`,
     };
   }
 
-  if (status === 404 || status === 400 || /not found|invalid|unavailable/i.test(error ?? '')) {
+  if (status === 404 || status === 400) {
+    return {
+      message: 'This invitation link is invalid, expired, or no longer available.',
+      detail: `${unchangedDetail} Ask the company to send a fresh assignment invite if needed.`,
+    };
+  }
+
+  if (/expired/i.test(normalizedReturnedError)) {
+    return {
+      message: 'This invitation has expired.',
+      detail: `${unchangedDetail} Ask the company to send a new invite if needed.`,
+    };
+  }
+
+  if (/temporarily|timeout/i.test(normalizedReturnedError)) {
+    return {
+      message: 'We could not verify this invitation right now.',
+      detail: `${unchangedDetail} Refresh this page, or ask the company to resend the invite if it keeps failing.`,
+    };
+  }
+
+  if (/not found|invalid|unavailable/i.test(normalizedReturnedError)) {
     return {
       message: 'This invitation link is invalid, expired, or no longer available.',
       detail: `${unchangedDetail} Ask the company to send a fresh assignment invite if needed.`,
@@ -404,7 +433,14 @@ export function CandidateInviteClient({
 
       if (!inviteResponse.ok) {
         const payload = await inviteResponse.json().catch(() => null);
-        const loadError = candidateInviteLoadErrorState(inviteResponse.status, payload?.error);
+        const returnedError = getReturnedError(payload);
+        if (returnedError) {
+          dispatchClientDiagnostic('candidate_invite.client.load_returned_error', {
+            status: inviteResponse.status,
+            hasReturnedError: true,
+          });
+        }
+        const loadError = candidateInviteLoadErrorState(inviteResponse.status, returnedError);
         setError(loadError.message);
         setErrorDetail(loadError.detail);
         return;
