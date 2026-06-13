@@ -180,10 +180,10 @@ describe('runtime debug output guardrails', () => {
   it('keeps Start from CV private draft failures safe and diagnostic', () => {
     const source = readSource('src/components/profile/StartFromCvDialog.tsx');
 
-    expect(source).toContain(
-      "import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics'"
-    );
+    expect(source).toContain('dispatchClientDiagnostic');
+    expect(source).toContain('dispatchClientErrorDiagnostic');
     expect(source).toContain('start_from_cv.private_drafts.create_failed');
+    expect(source).toContain('start_from_cv.private_drafts.accept_returned_error');
     expect(source).toContain('start_from_cv.private_drafts.accept_failed');
     expect(source).toContain('start_from_cv.private_drafts.delete_failed');
     expect(source).toContain('Your profile is unchanged; try again or continue manually.');

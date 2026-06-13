@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { apiFetch } from '@/lib/api/fetch';
 import { START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE } from '@/lib/ai/start-from-cv-contract';
-import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import type { StartFromCvDraftOutput } from '@/lib/ai/start-from-cv';
 import type { StartFromCvScaffoldingSurface } from '@/lib/ai/start-from-cv-contract';
 
@@ -72,6 +72,26 @@ const START_FROM_CV_ACCEPT_FAILED_MESSAGE =
   'Selected drafts could not be accepted. Your private drafts are still here; review them and try again.';
 const START_FROM_CV_DELETE_FAILED_MESSAGE =
   'Import session could not be deleted. Your private drafts are still here; please try again.';
+
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function getReturnedError(payload: unknown) {
+  if (!payload || typeof payload !== 'object') {
+    return '';
+  }
+
+  if ('error' in payload && typeof payload.error === 'string') {
+    return payload.error.trim();
+  }
+
+  if ('message' in payload && typeof payload.message === 'string') {
+    return payload.message.trim();
+  }
+
+  return '';
+}
 
 function userSafeCvError(value: unknown, fallback: string): string {
   if (typeof value !== 'string') {
@@ -206,9 +226,14 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
           body: JSON.stringify({ accepted }),
         }
       );
-      const payload = await response.json();
+      const payload = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(payload.error || START_FROM_CV_ACCEPT_FAILED_MESSAGE);
+        const returnedError = getReturnedError(payload);
+        dispatchClientDiagnostic('start_from_cv.private_drafts.accept_returned_error', {
+          status: getResponseStatus(response),
+          hasReturnedError: returnedError.length > 0,
+        });
+        throw new Error('start_from_cv_private_drafts_accept_request_failed');
       }
       onApplyComplete?.();
     } catch (caught) {

@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const apiFetchMock = vi.hoisted(() => vi.fn());
+const dispatchClientDiagnosticMock = vi.hoisted(() => vi.fn());
 const dispatchClientErrorDiagnosticMock = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/api/fetch', () => ({
@@ -9,6 +10,7 @@ vi.mock('@/lib/api/fetch', () => ({
 }));
 
 vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientDiagnostic: (...args: unknown[]) => dispatchClientDiagnosticMock(...args),
   dispatchClientErrorDiagnostic: (...args: unknown[]) => dispatchClientErrorDiagnosticMock(...args),
 }));
 
@@ -191,7 +193,11 @@ describe('StartFromCvDialog', () => {
         })
       )
       .mockResolvedValueOnce(jsonResponse(extractedDraftPayload))
-      .mockResolvedValueOnce(jsonResponse({ error: 'draft_accept_service token expired' }, false));
+      .mockResolvedValueOnce(
+        Object.assign(jsonResponse({ error: 'draft_accept_service token expired' }, false), {
+          status: 503,
+        })
+      );
 
     render(<StartFromCvDialog surface={START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE} />);
 
@@ -207,11 +213,24 @@ describe('StartFromCvDialog', () => {
     expect(alert).not.toHaveTextContent('token expired');
     expect(screen.getByDisplayValue('Original role')).toBeInTheDocument();
     expect(screen.getByLabelText('Use Work context drafts: Original role')).toBeChecked();
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
+      'start_from_cv.private_drafts.accept_returned_error',
+      {
+        status: 503,
+        hasReturnedError: true,
+      }
+    );
     expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
       'start_from_cv.private_drafts.accept_failed',
       expect.any(Error)
     );
     expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
+      'start_from_cv_private_drafts_accept_request_failed'
+    );
+    expect(JSON.stringify(dispatchClientDiagnosticMock.mock.calls)).not.toContain(
+      'draft_accept_service token expired'
+    );
+    expect(JSON.stringify(dispatchClientErrorDiagnosticMock.mock.calls)).not.toContain(
       'draft_accept_service token expired'
     );
   });
