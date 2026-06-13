@@ -4,7 +4,8 @@ import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import FeedbackForm from '../../src/components/feedback/FeedbackForm';
 import { VISUAL_FEEDBACK_TOKENS } from '../../src/lib/feedback/visual-fixtures';
 
-const { dispatchClientErrorDiagnosticMock } = vi.hoisted(() => ({
+const { dispatchClientDiagnosticMock, dispatchClientErrorDiagnosticMock } = vi.hoisted(() => ({
+  dispatchClientDiagnosticMock: vi.fn(),
   dispatchClientErrorDiagnosticMock: vi.fn(),
 }));
 
@@ -15,6 +16,7 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('../../src/lib/client-diagnostics', () => ({
+  dispatchClientDiagnostic: (...args: unknown[]) => dispatchClientDiagnosticMock(...args),
   dispatchClientErrorDiagnostic: (...args: unknown[]) => dispatchClientErrorDiagnosticMock(...args),
 }));
 
@@ -243,6 +245,7 @@ describe('FeedbackForm', () => {
     const rawError = 'feedback_answers insert failed: policy detail';
     vi.mocked(global.fetch).mockResolvedValueOnce({
       ok: false,
+      status: 500,
       json: async () => ({ error: rawError }),
     } as any);
 
@@ -262,11 +265,34 @@ describe('FeedbackForm', () => {
     expect(screen.getByRole('spinbutton')).toHaveValue(4);
     expect(screen.getByDisplayValue('The interview loop was clear.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /submit feedback/i })).toBeEnabled();
-    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
       'feedback.form.submit_returned_error',
-      expect.any(Error)
+      {
+        status: 500,
+        hasReturnedError: true,
+      }
     );
-    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(rawError);
+    expect(JSON.stringify(dispatchClientDiagnosticMock.mock.calls)).not.toContain(rawError);
+    expect(JSON.stringify(dispatchClientErrorDiagnosticMock.mock.calls)).not.toContain(rawError);
+  });
+
+  it('keeps known returned feedback states user-safe without diagnostic noise', async () => {
+    vi.mocked(global.fetch).mockResolvedValueOnce({
+      ok: false,
+      status: 409,
+      json: async () => ({ error: 'Feedback already submitted for this side' }),
+    } as any);
+
+    render(<FeedbackForm template={template} interviewId="interview-1" token="token-1" />);
+
+    fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '4' } });
+    fireEvent.click(screen.getByRole('button', { name: /submit feedback/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Feedback has already been submitted for this side.'
+    );
+    expect(dispatchClientDiagnosticMock).not.toHaveBeenCalled();
+    expect(dispatchClientErrorDiagnosticMock).not.toHaveBeenCalled();
   });
 
   it('records visual fixture feedback locally without calling the guarded submit API', async () => {

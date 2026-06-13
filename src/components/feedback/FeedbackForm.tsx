@@ -11,7 +11,7 @@ import {
   clientFeedbackVisualFixturesEnabled,
   VISUAL_FEEDBACK_TOKENS,
 } from '@/lib/feedback/visual-fixtures';
-import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { dispatchClientDiagnostic } from '@/lib/client-diagnostics';
 import { cn } from '@/lib/utils';
 
 type Direction = 'candidate_to_org' | 'org_to_candidate';
@@ -83,7 +83,11 @@ const FEEDBACK_SUBMIT_ERROR_MESSAGES = new Map([
   ['Could not save feedback', FEEDBACK_SUBMIT_RETRY_MESSAGE],
 ]);
 
-function feedbackSubmitError(error?: string | null) {
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function feedbackSubmitError(error?: string | null, status: number | 'unknown' = 'unknown') {
   const normalized = error?.trim();
 
   if (!normalized || /^Something went wrong\.? Please try again\.?$/i.test(normalized)) {
@@ -95,7 +99,10 @@ function feedbackSubmitError(error?: string | null) {
     return safeMessage;
   }
 
-  dispatchClientErrorDiagnostic('feedback.form.submit_returned_error', new Error(normalized));
+  dispatchClientDiagnostic('feedback.form.submit_returned_error', {
+    status,
+    hasReturnedError: true,
+  });
   return FEEDBACK_SUBMIT_RETRY_MESSAGE;
 }
 
@@ -196,7 +203,10 @@ export function FeedbackForm({
 
       if (!response.ok) {
         const error = await response.json().catch(() => null);
-        setMessage({ tone: 'error', text: feedbackSubmitError(error?.error) });
+        setMessage({
+          tone: 'error',
+          text: feedbackSubmitError(error?.error, getResponseStatus(response)),
+        });
         return;
       }
 
