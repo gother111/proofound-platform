@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { apiFetch } from '@/lib/api/fetch';
-import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import {
   HumanObservedAttestationFields,
   buildHumanObservedAttestationPayload,
@@ -64,7 +64,11 @@ const VERIFICATION_RESPONSE_ERROR_MESSAGES = new Map([
   ['Internal server error', VERIFICATION_RESPONSE_RETRY_MESSAGE],
 ]);
 
-function verificationResponseErrorMessage(message: string) {
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function verificationResponseErrorMessage(message: string, status: number | 'unknown' = 'unknown') {
   if (/^This verification request has already been \w+/.test(message)) {
     return message;
   }
@@ -74,7 +78,10 @@ function verificationResponseErrorMessage(message: string) {
     return safeMessage;
   }
 
-  dispatchClientErrorDiagnostic('verifications.respond.returned_error', new Error(message));
+  dispatchClientDiagnostic('verifications.respond.returned_error', {
+    status,
+    hasReturnedError: true,
+  });
   return VERIFICATION_RESPONSE_RETRY_MESSAGE;
 }
 
@@ -146,10 +153,10 @@ export function RespondDialog({
         onComplete(data.request);
         setResponseMessage('');
       } else {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => null);
         setError(
           typeof errorData.error === 'string'
-            ? verificationResponseErrorMessage(errorData.error)
+            ? verificationResponseErrorMessage(errorData.error, getResponseStatus(response))
             : VERIFICATION_RESPONSE_RETRY_MESSAGE
         );
       }

@@ -13,12 +13,14 @@ vi.mock('@/lib/api/fetch', () => ({
 }));
 
 vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientDiagnostic: (...args: unknown[]) => diagnosticMock(...args),
   dispatchClientErrorDiagnostic: (...args: unknown[]) => diagnosticMock(...args),
 }));
 
-function jsonResponse(payload: unknown, ok = false) {
+function jsonResponse(payload: unknown, ok = false, status = ok ? 200 : 500) {
   return {
     ok,
+    status,
     json: vi.fn().mockResolvedValue(payload),
   };
 }
@@ -122,7 +124,7 @@ describe('RespondDialog', () => {
 
   it('keeps unexpected returned response failures safe and diagnostic', async () => {
     const rawError = 'Postgres update failed: policy stack detail';
-    apiFetchMock.mockResolvedValueOnce(jsonResponse({ error: rawError }));
+    apiFetchMock.mockResolvedValueOnce(jsonResponse({ error: rawError }, false, 503));
 
     renderRespondDialog();
 
@@ -139,10 +141,10 @@ describe('RespondDialog', () => {
     );
     expect(alert).not.toHaveTextContent(rawError);
     expect(within(dialog).getByDisplayValue('I directly reviewed this claim.')).toBeInTheDocument();
-    expect(diagnosticMock).toHaveBeenCalledWith(
-      'verifications.respond.returned_error',
-      expect.any(Error)
-    );
-    expect((diagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(rawError);
+    expect(diagnosticMock).toHaveBeenCalledWith('verifications.respond.returned_error', {
+      status: 503,
+      hasReturnedError: true,
+    });
+    expect(JSON.stringify(diagnosticMock.mock.calls)).not.toContain(rawError);
   });
 });

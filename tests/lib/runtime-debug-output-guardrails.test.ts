@@ -985,11 +985,15 @@ describe('runtime debug output guardrails', () => {
     expect(sources).toContain('verifications.bundle_cancel.selected_cancel_failed');
     expect(sources).toContain('verifications.respond.submit_failed');
     expect(sources).toContain('verifications.respond.returned_error');
+    expect(sources).toContain('hasReturnedError');
     expect(sources).toContain('Verification response could not be sent');
     expect(sources).not.toContain(
       "throw new Error(body.error || 'Failed to load bundle details.')"
     );
     expect(sources).not.toContain('new Error(body.error)');
+    expect(sources).not.toContain(
+      "dispatchClientErrorDiagnostic('verifications.respond.returned_error'"
+    );
     expect(sources).not.toContain('Failed to load bundle cancellation details:');
     expect(sources).not.toContain('Failed to cancel selected bundle artifacts:');
     expect(sources).not.toContain('Error responding to verification:');
