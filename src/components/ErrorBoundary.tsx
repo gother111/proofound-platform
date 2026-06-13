@@ -85,6 +85,8 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
   render() {
     if (this.state.hasError) {
+      const canShowErrorDetails = this.props.showDetails && process.env.NODE_ENV === 'development';
+
       // Use custom fallback if provided
       if (this.props.fallback) {
         return this.props.fallback;
@@ -105,10 +107,10 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
                 team.
               </p>
             </div>
-            {this.props.showDetails && this.state.error && (
+            {canShowErrorDetails && this.state.error && (
               <div className="rounded-md bg-muted p-4">
                 <p className="font-mono text-sm text-muted-foreground">
-                  {this.state.error.message}
+                  {this.state.error.name || 'Error'}
                 </p>
               </div>
             )}

@@ -216,6 +216,9 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Failed to report ErrorBoundary exception:');
     expect(sources).not.toContain('Error caught by ErrorBoundary:');
     expect(sources).not.toContain('Application error:');
+    expect(readSource('src/components/ErrorBoundary.tsx')).not.toContain(
+      '{this.state.error.message}'
+    );
   });
 
   it('keeps active profile, settings, onboarding, tour, and matching diagnostics off raw console output', () => {
