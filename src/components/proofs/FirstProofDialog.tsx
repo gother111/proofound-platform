@@ -88,9 +88,7 @@ function getReturnedError(payload: unknown) {
   return '';
 }
 
-function firstProofUploadErrorMessage(message: string) {
-  const returnedError = message.trim();
-
+function firstProofUploadErrorMessage(returnedError: string) {
   if (FIRST_PROOF_SAFE_UPLOAD_ERRORS.has(returnedError)) {
     return returnedError;
   }
@@ -183,8 +181,7 @@ export function FirstProofDialog({
       });
 
       if (!result.success || !result.uploadedFileId) {
-        const uploadMessage = result.message || result.error || FIRST_PROOF_UPLOAD_RETRY_MESSAGE;
-        setUploadError(firstProofUploadErrorMessage(uploadMessage));
+        setUploadError(firstProofUploadErrorMessage(getReturnedError(result)));
         return;
       }
 

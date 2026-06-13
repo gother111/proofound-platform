@@ -365,6 +365,9 @@ describe('runtime debug output guardrails', () => {
       "setUploadError(result.error || result.message || 'Upload failed')"
     );
     expect(sources).not.toContain(
+      'const uploadMessage = result.message || result.error || FIRST_PROOF_UPLOAD_RETRY_MESSAGE'
+    );
+    expect(sources).not.toContain(
       "setFormError(error.message || error.error || 'Failed to save proof. Please try again.')"
     );
     expect(sources).not.toContain(
