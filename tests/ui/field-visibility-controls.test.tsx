@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { FieldVisibilityControls } from '@/components/privacy/FieldVisibilityControls';
 
 const apiFetchMock = vi.fn();
+const dispatchClientDiagnosticMock = vi.fn();
 const dispatchClientErrorDiagnosticMock = vi.fn();
 const toastErrorMock = vi.fn();
 
@@ -13,6 +14,7 @@ vi.mock('@/lib/api/fetch', () => ({
 }));
 
 vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientDiagnostic: (...args: unknown[]) => dispatchClientDiagnosticMock(...args),
   dispatchClientErrorDiagnostic: (...args: unknown[]) => dispatchClientErrorDiagnosticMock(...args),
 }));
 
@@ -43,6 +45,7 @@ describe('FieldVisibilityControls', () => {
     apiFetchMock
       .mockResolvedValueOnce({
         ok: false,
+        status: 503,
         json: async () => ({ error: 'privacy service unavailable' }),
       } as Response)
       .mockResolvedValueOnce({
@@ -63,8 +66,19 @@ describe('FieldVisibilityControls', () => {
       'privacy.field_controls.load_failed',
       expect.any(Error)
     );
-    expect(toastErrorMock).toHaveBeenCalledWith('Failed to load privacy settings', {
-      description: 'Retry before changing field visibility.',
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
+      'privacy.field_controls.load_returned_error',
+      {
+        status: 503,
+        hasReturnedError: true,
+      }
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
+      'privacy_field_controls_load_request_failed'
+    );
+    expect(toastErrorMock).toHaveBeenCalledWith('Privacy field controls could not load', {
+      description:
+        'Your saved privacy choices could not be loaded. Retry before changing field visibility.',
     });
 
     fireEvent.click(within(alert).getByRole('button', { name: 'Retry privacy controls' }));
@@ -89,6 +103,7 @@ describe('FieldVisibilityControls', () => {
       } as Response)
       .mockResolvedValueOnce({
         ok: false,
+        status: 500,
         json: async () => ({ error: 'policy debug: user user-1 cannot update profile_visibility' }),
       } as Response)
       .mockResolvedValueOnce({
@@ -111,10 +126,20 @@ describe('FieldVisibilityControls', () => {
       'privacy.field_controls.save_failed',
       expect.any(Error)
     );
-    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
-      'policy debug: user user-1 cannot update profile_visibility'
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
+      'privacy.field_controls.save_returned_error',
+      {
+        status: 500,
+        hasReturnedError: true,
+      }
     );
-    expect(toastErrorMock).toHaveBeenCalledWith('Failed to save privacy settings');
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
+      'privacy_field_controls_save_request_failed'
+    );
+    expect(toastErrorMock).toHaveBeenCalledWith('Privacy settings were not saved', {
+      description:
+        'Your visibility choices were not saved. They are still selected here; retry before leaving this page.',
+    });
 
     fireEvent.click(within(alert).getByRole('button', { name: 'Retry save' }));
 

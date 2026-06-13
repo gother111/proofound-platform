@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api/fetch';
-import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 type VisibilityLevel = 'public' | 'network' | 'private' | 'hidden';
 
@@ -148,6 +148,27 @@ interface FieldVisibilityControlsProps {
   userId: string;
 }
 
+const PRIVACY_FIELD_CONTROLS_LOAD_FAILED_TITLE = 'Privacy field controls could not load';
+const PRIVACY_FIELD_CONTROLS_LOAD_FAILED_MESSAGE =
+  'Your saved privacy choices could not be loaded. Retry before changing field visibility.';
+const PRIVACY_FIELD_CONTROLS_SAVE_FAILED_TITLE = 'Privacy settings were not saved';
+const PRIVACY_FIELD_CONTROLS_SAVE_FAILED_MESSAGE =
+  'Your visibility choices were not saved. They are still selected here; retry before leaving this page.';
+
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function hasReturnedError(payload: unknown) {
+  return Boolean(
+    payload &&
+      typeof payload === 'object' &&
+      'error' in payload &&
+      typeof payload.error === 'string' &&
+      payload.error.trim().length > 0
+  );
+}
+
 export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps) {
   const [fieldVisibility, setFieldVisibility] = useState<Record<string, VisibilityLevel>>({});
   const [redactMode, setRedactMode] = useState(false);
@@ -162,30 +183,26 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
       setIsLoading(true);
       setLoadError(null);
       const response = await apiFetch('/api/user/privacy-settings');
+      const data = (await response.json().catch(() => null)) as {
+        fieldVisibility?: Record<string, VisibilityLevel>;
+        redactMode?: boolean;
+      } | null;
 
       if (!response.ok) {
-        let message = 'Privacy settings request failed';
-        try {
-          const data = await response.json();
-          if (typeof data?.error === 'string' && data.error.trim()) {
-            message = data.error;
-          }
-        } catch {
-          // Keep the generic diagnostic message if the response body is not JSON.
-        }
-        throw new Error(message);
+        dispatchClientDiagnostic('privacy.field_controls.load_returned_error', {
+          status: getResponseStatus(response),
+          hasReturnedError: hasReturnedError(data),
+        });
+        throw new Error('privacy_field_controls_load_request_failed');
       }
 
-      const data = await response.json();
-      setFieldVisibility(data.fieldVisibility || {});
-      setRedactMode(data.redactMode || false);
+      setFieldVisibility(data?.fieldVisibility || {});
+      setRedactMode(data?.redactMode || false);
     } catch (error) {
       dispatchClientErrorDiagnostic('privacy.field_controls.load_failed', error);
-      setLoadError(
-        'Your saved privacy choices could not be loaded. Retry before changing field visibility.'
-      );
-      toast.error('Failed to load privacy settings', {
-        description: 'Retry before changing field visibility.',
+      setLoadError(PRIVACY_FIELD_CONTROLS_LOAD_FAILED_MESSAGE);
+      toast.error(PRIVACY_FIELD_CONTROLS_LOAD_FAILED_TITLE, {
+        description: PRIVACY_FIELD_CONTROLS_LOAD_FAILED_MESSAGE,
       });
     } finally {
       setIsLoading(false);
@@ -232,28 +249,24 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
           redactMode,
         }),
       });
+      const payload = await response.json().catch(() => null);
 
       if (!response.ok) {
-        let message = 'Privacy settings save request failed';
-        try {
-          const data = await response.json();
-          if (typeof data?.error === 'string' && data.error.trim()) {
-            message = data.error;
-          }
-        } catch {
-          // Keep the generic diagnostic message if the response body is not JSON.
-        }
-        throw new Error(message);
+        dispatchClientDiagnostic('privacy.field_controls.save_returned_error', {
+          status: getResponseStatus(response),
+          hasReturnedError: hasReturnedError(payload),
+        });
+        throw new Error('privacy_field_controls_save_request_failed');
       }
 
       setSaveError(null);
       toast.success('Privacy settings saved successfully');
     } catch (error) {
       dispatchClientErrorDiagnostic('privacy.field_controls.save_failed', error);
-      setSaveError(
-        'Your visibility choices were not saved. They are still selected here; retry before leaving this page.'
-      );
-      toast.error('Failed to save privacy settings');
+      setSaveError(PRIVACY_FIELD_CONTROLS_SAVE_FAILED_MESSAGE);
+      toast.error(PRIVACY_FIELD_CONTROLS_SAVE_FAILED_TITLE, {
+        description: PRIVACY_FIELD_CONTROLS_SAVE_FAILED_MESSAGE,
+      });
     } finally {
       setIsSaving(false);
     }
@@ -327,7 +340,7 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
           <div className="min-w-0 flex-1 space-y-3">
             <div>
               <h3 className="font-semibold text-[#92400E] dark:text-yellow-100">
-                Privacy field controls could not load
+                {PRIVACY_FIELD_CONTROLS_LOAD_FAILED_TITLE}
               </h3>
               <p className="mt-1 text-sm text-[#92400E] dark:text-yellow-200">{loadError}</p>
             </div>
@@ -562,7 +575,7 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
               <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-[#D97706]" />
               <div className="space-y-1">
                 <h3 className="font-semibold text-[#92400E] dark:text-yellow-100">
-                  Privacy settings were not saved
+                  {PRIVACY_FIELD_CONTROLS_SAVE_FAILED_TITLE}
                 </h3>
                 <p className="text-sm text-[#92400E] dark:text-yellow-200">{saveError}</p>
               </div>

@@ -337,7 +337,9 @@ describe('runtime debug output guardrails', () => {
     expect(sources).toContain('errorName: clientErrorName(error)');
     expect(sources).toContain('privacy.redact_mode.toggle_failed');
     expect(sources).toContain('privacy.visibility_modal.user_load_failed');
+    expect(sources).toContain('privacy.field_controls.load_returned_error');
     expect(sources).toContain('privacy.field_controls.load_failed');
+    expect(sources).toContain('privacy.field_controls.save_returned_error');
     expect(sources).toContain('privacy.field_controls.save_failed');
     expect(sources).toContain('FIRST_PROOF_SAFE_UPLOAD_ERRORS');
     expect(sources).toContain('proofs.first_proof.upload_returned_error');
