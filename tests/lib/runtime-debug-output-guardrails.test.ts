@@ -313,6 +313,7 @@ describe('runtime debug output guardrails', () => {
 
   it('keeps active decision, proof, profile privacy, and share diagnostics off raw console output', () => {
     const decisionSource = readSource('src/components/decisions/DecisionDialog.tsx');
+    const shareDialogSource = readSource('src/components/profile/ShareProfileDialog.tsx');
     const sources = [
       decisionSource,
       readSource('src/components/privacy/RedactModeToggle.tsx'),
@@ -320,7 +321,7 @@ describe('runtime debug output guardrails', () => {
       readSource('src/components/privacy/FieldVisibilityControls.tsx'),
       readSource('src/components/proofs/FirstProofDialog.tsx'),
       readSource('src/components/profile/AvatarUpload.tsx'),
-      readSource('src/components/profile/ShareProfileDialog.tsx'),
+      shareDialogSource,
       readSource('src/components/profile/PrivacySettings.tsx'),
       readSource('src/components/profile/forms/ImpactStoryForm.tsx'),
       readSource('src/components/profile/editable-profile/ProfileHeroSection.tsx'),
@@ -381,6 +382,7 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Failed to save proof. Please try again.');
     expect(sources).not.toContain('Image compression failed:');
     expect(sources).not.toContain('profile.snippet.generate.failed');
+    expect(shareDialogSource).not.toContain('error: error instanceof Error ? error.message');
     expect(sources).not.toContain('Failed to load privacy summary feature flag');
     expect(sources).not.toContain('Failed to load privacy settings:');
     expect(sources).not.toContain("error: result.error || result.message || 'Upload failed'");

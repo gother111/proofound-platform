@@ -206,8 +206,10 @@ describe('ShareProfileDialog', () => {
     expect(screen.getByRole('button', { name: /generate shareable link/i })).toBeEnabled();
     expect(screen.queryByDisplayValue(/http:\/\/\[/)).not.toBeInTheDocument();
     expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith('profile.snippet.generate_failed', {
-      error: expect.stringContaining('Invalid URL'),
+      errorName: 'TypeError',
+      hasError: true,
     });
+    expect(JSON.stringify(dispatchClientDiagnosticMock.mock.calls)).not.toContain('Invalid URL');
     expect(toastMock).toHaveBeenCalledWith(
       expect.objectContaining({
         title: 'Share link not created',

@@ -127,6 +127,14 @@ const SHARE_LINK_RETRY_COPY: Record<ProfileType, string> = {
     'Organization Trust Page link could not be created. Your sharing options are still here; please try again.',
 };
 
+function clientErrorName(error: unknown) {
+  if (error instanceof Error && error.name.trim()) {
+    return error.name;
+  }
+
+  return 'UnknownError';
+}
+
 export function ShareProfileDialog({
   isOpen,
   onClose,
@@ -209,7 +217,8 @@ export function ShareProfileDialog({
       });
     } catch (error) {
       dispatchClientDiagnostic('profile.snippet.generate_failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+        errorName: clientErrorName(error),
+        hasError: true,
       });
       setGenerationError(SHARE_LINK_RETRY_COPY[profileType]);
       toast({
