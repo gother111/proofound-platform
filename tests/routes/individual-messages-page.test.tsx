@@ -220,10 +220,11 @@ describe('individual messages page', () => {
     fireEvent.click(await screen.findByRole('button', { name: /Organization A/i }));
 
     const alert = await screen.findByRole('alert');
-    expect(alert).toHaveTextContent('Thread messages could not load');
+    expect(alert).toHaveTextContent('Conversation messages could not load');
     expect(alert).toHaveTextContent(
       'This thread did not finish loading. Your messages, reveal requests, and privacy state are still safe; retry before replying.'
     );
+    expect(alert).not.toHaveTextContent('Assignment thread messages could not load');
     expect(screen.queryByTestId('message-thread')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Retry thread messages' }));

@@ -328,6 +328,7 @@ function OrganizationMessagesPageContent({ currentUserId, hideHeader }: OrgMessa
           ) : selectedConversation && messageLoadError ? (
             <MessageThreadLoadFailure
               description={messageLoadError}
+              title="Assignment thread messages could not load"
               isRetrying={isLoadingMessages}
               onBack={handleBackToConversationList}
               onRetry={() => {

@@ -265,10 +265,11 @@ describe('organization messages page', () => {
     render(<OrgMessagesClient currentUserId="user-1" />);
 
     const alert = await screen.findByRole('alert');
-    expect(alert).toHaveTextContent('Thread messages could not load');
+    expect(alert).toHaveTextContent('Assignment thread messages could not load');
     expect(alert).toHaveTextContent(
       'This assignment thread did not finish loading. Messages, reveal requests, and review context are still safe; retry before replying.'
     );
+    expect(alert).not.toHaveTextContent('Conversation messages could not load');
     expect(screen.queryByTestId('message-thread')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Retry thread messages' }));

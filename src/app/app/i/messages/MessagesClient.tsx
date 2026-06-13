@@ -318,6 +318,7 @@ function MessagesPageContent() {
         ) : selectedConversation && messageLoadError ? (
           <MessageThreadLoadFailure
             description={messageLoadError}
+            title="Conversation messages could not load"
             isRetrying={isLoadingMessages}
             onBack={handleBackToConversationList}
             onRetry={() => {

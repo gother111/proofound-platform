@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 
 type MessageThreadLoadFailureProps = {
   description: string;
+  title?: string;
   isRetrying?: boolean;
   onBack?: () => void;
   onRetry: () => void;
@@ -12,6 +13,7 @@ type MessageThreadLoadFailureProps = {
 
 export function MessageThreadLoadFailure({
   description,
+  title = 'Thread messages could not load',
   isRetrying = false,
   onBack,
   onRetry,
@@ -38,9 +40,7 @@ export function MessageThreadLoadFailure({
         <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#fff1d6] text-[#8a5b00]">
           <AlertTriangle className="h-5 w-5" />
         </div>
-        <p className="font-display text-xl font-semibold text-proofound-charcoal">
-          Thread messages could not load
-        </p>
+        <p className="font-display text-xl font-semibold text-proofound-charcoal">{title}</p>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">{description}</p>
         <p className="mt-3 inline-flex items-center gap-2 text-xs font-medium text-proofound-charcoal/70">
           <ShieldCheck className="h-3.5 w-3.5" />
