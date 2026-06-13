@@ -31,7 +31,7 @@ import {
 } from '@/lib/interviews/calendar';
 import { apiFetch } from '@/lib/api/fetch';
 import { internalValueLabel } from '@/lib/copy/labels';
-import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import type { HiringCorridorSnapshot } from '@/lib/hiring-corridor/snapshot';
 import { toast } from 'sonner';
 
@@ -79,6 +79,26 @@ type WorkflowActionFeedback = {
 
 const ENGAGEMENT_CONFIRMATION_FAILED_MESSAGE =
   'Engagement confirmation could not be recorded. Your interview workflow is unchanged; retry before moving on.';
+
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function getReturnedError(payload: unknown) {
+  if (!payload || typeof payload !== 'object') {
+    return '';
+  }
+
+  if ('error' in payload && typeof payload.error === 'string') {
+    return payload.error.trim();
+  }
+
+  if ('message' in payload && typeof payload.message === 'string') {
+    return payload.message.trim();
+  }
+
+  return '';
+}
 
 export default function IndividualInterviewsPage() {
   const [interviews, setInterviews] = useState<Interview[]>([]);
@@ -196,12 +216,14 @@ export default function IndividualInterviewsPage() {
         }),
       });
 
-      const payload = await response.json();
+      const payload = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(
-          payload.error ||
-            'Engagement confirmation could not be recorded. Your interview workflow is unchanged.'
-        );
+        const returnedError = getReturnedError(payload);
+        dispatchClientDiagnostic('interviews.individual.engagement_confirm_returned_error', {
+          status: getResponseStatus(response),
+          hasReturnedError: returnedError.length > 0,
+        });
+        throw new Error('individual_engagement_confirmation_request_failed');
       }
 
       toast.success('Engagement confirmation recorded');

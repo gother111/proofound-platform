@@ -5,7 +5,8 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import InterviewsPage from '@/app/app/i/interviews/IndividualInterviewsPage';
 import { __resetCsrfCacheForTests } from '@/lib/api/fetch';
 
-const { dispatchClientErrorDiagnosticMock } = vi.hoisted(() => ({
+const { dispatchClientDiagnosticMock, dispatchClientErrorDiagnosticMock } = vi.hoisted(() => ({
+  dispatchClientDiagnosticMock: vi.fn(),
   dispatchClientErrorDiagnosticMock: vi.fn(),
 }));
 
@@ -16,6 +17,7 @@ vi.mock('@/app/actions/interviews', () => ({
 }));
 
 vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientDiagnostic: (...args: unknown[]) => dispatchClientDiagnosticMock(...args),
   dispatchClientErrorDiagnostic: (...args: unknown[]) => dispatchClientErrorDiagnosticMock(...args),
 }));
 
@@ -292,6 +294,7 @@ describe('individual interviews page clarity', () => {
           if (engagementPatchCount === 1) {
             return {
               ok: false,
+              status: 409,
               json: async () => ({
                 error: 'Engagement confirmation is temporarily unavailable.',
               }),
@@ -329,11 +332,24 @@ describe('individual interviews page clarity', () => {
       'Your interview workflow is unchanged; retry before moving on.'
     );
     expect(alert).not.toHaveTextContent('Engagement confirmation is temporarily unavailable.');
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
+      'interviews.individual.engagement_confirm_returned_error',
+      {
+        status: 409,
+        hasReturnedError: true,
+      }
+    );
     expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
       'interviews.individual.engagement_confirm_failed',
       expect.any(Error)
     );
     expect(getDiagnosticErrorMessage('interviews.individual.engagement_confirm_failed')).toBe(
+      'individual_engagement_confirmation_request_failed'
+    );
+    expect(JSON.stringify(dispatchClientDiagnosticMock.mock.calls)).not.toContain(
+      'Engagement confirmation is temporarily unavailable.'
+    );
+    expect(JSON.stringify(dispatchClientErrorDiagnosticMock.mock.calls)).not.toContain(
       'Engagement confirmation is temporarily unavailable.'
     );
     expect(screen.getByLabelText('Engagement type')).toHaveValue('full_time');

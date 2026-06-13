@@ -814,6 +814,7 @@ describe('runtime debug output guardrails', () => {
 
     expect(sources).toContain('proofound:client-diagnostic');
     expect(sources).toContain('interviews.individual.load_failed');
+    expect(sources).toContain('interviews.individual.engagement_confirm_returned_error');
     expect(sources).toContain('interviews.individual.engagement_confirm_failed');
     expect(sources).toContain('interviews.organization.load_failed');
     expect(sources).toContain('interviews.organization.edit_returned_error');
@@ -835,6 +836,9 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain("throw new Error(payload.error || 'Failed to mark no-show')");
     expect(sources).not.toContain(
       "throw new Error(payload.error || 'Failed to confirm engagement')"
+    );
+    expect(sources).not.toContain(
+      "payload.error ||\n            'Engagement confirmation could not be recorded. Your interview workflow is unchanged.'"
     );
   });
 
