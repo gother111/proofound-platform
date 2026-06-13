@@ -11,6 +11,10 @@ import {
   verifyExplicitAssignmentAccess,
   verifyExplicitAssignmentMutationAccess,
 } from '@/lib/assignments/access';
+import {
+  getVisualAssignmentFixtureById,
+  visualAssignmentFixturesEnabled,
+} from '@/lib/assignments/visual-fixtures';
 
 export const dynamic = 'force-dynamic';
 
@@ -85,6 +89,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     const validatedMatrix = ExpertiseMatrixArraySchema.parse(body.expertiseMatrix);
+
+    if (visualAssignmentFixturesEnabled() && access.orgId) {
+      const visualAssignment = getVisualAssignmentFixtureById(assignmentId, access.orgId);
+      if (visualAssignment) {
+        return NextResponse.json({ success: true, count: validatedMatrix.length });
+      }
+    }
 
     // Delete existing expertise matrix entries for this assignment
     await db
@@ -169,6 +180,20 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const accessResponse = assignmentAccessResponse(access);
     if (accessResponse) {
       return accessResponse;
+    }
+
+    if (visualAssignmentFixturesEnabled() && access.orgId) {
+      const visualAssignment = getVisualAssignmentFixtureById(assignmentId, access.orgId);
+      if (visualAssignment) {
+        return NextResponse.json({
+          expertiseMatrix: visualAssignment.mustHaveSkills.map((skill) => ({
+            assignmentId,
+            skillCode: skill.id,
+            requiredLevel: skill.level,
+            stakeholderRole: 'must',
+          })),
+        });
+      }
     }
 
     const matrix = await db.query.assignmentExpertiseMatrix.findMany({

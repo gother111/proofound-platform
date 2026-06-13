@@ -5,6 +5,7 @@ export const VISUAL_ASSIGNMENT_FIXTURE_IDS = new Set([
   '22222222-2222-4222-8222-222222222222',
 ]);
 
+export const VISUAL_ASSIGNMENT_MUTATION_DRAFT_ID = '22222222-2222-4222-8222-222222222222';
 export const VISUAL_ASSIGNMENT_MOCK_ORG_ID = '99999999-9999-4999-9999-999999999999';
 
 export type VisualAssignmentFixture = {
@@ -191,5 +192,57 @@ export function buildVisualAssignmentDetailResponse(fixture: VisualAssignmentFix
     status: fixture.status,
     creationStatus: fixture.creationStatus,
     builderMode: fixture.builderMode,
+  };
+}
+
+function readTextField(payload: Record<string, unknown>, ...keys: string[]) {
+  for (const key of keys) {
+    const value = payload[key];
+    if (typeof value === 'string') {
+      return value;
+    }
+  }
+
+  return '';
+}
+
+function readStringArray(payload: Record<string, unknown>, key: string) {
+  const value = payload[key];
+  return Array.isArray(value) ? value : [];
+}
+
+export function buildVisualAssignmentMutationResponse(
+  assignmentId: string,
+  orgId: string,
+  payload: Record<string, unknown>
+) {
+  const fallbackFixture =
+    getVisualAssignmentFixtureById(assignmentId, orgId) ??
+    getVisualAssignmentFixtureById(VISUAL_ASSIGNMENT_MUTATION_DRAFT_ID, orgId);
+  const fallback = fallbackFixture
+    ? buildVisualAssignmentDetailResponse(fallbackFixture)
+    : buildVisualAssignmentDetailResponse(buildVisualAssignmentFixtures(orgId)[1]);
+
+  return {
+    ...fallback,
+    id: assignmentId,
+    orgId,
+    title: readTextField(payload, 'title', 'role') || fallback.title,
+    role: readTextField(payload, 'title', 'role') || fallback.role,
+    engagementType: readTextField(payload, 'engagementType') || fallback.engagementType,
+    rolePurpose: readTextField(payload, 'rolePurpose', 'businessValue') || fallback.rolePurpose,
+    businessValue: readTextField(payload, 'rolePurpose', 'businessValue') || fallback.businessValue,
+    workSummary: readTextField(payload, 'description') || fallback.workSummary,
+    description: readTextField(payload, 'description') || fallback.description,
+    proofExpectations:
+      readTextField(payload, 'proofExpectations', 'expectedImpact') || fallback.proofExpectations,
+    expectedImpact:
+      readTextField(payload, 'proofExpectations', 'expectedImpact') || fallback.expectedImpact,
+    mustHaveSkills: readStringArray(payload, 'mustHaveSkills'),
+    requiredSkills: readStringArray(payload, 'mustHaveSkills'),
+    niceToHaveSkills: readStringArray(payload, 'niceToHaveSkills'),
+    status: readTextField(payload, 'status') || 'draft',
+    creationStatus: readTextField(payload, 'creationStatus') || 'draft',
+    updatedAt: new Date().toISOString(),
   };
 }

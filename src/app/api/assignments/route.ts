@@ -30,6 +30,8 @@ import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
 import { isFeatureEnabled } from '@/lib/feature-flags/server';
 import {
   buildVisualAssignmentFixtures,
+  buildVisualAssignmentMutationResponse,
+  VISUAL_ASSIGNMENT_MUTATION_DRAFT_ID,
   visualAssignmentFixturesEnabled,
 } from '@/lib/assignments/visual-fixtures';
 import { getMatchingVisualState } from '@/lib/matching/visual-fixtures';
@@ -465,6 +467,19 @@ export async function POST(request: NextRequest) {
           'Organization not found or access denied',
           403,
           'Only active organization managers or owners can create assignments.'
+        );
+      }
+
+      if (visualAssignmentFixturesEnabled()) {
+        return NextResponse.json(
+          {
+            assignment: buildVisualAssignmentMutationResponse(
+              VISUAL_ASSIGNMENT_MUTATION_DRAFT_ID,
+              orgId,
+              validatedData
+            ),
+          },
+          { status: 201 }
         );
       }
 

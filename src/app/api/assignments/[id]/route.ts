@@ -25,6 +25,7 @@ import { log } from '@/lib/log';
 import { sanitizeErrorForLog } from '@/lib/privacy/log-redaction';
 import {
   buildVisualAssignmentDetailResponse,
+  buildVisualAssignmentMutationResponse,
   getVisualAssignmentFixtureById,
   visualAssignmentFixturesEnabled,
 } from '@/lib/assignments/visual-fixtures';
@@ -335,6 +336,19 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     if (!targetAssignmentId) {
       return NextResponse.json({ error: 'Invalid assignment id' }, { status: 400 });
+    }
+
+    if (visualAssignmentFixturesEnabled() && access.orgId) {
+      const visualAssignment = getVisualAssignmentFixtureById(targetAssignmentId, access.orgId);
+      if (visualAssignment) {
+        return NextResponse.json({
+          assignment: buildVisualAssignmentMutationResponse(
+            targetAssignmentId,
+            access.orgId,
+            validatedData
+          ),
+        });
+      }
     }
 
     const shouldSyncMatrix =

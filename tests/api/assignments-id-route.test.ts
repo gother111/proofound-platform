@@ -133,6 +133,48 @@ describe('assignment [id] mutation routes', () => {
     expect(db.query.assignments.findFirst).not.toHaveBeenCalled();
   });
 
+  it('serves visual fixture assignment updates without touching persistence', async () => {
+    vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'true');
+    vi.stubEnv('PROOFOUND_VISUAL_FIXTURES', 'true');
+    (verifyExplicitAssignmentMutationAccess as any).mockResolvedValue({
+      status: 'ok',
+      orgId: '99999999-9999-4999-9999-999999999999',
+      role: 'org_manager',
+      membershipId: 'visual-assignment-membership',
+    });
+
+    const req = new NextRequest(
+      'http://localhost/api/assignments/22222222-2222-4222-8222-222222222222',
+      {
+        method: 'PUT',
+        body: JSON.stringify({
+          orgSlug: 'test-org',
+          title: 'Updated visual draft',
+          rolePurpose: 'Keep visual assignment QA writable without persistence.',
+          status: 'draft',
+          creationStatus: 'assignment_ready',
+          mustHaveSkills: [{ id: 'program-operations', label: 'Program operations', level: 4 }],
+        }),
+      }
+    );
+
+    const res = await PUT(req, {
+      params: Promise.resolve({ id: '22222222-2222-4222-8222-222222222222' }),
+    });
+    const payload = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(payload.assignment).toMatchObject({
+      id: '22222222-2222-4222-8222-222222222222',
+      orgId: '99999999-9999-4999-9999-999999999999',
+      role: 'Updated visual draft',
+      businessValue: 'Keep visual assignment QA writable without persistence.',
+      creationStatus: 'assignment_ready',
+    });
+    expect(db.transaction).not.toHaveBeenCalled();
+    expect(checkAndEmitAssignmentActivation).not.toHaveBeenCalled();
+  });
+
   it('GET returns an assignment for active members with explicit organization context', async () => {
     (verifyExplicitAssignmentAccess as any).mockResolvedValue({
       status: 'ok',

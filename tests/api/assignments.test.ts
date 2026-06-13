@@ -179,6 +179,43 @@ describe('Assignment API', () => {
       expect(db.insert).toHaveBeenCalled();
     });
 
+    it('serves visual fixture assignment creates without touching persistence', async () => {
+      vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'true');
+      vi.stubEnv('PROOFOUND_VISUAL_FIXTURES', 'true');
+      (requireAuth as any).mockResolvedValue({
+        id: '88888888-8888-4888-8888-888888888888',
+      });
+
+      const req = new NextRequest('http://localhost/api/assignments', {
+        method: 'POST',
+        body: JSON.stringify({
+          orgSlug: 'test-org',
+          title: 'Operations pilot lead',
+          rolePurpose: 'Turn pilot work into clear weekly launch decisions.',
+          description: 'Run readiness reviews and publish proof-backed launch notes.',
+          proofExpectations: 'Show rollout ownership and measured handoff decisions.',
+          status: 'draft',
+          creationStatus: 'draft',
+          mustHaveSkills: [{ id: 'program-operations', label: 'Program operations', level: 4 }],
+        }),
+      });
+
+      const res = await POST(req);
+      const data = await res.json();
+
+      expect(res.status).toBe(201);
+      expect(data.assignment).toMatchObject({
+        id: '22222222-2222-4222-8222-222222222222',
+        orgId: '99999999-9999-4999-9999-999999999999',
+        role: 'Operations pilot lead',
+        businessValue: 'Turn pilot work into clear weekly launch decisions.',
+        status: 'draft',
+        creationStatus: 'draft',
+      });
+      expect(db.query.organizationMembers.findFirst).not.toHaveBeenCalled();
+      expect(db.transaction).not.toHaveBeenCalled();
+    });
+
     it('returns a generic production response when assignment persistence fails', async () => {
       vi.stubEnv('NODE_ENV', 'production');
       (db.query.organizationMembers.findFirst as any).mockResolvedValue({

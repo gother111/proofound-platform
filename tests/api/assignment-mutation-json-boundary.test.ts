@@ -62,6 +62,7 @@ import { db } from '@/db';
 describe('assignment mutation JSON boundaries', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllEnvs();
     mocks.requireApiAuthContext.mockResolvedValue({
       user: { id: 'user-1' },
     });
@@ -95,5 +96,75 @@ describe('assignment mutation JSON boundaries', () => {
     await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
     expect(mocks.verifyExplicitAssignmentMutationAccess).not.toHaveBeenCalled();
     expect(db.delete).not.toHaveBeenCalled();
+  });
+
+  it('serves visual fixture outcome saves without touching persistence', async () => {
+    vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'true');
+    vi.stubEnv('PROOFOUND_VISUAL_FIXTURES', 'true');
+    mocks.verifyExplicitAssignmentMutationAccess.mockResolvedValue({
+      status: 'ok',
+      orgId: '99999999-9999-4999-9999-999999999999',
+      role: 'org_manager',
+      membershipId: 'visual-assignment-membership',
+    });
+
+    const response = await saveOutcomes(
+      new NextRequest(
+        'http://localhost/api/assignments/22222222-2222-4222-8222-222222222222/outcomes?orgSlug=test-org',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            outcomes: [
+              {
+                outcomeType: 'continuous',
+                title: 'Readiness notes published',
+                description: 'Target: weekly notes in 30 days',
+                metrics: [{ name: 'Notes', target: '4', unit: 'count' }],
+              },
+            ],
+          }),
+        }
+      ),
+      { params: Promise.resolve({ id: '22222222-2222-4222-8222-222222222222' }) }
+    );
+
+    await expect(response.json()).resolves.toEqual({ success: true, count: 1 });
+    expect(response.status).toBe(200);
+    expect(db.delete).not.toHaveBeenCalled();
+  });
+
+  it('serves visual fixture expertise saves without touching persistence', async () => {
+    vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'true');
+    vi.stubEnv('PROOFOUND_VISUAL_FIXTURES', 'true');
+    mocks.verifyExplicitAssignmentMutationAccess.mockResolvedValue({
+      status: 'ok',
+      orgId: '99999999-9999-4999-9999-999999999999',
+      role: 'org_manager',
+      membershipId: 'visual-assignment-membership',
+    });
+
+    const response = await saveExpertiseMatrix(
+      new NextRequest(
+        'http://localhost/api/assignments/22222222-2222-4222-8222-222222222222/expertise-matrix?orgSlug=test-org',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            expertiseMatrix: [
+              {
+                skillCode: 'program-operations',
+                requiredLevel: 4,
+                stakeholderRole: 'must',
+              },
+            ],
+          }),
+        }
+      ),
+      { params: Promise.resolve({ id: '22222222-2222-4222-8222-222222222222' }) }
+    );
+
+    await expect(response.json()).resolves.toEqual({ success: true, count: 1 });
+    expect(response.status).toBe(200);
+    expect(db.delete).not.toHaveBeenCalled();
+    expect(db.update).not.toHaveBeenCalled();
   });
 });
