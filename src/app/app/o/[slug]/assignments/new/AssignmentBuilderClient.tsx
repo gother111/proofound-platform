@@ -112,6 +112,8 @@ const DRAFT_SAVE_FAILED_MESSAGE =
   'Your changes are still on this page. Retry the draft save before moving on.';
 const REVIEW_SAVE_FAILED_MESSAGE =
   'Your draft is still on this page. Retry before leaving for internal review.';
+const AUTO_SAVE_FAILED_MESSAGE =
+  'Auto-save did not finish. Your draft is still on this page; use Next to save before leaving.';
 const JOB_DESCRIPTION_IMPORT_CHECKLIST = [
   'Role title and why this assignment matters',
   'Main workstreams or first outcomes',
@@ -162,6 +164,7 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
   const [isSaving, setIsSaving] = useState(false);
   const [isHydratingDraft, setIsHydratingDraft] = useState(Boolean(draftId));
   const [workflowFeedback, setWorkflowFeedback] = useState<AssignmentWorkflowFeedback | null>(null);
+  const [autoSaveFeedback, setAutoSaveFeedback] = useState<string | null>(null);
   const [assignmentId, setAssignmentId] = useState<string | null>(null);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [orgId, setOrgId] = useState<string | null>(null);
@@ -211,6 +214,7 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
       setHasHydratedDraft(false);
       setIsHydratingDraft(false);
       setWorkflowFeedback(null);
+      setAutoSaveFeedback(null);
       setImportedDraftNotice(null);
     }
 
@@ -584,8 +588,10 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
         try {
           const persisted = await persistDraft();
           await syncRelatedData(persisted.assignmentId);
+          setAutoSaveFeedback(null);
         } catch (error) {
           dispatchClientErrorDiagnostic('assignment_builder.client.auto_save_failed', error);
+          setAutoSaveFeedback(AUTO_SAVE_FAILED_MESSAGE);
         }
       })();
     }, 30000);
@@ -605,6 +611,7 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
         creationStatus: 'draft',
       });
       await syncRelatedData(persisted.assignmentId);
+      setAutoSaveFeedback(null);
       setCurrentStep((step) => Math.min(step + 1, 4));
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
@@ -639,6 +646,7 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
         creationStatus: 'review_ready',
       });
       await syncRelatedData(persisted.assignmentId);
+      setAutoSaveFeedback(null);
       toast.success('Assignment saved for internal review');
       router.push(`/app/o/${slug}/assignments/${persisted.assignmentId}/review`);
     } catch (error) {
@@ -835,6 +843,7 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
                       setEntryMode('scratch');
                       setJobDescriptionImportError(null);
                       setWorkflowFeedback(null);
+                      setAutoSaveFeedback(null);
                     }}
                   >
                     <PencilLine className="mr-2 h-4 w-4" />
@@ -847,6 +856,7 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
                     onClick={() => {
                       setEntryMode('import');
                       setWorkflowFeedback(null);
+                      setAutoSaveFeedback(null);
                     }}
                   >
                     <FileText className="mr-2 h-4 w-4" />
@@ -1041,6 +1051,11 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
                   <span className="ml-2 text-muted-foreground">• Saving review draft…</span>
                 ) : null}
               </p>
+              {autoSaveFeedback ? (
+                <p className="mt-2 text-amber-700" role="status" aria-live="polite">
+                  {autoSaveFeedback}
+                </p>
+              ) : null}
             </div>
           </>
         ) : null}

@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import AssignmentBuilderPage from '@/app/app/o/[slug]/assignments/new/page';
+import AssignmentBuilderClient from '@/app/app/o/[slug]/assignments/new/AssignmentBuilderClient';
 import { __resetCsrfCacheForTests } from '@/lib/api/fetch';
 
 let mockDraftId: string | null = null;
@@ -718,5 +719,56 @@ Full-time
     expect(
       fetchMock.mock.calls.some(([, init]) => init && (init as RequestInit).method === 'PUT')
     ).toBe(false);
+  });
+
+  it('surfaces auto-save failures without blocking the current draft', async () => {
+    vi.useFakeTimers();
+    mockDraftId = 'draft-1';
+
+    setupFetch({
+      failDraftSaveOnce: true,
+      draftAssignment: {
+        id: 'draft-1',
+        orgId: 'org-1',
+        role: 'Founding operator',
+        businessValue: 'Tighten proof quality',
+        description: 'Run the day-to-day assignment and review loop.',
+        expectedImpact: '',
+        outcomes: [],
+        requiredSkills: [],
+      },
+    });
+
+    render(<AssignmentBuilderClient slug="acme" />);
+
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(screen.getByText('Step 2 content')).toBeInTheDocument();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(30000);
+    });
+
+    expect(screen.getByRole('status')).toHaveTextContent('Auto-save did not finish');
+    expect(screen.getByRole('status')).toHaveTextContent('use Next to save before leaving');
+    expect(screen.getByText('Step 2 content')).toBeInTheDocument();
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'assignment_builder.client.auto_save_failed',
+      expect.any(Error)
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'next-step-2' }));
+
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(screen.getByText('Step 3 content')).toBeInTheDocument();
+    expect(screen.queryByText(/Auto-save did not finish/i)).not.toBeInTheDocument();
   });
 });
