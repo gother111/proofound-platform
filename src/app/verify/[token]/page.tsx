@@ -203,8 +203,16 @@ const VERIFICATION_RESPONSE_RETRY_MESSAGE =
 function verificationSubmitError(error?: string | null) {
   const normalized = error?.trim();
 
-  if (normalized && !/^Failed to submit response\.?$/i.test(normalized)) {
-    return normalized;
+  if (!normalized || /^Failed to submit response\.?$/i.test(normalized)) {
+    return VERIFICATION_RESPONSE_RETRY_MESSAGE;
+  }
+
+  if (/auth|required|identity|sign.?in/i.test(normalized)) {
+    return 'Sign in with the invited verifier email before submitting this response.';
+  }
+
+  if (/invalid|expired|not found|unavailable/i.test(normalized)) {
+    return 'This verification request is invalid, expired, or no longer available.';
   }
 
   return VERIFICATION_RESPONSE_RETRY_MESSAGE;

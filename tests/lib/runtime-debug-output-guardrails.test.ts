@@ -580,6 +580,9 @@ describe('runtime debug output guardrails', () => {
     expect(pageSources).not.toContain('function clientVisualVerificationEnabled()');
     expect(pageSources).not.toContain("setMessage(data.error || 'Failed to verify work email')");
     expect(pageSources).not.toContain(
+      'if (normalized && !/^Failed to submit response\\\\.?$/i.test(normalized))'
+    );
+    expect(pageSources).not.toContain(
       "dispatchClientErrorDiagnostic(\n    'verification.work_email_verify.returned_error'"
     );
     expect(pageSources).not.toContain(
