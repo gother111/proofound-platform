@@ -89,6 +89,31 @@ describe('public portfolio action feedback', () => {
     expect(alertSpy).not.toHaveBeenCalled();
   });
 
+  it('keeps fetched proof-summary text available when clipboard copy fails', async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response('Jane Doe\nProof Pack: Strategy delivery\nScoped public summary', {
+        status: 200,
+      })
+    );
+    clipboardWriteText.mockRejectedValueOnce(new Error('Clipboard unavailable'));
+
+    render(<CopyTextButton endpoint="/api/public-summary" />);
+
+    fireEvent.click(screen.getByRole('button', { name: /copy proof summary/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Proof summary could not be copied. Try again.'
+    );
+    expect(screen.getByLabelText('Proof summary for manual copy')).toHaveValue(
+      'Jane Doe\nProof Pack: Strategy delivery\nScoped public summary'
+    );
+    expect(dispatchClientErrorDiagnostic).toHaveBeenCalledWith(
+      'portfolio.public_text_pack.copy_failed',
+      expect.any(Error)
+    );
+    expect(alertSpy).not.toHaveBeenCalled();
+  });
+
   it('shows individual PDF download errors inline without a browser alert', async () => {
     fetchMock.mockResolvedValueOnce(
       new Response(JSON.stringify({ message: 'Public PDF is still being prepared.' }), {
