@@ -955,14 +955,18 @@ describe('runtime debug output guardrails', () => {
   it('keeps assignment builder client failures on client diagnostics without console output', () => {
     const source = readSource('src/app/app/o/[slug]/assignments/new/AssignmentBuilderClient.tsx');
 
-    expect(source).toContain(
-      "import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics'"
-    );
+    expect(source).toContain('dispatchClientDiagnostic');
+    expect(source).toContain('dispatchClientErrorDiagnostic');
+    expect(source).toContain('dispatchAssignmentBuilderFailure');
+    expect(source).toContain('hasReturnedError');
     expect(source).toContain('assignment_builder.client.draft_load_failed');
     expect(source).toContain('assignment_builder.client.auto_save_failed');
     expect(source).toContain('assignment_builder.client.review_save_failed');
     expect(source).not.toContain('Failed to auto-save assignment builder draft:');
     expect(source).not.toContain('Failed to save assignment:');
+    expect(source).not.toContain(
+      "errorData.message || errorData.error || 'Failed to persist assignment draft'"
+    );
   });
 
   it('keeps verification center client failures on client diagnostics without console output', () => {

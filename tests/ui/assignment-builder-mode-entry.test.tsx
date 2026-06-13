@@ -11,6 +11,7 @@ let mockDraftId: string | null = null;
 const pushMock = vi.fn();
 const toastSuccessMock = vi.fn();
 const toastErrorMock = vi.fn();
+const dispatchClientDiagnosticMock = vi.fn();
 const dispatchClientErrorDiagnosticMock = vi.fn();
 
 vi.mock('next/navigation', () => ({
@@ -31,6 +32,7 @@ vi.mock('sonner', () => ({
 }));
 
 vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientDiagnostic: (...args: unknown[]) => dispatchClientDiagnosticMock(...args),
   dispatchClientErrorDiagnostic: (...args: unknown[]) => dispatchClientErrorDiagnosticMock(...args),
 }));
 
@@ -150,6 +152,7 @@ function setupFetch({
         if (failReviewSaveOnce && reviewSaveAttempts === 1) {
           return {
             ok: false,
+            status: 503,
             json: async () => ({ message: 'Review save temporarily unavailable' }),
           };
         }
@@ -158,6 +161,7 @@ function setupFetch({
         if (failDraftSaveOnce && draftSaveAttempts === 1) {
           return {
             ok: false,
+            status: 503,
             json: async () => ({ message: 'Draft save temporarily unavailable' }),
           };
         }
@@ -185,6 +189,7 @@ function setupFetch({
         if (failOutcomesSaveOnce && outcomesSaveAttempts === 1) {
           return {
             ok: false,
+            status: 503,
             json: async () => ({ message: 'Outcome save temporarily unavailable' }),
           };
         }
@@ -425,11 +430,17 @@ Full-time
     );
     expect(alert).not.toHaveTextContent('Draft save temporarily unavailable');
     expect(screen.getByText('Step 1 content')).toBeInTheDocument();
-    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
       'assignment_builder.client.draft_save_failed',
-      expect.any(Error)
+      {
+        status: 503,
+        hasReturnedError: true,
+      }
     );
-    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
+    expect(JSON.stringify(dispatchClientDiagnosticMock.mock.calls)).not.toContain(
+      'Draft save temporarily unavailable'
+    );
+    expect(JSON.stringify(dispatchClientErrorDiagnosticMock.mock.calls)).not.toContain(
       'Draft save temporarily unavailable'
     );
 
@@ -453,11 +464,17 @@ Full-time
     expect(alert).not.toHaveTextContent('Outcome save temporarily unavailable');
     expect(screen.getByText('Step 1 content')).toBeInTheDocument();
     expect(screen.queryByText('Step 2 content')).not.toBeInTheDocument();
-    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
       'assignment_builder.client.draft_save_failed',
-      expect.any(Error)
+      {
+        status: 503,
+        hasReturnedError: true,
+      }
     );
-    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
+    expect(JSON.stringify(dispatchClientDiagnosticMock.mock.calls)).not.toContain(
+      'Outcome save temporarily unavailable'
+    );
+    expect(JSON.stringify(dispatchClientErrorDiagnosticMock.mock.calls)).not.toContain(
       'Outcome save temporarily unavailable'
     );
 
@@ -489,11 +506,17 @@ Full-time
     );
     expect(alert).not.toHaveTextContent('Review save temporarily unavailable');
     expect(pushMock).not.toHaveBeenCalled();
-    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
       'assignment_builder.client.review_save_failed',
-      expect.any(Error)
+      {
+        status: 503,
+        hasReturnedError: true,
+      }
     );
-    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
+    expect(JSON.stringify(dispatchClientDiagnosticMock.mock.calls)).not.toContain(
+      'Review save temporarily unavailable'
+    );
+    expect(JSON.stringify(dispatchClientErrorDiagnosticMock.mock.calls)).not.toContain(
       'Review save temporarily unavailable'
     );
 
@@ -797,9 +820,18 @@ Full-time
     expect(screen.getByRole('status')).toHaveTextContent('Auto-save did not finish');
     expect(screen.getByRole('status')).toHaveTextContent('use Next to save before leaving');
     expect(screen.getByText('Step 2 content')).toBeInTheDocument();
-    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
       'assignment_builder.client.auto_save_failed',
-      expect.any(Error)
+      {
+        status: 503,
+        hasReturnedError: true,
+      }
+    );
+    expect(JSON.stringify(dispatchClientDiagnosticMock.mock.calls)).not.toContain(
+      'Draft save temporarily unavailable'
+    );
+    expect(JSON.stringify(dispatchClientErrorDiagnosticMock.mock.calls)).not.toContain(
+      'Draft save temporarily unavailable'
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'next-step-2' }));

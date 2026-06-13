@@ -18,7 +18,7 @@ import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { apiFetch } from '@/lib/api/fetch';
-import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import {
   extractAssignmentDraftFromJobDescription,
   type ImportedAssignmentDraft,
@@ -108,6 +108,11 @@ type AssignmentBuilderClientProps = {
   slug: string;
 };
 
+type AssignmentBuilderReturnedError = Error & {
+  hasReturnedError: true;
+  status: number | 'unknown';
+};
+
 const DRAFT_SAVE_FAILED_MESSAGE =
   'Your changes are still on this page. Retry the draft save before moving on.';
 const REVIEW_SAVE_FAILED_MESSAGE =
@@ -153,16 +158,36 @@ function resolveDraftResumeStep(assignment: any) {
   return 4;
 }
 
-async function assignmentBuilderResponseError(response: Response, fallback: string) {
-  const errorData = await response.json().catch(() => null);
-  const message =
-    typeof errorData?.message === 'string'
-      ? errorData.message
-      : typeof errorData?.error === 'string'
-        ? errorData.error
-        : fallback;
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
 
-  return new Error(message);
+function assignmentBuilderResponseError(response: Response, fallback: string) {
+  const error = new Error(fallback) as AssignmentBuilderReturnedError;
+  error.name = 'AssignmentBuilderReturnedError';
+  error.hasReturnedError = true;
+  error.status = getResponseStatus(response);
+
+  return error;
+}
+
+function isAssignmentBuilderReturnedError(error: unknown): error is AssignmentBuilderReturnedError {
+  return (
+    error instanceof Error &&
+    (error as Partial<AssignmentBuilderReturnedError>).hasReturnedError === true
+  );
+}
+
+function dispatchAssignmentBuilderFailure(eventName: string, error: unknown) {
+  if (isAssignmentBuilderReturnedError(error)) {
+    dispatchClientDiagnostic(eventName, {
+      status: error.status,
+      hasReturnedError: true,
+    });
+    return;
+  }
+
+  dispatchClientErrorDiagnostic(eventName, error);
 }
 
 export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientProps) {
@@ -458,7 +483,7 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
       );
 
       if (!response.ok) {
-        throw await assignmentBuilderResponseError(response, 'Failed to save assignment outcomes');
+        throw assignmentBuilderResponseError(response, 'Failed to save assignment outcomes');
       }
     },
     [assignmentOrgQuery, form]
@@ -472,7 +497,7 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
         `/api/assignments/${targetAssignmentId}/outcomes${assignmentOrgQuery}`
       );
       if (!outcomesResponse.ok) {
-        throw await assignmentBuilderResponseError(
+        throw assignmentBuilderResponseError(
           outcomesResponse,
           'Failed to load assignment outcomes for expertise mapping'
         );
@@ -502,7 +527,7 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
       );
 
       if (!response.ok) {
-        throw await assignmentBuilderResponseError(
+        throw assignmentBuilderResponseError(
           response,
           'Failed to save assignment expertise mapping'
         );
@@ -557,10 +582,7 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
           });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          errorData.message || errorData.error || 'Failed to persist assignment draft'
-        );
+        throw assignmentBuilderResponseError(response, 'Failed to persist assignment draft');
       }
 
       const result = await response.json();
@@ -620,7 +642,7 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
           await syncRelatedData(persisted.assignmentId);
           setAutoSaveFeedback(null);
         } catch (error) {
-          dispatchClientErrorDiagnostic('assignment_builder.client.auto_save_failed', error);
+          dispatchAssignmentBuilderFailure('assignment_builder.client.auto_save_failed', error);
           setAutoSaveFeedback(AUTO_SAVE_FAILED_MESSAGE);
         }
       })();
@@ -645,7 +667,7 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
       setCurrentStep((step) => Math.min(step + 1, 4));
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
-      dispatchClientErrorDiagnostic('assignment_builder.client.draft_save_failed', error);
+      dispatchAssignmentBuilderFailure('assignment_builder.client.draft_save_failed', error);
       setWorkflowFeedback({
         kind: 'draft_save',
         title: 'Draft was not saved',
@@ -680,7 +702,7 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
       toast.success('Assignment saved for internal review');
       router.push(`/app/o/${slug}/assignments/${persisted.assignmentId}/review`);
     } catch (error) {
-      dispatchClientErrorDiagnostic('assignment_builder.client.review_save_failed', error);
+      dispatchAssignmentBuilderFailure('assignment_builder.client.review_save_failed', error);
       setWorkflowFeedback({
         kind: 'review_save',
         title: 'Assignment was not saved for review',
