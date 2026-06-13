@@ -153,6 +153,18 @@ function resolveDraftResumeStep(assignment: any) {
   return 4;
 }
 
+async function assignmentBuilderResponseError(response: Response, fallback: string) {
+  const errorData = await response.json().catch(() => null);
+  const message =
+    typeof errorData?.message === 'string'
+      ? errorData.message
+      : typeof errorData?.error === 'string'
+        ? errorData.error
+        : fallback;
+
+  return new Error(message);
+}
+
 export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -436,11 +448,18 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
         successCriteria: `Achieve ${outcome.target} within ${outcome.timeframe}`,
       }));
 
-      await apiFetch(`/api/assignments/${targetAssignmentId}/outcomes${assignmentOrgQuery}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ outcomes: transformedOutcomes }),
-      });
+      const response = await apiFetch(
+        `/api/assignments/${targetAssignmentId}/outcomes${assignmentOrgQuery}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ outcomes: transformedOutcomes }),
+        }
+      );
+
+      if (!response.ok) {
+        throw await assignmentBuilderResponseError(response, 'Failed to save assignment outcomes');
+      }
     },
     [assignmentOrgQuery, form]
   );
@@ -452,11 +471,15 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
       const outcomesResponse = await fetch(
         `/api/assignments/${targetAssignmentId}/outcomes${assignmentOrgQuery}`
       );
-      let outcomes: any[] = [];
-      if (outcomesResponse.ok) {
-        const outcomesData = await outcomesResponse.json();
-        outcomes = outcomesData.outcomes || [];
+      if (!outcomesResponse.ok) {
+        throw await assignmentBuilderResponseError(
+          outcomesResponse,
+          'Failed to load assignment outcomes for expertise mapping'
+        );
       }
+
+      const outcomesData = await outcomesResponse.json();
+      const outcomes = outcomesData.outcomes || [];
 
       const mustRows = mustHaveSkills.map((skill: any) => ({
         skillCode: skill.id,
@@ -469,7 +492,7 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
             : undefined,
       }));
 
-      await apiFetch(
+      const response = await apiFetch(
         `/api/assignments/${targetAssignmentId}/expertise-matrix${assignmentOrgQuery}`,
         {
           method: 'POST',
@@ -477,6 +500,13 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
           body: JSON.stringify({ expertiseMatrix: mustRows }),
         }
       );
+
+      if (!response.ok) {
+        throw await assignmentBuilderResponseError(
+          response,
+          'Failed to save assignment expertise mapping'
+        );
+      }
     },
     [assignmentOrgQuery, form]
   );

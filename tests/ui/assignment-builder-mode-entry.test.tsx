@@ -89,6 +89,7 @@ type FetchFixture = {
   failDraftLoadOnce?: boolean;
   failDraftSaveOnce?: boolean;
   failReviewSaveOnce?: boolean;
+  failOutcomesSaveOnce?: boolean;
 };
 
 function setupFetch({
@@ -96,10 +97,12 @@ function setupFetch({
   failDraftLoadOnce = false,
   failDraftSaveOnce = false,
   failReviewSaveOnce = false,
+  failOutcomesSaveOnce = false,
 }: FetchFixture = {}) {
   let draftLoadAttempts = 0;
   let draftSaveAttempts = 0;
   let reviewSaveAttempts = 0;
+  let outcomesSaveAttempts = 0;
 
   const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input);
@@ -177,6 +180,16 @@ function setupFetch({
       (mockDraftId && requestPath === `/api/assignments/${mockDraftId}/outcomes`) ||
       requestPath === '/api/assignments/draft-1/outcomes'
     ) {
+      if (init?.method === 'POST') {
+        outcomesSaveAttempts += 1;
+        if (failOutcomesSaveOnce && outcomesSaveAttempts === 1) {
+          return {
+            ok: false,
+            json: async () => ({ message: 'Outcome save temporarily unavailable' }),
+          };
+        }
+      }
+
       return {
         ok: true,
         json: async () => ({ outcomes: [] }),
@@ -418,6 +431,34 @@ Full-time
     );
     expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
       'Draft save temporarily unavailable'
+    );
+
+    fireEvent.click(within(alert).getByRole('button', { name: 'Retry draft save' }));
+
+    expect(await screen.findByText('Step 2 content')).toBeInTheDocument();
+  });
+
+  it('blocks step advancement when related outcome saves fail after the draft is persisted', async () => {
+    setupFetch({ failOutcomesSaveOnce: true });
+
+    render(await renderAssignmentBuilderPage());
+
+    fireEvent.click(await screen.findByRole('button', { name: 'next-step-1' }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Draft was not saved');
+    expect(alert).toHaveTextContent(
+      'Your changes are still on this page. Retry the draft save before moving on.'
+    );
+    expect(alert).not.toHaveTextContent('Outcome save temporarily unavailable');
+    expect(screen.getByText('Step 1 content')).toBeInTheDocument();
+    expect(screen.queryByText('Step 2 content')).not.toBeInTheDocument();
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'assignment_builder.client.draft_save_failed',
+      expect.any(Error)
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
+      'Outcome save temporarily unavailable'
     );
 
     fireEvent.click(within(alert).getByRole('button', { name: 'Retry draft save' }));
