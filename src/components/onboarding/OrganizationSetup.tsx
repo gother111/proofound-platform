@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { completeOrganizationOnboarding } from '@/actions/onboarding';
-import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { createClient } from '@/lib/supabase/client';
 import { AlertCircle, CheckCircle, Copy, ExternalLink } from 'lucide-react';
 
@@ -35,7 +35,9 @@ function organizationSetupActionErrorMessage(message: string) {
     return message;
   }
 
-  dispatchClientErrorDiagnostic('onboarding.organization.returned_error', new Error(message));
+  dispatchClientDiagnostic('onboarding.organization.returned_error', {
+    hasReturnedError: true,
+  });
   return ORGANIZATION_SETUP_RETRY_MESSAGE;
 }
 

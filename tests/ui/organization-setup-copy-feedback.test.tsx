@@ -4,12 +4,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const {
   completeOrganizationOnboardingMock,
   createClientMock,
-  dispatchClientErrorDiagnosticMock,
+  dispatchClientDiagnosticMock,
   pushMock,
 } = vi.hoisted(() => ({
   completeOrganizationOnboardingMock: vi.fn(),
   createClientMock: vi.fn(),
-  dispatchClientErrorDiagnosticMock: vi.fn(),
+  dispatchClientDiagnosticMock: vi.fn(),
   pushMock: vi.fn(),
 }));
 
@@ -28,7 +28,8 @@ vi.mock('@/lib/supabase/client', () => ({
 }));
 
 vi.mock('@/lib/client-diagnostics', () => ({
-  dispatchClientErrorDiagnostic: dispatchClientErrorDiagnosticMock,
+  dispatchClientDiagnostic: (...args: unknown[]) => dispatchClientDiagnosticMock(...args),
+  dispatchClientErrorDiagnostic: (...args: unknown[]) => dispatchClientDiagnosticMock(...args),
 }));
 
 import { OrganizationSetup } from '@/components/onboarding/OrganizationSetup';
@@ -104,7 +105,7 @@ describe('OrganizationSetup trust page link feedback', () => {
     );
     expect(alert).toHaveTextContent('Retry this check before creating a new organization');
     expect(screen.getByRole('button', { name: /create organization/i })).toBeEnabled();
-    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
       'onboarding.organization.existing_check_failed',
       expect.any(Error)
     );
@@ -157,11 +158,11 @@ describe('OrganizationSetup trust page link feedback', () => {
       'Organization setup could not be saved. Your details are still here; please try again.'
     );
     expect(screen.queryByText(rawError)).not.toBeInTheDocument();
-    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
       'onboarding.organization.returned_error',
-      expect.any(Error)
+      { hasReturnedError: true }
     );
-    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(rawError);
+    expect(JSON.stringify(dispatchClientDiagnosticMock.mock.calls)).not.toContain(rawError);
     expect(screen.getByRole('button', { name: /create organization/i })).toBeEnabled();
   });
 
@@ -175,7 +176,7 @@ describe('OrganizationSetup trust page link feedback', () => {
       'Organization setup could not be saved. Your details are still here; please try again.'
     );
     expect(screen.queryByText('Something went wrong. Please try again.')).not.toBeInTheDocument();
-    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
       'onboarding.organization.submit_failed',
       submitError
     );

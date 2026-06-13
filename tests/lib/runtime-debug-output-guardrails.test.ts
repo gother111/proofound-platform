@@ -285,8 +285,12 @@ describe('runtime debug output guardrails', () => {
 
     expect(source).toContain('ORGANIZATION_SETUP_SAFE_ACTION_ERRORS');
     expect(source).toContain('onboarding.organization.returned_error');
+    expect(source).toContain('hasReturnedError');
     expect(source).toContain('Organization setup could not be saved');
     expect(source).not.toContain('setError(result.error)');
+    expect(source).not.toContain(
+      "dispatchClientErrorDiagnostic('onboarding.organization.returned_error'"
+    );
   });
 
   it('keeps individual first-proof onboarding returned errors safe and diagnostic', () => {
