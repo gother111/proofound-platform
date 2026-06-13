@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { AlertTriangle, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { apiFetch } from '@/lib/api/fetch';
-import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 interface DeleteAccountProps {
   userId: string;
@@ -31,6 +31,20 @@ const ACCOUNT_STATUS_LOAD_RETRY_COPY =
 
 const ACCOUNT_DELETE_RETRY_COPY =
   'Account deletion could not finish. Check your password and confirmation phrase, then try again.';
+
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function hasReturnedMessage(payload: unknown) {
+  return Boolean(
+    payload &&
+      typeof payload === 'object' &&
+      'message' in payload &&
+      typeof payload.message === 'string' &&
+      payload.message.trim().length > 0
+  );
+}
 
 export function DeleteAccount({ userId }: DeleteAccountProps) {
   const [accountStatus, setAccountStatus] = useState<AccountStatus | null>(null);
@@ -91,10 +105,15 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
         }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => null);
 
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to delete account');
+        dispatchClientDiagnostic('settings.delete_account.request_returned_error', {
+          status: getResponseStatus(response),
+          hasReturnedMessage: hasReturnedMessage(data),
+          hasReason: Boolean(reason),
+        });
+        throw new Error('account_deletion_request_failed');
       }
 
       setSuccess('Your account has been deleted permanently.');

@@ -1,11 +1,13 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { dispatchClientErrorDiagnosticMock } = vi.hoisted(() => ({
+const { dispatchClientDiagnosticMock, dispatchClientErrorDiagnosticMock } = vi.hoisted(() => ({
+  dispatchClientDiagnosticMock: vi.fn(),
   dispatchClientErrorDiagnosticMock: vi.fn(),
 }));
 
 vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientDiagnostic: dispatchClientDiagnosticMock,
   dispatchClientErrorDiagnostic: dispatchClientErrorDiagnosticMock,
 }));
 
@@ -103,6 +105,22 @@ describe('settings DeleteAccount', () => {
       'settings.delete_account.request_failed',
       expect.any(Error)
     );
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
+      'settings.delete_account.request_returned_error',
+      expect.objectContaining({
+        hasReturnedMessage: true,
+        hasReason: false,
+      })
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
+      'account_deletion_request_failed'
+    );
+    expect(
+      [
+        ...dispatchClientDiagnosticMock.mock.calls,
+        ...dispatchClientErrorDiagnosticMock.mock.calls,
+      ].some((call) => JSON.stringify(call).includes('Password did not match your account.'))
+    ).toBe(false);
     expect(screen.getAllByRole('alert')).toHaveLength(1);
   });
 

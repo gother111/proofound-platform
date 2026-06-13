@@ -32,7 +32,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Trash2, AlertTriangle, Shield } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api/fetch';
-import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 const DELETION_REASONS = [
   'No longer need the service',
@@ -48,6 +48,20 @@ const DELETION_REASONS = [
 const CONFIRMATION_PHRASE = 'DELETE MY ACCOUNT';
 const ACCOUNT_DELETION_FAILED_MESSAGE =
   'Account deletion could not finish. Check your password and confirmation phrase, then try again.';
+
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function hasReturnedMessage(payload: unknown) {
+  return Boolean(
+    payload &&
+      typeof payload === 'object' &&
+      'message' in payload &&
+      typeof payload.message === 'string' &&
+      payload.message.trim().length > 0
+  );
+}
 
 export function DeleteAccountSection() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -104,10 +118,15 @@ export function DeleteAccountSection() {
         }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => null);
 
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to delete account');
+        dispatchClientDiagnostic('privacy.delete_account.request_returned_error', {
+          status: getResponseStatus(response),
+          hasReturnedMessage: hasReturnedMessage(data),
+          hasReason: Boolean(deletionReason),
+        });
+        throw new Error('account_deletion_request_failed');
       }
 
       resetDeleteDialog();

@@ -244,6 +244,7 @@ describe('runtime debug output guardrails', () => {
     expect(sources).toContain('settings.audit_log.load_failed');
     expect(sources).toContain('settings.account_history.load_failed');
     expect(sources).toContain('settings.delete_account.status_load_failed');
+    expect(sources).toContain('settings.delete_account.request_returned_error');
     expect(sources).toContain('settings.delete_account.request_failed');
     expect(sources).toContain('matching.filters.saved_parse_failed');
     expect(sources).not.toContain('Failed to load profile data:');
@@ -268,6 +269,7 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Failed to load verification status');
     expect(sources).not.toContain('audit_log.load.failed');
     expect(sources).not.toContain('audit_log.export.failed');
+    expect(sources).not.toContain("throw new Error(data.message || 'Failed to delete account')");
     expect(sources).not.toContain('Failed to fetch account history');
     expect(sources).not.toContain('Failed to load account history');
     expect(sources).not.toContain('Failed to parse saved filters:');
@@ -1578,18 +1580,21 @@ describe('runtime debug output guardrails', () => {
       individualVisibilitySource,
     ].join('\n');
 
-    expect(sources).toContain(
-      "import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics'"
-    );
+    expect(sources).toContain('dispatchClientDiagnostic');
+    expect(sources).toContain('dispatchClientErrorDiagnostic');
     expect(sources).toContain('privacy.data_breakdown.load_failed');
     expect(sources).toContain('privacy.data_breakdown.export_failed');
     expect(sources).toContain('privacy.audit_log.load_failed');
+    expect(sources).toContain('privacy.delete_account.request_returned_error');
     expect(sources).toContain('privacy.delete_account.request_failed');
     expect(sources).toContain('privacy.field_visibility.save_failed');
     expect(individualVisibilitySource).toContain('Your Public Page visibility was not changed');
     expect(individualVisibilitySource).not.toContain('? error.message');
     expect(deleteAccountSectionSource).toContain('Account deletion could not finish');
     expect(deleteAccountSectionSource).not.toContain('? error.message');
+    expect(deleteAccountSectionSource).not.toContain(
+      "throw new Error(data.message || 'Failed to delete account')"
+    );
     expect(sources).not.toContain('Failed to fetch data breakdown:');
     expect(sources).not.toContain('Export failed:');
     expect(sources).not.toContain('Failed to fetch account history:');

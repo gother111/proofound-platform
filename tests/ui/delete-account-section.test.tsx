@@ -5,7 +5,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DeleteAccountSection } from '@/components/privacy/DeleteAccountSection';
 import { apiFetch } from '@/lib/api/fetch';
 
-const { dispatchClientErrorDiagnosticMock } = vi.hoisted(() => ({
+const { dispatchClientDiagnosticMock, dispatchClientErrorDiagnosticMock } = vi.hoisted(() => ({
+  dispatchClientDiagnosticMock: vi.fn(),
   dispatchClientErrorDiagnosticMock: vi.fn(),
 }));
 
@@ -17,6 +18,7 @@ vi.mock('@/lib/api/fetch', () => ({
 }));
 
 vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientDiagnostic: (...args: unknown[]) => dispatchClientDiagnosticMock(...args),
   dispatchClientErrorDiagnostic: (...args: unknown[]) => dispatchClientErrorDiagnosticMock(...args),
 }));
 
@@ -62,9 +64,22 @@ describe('DeleteAccountSection', () => {
       'privacy.delete_account.request_failed',
       expect.any(Error)
     );
-    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
-      'Password did not match your account.'
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
+      'privacy.delete_account.request_returned_error',
+      expect.objectContaining({
+        hasReturnedMessage: true,
+        hasReason: false,
+      })
     );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
+      'account_deletion_request_failed'
+    );
+    expect(
+      [
+        ...dispatchClientDiagnosticMock.mock.calls,
+        ...dispatchClientErrorDiagnosticMock.mock.calls,
+      ].some((call) => JSON.stringify(call).includes('Password did not match your account.'))
+    ).toBe(false);
     expect(pushMock).not.toHaveBeenCalled();
     expect(refreshMock).not.toHaveBeenCalled();
   });
