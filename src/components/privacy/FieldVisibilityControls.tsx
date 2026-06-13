@@ -154,6 +154,7 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [activePreview, setActivePreview] = useState<'public' | 'network' | 'matched'>('public');
 
   const fetchPrivacySettings = useCallback(async () => {
@@ -196,6 +197,7 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
   }, [fetchPrivacySettings, userId]);
 
   const handleFieldVisibilityChange = (fieldName: string, visibility: VisibilityLevel) => {
+    setSaveError(null);
     setFieldVisibility((prev) => ({
       ...prev,
       [fieldName]: visibility,
@@ -203,6 +205,7 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
   };
 
   const handleRedactModeToggle = async (enabled: boolean) => {
+    setSaveError(null);
     setRedactMode(enabled);
     if (enabled) {
       // Apply redact mode: set all sensitive fields to hidden
@@ -219,6 +222,7 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
 
   const handleSave = async () => {
     setIsSaving(true);
+    setSaveError(null);
     try {
       const response = await apiFetch('/api/user/privacy-settings', {
         method: 'POST',
@@ -229,11 +233,26 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to save');
+      if (!response.ok) {
+        let message = 'Privacy settings save request failed';
+        try {
+          const data = await response.json();
+          if (typeof data?.error === 'string' && data.error.trim()) {
+            message = data.error;
+          }
+        } catch {
+          // Keep the generic diagnostic message if the response body is not JSON.
+        }
+        throw new Error(message);
+      }
 
+      setSaveError(null);
       toast.success('Privacy settings saved successfully');
     } catch (error) {
       dispatchClientErrorDiagnostic('privacy.field_controls.save_failed', error);
+      setSaveError(
+        'Your visibility choices were not saved. They are still selected here; retry before leaving this page.'
+      );
       toast.error('Failed to save privacy settings');
     } finally {
       setIsSaving(false);
@@ -241,6 +260,7 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
   };
 
   const handleResetToDefaults = () => {
+    setSaveError(null);
     const defaults: Record<string, VisibilityLevel> = {};
     PROFILE_FIELDS.forEach((field) => {
       defaults[field.name] = field.defaultVisibility;
@@ -531,6 +551,38 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
       </Card>
 
       {/* Action Buttons */}
+      {saveError ? (
+        <Card
+          role="alert"
+          aria-live="assertive"
+          className="border-[#FCD34D] bg-[#FFFBEB] p-4 dark:border-yellow-800 dark:bg-yellow-950/20"
+        >
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex min-w-0 gap-3">
+              <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-[#D97706]" />
+              <div className="space-y-1">
+                <h3 className="font-semibold text-[#92400E] dark:text-yellow-100">
+                  Privacy settings were not saved
+                </h3>
+                <p className="text-sm text-[#92400E] dark:text-yellow-200">{saveError}</p>
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                void handleSave();
+              }}
+              disabled={isSaving}
+              className="shrink-0 border-[#D97706] text-[#92400E] hover:bg-[#FEF3C7] dark:border-yellow-700 dark:text-yellow-100 dark:hover:bg-yellow-950/40"
+            >
+              <RefreshCcw className="h-4 w-4" aria-hidden="true" />
+              Retry save
+            </Button>
+          </div>
+        </Card>
+      ) : null}
+
       <div className="flex gap-2 justify-end">
         <Button variant="outline" onClick={handleResetToDefaults}>
           Reset to Defaults

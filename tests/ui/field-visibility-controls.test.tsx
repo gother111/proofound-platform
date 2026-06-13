@@ -77,4 +77,48 @@ describe('FieldVisibilityControls', () => {
     expect(apiFetchMock).toHaveBeenNthCalledWith(1, '/api/user/privacy-settings');
     expect(apiFetchMock).toHaveBeenNthCalledWith(2, '/api/user/privacy-settings');
   });
+
+  it('keeps failed saves visible and retryable without surfacing returned privacy errors', async () => {
+    apiFetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          fieldVisibility: { displayName: 'public' },
+          redactMode: false,
+        }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: 'policy debug: user user-1 cannot update profile_visibility' }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true }),
+      } as Response);
+
+    render(<FieldVisibilityControls userId="user-1" />);
+
+    const saveButton = await screen.findByRole('button', { name: 'Save Privacy Settings' });
+    fireEvent.click(saveButton);
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Privacy settings were not saved');
+    expect(alert).toHaveTextContent(
+      'Your visibility choices were not saved. They are still selected here; retry before leaving this page.'
+    );
+    expect(alert).not.toHaveTextContent('policy debug');
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'privacy.field_controls.save_failed',
+      expect.any(Error)
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
+      'policy debug: user user-1 cannot update profile_visibility'
+    );
+    expect(toastErrorMock).toHaveBeenCalledWith('Failed to save privacy settings');
+
+    fireEvent.click(within(alert).getByRole('button', { name: 'Retry save' }));
+
+    await waitFor(() => expect(apiFetchMock).toHaveBeenCalledTimes(3));
+    await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
+  });
 });
