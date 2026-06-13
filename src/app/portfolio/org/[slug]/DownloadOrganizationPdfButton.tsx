@@ -14,6 +14,8 @@ type DownloadFeedback = {
 const ORGANIZATION_PDF_RETRY_MESSAGE =
   'Organization PDF could not be downloaded. The trust page is still live; please try again.';
 
+class OrganizationPdfDownloadError extends Error {}
+
 export function DownloadOrganizationPdfButton({
   slug,
   className,
@@ -53,6 +55,9 @@ export function DownloadOrganizationPdfButton({
   };
 
   const handleDownload = async () => {
+    let downloadUrl: string | null = null;
+    let downloadLink: HTMLAnchorElement | null = null;
+
     try {
       setLoading(true);
       setFeedback(null);
@@ -62,35 +67,44 @@ export function DownloadOrganizationPdfButton({
       });
 
       if (!res.ok) {
-        throw new Error(await getErrorMessage(res));
+        throw new OrganizationPdfDownloadError(await getErrorMessage(res));
       }
 
       const contentType = res.headers.get('content-type') || '';
       if (!contentType.includes('application/pdf')) {
-        throw new Error('Received an unexpected response while generating your PDF.');
+        throw new OrganizationPdfDownloadError(
+          'Received an unexpected response while generating your PDF.'
+        );
       }
 
       const blob = await res.blob();
       if (blob.size === 0) {
-        throw new Error('Generated PDF was empty. Please try again.');
+        throw new OrganizationPdfDownloadError('Generated PDF was empty. Please try again.');
       }
 
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `proofound-org-${slug}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
+      downloadUrl = window.URL.createObjectURL(blob);
+      downloadLink = document.createElement('a');
+      downloadLink.href = downloadUrl;
+      downloadLink.download = `proofound-org-${slug}.pdf`;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
       setFeedback({ kind: 'success', message: 'Organization PDF download started.' });
     } catch (err) {
       dispatchClientErrorDiagnostic('portfolio.organization_pdf.download_failed', err);
       setFeedback({
         kind: 'error',
-        message: err instanceof Error && err.message ? err.message : ORGANIZATION_PDF_RETRY_MESSAGE,
+        message:
+          err instanceof OrganizationPdfDownloadError
+            ? err.message
+            : ORGANIZATION_PDF_RETRY_MESSAGE,
       });
     } finally {
+      if (downloadUrl) {
+        window.URL.revokeObjectURL(downloadUrl);
+      }
+      if (downloadLink?.parentNode) {
+        downloadLink.parentNode.removeChild(downloadLink);
+      }
       setLoading(false);
     }
   };
