@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/select';
 import { CheckCircle2, Mail, Loader2, AlertCircle } from 'lucide-react';
 import { apiFetch } from '@/lib/api/fetch';
-import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 interface WorkEmailVerificationFormProps {
   onSuccess: () => void;
@@ -38,7 +38,11 @@ const WORK_EMAIL_SEND_SAFE_ERRORS = new Map([
   ['Internal server error', WORK_EMAIL_SEND_RETRY_MESSAGE],
 ]);
 
-function workEmailSendError(error?: string | null) {
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function workEmailSendError(error?: string | null, status: number | 'unknown' = 'unknown') {
   const normalized = error?.trim();
 
   if (!normalized) {
@@ -51,7 +55,10 @@ function workEmailSendError(error?: string | null) {
     return safeMessage;
   }
 
-  dispatchClientErrorDiagnostic('settings.work_email.send_returned_error', new Error(normalized));
+  dispatchClientDiagnostic('settings.work_email.send_returned_error', {
+    status,
+    hasReturnedError: true,
+  });
   return WORK_EMAIL_SEND_RETRY_MESSAGE;
 }
 
@@ -170,7 +177,7 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
       const data = await response.json().catch(() => null);
 
       if (!response.ok) {
-        setError(workEmailSendError(data?.error));
+        setError(workEmailSendError(data?.error, getResponseStatus(response)));
         return;
       }
 

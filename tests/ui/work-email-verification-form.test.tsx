@@ -5,7 +5,8 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { WorkEmailVerificationForm } from '@/components/settings/WorkEmailVerificationForm';
 import { apiFetch } from '@/lib/api/fetch';
 
-const { dispatchClientErrorDiagnosticMock } = vi.hoisted(() => ({
+const { dispatchClientDiagnosticMock, dispatchClientErrorDiagnosticMock } = vi.hoisted(() => ({
+  dispatchClientDiagnosticMock: vi.fn(),
   dispatchClientErrorDiagnosticMock: vi.fn(),
 }));
 
@@ -14,6 +15,7 @@ vi.mock('@/lib/api/fetch', () => ({
 }));
 
 vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientDiagnostic: (...args: unknown[]) => dispatchClientDiagnosticMock(...args),
   dispatchClientErrorDiagnostic: (...args: unknown[]) => dispatchClientErrorDiagnosticMock(...args),
 }));
 
@@ -267,6 +269,7 @@ describe('WorkEmailVerificationForm', () => {
       if (url === '/api/verification/work-email/send') {
         return {
           ok: false,
+          status: 503,
           json: async () => ({ error: rawError }),
         } as Response;
       }
@@ -290,10 +293,14 @@ describe('WorkEmailVerificationForm', () => {
     expect(alert).not.toHaveTextContent(rawError);
     expect(screen.getByLabelText(/work email address/i)).toHaveValue('person@acme.org');
     expect(screen.getByRole('button', { name: /send confirmation email/i })).toBeEnabled();
-    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
       'settings.work_email.send_returned_error',
-      expect.any(Error)
+      {
+        status: 503,
+        hasReturnedError: true,
+      }
     );
-    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(rawError);
+    expect(JSON.stringify(dispatchClientDiagnosticMock.mock.calls)).not.toContain(rawError);
+    expect(JSON.stringify(dispatchClientErrorDiagnosticMock.mock.calls)).not.toContain(rawError);
   });
 });

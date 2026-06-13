@@ -239,6 +239,8 @@ describe('runtime debug output guardrails', () => {
     expect(sources).toContain('Your account settings were not changed');
     expect(sources).toContain('settings.work_email.organizations_fetch_failed');
     expect(sources).toContain('settings.work_email.send_returned_error');
+    expect(sources).toContain('dispatchClientDiagnostic');
+    expect(sources).toContain('hasReturnedError');
     expect(sources).toContain('settings.verification_status.load_failed');
     expect(sources).toContain('Verification status could not load');
     expect(sources).toContain('settings.audit_log.load_failed');
@@ -264,6 +266,9 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('settings.tour_reset_unexpected_failed');
     expect(sources).not.toContain('toast.error(errorMessage)');
     expect(sources).not.toContain('Error fetching organizations:');
+    expect(sources).not.toContain(
+      "dispatchClientErrorDiagnostic('settings.work_email.send_returned_error'"
+    );
     expect(sources).not.toContain('Check your browser console');
     expect(sources).not.toContain('Failed to fetch verification status');
     expect(sources).not.toContain('Failed to load verification status');
