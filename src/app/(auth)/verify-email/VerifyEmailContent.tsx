@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Card, CardHeader, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { verifyEmail } from '@/actions/auth';
-import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import {
   clientVerificationLinkVisualFixturesEnabled,
   isVisualEmailVerificationToken,
@@ -25,7 +25,9 @@ function verifyEmailErrorMessage(message: string) {
     return message;
   }
 
-  dispatchClientErrorDiagnostic('auth.verify_email.returned_error', new Error(message));
+  dispatchClientDiagnostic('auth.verify_email.returned_error', {
+    hasReturnedError: true,
+  });
   return VERIFY_EMAIL_RETRY_MESSAGE;
 }
 

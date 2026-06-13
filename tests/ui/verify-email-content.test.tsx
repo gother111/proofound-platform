@@ -4,7 +4,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 
 import { VerifyEmailContent } from '@/app/(auth)/verify-email/VerifyEmailContent';
 import { verifyEmail } from '@/actions/auth';
-import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { VISUAL_VERIFY_TOKENS } from '@/lib/verification/visual-link-fixtures';
 
 const routerPush = vi.fn();
@@ -24,10 +24,12 @@ vi.mock('@/actions/auth', () => ({
 }));
 
 vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientDiagnostic: vi.fn(),
   dispatchClientErrorDiagnostic: vi.fn(),
 }));
 
 const verifyEmailMock = vi.mocked(verifyEmail);
+const dispatchClientDiagnosticMock = vi.mocked(dispatchClientDiagnostic);
 const dispatchClientErrorDiagnosticMock = vi.mocked(dispatchClientErrorDiagnostic);
 
 describe('VerifyEmailContent', () => {
@@ -134,9 +136,9 @@ describe('VerifyEmailContent', () => {
     });
 
     expect(screen.getByRole('alert')).toHaveTextContent('Invalid or expired verification link');
-    expect(dispatchClientErrorDiagnosticMock).not.toHaveBeenCalledWith(
+    expect(dispatchClientDiagnosticMock).not.toHaveBeenCalledWith(
       'auth.verify_email.returned_error',
-      expect.any(Error)
+      expect.anything()
     );
   });
 
@@ -159,11 +161,11 @@ describe('VerifyEmailContent', () => {
       'We could not verify this email link. The link may be expired; try signing up again or go to login.'
     );
     expect(screen.queryByText(rawError)).not.toBeInTheDocument();
-    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
-      'auth.verify_email.returned_error',
-      expect.any(Error)
-    );
-    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(rawError);
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith('auth.verify_email.returned_error', {
+      hasReturnedError: true,
+    });
+    expect(JSON.stringify(dispatchClientDiagnosticMock.mock.calls)).not.toContain(rawError);
+    expect(JSON.stringify(dispatchClientErrorDiagnosticMock.mock.calls)).not.toContain(rawError);
   });
 
   it('keeps thrown verification failures safe and diagnostic', async () => {
