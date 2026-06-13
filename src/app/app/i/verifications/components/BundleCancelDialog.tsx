@@ -5,7 +5,7 @@ import { Loader2, PackageMinus, RefreshCcw } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { apiFetch } from '@/lib/api/fetch';
-import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -58,6 +58,26 @@ type BundleCancelDialogProps = {
 
 const SELECTED_CANCEL_FAILED_MESSAGE =
   'Selected artifacts could not be canceled. Your bundle request is unchanged; review the selected items and try again.';
+
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function getReturnedError(payload: unknown) {
+  if (!payload || typeof payload !== 'object') {
+    return '';
+  }
+
+  if ('error' in payload && typeof payload.error === 'string') {
+    return payload.error.trim();
+  }
+
+  if ('message' in payload && typeof payload.message === 'string') {
+    return payload.message.trim();
+  }
+
+  return '';
+}
 
 function artifactLabel(type: BundleItem['artifact_type']) {
   switch (type) {
@@ -112,14 +132,21 @@ export function BundleCancelDialog({
         method: 'GET',
       });
 
-      const body = (await response.json()) as { error?: string } & BundleResponse;
+      const body = (await response.json().catch(() => null)) as
+        | ({ error?: string; message?: string } & BundleResponse)
+        | null;
 
       if (!response.ok) {
-        throw new Error(body.error || 'Failed to load bundle details.');
+        const returnedError = getReturnedError(body);
+        dispatchClientDiagnostic('verifications.bundle_cancel.details_load_returned_error', {
+          status: getResponseStatus(response),
+          hasReturnedError: returnedError.length > 0,
+        });
+        throw new Error('bundle_cancel_details_load_request_failed');
       }
 
       if (loadRequestTokenRef.current !== loadToken) return;
-      setBundleRequest(body.request);
+      setBundleRequest(body?.request ?? null);
       setSelectedItemIds({});
     } catch (error) {
       if (loadRequestTokenRef.current !== loadToken) return;
@@ -176,30 +203,25 @@ export function BundleCancelDialog({
         }),
       });
 
-      const body = (await response.json()) as { error?: string } & CancelResponse;
+      const body = (await response.json().catch(() => null)) as
+        | ({ error?: string; message?: string } & CancelResponse)
+        | null;
 
       if (!response.ok) {
-        if (body.error) {
-          dispatchClientErrorDiagnostic(
-            'verifications.bundle_cancel.selected_cancel_failed',
-            new Error(body.error)
-          );
-        }
-        const message = SELECTED_CANCEL_FAILED_MESSAGE;
-        setCancelFeedback({
-          title: 'Selected artifacts could not be canceled',
-          message,
+        const returnedError = getReturnedError(body);
+        dispatchClientDiagnostic('verifications.bundle_cancel.selected_cancel_returned_error', {
+          status: getResponseStatus(response),
+          hasReturnedError: returnedError.length > 0,
         });
-        toast.error(message);
-        return;
+        throw new Error('bundle_cancel_selected_cancel_request_failed');
       }
 
       setCancelFeedback(null);
-      const removedSkillRequestIds = body.removedSkillRequestIds || [];
+      const removedSkillRequestIds = body?.removedSkillRequestIds || [];
       onCanceled(removedSkillRequestIds);
 
       toast.success(
-        body.requestExpired
+        body?.requestExpired
           ? 'Selected artifacts canceled. The bundle has no pending artifacts left.'
           : 'Selected artifacts canceled.'
       );
