@@ -150,9 +150,86 @@ describe('settings account history mobile clarity', () => {
     fireEvent.click(within(alert).getByRole('button', { name: 'Retry account history' }));
 
     await waitFor(() => {
-      expect(screen.getByText('Created profile')).toBeInTheDocument();
+      expect(screen.getAllByText('Created profile').length).toBeGreaterThan(0);
     });
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(apiFetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps settings account history CSV downloads inline and retryable', async () => {
+    let createObjectUrlAttempts = 0;
+    const createObjectURLMock = vi.fn(() => {
+      createObjectUrlAttempts += 1;
+      if (createObjectUrlAttempts === 1) {
+        throw new Error('raw browser download failure');
+      }
+      return 'blob:account-history';
+    });
+    const revokeObjectURLMock = vi.fn();
+    const anchorClickMock = vi.fn();
+    const originalCreateObjectURL = URL.createObjectURL;
+    const originalRevokeObjectURL = URL.revokeObjectURL;
+    const originalCreateElement = document.createElement.bind(document);
+    const createElementSpy = vi.spyOn(document, 'createElement').mockImplementation((tagName) => {
+      const element = originalCreateElement(tagName);
+      if (tagName.toLowerCase() === 'a') {
+        element.click = anchorClickMock;
+      }
+      return element;
+    });
+
+    URL.createObjectURL = createObjectURLMock;
+    URL.revokeObjectURL = revokeObjectURLMock;
+
+    apiFetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        events: [
+          {
+            id: 'event-1',
+            timestamp: '2026-05-16T01:30:00.000Z',
+            action: 'Created profile',
+            ipHash: 'protected-reference',
+            device: 'Unknown browser',
+          },
+        ],
+        total: 1,
+        limit: 50,
+        offset: 0,
+        hasMore: false,
+      }),
+    } as Response);
+
+    try {
+      render(<AuditLogTable userId="current" />);
+
+      expect((await screen.findAllByText('Created profile')).length).toBeGreaterThan(0);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Download activity' }));
+
+      const alert = await screen.findByRole('alert');
+      expect(alert).toHaveTextContent('Account history download could not start');
+      expect(alert).toHaveTextContent('Your activity list is still visible');
+      expect(alert).not.toHaveTextContent('raw browser download failure');
+      expect(within(alert).getByRole('button', { name: 'Retry download' })).toBeInTheDocument();
+      expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+        'settings.account_history.export_failed',
+        expect.any(Error)
+      );
+
+      fireEvent.click(within(alert).getByRole('button', { name: 'Retry download' }));
+
+      const status = await screen.findByRole('status');
+      expect(status).toHaveTextContent('Account history download started');
+      expect(status).toHaveTextContent('Keep this file private');
+      expect(anchorClickMock).toHaveBeenCalled();
+      expect(createObjectURLMock).toHaveBeenCalled();
+      expect(revokeObjectURLMock).toHaveBeenCalledWith('blob:account-history');
+      expect(screen.getAllByText('Created profile').length).toBeGreaterThan(0);
+    } finally {
+      URL.createObjectURL = originalCreateObjectURL;
+      URL.revokeObjectURL = originalRevokeObjectURL;
+      createElementSpy.mockRestore();
+    }
   });
 });

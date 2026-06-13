@@ -30,12 +30,21 @@ interface AuditLogResponse {
 
 const ACCOUNT_HISTORY_LOAD_RETRY_COPY =
   'Account history could not load. Your privacy records are still safe; retry this section to refresh recent activity.';
+const ACCOUNT_HISTORY_DOWNLOAD_RETRY_COPY =
+  'Account history download could not start. Your activity list is still visible; retry the download when ready.';
+
+type DownloadFeedback = {
+  kind: 'success' | 'error';
+  title: string;
+  message: string;
+};
 
 export function AuditLogTable({ userId }: AuditLogTableProps) {
   const [data, setData] = useState<AuditLogResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [downloadFeedback, setDownloadFeedback] = useState<DownloadFeedback | null>(null);
   const [offset, setOffset] = useState(0);
   const limit = 50;
 
@@ -47,6 +56,7 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
         setLoading(true);
       }
       setError(null);
+      setDownloadFeedback(null);
 
       const response = await apiFetch(`/api/user/audit-log?limit=${limit}&offset=${newOffset}`);
       if (!response.ok) {
@@ -89,30 +99,47 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
   const handleExportCSV = () => {
     if (!data) return;
 
-    // Convert to CSV
-    const headers = ['Date and time', 'Action', 'Access detail', 'Device'];
-    const rows = data.events.map((event) => [
-      new Date(event.timestamp).toLocaleString(),
-      event.action,
-      event.ipHash ? 'Protected' : 'Not recorded',
-      event.device,
-    ]);
+    try {
+      setDownloadFeedback(null);
 
-    const csvContent = [
-      headers.join(','),
-      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
-    ].join('\n');
+      // Convert to CSV
+      const headers = ['Date and time', 'Action', 'Access detail', 'Device'];
+      const rows = data.events.map((event) => [
+        new Date(event.timestamp).toLocaleString(),
+        event.action,
+        event.ipHash ? 'Protected' : 'Not recorded',
+        event.device,
+      ]);
 
-    // Download
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `proofound-audit-log-${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
+      const csvContent = [
+        headers.join(','),
+        ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
+      ].join('\n');
+
+      // Download
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `proofound-audit-log-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      setDownloadFeedback({
+        kind: 'success',
+        title: 'Account history download started',
+        message: 'Keep this file private because it can include account activity records.',
+      });
+    } catch (err) {
+      dispatchClientErrorDiagnostic('settings.account_history.export_failed', err);
+      setDownloadFeedback({
+        kind: 'error',
+        title: 'Account history download could not start',
+        message: ACCOUNT_HISTORY_DOWNLOAD_RETRY_COPY,
+      });
+    }
   };
 
   const formatTimestamp = (timestamp: string) => {
@@ -219,6 +246,44 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
         </CardHeader>
         <CardContent>
           {error ? <div className="mb-4">{renderLoadError()}</div> : null}
+
+          {downloadFeedback ? (
+            <div
+              role={downloadFeedback.kind === 'error' ? 'alert' : 'status'}
+              aria-live={downloadFeedback.kind === 'error' ? 'assertive' : 'polite'}
+              className={
+                downloadFeedback.kind === 'error'
+                  ? 'mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-100'
+                  : 'mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/20 dark:text-emerald-100'
+              }
+            >
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex gap-2">
+                  {downloadFeedback.kind === 'error' ? (
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                  ) : (
+                    <Download className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                  )}
+                  <div className="space-y-1">
+                    <p className="font-medium">{downloadFeedback.title}</p>
+                    <p>{downloadFeedback.message}</p>
+                  </div>
+                </div>
+                {downloadFeedback.kind === 'error' ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleExportCSV}
+                    className="min-h-10 w-full gap-2 bg-white/70 sm:w-auto"
+                  >
+                    <Download className="h-4 w-4" aria-hidden="true" />
+                    Retry download
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
 
           {data.events.length === 0 ? (
             <div className="text-center py-12">
