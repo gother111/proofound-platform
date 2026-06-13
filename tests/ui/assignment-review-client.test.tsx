@@ -5,6 +5,7 @@ import { AssignmentReviewClient } from '@/components/assignments/AssignmentRevie
 import { apiFetch } from '@/lib/api/fetch';
 
 const pushMock = vi.hoisted(() => vi.fn());
+const dispatchClientDiagnosticMock = vi.hoisted(() => vi.fn());
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
@@ -14,6 +15,11 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('@/lib/api/fetch', () => ({
   apiFetch: vi.fn(),
+}));
+
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientDiagnostic: (...args: unknown[]) => dispatchClientDiagnosticMock(...args),
+  dispatchClientErrorDiagnostic: vi.fn(),
 }));
 
 const baseAssignment = {
@@ -120,10 +126,12 @@ describe('AssignmentReviewClient', () => {
   });
 
   it('keeps publish failures visible and retryable from the review page', async () => {
+    const rawError = 'Organization trust review is still pending for ops@example.com.';
     vi.mocked(apiFetch)
       .mockResolvedValueOnce({
         ok: false,
-        json: async () => ({ message: 'Organization trust review is still pending.' }),
+        status: 503,
+        json: async () => ({ message: rawError }),
       } as Response)
       .mockResolvedValueOnce({
         ok: true,
@@ -146,7 +154,18 @@ describe('AssignmentReviewClient', () => {
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Publishing is blocked');
     expect(alert).toHaveTextContent('This assignment has not been published');
-    expect(alert).toHaveTextContent('Organization trust review is still pending.');
+    expect(alert).toHaveTextContent(
+      'Assignment publishing is currently blocked. Review the draft and retry from this page.'
+    );
+    expect(alert).not.toHaveTextContent(rawError);
+    expect(JSON.stringify(dispatchClientDiagnosticMock.mock.calls)).not.toContain(rawError);
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
+      'assignment_review.publish_returned_error',
+      {
+        status: 503,
+        hasReturnedError: true,
+      }
+    );
     expect(pushMock).not.toHaveBeenCalled();
 
     fireEvent.click(within(alert).getByRole('button', { name: 'Retry publish' }));
@@ -155,6 +174,46 @@ describe('AssignmentReviewClient', () => {
       expect(apiFetch).toHaveBeenCalledTimes(2);
     });
     expect(pushMock).toHaveBeenCalledWith('/app/o/acme/assignments?matching=assignment-1');
+  });
+
+  it('keeps structured publish block reasons visible without noisy returned diagnostics', async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: false,
+      status: 400,
+      json: async () => ({
+        error: 'Assignment is not ready to publish',
+        details: {
+          blocks: [
+            {
+              blockCode: 'work_summary_required',
+              field: 'description',
+              message: 'Describe the real work before publishing.',
+            },
+          ],
+        },
+      }),
+    } as Response);
+
+    render(
+      <AssignmentReviewClient
+        initialAssignment={baseAssignment}
+        assignmentId="assignment-1"
+        slug="acme"
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Publish Assignment/i }));
+
+    const publishDialog = await screen.findByRole('dialog');
+    fireEvent.click(within(publishDialog).getByRole('button', { name: /^Publish assignment$/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Publishing is blocked');
+    expect(alert).toHaveTextContent('Describe the real work before publishing.');
+    expect(dispatchClientDiagnosticMock).not.toHaveBeenCalledWith(
+      'assignment_review.publish_returned_error',
+      expect.anything()
+    );
   });
 
   it('keeps request publish failures calm and retryable without losing review state', async () => {

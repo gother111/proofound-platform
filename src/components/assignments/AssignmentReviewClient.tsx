@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { engagementTypeLabel } from '@/lib/copy/labels';
 import { apiFetch } from '@/lib/api/fetch';
-import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 interface Assignment {
   id: string;
@@ -69,6 +69,38 @@ type ReviewItem = {
   ready: boolean;
   detail: string;
 };
+
+const PUBLISH_RETURNED_ERROR_MESSAGES = new Map([
+  [
+    'ASSIGNMENT_INTERNAL_REVIEW_REQUIRED',
+    'Assignment must reach internal review before it can be published.',
+  ],
+  [
+    'ASSIGNMENT_NOT_PUBLISHABLE',
+    'Assignment is not in a publishable state. Refresh the review page before trying again.',
+  ],
+  ['ORG_NOT_READY', 'Complete the organization trust basics before publishing this assignment.'],
+  ['ASSIGNMENT_PUBLISH_STATE_CHANGED', 'Assignment publish state changed. Refresh and try again.'],
+  ['ASSIGNMENT_PUBLISH_BLOCKED', 'Publishing is blocked by trust or policy requirements.'],
+  ['ASSIGNMENT_PUBLISH_ON_HOLD', 'Publishing is on hold pending trust or policy review.'],
+  ['Assignment is not ready to publish', 'Complete all required sections before publishing.'],
+  [
+    'Assignment not found or access denied',
+    'Assignment could not be published from this organization context. Refresh access and try again.',
+  ],
+  [
+    'Organization context mismatch',
+    'Assignment could not be published from this organization context. Refresh access and try again.',
+  ],
+  [
+    'Forbidden. Organization manager or owner role is required to publish assignments.',
+    'Your role cannot publish this assignment. Ask an owner or manager to publish it.',
+  ],
+  ['Unauthorized', 'Sign in again before publishing this assignment.'],
+]);
+
+const PUBLISH_RETURNED_FALLBACK_MESSAGE =
+  'Assignment publishing is currently blocked. Review the draft and retry from this page.';
 
 function hasText(value: unknown) {
   return typeof value === 'string' && value.trim().length > 0;
@@ -123,6 +155,36 @@ function getSupportedVerificationGates(gates: string[] | undefined) {
 
 function hasUnsupportedVerificationGates(gates: string[] | undefined) {
   return (gates ?? []).some((gate) => !VERIFICATION_GATE_LABELS[gate]);
+}
+
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function getReturnedErrorCode(payload: unknown) {
+  if (!payload || typeof payload !== 'object') return null;
+  const record = payload as { error?: unknown };
+  return typeof record.error === 'string' && record.error.trim().length > 0
+    ? record.error.trim()
+    : null;
+}
+
+function hasReturnedError(payload: unknown) {
+  if (!payload || typeof payload !== 'object') return false;
+  const record = payload as { error?: unknown; message?: unknown };
+  return (
+    (typeof record.error === 'string' && record.error.trim().length > 0) ||
+    (typeof record.message === 'string' && record.message.trim().length > 0)
+  );
+}
+
+function getPublishReturnedMessage(payload: unknown) {
+  const errorCode = getReturnedErrorCode(payload);
+  if (errorCode) {
+    return PUBLISH_RETURNED_ERROR_MESSAGES.get(errorCode) ?? PUBLISH_RETURNED_FALLBACK_MESSAGE;
+  }
+
+  return PUBLISH_RETURNED_FALLBACK_MESSAGE;
 }
 
 export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }: Props) {
@@ -188,6 +250,12 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
         const blocks = Array.isArray(errorData.details?.blocks)
           ? (errorData.details.blocks as PublishBlock[])
           : [];
+        if (blocks.length === 0) {
+          dispatchClientDiagnostic('assignment_review.publish_returned_error', {
+            status: getResponseStatus(response),
+            hasReturnedError: hasReturnedError(errorData),
+          });
+        }
         setPublishBlocks(
           blocks.length > 0
             ? blocks
@@ -195,10 +263,7 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
                 {
                   blockCode: 'publish_blocked',
                   field: 'publish',
-                  message:
-                    errorData.message ||
-                    errorData.error ||
-                    'Assignment publishing is currently blocked.',
+                  message: getPublishReturnedMessage(errorData),
                 },
               ]
         );

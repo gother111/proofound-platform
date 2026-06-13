@@ -395,6 +395,8 @@ describe('runtime debug output guardrails', () => {
     expect(sources).toContain('admin.break_glass_org_audit.preview_failed');
     expect(sources).toContain('assignment_review.client_fetch_failed');
     expect(sources).toContain('assignment_review.publish_failed');
+    expect(sources).toContain('assignment_review.publish_returned_error');
+    expect(sources).toContain('PUBLISH_RETURNED_FALLBACK_MESSAGE');
     expect(sources).toContain('spotlight.provider_missing');
     expect(sources).not.toContain("console.error('Failed to load operations queues'");
     expect(sources).not.toContain("console.error('Failed to update operations queue item'");
@@ -407,6 +409,9 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain("console.error('break_glass_org_audit.preview.failed'");
     expect(sources).not.toContain("console.error('Client fetch failed'");
     expect(sources).not.toContain("console.error('Failed to publish:'");
+    expect(sources).not.toContain(
+      "errorData.message ||\n                    errorData.error ||\n                    'Assignment publishing is currently blocked.'"
+    );
     expect(sources).not.toContain('console.warn(');
   });
 
