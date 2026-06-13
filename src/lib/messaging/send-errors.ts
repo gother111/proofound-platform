@@ -1,5 +1,7 @@
 export const MESSAGE_SEND_RETRY_COPY =
   'Message could not be sent. Your draft is still here; please try again.';
+export const MESSAGE_PII_REVIEW_COPY =
+  'This conversation is still masked. Review the message before sharing contact details or identity-bearing information.';
 
 type PiiDetectedSendError = {
   type: 'PII_DETECTED';
@@ -21,8 +23,8 @@ export function parsePiiDetectedSendError(error: unknown): string | null {
 
   try {
     const parsed = JSON.parse(error.message) as PiiDetectedSendError;
-    if (parsed.type === 'PII_DETECTED' && typeof parsed.message === 'string') {
-      return parsed.message;
+    if (parsed.type === 'PII_DETECTED') {
+      return MESSAGE_PII_REVIEW_COPY;
     }
   } catch {
     return null;

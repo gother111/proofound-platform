@@ -812,6 +812,7 @@ describe('runtime debug output guardrails', () => {
     const sources = [
       readSource('src/app/app/i/messages/MessagesClient.tsx'),
       readSource('src/app/app/o/[slug]/messages/OrgMessagesClient.tsx'),
+      readSource('src/lib/messaging/send-errors.ts'),
     ].join('\n');
 
     expect(sources).toContain(
@@ -823,9 +824,11 @@ describe('runtime debug output guardrails', () => {
     expect(sources).toContain('messages.organization.conversations_load_failed');
     expect(sources).toContain('messages.organization.thread_load_failed');
     expect(sources).toContain('messages.organization.send_failed');
+    expect(sources).toContain('MESSAGE_PII_REVIEW_COPY');
     expect(sources).not.toContain('Failed to load conversations:');
     expect(sources).not.toContain('Failed to load messages:');
     expect(sources).not.toContain('Failed to send message:');
+    expect(sources).not.toContain('return parsed.message');
   });
 
   it('keeps realtime messaging failures on client diagnostics without console output', () => {

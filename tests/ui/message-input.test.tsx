@@ -45,7 +45,7 @@ describe('MessageInput', () => {
         new Error(
           JSON.stringify({
             type: 'PII_DETECTED',
-            message: 'This conversation is still masked. Review before sharing contact details.',
+            message: 'debug: raw policy detector pii_score=0.98 for person@example.com',
           })
         )
       )
@@ -67,8 +67,9 @@ describe('MessageInput', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Send message' }));
 
     expect(await screen.findByRole('alertdialog')).toHaveTextContent(
-      'This conversation is still masked'
+      'This conversation is still masked. Review the message before sharing contact details or identity-bearing information.'
     );
+    expect(screen.queryByText(/raw policy detector/i)).not.toBeInTheDocument();
     expect(
       screen.getByText(
         'Consider waiting until identities are revealed before sharing contact information.'
