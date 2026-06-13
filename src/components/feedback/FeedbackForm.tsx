@@ -11,6 +11,7 @@ import {
   clientFeedbackVisualFixturesEnabled,
   VISUAL_FEEDBACK_TOKENS,
 } from '@/lib/feedback/visual-fixtures';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { cn } from '@/lib/utils';
 
 type Direction = 'candidate_to_org' | 'org_to_candidate';
@@ -62,13 +63,39 @@ const FEEDBACK_SUBMIT_RETRY_MESSAGE =
   'Feedback could not be submitted. Your answers are still here; please try again.';
 const FEEDBACK_VALIDATION_MESSAGE = 'Please fix the highlighted questions before submitting.';
 
+const FEEDBACK_SUBMIT_ERROR_MESSAGES = new Map([
+  [
+    'Feedback is available after the interview is marked completed',
+    'Feedback opens after the interview is marked completed. Your answers are still here.',
+  ],
+  [
+    'No feedback template configured',
+    'This feedback form is not ready yet. Ask the sender to resend the feedback request.',
+  ],
+  [
+    'Structured feedback is required. Include a reason code, personalized note, and suggested next step.',
+    'This feedback form needs a structured response before it can be submitted.',
+  ],
+  [
+    'Feedback already submitted for this side',
+    'Feedback has already been submitted for this side.',
+  ],
+  ['Could not save feedback', FEEDBACK_SUBMIT_RETRY_MESSAGE],
+]);
+
 function feedbackSubmitError(error?: string | null) {
   const normalized = error?.trim();
 
-  if (normalized && !/^Something went wrong\.? Please try again\.?$/i.test(normalized)) {
-    return normalized;
+  if (!normalized || /^Something went wrong\.? Please try again\.?$/i.test(normalized)) {
+    return FEEDBACK_SUBMIT_RETRY_MESSAGE;
   }
 
+  const safeMessage = FEEDBACK_SUBMIT_ERROR_MESSAGES.get(normalized);
+  if (safeMessage) {
+    return safeMessage;
+  }
+
+  dispatchClientErrorDiagnostic('feedback.form.submit_returned_error', new Error(normalized));
   return FEEDBACK_SUBMIT_RETRY_MESSAGE;
 }
 

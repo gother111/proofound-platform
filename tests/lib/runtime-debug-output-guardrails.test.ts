@@ -1242,6 +1242,17 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Failed to send feedback email');
   });
 
+  it('keeps feedback form returned failures on client diagnostics without raw UI text', () => {
+    const source = readSource('src/components/feedback/FeedbackForm.tsx');
+
+    expect(source).toContain(
+      "import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics'"
+    );
+    expect(source).toContain('feedback.form.submit_returned_error');
+    expect(source).toContain('feedbackSubmitError');
+    expect(source).not.toContain('return normalized');
+  });
+
   it('keeps user skills API failures on structured server logging', () => {
     const sources = [
       readSource('src/app/api/expertise/user-skills/route.ts'),

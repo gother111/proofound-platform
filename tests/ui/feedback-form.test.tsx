@@ -4,10 +4,18 @@ import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import FeedbackForm from '../../src/components/feedback/FeedbackForm';
 import { VISUAL_FEEDBACK_TOKENS } from '../../src/lib/feedback/visual-fixtures';
 
+const { dispatchClientErrorDiagnosticMock } = vi.hoisted(() => ({
+  dispatchClientErrorDiagnosticMock: vi.fn(),
+}));
+
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     refresh: vi.fn(),
   }),
+}));
+
+vi.mock('../../src/lib/client-diagnostics', () => ({
+  dispatchClientErrorDiagnostic: (...args: unknown[]) => dispatchClientErrorDiagnosticMock(...args),
 }));
 
 // Simplify UI primitives to avoid unrelated rendering errors
@@ -229,6 +237,36 @@ describe('FeedbackForm', () => {
     );
     expect(screen.getByRole('spinbutton')).toHaveValue(3);
     expect(screen.getByRole('button', { name: /submit feedback/i })).toBeEnabled();
+  });
+
+  it('keeps unexpected feedback API errors safe and diagnostic', async () => {
+    const rawError = 'feedback_answers insert failed: policy detail';
+    vi.mocked(global.fetch).mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({ error: rawError }),
+    } as any);
+
+    render(<FeedbackForm template={template} interviewId="interview-1" token="token-1" />);
+
+    fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '4' } });
+    fireEvent.change(screen.getByPlaceholderText(/Add details/), {
+      target: { value: 'The interview loop was clear.' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /submit feedback/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(
+      'Feedback could not be submitted. Your answers are still here; please try again.'
+    );
+    expect(alert).not.toHaveTextContent(rawError);
+    expect(screen.getByRole('spinbutton')).toHaveValue(4);
+    expect(screen.getByDisplayValue('The interview loop was clear.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /submit feedback/i })).toBeEnabled();
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'feedback.form.submit_returned_error',
+      expect.any(Error)
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(rawError);
   });
 
   it('records visual fixture feedback locally without calling the guarded submit API', async () => {
