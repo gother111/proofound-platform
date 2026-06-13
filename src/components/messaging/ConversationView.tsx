@@ -9,8 +9,9 @@
  * Reference: DATA_SECURITY_PRIVACY_ARCHITECTURE.md Section 10
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import { MessageInput } from './MessageInput';
+import { MessageThreadLoadFailure } from './MessageThreadLoadFailure';
 import { RevealIdentityCard } from './RevealIdentityCard';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -67,56 +68,70 @@ interface ConversationViewProps {
   conversationId: string;
 }
 
+type ConversationLoadFailure = {
+  title: string;
+  description: string;
+};
+
+const CONVERSATION_THREAD_LOAD_FAILURE: ConversationLoadFailure = {
+  title: 'Conversation thread could not load',
+  description:
+    'This conversation did not finish loading. Messages, reveal requests, and review context are still safe; retry before replying.',
+};
+
 export function ConversationView({ conversationId }: ConversationViewProps) {
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [otherParticipant, setOtherParticipant] = useState<OtherParticipant | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ConversationLoadFailure | null>(null);
   const [sendingMessage, setSendingMessage] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-  // Fetch conversation and messages
-  useEffect(() => {
-    fetchConversation();
-    fetchMessages();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  const loadConversationThread = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const [conversationRes, messagesRes] = await Promise.all([
+        apiFetch(`/api/conversations/${conversationId}`),
+        apiFetch(`/api/conversations/${conversationId}/messages?limit=100`),
+      ]);
+
+      if (!conversationRes.ok) {
+        throw new Error('conversation_load_failed');
+      }
+
+      if (!messagesRes.ok) {
+        throw new Error('conversation_messages_load_failed');
+      }
+
+      const [conversationData, messagesData] = await Promise.all([
+        conversationRes.json(),
+        messagesRes.json(),
+      ]);
+
+      setConversation(conversationData.conversation);
+      setOtherParticipant(conversationData.otherParticipant);
+      setMessages(messagesData.messages);
+    } catch (err) {
+      dispatchClientErrorDiagnostic('messages.conversation_view.load_failed', err);
+      setError(CONVERSATION_THREAD_LOAD_FAILURE);
+    } finally {
+      setLoading(false);
+    }
   }, [conversationId]);
+
+  useEffect(() => {
+    void loadConversationThread();
+  }, [loadConversationThread]);
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
-  const fetchConversation = async () => {
-    try {
-      const res = await apiFetch(`/api/conversations/${conversationId}`);
-      if (!res.ok) throw new Error('Failed to fetch conversation');
-
-      const data = await res.json();
-      setConversation(data.conversation);
-      setOtherParticipant(data.otherParticipant);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load conversation');
-    }
-  };
-
-  const fetchMessages = async () => {
-    try {
-      setLoading(true);
-      const res = await apiFetch(`/api/conversations/${conversationId}/messages?limit=100`);
-      if (!res.ok) throw new Error('Failed to fetch messages');
-
-      const data = await res.json();
-      setMessages(data.messages);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load messages');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSendMessage = async (content: string, piiWarningShown: boolean = false) => {
     try {
@@ -170,8 +185,8 @@ export function ConversationView({ conversationId }: ConversationViewProps) {
         throw new Error(data.error || 'Reveal identity request failed');
       }
 
-      // Refresh conversation to get updated reveal status
-      await fetchConversation();
+      // Refresh thread state after a reveal request or approval.
+      await loadConversationThread();
 
       return data;
     } catch (err) {
@@ -194,9 +209,12 @@ export function ConversationView({ conversationId }: ConversationViewProps) {
 
   if (error) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <p className="text-destructive">{error}</p>
-      </div>
+      <MessageThreadLoadFailure
+        title={error.title}
+        description={error.description}
+        isRetrying={loading}
+        onRetry={loadConversationThread}
+      />
     );
   }
 
