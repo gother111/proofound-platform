@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Lock, Loader2, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api/fetch';
-import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 const PASSWORD_UPDATE_FAILED_MESSAGE =
   'Password was not updated. Your password has not changed; review the entries and try again.';
@@ -16,15 +16,44 @@ const PASSWORD_UPDATE_FAILED_MESSAGE =
 function getSafePasswordUpdateError(error: unknown): string {
   const message = error instanceof Error ? error.message : '';
 
-  if (/current password is incorrect/i.test(message)) {
+  if (message === 'password_current_incorrect' || /current password is incorrect/i.test(message)) {
     return 'Current password is incorrect. Please re-enter it and try again.';
   }
 
-  if (/unauthorized/i.test(message)) {
+  if (message === 'password_session_unconfirmed' || /unauthorized/i.test(message)) {
     return 'Your session could not be confirmed. Sign in again, then update your password.';
   }
 
   return PASSWORD_UPDATE_FAILED_MESSAGE;
+}
+
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function getReturnedError(payload: unknown) {
+  if (
+    payload &&
+    typeof payload === 'object' &&
+    'error' in payload &&
+    typeof payload.error === 'string'
+  ) {
+    return payload.error.trim();
+  }
+
+  return '';
+}
+
+function getPasswordUpdateErrorCode(returnedError: string) {
+  if (/current password is incorrect/i.test(returnedError)) {
+    return 'password_current_incorrect';
+  }
+
+  if (/unauthorized/i.test(returnedError)) {
+    return 'password_session_unconfirmed';
+  }
+
+  return 'password_update_request_failed';
 }
 
 /**
@@ -100,10 +129,17 @@ export function PasswordChangeForm() {
         }),
       });
 
-      const data = await response.json().catch(() => ({}));
+      const data = await response.json().catch(() => null);
 
       if (!response.ok) {
-        throw new Error(data.error || 'password update failed');
+        const returnedError = getReturnedError(data);
+        const errorCode = getPasswordUpdateErrorCode(returnedError);
+        dispatchClientDiagnostic('settings.password.update_returned_error', {
+          status: getResponseStatus(response),
+          hasReturnedError: returnedError.length > 0,
+          errorKind: errorCode,
+        });
+        throw new Error(errorCode);
       }
 
       toast.success('Password updated successfully');

@@ -7,7 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Pencil, Check, X, Mail, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api/fetch';
-import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 interface EmailManagerProps {
   currentEmail: string;
@@ -20,15 +20,44 @@ const EMAIL_UPDATE_FAILED_MESSAGE =
 function getSafeEmailUpdateError(error: unknown): string {
   const message = error instanceof Error ? error.message : '';
 
-  if (/valid email address/i.test(message)) {
+  if (message === 'email_invalid_address' || /valid email address/i.test(message)) {
     return 'Please enter a valid email address.';
   }
 
-  if (/unauthorized/i.test(message)) {
+  if (message === 'email_session_unconfirmed' || /unauthorized/i.test(message)) {
     return 'Your session could not be confirmed. Sign in again, then update your email.';
   }
 
   return EMAIL_UPDATE_FAILED_MESSAGE;
+}
+
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function getReturnedError(payload: unknown) {
+  if (
+    payload &&
+    typeof payload === 'object' &&
+    'error' in payload &&
+    typeof payload.error === 'string'
+  ) {
+    return payload.error.trim();
+  }
+
+  return '';
+}
+
+function getEmailUpdateErrorCode(returnedError: string) {
+  if (/valid email address/i.test(returnedError)) {
+    return 'email_invalid_address';
+  }
+
+  if (/unauthorized/i.test(returnedError)) {
+    return 'email_session_unconfirmed';
+  }
+
+  return 'email_update_request_failed';
 }
 
 /**
@@ -77,10 +106,17 @@ export function EmailManager({ currentEmail, onEmailUpdated }: EmailManagerProps
         body: JSON.stringify({ email: newEmail }),
       });
 
-      const data = await response.json().catch(() => ({}));
+      const data = await response.json().catch(() => null);
 
       if (!response.ok) {
-        throw new Error(data.error || 'email update failed');
+        const returnedError = getReturnedError(data);
+        const errorCode = getEmailUpdateErrorCode(returnedError);
+        dispatchClientDiagnostic('settings.email.update_returned_error', {
+          status: getResponseStatus(response),
+          hasReturnedError: returnedError.length > 0,
+          errorKind: errorCode,
+        });
+        throw new Error(errorCode);
       }
 
       toast.success('Email updated successfully', {

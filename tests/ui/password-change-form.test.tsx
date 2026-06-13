@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PasswordChangeForm } from '@/components/settings/PasswordChangeForm';
 import { apiFetch } from '@/lib/api/fetch';
-import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 const toastErrorMock = vi.hoisted(() => vi.fn());
 
@@ -13,6 +13,7 @@ vi.mock('@/lib/api/fetch', () => ({
 }));
 
 vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientDiagnostic: vi.fn(),
   dispatchClientErrorDiagnostic: vi.fn(),
 }));
 
@@ -24,6 +25,7 @@ vi.mock('sonner', () => ({
 }));
 
 const apiFetchMock = vi.mocked(apiFetch);
+const dispatchClientDiagnosticMock = vi.mocked(dispatchClientDiagnostic);
 const dispatchClientErrorDiagnosticMock = vi.mocked(dispatchClientErrorDiagnostic);
 
 describe('PasswordChangeForm', () => {
@@ -78,9 +80,22 @@ describe('PasswordChangeForm', () => {
       'settings.password.update_failed',
       expect.any(Error)
     );
-    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
-      rawFailure
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
+      'settings.password.update_returned_error',
+      expect.objectContaining({
+        hasReturnedError: true,
+        errorKind: 'password_update_request_failed',
+      })
     );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
+      'password_update_request_failed'
+    );
+    expect(
+      [
+        ...dispatchClientDiagnosticMock.mock.calls,
+        ...dispatchClientErrorDiagnosticMock.mock.calls,
+      ].some((call) => JSON.stringify(call).includes(rawFailure))
+    ).toBe(false);
     await waitFor(() =>
       expect(screen.getByRole('button', { name: /update password/i })).toBeEnabled()
     );

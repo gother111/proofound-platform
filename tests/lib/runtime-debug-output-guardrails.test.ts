@@ -1433,14 +1433,17 @@ describe('runtime debug output guardrails', () => {
       readSource('src/components/settings/EmailManager.tsx'),
     ].join('\n');
 
-    expect(sources).toContain(
-      "import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics'"
-    );
+    expect(sources).toContain('dispatchClientDiagnostic');
+    expect(sources).toContain('dispatchClientErrorDiagnostic');
+    expect(sources).toContain('settings.password.update_returned_error');
     expect(sources).toContain('settings.password.update_failed');
+    expect(sources).toContain('settings.email.update_returned_error');
     expect(sources).toContain('settings.email.update_failed');
     expect(sources).toContain('Password was not updated');
     expect(sources).toContain('Email was not updated');
     expect(sources).not.toContain('toast.error(errorMessage)');
+    expect(sources).not.toContain("throw new Error(data.error || 'password update failed')");
+    expect(sources).not.toContain("throw new Error(data.error || 'email update failed')");
     expect(sources).not.toContain("throw new Error(data.error || 'Failed to update password')");
     expect(sources).not.toContain("throw new Error(data.error || 'Failed to update email')");
   });
