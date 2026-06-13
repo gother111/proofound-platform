@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   apiFetch: vi.fn(),
+  clientDiagnostic: vi.fn(),
   diagnostic: vi.fn(),
   markAllAsRead: vi.fn(),
   markAsRead: vi.fn(),
@@ -16,6 +17,7 @@ vi.mock('@/lib/api/fetch', () => ({
 }));
 
 vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientDiagnostic: mocks.clientDiagnostic,
   dispatchClientErrorDiagnostic: mocks.diagnostic,
 }));
 
@@ -205,10 +207,26 @@ describe('RealtimeMessageThread', () => {
         'Reveal request could not be sent. The thread remains masked; please try again.',
       ]);
     });
+    expect(mocks.clientDiagnostic).toHaveBeenCalledWith(
+      'messages.thread.reveal_returned_error',
+      expect.objectContaining({
+        conversationId: 'conversation-1',
+        isApproval: false,
+        hasReturnedError: true,
+      })
+    );
     expect(mocks.diagnostic).toHaveBeenCalledWith(
       'messages.thread.reveal_failed',
       expect.any(Error)
     );
+    expect((mocks.diagnostic.mock.calls[0]?.[1] as Error).message).toBe(
+      'reveal_identity_request_failed'
+    );
+    expect(
+      [...mocks.clientDiagnostic.mock.calls, ...mocks.diagnostic.mock.calls].some((call) =>
+        JSON.stringify(call).includes('Conversation not found')
+      )
+    ).toBe(false);
 
     window.removeEventListener('realtime-reveal-rejected', listener);
   });

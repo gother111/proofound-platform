@@ -4,14 +4,36 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ConversationView } from '@/components/messaging/ConversationView';
 import { apiFetch } from '@/lib/api/fetch';
-import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 vi.mock('@/lib/api/fetch', () => ({
   apiFetch: vi.fn(),
 }));
 
 vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientDiagnostic: vi.fn(),
   dispatchClientErrorDiagnostic: vi.fn(),
+}));
+
+vi.mock('@/components/messaging/RevealIdentityCard', () => ({
+  RevealIdentityCard: ({ onReveal }: { onReveal: () => Promise<unknown> }) => (
+    <button
+      type="button"
+      onClick={async () => {
+        try {
+          await onReveal();
+        } catch (error) {
+          window.dispatchEvent(
+            new CustomEvent('conversation-reveal-rejected', {
+              detail: error instanceof Error ? error.message : String(error),
+            })
+          );
+        }
+      }}
+    >
+      Request reveal from mock
+    </button>
+  ),
 }));
 
 function conversationResponse() {
@@ -28,6 +50,33 @@ function conversationResponse() {
         currentUserWantsReveal: false,
         otherUserWantsReveal: false,
         canReveal: false,
+      },
+      otherParticipant: {
+        id: 'org-1',
+        handle: null,
+        displayName: 'Nordic Future Labs',
+        avatarUrl: null,
+        persona: 'org_member',
+        masked: true,
+      },
+    }),
+  };
+}
+
+function revealableConversationResponse() {
+  return {
+    ok: true,
+    json: async () => ({
+      conversation: {
+        id: 'conversation-1',
+        matchId: 'match-1',
+        stage: 'masked',
+        revealedAt: null,
+        lastMessageAt: null,
+        createdAt: '2026-03-20T10:00:00.000Z',
+        currentUserWantsReveal: false,
+        otherUserWantsReveal: false,
+        canReveal: true,
       },
       otherParticipant: {
         id: 'org-1',
@@ -107,5 +156,57 @@ describe('ConversationView load failure recovery', () => {
       'messages.conversation_view.load_failed',
       expect.any(Error)
     );
+  });
+
+  it('keeps reveal returned errors safe, diagnostic, and retryable', async () => {
+    const rejectedReveals: string[] = [];
+    const listener = (event: Event) => {
+      rejectedReveals.push((event as CustomEvent<string>).detail);
+    };
+    window.addEventListener('conversation-reveal-rejected', listener);
+
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce(revealableConversationResponse() as any)
+      .mockResolvedValueOnce(messagesResponse() as any)
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        json: async () => ({ error: 'Conversation not found' }),
+      } as any);
+
+    const { container } = render(<ConversationView conversationId="conversation-1" />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Request reveal from mock' }));
+
+    await waitFor(() => {
+      expect(rejectedReveals).toEqual([
+        'Reveal request could not be sent. The thread remains masked; please try again.',
+      ]);
+    });
+    expect(dispatchClientDiagnostic).toHaveBeenCalledWith(
+      'messages.conversation_view.reveal_returned_error',
+      expect.objectContaining({
+        conversationId: 'conversation-1',
+        isApproval: false,
+        status: 404,
+        hasReturnedError: true,
+      })
+    );
+    expect(dispatchClientErrorDiagnostic).toHaveBeenCalledWith(
+      'messages.conversation_view.reveal_failed',
+      expect.any(Error)
+    );
+    expect((vi.mocked(dispatchClientErrorDiagnostic).mock.calls[0]?.[1] as Error).message).toBe(
+      'reveal_identity_request_failed'
+    );
+    expect(container).not.toHaveTextContent('Conversation not found');
+    expect(
+      [
+        ...vi.mocked(dispatchClientDiagnostic).mock.calls,
+        ...vi.mocked(dispatchClientErrorDiagnostic).mock.calls,
+      ].some((call) => JSON.stringify(call).includes('Conversation not found'))
+    ).toBe(false);
+
+    window.removeEventListener('conversation-reveal-rejected', listener);
   });
 });

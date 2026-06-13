@@ -7,7 +7,7 @@ import { RevealIdentityCard } from './RevealIdentityCard';
 import { Wifi, WifiOff } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { apiFetch } from '@/lib/api/fetch';
-import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { getConversationParticipantLabel } from '@/lib/messaging/participant-label';
 import { createRevealIdentityRetryError } from '@/lib/messaging/reveal-errors';
 import { createMessageSendRetryError } from '@/lib/messaging/send-errors';
@@ -21,6 +21,20 @@ export interface RealtimeMessageThreadProps {
   stage: 'masked' | 'revealed';
   onSendMessage: (content: string) => Promise<void>;
   onBack?: () => void;
+}
+
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function hasReturnedError(payload: unknown) {
+  return Boolean(
+    payload &&
+      typeof payload === 'object' &&
+      'error' in payload &&
+      typeof payload.error === 'string' &&
+      payload.error.trim().length > 0
+  );
 }
 
 /**
@@ -95,10 +109,16 @@ export function RealtimeMessageThread({
       const response = await apiFetch(`/api/conversations/${conversationId}/reveal`, {
         method: 'POST',
       });
-      const data = await response.json();
+      const data = await response.json().catch(() => null);
 
       if (!response.ok) {
-        throw new Error(data.error || 'Reveal identity request failed');
+        dispatchClientDiagnostic('messages.thread.reveal_returned_error', {
+          conversationId,
+          isApproval,
+          status: getResponseStatus(response),
+          hasReturnedError: hasReturnedError(data),
+        });
+        throw new Error('reveal_identity_request_failed');
       }
 
       await refreshConversationState();

@@ -20,7 +20,7 @@ import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { CheckCheck, Check, Mail, Phone, Link2, Lock } from 'lucide-react';
 import { apiFetch } from '@/lib/api/fetch';
-import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { createRevealIdentityRetryError } from '@/lib/messaging/reveal-errors';
 import { createMessageSendRetryError } from '@/lib/messaging/send-errors';
 
@@ -78,6 +78,20 @@ const CONVERSATION_THREAD_LOAD_FAILURE: ConversationLoadFailure = {
   description:
     'This conversation did not finish loading. Messages, reveal requests, and review context are still safe; retry before replying.',
 };
+
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function hasReturnedError(payload: unknown) {
+  return Boolean(
+    payload &&
+      typeof payload === 'object' &&
+      'error' in payload &&
+      typeof payload.error === 'string' &&
+      payload.error.trim().length > 0
+  );
+}
 
 export function ConversationView({ conversationId }: ConversationViewProps) {
   const [conversation, setConversation] = useState<Conversation | null>(null);
@@ -179,10 +193,16 @@ export function ConversationView({ conversationId }: ConversationViewProps) {
         method: 'POST',
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
 
       if (!res.ok) {
-        throw new Error(data.error || 'Reveal identity request failed');
+        dispatchClientDiagnostic('messages.conversation_view.reveal_returned_error', {
+          conversationId,
+          isApproval,
+          status: getResponseStatus(res),
+          hasReturnedError: hasReturnedError(data),
+        });
+        throw new Error('reveal_identity_request_failed');
       }
 
       // Refresh thread state after a reveal request or approval.

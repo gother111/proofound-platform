@@ -869,6 +869,7 @@ describe('runtime debug output guardrails', () => {
   it('keeps realtime messaging failures on client diagnostics without console output', () => {
     const sources = [
       readSource('src/hooks/useRealtimeMessages.ts'),
+      readSource('src/components/messaging/ConversationView.tsx'),
       readSource('src/components/messaging/RealtimeMessageThread.tsx'),
     ].join('\n');
 
@@ -880,7 +881,10 @@ describe('runtime debug output guardrails', () => {
     expect(sources).toContain('messages.realtime.mark_read_unexpected_failed');
     expect(sources).toContain('messages.realtime.mark_all_read_failed');
     expect(sources).toContain('messages.realtime.mark_all_read_unexpected_failed');
+    expect(sources).toContain('messages.conversation_view.reveal_returned_error');
+    expect(sources).toContain('messages.conversation_view.reveal_failed');
     expect(sources).toContain('messages.thread.conversation_refresh_failed');
+    expect(sources).toContain('messages.thread.reveal_returned_error');
     expect(sources).toContain('messages.thread.reveal_failed');
     expect(sources).toContain('messages.thread.send_failed');
     expect(sources).not.toContain('User joined:');
@@ -893,6 +897,9 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Failed to refresh conversation state:');
     expect(sources).not.toContain('Failed to send message:');
     expect(sources).not.toContain('Failed to request reveal:');
+    expect(sources).not.toContain(
+      "throw new Error(data.error || 'Reveal identity request failed')"
+    );
   });
 
   it('keeps candidate invite client failures on client diagnostics without console output', () => {
