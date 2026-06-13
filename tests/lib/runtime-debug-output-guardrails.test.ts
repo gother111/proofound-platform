@@ -427,8 +427,11 @@ describe('runtime debug output guardrails', () => {
     const source = readSource('src/components/policy/PolicyAssistant.tsx');
 
     expect(source).toContain('policy.assistant.ask_failed');
+    expect(source).toContain('errorName: clientErrorName(error)');
+    expect(source).toContain('hasError: true');
     expect(source).not.toContain('policy.assistant.ask.failed');
     expect(source).not.toContain("console.error('policy.assistant.ask.failed'");
+    expect(source).not.toContain('error: error instanceof Error ? error.message');
   });
 
   it('keeps legacy client helpers and realtime diagnostics off raw console output', () => {

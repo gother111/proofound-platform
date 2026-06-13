@@ -46,6 +46,14 @@ const COMMON_QUESTIONS: CommonQuestion[] = [
   },
 ];
 
+function clientErrorName(error: unknown) {
+  if (error instanceof Error && error.name.trim()) {
+    return error.name;
+  }
+
+  return 'UnknownError';
+}
+
 const explainPolicyQuestion = (question: string): Message => {
   const normalizedQuestion = question.toLowerCase();
 
@@ -132,7 +140,8 @@ export function PolicyAssistant() {
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
       dispatchClientDiagnostic('policy.assistant.ask_failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+        errorName: clientErrorName(error),
+        hasError: true,
       });
 
       const errorMessage: Message = {
