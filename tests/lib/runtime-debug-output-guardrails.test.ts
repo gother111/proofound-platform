@@ -371,7 +371,9 @@ describe('runtime debug output guardrails', () => {
     ].join('\n');
 
     expect(sources).toContain('admin.operations_queues.load_failed');
+    expect(sources).toContain('admin.operations_queues.load_returned_error');
     expect(sources).toContain('admin.operations_queues.update_failed');
+    expect(sources).toContain('admin.operations_queues.update_returned_error');
     expect(sources).toContain('OPERATIONS_QUEUE_LOAD_RETRY_MESSAGE');
     expect(sources).toContain('OPERATIONS_QUEUE_UPDATE_RETRY_MESSAGE');
     expect(sources).toContain('admin.audit_history.load_failed');
@@ -381,6 +383,10 @@ describe('runtime debug output guardrails', () => {
     expect(sources).toContain('spotlight.provider_missing');
     expect(sources).not.toContain("console.error('Failed to load operations queues'");
     expect(sources).not.toContain("console.error('Failed to update operations queue item'");
+    expect(sources).not.toContain(
+      "throw new Error(error.error || 'Failed to load operations queues')"
+    );
+    expect(sources).not.toContain("throw new Error(error.error || 'Failed to update queue item')");
     expect(sources).not.toContain('toast.error(error instanceof Error ? error.message');
     expect(sources).not.toContain("console.error('Audit history load failed'");
     expect(sources).not.toContain("console.error('break_glass_org_audit.preview.failed'");

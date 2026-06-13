@@ -3,11 +3,16 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const apiFetchMock = vi.fn();
+const dispatchClientDiagnosticMock = vi.fn();
 const toastErrorMock = vi.fn();
 const toastSuccessMock = vi.fn();
 
 vi.mock('@/lib/api/fetch', () => ({
   apiFetch: (...args: any[]) => apiFetchMock(...args),
+}));
+
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientDiagnostic: (...args: any[]) => dispatchClientDiagnosticMock(...args),
 }));
 
 vi.mock('sonner', () => ({
@@ -19,9 +24,10 @@ vi.mock('sonner', () => ({
 
 import { AdminVerificationDashboard } from '@/components/admin/AdminVerificationDashboard';
 
-function buildJsonResponse(payload: unknown, ok = true) {
+function buildJsonResponse(payload: unknown, ok = true, status = ok ? 200 : 500) {
   return {
     ok,
+    status,
     json: vi.fn().mockResolvedValue(payload),
   } as any;
 }
@@ -179,6 +185,24 @@ describe('AdminVerificationDashboard', () => {
     });
     expect(toastErrorMock).not.toHaveBeenCalledWith(rawFailure);
     expect(screen.queryByText(rawFailure)).not.toBeInTheDocument();
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
+      'admin.operations_queues.load_returned_error',
+      expect.objectContaining({
+        status: 500,
+        hasReturnedError: true,
+      })
+    );
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
+      'admin.operations_queues.load_failed',
+      expect.objectContaining({
+        error: 'operations_queues_load_request_failed',
+      })
+    );
+    expect(
+      dispatchClientDiagnosticMock.mock.calls.some((call) =>
+        JSON.stringify(call).includes(rawFailure)
+      )
+    ).toBe(false);
   });
 
   it.each([
@@ -325,6 +349,27 @@ describe('AdminVerificationDashboard', () => {
     });
     expect(toastErrorMock).not.toHaveBeenCalledWith(rawFailure);
     expect(screen.queryByText(rawFailure)).not.toBeInTheDocument();
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
+      'admin.operations_queues.update_returned_error',
+      expect.objectContaining({
+        itemId: '33333333-3333-4333-8333-333333333333',
+        action: 'resolve',
+        nextStatus: 'resolved',
+        status: 500,
+        hasReturnedError: true,
+      })
+    );
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
+      'admin.operations_queues.update_failed',
+      expect.objectContaining({
+        error: 'operations_queue_update_request_failed',
+      })
+    );
+    expect(
+      dispatchClientDiagnosticMock.mock.calls.some((call) =>
+        JSON.stringify(call).includes(rawFailure)
+      )
+    ).toBe(false);
     expect(screen.getByRole('alertdialog', { name: 'Resolve queue item?' })).toBeInTheDocument();
   });
 

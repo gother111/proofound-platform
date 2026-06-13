@@ -208,12 +208,30 @@ const METADATA_VALUE_LABEL_OVERRIDES: Record<string, Record<string, string>> = {
   },
 };
 
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+async function responseHasReturnedError(response: Response) {
+  const payload = await response.json().catch(() => null);
+  return Boolean(
+    payload &&
+      typeof payload === 'object' &&
+      'error' in payload &&
+      typeof payload.error === 'string' &&
+      payload.error.trim().length > 0
+  );
+}
+
 async function fetchQueueData() {
   const response = await apiFetch('/api/admin/internal-ops/queues');
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to load operations queues');
+    dispatchClientDiagnostic('admin.operations_queues.load_returned_error', {
+      status: getResponseStatus(response),
+      hasReturnedError: await responseHasReturnedError(response),
+    });
+    throw new Error('operations_queues_load_request_failed');
   }
 
   return (await response.json()) as QueueResponse;
@@ -474,6 +492,7 @@ export function AdminVerificationDashboard() {
       } catch (error) {
         dispatchClientDiagnostic('admin.operations_queues.load_failed', {
           errorName: error instanceof Error ? error.name : typeof error,
+          error: error instanceof Error ? error.message : 'unknown',
         });
         if (mounted) {
           toast.error(OPERATIONS_QUEUE_LOAD_RETRY_MESSAGE);
@@ -527,8 +546,14 @@ export function AdminVerificationDashboard() {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to update queue item');
+        dispatchClientDiagnostic('admin.operations_queues.update_returned_error', {
+          itemId: item.id,
+          action: action.id,
+          nextStatus,
+          status: getResponseStatus(response),
+          hasReturnedError: await responseHasReturnedError(response),
+        });
+        throw new Error('operations_queue_update_request_failed');
       }
 
       const nextData = await fetchQueueData();
@@ -544,6 +569,7 @@ export function AdminVerificationDashboard() {
     } catch (error) {
       dispatchClientDiagnostic('admin.operations_queues.update_failed', {
         errorName: error instanceof Error ? error.name : typeof error,
+        error: error instanceof Error ? error.message : 'unknown',
       });
       toast.error(OPERATIONS_QUEUE_UPDATE_RETRY_MESSAGE);
       return false;
