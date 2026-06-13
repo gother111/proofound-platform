@@ -312,8 +312,9 @@ describe('runtime debug output guardrails', () => {
   });
 
   it('keeps active decision, proof, profile privacy, and share diagnostics off raw console output', () => {
+    const decisionSource = readSource('src/components/decisions/DecisionDialog.tsx');
     const sources = [
-      readSource('src/components/decisions/DecisionDialog.tsx'),
+      decisionSource,
       readSource('src/components/privacy/RedactModeToggle.tsx'),
       readSource('src/components/privacy/VisibilitySettingsModal.tsx'),
       readSource('src/components/privacy/FieldVisibilityControls.tsx'),
@@ -328,6 +329,8 @@ describe('runtime debug output guardrails', () => {
     expect(sources).toContain('decision.window.fetch_failed');
     expect(sources).toContain('decision.submit_returned_error');
     expect(sources).toContain('decision.submit_failed');
+    expect(sources).toContain('hasReturnedError: returnedError.length > 0');
+    expect(sources).toContain('errorName: clientErrorName(error)');
     expect(sources).toContain('privacy.redact_mode.toggle_failed');
     expect(sources).toContain('privacy.visibility_modal.user_load_failed');
     expect(sources).toContain('privacy.field_controls.load_failed');
@@ -351,6 +354,8 @@ describe('runtime debug output guardrails', () => {
     expect(sources).toContain('profile.hero.average_color_failed');
     expect(sources).not.toContain('decision.window.fetch.failed');
     expect(sources).not.toContain('decision.submit.failed');
+    expect(decisionSource).not.toContain('error: error instanceof Error ? error.message');
+    expect(decisionSource).not.toContain("error: 'Decision submit request failed'");
     expect(sources).not.toContain(
       "throw new Error(error.error || 'Decision submit request failed')"
     );

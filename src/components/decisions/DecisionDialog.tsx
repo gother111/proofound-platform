@@ -44,6 +44,26 @@ interface DecisionWindow {
   deadline: string;
 }
 
+function clientErrorName(error: unknown) {
+  if (error instanceof Error && error.name.trim()) {
+    return error.name;
+  }
+
+  return 'UnknownError';
+}
+
+function getReturnedError(payload: unknown) {
+  if (!payload || typeof payload !== 'object') {
+    return '';
+  }
+
+  if ('error' in payload && typeof payload.error === 'string') {
+    return payload.error.trim();
+  }
+
+  return '';
+}
+
 export function DecisionDialog({
   isOpen,
   onClose,
@@ -88,7 +108,8 @@ export function DecisionDialog({
       });
     } catch (error) {
       dispatchClientDiagnostic('decision.window.fetch_failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+        errorName: clientErrorName(error),
+        hasError: true,
       });
       setDecisionWindowError(
         'The decision can still be recorded, but the 48-hour SLA countdown could not load. Retry before confirming if you need the current deadline.'
@@ -125,13 +146,11 @@ export function DecisionDialog({
 
       if (!response.ok) {
         const error = await response.json().catch(() => null);
+        const returnedError = getReturnedError(error);
         dispatchClientDiagnostic('decision.submit_returned_error', {
           decision,
           status: response.status,
-          error:
-            error && typeof error === 'object' && typeof error.error === 'string'
-              ? error.error
-              : 'Decision submit request failed',
+          hasReturnedError: returnedError.length > 0,
         });
         throw new Error('decision_submit_request_failed');
       }
@@ -157,7 +176,8 @@ export function DecisionDialog({
     } catch (error) {
       dispatchClientDiagnostic('decision.submit_failed', {
         decision,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        errorName: clientErrorName(error),
+        hasError: true,
       });
       toast({
         title: 'Decision not recorded',

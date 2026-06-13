@@ -105,6 +105,13 @@ describe('DecisionDialog', () => {
     expect(toastMock).not.toHaveBeenCalledWith(
       expect.objectContaining({ title: 'Failed to load decision window' })
     );
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith('decision.window.fetch_failed', {
+      errorName: 'Error',
+      hasError: true,
+    });
+    expect(JSON.stringify(dispatchClientDiagnosticMock.mock.calls)).not.toContain(
+      'temporary outage'
+    );
 
     fireEvent.click(within(alert).getByRole('button', { name: 'Retry deadline' }));
 
@@ -196,22 +203,21 @@ describe('DecisionDialog', () => {
       expect.objectContaining({
         decision: 'hold',
         status: 500,
-        error: 'Decision transition blocked by policy guard',
+        hasReturnedError: true,
       })
     );
     expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
       'decision.submit_failed',
       expect.objectContaining({
         decision: 'hold',
-        error: 'decision_submit_request_failed',
+        errorName: 'Error',
+        hasError: true,
       })
     );
     expect(
-      dispatchClientDiagnosticMock.mock.calls
-        .filter(([reason]) => reason === 'decision.submit_failed')
-        .some(([, detail]) =>
-          JSON.stringify(detail).includes('Decision transition blocked by policy guard')
-        )
+      JSON.stringify(dispatchClientDiagnosticMock.mock.calls).includes(
+        'Decision transition blocked by policy guard'
+      )
     ).toBe(false);
     expect(screen.getByRole('button', { name: 'Hold' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByLabelText(/Feedback/i)).toHaveValue(feedback);
