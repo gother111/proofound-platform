@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { MatchingClient } from '@/app/app/i/matching/MatchingClient';
+import { apiFetch } from '@/lib/api/fetch';
 import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { toast } from 'sonner';
 
@@ -36,8 +37,19 @@ vi.mock('@/components/matching/IndividualMatchingEmpty', () => ({
 }));
 
 vi.mock('@/components/matching/MatchResultCard', () => ({
-  MatchResultCard: ({ result }: { result: { id: string } }) => (
-    <div data-testid="match-card">{result.id}</div>
+  MatchResultCard: ({
+    result,
+    onInterested,
+  }: {
+    result: { id: string };
+    onInterested: () => void;
+  }) => (
+    <div data-testid="match-card">
+      <span>{result.id}</span>
+      <button type="button" onClick={onInterested}>
+        Express interest
+      </button>
+    </div>
   ),
 }));
 
@@ -58,6 +70,7 @@ vi.mock('@/lib/api/fetch', () => ({
 }));
 
 const dispatchClientErrorDiagnosticMock = vi.mocked(dispatchClientErrorDiagnostic);
+const apiFetchMock = vi.mocked(apiFetch);
 const toastErrorMock = vi.mocked(toast.error);
 
 describe('individual matching load failure recovery', () => {
@@ -130,5 +143,85 @@ describe('individual matching load failure recovery', () => {
       expect(screen.getByText('Matching profile setup ready')).toBeInTheDocument();
     });
     expect(profileRequests).toBe(2);
+  });
+
+  it('keeps failed interest requests safe and retryable without changing corridor state', async () => {
+    const rawFailure = {
+      message: 'debug: intro workflow write failed for candidate@example.com',
+      requestId: 'interest-provider-secret-123',
+    };
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        if (url === '/api/individual/readiness') {
+          return {
+            ok: true,
+            json: async () => ({ topActions: [] }),
+          } as Response;
+        }
+
+        if (url === '/api/matching-profile') {
+          return {
+            ok: true,
+            json: async () => ({ profile: { id: 'user-1' } }),
+          } as Response;
+        }
+
+        throw new Error(`Unexpected fetch URL: ${url}`);
+      }) as any
+    );
+
+    apiFetchMock.mockImplementation(async (url: string) => {
+      if (url === '/api/match/profile') {
+        return {
+          ok: true,
+          json: async () => ({
+            items: [
+              {
+                id: 'match-1',
+                assignmentId: 'assignment-1',
+                assignment: { role: 'Proof operations lead' },
+              },
+            ],
+          }),
+        } as Response;
+      }
+
+      if (url === '/api/match/interest') {
+        return {
+          ok: false,
+          status: 500,
+          json: async () => rawFailure,
+        } as Response;
+      }
+
+      throw new Error(`Unexpected apiFetch URL: ${url}`);
+    });
+
+    render(<MatchingClient />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Express interest' }));
+
+    await waitFor(() => {
+      expect(toastErrorMock).toHaveBeenCalledWith(
+        'Interest could not be recorded',
+        expect.objectContaining({
+          description:
+            'No intro, reveal, or review state changed. Retry before moving to the next assignment review.',
+        })
+      );
+    });
+
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'matching.client.interest_returned_error',
+      rawFailure
+    );
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'matching.client.interest_failed',
+      expect.any(Error)
+    );
+    expect(document.body).not.toHaveTextContent(/candidate@example.com/i);
+    expect(JSON.stringify(toastErrorMock.mock.calls)).not.toContain('candidate@example.com');
   });
 });

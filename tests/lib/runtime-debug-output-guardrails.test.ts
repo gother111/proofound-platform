@@ -831,6 +831,17 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('return parsed.message');
   });
 
+  it('keeps individual matching interest failures safe and diagnostic', () => {
+    const source = readSource('src/app/app/i/matching/MatchingClient.tsx');
+
+    expect(source).toContain('matching.client.interest_returned_error');
+    expect(source).toContain('matching.client.interest_failed');
+    expect(source).toContain('Interest could not be recorded');
+    expect(source).toContain('No intro, reveal, or review state changed');
+    expect(source).not.toContain("toast.error('Failed to record interest')");
+    expect(source).not.toContain('errorPayload?.message ||');
+  });
+
   it('keeps realtime messaging failures on client diagnostics without console output', () => {
     const sources = [
       readSource('src/hooks/useRealtimeMessages.ts'),

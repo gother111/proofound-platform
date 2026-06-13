@@ -19,6 +19,9 @@ const MATCHING_LOAD_RETRY_COPY =
   'Assignment reviews could not load. Your profile, proof records, and paused or hidden choices are still safe; retry this section before acting on assignment reviews.';
 const MATCHING_LOAD_TOAST_DESCRIPTION =
   'Retry assignment reviews without changing proof, preferences, or hidden assignment reviews.';
+const MATCHING_INTEREST_RETRY_TITLE = 'Interest could not be recorded';
+const MATCHING_INTEREST_RETRY_DESCRIPTION =
+  'No intro, reveal, or review state changed. Retry before moving to the next assignment review.';
 
 type MatchabilityCriterion = {
   id: string;
@@ -468,7 +471,11 @@ export function MatchingClient() {
 
                   if (!response.ok) {
                     const errorPayload = await response.json().catch(() => null);
-                    throw new Error(errorPayload?.message || 'Failed');
+                    dispatchClientErrorDiagnostic(
+                      'matching.client.interest_returned_error',
+                      errorPayload ?? { status: response.status }
+                    );
+                    throw new Error('matching_interest_request_failed');
                   }
 
                   const data = await response.json();
@@ -487,7 +494,10 @@ export function MatchingClient() {
                     toast.success('Interest recorded. Waiting for shortlist review.');
                   }
                 } catch (error) {
-                  toast.error('Failed to record interest');
+                  dispatchClientErrorDiagnostic('matching.client.interest_failed', error);
+                  toast.error(MATCHING_INTEREST_RETRY_TITLE, {
+                    description: MATCHING_INTEREST_RETRY_DESCRIPTION,
+                  });
                 }
               }}
               onHide={async () => {
