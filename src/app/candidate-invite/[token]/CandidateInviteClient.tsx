@@ -248,6 +248,22 @@ const CANDIDATE_INVITE_CLAIM_RETRY_MESSAGE =
 const CANDIDATE_INVITE_CLAIM_RETRY_DETAIL =
   'No proof was submitted, no visibility changed, and the invitation can be retried from this page.';
 
+const CANDIDATE_INVITE_CLAIM_ERROR_MESSAGES = new Map([
+  [
+    'Unauthorized',
+    'Please sign in again before accepting this invite. Your assignment context is still here.',
+  ],
+  ['Invite not found', 'This invitation link is invalid, expired, or no longer available.'],
+  ['Invite is already completed', 'This invitation has already been completed.'],
+  [
+    'Profile not found',
+    'Your profile could not be confirmed before accepting this invite. Please sign in again.',
+  ],
+  ['Assignment not found.', 'This assignment context is no longer available.'],
+  ['Failed to claim invite', CANDIDATE_INVITE_CLAIM_RETRY_MESSAGE],
+  ['Failed to claim invite.', CANDIDATE_INVITE_CLAIM_RETRY_MESSAGE],
+]);
+
 const CANDIDATE_INVITE_PROOF_SUBMIT_RETRY_MESSAGE = 'Assignment proof could not be submitted.';
 
 const CANDIDATE_INVITE_PROOF_SUBMIT_ERROR_MESSAGES = new Map([
@@ -293,11 +309,19 @@ const CANDIDATE_INVITE_PROOF_SUBMIT_ERROR_MESSAGES = new Map([
 
 function candidateInviteClaimError(error?: string | null) {
   const normalized = error?.trim();
-
-  if (normalized && !/^Failed to claim invite\.?$/i.test(normalized)) {
-    return normalized;
+  if (!normalized) {
+    return CANDIDATE_INVITE_CLAIM_RETRY_MESSAGE;
   }
 
+  const safeMessage = CANDIDATE_INVITE_CLAIM_ERROR_MESSAGES.get(normalized);
+  if (safeMessage) {
+    return safeMessage;
+  }
+
+  dispatchClientErrorDiagnostic(
+    'candidate_invite.client.claim_returned_error',
+    new Error(normalized)
+  );
   return CANDIDATE_INVITE_CLAIM_RETRY_MESSAGE;
 }
 

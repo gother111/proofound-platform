@@ -864,6 +864,7 @@ describe('runtime debug output guardrails', () => {
     );
     expect(source).toContain('candidate_invite.client.load_failed');
     expect(source).toContain('candidate_invite.client.claim_failed');
+    expect(source).toContain('candidate_invite.client.claim_returned_error');
     expect(source).toContain('candidate_invite.client.proof_submit_failed');
     expect(source).toContain('candidate_invite.client.proof_submit_returned_error');
     expect(source).toContain('candidateInviteProofSubmitError');

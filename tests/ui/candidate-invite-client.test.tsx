@@ -575,6 +575,79 @@ describe('CandidateInviteClient test_match flow', () => {
     expect(screen.queryByLabelText(/owner-only proof pack/i)).not.toBeInTheDocument();
   });
 
+  it('keeps unexpected returned claim failures safe and diagnostic', async () => {
+    const rawError = 'database update failed: org_candidate_invites policy detail';
+    const fetchMock = vi.fn().mockImplementation(async (url: string) => {
+      if (url === '/api/candidate-invites/token-value') {
+        return {
+          ok: true,
+          json: async () => ({
+            invite: {
+              id: 'invite-1',
+              status: 'pending',
+              flowType: 'proof_card',
+              assignmentId: 'assignment-1',
+              maskedEmail: 'ca***@example.com',
+              expiresAt: new Date(Date.now() + 3600_000).toISOString(),
+              claimedAt: null,
+              claimedByCurrentUser: false,
+              acceptedAt: null,
+              acceptedByCurrentUser: false,
+              communicationsUrl: null,
+              proofSubmittedAt: null,
+            },
+            organization: {
+              id: 'org-1',
+              slug: 'acme',
+              displayName: 'Acme Org',
+              logoUrl: null,
+            },
+            assignment: structuredAssignment,
+            availableProofPacks: [],
+          }),
+        };
+      }
+
+      if (url === '/api/user/me') {
+        return {
+          ok: true,
+          json: async () => ({
+            id: 'user-1',
+            email: 'candidate@example.com',
+          }),
+        };
+      }
+
+      throw new Error(`Unexpected fetch URL: ${url}`);
+    });
+    apiFetchMock.mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({ error: rawError }),
+    } as Response);
+
+    vi.stubGlobal('fetch', fetchMock as any);
+
+    render(<CandidateInviteClient token="token-value" />);
+
+    await screen.findByRole('heading', { name: /designer/i });
+
+    fireEvent.click(screen.getByRole('button', { name: /start proof submission/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(
+      'Invite could not be accepted. Your assignment context is still here; please try again.'
+    );
+    expect(alert).not.toHaveTextContent(rawError);
+    expect(screen.getByText(/No proof was submitted, no visibility changed/i)).toBeInTheDocument();
+    expect(screen.getByText(/Improve submission review quality/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /start proof submission/i })).toBeEnabled();
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'candidate_invite.client.claim_returned_error',
+      expect.any(Error)
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(rawError);
+  });
+
   it('shows a neutral retry state when invitation verification is temporarily unavailable', async () => {
     const fetchMock = vi.fn().mockImplementation(async (url: string) => {
       if (url === '/api/candidate-invites/not-a-real-token') {
