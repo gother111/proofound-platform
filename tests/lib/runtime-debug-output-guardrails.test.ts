@@ -453,9 +453,12 @@ describe('runtime debug output guardrails', () => {
 
     expect(sources).toContain('assignment_builder.legacy.create_rejected');
     expect(sources).toContain('assignment_builder.legacy.create_failed');
+    expect(sources).toContain('ASSIGNMENT_CREATE_RETRY_MESSAGE');
+    expect(sources).toContain('hasReturnedError: true');
     expect(sources).toContain('profile_storage.load_failed');
     expect(sources).toContain('profile_storage.quota_exceeded');
     expect(sources).toContain('messages.realtime.mark_message_read_failed');
+    expect(sources).not.toContain('toast.error(result.error)');
     expect(sources).not.toContain('console.error(result.details)');
     expect(sources).not.toContain('console.error(error)');
     expect(sources).not.toContain('localStorage is not available');
