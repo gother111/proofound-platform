@@ -839,9 +839,11 @@ describe('runtime debug output guardrails', () => {
       readSource('src/lib/client-diagnostics.ts'),
       readSource('src/app/app/i/interviews/IndividualInterviewsPage.tsx'),
       readSource('src/app/app/o/[slug]/interviews/page.tsx'),
+      readSource('src/components/interviews/ScheduleInterviewModal.tsx'),
     ].join('\n');
 
     expect(sources).toContain('proofound:client-diagnostic');
+    expect(sources).toContain('interview.schedule_modal.submit_failed');
     expect(sources).toContain('interviews.individual.load_failed');
     expect(sources).toContain('interviews.individual.engagement_confirm_returned_error');
     expect(sources).toContain('interviews.individual.engagement_confirm_failed');
@@ -857,6 +859,7 @@ describe('runtime debug output guardrails', () => {
     expect(sources).toContain('interviews.organization.engagement_confirm_returned_error');
     expect(sources).toContain('interviews.organization.engagement_confirm_failed');
     expect(sources).not.toContain('Failed to load interviews:');
+    expect(sources).not.toContain('error: err instanceof Error ? err.message');
     expect(sources).not.toContain("throw new Error(payload.error || 'Failed to update interview')");
     expect(sources).not.toContain("throw new Error(payload.error || 'Failed to cancel interview')");
     expect(sources).not.toContain(

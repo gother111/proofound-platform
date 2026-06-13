@@ -407,10 +407,14 @@ describe('ScheduleInterviewModal', () => {
     expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
       'interview.schedule_modal.submit_failed',
       {
-        error: 'Calendar provider token expired',
+        errorName: 'Error',
+        hasError: true,
         isReschedule: false,
         platform: 'manual',
       }
+    );
+    expect(JSON.stringify(dispatchClientDiagnosticMock.mock.calls)).not.toContain(
+      'Calendar provider token expired'
     );
   });
 

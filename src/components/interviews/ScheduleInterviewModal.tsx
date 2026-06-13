@@ -55,6 +55,14 @@ type ManualMeetingProvider = 'teams' | 'google_meet' | 'other';
 const INTERVIEW_SCHEDULE_RETRY_MESSAGE =
   'Interview could not be saved. Your selected time and meeting link are still here; please try again.';
 
+function clientErrorName(error: unknown) {
+  if (error instanceof Error && error.name.trim()) {
+    return error.name;
+  }
+
+  return 'UnknownError';
+}
+
 export function ScheduleInterviewModal({
   isOpen,
   onClose,
@@ -197,7 +205,8 @@ export function ScheduleInterviewModal({
       onClose();
     } catch (err) {
       dispatchClientDiagnostic('interview.schedule_modal.submit_failed', {
-        error: err instanceof Error ? err.message : 'Unknown error',
+        errorName: clientErrorName(err),
+        hasError: true,
         isReschedule,
         platform,
       });
