@@ -540,10 +540,15 @@ describe('runtime debug output guardrails', () => {
     expect(fixtureSource).toContain('visualFixturesRuntimeAllowed()');
     expect(fixtureSource).not.toContain("process.env.VERCEL_ENV !== 'production'");
     expect(pageSources).toContain('WORK_EMAIL_VERIFY_SAFE_ERRORS');
+    expect(pageSources).toContain('dispatchClientDiagnostic');
     expect(pageSources).toContain('verification.work_email_verify.returned_error');
     expect(pageSources).toContain('verification.work_email_verify.client_failed');
+    expect(pageSources).toContain('hasReturnedError');
     expect(pageSources).not.toContain('function clientVisualVerificationEnabled()');
     expect(pageSources).not.toContain("setMessage(data.error || 'Failed to verify work email')");
+    expect(pageSources).not.toContain(
+      "dispatchClientErrorDiagnostic(\n    'verification.work_email_verify.returned_error'"
+    );
     expect(pageSources).not.toContain(
       "return process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true';"
     );

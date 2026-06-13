@@ -10,7 +10,7 @@ import {
   buildVisualWorkEmailVerificationResponse,
   clientVerificationLinkVisualFixturesEnabled,
 } from '@/lib/verification/visual-link-fixtures';
-import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 const WORK_EMAIL_VERIFY_RETRY_MESSAGE =
   'Work-email verification could not be completed. Request a fresh link from settings and try again.';
@@ -35,7 +35,14 @@ const WORK_EMAIL_VERIFY_SAFE_ERRORS = new Map([
   ['Internal server error', WORK_EMAIL_VERIFY_RETRY_MESSAGE],
 ]);
 
-function workEmailVerifyErrorMessage(error?: string | null) {
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function workEmailVerifyErrorMessage(
+  error?: string | null,
+  status: number | 'unknown' = 'unknown'
+) {
   const normalized = error?.trim();
   if (!normalized) {
     return WORK_EMAIL_VERIFY_RETRY_MESSAGE;
@@ -46,10 +53,10 @@ function workEmailVerifyErrorMessage(error?: string | null) {
     return safeMessage;
   }
 
-  dispatchClientErrorDiagnostic(
-    'verification.work_email_verify.returned_error',
-    new Error(normalized)
-  );
+  dispatchClientDiagnostic('verification.work_email_verify.returned_error', {
+    status,
+    hasReturnedError: true,
+  });
   return WORK_EMAIL_VERIFY_RETRY_MESSAGE;
 }
 
@@ -76,7 +83,7 @@ export function VerifyWorkEmailContent() {
         }
 
         const response = await fetch(`/api/verification/work-email/verify?token=${token}`);
-        const data = await response.json();
+        const data = await response.json().catch(() => null);
 
         if (response.ok) {
           setStatus('success');
@@ -90,7 +97,7 @@ export function VerifyWorkEmailContent() {
           }, 3000);
         } else {
           setStatus('error');
-          setMessage(workEmailVerifyErrorMessage(data?.error));
+          setMessage(workEmailVerifyErrorMessage(data?.error, getResponseStatus(response)));
         }
       } catch (error) {
         dispatchClientErrorDiagnostic('verification.work_email_verify.client_failed', error);

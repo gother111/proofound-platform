@@ -4,7 +4,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import { VerifyWorkEmailContent } from '@/app/verify-work-email/VerifyWorkEmailContent';
 import { VISUAL_VERIFY_TOKENS } from '@/lib/verification/visual-link-fixtures';
-import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 const routerPush = vi.fn();
 const searchParamsGet = vi.fn();
@@ -19,9 +19,11 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientDiagnostic: vi.fn(),
   dispatchClientErrorDiagnostic: vi.fn(),
 }));
 
+const dispatchClientDiagnosticMock = vi.mocked(dispatchClientDiagnostic);
 const dispatchClientErrorDiagnosticMock = vi.mocked(dispatchClientErrorDiagnostic);
 
 describe('VerifyWorkEmailContent', () => {
@@ -116,6 +118,7 @@ describe('VerifyWorkEmailContent', () => {
     searchParamsGet.mockImplementation((key: string) => (key === 'token' ? 'token-raw' : null));
     vi.mocked(global.fetch).mockResolvedValue({
       ok: false,
+      status: 500,
       json: async () => ({ error: rawFailure }),
     } as Response);
 
@@ -133,13 +136,15 @@ describe('VerifyWorkEmailContent', () => {
       )
     ).toBeInTheDocument();
     expect(screen.queryByText(rawFailure)).not.toBeInTheDocument();
-    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
       'verification.work_email_verify.returned_error',
-      expect.any(Error)
+      {
+        status: 500,
+        hasReturnedError: true,
+      }
     );
-    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
-      rawFailure
-    );
+    expect(JSON.stringify(dispatchClientDiagnosticMock.mock.calls)).not.toContain(rawFailure);
+    expect(JSON.stringify(dispatchClientErrorDiagnosticMock.mock.calls)).not.toContain(rawFailure);
   });
 
   it('keeps thrown verification failures safe and diagnostic', async () => {
