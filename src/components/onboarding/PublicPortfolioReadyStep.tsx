@@ -50,11 +50,13 @@ export function PublicPortfolioReadyStep({
   );
 
   const heading =
-    persona === 'organization' ? 'Your organization portfolio is live' : 'Your Public Page is live';
+    persona === 'organization'
+      ? 'Your organization trust page is live'
+      : 'Your Public Page is live';
 
   const description =
     persona === 'organization'
-      ? 'Day 1 proof link ready. Your public organization link is shareable now, and search engines stay off until you opt in.'
+      ? 'Day 1 trust link ready. Your public organization trust page is shareable now, and search engines stay off until you opt in.'
       : 'Day 1 proof link ready. Preview it, copy it, and share it by direct link. Search engines stay off until you opt in.';
 
   async function handleCopy() {
@@ -62,7 +64,13 @@ export function PublicPortfolioReadyStep({
       setCopyFeedback(null);
       await navigator.clipboard.writeText(resolvedUrl);
       setCopied(true);
-      setCopyFeedback({ kind: 'success', message: 'Portfolio link copied.' });
+      setCopyFeedback({
+        kind: 'success',
+        message:
+          persona === 'organization'
+            ? 'Organization trust page link copied.'
+            : 'Portfolio link copied.',
+      });
       window.setTimeout(() => {
         setCopied(false);
         setCopyFeedback(null);
@@ -72,7 +80,10 @@ export function PublicPortfolioReadyStep({
       setCopied(false);
       setCopyFeedback({
         kind: 'error',
-        message: 'Portfolio link could not be copied. Try again.',
+        message:
+          persona === 'organization'
+            ? 'Organization trust page link could not be copied. Try again.'
+            : 'Portfolio link could not be copied. Try again.',
       });
     }
   }
@@ -93,7 +104,7 @@ export function PublicPortfolioReadyStep({
       <CardContent className="space-y-5">
         <div className="rounded-xl border border-proofound-stone bg-proofound-parchment/60 p-4 text-sm text-proofound-charcoal dark:border-border dark:bg-muted dark:text-foreground">
           <p className="mb-2 text-xs uppercase tracking-wide text-proofound-charcoal/60 dark:text-muted-foreground">
-            {persona === 'organization' ? 'Public portfolio URL' : 'Public Page URL'}
+            {persona === 'organization' ? 'Organization trust page URL' : 'Public Page URL'}
           </p>
           <p className="break-all font-mono text-sm">{resolvedUrl}</p>
         </div>
@@ -124,7 +135,11 @@ export function PublicPortfolioReadyStep({
                 </p>
                 {copyFeedback.kind === 'error' ? (
                   <input
-                    aria-label="Portfolio link for manual copy"
+                    aria-label={
+                      persona === 'organization'
+                        ? 'Organization trust page link for manual copy'
+                        : 'Portfolio link for manual copy'
+                    }
                     className="min-h-10 w-full rounded-md border border-proofound-stone bg-white px-2 text-xs text-proofound-charcoal dark:border-border dark:bg-background dark:text-foreground"
                     onFocus={(event) => event.currentTarget.select()}
                     readOnly
@@ -142,7 +157,7 @@ export function PublicPortfolioReadyStep({
           >
             <Link href={resolvedUrl} target="_blank" rel="noopener noreferrer">
               <ExternalLink className="h-4 w-4" />
-              {persona === 'organization' ? 'Preview portfolio' : 'Preview Public Page'}
+              {persona === 'organization' ? 'Preview trust page' : 'Preview Public Page'}
             </Link>
           </Button>
           <Button

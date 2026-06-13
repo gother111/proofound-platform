@@ -155,7 +155,7 @@ export function OrganizationSetup() {
         setCopyFeedback(null);
         await navigator.clipboard.writeText(success.portfolioUrl);
         setCopied(true);
-        setCopyFeedback({ kind: 'success', message: 'Organization portfolio link copied.' });
+        setCopyFeedback({ kind: 'success', message: 'Organization trust page link copied.' });
         setTimeout(() => {
           setCopied(false);
           setCopyFeedback(null);
@@ -165,7 +165,7 @@ export function OrganizationSetup() {
         setCopied(false);
         setCopyFeedback({
           kind: 'error',
-          message: 'Organization portfolio link could not be copied. Try again.',
+          message: 'Organization trust page link could not be copied. Try again.',
         });
       }
     };
@@ -180,7 +180,7 @@ export function OrganizationSetup() {
 
             <div className="space-y-2">
               <h2 className="text-2xl font-['Crimson_Pro'] font-semibold text-proofound-forest dark:text-primary">
-                Organization link ready
+                Organization trust page ready
               </h2>
               <p className="text-3xl font-bold text-proofound-charcoal dark:text-foreground">
                 Welcome to {success.orgName}!
@@ -191,7 +191,9 @@ export function OrganizationSetup() {
             </div>
 
             <div className="bg-proofound-stone/30 dark:bg-muted rounded-xl p-6 text-left space-y-3">
-              <p className="font-medium text-proofound-charcoal dark:text-foreground">Live URL</p>
+              <p className="font-medium text-proofound-charcoal dark:text-foreground">
+                Trust page URL
+              </p>
               <p className="text-sm break-all text-proofound-charcoal/70 dark:text-muted-foreground">
                 {success.portfolioUrl}
               </p>
@@ -223,7 +225,7 @@ export function OrganizationSetup() {
                     </p>
                     {copyFeedback.kind === 'error' ? (
                       <input
-                        aria-label="Organization portfolio link for manual copy"
+                        aria-label="Organization trust page link for manual copy"
                         className="min-h-10 w-full rounded-md border border-proofound-stone bg-white px-2 text-xs text-proofound-charcoal dark:border-border dark:bg-background dark:text-foreground"
                         onFocus={(event) => event.currentTarget.select()}
                         readOnly
@@ -241,7 +243,7 @@ export function OrganizationSetup() {
               >
                 <a href={success.portfolioUrl} target="_blank" rel="noreferrer">
                   <ExternalLink className="h-4 w-4" />
-                  Open portfolio
+                  Open trust page
                 </a>
               </Button>
               <Button

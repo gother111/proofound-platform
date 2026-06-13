@@ -33,7 +33,7 @@ vi.mock('@/lib/client-diagnostics', () => ({
 
 import { OrganizationSetup } from '@/components/onboarding/OrganizationSetup';
 
-describe('OrganizationSetup portfolio link feedback', () => {
+describe('OrganizationSetup trust page link feedback', () => {
   let clipboardWriteText: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
@@ -78,7 +78,7 @@ describe('OrganizationSetup portfolio link feedback', () => {
 
   async function renderSuccessScreen() {
     await submitOrganizationSetup();
-    await screen.findByText('Organization link ready');
+    await screen.findByText('Organization trust page ready');
   }
 
   it('keeps a failed existing-organization check visible and retryable', async () => {
@@ -182,8 +182,16 @@ describe('OrganizationSetup portfolio link feedback', () => {
     expect(screen.getByRole('button', { name: /create organization/i })).toBeEnabled();
   });
 
-  it('confirms organization portfolio copy inline', async () => {
+  it('confirms organization trust page copy inline', async () => {
     await renderSuccessScreen();
+
+    expect(screen.getByText('Organization trust page ready')).toBeInTheDocument();
+    expect(screen.getByText('Trust page URL')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /open trust page/i })).toHaveAttribute(
+      'href',
+      expect.stringContaining('/portfolio/org/acme')
+    );
+    expect(document.body.textContent ?? '').not.toMatch(/organization portfolio/i);
 
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: /copy link/i }));
@@ -191,10 +199,10 @@ describe('OrganizationSetup portfolio link feedback', () => {
     });
 
     expect(clipboardWriteText).toHaveBeenCalledWith(expect.stringContaining('/portfolio/org/acme'));
-    expect(screen.getByRole('status')).toHaveTextContent('Organization portfolio link copied.');
+    expect(screen.getByRole('status')).toHaveTextContent('Organization trust page link copied.');
   });
 
-  it('keeps organization portfolio copy failures recoverable', async () => {
+  it('keeps organization trust page copy failures recoverable', async () => {
     clipboardWriteText.mockRejectedValueOnce(new Error('Clipboard unavailable'));
     await renderSuccessScreen();
 
@@ -204,9 +212,9 @@ describe('OrganizationSetup portfolio link feedback', () => {
     });
 
     expect(screen.getByRole('alert')).toHaveTextContent(
-      'Organization portfolio link could not be copied. Try again.'
+      'Organization trust page link could not be copied. Try again.'
     );
-    expect(screen.getByLabelText('Organization portfolio link for manual copy')).toHaveValue(
+    expect(screen.getByLabelText('Organization trust page link for manual copy')).toHaveValue(
       'http://localhost:3000/portfolio/org/acme'
     );
     expect(screen.getByRole('button', { name: /copy link/i })).toBeEnabled();

@@ -80,7 +80,7 @@ describe('PublicPortfolioReadyStep', () => {
     expect(screen.getByRole('button', { name: /copy link/i })).toBeEnabled();
   });
 
-  it('renders organization copy and continues to app', () => {
+  it('renders organization trust page copy and continues to app', () => {
     const onContinue = vi.fn();
 
     render(
@@ -91,12 +91,16 @@ describe('PublicPortfolioReadyStep', () => {
       />
     );
 
-    expect(screen.getByText(/organization portfolio is live/i)).toBeInTheDocument();
-    expect(screen.getByText(/public organization link is shareable now/i)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /preview portfolio/i })).toHaveAttribute(
+    expect(screen.getByText(/organization trust page is live/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/public organization trust page is shareable now/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText('Organization trust page URL')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /preview trust page/i })).toHaveAttribute(
       'href',
       'https://proofound.io/portfolio/org/acme'
     );
+    expect(document.body.textContent ?? '').not.toMatch(/organization portfolio/i);
 
     fireEvent.click(screen.getByRole('button', { name: /continue to app/i }));
     expect(onContinue).toHaveBeenCalledTimes(1);
