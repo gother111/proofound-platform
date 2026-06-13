@@ -11,7 +11,7 @@ import { SnoozedMatchesList } from '@/components/matching/SnoozedMatchesList';
 import { HiddenMatchesList } from '@/components/matching/HiddenMatchesList';
 import { CardGridSkeleton, PageIntroSkeleton } from '@/components/skeletons/CoreLoadingPrimitives';
 import { apiFetch } from '@/lib/api/fetch';
-import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { Search } from 'lucide-react';
 
 const MATCHING_DATA_TIMEOUT_MS = 10000;
@@ -44,6 +44,17 @@ type MatchabilityBlockedPayload = {
   topActions: Array<{ id: string; title: string; description: string; actionUrl: string }>;
 };
 
+type MatchingReturnedDiagnosticEvent =
+  | 'matching.client.profile_load_failed'
+  | 'matching.client.matches_load_failed'
+  | 'matching.client.interest_returned_error';
+
+type MatchingReturnedError = Error & {
+  hasReturnedError: true;
+  status: number | 'unknown';
+  diagnosticEvent: MatchingReturnedDiagnosticEvent;
+};
+
 function isMatchabilityBlockedPayload(payload: unknown): payload is MatchabilityBlockedPayload {
   return Boolean(
     payload &&
@@ -51,6 +62,42 @@ function isMatchabilityBlockedPayload(payload: unknown): payload is Matchability
       (payload as { meta?: { softGated?: boolean } }).meta?.softGated === true &&
       Array.isArray((payload as { topActions?: unknown }).topActions)
   );
+}
+
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function matchingReturnedError(
+  response: Response,
+  fallback: string,
+  diagnosticEvent: MatchingReturnedDiagnosticEvent
+) {
+  const error = new Error(fallback) as MatchingReturnedError;
+  error.name = 'MatchingReturnedError';
+  error.hasReturnedError = true;
+  error.status = getResponseStatus(response);
+  error.diagnosticEvent = diagnosticEvent;
+
+  return error;
+}
+
+function isMatchingReturnedError(error: unknown): error is MatchingReturnedError {
+  return (
+    error instanceof Error && (error as Partial<MatchingReturnedError>).hasReturnedError === true
+  );
+}
+
+function dispatchMatchingFailure(eventName: string, error: unknown) {
+  if (isMatchingReturnedError(error)) {
+    dispatchClientDiagnostic(eventName, {
+      status: error.status,
+      hasReturnedError: true,
+    });
+    return;
+  }
+
+  dispatchClientErrorDiagnostic(eventName, error);
 }
 
 export function MatchingClient() {
@@ -145,9 +192,11 @@ export function MatchingClient() {
       }
 
       if (!profileRes.ok) {
-        const errorData = await profileRes.json().catch(() => ({}));
-        dispatchClientErrorDiagnostic('matching.client.profile_load_failed', errorData);
-        throw new Error('matching_profile_request_failed');
+        throw matchingReturnedError(
+          profileRes,
+          'matching_profile_request_failed',
+          'matching.client.profile_load_failed'
+        );
       }
 
       const profileData = await profileRes.json();
@@ -173,9 +222,11 @@ export function MatchingClient() {
         }
 
         if (!matchesRes.ok) {
-          const errorData = matchesPayload || {};
-          dispatchClientErrorDiagnostic('matching.client.matches_load_failed', errorData);
-          throw new Error('matching_results_request_failed');
+          throw matchingReturnedError(
+            matchesRes,
+            'matching_results_request_failed',
+            'matching.client.matches_load_failed'
+          );
         }
 
         const matchesData = matchesPayload || {};
@@ -193,7 +244,10 @@ export function MatchingClient() {
           'Matching is taking longer than usual. You can retry or review your proof readiness.'
         );
       } else {
-        dispatchClientErrorDiagnostic('matching.client.load_failed', error);
+        dispatchMatchingFailure(
+          isMatchingReturnedError(error) ? error.diagnosticEvent : 'matching.client.load_failed',
+          error
+        );
         setLoadError(MATCHING_LOAD_RETRY_COPY);
         toast.error('Assignment reviews could not load', {
           description: MATCHING_LOAD_TOAST_DESCRIPTION,
@@ -470,12 +524,11 @@ export function MatchingClient() {
                   });
 
                   if (!response.ok) {
-                    const errorPayload = await response.json().catch(() => null);
-                    dispatchClientErrorDiagnostic(
-                      'matching.client.interest_returned_error',
-                      errorPayload ?? { status: response.status }
+                    throw matchingReturnedError(
+                      response,
+                      'matching_interest_request_failed',
+                      'matching.client.interest_returned_error'
                     );
-                    throw new Error('matching_interest_request_failed');
                   }
 
                   const data = await response.json();
@@ -494,7 +547,12 @@ export function MatchingClient() {
                     toast.success('Interest recorded. Waiting for shortlist review.');
                   }
                 } catch (error) {
-                  dispatchClientErrorDiagnostic('matching.client.interest_failed', error);
+                  dispatchMatchingFailure(
+                    isMatchingReturnedError(error)
+                      ? error.diagnosticEvent
+                      : 'matching.client.interest_failed',
+                    error
+                  );
                   toast.error(MATCHING_INTEREST_RETRY_TITLE, {
                     description: MATCHING_INTEREST_RETRY_DESCRIPTION,
                   });

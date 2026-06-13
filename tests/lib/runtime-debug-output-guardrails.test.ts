@@ -1533,9 +1533,11 @@ describe('runtime debug output guardrails', () => {
       readSource('src/components/matching/MatchingProfileSetup.tsx'),
     ].join('\n');
 
-    expect(sources).toContain(
-      "import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics'"
-    );
+    expect(sources).toContain('dispatchClientDiagnostic');
+    expect(sources).toContain('dispatchClientErrorDiagnostic');
+    expect(sources).toContain('dispatchMatchingFailure');
+    expect(sources).toContain('hasReturnedError');
+    expect(sources).toContain('diagnosticEvent');
     expect(sources).toContain('matching.client.profile_load_failed');
     expect(sources).toContain('matching.client.matches_load_failed');
     expect(sources).toContain('matching.client.load_timeout');
@@ -1558,6 +1560,13 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Failed to refresh matches after restore:');
     expect(sources).not.toContain('Failed to hide match:');
     expect(sources).not.toContain('toast.error(errorMessage)');
+    expect(sources).not.toContain(
+      "dispatchClientErrorDiagnostic('matching.client.profile_load_failed', errorData)"
+    );
+    expect(sources).not.toContain(
+      "dispatchClientErrorDiagnostic('matching.client.matches_load_failed', errorData)"
+    );
+    expect(sources).not.toContain('errorPayload ?? { status: response.status }');
   });
 
   it('keeps matching interaction failures on client diagnostics without console output', () => {
