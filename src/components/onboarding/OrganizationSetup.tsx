@@ -209,17 +209,28 @@ export function OrganizationSetup() {
                   {copied ? 'Copied' : 'Copy link'}
                 </Button>
                 {copyFeedback ? (
-                  <p
-                    className={
-                      copyFeedback.kind === 'error'
-                        ? 'max-w-64 text-xs leading-5 text-[#8A3F21]'
-                        : 'max-w-64 text-xs leading-5 text-proofound-forest'
-                    }
-                    role={copyFeedback.kind === 'error' ? 'alert' : 'status'}
-                    aria-live={copyFeedback.kind === 'error' ? 'assertive' : 'polite'}
-                  >
-                    {copyFeedback.message}
-                  </p>
+                  <div className="max-w-64 space-y-1.5">
+                    <p
+                      className={
+                        copyFeedback.kind === 'error'
+                          ? 'text-xs leading-5 text-[#8A3F21]'
+                          : 'text-xs leading-5 text-proofound-forest'
+                      }
+                      role={copyFeedback.kind === 'error' ? 'alert' : 'status'}
+                      aria-live={copyFeedback.kind === 'error' ? 'assertive' : 'polite'}
+                    >
+                      {copyFeedback.message}
+                    </p>
+                    {copyFeedback.kind === 'error' ? (
+                      <input
+                        aria-label="Organization portfolio link for manual copy"
+                        className="min-h-10 w-full rounded-md border border-proofound-stone bg-white px-2 text-xs text-proofound-charcoal dark:border-border dark:bg-background dark:text-foreground"
+                        onFocus={(event) => event.currentTarget.select()}
+                        readOnly
+                        value={success.portfolioUrl}
+                      />
+                    ) : null}
+                  </div>
                 ) : null}
               </div>
               <Button

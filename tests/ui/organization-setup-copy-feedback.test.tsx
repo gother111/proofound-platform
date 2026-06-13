@@ -206,6 +206,9 @@ describe('OrganizationSetup portfolio link feedback', () => {
     expect(screen.getByRole('alert')).toHaveTextContent(
       'Organization portfolio link could not be copied. Try again.'
     );
+    expect(screen.getByLabelText('Organization portfolio link for manual copy')).toHaveValue(
+      'http://localhost:3000/portfolio/org/acme'
+    );
     expect(screen.getByRole('button', { name: /copy link/i })).toBeEnabled();
   });
 });

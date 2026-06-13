@@ -74,6 +74,9 @@ describe('PublicPortfolioReadyStep', () => {
     expect(screen.getByRole('alert')).toHaveTextContent(
       'Portfolio link could not be copied. Try again.'
     );
+    expect(screen.getByLabelText('Portfolio link for manual copy')).toHaveValue(
+      'https://proofound.io/portfolio/jane'
+    );
     expect(screen.getByRole('button', { name: /copy link/i })).toBeEnabled();
   });
 
