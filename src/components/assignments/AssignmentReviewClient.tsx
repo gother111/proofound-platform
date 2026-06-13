@@ -210,7 +210,8 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
         {
           blockCode: 'publish_request_failed',
           field: 'publish',
-          message: 'Failed to publish assignment. Try again.',
+          message:
+            'Assignment could not be published. Your review is still here; retry when the connection is back.',
         },
       ]);
     } finally {

@@ -157,6 +157,34 @@ describe('AssignmentReviewClient', () => {
     expect(pushMock).toHaveBeenCalledWith('/app/o/acme/assignments?matching=assignment-1');
   });
 
+  it('keeps request publish failures calm and retryable without losing review state', async () => {
+    vi.mocked(apiFetch).mockRejectedValueOnce(new Error('network offline'));
+
+    render(
+      <AssignmentReviewClient
+        initialAssignment={baseAssignment}
+        assignmentId="assignment-1"
+        slug="acme"
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Publish Assignment/i }));
+
+    const publishDialog = await screen.findByRole('dialog');
+    fireEvent.click(within(publishDialog).getByRole('button', { name: /^Publish assignment$/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Publishing is blocked');
+    expect(alert).toHaveTextContent('This assignment has not been published');
+    expect(alert).toHaveTextContent(
+      'Assignment could not be published. Your review is still here; retry when the connection is back.'
+    );
+    expect(alert).not.toHaveTextContent('network offline');
+    expect(alert).not.toHaveTextContent('Failed to publish assignment. Try again.');
+    expect(within(alert).getByRole('button', { name: 'Retry publish' })).toBeEnabled();
+    expect(pushMock).not.toHaveBeenCalled();
+  });
+
   it('keeps publish disabled and routes users to missing draft details', () => {
     render(
       <AssignmentReviewClient
