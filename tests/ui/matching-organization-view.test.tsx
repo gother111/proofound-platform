@@ -155,7 +155,13 @@ describe('MatchingOrganizationView', () => {
     });
     expect(screen.getByLabelText('Selected proof submission review')).toHaveFocus();
     expect(screen.getByText('Proof overlap')).toBeInTheDocument();
+    expect(screen.getByText('Strongest Proof Pack')).toBeInTheDocument();
+    expect(
+      screen.getByText(/The summary uses scoped Proof Pack signals, reason codes/i)
+    ).toBeInTheDocument();
     expect(screen.queryByText('proof_overlap')).not.toBeInTheDocument();
+    expect(screen.queryByText('Strongest Proof Package')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Complete proof details, work samples/i)).not.toBeInTheDocument();
   });
 
   it('keeps desktop submission selection inside the split review console', async () => {

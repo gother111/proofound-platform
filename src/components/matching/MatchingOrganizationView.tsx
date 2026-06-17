@@ -1039,7 +1039,7 @@ export function MatchingOrganizationView({
                           <div className="bg-proofound-parchment/20 border border-proofound-stone/50 rounded-xl p-4 space-y-3">
                             <div className="flex items-center justify-between">
                               <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                                Strongest Proof Package
+                                Strongest Proof Pack
                               </h4>
                               {activeMatch.reviewCard.strongestProof.freshnessLabel && (
                                 <span className="text-[10px] text-muted-foreground">
@@ -1074,9 +1074,10 @@ export function MatchingOrganizationView({
                         <div className="flex items-start gap-2 bg-[#fdfcfa] border border-proofound-stone/45 rounded-xl p-3 text-[11px] text-muted-foreground leading-relaxed">
                           <ShieldCheck className="h-4 w-4 text-proofound-forest shrink-0 mt-0.5" />
                           <span>
-                            Identity is protected. Complete proof details, work samples, and
-                            verification outcomes are verified by Proofound. Full details remain
-                            locked until mutually accepted.
+                            Identity stays protected in this review queue. The summary uses scoped
+                            Proof Pack signals, reason codes, and verification status that are safe
+                            for this assignment stage. Full identity and private context stay locked
+                            until the intro and reveal corridor allows access.
                           </span>
                         </div>
 
