@@ -7,9 +7,13 @@ import { PrivacySettingsClient } from '@/app/app/i/settings/privacy/PrivacySetti
 import { DeferredVerificationsClient } from '@/app/app/i/verifications/DeferredVerificationsClient';
 import { DeferredSettingsContent } from '@/components/settings/DeferredSettingsContent';
 
+const { toastErrorMock } = vi.hoisted(() => ({
+  toastErrorMock: vi.fn(),
+}));
+
 vi.mock('sonner', () => ({
   toast: {
-    error: vi.fn(),
+    error: (...args: unknown[]) => toastErrorMock(...args),
     success: vi.fn(),
   },
 }));
@@ -48,6 +52,10 @@ vi.mock('@/components/profile/IndividualFieldVisibilityControls', () => ({
 }));
 
 describe('deferred settings loaders', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('announces privacy controls while they load', () => {
     const loadPrivacySettingsView = vi.fn(() => new Promise<never>(() => {}));
 
@@ -93,6 +101,11 @@ describe('deferred settings loaders', () => {
       expect(screen.getByTestId('visibility-controls-disabled-reason')).toHaveTextContent(
         'Retry privacy preferences before editing'
       );
+      expect(toastErrorMock).toHaveBeenCalledWith('Privacy preferences need a refresh', {
+        description:
+          'Safe defaults are shown until retry succeeds. Retry before editing visibility controls.',
+      });
+      expect(toastErrorMock).not.toHaveBeenCalledWith('Failed to load privacy settings');
 
       fireEvent.click(screen.getByRole('button', { name: /retry privacy preferences/i }));
 
@@ -129,6 +142,11 @@ describe('deferred settings loaders', () => {
       expect(screen.getByTestId('visibility-controls-disabled-reason')).toHaveTextContent(
         'Saved privacy preferences did not load'
       );
+      expect(toastErrorMock).toHaveBeenCalledWith('Privacy preferences need a refresh', {
+        description:
+          'Safe defaults are shown until retry succeeds. Retry before editing visibility controls.',
+      });
+      expect(toastErrorMock).not.toHaveBeenCalledWith('Failed to load privacy settings');
 
       fireEvent.click(screen.getByRole('button', { name: /retry privacy preferences/i }));
 

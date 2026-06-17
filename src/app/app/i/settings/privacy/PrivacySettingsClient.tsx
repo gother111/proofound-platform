@@ -22,6 +22,8 @@ const PRIVACY_SECTION_IDS = new Set([
 ]);
 const PRIVACY_ANCHOR_OFFSET_PX = 24;
 const PRIVACY_VISIBILITY_LOAD_RETRY_MESSAGE = 'Saved privacy preferences could not be loaded.';
+const PRIVACY_VISIBILITY_LOAD_TOAST_DESCRIPTION =
+  'Safe defaults are shown until retry succeeds. Retry before editing visibility controls.';
 
 function getScrollableParent(element: HTMLElement): HTMLElement | null {
   let parent = element.parentElement;
@@ -68,7 +70,9 @@ export function PrivacySettingsClient() {
     } catch (error) {
       dispatchClientErrorDiagnostic('privacy_settings.client.visibility_fetch_failed', error);
       setVisibilityLoadError(PRIVACY_VISIBILITY_LOAD_RETRY_MESSAGE);
-      toast.error('Failed to load privacy settings');
+      toast.error('Privacy preferences need a refresh', {
+        description: PRIVACY_VISIBILITY_LOAD_TOAST_DESCRIPTION,
+      });
     } finally {
       if (initial) {
         setLoading(false);
