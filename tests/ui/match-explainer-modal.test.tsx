@@ -175,6 +175,8 @@ describe('MatchExplainerModal', () => {
       screen.getByText('Exact ordering is hidden while privacy or policy limits apply.')
     ).toBeInTheDocument();
     expect(screen.getByText('Supporting fit signal')).toBeInTheDocument();
+    expect(screen.getByRole('tablist')).toHaveClass('grid-cols-3');
+    expect(screen.getByRole('tablist')).not.toHaveClass('grid-cols-4');
     expect(screen.getByText('Review signals by area')).toBeInTheDocument();
     expect(screen.getByText('Skills evidence')).toBeInTheDocument();
     expect(screen.getByText('Practical constraints')).toBeInTheDocument();
