@@ -478,7 +478,7 @@ export function MatchingClient() {
           <p className="mb-6 mx-auto max-w-md text-sm leading-6 text-muted-foreground">
             {matches.length === 0
               ? 'Nothing needs your attention right now. Keep your proof and preferences current so new assignment reviews can land cleanly.'
-              : 'No assignment reviews fit the current filters. Loosen one filter to widen the corridor.'}
+              : 'Your review filters are hiding the available assignment reviews. Clear one filter to see more proof-led reviews.'}
           </p>
           {ensureThreeActions(readinessActions).length > 0 ? (
             <div className="mx-auto w-full max-w-xl space-y-2 text-left mt-2">

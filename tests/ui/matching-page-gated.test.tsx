@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import MatchingPage from '@/app/app/i/matching/(workspace)/page';
@@ -20,7 +20,14 @@ vi.mock('@/components/matching/MatchingProfileSetup', () => ({
 }));
 
 vi.mock('@/components/matching/EnhancedMatchFilters', () => ({
-  EnhancedMatchFilters: () => <div>filters</div>,
+  EnhancedMatchFilters: ({ onFiltersChange }: any) => (
+    <button
+      type="button"
+      onClick={() => onFiltersChange({ skillDomains: [], locationMode: 'onsite' })}
+    >
+      Apply onsite filter
+    </button>
+  ),
 }));
 
 vi.mock('@/components/matching/MatchResultCard', () => ({
@@ -206,5 +213,74 @@ describe('MatchingPage soft-gated state', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('Tune match preferences')).toBeInTheDocument();
     expect(screen.queryByText('Introductions need more proof')).not.toBeInTheDocument();
+  });
+
+  it('keeps filtered-empty copy review-led instead of fit-led', async () => {
+    const fetchMock = vi.fn(async (input: string | URL, init?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input.toString();
+
+      if (url.startsWith('/api/csrf-token')) {
+        return {
+          ok: true,
+          json: async () => ({ token: 'csrf-token' }),
+        };
+      }
+
+      if (url === '/api/matching-profile') {
+        return {
+          ok: true,
+          json: async () => ({ profile: { id: 'user-1' } }),
+        };
+      }
+
+      if (url === '/api/individual/readiness') {
+        return {
+          ok: true,
+          json: async () => ({ topActions: [] }),
+        };
+      }
+
+      if (url === '/api/match/profile' && init?.method === 'POST') {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            items: [
+              {
+                id: 'match-1',
+                assignmentId: 'assignment-1',
+                assignment: {
+                  role: 'Proof operations lead',
+                  locationMode: 'remote',
+                  workMode: 'contract',
+                },
+              },
+            ],
+          }),
+        };
+      }
+
+      throw new Error(`Unexpected fetch URL: ${url}`);
+    });
+
+    (global as any).fetch = fetchMock;
+
+    render(<MatchingPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('match card')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Apply onsite filter' }));
+
+    expect(
+      await screen.findByText(
+        'Your review filters are hiding the available assignment reviews. Clear one filter to see more proof-led reviews.'
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText('No assignment reviews fit the current filters')
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Loosen one filter to widen the corridor.')).not.toBeInTheDocument();
   });
 });
