@@ -683,7 +683,13 @@ describe('MatchingOrganizationView launch corridor', () => {
 
     expect(await screen.findByText('Submission A7F2')).toBeInTheDocument();
     expect(await screen.findByText('Evidence operations')).toBeInTheDocument();
-    expect(screen.getByText(/Required: Lvl 3 .* Submission has: Lvl 4/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Required proof depth: level 3 .* Submission proof depth: level 4/)
+    ).toBeInTheDocument();
+    expect(screen.getByText('Proof alignment')).toBeInTheDocument();
+    expect(screen.queryByText(/Required: Lvl 3/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Submission has: Lvl 4/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Candidate has: Lvl 4/)).not.toBeInTheDocument();
+    expect(screen.queryByText('Fit Evidence')).not.toBeInTheDocument();
   });
 });

@@ -996,11 +996,11 @@ export function MatchingOrganizationView({
                           </div>
                         )}
 
-                        {/* Fit evidence summary */}
+                        {/* Proof alignment summary */}
                         {activeMatch.reviewCard?.fitSummary && (
                           <div className="space-y-2">
                             <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                              Fit Evidence
+                              Proof alignment
                             </h4>
                             <p className="text-sm font-semibold text-proofound-charcoal">
                               {activeMatch.reviewCard.fitSummary.headline}
@@ -1117,7 +1117,7 @@ export function MatchingOrganizationView({
                                     {explanation.skillsMatch.required?.length > 0 && (
                                       <div>
                                         <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1.5">
-                                          Required Skills
+                                          Required proof anchors
                                         </p>
                                         <div className="space-y-1.5">
                                           {explanation.skillsMatch.required.map(
@@ -1131,8 +1131,9 @@ export function MatchingOrganizationView({
                                                     {skill.skillName}
                                                   </p>
                                                   <p className="text-[10px] text-muted-foreground">
-                                                    Required: Lvl {skill.requiredLevel} • Submission
-                                                    has: Lvl {skill.yourLevel}
+                                                    Required proof depth: level{' '}
+                                                    {skill.requiredLevel} • Submission proof depth:
+                                                    level {skill.yourLevel}
                                                   </p>
                                                 </div>
                                                 {skill.met ? (
@@ -1150,7 +1151,7 @@ export function MatchingOrganizationView({
                                     {explanation.skillsMatch.nice?.length > 0 && (
                                       <div>
                                         <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1.5">
-                                          Desired Skills
+                                          Helpful proof anchors
                                         </p>
                                         <div className="space-y-1.5">
                                           {explanation.skillsMatch.nice.map(
@@ -1166,7 +1167,7 @@ export function MatchingOrganizationView({
                                                   variant="secondary"
                                                   className="text-[10px] font-normal"
                                                 >
-                                                  Submission Lvl {skill.yourLevel}
+                                                  Submission proof depth: level {skill.yourLevel}
                                                 </Badge>
                                               </div>
                                             )

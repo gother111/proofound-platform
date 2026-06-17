@@ -4653,7 +4653,8 @@ describe('launch gate package configuration', () => {
       'Blind-by-default review keeps identity details hidden until the proof-review participant consents to reveal.'
     );
     expect(activeMatchingReviewText).toContain('Submission #');
-    expect(activeMatchingReviewText).toContain('Submission Lvl');
+    expect(activeMatchingReviewText).toContain('Submission proof depth: level');
+    expect(activeMatchingReviewText).toContain('Required proof depth: level');
     expect(activeMatchingReviewText).not.toContain(
       'compositeScore={matchExplanation.compositeScore}'
     );
@@ -4726,6 +4727,8 @@ describe('launch gate package configuration', () => {
       expect(content).not.toContain('Candidate #');
       expect(content).not.toContain('Candidate Lvl');
       expect(content).not.toContain('Candidate has: Lvl');
+      expect(content).not.toContain('Submission has: Lvl');
+      expect(content).not.toContain('Submission Lvl');
       expect(content).not.toContain('selected candidate');
       expect(content).not.toContain('candidate explanation');
       expect(content).not.toContain('Org viewing candidates');
@@ -5518,7 +5521,7 @@ describe('launch gate package configuration', () => {
     expect(supportWorkflowCopy).toContain('Keep participant private context out of notes.');
     expect(supportWorkflowCopy).toContain('participant-facing explanation copy');
     expect(supportWorkflowCopy).toContain('proof-review participant consent');
-    expect(supportWorkflowCopy).toContain('proof-review participant consented reveal');
+    expect(supportWorkflowCopy).toContain('proof-review participant consents to reveal');
     expect(supportWorkflowCopy).toContain('proof-review participant approval');
     expect(supportWorkflowCopy).toContain('hidden identity details before reveal consent');
     expect(supportWorkflowCopy).toContain('participant comms templates');
