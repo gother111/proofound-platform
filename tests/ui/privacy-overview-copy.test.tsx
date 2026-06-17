@@ -152,6 +152,38 @@ describe('PrivacyOverview copy', () => {
     expect(global.fetch).not.toHaveBeenCalledWith('/api/user/export');
   });
 
+  it('uses a named loading state while checking the visibility summary', async () => {
+    let resolveSummary: ((response: Response) => void) | undefined;
+    apiFetchMock.mockImplementation(
+      () =>
+        new Promise<Response>((resolve) => {
+          resolveSummary = resolve;
+        })
+    );
+
+    render(<PrivacyOverview userId="user-1" />);
+
+    expect(screen.getAllByText('Checking visibility')).toHaveLength(4);
+    expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(apiFetchMock).toHaveBeenCalledWith('/api/profile/privacy-settings');
+    });
+
+    resolveSummary?.({
+      ok: true,
+      json: async () => ({
+        fieldVisibility: {
+          displayName: 'public',
+        },
+      }),
+    } as Response);
+
+    await waitFor(() => {
+      expect(screen.getByText('1 section')).toBeInTheDocument();
+    });
+  });
+
   it('shows inline export failure feedback instead of a native alert', async () => {
     const alertSpy = vi.fn();
     vi.stubGlobal('alert', alertSpy);

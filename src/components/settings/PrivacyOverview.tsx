@@ -135,7 +135,7 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
   }, [loadVisibilitySummary]);
 
   const getVisibilitySummaryText = (count: number) => {
-    if (visibilitySummaryLoading) return 'Loading...';
+    if (visibilitySummaryLoading) return 'Checking visibility';
     if (visibilitySummaryError) return 'Needs refresh';
 
     return `${count} ${count === 1 ? 'section' : 'sections'}`;
@@ -320,7 +320,11 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
                 </div>
               </div>
             ) : null}
-            <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2 md:grid-cols-4">
+            <div
+              className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2 md:grid-cols-4"
+              aria-busy={visibilitySummaryLoading}
+              aria-live="polite"
+            >
               <div className="rounded-lg border p-3">
                 <p className="font-medium">Public</p>
                 <p className="text-muted-foreground">
