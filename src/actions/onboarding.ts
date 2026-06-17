@@ -33,6 +33,9 @@ const INDIVIDUAL_DAY_ONE_FIELD_VISIBILITY = {
   contact: false,
 } as const;
 
+const ORGANIZATION_SETUP_RETRY_MESSAGE =
+  'Organization setup could not be saved. Your details are still here; please try again.';
+
 type OnboardingContextType = 'experience' | 'education' | 'volunteering';
 type OnboardingArtifactInputMode = 'link' | 'file';
 type OnboardingContributionMode = 'solo' | 'team';
@@ -1116,7 +1119,7 @@ export async function completeOrganizationOnboarding(formData: FormData) {
           orgId,
           error: orgInsert.error,
         });
-        return { error: 'Failed to create organization. Please try again.' };
+        return { error: ORGANIZATION_SETUP_RETRY_MESSAGE };
       }
 
       // Log RLS warning but continue with membership creation
@@ -1147,7 +1150,7 @@ export async function completeOrganizationOnboarding(formData: FormData) {
           userId: user.id,
           error: memberInsert.error,
         });
-        return { error: 'Failed to create organization. Please try again.' };
+        return { error: ORGANIZATION_SETUP_RETRY_MESSAGE };
       }
 
       // Log RLS warning but continue - membership was likely created
@@ -1207,6 +1210,6 @@ export async function completeOrganizationOnboarding(formData: FormData) {
       state: 'org_portfolio_publish_unhandled_error',
       failureClass: 'unhandled_portfolio_publish_error',
     });
-    return { error: 'Failed to create organization. Please try again.' };
+    return { error: ORGANIZATION_SETUP_RETRY_MESSAGE };
   }
 }

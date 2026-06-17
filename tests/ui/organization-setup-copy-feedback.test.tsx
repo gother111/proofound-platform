@@ -146,6 +146,25 @@ describe('OrganizationSetup trust page link feedback', () => {
     expect(screen.getByRole('button', { name: /create organization/i })).toBeEnabled();
   });
 
+  it('translates legacy generic create failures into retained-details retry copy', async () => {
+    completeOrganizationOnboardingMock.mockResolvedValueOnce({
+      error: 'Failed to create organization. Please try again.',
+    });
+
+    await submitOrganizationSetup();
+
+    const alert = screen.getByRole('alert');
+    expect(alert).toHaveTextContent(
+      'Organization setup could not be saved. Your details are still here; please try again.'
+    );
+    expect(alert).not.toHaveTextContent('Failed to create organization. Please try again.');
+    expect(screen.getByRole('button', { name: /create organization/i })).toBeEnabled();
+    expect(dispatchClientDiagnosticMock).not.toHaveBeenCalledWith(
+      'onboarding.organization.returned_error',
+      expect.anything()
+    );
+  });
+
   it('keeps unexpected returned organization errors safe and diagnostic', async () => {
     const rawError = 'Supabase insert failed: duplicate key stack detail';
     completeOrganizationOnboardingMock.mockResolvedValueOnce({

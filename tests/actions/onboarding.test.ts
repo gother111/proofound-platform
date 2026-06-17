@@ -537,7 +537,10 @@ describe('onboarding actions', () => {
 
     const result = await completeOrganizationOnboarding(formData);
 
-    expect(result).toEqual({ error: 'Failed to create organization. Please try again.' });
+    expect(result).toEqual({
+      error:
+        'Organization setup could not be saved. Your details are still here; please try again.',
+    });
     expect(log.error).toHaveBeenCalledWith(
       'onboarding.organization.owner_insert_failed',
       expect.objectContaining({

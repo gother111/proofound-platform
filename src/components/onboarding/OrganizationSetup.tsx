@@ -20,19 +20,34 @@ const ORGANIZATION_SETUP_RETRY_MESSAGE =
   'Organization setup could not be saved. Your details are still here; please try again.';
 const ORGANIZATION_EXISTING_CHECK_FAILED_MESSAGE =
   'We could not confirm whether your account already belongs to an organization. Retry this check before creating a new organization if you expected an existing workspace.';
+const ORGANIZATION_SETUP_LEGACY_CREATE_ERROR = 'Failed to create organization. Please try again.';
 
-const ORGANIZATION_SETUP_SAFE_ACTION_ERRORS = new Set([
-  'Organization name, slug, and type are required',
-  'Slug can only contain lowercase letters, numbers, and hyphens',
-  'Invalid organization type',
-  'You are already connected to an organization. Please contact support to update your organization membership.',
-  'Organization slug already taken. Please choose another.',
-  'Failed to create organization. Please try again.',
+const ORGANIZATION_SETUP_SAFE_ACTION_ERRORS = new Map([
+  [
+    'Organization name, slug, and type are required',
+    'Organization name, slug, and type are required',
+  ],
+  [
+    'Slug can only contain lowercase letters, numbers, and hyphens',
+    'Slug can only contain lowercase letters, numbers, and hyphens',
+  ],
+  ['Invalid organization type', 'Invalid organization type'],
+  [
+    'You are already connected to an organization. Please contact support to update your organization membership.',
+    'You are already connected to an organization. Please contact support to update your organization membership.',
+  ],
+  [
+    'Organization slug already taken. Please choose another.',
+    'Organization slug already taken. Please choose another.',
+  ],
+  [ORGANIZATION_SETUP_RETRY_MESSAGE, ORGANIZATION_SETUP_RETRY_MESSAGE],
+  [ORGANIZATION_SETUP_LEGACY_CREATE_ERROR, ORGANIZATION_SETUP_RETRY_MESSAGE],
 ]);
 
 function organizationSetupActionErrorMessage(message: string) {
-  if (ORGANIZATION_SETUP_SAFE_ACTION_ERRORS.has(message)) {
-    return message;
+  const safeMessage = ORGANIZATION_SETUP_SAFE_ACTION_ERRORS.get(message);
+  if (safeMessage) {
+    return safeMessage;
   }
 
   dispatchClientDiagnostic('onboarding.organization.returned_error', {
