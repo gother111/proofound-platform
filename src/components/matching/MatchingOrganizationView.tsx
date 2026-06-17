@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -159,6 +159,7 @@ export function MatchingOrganizationView({
   const [isLoadingExplanation, setIsLoadingExplanation] = useState(false);
   const [reviewActionPending, setReviewActionPending] = useState<ReviewActionState | null>(null);
   const [reviewActionError, setReviewActionError] = useState<ReviewActionError | null>(null);
+  const reviewDetailRef = useRef<HTMLDivElement | null>(null);
 
   const currentAssignment = assignments.find((a) => a.id === selectedAssignment);
 
@@ -221,6 +222,35 @@ export function MatchingOrganizationView({
       router.push(`/app/o/${slug}/assignments?matching=${encodeURIComponent(assignmentId)}`);
     }
   };
+
+  const scrollReviewDetailIntoViewOnMobile = useCallback(() => {
+    if (typeof window === 'undefined' || !window.matchMedia('(max-width: 1023px)').matches) {
+      return;
+    }
+
+    window.requestAnimationFrame(() => {
+      const reviewDetail = reviewDetailRef.current;
+
+      if (!reviewDetail) {
+        return;
+      }
+
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      reviewDetail.scrollIntoView({
+        behavior: prefersReducedMotion ? 'auto' : 'smooth',
+        block: 'start',
+      });
+      reviewDetail.focus({ preventScroll: true });
+    });
+  }, []);
+
+  const handleSelectMatch = useCallback(
+    (matchId: string) => {
+      setActiveMatchId(matchId);
+      scrollReviewDetailIntoViewOnMobile();
+    },
+    [scrollReviewDetailIntoViewOnMobile]
+  );
 
   const getAssignmentBadgeLabel = (assignment: Assignment) => {
     const summary = assignment.matchingSummary;
@@ -702,7 +732,7 @@ export function MatchingOrganizationView({
                         <button
                           key={match.id}
                           type="button"
-                          onClick={() => setActiveMatchId(match.id)}
+                          onClick={() => handleSelectMatch(match.id)}
                           className={`w-full p-4 rounded-xl border text-left transition-all space-y-2 block ${
                             isSelected
                               ? 'border-proofound-forest bg-proofound-parchment/35 ring-1 ring-proofound-forest/50'
@@ -761,7 +791,12 @@ export function MatchingOrganizationView({
                     })}
                   </div>
 
-                  <div className="flex flex-col space-y-6 rounded-xl border border-proofound-stone/60 bg-white/80 p-5 lg:col-span-3 lg:min-h-0 lg:overflow-y-auto">
+                  <div
+                    ref={reviewDetailRef}
+                    tabIndex={-1}
+                    aria-label="Selected proof submission review"
+                    className="flex flex-col space-y-6 rounded-xl border border-proofound-stone/60 bg-white/80 p-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 lg:col-span-3 lg:min-h-0 lg:overflow-y-auto"
+                  >
                     {!activeMatch ? (
                       <div className="flex-1 flex flex-col justify-center items-center text-center py-12">
                         <p className="text-sm text-muted-foreground">
