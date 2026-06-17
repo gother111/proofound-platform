@@ -21,6 +21,12 @@ type CopyFeedback = {
   message: string;
 };
 
+const COPY_FAILURE_MESSAGES: Record<PersonaType, string> = {
+  individual: 'Portfolio link could not be copied. Select the link below or try again.',
+  organization:
+    'Organization trust page link could not be copied. Select the link below or try again.',
+};
+
 function normalizePortfolioUrl(input: string): string {
   const trimmed = input.trim();
 
@@ -80,10 +86,7 @@ export function PublicPortfolioReadyStep({
       setCopied(false);
       setCopyFeedback({
         kind: 'error',
-        message:
-          persona === 'organization'
-            ? 'Organization trust page link could not be copied. Try again.'
-            : 'Portfolio link could not be copied. Try again.',
+        message: COPY_FAILURE_MESSAGES[persona],
       });
     }
   }

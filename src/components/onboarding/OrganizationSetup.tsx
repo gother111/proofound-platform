@@ -21,6 +21,8 @@ const ORGANIZATION_SETUP_RETRY_MESSAGE =
 const ORGANIZATION_EXISTING_CHECK_FAILED_MESSAGE =
   'We could not confirm whether your account already belongs to an organization. Retry this check before creating a new organization if you expected an existing workspace.';
 const ORGANIZATION_SETUP_LEGACY_CREATE_ERROR = 'Failed to create organization. Please try again.';
+const ORGANIZATION_TRUST_LINK_COPY_FAILED_MESSAGE =
+  'Organization trust page link could not be copied. Select the link below or try again.';
 
 const ORGANIZATION_SETUP_SAFE_ACTION_ERRORS = new Map([
   [
@@ -182,7 +184,7 @@ export function OrganizationSetup() {
         setCopied(false);
         setCopyFeedback({
           kind: 'error',
-          message: 'Organization trust page link could not be copied. Try again.',
+          message: ORGANIZATION_TRUST_LINK_COPY_FAILED_MESSAGE,
         });
       }
     };

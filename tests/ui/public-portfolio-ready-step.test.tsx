@@ -72,12 +72,42 @@ describe('PublicPortfolioReadyStep', () => {
     });
 
     expect(screen.getByRole('alert')).toHaveTextContent(
-      'Portfolio link could not be copied. Try again.'
+      'Portfolio link could not be copied. Select the link below or try again.'
     );
     expect(screen.getByLabelText('Portfolio link for manual copy')).toHaveValue(
       'https://proofound.io/portfolio/jane'
     );
+    expect(
+      screen.queryByText('Portfolio link could not be copied. Try again.')
+    ).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /copy link/i })).toBeEnabled();
+  });
+
+  it('shows organization trust page manual-copy guidance when copying fails', async () => {
+    clipboardWriteText.mockRejectedValueOnce(new Error('Clipboard unavailable'));
+
+    render(
+      <PublicPortfolioReadyStep
+        persona="organization"
+        publicPortfolioUrl="https://proofound.io/portfolio/org/acme"
+        onContinue={vi.fn()}
+      />
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /copy link/i }));
+      await Promise.resolve();
+    });
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Organization trust page link could not be copied. Select the link below or try again.'
+    );
+    expect(screen.getByLabelText('Organization trust page link for manual copy')).toHaveValue(
+      'https://proofound.io/portfolio/org/acme'
+    );
+    expect(
+      screen.queryByText('Organization trust page link could not be copied. Try again.')
+    ).not.toBeInTheDocument();
   });
 
   it('renders organization trust page copy and continues to app', () => {

@@ -232,11 +232,14 @@ describe('OrganizationSetup trust page link feedback', () => {
     });
 
     expect(screen.getByRole('alert')).toHaveTextContent(
-      'Organization trust page link could not be copied. Try again.'
+      'Organization trust page link could not be copied. Select the link below or try again.'
     );
     expect(screen.getByLabelText('Organization trust page link for manual copy')).toHaveValue(
       'http://localhost:3000/portfolio/org/acme'
     );
+    expect(
+      screen.queryByText('Organization trust page link could not be copied. Try again.')
+    ).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /copy link/i })).toBeEnabled();
   });
 });
