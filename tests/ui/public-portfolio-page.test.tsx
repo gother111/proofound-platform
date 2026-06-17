@@ -304,7 +304,13 @@ describe('Public individual portfolio page', () => {
     expect(screen.getByText('Work area: Product strategy')).toBeInTheDocument();
     expect(screen.getByText('Industry: Proof-first assignment review')).toBeInTheDocument();
     expect(screen.queryByText('Industry: Proof-first hiring')).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /proof snapshot/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /public trust summary/i })).toBeInTheDocument();
+    expect(
+      screen.getByText(/no selected public-safe proof packs are public yet/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/private context and unshared credentials stay closed/i)
+    ).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /selected outcomes/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /skills snapshot/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /contact & share/i })).toBeInTheDocument();
@@ -341,6 +347,44 @@ describe('Public individual portfolio page', () => {
     expect(screen.queryByText(/stockholm, sweden/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /return to menu/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /return home/i })).not.toBeInTheDocument();
+  });
+
+  it('keeps public trust summary humanized when count metadata is private', async () => {
+    const baseProjection = buildProjection();
+
+    vi.mocked(resolvePublicIndividualPortfolioAccessByHandle).mockResolvedValue({
+      status: 'accessible',
+      projection: buildProjection({
+        visibility: {
+          ...baseProjection.visibility,
+          counts: false,
+        },
+        exportData: {
+          ...baseProjection.exportData,
+          visibility: {
+            ...baseProjection.exportData.visibility,
+            counts: false,
+          },
+        },
+      }) as any,
+    });
+
+    const element = await PortfolioPage({
+      params: Promise.resolve({ handle: 'jane' }),
+      searchParams: Promise.resolve({}),
+    });
+
+    render(element);
+
+    expect(screen.getByRole('heading', { name: /public trust summary/i })).toBeInTheDocument();
+    expect(
+      screen.getByText('Selected public-safe Proof Packs are shown below.')
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('Verification status appears only where the owner made it public.')
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Public Proof Packs')).not.toBeInTheDocument();
+    expect(screen.queryByText('Public credentials')).not.toBeInTheDocument();
   });
 
   it('uses specific names for public evidence links', async () => {

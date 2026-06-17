@@ -206,6 +206,15 @@ export default async function PortfolioPage({
     .map((pack) => pack.outcomesSummary?.trim() || pack.summary?.trim() || '')
     .filter((value) => value.length > 0)
     .slice(0, 3);
+  const publicCredentialCount = countPublicCredentials(selectedProofPacks);
+  const trustSummaryItems = buildTrustSummaryItems({
+    countsArePublic: data.visibility.counts,
+    proofPackCount: selectedProofPacks.length,
+    verificationCount: data.signals.verifications.count,
+    skillCount: data.publicSkills.length,
+    skillsArePublic: data.visibility.skills,
+    publicCredentialCount,
+  });
 
   const viewerIsOwner = Boolean(user?.id && user.id === data.profileId);
   const displayName = data.publicDisplayName;
@@ -390,19 +399,11 @@ export default async function PortfolioPage({
           </div>
 
           <div className="space-y-4">
-            <PublicProfileSection title="Proof snapshot">
+            <PublicProfileSection title="Public trust summary">
               <div className="space-y-2">
-                <SummaryStat label="Public Proof Packs" value={`${selectedProofPacks.length}`} />
-                <SummaryStat label="Outcomes shown" value={`${selectedOutcomeHighlights.length}`} />
-                <SummaryStat label="Proof-backed skills" value={`${data.publicSkills.length}`} />
-                <SummaryStat
-                  label="Scoped verifications"
-                  value={`${data.signals.verifications.count}`}
-                />
-                <SummaryStat
-                  label="Public credentials"
-                  value={`${countPublicCredentials(selectedProofPacks)}`}
-                />
+                {trustSummaryItems.map((item) => (
+                  <TrustSummaryItem key={item.label} label={item.label} value={item.value} />
+                ))}
               </div>
               {publicTrustBadges.length > 0 ? (
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -415,6 +416,10 @@ export default async function PortfolioPage({
                   Verification checks stay narrow and proof-scoped on this public surface.
                 </p>
               )}
+              <p className="mt-3 text-xs leading-5 text-muted-foreground">
+                This summary only describes selected public-safe material. Private context and
+                unshared credentials stay closed.
+              </p>
             </PublicProfileSection>
 
             <PublicProfileSection title="Selected outcomes">
@@ -645,44 +650,74 @@ function StatusChip({
   );
 }
 
-function SummaryStat({ label, value, icon }: { label: string; value: string; icon?: ReactNode }) {
+function TrustSummaryItem({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl border border-white/40 bg-white/40 px-3 py-2 shadow-sm">
       <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
         {label}
       </p>
-      <p className="mt-1 flex items-center gap-2 text-sm text-foreground">
-        {icon}
-        <span>{value}</span>
-      </p>
+      <p className="mt-1 text-sm leading-5 text-foreground">{value}</p>
     </div>
   );
 }
 
-function humanizeVerification(status: string) {
-  switch (status) {
-    case 'verified':
-      return 'Verified evidence';
-    case 'partially_verified':
-      return 'Partially verified';
-    case 'disputed':
-      return 'Verification disputed';
-    default:
-      return 'Public-safe proof';
+function buildTrustSummaryItems({
+  countsArePublic,
+  proofPackCount,
+  verificationCount,
+  skillCount,
+  skillsArePublic,
+  publicCredentialCount,
+}: {
+  countsArePublic: boolean;
+  proofPackCount: number;
+  verificationCount: number;
+  skillCount: number;
+  skillsArePublic: boolean;
+  publicCredentialCount: number;
+}) {
+  const items = [
+    {
+      label: 'Proof shown',
+      value: countsArePublic
+        ? formatCountSummary(proofPackCount, 'selected public-safe Proof Pack')
+        : proofPackCount > 0
+          ? 'Selected public-safe Proof Packs are shown below.'
+          : 'No selected Proof Packs are public yet.',
+    },
+    {
+      label: 'Verification scope',
+      value: countsArePublic
+        ? formatCountSummary(verificationCount, 'scoped verification')
+        : 'Verification status appears only where the owner made it public.',
+    },
+  ];
+
+  if (skillsArePublic && skillCount > 0) {
+    items.push({
+      label: 'Skills shared',
+      value: countsArePublic
+        ? formatCountSummary(skillCount, 'proof-backed skill')
+        : 'Proof-backed skills are listed without count metadata.',
+    });
   }
+
+  if (publicCredentialCount > 0) {
+    items.push({
+      label: 'Credentials shared',
+      value: countsArePublic
+        ? formatCountSummary(publicCredentialCount, 'public credential')
+        : 'Public credential files are shown without count metadata.',
+    });
+  }
+
+  return items;
 }
 
-function humanizeFreshness(state: string) {
-  switch (state) {
-    case 'fresh':
-      return 'Fresh';
-    case 'review_soon':
-      return 'Review soon';
-    case 'stale':
-      return 'Needs refresh';
-    case 'expired':
-      return 'Expired';
-    default:
-      return 'Unknown';
+function formatCountSummary(count: number, singular: string) {
+  if (count <= 0) {
+    return `No ${singular}s are public yet.`;
   }
+
+  return `${count} ${count === 1 ? singular : `${singular}s`} shared on this page.`;
 }
