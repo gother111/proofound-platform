@@ -4732,7 +4732,7 @@ describe('launch gate package configuration', () => {
       'utf8'
     );
     expect(reviewContract).toContain('Review band:');
-    expect(reviewContract).toContain('High-priority proof review');
+    expect(reviewContract).toContain('Review-ready proof');
     expect(reviewContract).toContain('return `Submission ${suffix');
     expect(reviewContract).toContain('proof-review participant’s stated focus');
     expect(reviewContract).toContain('proof-review participant was shortlisted');

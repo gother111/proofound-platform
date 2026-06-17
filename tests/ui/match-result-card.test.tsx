@@ -170,7 +170,7 @@ describe('MatchResultCard', () => {
 
     expect(screen.getByText('Submission A7F2')).toBeInTheDocument();
     expect(screen.getByText('Blind by default')).toBeInTheDocument();
-    expect(screen.getByText('High-priority proof review')).toBeInTheDocument();
+    expect(screen.getByText('Review-ready proof')).toBeInTheDocument();
     expect(screen.getByText('Strongest relevant proof')).toBeInTheDocument();
     expect(
       screen.getByText('Led a privacy-safe launch proof for a complex assignment-review workflow.')

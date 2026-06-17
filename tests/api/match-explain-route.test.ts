@@ -248,7 +248,7 @@ describe('GET /api/match/explain/[matchId]', () => {
           count: 2,
         },
         trustLabels: ['Blind by default', 'Privacy ready'],
-        fitBand: 'High-priority proof review',
+        fitBand: 'Review-ready proof',
         fitSummary: expect.objectContaining({
           headline: 'Strong proof signals align with this assignment review.',
           reasonCodes: ['skills_fit_high', 'recent_proof', 'privacy_ready'],

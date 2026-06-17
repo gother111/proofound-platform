@@ -143,7 +143,7 @@ function buildVisualIndividualReviewCard(match: {
       count: 2,
     },
     trustLabels: ['Blind by default', 'Privacy ready'],
-    fitBand: hasGaps ? 'Relevant proof review' : 'High-priority proof review',
+    fitBand: hasGaps ? 'Relevant proof review' : 'Review-ready proof',
     fitSummary: {
       headline,
       bullets,
@@ -210,7 +210,7 @@ export async function GET(
         reviewCard,
         rank: undefined,
         totalCandidates: mockMatches.length,
-        rankBand: hasGaps ? 'Relevant proof review' : 'High-priority proof review',
+        rankBand: hasGaps ? 'Relevant proof review' : 'Review-ready proof',
         rankMode: 'band',
         exactRankAvailable: false,
         scoreVisibility: 'internal_ordering_only',

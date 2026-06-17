@@ -205,7 +205,20 @@ export function buildVisualOrgMatches(assignmentId: string): any[] {
       profileId: 'visual-profile-1',
       score: 0.94,
       scoreTotal: 100,
-      reasonCodes: ['skills_fit_high', 'recent_proof', 'privacy_ready'],
+      reasonCodes: [
+        'canonical_skill_overlap',
+        'proof_text_overlap',
+        'role_relevant_outcome',
+        'proof_expectation_overlap',
+        'fresh_proof_present',
+        'non_self_trust_anchor_present',
+        'constraint_match',
+        'privacy_safe_for_stage',
+      ],
+      scoreSnapshotJson: {
+        discovery_status: 'review_ready_match',
+        fit_band: 'strong_evidence_overlap',
+      },
       profile: {
         skills: {
           'program-operations': { level: 4 },
@@ -223,12 +236,9 @@ export function buildVisualOrgMatches(assignmentId: string): any[] {
       visibleIdentityFields: [],
       corridorState: 'shortlist',
       fairness: { status: 'pass' },
-      rankBand: 'Highest-priority proof review',
+      rankBand: null,
       why: {
-        summary: [
-          'Very strong proof alignment',
-          'Critical role requirements have supporting proof.',
-        ],
+        summary: ['Strong evidence overlap', 'Fresh anchored proof supports the corridor.'],
         sections: [
           {
             title: 'Verified Competence',
@@ -255,15 +265,15 @@ export function buildVisualOrgMatches(assignmentId: string): any[] {
           count: 3,
         },
         trustLabels: ['Verified Email', 'Audit Cleared'],
-        fitBand: 'Highest-priority',
+        fitBand: 'Strong evidence overlap',
         fitSummary: {
-          headline: 'Strong technical and timezone alignment.',
+          headline: 'Strong evidence overlap with fresh, anchored proof.',
           bullets: [
-            'Verified C1 English proficiency.',
-            'Has 3+ years experience with proof systems.',
-            'Located in Europe/Stockholm.',
+            'Required operations skills appear in proof-backed work.',
+            'Proof outcome matches the assignment handoff goal.',
+            'Blind review remains privacy safe at this stage.',
           ],
-          reasonCodes: ['skills_fit_high', 'recent_proof'],
+          reasonCodes: ['canonical_skill_overlap', 'proof_text_overlap', 'role_relevant_outcome'],
         },
         privacy: {
           reviewState: 'visible',
@@ -276,7 +286,18 @@ export function buildVisualOrgMatches(assignmentId: string): any[] {
       profileId: 'visual-profile-2',
       score: 0.88,
       scoreTotal: 100,
-      reasonCodes: ['proof_fit_good', 'constraints_fit_good'],
+      reasonCodes: [
+        'alias_skill_overlap',
+        'proof_text_overlap',
+        'fresh_proof_present',
+        'non_self_trust_anchor_present',
+        'constraint_match',
+        'privacy_safe_for_stage',
+      ],
+      scoreSnapshotJson: {
+        discovery_status: 'review_ready_match',
+        fit_band: 'relevant_partial',
+      },
       profile: {
         skills: {
           'systems-engineering': { level: 5 },
@@ -293,9 +314,9 @@ export function buildVisualOrgMatches(assignmentId: string): any[] {
       visibleIdentityFields: [],
       corridorState: 'shortlist',
       fairness: { status: 'pass' },
-      rankBand: 'High-priority proof review',
+      rankBand: null,
       why: {
-        summary: ['Strong proof alignment', 'Compliance and systems evidence match the brief.'],
+        summary: ['Relevant partial match', 'Alias and proof text signals support review.'],
         sections: [
           {
             title: 'Verified Competence',
@@ -318,15 +339,15 @@ export function buildVisualOrgMatches(assignmentId: string): any[] {
           count: 2,
         },
         trustLabels: ['ISO 27001 Certified', 'Reference Attestation'],
-        fitBand: 'High-priority',
+        fitBand: 'Relevant partial',
         fitSummary: {
-          headline: 'Robust engineering background.',
+          headline: 'Relevant partial match through adjacent evidence wording.',
           bullets: [
-            'Strong systems engineering (Level 5).',
-            'ISO 27001 audit experience.',
-            'Based in Gothenburg (hybrid available).',
+            'Proof text overlaps the assignment evidence expectations.',
+            'Trust anchor is present for the relevant proof corridor.',
+            'Constraints look compatible for review, not automatic intro.',
           ],
-          reasonCodes: ['proof_fit_good', 'constraints_fit_good'],
+          reasonCodes: ['alias_skill_overlap', 'proof_text_overlap', 'constraint_match'],
         },
         privacy: {
           reviewState: 'visible',
@@ -339,7 +360,18 @@ export function buildVisualOrgMatches(assignmentId: string): any[] {
       profileId: 'visual-profile-3',
       score: 0.82,
       scoreTotal: 100,
-      reasonCodes: ['skills_fit_high', 'privacy_ready'],
+      reasonCodes: [
+        'custom_wording_overlap',
+        'proof_text_overlap',
+        'role_relevant_outcome',
+        'fresh_proof_present',
+        'constraint_match',
+        'privacy_safe_for_stage',
+      ],
+      scoreSnapshotJson: {
+        discovery_status: 'review_ready_match',
+        fit_band: 'relevant_partial',
+      },
       profile: {
         skills: {
           'product-management': { level: 4 },
@@ -356,9 +388,9 @@ export function buildVisualOrgMatches(assignmentId: string): any[] {
       visibleIdentityFields: [],
       corridorState: 'shortlist',
       fairness: { status: 'pass' },
-      rankBand: 'Priority proof review',
+      rankBand: null,
       why: {
-        summary: ['Clear proof alignment', 'Product and data evidence match the brief.'],
+        summary: ['Relevant partial match', 'Custom wording overlaps outcome evidence.'],
         sections: [
           {
             title: 'Product Focus',
@@ -381,15 +413,15 @@ export function buildVisualOrgMatches(assignmentId: string): any[] {
           count: 2,
         },
         trustLabels: ['Verified Degree', 'Reference Verified'],
-        fitBand: 'Priority',
+        fitBand: 'Relevant partial',
         fitSummary: {
-          headline: 'Data-driven Product Manager.',
+          headline: 'Custom wording overlaps the assignment outcome.',
           bullets: [
-            'Strong analytics skills.',
-            'Managed scale products successfully.',
-            'Ready to start remotely.',
+            'Outcome text maps to the assignment impact language.',
+            'Fresh proof is present for review.',
+            'Non-self trust is still needed before intro.',
           ],
-          reasonCodes: ['skills_fit_high', 'privacy_ready'],
+          reasonCodes: ['custom_wording_overlap', 'role_relevant_outcome'],
         },
         privacy: {
           reviewState: 'visible',
@@ -402,7 +434,16 @@ export function buildVisualOrgMatches(assignmentId: string): any[] {
       profileId: 'visual-profile-4',
       score: 0.78,
       scoreTotal: 100,
-      reasonCodes: ['proof_fit_good'],
+      reasonCodes: [
+        'adjacent_skill_overlap',
+        'custom_wording_overlap',
+        'low_supply_expanded_discovery',
+        'privacy_safe_for_stage',
+      ],
+      scoreSnapshotJson: {
+        discovery_status: 'possible_discovery_match',
+        fit_band: 'adjacent_exploratory',
+      },
       profile: {
         skills: {
           'frontend-engineering': { level: 4 },
@@ -419,9 +460,9 @@ export function buildVisualOrgMatches(assignmentId: string): any[] {
       visibleIdentityFields: [],
       corridorState: 'shortlist',
       fairness: { status: 'pass' },
-      rankBand: 'Strong proof review',
+      rankBand: null,
       why: {
-        summary: ['Clear proof alignment', 'Design and development evidence are balanced.'],
+        summary: ['Adjacent exploratory discovery', 'Low supply expanded the review pool.'],
         sections: [
           {
             title: 'Design Systems',
@@ -444,15 +485,15 @@ export function buildVisualOrgMatches(assignmentId: string): any[] {
           count: 1,
         },
         trustLabels: ['GitHub Contributor', 'Verified Portfolio'],
-        fitBand: 'Strong',
+        fitBand: 'Adjacent exploratory',
         fitSummary: {
-          headline: 'Design Engineer with strong portfolio.',
+          headline: 'Adjacent exploratory signal only.',
           bullets: [
-            'Strong React & CSS skills.',
-            'Maintains popular open-source packages.',
-            'Prefers remote contract roles.',
+            'Adjacent skills may help with workflow handoff design.',
+            'Low candidate supply widened discovery.',
+            'This is not intro-ready without stronger proof and gates.',
           ],
-          reasonCodes: ['proof_fit_good'],
+          reasonCodes: ['adjacent_skill_overlap', 'low_supply_expanded_discovery'],
         },
         privacy: {
           reviewState: 'visible',
@@ -465,7 +506,16 @@ export function buildVisualOrgMatches(assignmentId: string): any[] {
       profileId: 'visual-profile-5',
       score: 0.71,
       scoreTotal: 100,
-      reasonCodes: ['constraints_fit_good'],
+      reasonCodes: [
+        'proof_expectation_overlap',
+        'fresh_proof_missing',
+        'constraint_match',
+        'privacy_safe_for_stage',
+      ],
+      scoreSnapshotJson: {
+        discovery_status: 'review_ready_match',
+        fit_band: 'needs_more_proof',
+      },
       profile: {
         skills: {
           devops: { level: 5 },
@@ -482,9 +532,9 @@ export function buildVisualOrgMatches(assignmentId: string): any[] {
       visibleIdentityFields: [],
       corridorState: 'shortlist',
       fairness: { status: 'pass' },
-      rankBand: 'Clear proof review',
+      rankBand: null,
       why: {
-        summary: ['Relevant proof alignment', 'Cloud and DevOps evidence supports review.'],
+        summary: ['Needs more proof', 'Proof expectation overlap is not fresh enough for intro.'],
         sections: [
           {
             title: 'Infrastructure',
@@ -506,15 +556,15 @@ export function buildVisualOrgMatches(assignmentId: string): any[] {
           count: 2,
         },
         trustLabels: ['AWS Certified', 'Manager Attestation'],
-        fitBand: 'Clear',
+        fitBand: 'Needs more proof',
         fitSummary: {
-          headline: 'Experienced Cloud & DevOps Engineer.',
+          headline: 'Needs more fresh role-relevant proof.',
           bullets: [
-            'Kubernetes and Terraform expert.',
-            'Proven cost reduction achievements.',
-            'Stockholm onsite preferred.',
+            'Proof expectations overlap the assignment.',
+            'Fresh role-relevant proof is missing.',
+            'Intro stays blocked until the proof gate is satisfied.',
           ],
-          reasonCodes: ['constraints_fit_good'],
+          reasonCodes: ['proof_expectation_overlap', 'fresh_proof_missing'],
         },
         privacy: {
           reviewState: 'visible',
@@ -527,7 +577,19 @@ export function buildVisualOrgMatches(assignmentId: string): any[] {
       profileId: 'visual-profile-6',
       score: 0.91,
       scoreTotal: 100,
-      reasonCodes: ['skills_fit_high', 'recent_proof'],
+      reasonCodes: [
+        'canonical_skill_overlap',
+        'proof_text_overlap',
+        'role_relevant_outcome',
+        'fresh_proof_present',
+        'non_self_trust_anchor_present',
+        'constraint_match',
+        'privacy_safe_for_stage',
+      ],
+      scoreSnapshotJson: {
+        discovery_status: 'intro_ready_match',
+        fit_band: 'strong_evidence_overlap',
+      },
       profile: {
         skills: {
           'technical-writing': { level: 4 },
@@ -553,9 +615,9 @@ export function buildVisualOrgMatches(assignmentId: string): any[] {
       ],
       corridorState: 'shortlist',
       fairness: { status: 'pass' },
-      rankBand: 'Highest-priority proof review',
+      rankBand: null,
       why: {
-        summary: ['Very strong proof alignment', 'Technical documentation evidence is recent.'],
+        summary: ['Intro-ready evidence gate', 'Fresh anchored proof is available.'],
         sections: [
           {
             title: 'Documentation',
@@ -578,15 +640,19 @@ export function buildVisualOrgMatches(assignmentId: string): any[] {
           count: 3,
         },
         trustLabels: ['Verified Writing', 'Reference Approved'],
-        fitBand: 'Highest-priority',
+        fitBand: 'Strong evidence overlap',
         fitSummary: {
-          headline: 'Exceptional writer and content strategist.',
+          headline: 'Intro-ready after shortlist review.',
           bullets: [
-            'Wrote developer docs from scratch.',
-            'Based in Stockholm, remote-ready.',
-            'Excellent client feedback.',
+            'Required skills and proof outcome overlap the assignment.',
+            'Fresh proof and non-self trust anchor are present.',
+            'Identity-bearing reveal remains candidate-consented.',
           ],
-          reasonCodes: ['skills_fit_high', 'recent_proof'],
+          reasonCodes: [
+            'canonical_skill_overlap',
+            'proof_text_overlap',
+            'non_self_trust_anchor_present',
+          ],
         },
         privacy: {
           reviewState: 'visible',
@@ -599,7 +665,18 @@ export function buildVisualOrgMatches(assignmentId: string): any[] {
       profileId: 'visual-profile-7',
       score: 0.85,
       scoreTotal: 100,
-      reasonCodes: ['proof_fit_good', 'privacy_ready'],
+      reasonCodes: [
+        'alias_skill_overlap',
+        'proof_text_overlap',
+        'fresh_proof_present',
+        'non_self_trust_anchor_present',
+        'constraint_match',
+        'privacy_safe_for_stage',
+      ],
+      scoreSnapshotJson: {
+        discovery_status: 'intro_ready_match',
+        fit_band: 'relevant_partial',
+      },
       profile: {
         skills: {
           'qa-engineering': { level: 4 },
@@ -626,9 +703,9 @@ export function buildVisualOrgMatches(assignmentId: string): any[] {
       corridorState: 'intro_approved',
       conversationId: 'visual-conv-7',
       fairness: { status: 'pass' },
-      rankBand: 'High-priority proof review',
+      rankBand: null,
       why: {
-        summary: ['Strong proof alignment', 'QA automation evidence is ready for review.'],
+        summary: ['Intro already open', 'Alias and proof text evidence supported the corridor.'],
         sections: [
           {
             title: 'Test Automation',
@@ -651,15 +728,15 @@ export function buildVisualOrgMatches(assignmentId: string): any[] {
           count: 2,
         },
         trustLabels: ['Playwright Certified', 'Reference Confirmed'],
-        fitBand: 'High-priority',
+        fitBand: 'Relevant partial',
         fitSummary: {
-          headline: 'Expert QA Automation Engineer.',
+          headline: 'Intro already open from a relevant partial match.',
           bullets: [
-            'Built CI/CD Playwright suites.',
-            'Strong test strategy background.',
-            'Stockholm remote role preferred.',
+            'Alias and proof text signals were enough for shortlist review.',
+            'Trust and freshness gates are present.',
+            'Conversation is open after consented reveal.',
           ],
-          reasonCodes: ['proof_fit_good', 'privacy_ready'],
+          reasonCodes: ['alias_skill_overlap', 'proof_text_overlap'],
         },
         privacy: {
           reviewState: 'visible',

@@ -102,10 +102,16 @@ interface MatchExplainerProps {
 }
 
 function fitBandLabel(label?: string | null): string {
-  if (label && !/^top\s*\d+/i.test(label) && !/^#\d+/i.test(label)) {
+  if (
+    label &&
+    !/^top\s*\d+/i.test(label) &&
+    !/^#\d+/i.test(label) &&
+    !/^(highest-priority|high-priority|priority|strong|clear)\s+proof review$/i.test(label) &&
+    !/^(highest-priority|high-priority|priority|strong|clear)$/i.test(label)
+  ) {
     return label;
   }
-  return 'Proof review needed';
+  return label ? 'Review-ready proof' : 'Proof review needed';
 }
 
 function privacySafeWarning(message?: string | null): string | null {

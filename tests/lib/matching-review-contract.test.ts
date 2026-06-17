@@ -348,11 +348,11 @@ describe('matching review contract', () => {
       reasonCodes: ['skills_strong', 'verification_ready'],
       fairnessStatus: 'elevated',
       fallbackState: 'fairness_suppressed_ranking',
-      rankBand: 'High-priority proof review',
+      rankBand: 'Review-ready proof',
     });
 
     expect(why.reasonCodes).toContain('fairness_ranking_suppressed');
-    expect(why.summary).toContain('Review band: High-priority proof review');
+    expect(why.summary).toContain('Review band: Review-ready proof');
   });
 
   it('does not present account-side checks as proof verification records or internal flags', () => {

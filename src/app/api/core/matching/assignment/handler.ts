@@ -318,10 +318,36 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      // Default: Return the 7 visual mock matches
-      const mockItems = buildVisualOrgMatches(assignmentId).map(
-        toVisibilitySafeAssignmentMatchItem
-      );
+      // Default: Return the 7 visual mock matches with the same public-safe review
+      // contract as live matching results.
+      const mockItems = buildVisualOrgMatches(assignmentId).map((item) => {
+        const reasonCodes = Array.isArray(item.reasonCodes) ? item.reasonCodes : [];
+        const reviewCard = item.reviewCard as ReturnType<typeof buildProofFirstReviewCard>;
+        const visualReviewSignals = item.scoreSnapshotJson;
+        const safeReview = buildSafeReviewMetadata({
+          reasonCodes,
+          scoreSnapshotJson: visualReviewSignals,
+          reviewCard,
+          reviewStage: typeof item.reviewStage === 'string' ? item.reviewStage : 'blind_review',
+          revealScope: typeof item.revealScope === 'string' ? item.revealScope : 'blind',
+          fallbackState:
+            typeof item.operationalFallbackMode === 'string' ? item.operationalFallbackMode : null,
+        });
+
+        return toVisibilitySafeAssignmentMatchItem({
+          ...item,
+          anonymousCandidateLabel: safeReview.anonymousCandidateLabel,
+          discoveryStatus: safeReview.discoveryStatus,
+          fitBand: safeReview.fitBand,
+          introGate: safeReview.introGate,
+          canRequestIntro: safeReview.canRequestIntro,
+          proofSummaries: safeReview.proofSummaries,
+          skillClusters: safeReview.skillClusters,
+          reasonDetails: safeReview.reasonDetails,
+          missingGates: safeReview.missingGates,
+          supplyState: safeReview.supplyState,
+        });
+      });
       emitLaunchTrace(trace, {
         outcome: 'success',
         state: 'shortlist_generated',

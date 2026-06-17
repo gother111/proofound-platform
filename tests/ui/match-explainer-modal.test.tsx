@@ -146,7 +146,7 @@ describe('MatchExplainerModal', () => {
       MATCH_EXPLAINER_DIALOG_DESCRIPTION
     );
     expect(screen.getByText('Strongest relevant proof')).toBeInTheDocument();
-    expect(screen.getAllByText('High-priority proof review').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Review-ready proof').length).toBeGreaterThan(0);
     expect(
       screen.getByText('Built a blind review corridor around proof-backed evaluation.')
     ).toBeInTheDocument();

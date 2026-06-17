@@ -39,8 +39,13 @@ const PROOF_SIGNAL_LABELS: Record<string, string> = {
 
 function reviewBandLabel(label?: string | null): string | null {
   if (!label) return null;
-  if (/^top\s*\d+/i.test(label) || /^#\d+/i.test(label)) {
-    return 'High-priority proof review';
+  if (
+    /^top\s*\d+/i.test(label) ||
+    /^#\d+/i.test(label) ||
+    /^(highest-priority|high-priority|priority|strong|clear)\s+proof review$/i.test(label) ||
+    /^(highest-priority|high-priority|priority|strong|clear)$/i.test(label)
+  ) {
+    return 'Review-ready proof';
   }
   return label;
 }

@@ -1484,12 +1484,8 @@ export function canMutateReview(role: OrgReviewRole | null): boolean {
 }
 
 export function getRankBand(rank: number, totalCandidates: number): string {
-  if (rank <= 5) return 'Highest-priority proof review';
-  if (rank <= 10) return 'High-priority proof review';
-  if (rank <= 20) return 'Priority proof review';
-  if (rank <= Math.ceil(totalCandidates * 0.3)) return 'Strong proof review';
-  if (rank <= Math.ceil(totalCandidates * 0.5)) return 'Clear proof review';
-  return 'Contextual proof review';
+  if (rank > 0 && totalCandidates > 0) return 'Review-ready proof';
+  return 'Proof review needed';
 }
 
 export function buildCandidateReviewProjection(

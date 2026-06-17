@@ -835,22 +835,16 @@ export function MatchingOrganizationView({
                                   {readableMatchLabel(activeMatch.fitBand, FIT_BAND_LABELS)}
                                 </Badge>
                               )}
-                              {readableMatchLabel(activeMatch.introGate, INTRO_GATE_LABELS) && (
-                                <Badge
-                                  variant="secondary"
-                                  className="text-[10px] font-semibold bg-proofound-stone/30 text-proofound-charcoal"
-                                >
-                                  {readableMatchLabel(activeMatch.introGate, INTRO_GATE_LABELS)}
-                                </Badge>
-                              )}
-                              {activeMatch.reviewCard?.fitBand && (
-                                <Badge
-                                  variant="secondary"
-                                  className="text-[10px] font-semibold bg-[#eef4eb] text-proofound-forest"
-                                >
-                                  {activeMatch.reviewCard.fitBand}
-                                </Badge>
-                              )}
+                              {readableMatchLabel(activeMatch.introGate, INTRO_GATE_LABELS) &&
+                                (activeSegment === 'shortlist' ||
+                                  activeMatch.introGate !== 'intro_ready') && (
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-[10px] font-semibold bg-proofound-stone/30 text-proofound-charcoal"
+                                  >
+                                    {readableMatchLabel(activeMatch.introGate, INTRO_GATE_LABELS)}
+                                  </Badge>
+                                )}
                             </div>
                           </div>
 
