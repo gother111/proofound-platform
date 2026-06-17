@@ -76,13 +76,13 @@ describe('MatchingOrganizationView launch corridor', () => {
 
     render(<MatchingOrganizationView assignments={assignments as any} onCreateNew={vi.fn()} />);
 
-    expect(screen.getByText('Assignment review queue')).toBeInTheDocument();
+    expect(screen.getByText('Proof submission review')).toBeInTheDocument();
     expect(
       screen.getByText(
-        'Review proof-backed submissions, keep workflow stages clear, and request intros when ready.'
+        'Select an assignment, review proof-backed submissions, and request intros only when the evidence is ready.'
       )
     ).toBeInTheDocument();
-    expect(screen.getByText('Active Assignments')).toBeInTheDocument();
+    expect(screen.getByText('Assignment corridors')).toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getByText('No proof submissions yet')).toBeInTheDocument();

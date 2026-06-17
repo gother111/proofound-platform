@@ -503,11 +503,11 @@ export function MatchingOrganizationView({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-proofound-stone/50 pb-5">
         <div>
           <h2 className="font-display text-2xl font-semibold text-proofound-charcoal dark:text-foreground md:text-3xl">
-            Assignment review queue
+            Proof submission review
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Review proof-backed submissions, keep workflow stages clear, and request intros when
-            ready.
+            Select an assignment, review proof-backed submissions, and request intros only when the
+            evidence is ready.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -516,7 +516,7 @@ export function MatchingOrganizationView({
             className="bg-proofound-forest hover:bg-proofound-forest/90 text-white rounded-full px-5"
           >
             <Plus className="w-4 h-4 mr-2" />
-            New Assignment
+            New assignment
           </Button>
         </div>
       </div>
@@ -525,7 +525,7 @@ export function MatchingOrganizationView({
         {/* LEFT COLUMN: Assignment List (sidebar) */}
         <div className="flex w-full shrink-0 flex-col gap-3 border-b border-proofound-stone/60 pb-4 lg:w-[280px] lg:overflow-y-auto lg:border-b-0 lg:border-r lg:pb-0 lg:pr-2">
           <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground mb-1">
-            Active Assignments
+            Assignment corridors
           </div>
           <div className="space-y-2">
             {assignments.map((assignment) => {

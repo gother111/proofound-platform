@@ -44,8 +44,8 @@ export default async function OrgAssignmentsAliasPage({
                   Assignments
                 </h1>
                 <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-                  Assignment cards own their proof-review workflow, staged review context, and next
-                  action state.
+                  Create one proof-led assignment, review submissions blind by default, and move
+                  ready participants toward intro and interview.
                 </p>
               </div>
             </div>
