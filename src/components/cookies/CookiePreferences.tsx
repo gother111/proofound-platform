@@ -62,6 +62,28 @@ interface CookiePreferencesProps {
   onSave?: () => void;
 }
 
+export function CookiePreferencesLoading() {
+  return (
+    <div
+      aria-busy="true"
+      aria-live="polite"
+      className="rounded-2xl border border-proofound-stone/80 bg-white/80 p-5 shadow-sm"
+      role="status"
+    >
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+        Consent controls
+      </p>
+      <h2 className="mt-2 font-display text-xl font-semibold text-proofound-charcoal">
+        Loading cookie preferences
+      </h2>
+      <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+        Your saved choices are being read from this browser. Essential security cookies stay on;
+        optional analytics and marketing remain unchanged while preferences load.
+      </p>
+    </div>
+  );
+}
+
 export function CookiePreferences({ onSave }: CookiePreferencesProps) {
   // State for cookie preferences
   const [preferences, setPreferences] = useState<CookiePreferencesType | null>(null);
@@ -153,8 +175,8 @@ export function CookiePreferences({ onSave }: CookiePreferencesProps) {
 
   if (!preferences) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-muted-foreground">Loading preferences...</p>
+      <div className="py-6">
+        <CookiePreferencesLoading />
       </div>
     );
   }

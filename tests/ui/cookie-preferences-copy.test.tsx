@@ -2,7 +2,10 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { CookiePreferences } from '@/components/cookies/CookiePreferences';
+import {
+  CookiePreferences,
+  CookiePreferencesLoading,
+} from '@/components/cookies/CookiePreferences';
 
 const {
   dispatchClientErrorDiagnosticMock,
@@ -58,6 +61,19 @@ describe('CookiePreferences copy', () => {
     expect(screen.getByText(/relevant Proofound updates/i)).toBeInTheDocument();
     expect(screen.queryByText(/use our platform/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Ad targeting/i)).not.toBeInTheDocument();
+  });
+
+  it('names the browser-stored consent loading state without implying changes were made', () => {
+    render(<CookiePreferencesLoading />);
+
+    const status = screen.getByRole('status');
+
+    expect(status).toHaveAttribute('aria-busy', 'true');
+    expect(status).toHaveTextContent('Loading cookie preferences');
+    expect(status).toHaveTextContent('saved choices are being read from this browser');
+    expect(status).toHaveTextContent('Essential security cookies stay on');
+    expect(status).toHaveTextContent('optional analytics and marketing remain unchanged');
+    expect(screen.queryByText('Loading preferences...')).not.toBeInTheDocument();
   });
 
   it('keeps failed preference saves safe, diagnostic, and retryable', async () => {
