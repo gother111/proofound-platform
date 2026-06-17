@@ -36,6 +36,18 @@ describe('WorkEmailVerificationForm', () => {
     vi.restoreAllMocks();
   });
 
+  it('names the organization selector loading state instead of generic loading copy', () => {
+    vi.mocked(apiFetch).mockReturnValue(new Promise<Response>(() => {}));
+
+    render(<WorkEmailVerificationForm onSuccess={vi.fn()} />);
+
+    expect(screen.getByText('Loading organization list')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Loading organization choices. You can still enter your work email.'
+    );
+    expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+  });
+
   it('submits verification with normalized email and null orgId, while rendering display_name labels', async () => {
     vi.mocked(apiFetch).mockImplementation(async (url: string, init?: RequestInit) => {
       if (url === '/api/organizations') {

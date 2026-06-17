@@ -28,6 +28,9 @@ interface Organization {
 
 const WORK_EMAIL_SEND_RETRY_MESSAGE =
   'Confirmation email could not be sent. Your work email and organization choice are still here; please try again.';
+const ORGANIZATION_LOADING_PLACEHOLDER = 'Loading organization list';
+const ORGANIZATION_LOADING_STATUS =
+  'Loading organization choices. You can still enter your work email.';
 const WORK_EMAIL_SEND_SAFE_ERRORS = new Map([
   [
     'This work email is already verified by another account',
@@ -246,7 +249,11 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
           disabled={submitting || loadingOrgs}
         >
           <SelectTrigger id="organization">
-            <SelectValue placeholder={loadingOrgs ? 'Loading...' : 'Select your organization'} />
+            <SelectValue
+              placeholder={
+                loadingOrgs ? ORGANIZATION_LOADING_PLACEHOLDER : 'Select your organization'
+              }
+            />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="none">None - I&apos;ll link later</SelectItem>
@@ -258,7 +265,9 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
           </SelectContent>
         </Select>
         {loadingOrgs ? (
-          <p className="text-xs text-muted-foreground">Loading organizations...</p>
+          <p className="text-xs text-muted-foreground" role="status" aria-live="polite">
+            {ORGANIZATION_LOADING_STATUS}
+          </p>
         ) : organizationLoadError ? (
           <div
             className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900"
