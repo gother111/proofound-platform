@@ -243,7 +243,7 @@ describe('CandidateInviteClient test_match flow', () => {
     expect(screen.getByText(/Work email check/i)).toBeInTheDocument();
     expect(screen.getByText(/Private review first/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/does not publish a public page or broaden visibility/i)
+      screen.getByText(/does not publish your Public Page or broaden visibility/i)
     ).toBeInTheDocument();
     expect(screen.getByTestId('candidate-proof-submission-path')).toHaveTextContent(
       /Build proof.*Attach evidence.*Review privacy/i
@@ -295,7 +295,7 @@ describe('CandidateInviteClient test_match flow', () => {
       reviewConfirmed: true,
     });
     expect(screen.getByRole('status')).toHaveTextContent(
-      /Assignment proof submitted for blind-first review\. No verification emails were sent\./i
+      /Assignment proof submitted for blind-first review\. No verification requests were sent\./i
     );
     expect(apiFetchMock.mock.calls.some(([url]) => url === '/api/profile/snippet')).toBe(false);
   });
@@ -969,7 +969,7 @@ describe('CandidateInviteClient test_match flow', () => {
     });
 
     expect(screen.getByRole('status')).toHaveTextContent(
-      /Assignment proof submitted for blind-first review\. No verification emails were sent\./i
+      /Assignment proof submitted for blind-first review\. No verification requests were sent\./i
     );
     expect(apiFetchMock).not.toHaveBeenCalledWith('/api/profile/snippet', expect.anything());
   });
@@ -1155,7 +1155,7 @@ describe('CandidateInviteClient test_match flow', () => {
               summary: 'A private proof pack for this assignment.',
               evidenceSummary: 'Evidence summary.',
               outcomesSummary: 'Outcome summary.',
-              verificationSummary: 'No new verification email is sent.',
+              verificationSummary: 'No new verification request is sent.',
               updatedAt: new Date().toISOString(),
             },
           ],

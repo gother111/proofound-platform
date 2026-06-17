@@ -560,7 +560,7 @@ export function CandidateInviteClient({
       if (visualMode) {
         setAccountSaveControls(DEFAULT_ACCOUNT_SAVE_CONTROLS);
         setSuccessMessage(
-          'Assignment proof submitted for blind-first review. No verification emails were sent.'
+          'Assignment proof submitted for blind-first review. No verification requests were sent.'
         );
         setInvite((current) =>
           current
@@ -597,7 +597,7 @@ export function CandidateInviteClient({
         setAccountSaveControls(payload.accountSave.controls);
       }
       setSuccessMessage(
-        'Assignment proof submitted for blind-first review. No verification emails were sent.'
+        'Assignment proof submitted for blind-first review. No verification requests were sent.'
       );
       setReviewProofPackId('');
       setReviewConfirmed(false);
@@ -1093,7 +1093,7 @@ export function CandidateInviteClient({
                 <div className="space-y-5">
                   <p className="text-sm text-slate-700">
                     Create or choose one owner-only Proof Pack for this assignment. The submission
-                    does not publish a public page or broaden visibility beyond this assignment.
+                    does not publish your Public Page or broaden visibility beyond this assignment.
                   </p>
 
                   <Button asChild variant="outline" className="w-full sm:w-auto">
