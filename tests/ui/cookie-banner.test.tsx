@@ -90,6 +90,41 @@ describe('CookieBanner', () => {
     expect(screen.getByRole('link', { name: 'Cookie Settings' })).toHaveClass('min-h-9');
   });
 
+  it('docks first-visit consent on public pages so proof content stays inspectable', () => {
+    usePathnameMock.mockReturnValue('/portfolio/demo-proofound');
+
+    render(<CookieBanner />);
+
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+
+    const bannerCard = screen
+      .getByRole('heading', { name: /privacy choices/i })
+      .closest('.pointer-events-auto');
+
+    expect(bannerCard).toHaveClass('max-w-xl');
+    expect(bannerCard).toHaveClass('sm:ml-auto');
+    expect(bannerCard).toHaveClass('sm:mr-4');
+  });
+
+  it('uses concise first-visit consent copy inside app workflows', () => {
+    usePathnameMock.mockReturnValue('/app/o/test-org/assignments');
+
+    render(<CookieBanner />);
+
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+
+    expect(
+      screen.getByText(
+        'Essential cookies keep Proofound working. Optional analytics stay off unless you accept.'
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/We never sell your data/i)).not.toBeInTheDocument();
+  });
+
   it('does not render on snippet embed routes', () => {
     usePathnameMock.mockReturnValue('/p/demo/embed');
 

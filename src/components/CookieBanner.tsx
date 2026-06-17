@@ -30,6 +30,10 @@ export function CookieBanner() {
   const isSnippetEmbedRoute = /^\/p\/[^/]+\/embed\/?$/.test(pathname ?? '');
   const isMobileAppRoute = /^\/app\//.test(pathname ?? '');
   const isLandingRoute = pathname === '/';
+  const isPublicSurfaceBanner = !isMobileAppRoute && !isLandingRoute;
+  const bannerDescription = isMobileAppRoute
+    ? 'Essential cookies keep Proofound working. Optional analytics stay off unless you accept.'
+    : 'Essential cookies keep Proofound working. Optional analytics help us improve the product. We never sell your data.';
 
   useEffect(() => {
     if (isSnippetEmbedRoute) {
@@ -92,12 +96,24 @@ export function CookieBanner() {
           ? 'bottom-[4.75rem] md:bottom-0'
           : isLandingRoute
             ? 'bottom-3 sm:bottom-4'
-            : 'bottom-0'
+            : 'bottom-3 sm:bottom-4'
       )}
     >
-      <Card className="pointer-events-auto mx-auto w-full max-w-4xl border border-proofound-stone/70 bg-white/95 shadow-[0_18px_54px_-38px_rgba(86,98,79,0.45)] backdrop-blur">
-        <CardContent className={cn('p-3 sm:p-4', isMobileAppRoute && 'max-sm:p-2.5')}>
-          <div className="flex flex-col gap-2 sm:gap-3 md:flex-row md:items-center md:justify-between">
+      <Card
+        className={cn(
+          'pointer-events-auto mx-auto w-full border border-proofound-stone/70 bg-white/95 shadow-[0_18px_54px_-38px_rgba(86,98,79,0.45)] backdrop-blur',
+          isPublicSurfaceBanner ? 'max-w-xl sm:ml-auto sm:mr-4' : 'max-w-4xl'
+        )}
+      >
+        <CardContent className={cn('p-3 sm:p-4', isMobileAppRoute && 'max-sm:p-2')}>
+          <div
+            className={cn(
+              'flex flex-col gap-2 sm:gap-3',
+              isPublicSurfaceBanner
+                ? 'lg:flex-row lg:items-center lg:justify-between'
+                : 'md:flex-row md:items-center md:justify-between'
+            )}
+          >
             <div className="flex min-w-0 items-start gap-3">
               <span className="mt-0.5 hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#eef3e8] text-proofound-forest sm:flex">
                 <Cookie className="h-5 w-5" />
@@ -110,8 +126,7 @@ export function CookieBanner() {
                     isMobileAppRoute && 'max-sm:line-clamp-2'
                   )}
                 >
-                  Essential cookies keep Proofound working. Optional analytics help us improve the
-                  product. We never sell your data.
+                  {bannerDescription}
                 </p>
                 <div
                   className={cn(
@@ -152,12 +167,17 @@ export function CookieBanner() {
               </div>
             </div>
 
-            <div className="grid shrink-0 grid-cols-[1fr_1fr_auto] items-center gap-2 md:flex">
+            <div
+              className={cn(
+                'grid shrink-0 grid-cols-[1fr_1fr_auto] items-center gap-2 md:flex',
+                isMobileAppRoute && 'max-sm:grid-cols-[1fr_1fr_2rem] max-sm:gap-1.5'
+              )}
+            >
               <Button
                 onClick={handleAccept}
                 disabled={saving}
                 size="sm"
-                className={cn('px-3', isMobileAppRoute && 'max-sm:h-9')}
+                className={cn('px-3', isMobileAppRoute && 'max-sm:h-8 max-sm:px-2 max-sm:text-xs')}
               >
                 Accept All
               </Button>
@@ -166,13 +186,16 @@ export function CookieBanner() {
                 variant="outline"
                 disabled={saving}
                 size="sm"
-                className={cn('px-3', isMobileAppRoute && 'max-sm:h-9')}
+                className={cn('px-3', isMobileAppRoute && 'max-sm:h-8 max-sm:px-2 max-sm:text-xs')}
               >
                 Essential Only
               </Button>
               <button
                 onClick={handleDecline}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-proofound-stone/30 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 md:hidden"
+                className={cn(
+                  'flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-proofound-stone/30 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 md:hidden',
+                  isMobileAppRoute && 'max-sm:h-8 max-sm:w-8'
+                )}
                 aria-label="Close cookie preferences"
               >
                 <X className="h-4 w-4" />
