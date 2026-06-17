@@ -86,6 +86,9 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
     showInlineSection();
   };
 
+  const reviewFieldVisibility = () =>
+    showInlineOrFocus('privacy-field-visibility', () => setShowVisibilitySettings(true));
+
   const loadVisibilitySummary = useCallback(async () => {
     setVisibilitySummaryLoading(true);
     setVisibilitySummaryError(null);
@@ -230,11 +233,11 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
               </p>
               <div className="grid grid-cols-1 gap-3 sm:flex sm:flex-wrap">
                 <Button
-                  onClick={() => setShowVisibilitySettings(true)}
+                  onClick={reviewFieldVisibility}
                   className="w-full justify-center bg-proofound-forest hover:bg-proofound-forest/90 sm:w-auto"
                 >
                   <Settings className="h-4 w-4 mr-2" />
-                  Privacy settings
+                  Review field visibility
                 </Button>
                 <Button
                   variant="outline"
@@ -364,9 +367,7 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
           <Button
             variant="outline"
             className="h-auto py-3 text-left"
-            onClick={() =>
-              showInlineOrFocus('privacy-field-visibility', () => setShowVisibilitySettings(true))
-            }
+            onClick={reviewFieldVisibility}
           >
             <span className="font-medium">Review field visibility</span>
           </Button>

@@ -121,6 +121,22 @@ describe('PrivacyOverview copy', () => {
     target.remove();
   });
 
+  it('routes the full-page primary privacy action to field visibility controls', () => {
+    const target = document.createElement('section');
+    target.id = 'privacy-field-visibility';
+    document.body.appendChild(target);
+
+    render(<PrivacyOverview userId="user-1" fullPageNavigation />);
+
+    fireEvent.click(screen.getAllByRole('button', { name: /review field visibility/i })[0]);
+
+    expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+    expect(focusMock).toHaveBeenCalledWith({ preventScroll: true });
+    expect(screen.queryByText('← Back to Privacy Overview')).not.toBeInTheDocument();
+
+    target.remove();
+  });
+
   it('uses the read-only data inventory for inline data review', async () => {
     render(<PrivacyOverview userId="user-1" />);
 
