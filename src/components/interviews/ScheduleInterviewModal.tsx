@@ -54,6 +54,15 @@ type ManualMeetingProvider = 'teams' | 'google_meet' | 'other';
 
 const INTERVIEW_SCHEDULE_RETRY_MESSAGE =
   'Interview could not be saved. Your selected time and meeting link are still here; please try again.';
+const INTERVIEW_DATE_TIME_REQUIRED_MESSAGE =
+  'Choose a date and time before scheduling this interview.';
+const INTERVIEW_RESCHEDULE_LIMIT_MESSAGE =
+  'This interview has already been rescheduled once. Keep the current slot or coordinate the next step outside this dialog.';
+const MANUAL_MEETING_LINK_REQUIRED_MESSAGE =
+  'Paste the meeting link participants should use before scheduling.';
+const MANUAL_MEETING_PROVIDER_REQUIRED_MESSAGE =
+  'Select the meeting-link provider before scheduling.';
+const MANUAL_MEETING_LINK_INVALID_MESSAGE = 'Enter a full meeting URL, including https://.';
 
 function clientErrorName(error: unknown) {
   if (error instanceof Error && error.name.trim()) {
@@ -91,10 +100,9 @@ export function ScheduleInterviewModal({
   const providerHelpId = 'manual-meeting-provider-help';
   const linkHelpId = 'manual-meeting-link-help';
   const rescheduleLimitId = 'interview-reschedule-limit';
-  const providerHasError = error === 'Please select the meeting provider when using manual mode';
+  const providerHasError = error === MANUAL_MEETING_PROVIDER_REQUIRED_MESSAGE;
   const linkHasError =
-    error === 'Please add a meeting link when using manual mode' ||
-    error === 'Please provide a valid meeting link URL';
+    error === MANUAL_MEETING_LINK_REQUIRED_MESSAGE || error === MANUAL_MEETING_LINK_INVALID_MESSAGE;
 
   const maxDate = useMemo(() => {
     const max = new Date(matchAgreedAt);
@@ -141,30 +149,30 @@ export function ScheduleInterviewModal({
     setError(null);
 
     if (!selectedDate || !selectedTime) {
-      setError('Please select both date and time');
+      setError(INTERVIEW_DATE_TIME_REQUIRED_MESSAGE);
       return;
     }
 
     if (isReschedule && !canReschedule) {
-      setError('Reschedule limit exceeded (maximum 1 reschedule allowed)');
+      setError(INTERVIEW_RESCHEDULE_LIMIT_MESSAGE);
       return;
     }
 
     if (platform === 'manual') {
       if (!manualMeetingLink.trim()) {
-        setError('Please add a meeting link when using manual mode');
+        setError(MANUAL_MEETING_LINK_REQUIRED_MESSAGE);
         return;
       }
 
       if (!manualMeetingProvider) {
-        setError('Please select the meeting provider when using manual mode');
+        setError(MANUAL_MEETING_PROVIDER_REQUIRED_MESSAGE);
         return;
       }
 
       try {
         new URL(manualMeetingLink.trim());
       } catch {
-        setError('Please provide a valid meeting link URL');
+        setError(MANUAL_MEETING_LINK_INVALID_MESSAGE);
         return;
       }
     }
@@ -270,7 +278,7 @@ export function ScheduleInterviewModal({
       <div className="space-y-2">
         <Label htmlFor="platform">
           <Video className="w-4 h-4 inline mr-2" />
-          Video Platform
+          Video platform
         </Label>
         <Select value={platform} onValueChange={() => setPlatform('manual')}>
           <SelectTrigger id="platform">
@@ -287,7 +295,7 @@ export function ScheduleInterviewModal({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="manualMeetingProvider">Manual Link Provider</Label>
+        <Label htmlFor="manualMeetingProvider">Meeting link provider</Label>
         <Select
           value={manualMeetingProvider || undefined}
           onValueChange={(value) => setManualMeetingProvider(value as ManualMeetingProvider)}
@@ -311,7 +319,7 @@ export function ScheduleInterviewModal({
           This labels the meeting link for both participants; it does not connect an external
           calendar provider.
         </p>
-        <Label htmlFor="manualMeetingLink">Meeting Link</Label>
+        <Label htmlFor="manualMeetingLink">Meeting link</Label>
         <input
           id="manualMeetingLink"
           type="url"
@@ -360,12 +368,12 @@ export function ScheduleInterviewModal({
         Cancel
       </Button>
       <Button onClick={handleSubmit} disabled={isSubmitting || (isReschedule && !canReschedule)}>
-        {isSubmitting ? 'Scheduling...' : isReschedule ? 'Reschedule' : 'Schedule Interview'}
+        {isSubmitting ? 'Scheduling...' : isReschedule ? 'Reschedule' : 'Schedule interview'}
       </Button>
     </div>
   );
 
-  const title = isReschedule ? 'Reschedule Interview' : 'Schedule Interview';
+  const title = isReschedule ? 'Reschedule interview' : 'Schedule interview';
   const description = isReschedule
     ? `You can reschedule this interview ${canReschedule ? 'once' : '(limit reached)'}.`
     : 'Schedule a 30-minute video interview. Must be within 7 days of match acceptance.';

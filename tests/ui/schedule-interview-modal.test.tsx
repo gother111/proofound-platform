@@ -232,7 +232,7 @@ describe('ScheduleInterviewModal', () => {
     fireEvent.click(screen.getByRole('button', { name: /schedule interview/i }));
 
     const alert = await screen.findByRole('alert');
-    expect(alert).toHaveTextContent('Please select the meeting provider when using manual mode');
+    expect(alert).toHaveTextContent('Select the meeting-link provider before scheduling.');
     expect(scheduleInterviewMock).not.toHaveBeenCalled();
   });
 
@@ -262,11 +262,47 @@ describe('ScheduleInterviewModal', () => {
     const alert = await screen.findByRole('alert');
     const meetingLinkInput = screen.getByLabelText(/meeting link/i);
 
-    expect(alert).toHaveTextContent('Please add a meeting link when using manual mode');
+    expect(alert).toHaveTextContent(
+      'Paste the meeting link participants should use before scheduling.'
+    );
     expect(meetingLinkInput).toHaveAttribute('aria-invalid', 'true');
     expect(meetingLinkInput).toHaveAccessibleDescription(
-      'Use the meeting URL participants should open for this interview. Please add a meeting link when using manual mode'
+      'Use the meeting URL participants should open for this interview. Paste the meeting link participants should use before scheduling.'
     );
+    expect(scheduleInterviewMock).not.toHaveBeenCalled();
+  });
+
+  it('marks the manual meeting link invalid when the URL is incomplete', async () => {
+    render(
+      <ScheduleInterviewModal
+        isOpen
+        onClose={vi.fn()}
+        matchId="6e704a5a-a89e-43cc-9f71-d1f29fd7f3dd"
+        matchAgreedAt={new Date()}
+      />
+    );
+
+    await screen.findAllByTestId('mock-select');
+    const dateSelect = findSelectByOption(new Date().toISOString().slice(0, 10));
+    const timeSelect = findSelectByOption('09:00');
+    const platformSelect = findSelectByOption('manual');
+    const manualProviderSelect = findSelectByOption('teams');
+    const meetingLinkInput = screen.getByLabelText(/meeting link/i);
+
+    fireEvent.change(dateSelect, { target: { value: dateSelect.options[0].value } });
+    fireEvent.change(timeSelect, { target: { value: timeSelect.options[0].value } });
+    fireEvent.change(platformSelect, { target: { value: 'manual' } });
+    fireEvent.change(manualProviderSelect, { target: { value: 'teams' } });
+    fireEvent.change(meetingLinkInput, {
+      target: { value: 'meet.google.com/manual-room' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /schedule interview/i }));
+
+    const alert = await screen.findByRole('alert');
+
+    expect(alert).toHaveTextContent('Enter a full meeting URL, including https://.');
+    expect(meetingLinkInput).toHaveAttribute('aria-invalid', 'true');
     expect(scheduleInterviewMock).not.toHaveBeenCalled();
   });
 
