@@ -364,6 +364,41 @@ describe('Public individual portfolio page', () => {
     );
   });
 
+  it('renders proof trust signals and ownership as readable public-safe details', async () => {
+    const baseProjection = buildProjection();
+    const basePack = baseProjection.exportData.proofPacks[0];
+
+    vi.mocked(resolvePublicIndividualPortfolioAccessByHandle).mockResolvedValue({
+      status: 'accessible',
+      projection: buildProjection({
+        exportData: {
+          ...baseProjection.exportData,
+          proofPacks: [
+            {
+              ...basePack,
+              freshnessState: 'current',
+              ownershipStatement:
+                'Led discovery, synthesized evidence, and facilitated the operating rhythm.',
+            },
+          ],
+        },
+      }) as any,
+    });
+
+    const element = await PortfolioPage({
+      params: Promise.resolve({ handle: 'jane' }),
+      searchParams: Promise.resolve({}),
+    });
+
+    render(element);
+
+    expect(screen.getByText('Verified evidence')).toBeInTheDocument();
+    expect(screen.getByText('Current')).toBeInTheDocument();
+    expect(screen.getByText('Role:')).toBeInTheDocument();
+    expect(screen.getByText(/Led discovery, synthesized evidence/i)).toBeInTheDocument();
+    expect(document.body.textContent ?? '').not.toContain('Verified evidence / Led discovery');
+  });
+
   it('renders owner-safe public preview and allows return link when provided', async () => {
     vi.mocked(createClient).mockResolvedValue({
       auth: {

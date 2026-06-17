@@ -38,36 +38,6 @@ export function PublicProofPackList({ proofPacks }: PublicProofPackListProps) {
     }));
   };
 
-  const getTrustLine = (pack: PublicProofPack) => {
-    const parts: string[] = [];
-
-    if (pack.verificationStatus === 'verified') {
-      parts.push('Verified evidence');
-    } else if (pack.verificationStatus === 'partially_verified') {
-      parts.push('Partially verified');
-    } else if (pack.verificationStatus === 'disputed') {
-      parts.push('Verification disputed');
-    } else {
-      parts.push('Self-claimed');
-    }
-
-    if (pack.freshnessState === 'fresh') {
-      parts.push('Fresh');
-    } else if (pack.freshnessState === 'review_soon') {
-      parts.push('Review soon');
-    } else if (pack.freshnessState === 'stale') {
-      parts.push('Needs refresh');
-    } else if (pack.freshnessState === 'expired') {
-      parts.push('Expired');
-    }
-
-    if (pack.ownershipStatement) {
-      parts.push(pack.ownershipStatement);
-    }
-
-    return parts.join(' / ');
-  };
-
   return (
     <div className="space-y-4">
       {proofPacks.map((pack) => {
@@ -76,6 +46,7 @@ export function PublicProofPackList({ proofPacks }: PublicProofPackListProps) {
           pack.verificationSummary ||
           (pack.summary && pack.summary !== pack.outcomesSummary) ||
           pack.selectedEvidence.length > 0;
+        const trustSignals = getTrustSignals(pack);
 
         return (
           <article
@@ -180,30 +151,120 @@ export function PublicProofPackList({ proofPacks }: PublicProofPackListProps) {
               </div>
             )}
 
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-[#EFECE5]/60 pt-3">
-              <span className="text-xs font-medium text-muted-foreground/80 tracking-wide">
-                {getTrustLine(pack)}
-              </span>
-
-              {hasExtraDetails && (
-                <button
-                  type="button"
-                  onClick={() => toggleExpand(pack.id)}
-                  aria-expanded={isExpanded}
-                  className="-mr-2 inline-flex min-h-8 items-center gap-1.5 rounded-md px-2 text-xs font-semibold text-proofound-forest transition-colors hover:bg-proofound-forest/5 hover:text-[#143829] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+            <div className="mt-4 space-y-3 border-t border-[#EFECE5]/60 pt-3">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div
+                  className="flex min-w-0 flex-1 flex-wrap gap-1.5"
+                  aria-label="Proof trust signals"
                 >
-                  <span>{isExpanded ? 'Hide details' : 'Show details'}</span>
-                  {isExpanded ? (
-                    <ChevronUp className="h-3 w-3" />
-                  ) : (
-                    <ChevronDown className="h-3 w-3" />
-                  )}
-                </button>
-              )}
+                  {trustSignals.map((signal) => (
+                    <span
+                      key={`${pack.id}-${signal.label}`}
+                      className={cn(
+                        'inline-flex max-w-full items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold leading-5',
+                        signal.tone === 'positive'
+                          ? 'border-[#D7E8DE] bg-[#F3FAF6] text-proofound-forest'
+                          : signal.tone === 'warning'
+                            ? 'border-[#E8D9BE] bg-[#FFF8EA] text-[#7A5520]'
+                            : 'border-[#E2DDD3] bg-[#F8F6F0] text-muted-foreground'
+                      )}
+                    >
+                      <span className="truncate">{signal.label}</span>
+                    </span>
+                  ))}
+                </div>
+
+                {hasExtraDetails && (
+                  <button
+                    type="button"
+                    onClick={() => toggleExpand(pack.id)}
+                    aria-expanded={isExpanded}
+                    className="-ml-2 inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-md px-2 text-xs font-semibold text-proofound-forest transition-colors hover:bg-proofound-forest/5 hover:text-[#143829] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 sm:-mr-2 sm:ml-0"
+                  >
+                    <span>{isExpanded ? 'Hide details' : 'Show details'}</span>
+                    {isExpanded ? (
+                      <ChevronUp className="h-3 w-3" />
+                    ) : (
+                      <ChevronDown className="h-3 w-3" />
+                    )}
+                  </button>
+                )}
+              </div>
+
+              {pack.ownershipStatement ? (
+                <p className="text-xs leading-5 text-muted-foreground">
+                  <span className="font-semibold text-foreground/80">Role:</span>{' '}
+                  {pack.ownershipStatement}
+                </p>
+              ) : null}
             </div>
           </article>
         );
       })}
     </div>
   );
+}
+
+type TrustSignal = {
+  label: string;
+  tone: 'positive' | 'neutral' | 'warning';
+};
+
+function getTrustSignals(pack: PublicProofPack): TrustSignal[] {
+  const signals: TrustSignal[] = [
+    {
+      label: getVerificationLabel(pack.verificationStatus),
+      tone: getVerificationTone(pack.verificationStatus),
+    },
+  ];
+  const freshness = getFreshnessLabel(pack.freshnessState);
+
+  if (freshness) {
+    signals.push(freshness);
+  }
+
+  return signals;
+}
+
+function getVerificationLabel(status: string) {
+  switch (status) {
+    case 'verified':
+      return 'Verified evidence';
+    case 'partially_verified':
+      return 'Partially verified';
+    case 'disputed':
+      return 'Verification disputed';
+    default:
+      return 'Self-claimed';
+  }
+}
+
+function getVerificationTone(status: string): TrustSignal['tone'] {
+  switch (status) {
+    case 'verified':
+    case 'partially_verified':
+      return 'positive';
+    case 'disputed':
+      return 'warning';
+    default:
+      return 'neutral';
+  }
+}
+
+function getFreshnessLabel(state: string): TrustSignal | null {
+  switch (state) {
+    case 'current':
+      return { label: 'Current', tone: 'positive' };
+    case 'recent':
+    case 'fresh':
+      return { label: 'Fresh', tone: 'positive' };
+    case 'review_soon':
+      return { label: 'Review soon', tone: 'neutral' };
+    case 'stale':
+      return { label: 'Needs refresh', tone: 'warning' };
+    case 'expired':
+      return { label: 'Expired', tone: 'warning' };
+    default:
+      return null;
+  }
 }
