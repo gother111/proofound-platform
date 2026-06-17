@@ -441,6 +441,10 @@ describe('Organization public portfolio page', () => {
     expect(
       screen.getByText(/Ask the organization for a fresh public trust page link/i)
     ).toBeInTheDocument();
+    const trustStatus = screen.getByRole('status');
+    expect(trustStatus).toHaveClass('rounded-xl');
+    expect(trustStatus).toHaveClass('shadow-sm');
+    expect(trustStatus).not.toHaveClass('border-l-4');
     expect(screen.getByRole('link', { name: 'Return home' })).toHaveAttribute('href', '/');
     expect(notFoundMock).not.toHaveBeenCalled();
   });

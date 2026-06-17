@@ -79,7 +79,7 @@ function renderUnavailablePage(
           <div
             role="status"
             aria-live="polite"
-            className="border-l-4 border-proofound-forest bg-[#F3FAF6] px-4 py-3 text-sm leading-6 text-proofound-charcoal"
+            className="rounded-xl border border-[#D7E8DE] bg-[#F3FAF6] px-4 py-3 text-sm leading-6 text-proofound-charcoal shadow-sm"
           >
             <div className="flex min-w-0 gap-3">
               <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/80 text-proofound-forest">

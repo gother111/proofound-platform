@@ -561,6 +561,10 @@ describe('Public individual portfolio page', () => {
       screen.getByText(/Public Pages only load selected public-safe Proof Packs/i)
     ).toBeInTheDocument();
     expect(screen.getByText(/Ask the owner for a fresh Public Page link/i)).toBeInTheDocument();
+    const privacyStatus = screen.getByRole('status');
+    expect(privacyStatus).toHaveClass('rounded-xl');
+    expect(privacyStatus).toHaveClass('shadow-sm');
+    expect(privacyStatus).not.toHaveClass('border-l-4');
     expect(screen.queryByRole('heading', { name: 'Jane Doe' })).not.toBeInTheDocument();
   });
 
