@@ -147,6 +147,7 @@ describe('VerificationsClient', () => {
     const sentTab = screen.getByRole('tab', { name: /^Sent/i });
     expect(incomingTab).toBeInTheDocument();
     expect(sentTab).toBeInTheDocument();
+    expect(screen.getByRole('tablist')).toHaveClass('min-h-11');
     expect(incomingTab).toHaveClass('min-h-11');
     expect(sentTab).toHaveClass('min-h-11');
 
@@ -158,6 +159,38 @@ describe('VerificationsClient', () => {
     expect(screen.getByText('Accepted')).toBeInTheDocument();
     expect(screen.getAllByText('Declined').length).toBeGreaterThan(0);
     expect(screen.getAllByText('All').length).toBeGreaterThan(0);
+  });
+
+  it('keeps verification request actions large enough for mobile trust workflows', async () => {
+    render(
+      <VerificationsClient
+        incomingRequests={[makeRequest({ id: 'incoming-touch', status: 'pending' })]}
+        sentRequests={[
+          makeRequest({
+            id: 'sent-touch',
+            verifierEmail: 'mentor@company.com',
+            status: 'pending',
+          }),
+        ]}
+        userEmail="me@proofound.io"
+      />
+    );
+    await settleAssistiveAiFlag();
+
+    expect(screen.getByRole('button', { name: /^Draft scoped request$/i })).toHaveClass(
+      'min-h-[44px]'
+    );
+    expect(screen.getByRole('button', { name: 'Decline' })).toHaveClass('min-h-[44px]');
+    expect(screen.getByRole('button', { name: 'Confirm' })).toHaveClass('min-h-[44px]');
+
+    const sentTab = screen.getByRole('tab', { name: /^Sent/i });
+    fireEvent.mouseDown(sentTab);
+    fireEvent.click(sentTab);
+    fireEvent.keyDown(sentTab, { key: 'Enter' });
+    await waitFor(() => expect(screen.getByText('mentor@company.com')).toBeInTheDocument());
+
+    expect(screen.getByRole('button', { name: 'Resend request' })).toHaveClass('min-h-[44px]');
+    expect(screen.getByRole('button', { name: 'Delete' })).toHaveClass('min-h-[44px]');
   });
 
   it('uses clear pending requester copy when profile details are unavailable', async () => {
@@ -866,6 +899,7 @@ describe('VerificationsClient', () => {
       'Mailbox provider rejected the resend.'
     );
 
+    expect(within(alert).getByRole('button', { name: 'Retry resend' })).toHaveClass('min-h-[44px]');
     fireEvent.click(within(alert).getByRole('button', { name: 'Retry resend' }));
 
     await waitFor(() => expect(apiFetchMock).toHaveBeenCalledTimes(2));

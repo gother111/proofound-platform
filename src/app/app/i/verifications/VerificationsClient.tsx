@@ -698,17 +698,17 @@ export function VerificationsClient({
           {request.status === 'pending' && request.subjectType === 'skill' && (
             <div className="flex flex-wrap items-center gap-2">
               <Button
-                size="sm"
+                size="touch"
                 variant="outline"
                 onClick={() => handleRespond(request, 'decline')}
-                className="border-destructive text-destructive hover:bg-destructive/10 text-xs px-3 h-8"
+                className="border-destructive px-3 text-xs text-destructive hover:bg-destructive/10"
               >
                 Decline
               </Button>
               <Button
-                size="sm"
+                size="touch"
                 onClick={() => handleRespond(request, 'accept')}
-                className="bg-proofound-forest text-white hover:bg-proofound-forest/90 text-xs px-3 h-8"
+                className="bg-proofound-forest px-3 text-xs text-white hover:bg-proofound-forest/90"
               >
                 Confirm
               </Button>
@@ -769,13 +769,13 @@ export function VerificationsClient({
               {canResendSentRequest(request) && (
                 <Button
                   type="button"
-                  size="sm"
+                  size="touch"
                   variant="outline"
                   onClick={() => {
                     void handleResendSentRequest(request);
                   }}
                   disabled={Boolean(resendingRequestIds[request.id])}
-                  className="border-proofound-forest text-proofound-forest hover:bg-[#E8F5E9] text-xs px-3 h-8"
+                  className="border-proofound-forest px-3 text-xs text-proofound-forest hover:bg-[#E8F5E9]"
                 >
                   {resendingRequestIds[request.id]
                     ? 'Resending...'
@@ -788,13 +788,13 @@ export function VerificationsClient({
               {canDeleteSentRequest(request) && (
                 <Button
                   type="button"
-                  size="sm"
+                  size="touch"
                   variant="outline"
                   onClick={() => {
                     openDeleteSentRequestDialog(request);
                   }}
                   disabled={Boolean(deletingRequestIds[request.id])}
-                  className="border-[#C76B4A] text-[#8B4A36] hover:bg-[#FFF0F0] text-xs px-3 h-8"
+                  className="border-[#C76B4A] px-3 text-xs text-[#8B4A36] hover:bg-[#FFF0F0]"
                 >
                   {deletingRequestIds[request.id]
                     ? 'Deleting...'
@@ -821,7 +821,7 @@ export function VerificationsClient({
             <p>{actionError.message}</p>
             <Button
               type="button"
-              size="sm"
+              size="touch"
               variant="outline"
               onClick={() => {
                 if (actionError.action === 'resend') {
@@ -835,7 +835,7 @@ export function VerificationsClient({
                   ? Boolean(resendingRequestIds[request.id])
                   : Boolean(deletingRequestIds[request.id])
               }
-              className="mt-2 h-8 rounded-full border-amber-300 bg-white px-3 text-xs font-semibold text-amber-950 hover:bg-amber-100"
+              className="mt-2 rounded-full border-amber-300 bg-white px-3 text-xs font-semibold text-amber-950 hover:bg-amber-100"
             >
               {actionError.action === 'resend' ? 'Retry resend' : 'Review delete'}
             </Button>
@@ -1025,8 +1025,9 @@ export function VerificationsClient({
           {assistiveAiEnabled ? (
             <Button
               type="button"
+              size="touch"
               onClick={() => setComposerOpen(true)}
-              className="bg-proofound-forest text-white hover:bg-proofound-forest/90 text-xs px-4 h-9"
+              className="bg-proofound-forest px-4 text-xs text-white hover:bg-proofound-forest/90"
             >
               <Wand2 className="mr-2 h-4 w-4" />
               Draft scoped request
@@ -1035,7 +1036,7 @@ export function VerificationsClient({
         </div>
 
         <Tabs defaultValue="incoming" className="w-full">
-          <TabsList className="mb-4 h-10 p-0.5 bg-proofound-stone/30 rounded-lg">
+          <TabsList className="mb-4 h-auto min-h-11 p-0.5 bg-proofound-stone/30 rounded-lg">
             <TabsTrigger value="incoming" className="min-h-11 text-xs px-4 py-2 rounded-md">
               Incoming
               {incomingRequests.length > 0 && (
