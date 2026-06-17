@@ -20,12 +20,12 @@ type ShareFeedback = {
 const SHARE_LINK_COPY = {
   'public-page': {
     copied: 'Public page link copied.',
-    failed: 'Public page link could not be copied. Try again.',
+    failed: 'Public page link could not be copied. Select the link below or try again.',
     manualLabel: 'Share link for manual copy',
   },
   'organization-trust-page': {
     copied: 'Organization trust page link copied.',
-    failed: 'Organization trust page link could not be copied. Try again.',
+    failed: 'Organization trust page link could not be copied. Select the link below or try again.',
     manualLabel: 'Organization trust page link for manual copy',
   },
 } as const;

@@ -85,11 +85,14 @@ describe('public portfolio action feedback', () => {
     fireEvent.click(screen.getByRole('button', { name: /copy share link/i }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Public page link could not be copied. Try again.'
+      'Public page link could not be copied. Select the link below or try again.'
     );
     expect(screen.getByLabelText('Share link for manual copy')).toHaveValue(
       'https://proofound.io/portfolio/jane'
     );
+    expect(
+      screen.queryByText('Public page link could not be copied. Try again.')
+    ).not.toBeInTheDocument();
     expect(alertSpy).not.toHaveBeenCalled();
   });
 
@@ -106,11 +109,14 @@ describe('public portfolio action feedback', () => {
     fireEvent.click(screen.getByRole('button', { name: /copy share link/i }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Organization trust page link could not be copied. Try again.'
+      'Organization trust page link could not be copied. Select the link below or try again.'
     );
     expect(screen.getByLabelText('Organization trust page link for manual copy')).toHaveValue(
       'https://proofound.io/portfolio/org/acme'
     );
+    expect(
+      screen.queryByText('Organization trust page link could not be copied. Try again.')
+    ).not.toBeInTheDocument();
     expect(alertSpy).not.toHaveBeenCalled();
   });
 
@@ -122,8 +128,11 @@ describe('public portfolio action feedback', () => {
     fireEvent.click(screen.getByRole('button', { name: /copy proof summary/i }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Proof summary could not be copied. Try again.'
+      'Proof summary could not be prepared. Refresh this page or try again.'
     );
+    expect(
+      screen.queryByText('Proof summary could not be copied. Try again.')
+    ).not.toBeInTheDocument();
     expect(alertSpy).not.toHaveBeenCalled();
   });
 
@@ -140,11 +149,14 @@ describe('public portfolio action feedback', () => {
     fireEvent.click(screen.getByRole('button', { name: /copy proof summary/i }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Proof summary could not be copied. Try again.'
+      'Proof summary could not be copied. Select the summary below or try again.'
     );
     expect(screen.getByLabelText('Proof summary for manual copy')).toHaveValue(
       'Jane Doe\nProof Pack: Strategy delivery\nScoped public summary'
     );
+    expect(
+      screen.queryByText('Proof summary could not be copied. Try again.')
+    ).not.toBeInTheDocument();
     expect(dispatchClientErrorDiagnostic).toHaveBeenCalledWith(
       'portfolio.public_text_pack.copy_failed',
       expect.any(Error)

@@ -16,6 +16,11 @@ type CopyFeedback = {
   message: string;
 };
 
+const PROOF_SUMMARY_FETCH_RETRY_MESSAGE =
+  'Proof summary could not be prepared. Refresh this page or try again.';
+const PROOF_SUMMARY_MANUAL_COPY_MESSAGE =
+  'Proof summary could not be copied. Select the summary below or try again.';
+
 export function CopyTextButton({
   endpoint = '/api/portfolio/text-pack',
   className,
@@ -46,7 +51,12 @@ export function CopyTextButton({
       dispatchClientErrorDiagnostic('portfolio.public_text_pack.copy_failed', e);
       setCopied(false);
       setManualCopyText(fetchedText);
-      setFeedback({ kind: 'error', message: 'Proof summary could not be copied. Try again.' });
+      setFeedback({
+        kind: 'error',
+        message: fetchedText
+          ? PROOF_SUMMARY_MANUAL_COPY_MESSAGE
+          : PROOF_SUMMARY_FETCH_RETRY_MESSAGE,
+      });
     } finally {
       setLoading(false);
     }
