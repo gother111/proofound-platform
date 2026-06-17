@@ -132,6 +132,54 @@ describe('MatchingOrganizationView', () => {
     });
   });
 
+  it('exposes selected assignment, review tabs, and selected proof submission semantics', async () => {
+    mockViewport(false);
+
+    renderView();
+
+    const assignmentButton = screen.getByRole('button', {
+      name: /Field operations launch lead.*Current assignment corridor/i,
+    });
+    expect(assignmentButton).toHaveAttribute('aria-current', 'true');
+
+    const submissionAButton = await screen.findByRole('button', {
+      name: /Select Submission A for proof review.*Selected/i,
+    });
+    const submissionBButton = screen.getByRole('button', {
+      name: /Select Submission B for proof review\./i,
+    });
+    expect(submissionAButton).toHaveAttribute('aria-pressed', 'true');
+    expect(submissionBButton).toHaveAttribute('aria-pressed', 'false');
+
+    const queueTab = screen.getByRole('tab', { name: /Review queue \(2\)/i });
+    const shortlistTab = screen.getByRole('tab', { name: /Shortlist and intros \(0\)/i });
+    expect(queueTab).toHaveAttribute('aria-selected', 'true');
+    expect(shortlistTab).toHaveAttribute('aria-selected', 'false');
+    expect(screen.getByRole('tabpanel', { name: /Review queue \(2\)/i })).toHaveAttribute(
+      'id',
+      'review-queue-panel'
+    );
+
+    fireEvent.click(submissionBButton);
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', {
+          name: /Select Submission B for proof review.*Selected/i,
+        })
+      ).toHaveAttribute('aria-pressed', 'true');
+    });
+
+    fireEvent.click(shortlistTab);
+
+    expect(shortlistTab).toHaveAttribute('aria-selected', 'true');
+    expect(queueTab).toHaveAttribute('aria-selected', 'false');
+    expect(screen.getByRole('tabpanel', { name: /Shortlist and intros \(0\)/i })).toHaveAttribute(
+      'id',
+      'review-shortlist-panel'
+    );
+  });
+
   it('brings selected proof details into view on mobile submission selection', async () => {
     const scrollIntoViewMock = vi.fn();
     window.HTMLElement.prototype.scrollIntoView = scrollIntoViewMock;

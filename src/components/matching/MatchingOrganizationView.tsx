@@ -519,6 +519,10 @@ export function MatchingOrganizationView({
     activeMatch && reviewActionError?.matchId === activeMatch.id ? reviewActionError : null;
   const activeReviewActionPending =
     activeMatch && reviewActionPending?.matchId === activeMatch.id ? reviewActionPending : null;
+  const activeSegmentPanelId =
+    activeSegment === 'queue' ? 'review-queue-panel' : 'review-shortlist-panel';
+  const activeSegmentTabId =
+    activeSegment === 'queue' ? 'review-queue-tab' : 'review-shortlist-tab';
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 md:px-0 space-y-6">
@@ -559,7 +563,9 @@ export function MatchingOrganizationView({
                 <button
                   key={assignment.id}
                   onClick={() => handleSelectAssignment(assignment.id)}
-                  className={`w-full p-4 rounded-xl text-left border transition-all ${
+                  aria-current={isSelected ? 'true' : undefined}
+                  aria-label={`${assignment.role}. ${assignmentStatusLabel(assignment.status)}. ${count} proof submission${count !== 1 ? 's' : ''}.${isSelected ? ' Current assignment corridor.' : ''}`}
+                  className={`w-full p-4 rounded-xl text-left border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 ${
                     isSelected
                       ? 'border-proofound-forest bg-proofound-parchment/40 ring-1 ring-proofound-forest/50 font-medium'
                       : 'border-proofound-stone/60 bg-white/70 hover:border-proofound-forest/50 hover:bg-white'
@@ -685,10 +691,19 @@ export function MatchingOrganizationView({
             </div>
           ) : (
             <div className="flex-1 flex flex-col min-h-0">
-              <div className="flex border-b border-proofound-stone/50 mb-4 shrink-0">
+              <div
+                className="flex border-b border-proofound-stone/50 mb-4 shrink-0"
+                role="tablist"
+                aria-label="Proof submission review sections"
+              >
                 <button
+                  id="review-queue-tab"
+                  type="button"
+                  role="tab"
+                  aria-selected={activeSegment === 'queue'}
+                  aria-controls={activeSegment === 'queue' ? 'review-queue-panel' : undefined}
                   onClick={() => setActiveSegment('queue')}
-                  className={`px-4 py-2 text-sm font-semibold border-b-2 transition-all ${
+                  className={`min-h-11 rounded-t-md px-4 py-2 text-sm font-semibold border-b-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 ${
                     activeSegment === 'queue'
                       ? 'border-proofound-forest text-proofound-forest'
                       : 'border-transparent text-muted-foreground hover:text-proofound-charcoal'
@@ -697,8 +712,15 @@ export function MatchingOrganizationView({
                   Review queue ({reviewQueueMatches.length})
                 </button>
                 <button
+                  id="review-shortlist-tab"
+                  type="button"
+                  role="tab"
+                  aria-selected={activeSegment === 'shortlist'}
+                  aria-controls={
+                    activeSegment === 'shortlist' ? 'review-shortlist-panel' : undefined
+                  }
                   onClick={() => setActiveSegment('shortlist')}
-                  className={`px-4 py-2 text-sm font-semibold border-b-2 transition-all ${
+                  className={`min-h-11 rounded-t-md px-4 py-2 text-sm font-semibold border-b-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 ${
                     activeSegment === 'shortlist'
                       ? 'border-proofound-forest text-proofound-forest'
                       : 'border-transparent text-muted-foreground hover:text-proofound-charcoal'
@@ -710,7 +732,12 @@ export function MatchingOrganizationView({
 
               {/* Two-column proof-submission review console */}
               {filteredMatches.length === 0 ? (
-                <div className="flex-1 flex flex-col justify-center items-center text-center p-8 bg-white/40 border border-dashed border-proofound-stone/60 rounded-xl">
+                <div
+                  id={activeSegmentPanelId}
+                  role="tabpanel"
+                  aria-labelledby={activeSegmentTabId}
+                  className="flex-1 flex flex-col justify-center items-center text-center p-8 bg-white/40 border border-dashed border-proofound-stone/60 rounded-xl"
+                >
                   <ListChecks className="h-8 w-8 text-muted-foreground/60 mb-2" />
                   <h4 className="text-sm font-semibold text-proofound-charcoal">
                     {activeSegment === 'queue'
@@ -734,10 +761,17 @@ export function MatchingOrganizationView({
                   )}
                 </div>
               ) : (
-                <div className="grid flex-1 grid-cols-1 gap-6 lg:min-h-0 lg:grid-cols-5 lg:overflow-hidden">
+                <div
+                  id={activeSegmentPanelId}
+                  role="tabpanel"
+                  aria-labelledby={activeSegmentTabId}
+                  className="grid flex-1 grid-cols-1 gap-6 lg:min-h-0 lg:grid-cols-5 lg:overflow-hidden"
+                >
                   <div className="flex flex-col gap-3 lg:col-span-2 lg:min-h-0 lg:overflow-y-auto lg:pr-1">
                     {filteredMatches.map((match: any, index: number) => {
                       const isSelected = match.id === activeMatchId;
+                      const submissionLabel =
+                        match.reviewCard?.candidateLabel || `Submission #${index + 1}`;
                       const skillsList = match.profile?.skills
                         ? Object.keys(match.profile.skills).slice(0, 3)
                         : [];
@@ -752,7 +786,9 @@ export function MatchingOrganizationView({
                           key={match.id}
                           type="button"
                           onClick={() => handleSelectMatch(match.id)}
-                          className={`w-full p-4 rounded-xl border text-left transition-all space-y-2 block ${
+                          aria-pressed={isSelected}
+                          aria-label={`Select ${submissionLabel} for proof review${isSelected ? '. Selected.' : '.'}`}
+                          className={`w-full p-4 rounded-xl border text-left transition-all space-y-2 block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 ${
                             isSelected
                               ? 'border-proofound-forest bg-proofound-parchment/35 ring-1 ring-proofound-forest/50'
                               : 'border-proofound-stone/60 bg-white/70 hover:border-proofound-forest/50 hover:bg-white'
@@ -760,7 +796,7 @@ export function MatchingOrganizationView({
                         >
                           <div className="flex items-center justify-between">
                             <span className="font-semibold text-sm text-proofound-charcoal">
-                              {match.reviewCard?.candidateLabel || `Submission #${index + 1}`}
+                              {submissionLabel}
                             </span>
 
                             {match.corridorState === 'intro_approved' ? (
