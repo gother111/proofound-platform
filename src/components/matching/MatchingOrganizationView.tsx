@@ -114,7 +114,7 @@ type ReviewActionError = ReviewActionState & {
 };
 
 const REVIEW_ACTION_FAILED_MESSAGE =
-  'No shortlist, decline, or intro action was changed. Retry this action before moving to the next submission.';
+  'No shortlist, decline, or intro request was changed. Retry this action before moving to the next submission.';
 
 const REVIEW_ACTION_LABELS: Record<ReviewAction, string> = {
   shortlist: 'Shortlist',
@@ -308,7 +308,7 @@ export function MatchingOrganizationView({
     } catch (error) {
       dispatchClientErrorDiagnostic('matching.organization_view.matches_load_failed', error);
       setLoadError(
-        'Your review queue is still safe, and no shortlist, pass, or intro action was changed.'
+        'Your review queue is still safe, and no shortlist, decline, or intro request was changed.'
       );
       toast.error('Proof submissions could not load', {
         description: 'Retry the review queue without leaving this assignment.',
@@ -395,7 +395,7 @@ export function MatchingOrganizationView({
         action,
         label: actionLabel,
         message:
-          'Review context could not be found. No shortlist, decline, or intro action was changed.',
+          'Review context could not be found. No shortlist, decline, or intro request was changed.',
       });
       toast.error('Match context not found');
       return;
@@ -451,7 +451,7 @@ export function MatchingOrganizationView({
 
       if (action === 'pass') {
         setMatches((current) => current.filter((match: any) => match.id !== matchId));
-        toast.success('Submission passed for now.');
+        toast.success('Submission declined for now.');
       } else {
         // Update local state for review-stage and request_intro updates
         setMatches((current) =>
@@ -500,7 +500,7 @@ export function MatchingOrganizationView({
         message: REVIEW_ACTION_FAILED_MESSAGE,
       });
       toast.error('Review action did not save', {
-        description: 'No shortlist, decline, or intro action was changed.',
+        description: 'No shortlist, decline, or intro request was changed.',
       });
     } finally {
       setReviewActionPending(null);

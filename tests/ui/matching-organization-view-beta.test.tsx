@@ -1,6 +1,7 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { toast } from 'sonner';
 
 import { MatchingOrganizationView } from '@/components/matching/MatchingOrganizationView';
 
@@ -33,6 +34,13 @@ vi.mock('@/components/matching/MatchResultCard', () => ({
 
 vi.mock('@/lib/ui/recovery-actions', () => ({
   getOrganizationRecoveryActions: () => [],
+}));
+
+vi.mock('sonner', () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+  },
 }));
 
 describe('MatchingOrganizationView launch corridor', () => {
@@ -347,7 +355,7 @@ describe('MatchingOrganizationView launch corridor', () => {
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Shortlist did not save');
     expect(alert).toHaveTextContent(
-      'No shortlist, decline, or intro action was changed. Retry this action before moving to the next submission.'
+      'No shortlist, decline, or intro request was changed. Retry this action before moving to the next submission.'
     );
     expect(alert).not.toHaveTextContent('Review service temporarily unavailable');
     expect(screen.getAllByText('Submission A7F2').length).toBeGreaterThan(0);
@@ -416,7 +424,7 @@ describe('MatchingOrganizationView launch corridor', () => {
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Remove from shortlist did not save');
     expect(alert).toHaveTextContent(
-      'No shortlist, decline, or intro action was changed. Retry this action before moving to the next submission.'
+      'No shortlist, decline, or intro request was changed. Retry this action before moving to the next submission.'
     );
     expect(alert).not.toHaveTextContent('Review service temporarily unavailable');
     expect(screen.getByRole('button', { name: /retry remove from shortlist/i })).toBeEnabled();
@@ -432,6 +440,50 @@ describe('MatchingOrganizationView launch corridor', () => {
         body: JSON.stringify({ action: 'pass' }),
       })
     );
+  });
+
+  it('uses decline wording when a queue submission is removed', async () => {
+    apiFetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          items: [
+            {
+              id: 'match-decline',
+              assignmentId: 'assignment-1',
+              reviewStage: 'blind_review',
+              revealScope: 'blind',
+              corridorState: 'blind_review',
+              canRequestIntro: true,
+              reviewCard: {
+                candidateLabel: 'Submission D3C1',
+                fitSummary: {
+                  headline: 'Proof needs a different assignment context.',
+                  bullets: [],
+                  reasonCodes: [],
+                },
+              },
+              profile: {
+                skills: {},
+              },
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({}),
+      });
+
+    render(<MatchingOrganizationView assignments={assignments as any} onCreateNew={vi.fn()} />);
+
+    expect(await screen.findByText('Submission D3C1')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Decline' }));
+
+    await waitFor(() => {
+      expect(toast.success).toHaveBeenCalledWith('Submission declined for now.');
+    });
+    expect(screen.queryByText('Submission D3C1')).not.toBeInTheDocument();
   });
 
   it('opens assignment-specific matching from the assignment card', async () => {
