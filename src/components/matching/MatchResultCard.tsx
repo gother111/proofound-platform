@@ -351,8 +351,8 @@ export function MatchResultCard({
       ? `Matched skills: ${topSkills.map((skill) => skillDisplayLabel({ label: skill.label, id: skill.id })).join(', ')}.`
       : 'Skills and proof signals are available for assignment review.',
     result.profile?.workMode || result.profile?.locationMode
-      ? 'Practical fit is checked against the assignment work mode and constraints.'
-      : 'Practical fit is kept separate from identity-bearing profile details.',
+      ? 'Practical alignment is checked against the assignment work mode and constraints.'
+      : 'Practical alignment is kept separate from identity-bearing profile details.',
     orgReviewCard?.verification?.summaryLabel
       ? `Trust signal: ${orgReviewCard.verification.summaryLabel}.`
       : 'Blind-by-default review keeps identity details hidden until the proof-review participant consents to reveal.',
@@ -508,10 +508,10 @@ export function MatchResultCard({
 
           <div className="flex-1 rounded-xl border border-proofound-stone/80 bg-white p-4">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Fit signal summary
+              Proof alignment summary
             </p>
             <p className="mb-3 text-sm font-medium text-proofound-charcoal">
-              {orgReviewCard?.fitSummary.headline || 'Proof-backed fit available for review.'}
+              {orgReviewCard?.fitSummary.headline || 'Proof-backed alignment available for review.'}
             </p>
             <ul className="space-y-2 text-sm text-proofound-charcoal/85">
               {orgFitBullets.map((bullet: string) => (
@@ -720,7 +720,7 @@ export function MatchResultCard({
 
         <div className="mb-3 flex-1">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Why it fits
+            Why this review
           </p>
           <div className="space-y-1.5">
             {proofSignals.map((signal) => (

@@ -150,7 +150,7 @@ describe('MatchExplainerModal', () => {
     expect(
       screen.getByText('Built a blind review corridor around proof-backed evaluation.')
     ).toBeInTheDocument();
-    expect(screen.getByText('Fit signal summary')).toBeInTheDocument();
+    expect(screen.getByText('Proof alignment summary')).toBeInTheDocument();
     expect(screen.getByText('Strong skills evidence')).toBeInTheDocument();
     expect(screen.queryByText('Reason-coded fit summary')).not.toBeInTheDocument();
     expect(screen.queryByText('skills_strong')).not.toBeInTheDocument();
@@ -174,7 +174,7 @@ describe('MatchExplainerModal', () => {
     expect(
       screen.getByText('Exact ordering is hidden while privacy or policy limits apply.')
     ).toBeInTheDocument();
-    expect(screen.getByText('Supporting fit signal')).toBeInTheDocument();
+    expect(screen.getByText('Supporting proof signal')).toBeInTheDocument();
     expect(screen.getByRole('tablist')).toHaveClass('grid-cols-3');
     expect(screen.getByRole('tablist')).not.toHaveClass('grid-cols-4');
     expect(screen.getByText('Review signals by area')).toBeInTheDocument();
@@ -187,9 +187,11 @@ describe('MatchExplainerModal', () => {
     expect(screen.queryByText('Top 10')).not.toBeInTheDocument();
     expect(
       screen.getByText(
-        'This fit signal summarizes proof strength, fit rationale, and practical constraints after the privacy-safe review context above.'
+        'This proof signal summarizes proof strength, review rationale, and practical constraints after the privacy-safe review context above.'
       )
     ).toBeInTheDocument();
+    expect(screen.queryByText('Fit signal summary')).not.toBeInTheDocument();
+    expect(screen.queryByText('Supporting fit signal')).not.toBeInTheDocument();
     expect(screen.queryByText(/fairness/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/ranking/i)).not.toBeInTheDocument();
   });

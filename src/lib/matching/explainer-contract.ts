@@ -1,8 +1,9 @@
-export const MATCH_EXPLAINER_TITLE = 'Why This Proof Match?';
+export const MATCH_EXPLAINER_TITLE = 'Why this proof review?';
 export const MATCH_EXPLAINER_TRIGGER_LABEL = MATCH_EXPLAINER_TITLE;
-export const MATCH_EXPLAINER_TRIGGER_ARIA_LABEL = 'Open the proof-first explanation for this match';
+export const MATCH_EXPLAINER_TRIGGER_ARIA_LABEL =
+  'Open the proof-first explanation for this assignment review';
 export const MATCH_EXPLAINER_DIALOG_DESCRIPTION =
-  'Blind-by-default review keeps identity-bearing details hidden until proof-review participant consent allows reveal. Review the strongest proof, reason-coded fit rationale, privacy-safe constraints, and only then the supporting fit-signal detail.';
+  'Blind-by-default review keeps identity-bearing details hidden until proof-review participant consent allows reveal. Review the strongest proof, reason-coded review rationale, privacy-safe constraints, and then the supporting proof-signal detail.';
 
 export const MATCH_EXPLAINER_TEST_IDS = {
   trigger: 'match-explainer-trigger',

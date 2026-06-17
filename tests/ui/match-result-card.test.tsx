@@ -185,7 +185,7 @@ describe('MatchResultCard', () => {
     expect(screen.getByText('Fresh')).toBeInTheDocument();
     expect(screen.getByText('Verified proof signal present')).toBeInTheDocument();
     expect(screen.getByText('Auditable verification history')).toBeInTheDocument();
-    expect(screen.getByText('Fit signal summary')).toBeInTheDocument();
+    expect(screen.getByText('Proof alignment summary')).toBeInTheDocument();
     expect(screen.getByText('Strong skills evidence')).toBeInTheDocument();
     expect(screen.getByText('Verification ready')).toBeInTheDocument();
     expect(screen.queryByText('Reason-coded fit summary')).not.toBeInTheDocument();
@@ -386,9 +386,9 @@ describe('MatchResultCard', () => {
       />
     );
 
-    expect(screen.getByText('Fit signal summary')).toBeInTheDocument();
+    expect(screen.getByText('Proof alignment summary')).toBeInTheDocument();
     expect(screen.getByText(/Matched skills: Program management/i)).toBeInTheDocument();
-    expect(screen.getByText(/Practical fit is checked/i)).toBeInTheDocument();
+    expect(screen.getByText(/Practical alignment is checked/i)).toBeInTheDocument();
     expect(
       screen.getByText(
         'Blind-by-default review keeps identity details hidden until the proof-review participant consents to reveal.'
@@ -399,6 +399,7 @@ describe('MatchResultCard', () => {
     expect(screen.getByText('Proof')).toBeInTheDocument();
     expect(screen.getByText('Constraints')).toBeInTheDocument();
     expect(screen.queryByText('Reason-coded fit summary')).not.toBeInTheDocument();
+    expect(screen.queryByText('Fit signal summary')).not.toBeInTheDocument();
     expect(screen.queryByText('skills')).not.toBeInTheDocument();
     expect(screen.queryByText('proof')).not.toBeInTheDocument();
     expect(screen.queryByText('constraints')).not.toBeInTheDocument();

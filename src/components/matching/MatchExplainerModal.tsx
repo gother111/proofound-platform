@@ -2,9 +2,9 @@
  * Match explainer modal for the launch corridor.
  *
  * The explanation stays proof-first and privacy-safe:
- * - strongest proof and fit rationale lead
+ * - strongest proof and review rationale lead
  * - blind-by-default review stays explicit
- * - fit-signal detail stays secondary
+ * - proof-signal detail stays secondary
  */
 
 'use client';
@@ -230,7 +230,7 @@ export function MatchExplainerModal({
             {reviewCard.fitSummary.bullets.length > 0 ? (
               <div className="mt-4 rounded-lg bg-white p-4">
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Fit signal summary
+                  Proof alignment summary
                 </p>
                 <ul className="space-y-2 text-sm text-foreground">
                   {reviewCard.fitSummary.bullets.map((item) => (
@@ -296,7 +296,7 @@ export function MatchExplainerModal({
         <div className="rounded-xl border border-proofound-stone bg-[#F7F6F1] p-5">
           <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="mb-1 text-sm text-muted-foreground">Supporting fit signal</p>
+              <p className="mb-1 text-sm text-muted-foreground">Supporting proof signal</p>
               <p className="text-lg font-semibold text-proofound-charcoal">{fitBand}</p>
               <p className="mt-1 text-xs text-muted-foreground">
                 Internal matching values stay secondary to proof, outcome, verification, and privacy
@@ -394,9 +394,9 @@ export function MatchExplainerModal({
 
             <div className="bg-japandi-bg rounded-lg p-4 border border-proofound-stone mt-4">
               <p className="text-xs leading-relaxed text-foreground">
-                <strong className="font-semibold">How it works:</strong> This fit signal summarizes
-                proof strength, fit rationale, and practical constraints after the privacy-safe
-                review context above.
+                <strong className="font-semibold">How it works:</strong> This proof signal
+                summarizes proof strength, review rationale, and practical constraints after the
+                privacy-safe review context above.
               </p>
             </div>
           </TabsContent>
