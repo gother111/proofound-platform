@@ -400,12 +400,17 @@ describe('Public individual portfolio page', () => {
 
     render(element);
 
-    fireEvent.click(screen.getByRole('button', { name: /show details/i }));
+    fireEvent.click(screen.getByRole('button', { name: /show proof context/i }));
 
+    expect(screen.getAllByText('Verification scope').length).toBeGreaterThan(0);
+    expect(screen.getByText('Public-safe evidence')).toBeInTheDocument();
+    expect(screen.queryByText('Trust Details')).not.toBeInTheDocument();
+    expect(screen.queryByText('Supporting Evidence')).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: /open launch memo/i })).toHaveAttribute(
       'href',
       'https://example.com/launch-memo'
     );
+    expect(screen.getByRole('button', { name: /hide proof context/i })).toBeInTheDocument();
   });
 
   it('renders proof trust signals and ownership as readable public-safe details', async () => {
@@ -528,9 +533,10 @@ describe('Public individual portfolio page', () => {
 
     render(element);
 
-    fireEvent.click(screen.getByRole('button', { name: /show details/i }));
+    fireEvent.click(screen.getByRole('button', { name: /show proof context/i }));
 
     expect(screen.getAllByText('Hidden asset proof').length).toBeGreaterThan(0);
+    expect(screen.getByText('Not independently verified')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /open evidence/i })).not.toBeInTheDocument();
   });
 

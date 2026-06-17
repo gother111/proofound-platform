@@ -86,7 +86,7 @@ export function PublicProofPackList({ proofPacks }: PublicProofPackListProps) {
                 {pack.summary && pack.summary !== pack.outcomesSummary && (
                   <div className="space-y-1">
                     <h4 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                      Detailed Summary
+                      Proof context
                     </h4>
                     <p className="text-sm text-foreground/90 leading-relaxed">{pack.summary}</p>
                   </div>
@@ -95,7 +95,7 @@ export function PublicProofPackList({ proofPacks }: PublicProofPackListProps) {
                 {pack.verificationSummary && (
                   <div className="space-y-1">
                     <h4 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                      Trust Details
+                      Verification scope
                     </h4>
                     <p className="text-sm text-foreground/90 leading-relaxed">
                       {pack.verificationSummary}
@@ -106,7 +106,7 @@ export function PublicProofPackList({ proofPacks }: PublicProofPackListProps) {
                 {pack.selectedEvidence.length > 0 && (
                   <div className="space-y-2">
                     <h4 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                      Supporting Evidence
+                      Public-safe evidence
                     </h4>
                     <ul className="space-y-2">
                       {pack.selectedEvidence.map((item) => (
@@ -181,7 +181,7 @@ export function PublicProofPackList({ proofPacks }: PublicProofPackListProps) {
                     aria-expanded={isExpanded}
                     className="-ml-2 inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-md px-2 text-xs font-semibold text-proofound-forest transition-colors hover:bg-proofound-forest/5 hover:text-[#143829] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 sm:-mr-2 sm:ml-0"
                   >
-                    <span>{isExpanded ? 'Hide details' : 'Show details'}</span>
+                    <span>{isExpanded ? 'Hide proof context' : 'Show proof context'}</span>
                     {isExpanded ? (
                       <ChevronUp className="h-3 w-3" />
                     ) : (
@@ -235,7 +235,7 @@ function getVerificationLabel(status: string) {
     case 'disputed':
       return 'Verification disputed';
     default:
-      return 'Self-claimed';
+      return 'Not independently verified';
   }
 }
 
