@@ -229,6 +229,13 @@ function parseProofSkills(value: string) {
     .filter(Boolean);
 }
 
+function verificationRequestInvitationCopy(sentCount: number, totalCount: number) {
+  const invitationLabel =
+    totalCount === 1 ? 'verification request invitation' : 'verification request invitations';
+  const deliveryVerb = totalCount === 1 ? 'was' : 'were';
+  return `${sentCount} of ${totalCount} ${invitationLabel} ${deliveryVerb} sent.`;
+}
+
 function buildOwnershipStatement(
   contributionMode: ContributionMode,
   ownershipLevel: OwnershipLevel,
@@ -645,8 +652,8 @@ export function IndividualSetup({
           const sentCount = sendResults.filter(Boolean).length;
           verificationMessage =
             sentCount === completeConfirmers.length
-              ? `Verification request sent to ${sentCount} confirmer${sentCount === 1 ? '' : 's'}.`
-              : `First Proof Pack saved. ${sentCount} of ${completeConfirmers.length} verification request emails sent.`;
+              ? `Verification request invitation${sentCount === 1 ? '' : 's'} sent to ${sentCount} confirmer${sentCount === 1 ? '' : 's'}.`
+              : `First Proof Pack saved. ${verificationRequestInvitationCopy(sentCount, completeConfirmers.length)}`;
         } else {
           verificationMessage =
             'First Proof Pack saved. Verification request details were saved so you can send them later.';

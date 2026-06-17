@@ -603,8 +603,12 @@ describe('IndividualSetup first-proof flow', () => {
     fillBasicDetails();
     fillLinkProof();
     fireEvent.click(screen.getByLabelText('Send now'));
-    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Program Teacher' } });
-    fireEvent.change(screen.getByLabelText('Relationship'), { target: { value: 'teacher' } });
+    fireEvent.change(screen.getByLabelText('Name'), {
+      target: { value: 'Program Teacher' },
+    });
+    fireEvent.change(screen.getByLabelText('Relationship'), {
+      target: { value: 'teacher' },
+    });
     fireEvent.change(screen.getByLabelText('Email'), {
       target: { value: 'teacher@example.com' },
     });
@@ -625,6 +629,52 @@ describe('IndividualSetup first-proof flow', () => {
     expect(body.artifacts).toEqual([
       { type: 'experience', id: '11111111-1111-4111-8111-111111111111' },
     ]);
-    expect(screen.getByText(/verification request sent to 1 confirmer/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/verification request invitation sent to 1 confirmer/i)
+    ).toBeInTheDocument();
+  });
+
+  it('keeps partial verification request delivery honest after saving first proof', async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ request: { id: 'request-1' }, email_sent: true }),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: 'service unavailable' }),
+      });
+
+    render(<IndividualSetup />);
+
+    fillBasicDetails();
+    fillLinkProof();
+    fireEvent.click(screen.getByLabelText('Send now'));
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Program Teacher' } });
+    fireEvent.change(screen.getByLabelText('Relationship'), { target: { value: 'teacher' } });
+    fireEvent.change(screen.getByLabelText('Email'), {
+      target: { value: 'teacher@example.com' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /add confirmer/i }));
+    fireEvent.change(screen.getAllByLabelText('Name')[1], {
+      target: { value: 'Peer Reviewer' },
+    });
+    fireEvent.change(screen.getAllByLabelText('Relationship')[1], {
+      target: { value: 'peer' },
+    });
+    fireEvent.change(screen.getAllByLabelText('Email')[1], {
+      target: { value: 'peer@example.com' },
+    });
+
+    fireEvent.submit(
+      screen.getByRole('button', { name: /save and send request/i }).closest('form')!
+    );
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    expect(
+      screen.getByText(
+        /First Proof Pack saved\. 1 of 2 verification request invitations were sent\./i
+      )
+    ).toBeInTheDocument();
   });
 });
