@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -92,6 +92,13 @@ const INTRO_GATE_LABELS: Record<string, string> = {
   intro_hold_privacy_or_policy_review: 'Privacy or policy hold',
   intro_hold_not_match_visible: 'Discovery only',
 };
+
+const SHORTLIST_CORRIDOR_STATES = [
+  'request_intro',
+  'intro_approved',
+  'request_reveal',
+  'interview_scheduled',
+];
 
 type ReviewAction = 'shortlist' | 'pass' | 'request_intro';
 
@@ -317,18 +324,32 @@ export function MatchingOrganizationView({
   }, [fetchMatches]);
 
   // Filter matches based on the active tab segment
-  const filteredMatches = matches.filter((match: any) => {
-    if (activeSegment === 'queue') {
-      return match.reviewStage === 'blind_review';
-    } else {
-      return (
-        match.reviewStage === 'shortlisted' ||
-        ['request_intro', 'intro_approved', 'request_reveal', 'interview_scheduled'].includes(
-          match.corridorState
-        )
-      );
-    }
-  });
+  const reviewQueueMatches = useMemo(
+    () => matches.filter((match: any) => match.reviewStage === 'blind_review'),
+    [matches]
+  );
+  const shortlistMatches = useMemo(
+    () =>
+      matches.filter(
+        (match: any) =>
+          match.reviewStage === 'shortlisted' ||
+          SHORTLIST_CORRIDOR_STATES.includes(match.corridorState)
+      ),
+    [matches]
+  );
+  const filteredMatches = activeSegment === 'queue' ? reviewQueueMatches : shortlistMatches;
+  const alternateSegment =
+    activeSegment === 'queue'
+      ? {
+          label: 'View shortlist and intros',
+          count: shortlistMatches.length,
+          next: 'shortlist' as const,
+        }
+      : {
+          label: 'Back to review queue',
+          count: reviewQueueMatches.length,
+          next: 'queue' as const,
+        };
 
   // Keep the selected proof submission in sync with tab changes or list changes.
   useEffect(() => {
@@ -672,7 +693,7 @@ export function MatchingOrganizationView({
                       : 'border-transparent text-muted-foreground hover:text-proofound-charcoal'
                   }`}
                 >
-                  Review queue ({matches.filter((m) => m.reviewStage === 'blind_review').length})
+                  Review queue ({reviewQueueMatches.length})
                 </button>
                 <button
                   onClick={() => setActiveSegment('shortlist')}
@@ -682,20 +703,7 @@ export function MatchingOrganizationView({
                       : 'border-transparent text-muted-foreground hover:text-proofound-charcoal'
                   }`}
                 >
-                  Shortlist and intros (
-                  {
-                    matches.filter(
-                      (m) =>
-                        m.reviewStage === 'shortlisted' ||
-                        [
-                          'request_intro',
-                          'intro_approved',
-                          'request_reveal',
-                          'interview_scheduled',
-                        ].includes(m.corridorState)
-                    ).length
-                  }
-                  )
+                  Shortlist and intros ({shortlistMatches.length})
                 </button>
               </div>
 
@@ -713,6 +721,16 @@ export function MatchingOrganizationView({
                       ? 'All proof submissions for this assignment have been reviewed.'
                       : 'Shortlist qualified proof submissions to request introductions and reveal identities.'}
                   </p>
+                  {alternateSegment.count > 0 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setActiveSegment(alternateSegment.next)}
+                      className="mt-4 min-h-9 rounded-full border-proofound-stone/85 bg-white px-4 text-xs font-semibold text-proofound-forest hover:border-proofound-forest hover:bg-proofound-parchment/30"
+                    >
+                      {alternateSegment.label} ({alternateSegment.count})
+                    </Button>
+                  )}
                 </div>
               ) : (
                 <div className="grid flex-1 grid-cols-1 gap-6 lg:min-h-0 lg:grid-cols-5 lg:overflow-hidden">

@@ -133,7 +133,10 @@ describe('MatchingOrganizationView launch corridor', () => {
       screen.queryByText('All matching submissions for this assignment have been reviewed.')
     ).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /shortlist and intros/i }));
+    fireEvent.click(screen.getByRole('button', { name: /view shortlist and intros \(1\)/i }));
+
+    expect((await screen.findAllByText('Submission B8K4')).length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole('button', { name: /^shortlist and intros \(1\)$/i }));
 
     expect(screen.queryByText('No submissions shortlisted yet')).not.toBeInTheDocument();
     expect(screen.queryByText(/Shortlist qualified submissions/i)).not.toBeInTheDocument();
@@ -168,7 +171,7 @@ describe('MatchingOrganizationView launch corridor', () => {
 
     render(<MatchingOrganizationView assignments={assignments as any} onCreateNew={vi.fn()} />);
 
-    fireEvent.click(await screen.findByRole('button', { name: /shortlist and intros/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /^shortlist and intros \(0\)$/i }));
 
     expect(screen.getByText('No proof submissions shortlisted yet')).toBeInTheDocument();
     expect(
@@ -178,6 +181,45 @@ describe('MatchingOrganizationView launch corridor', () => {
     ).toBeInTheDocument();
     expect(screen.queryByText('No submissions shortlisted yet')).not.toBeInTheDocument();
     expect(screen.queryByText(/Shortlist qualified submissions/i)).not.toBeInTheDocument();
+  });
+
+  it('routes reviewers back to the queue when the shortlist segment is empty', async () => {
+    apiFetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        items: [
+          {
+            id: 'match-queue',
+            assignmentId: 'assignment-1',
+            reviewStage: 'blind_review',
+            revealScope: 'blind',
+            corridorState: 'blind_review',
+            reviewCard: {
+              candidateLabel: 'Submission Q5M2',
+              fitSummary: {
+                headline: 'Fresh proof signals need review.',
+                bullets: [],
+                reasonCodes: [],
+              },
+            },
+            profile: {
+              skills: {},
+            },
+          },
+        ],
+      }),
+    });
+
+    render(<MatchingOrganizationView assignments={assignments as any} onCreateNew={vi.fn()} />);
+
+    expect((await screen.findAllByText('Submission Q5M2')).length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole('button', { name: /^shortlist and intros \(0\)$/i }));
+
+    expect(screen.getByText('No proof submissions shortlisted yet')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /back to review queue \(1\)/i }));
+
+    expect(screen.getAllByText('Submission Q5M2').length).toBeGreaterThan(0);
+    expect(screen.queryByText('No proof submissions shortlisted yet')).not.toBeInTheDocument();
   });
 
   it('stays on the assignment match API and never calls archived test-match endpoints', async () => {
@@ -367,7 +409,7 @@ describe('MatchingOrganizationView launch corridor', () => {
 
     render(<MatchingOrganizationView assignments={assignments as any} onCreateNew={vi.fn()} />);
 
-    fireEvent.click(await screen.findByRole('button', { name: /shortlist and intros/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /^shortlist and intros \(1\)$/i }));
     expect((await screen.findAllByText('Submission B8K4')).length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole('button', { name: 'Remove from shortlist' }));
 
