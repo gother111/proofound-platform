@@ -170,14 +170,14 @@ export function CookieBanner() {
             <div
               className={cn(
                 'grid shrink-0 grid-cols-[1fr_1fr_auto] items-center gap-2 md:flex',
-                isMobileAppRoute && 'max-sm:grid-cols-[1fr_1fr_2rem] max-sm:gap-1.5'
+                isMobileAppRoute && 'max-sm:grid-cols-[1fr_1fr_2.75rem] max-sm:gap-1'
               )}
             >
               <Button
                 onClick={handleAccept}
                 disabled={saving}
-                size="sm"
-                className={cn('px-3', isMobileAppRoute && 'max-sm:h-8 max-sm:px-2 max-sm:text-xs')}
+                size="touch"
+                className={cn('px-3', isMobileAppRoute && 'max-sm:px-2 max-sm:text-xs')}
               >
                 Accept All
               </Button>
@@ -185,16 +185,15 @@ export function CookieBanner() {
                 onClick={handleDecline}
                 variant="outline"
                 disabled={saving}
-                size="sm"
-                className={cn('px-3', isMobileAppRoute && 'max-sm:h-8 max-sm:px-2 max-sm:text-xs')}
+                size="touch"
+                className={cn('px-3', isMobileAppRoute && 'max-sm:px-2 max-sm:text-xs')}
               >
                 Essential Only
               </Button>
               <button
                 onClick={handleDecline}
                 className={cn(
-                  'flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-proofound-stone/30 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 md:hidden',
-                  isMobileAppRoute && 'max-sm:h-8 max-sm:w-8'
+                  'flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-proofound-stone/30 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 md:hidden'
                 )}
                 aria-label="Close cookie preferences"
               >

@@ -49,6 +49,9 @@ describe('privacy audit log mobile clarity', () => {
     expect(mobileCard.parentElement).toHaveClass('md:hidden');
     expect(screen.getAllByText('Persona').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Individual').length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: /previous/i })).toHaveClass('h-11');
+    expect(screen.getByRole('button', { name: /next/i })).toHaveClass('h-11');
+    expect(screen.getByRole('button', { name: /next/i })).toHaveClass('min-h-[44px]');
   });
 
   it('keeps account history load failures separate from the empty history state', async () => {

@@ -302,7 +302,7 @@ export function AuditLogTable({ title = 'Account history' }: AuditLogTableProps)
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
-                    size="sm"
+                    size="touch"
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page === 1 || loading}
                   >
@@ -311,7 +311,7 @@ export function AuditLogTable({ title = 'Account history' }: AuditLogTableProps)
                   </Button>
                   <Button
                     variant="outline"
-                    size="sm"
+                    size="touch"
                     onClick={() => setPage((p) => p + 1)}
                     disabled={!hasMore || loading}
                   >

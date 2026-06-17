@@ -74,6 +74,23 @@ describe('CookieBanner', () => {
 
     const close = screen.getByRole('button', { name: /close cookie preferences/i });
     expect(close).toHaveClass('focus-visible:ring-proofound-forest');
+    expect(close).toHaveClass('h-11');
+    expect(close).toHaveClass('w-11');
+  });
+
+  it('keeps compact app-route cookie actions finger-friendly', () => {
+    usePathnameMock.mockReturnValue('/app/i/settings/privacy');
+
+    render(<CookieBanner />);
+
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+
+    expect(screen.getByRole('button', { name: 'Accept All' })).toHaveClass('h-11');
+    expect(screen.getByRole('button', { name: 'Accept All' })).toHaveClass('min-h-[44px]');
+    expect(screen.getByRole('button', { name: 'Essential Only' })).toHaveClass('h-11');
+    expect(screen.getByRole('button', { name: 'Essential Only' })).toHaveClass('min-h-[44px]');
   });
 
   it('keeps legal and settings links finger-friendly when visible', () => {
