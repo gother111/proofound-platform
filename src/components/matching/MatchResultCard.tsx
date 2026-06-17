@@ -23,6 +23,7 @@ import {
 } from '@/lib/matching/explainer-contract';
 import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { skillDisplayLabel } from '@/lib/copy/labels';
+import { reasonCodeDisplayLabel } from '@/lib/matching/reason-codes';
 
 const PROOF_SIGNAL_LABELS: Record<string, string> = {
   skills_fit: 'Skills',
@@ -507,7 +508,7 @@ export function MatchResultCard({
 
           <div className="flex-1 rounded-xl border border-proofound-stone/80 bg-white p-4">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Reason-coded fit summary
+              Fit signal summary
             </p>
             <p className="mb-3 text-sm font-medium text-proofound-charcoal">
               {orgReviewCard?.fitSummary.headline || 'Proof-backed fit available for review.'}
@@ -523,8 +524,8 @@ export function MatchResultCard({
             {orgReasonCodes.length > 0 ? (
               <div className="mt-3 flex flex-wrap gap-2">
                 {orgReasonCodes.map((reasonCode: string) => (
-                  <Badge key={reasonCode} variant="secondary" className="font-mono text-[11px]">
-                    {reasonCode}
+                  <Badge key={reasonCode} variant="secondary" className="text-[11px]">
+                    {reasonCodeDisplayLabel(reasonCode)}
                   </Badge>
                 ))}
               </div>

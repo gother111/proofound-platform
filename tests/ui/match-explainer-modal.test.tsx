@@ -150,8 +150,10 @@ describe('MatchExplainerModal', () => {
     expect(
       screen.getByText('Built a blind review corridor around proof-backed evaluation.')
     ).toBeInTheDocument();
-    expect(screen.getByText('Reason-coded fit summary')).toBeInTheDocument();
-    expect(screen.getByText('skills_strong')).toBeInTheDocument();
+    expect(screen.getByText('Fit signal summary')).toBeInTheDocument();
+    expect(screen.getByText('Strong skills evidence')).toBeInTheDocument();
+    expect(screen.queryByText('Reason-coded fit summary')).not.toBeInTheDocument();
+    expect(screen.queryByText('skills_strong')).not.toBeInTheDocument();
     expect(screen.getByText('Privacy-safe explanation')).toBeInTheDocument();
     expect(
       screen.getByText(

@@ -185,9 +185,12 @@ describe('MatchResultCard', () => {
     expect(screen.getByText('Fresh')).toBeInTheDocument();
     expect(screen.getByText('Verified proof signal present')).toBeInTheDocument();
     expect(screen.getByText('Auditable verification history')).toBeInTheDocument();
-    expect(screen.getByText('Reason-coded fit summary')).toBeInTheDocument();
-    expect(screen.getByText('skills_strong')).toBeInTheDocument();
-    expect(screen.getByText('verification_ready')).toBeInTheDocument();
+    expect(screen.getByText('Fit signal summary')).toBeInTheDocument();
+    expect(screen.getByText('Strong skills evidence')).toBeInTheDocument();
+    expect(screen.getByText('Verification ready')).toBeInTheDocument();
+    expect(screen.queryByText('Reason-coded fit summary')).not.toBeInTheDocument();
+    expect(screen.queryByText('skills_strong')).not.toBeInTheDocument();
+    expect(screen.queryByText('verification_ready')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: MATCH_EXPLAINER_TRIGGER_LABEL })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Shortlist' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Pass' })).toBeInTheDocument();
@@ -383,7 +386,7 @@ describe('MatchResultCard', () => {
       />
     );
 
-    expect(screen.getByText('Reason-coded fit summary')).toBeInTheDocument();
+    expect(screen.getByText('Fit signal summary')).toBeInTheDocument();
     expect(screen.getByText(/Matched skills: Program management/i)).toBeInTheDocument();
     expect(screen.getByText(/Practical fit is checked/i)).toBeInTheDocument();
     expect(
@@ -392,8 +395,12 @@ describe('MatchResultCard', () => {
       )
     ).toBeInTheDocument();
     expect(screen.queryByText(/candidate consent/i)).not.toBeInTheDocument();
-    expect(screen.getByText('skills')).toBeInTheDocument();
-    expect(screen.getByText('proof')).toBeInTheDocument();
-    expect(screen.getByText('constraints')).toBeInTheDocument();
+    expect(screen.getByText('Skills')).toBeInTheDocument();
+    expect(screen.getByText('Proof')).toBeInTheDocument();
+    expect(screen.getByText('Constraints')).toBeInTheDocument();
+    expect(screen.queryByText('Reason-coded fit summary')).not.toBeInTheDocument();
+    expect(screen.queryByText('skills')).not.toBeInTheDocument();
+    expect(screen.queryByText('proof')).not.toBeInTheDocument();
+    expect(screen.queryByText('constraints')).not.toBeInTheDocument();
   });
 });

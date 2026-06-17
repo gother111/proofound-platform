@@ -35,6 +35,7 @@ import {
   buildMatchExplainerContract,
   MATCH_EXPLAINER_TEST_IDS,
 } from '@/lib/matching/explainer-contract';
+import { reasonCodeDisplayLabel } from '@/lib/matching/reason-codes';
 import { motion } from 'framer-motion';
 
 interface MatchExplainerProps {
@@ -229,7 +230,7 @@ export function MatchExplainerModal({
             {reviewCard.fitSummary.bullets.length > 0 ? (
               <div className="mt-4 rounded-lg bg-white p-4">
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Reason-coded fit summary
+                  Fit signal summary
                 </p>
                 <ul className="space-y-2 text-sm text-foreground">
                   {reviewCard.fitSummary.bullets.map((item) => (
@@ -242,8 +243,8 @@ export function MatchExplainerModal({
                 {reviewCard.fitSummary.reasonCodes.length > 0 ? (
                   <div className="mt-3 flex flex-wrap gap-2">
                     {reviewCard.fitSummary.reasonCodes.map((reasonCode) => (
-                      <Badge key={reasonCode} variant="secondary" className="font-mono text-[11px]">
-                        {reasonCode}
+                      <Badge key={reasonCode} variant="secondary" className="text-[11px]">
+                        {reasonCodeDisplayLabel(reasonCode)}
                       </Badge>
                     ))}
                   </div>

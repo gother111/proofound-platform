@@ -154,6 +154,8 @@ describe('MatchingOrganizationView', () => {
       });
     });
     expect(screen.getByLabelText('Selected proof submission review')).toHaveFocus();
+    expect(screen.getByText('Proof overlap')).toBeInTheDocument();
+    expect(screen.queryByText('proof_overlap')).not.toBeInTheDocument();
   });
 
   it('keeps desktop submission selection inside the split review console', async () => {

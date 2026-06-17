@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { apiFetch } from '@/lib/api/fetch';
 import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { reasonCodeDisplayLabel } from '@/lib/matching/reason-codes';
 import { getOrganizationRecoveryActions } from '@/lib/ui/recovery-actions';
 import { CardGridSkeleton } from '@/components/skeletons/CoreLoadingPrimitives';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -1022,9 +1023,9 @@ export function MatchingOrganizationView({
                                     <Badge
                                       key={code}
                                       variant="secondary"
-                                      className="font-mono text-[9px] bg-proofound-stone/20 text-muted-foreground px-1.5 py-0 font-medium"
+                                      className="bg-proofound-stone/20 px-1.5 py-0 text-[9px] font-medium text-muted-foreground"
                                     >
-                                      {code}
+                                      {reasonCodeDisplayLabel(code)}
                                     </Badge>
                                   )
                                 )}
