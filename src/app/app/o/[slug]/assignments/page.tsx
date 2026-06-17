@@ -31,10 +31,10 @@ export default async function OrgAssignmentsAliasPage({
                 <ClipboardCheck className="h-7 w-7" />
               </div>
               <div className="min-w-0">
-                <nav className="mb-2 flex min-h-8 items-center gap-1 text-xs text-muted-foreground">
+                <nav className="mb-2 flex min-h-11 items-center gap-1 text-xs text-muted-foreground">
                   <Link
                     href={`/app/o/${slug}/home`}
-                    className="-ml-2 inline-flex min-h-8 items-center rounded-md px-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+                    className="-ml-2 inline-flex min-h-11 items-center rounded-md px-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
                   >
                     Organization
                   </Link>{' '}

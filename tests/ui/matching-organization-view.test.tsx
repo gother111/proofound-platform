@@ -155,6 +155,8 @@ describe('MatchingOrganizationView', () => {
     const shortlistTab = screen.getByRole('tab', { name: /Shortlist and intros \(0\)/i });
     expect(queueTab).toHaveAttribute('aria-selected', 'true');
     expect(shortlistTab).toHaveAttribute('aria-selected', 'false');
+    expect(queueTab).toHaveClass('min-h-11');
+    expect(shortlistTab).toHaveClass('min-h-11');
     expect(screen.getByRole('tabpanel', { name: /Review queue \(2\)/i })).toHaveAttribute(
       'id',
       'review-queue-panel'
@@ -169,6 +171,9 @@ describe('MatchingOrganizationView', () => {
         })
       ).toHaveAttribute('aria-pressed', 'true');
     });
+
+    const skillsTab = await screen.findByRole('tab', { name: 'Skills' });
+    expect(skillsTab).toHaveClass('min-h-11');
 
     fireEvent.click(shortlistTab);
 

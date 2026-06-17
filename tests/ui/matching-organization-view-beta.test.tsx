@@ -144,7 +144,7 @@ describe('MatchingOrganizationView launch corridor', () => {
     fireEvent.click(screen.getByRole('button', { name: /view shortlist and intros \(1\)/i }));
 
     expect((await screen.findAllByText('Submission B8K4')).length).toBeGreaterThan(0);
-    fireEvent.click(screen.getByRole('button', { name: /^shortlist and intros \(1\)$/i }));
+    fireEvent.click(screen.getByRole('tab', { name: /^shortlist and intros \(1\)$/i }));
 
     expect(screen.queryByText('No submissions shortlisted yet')).not.toBeInTheDocument();
     expect(screen.queryByText(/Shortlist qualified submissions/i)).not.toBeInTheDocument();
@@ -179,7 +179,7 @@ describe('MatchingOrganizationView launch corridor', () => {
 
     render(<MatchingOrganizationView assignments={assignments as any} onCreateNew={vi.fn()} />);
 
-    fireEvent.click(await screen.findByRole('button', { name: /^shortlist and intros \(0\)$/i }));
+    fireEvent.click(await screen.findByRole('tab', { name: /^shortlist and intros \(0\)$/i }));
 
     expect(screen.getByText('No proof submissions shortlisted yet')).toBeInTheDocument();
     expect(
@@ -221,7 +221,7 @@ describe('MatchingOrganizationView launch corridor', () => {
     render(<MatchingOrganizationView assignments={assignments as any} onCreateNew={vi.fn()} />);
 
     expect((await screen.findAllByText('Submission Q5M2')).length).toBeGreaterThan(0);
-    fireEvent.click(screen.getByRole('button', { name: /^shortlist and intros \(0\)$/i }));
+    fireEvent.click(screen.getByRole('tab', { name: /^shortlist and intros \(0\)$/i }));
 
     expect(screen.getByText('No proof submissions shortlisted yet')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /back to review queue \(1\)/i }));
@@ -417,7 +417,7 @@ describe('MatchingOrganizationView launch corridor', () => {
 
     render(<MatchingOrganizationView assignments={assignments as any} onCreateNew={vi.fn()} />);
 
-    fireEvent.click(await screen.findByRole('button', { name: /^shortlist and intros \(1\)$/i }));
+    fireEvent.click(await screen.findByRole('tab', { name: /^shortlist and intros \(1\)$/i }));
     expect((await screen.findAllByText('Submission B8K4')).length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole('button', { name: 'Remove from shortlist' }));
 
@@ -530,10 +530,13 @@ describe('MatchingOrganizationView launch corridor', () => {
       );
     });
     expect(pushMock).toHaveBeenCalledWith('/app/o/acme/assignments?matching=assignment-2');
-    expect(screen.getByRole('link', { name: 'Edit assignment context' })).toHaveAttribute(
+    const editAssignmentLink = screen.getByRole('link', { name: 'Edit assignment context' });
+    expect(editAssignmentLink).toHaveAttribute(
       'href',
       '/app/o/acme/assignments/assignment-2/review'
     );
+    expect(editAssignmentLink).toHaveClass('h-11');
+    expect(editAssignmentLink).toHaveClass('min-h-[44px]');
   });
 
   it('shows a lightweight badge only for assignments with unseen matching activity', async () => {

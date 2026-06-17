@@ -614,7 +614,7 @@ export function MatchingOrganizationView({
                 <Button
                   asChild
                   variant="outline"
-                  size="sm"
+                  size="touch"
                   className="border-proofound-stone/85 text-proofound-charcoal bg-white rounded-full"
                 >
                   <Link href={`/app/o/${slug}/assignments/${currentAssignment.id}/review`}>
@@ -754,7 +754,7 @@ export function MatchingOrganizationView({
                       type="button"
                       variant="outline"
                       onClick={() => setActiveSegment(alternateSegment.next)}
-                      className="mt-4 min-h-9 rounded-full border-proofound-stone/85 bg-white px-4 text-xs font-semibold text-proofound-forest hover:border-proofound-forest hover:bg-proofound-parchment/30"
+                      className="mt-4 min-h-11 rounded-full border-proofound-stone/85 bg-white px-4 text-xs font-semibold text-proofound-forest hover:border-proofound-forest hover:bg-proofound-parchment/30"
                     >
                       {alternateSegment.label} ({alternateSegment.count})
                     </Button>
@@ -959,7 +959,7 @@ export function MatchingOrganizationView({
                                       activeMatch.canRequestIntro === false ||
                                       Boolean(activeReviewActionPending)
                                     }
-                                    className="min-h-9 w-full rounded-full bg-proofound-forest px-4 py-2 text-xs font-semibold text-white hover:bg-proofound-forest/90"
+                                    className="min-h-11 w-full rounded-full bg-proofound-forest px-4 py-2 text-xs font-semibold text-white hover:bg-proofound-forest/90"
                                   >
                                     <Lock className="w-3.5 h-3.5 mr-1.5" />
                                     {activeReviewActionPending?.action === 'request_intro'
@@ -986,7 +986,7 @@ export function MatchingOrganizationView({
                                   onClick={() => handleReviewAction(activeMatch.id, 'pass')}
                                   variant="ghost"
                                   disabled={Boolean(activeReviewActionPending)}
-                                  className="min-h-9 w-full rounded-full py-1.5 text-xs font-medium text-muted-foreground hover:bg-proofound-stone/20"
+                                  className="min-h-11 w-full rounded-full py-2 text-xs font-medium text-muted-foreground hover:bg-proofound-stone/20"
                                 >
                                   {activeReviewActionPending?.action === 'pass'
                                     ? 'Saving...'
@@ -1007,7 +1007,7 @@ export function MatchingOrganizationView({
                                 <Button
                                   type="button"
                                   variant="outline"
-                                  size="sm"
+                                  size="touch"
                                   disabled={Boolean(activeReviewActionPending)}
                                   onClick={() =>
                                     handleReviewAction(
@@ -1015,7 +1015,7 @@ export function MatchingOrganizationView({
                                       activeReviewActionError.action
                                     )
                                   }
-                                  className="mt-2 min-h-8 rounded-full border-amber-300 bg-white px-3 text-xs text-amber-950 hover:bg-amber-100"
+                                  className="mt-2 rounded-full border-amber-300 bg-white px-3 text-xs text-amber-950 hover:bg-amber-100"
                                 >
                                   <RefreshCcw className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
                                   Retry {activeReviewActionError.label.toLowerCase()}
@@ -1136,13 +1136,13 @@ export function MatchingOrganizationView({
                           ) : (
                             <Tabs defaultValue="skills" className="w-full">
                               <TabsList className="grid w-full grid-cols-3 bg-proofound-stone/20 p-0.5 rounded-lg">
-                                <TabsTrigger value="skills" className="min-h-9 text-xs">
+                                <TabsTrigger value="skills" className="min-h-11 text-xs">
                                   Skills
                                 </TabsTrigger>
-                                <TabsTrigger value="constraints" className="min-h-9 text-xs">
+                                <TabsTrigger value="constraints" className="min-h-11 text-xs">
                                   Constraints
                                 </TabsTrigger>
-                                <TabsTrigger value="evidence" className="min-h-9 text-xs">
+                                <TabsTrigger value="evidence" className="min-h-11 text-xs">
                                   Evidence
                                 </TabsTrigger>
                               </TabsList>
