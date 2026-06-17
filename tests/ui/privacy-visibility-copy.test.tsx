@@ -115,7 +115,7 @@ describe('privacy visibility copy', () => {
     expect(screen.getByRole('status')).toHaveTextContent('You have unsaved changes');
   });
 
-  it('shows save errors inline and keeps recommendation buttons named', async () => {
+  it('shows save errors inline and keeps privacy guidance buttons named', async () => {
     const onSave = vi.fn().mockRejectedValue(new Error('The privacy service is unavailable.'));
 
     render(
@@ -123,8 +123,9 @@ describe('privacy visibility copy', () => {
     );
 
     expect(
-      screen.getByRole('button', { name: 'Show recommendation for Location' })
+      screen.getByRole('button', { name: 'Show privacy guidance for Location' })
     ).toBeInTheDocument();
+    expect(screen.getAllByText('Privacy default').length).toBeGreaterThan(0);
 
     fireEvent.change(screen.getByLabelText('Location'), {
       target: { value: 'private' },

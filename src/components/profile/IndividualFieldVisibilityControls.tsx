@@ -276,7 +276,7 @@ export function IndividualFieldVisibilityControls({
                         variant="secondary"
                         className="text-xs bg-proofound-forest/5 text-proofound-forest"
                       >
-                        Recommended
+                        Privacy default
                       </Badge>
                     )}
                   </div>
@@ -319,15 +319,15 @@ export function IndividualFieldVisibilityControls({
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8"
-                          aria-label={`Show recommendation for ${field.label}`}
+                          className="h-11 w-11 sm:h-8 sm:w-8"
+                          aria-label={`Show privacy guidance for ${field.label}`}
                         >
                           <Info className="h-4 w-4 text-muted-foreground" />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent side="left" className="max-w-xs">
                         <p className="text-xs">
-                          <strong>Recommended:</strong> {getVisibilityLabel(field.recommended)}
+                          <strong>Privacy default:</strong> {getVisibilityLabel(field.recommended)}
                           <br />
                           {
                             VISIBILITY_OPTIONS.find((opt) => opt.value === field.recommended)
