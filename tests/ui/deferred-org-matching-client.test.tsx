@@ -13,7 +13,10 @@ describe('DeferredOrgMatchingClient', () => {
     expect(
       screen.getByRole('heading', { name: 'Assignment workspace is loading' })
     ).toBeInTheDocument();
-    expect(screen.getByRole('status')).toHaveTextContent('Loading assignments and matches...');
+    expect(screen.getByText(/proof submissions, and review context/i)).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Preparing assignment review workspace...'
+    );
     expect(screen.getByRole('link', { name: 'Create assignment' })).toHaveAttribute(
       'href',
       '/app/o/acme/assignments/new'

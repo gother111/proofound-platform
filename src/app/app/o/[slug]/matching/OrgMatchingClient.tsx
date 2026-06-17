@@ -90,7 +90,21 @@ export function OrgMatchingClient() {
   if (isLoading) {
     return (
       <div className="mx-auto w-full max-w-6xl space-y-6">
-        <p className="text-sm text-muted-foreground">Loading assignments and matches...</p>
+        <section className="rounded-2xl border border-proofound-stone bg-white/85 p-5 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+            Assignments
+          </p>
+          <h2 className="mt-2 font-display text-xl font-semibold text-foreground">
+            Preparing assignment review workspace
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+            We are loading assignment cards, proof submissions, and review context for this
+            organization. No shortlist, intro, or reveal action changes while this workspace loads.
+          </p>
+          <p className="mt-3 text-sm text-muted-foreground" role="status">
+            Preparing assignment review workspace...
+          </p>
+        </section>
         <PageIntroSkeleton />
         <CardGridSkeleton
           count={4}

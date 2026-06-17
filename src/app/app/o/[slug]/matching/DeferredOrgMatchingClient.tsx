@@ -83,11 +83,11 @@ export function DeferredOrgMatchingClient({
                 Assignment workspace is loading
               </h2>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-                We are preparing the assignment cards, proof matches, and review context for this
-                workspace.
+                We are preparing the assignment cards, proof submissions, and review context for
+                this workspace.
               </p>
               <p className="mt-3 text-sm text-muted-foreground" role="status">
-                Loading assignments and matches...
+                Preparing assignment review workspace...
               </p>
             </div>
             {createAssignmentHref ? (

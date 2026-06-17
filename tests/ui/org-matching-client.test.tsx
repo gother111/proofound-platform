@@ -42,6 +42,22 @@ describe('OrgMatchingClient assignment loader', () => {
     window.history.replaceState({}, '', '/app/o/acme/assignments');
   });
 
+  it('shows a proof-review loading state before assignments resolve', () => {
+    (global as any).fetch = vi.fn(() => new Promise<never>(() => {}));
+
+    render(<OrgMatchingClient />);
+
+    expect(
+      screen.getByRole('heading', { name: 'Preparing assignment review workspace' })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/proof submissions, and review context/i)).toBeInTheDocument();
+    expect(screen.getByText(/No shortlist, intro, or reveal action changes/i)).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Preparing assignment review workspace...'
+    );
+    expect(screen.queryByText('Loading assignments and matches...')).not.toBeInTheDocument();
+  });
+
   it('shows a retryable load failure instead of the empty assignment state', async () => {
     const fetchMock = vi
       .fn()
