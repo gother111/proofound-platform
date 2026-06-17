@@ -2,6 +2,7 @@ import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 
+import { VerifyEmailPageFallback } from '@/app/(auth)/verify-email/VerifyEmailPageFallback';
 import { VerifyEmailContent } from '@/app/(auth)/verify-email/VerifyEmailContent';
 import { verifyEmail } from '@/actions/auth';
 import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
@@ -31,6 +32,21 @@ vi.mock('@/lib/client-diagnostics', () => ({
 const verifyEmailMock = vi.mocked(verifyEmail);
 const dispatchClientDiagnosticMock = vi.mocked(dispatchClientDiagnostic);
 const dispatchClientErrorDiagnosticMock = vi.mocked(dispatchClientErrorDiagnostic);
+
+describe('VerifyEmailPageFallback', () => {
+  it('keeps the page-level verification fallback specific and account-safe', () => {
+    render(<VerifyEmailPageFallback />);
+
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Verifying your email' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Checking verification link...');
+    expect(
+      screen.getByText(/No profile, proof, or privacy setting changes from this loading state/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+  });
+});
 
 describe('VerifyEmailContent', () => {
   beforeEach(() => {
