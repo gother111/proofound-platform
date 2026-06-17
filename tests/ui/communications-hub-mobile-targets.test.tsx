@@ -34,12 +34,22 @@ describe('CommunicationsHub mobile targets', () => {
   it('renders the section switch as a full-height touch target', () => {
     render(<CommunicationsHub perspective="individual" />);
 
-    const switchLink = screen.getByRole('link', { name: /Switch to interviews/i });
+    const switchLink = screen.getByRole('link', {
+      name: /Switch to interviews: Interview times, decisions, and visible feedback/i,
+    });
 
     expect(switchLink).toHaveAttribute('href', '/app/i/communications?section=interviews');
     expect(switchLink).toHaveClass('min-h-11');
     expect(switchLink).toHaveClass('w-full');
     expect(switchLink).toHaveClass('sm:w-auto');
+    expect(
+      screen.getByText('Introductions, reveal choices, and private threads.')
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Messages, interview timing, and reveal decisions stay consent-bound before identity-bearing access.'
+      )
+    ).toBeInTheDocument();
   });
 
   it('keeps organization messages loading contextual while user context resolves', () => {
@@ -47,6 +57,12 @@ describe('CommunicationsHub mobile targets', () => {
 
     render(<CommunicationsHub perspective="organization" />);
 
+    expect(screen.getByText('Reviewer threads, intros, and reveal requests.')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Reviewer messages, scheduling, and reveal steps stay inside the proof-first review corridor.'
+      )
+    ).toBeInTheDocument();
     const status = screen.getByRole('status');
     expect(status).toHaveTextContent('Preparing organization messages');
     expect(status).toHaveTextContent(/threads, intros, and reveal requests/i);

@@ -12,6 +12,12 @@ import { cn } from '@/lib/utils';
 
 type CommunicationsPerspective = 'individual' | 'organization';
 type CommunicationsSection = 'messages' | 'interviews';
+type CommunicationsSectionConfig = {
+  id: CommunicationsSection;
+  label: string;
+  description: string;
+  icon: typeof MessageCircle;
+};
 
 interface CommunicationsHubProps {
   perspective: CommunicationsPerspective;
@@ -19,25 +25,43 @@ interface CommunicationsHubProps {
   initialSection?: string | null;
 }
 
-const sections: Array<{
-  id: CommunicationsSection;
-  label: string;
-  description: string;
-  icon: typeof MessageCircle;
-}> = [
-  {
-    id: 'messages',
-    label: 'Messages',
-    description: 'Threads, intros, and reveal requests.',
-    icon: MessageCircle,
-  },
-  {
-    id: 'interviews',
-    label: 'Interviews',
-    description: 'Scheduling, feedback, and handoff.',
-    icon: CalendarCheck,
-  },
-];
+const sectionsByPerspective: Record<CommunicationsPerspective, CommunicationsSectionConfig[]> = {
+  individual: [
+    {
+      id: 'messages',
+      label: 'Messages',
+      description: 'Introductions, reveal choices, and private threads.',
+      icon: MessageCircle,
+    },
+    {
+      id: 'interviews',
+      label: 'Interviews',
+      description: 'Interview times, decisions, and visible feedback.',
+      icon: CalendarCheck,
+    },
+  ],
+  organization: [
+    {
+      id: 'messages',
+      label: 'Messages',
+      description: 'Reviewer threads, intros, and reveal requests.',
+      icon: MessageCircle,
+    },
+    {
+      id: 'interviews',
+      label: 'Interviews',
+      description: 'Scheduling, decisions, and engagement handoff.',
+      icon: CalendarCheck,
+    },
+  ],
+};
+
+const corridorCopy: Record<CommunicationsPerspective, string> = {
+  individual:
+    'Messages, interview timing, and reveal decisions stay consent-bound before identity-bearing access.',
+  organization:
+    'Reviewer messages, scheduling, and reveal steps stay inside the proof-first review corridor.',
+};
 
 function normalizeSection(value: string | null): CommunicationsSection {
   if (value === 'interviews' || value === 'decisions') {
@@ -75,6 +99,7 @@ export function CommunicationsHub({
 }: CommunicationsHubProps) {
   const pathname = usePathname() ?? (perspective === 'organization' ? '/app/o' : '/app/i');
   const activeSection = normalizeSection(initialSection ?? null);
+  const sections = sectionsByPerspective[perspective];
 
   const sectionHref = (section: CommunicationsSection) => {
     const params = new URLSearchParams();
@@ -117,7 +142,7 @@ export function CommunicationsHub({
                       : 'border-proofound-stone/50 bg-white/60 text-proofound-charcoal hover:border-proofound-forest/40 hover:bg-white'
                   )}
                   aria-current={isActive ? 'page' : undefined}
-                  aria-label={`Switch to ${section.label.toLowerCase()}`}
+                  aria-label={`Switch to ${section.label.toLowerCase()}: ${section.description}`}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
                   <div className="min-w-0">
@@ -138,14 +163,12 @@ export function CommunicationsHub({
         </div>
 
         {/* Bottom Supporting Privacy/Trust Panel */}
-        <div className="hidden rounded-lg border border-proofound-stone/60 bg-white/50 p-3 space-y-1 md:block">
+        <div className="space-y-1 rounded-lg border border-proofound-stone/60 bg-white/50 p-3">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-proofound-charcoal">
             <Handshake className="h-3.5 w-3.5 text-proofound-forest shrink-0" />
             <span>Secure Corridor</span>
           </div>
-          <p className="text-[10px] leading-4 text-muted-foreground">
-            Messages, scheduling, and reveal steps stay inside the consent-bound corridor.
-          </p>
+          <p className="text-[10px] leading-4 text-muted-foreground">{corridorCopy[perspective]}</p>
         </div>
       </aside>
 
