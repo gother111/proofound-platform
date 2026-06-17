@@ -1,11 +1,28 @@
 import { isMockSupabaseEnabled, visualFixturesRuntimeAllowed } from '@/lib/env';
 import type { InterviewCorridorItem } from '@/app/actions/interviews';
-import type { EngagementVerificationSummary } from '@/lib/engagement-verifications/service';
+import type {
+  CanonicalEngagementType,
+  EngagementVerificationSummary,
+} from '@/lib/engagement-verifications/service';
 import type {
   HiringCorridorNextActionId,
   HiringCorridorSnapshot,
   HiringCorridorStep,
 } from '@/lib/hiring-corridor/snapshot';
+import {
+  getAllowedActions,
+  getWorkflowLabel,
+  type EngagementVerificationWorkflowState,
+} from '@/lib/workflow/contracts';
+
+export const VISUAL_ORG_ENGAGEMENT_VERIFICATION_ID = 'visual-engagement-verification-1';
+export const VISUAL_INDIVIDUAL_ENGAGEMENT_VERIFICATION_ID =
+  'visual-individual-engagement-verification-1';
+
+const VISUAL_ENGAGEMENT_VERIFICATION_IDS = new Set([
+  VISUAL_ORG_ENGAGEMENT_VERIFICATION_ID,
+  VISUAL_INDIVIDUAL_ENGAGEMENT_VERIFICATION_ID,
+]);
 
 export function interviewVisualFixturesEnabled() {
   return (
@@ -14,6 +31,10 @@ export function interviewVisualFixturesEnabled() {
     process.env.PROOFOUND_INTERVIEWS_VISUAL_STATE === 'filled' &&
     visualFixturesRuntimeAllowed()
   );
+}
+
+export function isVisualInterviewEngagementVerificationId(id: string) {
+  return VISUAL_ENGAGEMENT_VERIFICATION_IDS.has(id);
 }
 
 const steps: HiringCorridorStep[] = [
@@ -77,12 +98,46 @@ function buildCorridor(params: {
   };
 }
 
+function buildEngagementWorkflow(state: EngagementVerificationWorkflowState) {
+  return {
+    state,
+    displayState: getWorkflowLabel('engagement_verification', state),
+    allowedActions: getAllowedActions('engagement_verification', state),
+  };
+}
+
+export function buildVisualEngagementConfirmationSummary(params: {
+  id: string;
+  engagementType: CanonicalEngagementType | null;
+}): EngagementVerificationSummary {
+  const now = new Date().toISOString();
+  const isIndividualFixture = params.id === VISUAL_INDIVIDUAL_ENGAGEMENT_VERIFICATION_ID;
+  const status: EngagementVerificationWorkflowState = isIndividualFixture
+    ? 'pending_organization_confirmation'
+    : 'pending_candidate_confirmation';
+
+  return {
+    id: params.id,
+    decisionId: isIndividualFixture ? 'visual-individual-decision-1' : 'visual-decision-1',
+    status,
+    statusLabel: getWorkflowLabel('engagement_verification', status),
+    engagementType: params.engagementType,
+    candidateConfirmedAt: isIndividualFixture ? now : null,
+    organizationConfirmedAt: isIndividualFixture ? null : now,
+    uploadedEvidencePresent: false,
+    proofHookStatus: 'not_ready',
+    verifiedAt: null,
+    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    workflow: buildEngagementWorkflow(status),
+  };
+}
+
 export function buildVisualOrgInterviewCorridorItems(): InterviewCorridorItem[] {
   const now = Date.now();
   const scheduledAt = new Date(now + 2 * 24 * 60 * 60 * 1000).toISOString();
   const completedAt = new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString();
   const engagementVerification: EngagementVerificationSummary = {
-    id: 'visual-engagement-verification-1',
+    id: VISUAL_ORG_ENGAGEMENT_VERIFICATION_ID,
     decisionId: 'visual-decision-1',
     status: 'pending_both_confirmations',
     statusLabel: 'Awaiting both confirmations',
@@ -177,7 +232,7 @@ export function buildVisualIndividualInterviewCorridorItems(): InterviewCorridor
   const scheduledAt = new Date(now + 2 * 24 * 60 * 60 * 1000).toISOString();
   const completedAt = new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString();
   const engagementVerification: EngagementVerificationSummary = {
-    id: 'visual-individual-engagement-verification-1',
+    id: VISUAL_INDIVIDUAL_ENGAGEMENT_VERIFICATION_ID,
     decisionId: 'visual-individual-decision-1',
     status: 'pending_both_confirmations',
     statusLabel: 'Awaiting both confirmations',

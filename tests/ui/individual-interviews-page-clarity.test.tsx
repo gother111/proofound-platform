@@ -110,6 +110,7 @@ describe('individual interviews page clarity', () => {
 
     const nextAction = screen.getByRole('link', { name: /open assignment reviews/i });
     expect(nextAction).toHaveAttribute('href', '/app/i/matching');
+    expect(nextAction).toHaveClass('min-h-[44px]');
   });
 
   it('keeps load failures separate from the empty workflow state and retries', async () => {
@@ -131,7 +132,10 @@ describe('individual interviews page clarity', () => {
       screen.queryByRole('heading', { name: /no active interview workflow yet/i })
     ).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /retry interviews/i }));
+    const retryButton = screen.getByRole('button', { name: /retry interviews/i });
+    expect(retryButton).toHaveClass('min-h-[44px]');
+
+    fireEvent.click(retryButton);
 
     await waitFor(() => {
       expect(getInterviewCorridorItemsMock).toHaveBeenCalledTimes(2);
@@ -192,10 +196,9 @@ describe('individual interviews page clarity', () => {
       expect(screen.getByText('Northstar Evidence Studio')).toBeInTheDocument();
     });
 
-    expect(screen.getByRole('link', { name: /join meeting/i })).toHaveAttribute(
-      'href',
-      'https://meet.google.com/example'
-    );
+    const joinMeetingLink = screen.getByRole('link', { name: /join meeting/i });
+    expect(joinMeetingLink).toHaveAttribute('href', 'https://meet.google.com/example');
+    expect(joinMeetingLink).toHaveClass('min-h-11');
     expect(screen.getByText('Google Meet')).toBeInTheDocument();
     expect(screen.getByText('Teams')).toBeInTheDocument();
     expect(screen.getByText('Meeting link pending.')).toBeInTheDocument();
@@ -204,9 +207,10 @@ describe('individual interviews page clarity', () => {
     ).toBeInTheDocument();
     expect(screen.queryByText('Google_meet')).not.toBeInTheDocument();
     expect(screen.queryByText('pending')).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /add to calendar/i })).toBeInTheDocument();
-    expect(screen.getByLabelText(/engagement type/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /confirm engagement/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /add to calendar/i })).toHaveClass('min-h-11');
+    expect(screen.getByRole('button', { name: /\.ics/i })).toHaveClass('min-h-[44px]');
+    expect(screen.getByLabelText(/engagement type/i)).toHaveClass('min-h-11');
+    expect(screen.getByRole('button', { name: /confirm engagement/i })).toHaveClass('min-h-[44px]');
   });
 
   it('keeps failed engagement confirmations visible and retryable', async () => {
@@ -354,7 +358,12 @@ describe('individual interviews page clarity', () => {
     );
     expect(screen.getByLabelText('Engagement type')).toHaveValue('full_time');
 
-    fireEvent.click(within(alert).getByRole('button', { name: 'Retry confirmation' }));
+    const retryConfirmationButton = within(alert).getByRole('button', {
+      name: 'Retry confirmation',
+    });
+    expect(retryConfirmationButton).toHaveClass('min-h-[44px]');
+
+    fireEvent.click(retryConfirmationButton);
 
     await waitFor(() => {
       expect(

@@ -324,8 +324,8 @@ export default function IndividualInterviewsPage() {
               </div>
               <Button
                 variant="outline"
-                size="sm"
-                className="min-h-10 shrink-0 gap-2"
+                size="touch"
+                className="shrink-0 gap-2"
                 onClick={() => {
                   void loadInterviews();
                 }}
@@ -348,7 +348,7 @@ export default function IndividualInterviewsPage() {
               interview coordination, this page will show the next step and the full proof-safe
               timeline.
             </p>
-            <Button asChild variant="outline" size="sm">
+            <Button asChild variant="outline" size="touch">
               <Link href="/app/i/matching">Open assignment reviews</Link>
             </Button>
           </div>
@@ -412,7 +412,7 @@ export default function IndividualInterviewsPage() {
                             href={interview.interview.meetingUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-proofound-stone/80 bg-white px-3 text-sm font-medium text-proofound-forest hover:bg-proofound-parchment/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+                            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-proofound-stone/80 bg-white px-3 text-sm font-medium text-proofound-forest hover:bg-proofound-parchment/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
                           >
                             Join Meeting
                             <ExternalLink className="w-3 h-3" />
@@ -421,15 +421,15 @@ export default function IndividualInterviewsPage() {
                             href={buildGoogleCalendarUrl(toCalendarPayload(interview))}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-proofound-stone/80 bg-white px-3 text-sm font-medium text-proofound-forest hover:bg-proofound-parchment/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+                            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-proofound-stone/80 bg-white px-3 text-sm font-medium text-proofound-forest hover:bg-proofound-parchment/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
                           >
                             Add to calendar
                             <CalendarPlus className="w-3 h-3" />
                           </a>
                           <Button
                             variant="outline"
-                            size="sm"
-                            className="min-h-10 px-3 text-xs"
+                            size="touch"
+                            className="px-3 text-xs"
                             onClick={() => downloadInterviewIcs(toCalendarPayload(interview))}
                           >
                             <Download className="w-3 h-3 mr-1" />
@@ -492,7 +492,7 @@ export default function IndividualInterviewsPage() {
                                 [interview.engagementVerification!.id]: event.target.value,
                               }));
                             }}
-                            className="h-10 rounded-md border border-proofound-stone bg-white px-3 text-sm"
+                            className="min-h-11 rounded-md border border-proofound-stone bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
                           >
                             <option value="">Select engagement type</option>
                             <option value="full_time">Full-time</option>
@@ -502,9 +502,9 @@ export default function IndividualInterviewsPage() {
                           </select>
                           <Button
                             variant="outline"
-                            size="sm"
+                            size="touch"
                             onClick={() => handleConfirmEngagement(interview)}
-                            className="min-h-10 w-full lg:w-auto"
+                            className="w-full lg:w-auto"
                             disabled={
                               isConfirmingEngagementId === interview.engagementVerification.id
                             }
@@ -527,14 +527,14 @@ export default function IndividualInterviewsPage() {
                                 <Button
                                   type="button"
                                   variant="outline"
-                                  size="sm"
+                                  size="touch"
                                   onClick={() => {
                                     void handleConfirmEngagement(interview);
                                   }}
                                   disabled={
                                     isConfirmingEngagementId === interview.engagementVerification.id
                                   }
-                                  className="mt-2 h-8 rounded-full border-amber-300 bg-white px-3 text-xs font-semibold text-amber-950 hover:bg-amber-100"
+                                  className="mt-2 rounded-full border-amber-300 bg-white px-3 text-xs font-semibold text-amber-950 hover:bg-amber-100"
                                 >
                                   Retry confirmation
                                 </Button>
