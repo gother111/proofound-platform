@@ -400,17 +400,36 @@ describe('Public individual portfolio page', () => {
 
     render(element);
 
-    fireEvent.click(screen.getByRole('button', { name: /show proof context/i }));
+    const contextToggle = screen.getByRole('button', { name: /show proof context/i });
+    expect(contextToggle).toHaveClass('min-h-11');
+
+    fireEvent.click(contextToggle);
 
     expect(screen.getAllByText('Verification scope').length).toBeGreaterThan(0);
     expect(screen.getByText('Public-safe evidence')).toBeInTheDocument();
     expect(screen.queryByText('Trust Details')).not.toBeInTheDocument();
     expect(screen.queryByText('Supporting Evidence')).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /open launch memo/i })).toHaveAttribute(
-      'href',
-      'https://example.com/launch-memo'
-    );
+    const evidenceLink = screen.getByRole('link', { name: /open launch memo/i });
+    expect(evidenceLink).toHaveAttribute('href', 'https://example.com/launch-memo');
+    expect(evidenceLink).toHaveClass('min-h-11');
     expect(screen.getByRole('button', { name: /hide proof context/i })).toBeInTheDocument();
+  });
+
+  it('keeps public portfolio contact actions touch-sized on narrow layouts', async () => {
+    vi.mocked(resolvePublicIndividualPortfolioAccessByHandle).mockResolvedValue({
+      status: 'accessible',
+      projection: buildProjection() as any,
+    });
+
+    const element = await PortfolioPage({
+      params: Promise.resolve({ handle: 'jane' }),
+      searchParams: Promise.resolve({}),
+    });
+
+    render(element);
+
+    expect(screen.getByRole('link', { name: /^share link$/i })).toHaveClass('min-h-11');
+    expect(screen.getByRole('link', { name: /^request contact$/i })).toHaveClass('min-h-11');
   });
 
   it('renders proof trust signals and ownership as readable public-safe details', async () => {

@@ -519,7 +519,7 @@ function ContactPill({ href, label, icon }: { href: string; label: string; icon?
   return (
     <a
       href={href}
-      className="flex items-center gap-2 rounded-xl border border-white/40 bg-white/40 px-3 py-2 text-foreground shadow-sm transition-colors hover:border-proofound-forest/30 hover:text-proofound-forest"
+      className="flex min-h-11 items-center gap-2 rounded-xl border border-white/40 bg-white/40 px-3 py-2 text-foreground shadow-sm transition-colors hover:border-proofound-forest/30 hover:text-proofound-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
     >
       {icon}
       <span>{label}</span>
