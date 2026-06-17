@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { engagementTypeLabel } from '@/lib/copy/labels';
+import { engagementTypeLabel, internalValueLabel, skillDisplayLabel } from '@/lib/copy/labels';
 import { apiFetch } from '@/lib/api/fetch';
 import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
@@ -40,15 +40,19 @@ interface Assignment {
   status: string;
 }
 
-function getSkillDisplayLabel(skill: any) {
-  return skill?.label || skill?.name || skill?.skillName || skill?.id || 'Unknown skill';
-}
-
 const VERIFICATION_GATE_LABELS: Record<string, string> = {
   identity: 'Identity Verification',
   work_email: 'Work Email Verification',
   background_check: 'Background Check',
   education: 'Education Verification',
+};
+
+const SKILL_REQUIREMENT_DEPTH_LABELS: Record<number, string> = {
+  1: 'Baseline proof depth',
+  2: 'Working proof depth',
+  3: 'Solid proof depth',
+  4: 'Strong proof depth',
+  5: 'Deep proof depth',
 };
 
 type Props = {
@@ -104,6 +108,25 @@ const PUBLISH_RETURNED_FALLBACK_MESSAGE =
 
 function hasText(value: unknown) {
   return typeof value === 'string' && value.trim().length > 0;
+}
+
+function getSkillRequirementDepthLabel(level: unknown) {
+  const numericLevel = typeof level === 'number' ? level : Number(level);
+  if (!Number.isFinite(numericLevel)) {
+    return 'Proof depth not set';
+  }
+
+  return SKILL_REQUIREMENT_DEPTH_LABELS[Math.round(numericLevel)] ?? 'Proof depth not set';
+}
+
+function formatCompensationRange(assignment: Assignment) {
+  const currency =
+    typeof assignment.currency === 'string' && assignment.currency.trim().length > 0
+      ? assignment.currency.trim().toUpperCase()
+      : 'Compensation';
+  const min = assignment.compensationMin?.toLocaleString() ?? 'not set';
+  const max = assignment.compensationMax?.toLocaleString() ?? 'not set';
+  return `${currency} ${min} to ${max}`;
 }
 
 function getReviewItems(assignment: Assignment): ReviewItem[] {
@@ -392,8 +415,8 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
                 {isPublishing
                   ? 'Publishing...'
                   : isClosed
-                    ? 'Assignment Closed'
-                    : 'Publish Assignment'}
+                    ? 'Assignment closed'
+                    : 'Publish assignment'}
                 {!isClosed ? <ChevronRight className="h-4 w-4 ml-2" /> : null}
               </Button>
             )}
@@ -652,15 +675,16 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
                 <div>
                   <p className="text-sm text-muted-foreground">Compensation range</p>
                   <p className="font-medium text-foreground">
-                    {assignment.currency} {assignment.compensationMin.toLocaleString()} -{' '}
-                    {assignment.compensationMax.toLocaleString()}
+                    {formatCompensationRange(assignment)}
                   </p>
                 </div>
               ) : null}
               {assignment.location ? (
                 <div>
                   <p className="text-sm text-muted-foreground">Location</p>
-                  <p className="font-medium text-foreground">{assignment.location}</p>
+                  <p className="font-medium text-foreground">
+                    {internalValueLabel(assignment.location)}
+                  </p>
                 </div>
               ) : null}
             </div>
@@ -688,7 +712,7 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
                       variant="outline"
                       className="border-[#7A9278] text-proofound-forest"
                     >
-                      {getSkillDisplayLabel(skill)} (Level {skill.level}/5)
+                      {skillDisplayLabel(skill)}: {getSkillRequirementDepthLabel(skill.level)}
                     </Badge>
                   ))}
                 </div>

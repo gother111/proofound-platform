@@ -78,6 +78,27 @@ describe('AssignmentReviewClient', () => {
     expect(screen.getAllByText('Proof expectations').length).toBeGreaterThan(0);
   });
 
+  it('humanizes practical constraints and skill depth in the review checklist', () => {
+    render(
+      <AssignmentReviewClient
+        initialAssignment={{
+          ...baseAssignment,
+          location: 'hybrid',
+        }}
+        assignmentId="assignment-1"
+        slug="acme"
+      />
+    );
+
+    const pageText = document.body.textContent ?? '';
+    expect(pageText).toContain('SEK 80,000 to 100,000');
+    expect(pageText).toContain('Hybrid');
+    expect(pageText).toContain('Evidence review: Strong proof depth');
+    expect(pageText).toContain('Privacy operations: Strong proof depth');
+    expect(pageText).not.toMatch(/Level \d\/5/);
+    expect(pageText).not.toContain('SEK 80,000 - 100,000');
+  });
+
   it('confirms publish in an in-app dialog before starting matching', async () => {
     const confirmSpy = vi.fn();
     vi.stubGlobal('confirm', confirmSpy);
