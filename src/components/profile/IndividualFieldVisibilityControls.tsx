@@ -186,7 +186,8 @@ export function IndividualFieldVisibilityControls({
           'Your Public Page and assignment-review visibility preferences are up to date.',
       });
       toast.success('Privacy settings saved', {
-        description: 'Your field visibility preferences have been updated',
+        description:
+          'Your Public Page and assignment-review visibility preferences are up to date.',
       });
     } catch (error) {
       dispatchClientErrorDiagnostic('privacy.field_visibility.save_failed', error);
@@ -195,8 +196,8 @@ export function IndividualFieldVisibilityControls({
         message: 'Privacy settings were not saved',
         description: PRIVACY_VISIBILITY_SAVE_FAILED_DESCRIPTION,
       });
-      toast.error('Failed to save settings', {
-        description: 'Please try again',
+      toast.error('Privacy settings were not saved', {
+        description: PRIVACY_VISIBILITY_SAVE_FAILED_DESCRIPTION,
       });
     } finally {
       setSaving(false);

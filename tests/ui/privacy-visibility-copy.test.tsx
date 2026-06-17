@@ -1,16 +1,18 @@
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+const { dispatchClientErrorDiagnosticMock, toastErrorMock, toastSuccessMock } = vi.hoisted(() => ({
+  dispatchClientErrorDiagnosticMock: vi.fn(),
+  toastErrorMock: vi.fn(),
+  toastSuccessMock: vi.fn(),
+}));
 
 vi.mock('sonner', () => ({
   toast: {
-    error: vi.fn(),
-    success: vi.fn(),
+    error: (...args: unknown[]) => toastErrorMock(...args),
+    success: (...args: unknown[]) => toastSuccessMock(...args),
   },
-}));
-
-const { dispatchClientErrorDiagnosticMock } = vi.hoisted(() => ({
-  dispatchClientErrorDiagnosticMock: vi.fn(),
 }));
 
 vi.mock('@/lib/client-diagnostics', () => ({
@@ -52,6 +54,10 @@ vi.mock('@/components/ui/select', () => ({
 import { IndividualFieldVisibilityControls } from '@/components/profile/IndividualFieldVisibilityControls';
 
 describe('privacy visibility copy', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('frames visibility as Public Page control instead of broad profile exposure', () => {
     render(
       <IndividualFieldVisibilityControls userId="user-1" initialVisibility={{}} onSave={vi.fn()} />
@@ -96,6 +102,9 @@ describe('privacy visibility copy', () => {
         'Your Public Page and assignment-review visibility preferences are up to date.'
       )
     ).toBeInTheDocument();
+    expect(toastSuccessMock).toHaveBeenCalledWith('Privacy settings saved', {
+      description: 'Your Public Page and assignment-review visibility preferences are up to date.',
+    });
     expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ location: 'private' }));
 
     fireEvent.change(screen.getByLabelText('Location'), {
@@ -128,6 +137,11 @@ describe('privacy visibility copy', () => {
       'Your Public Page visibility was not changed. Review the selected fields and retry before leaving this page.'
     );
     expect(alert).not.toHaveTextContent('The privacy service is unavailable.');
+    expect(toastErrorMock).toHaveBeenCalledWith('Privacy settings were not saved', {
+      description:
+        'Your Public Page visibility was not changed. Review the selected fields and retry before leaving this page.',
+    });
+    expect(toastErrorMock).not.toHaveBeenCalledWith('Failed to save settings', expect.anything());
     expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
       'privacy.field_visibility.save_failed',
       expect.any(Error)
