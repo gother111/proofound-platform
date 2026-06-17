@@ -182,6 +182,11 @@ describe('Organization public portfolio page', () => {
     expect(
       screen.getByText(/proof submissions, member details, and private review context stay inside/i)
     ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /blind-by-default review stays separate from this public page until a proof-review participant consents to reveal/i
+      )
+    ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /return to menu/i })).toHaveAttribute(
       'href',
       '/app/o/acme/home'
@@ -269,6 +274,16 @@ describe('Organization public portfolio page', () => {
 
     expect(screen.getByRole('link', { name: /return home/i })).toHaveAttribute('href', '/');
     expect(screen.getAllByText('Build trust').length).toBeGreaterThan(0);
+    expect(
+      screen.getByText(/no active assignment is published on this trust page yet/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/no engagement type published yet/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /assignment context will appear here once the organization publishes review-ready work/i
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText(/proof expectations are not published yet/i)).toBeInTheDocument();
     expect(
       screen.getByText(/assignment detail will appear here once the organization publishes it/i)
     ).toBeInTheDocument();

@@ -201,7 +201,7 @@ export default async function OrganizationPortfolioPage({
     assignmentSnapshot
       ? 'A review-ready assignment is active, so proof review standards are already defined.'
       : 'Assignment standards are published before broader review starts.',
-    'Blind-by-default review stays separate from this public page until proof-review participant consented reveal.',
+    'Blind-by-default review stays separate from this public page until a proof-review participant consents to reveal.',
   ];
 
   const membershipResult = user?.id
@@ -327,8 +327,7 @@ export default async function OrganizationPortfolioPage({
                 label="Work offered"
                 value={
                   assignmentSnapshot?.role ||
-                  data.organization.tagline?.trim() ||
-                  'A concise statement of the work offered has not been published yet.'
+                  'No active assignment is published on this trust page yet.'
                 }
               />
               <SummaryRow
@@ -336,13 +335,12 @@ export default async function OrganizationPortfolioPage({
                 value={
                   assignmentSnapshot?.engagementType
                     ? humanizeEngagementType(assignmentSnapshot.engagementType)
-                    : 'Not published'
+                    : 'No engagement type published yet'
                 }
               />
               <p className="break-words whitespace-pre-line text-sm leading-6 text-foreground">
                 {assignmentSnapshot?.businessValue ||
-                  data.organization.tagline?.trim() ||
-                  'Why this work exists has not been published yet.'}
+                  'Assignment context will appear here once the organization publishes review-ready work.'}
               </p>
             </div>
           </PublicProfileSection>
@@ -357,7 +355,8 @@ export default async function OrganizationPortfolioPage({
               <SummaryRow
                 label="Proof expectations"
                 value={
-                  assignmentSnapshot?.expectedImpact?.trim() || 'Proof expectations not published'
+                  assignmentSnapshot?.expectedImpact?.trim() ||
+                  'Proof expectations are not published yet.'
                 }
               />
               <div className="space-y-2">
@@ -399,7 +398,7 @@ export default async function OrganizationPortfolioPage({
                     </p>
                     <p className="mt-1 text-xs leading-5 text-muted-foreground">
                       Proof submissions, member details, and private review context stay inside the
-                      assignment workflow until consented reveal.
+                      assignment workflow until a proof-review participant consents to reveal.
                     </p>
                   </div>
                 </div>
