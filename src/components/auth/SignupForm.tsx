@@ -425,12 +425,17 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                       : 'data-[state=checked]:bg-proofound-forest data-[state=checked]:text-white focus-visible:ring-proofound-forest/20'
                   }`}
                 />
-                <label
-                  htmlFor="signup-marketing-opt-in"
-                  className="cursor-pointer text-sm leading-5 text-muted-foreground"
-                >
-                  Send me updates about new features and proof-review workflow improvements
-                </label>
+                <div className="space-y-1">
+                  <label
+                    htmlFor="signup-marketing-opt-in"
+                    className="cursor-pointer text-sm leading-5 text-muted-foreground"
+                  >
+                    Send me updates about new features and proof-review workflow improvements
+                  </label>
+                  <p className="text-xs leading-5 text-muted-foreground/80">
+                    Includes proof-review workflow, staged review context, and launch improvements.
+                  </p>
+                </div>
               </div>
             </div>
 

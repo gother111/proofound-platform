@@ -2135,6 +2135,18 @@ describe('launch gate package configuration', () => {
     expect(workflow).toContain('Vercel daily deployment quota available');
   });
 
+  it('keeps Vercel pull bounded during production deploy retries', () => {
+    const vercelCommand = fs.readFileSync(
+      path.join(repoRoot, 'scripts/vercel-command.mjs'),
+      'utf8'
+    );
+
+    expect(vercelCommand).toContain('DEFAULT_PULL_TIMEOUT_MS = 120_000');
+    expect(vercelCommand).toContain('VERCEL_PULL_TIMEOUT_MS');
+    expect(vercelCommand).toContain("result.error?.code === 'ETIMEDOUT'");
+    expect(vercelCommand).toContain('process.exit(124)');
+  });
+
   it('keeps the legacy Linear bulk import out of active launch operations', () => {
     const linearSetup = fs.readFileSync(
       path.join(repoRoot, 'LINEAR_SETUP_INSTRUCTIONS.md'),

@@ -593,7 +593,7 @@ export function MatchingOrganizationView({
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-white/75 backdrop-blur-sm border border-proofound-stone/60 rounded-xl p-4 mb-4 shrink-0">
             <div className="min-w-0">
               <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-proofound-forest">
-                Focused Review
+                Review proof-backed submissions
               </span>
               <h2 className="mt-0.5 line-clamp-2 text-lg font-bold leading-snug text-proofound-charcoal">
                 {currentAssignment ? currentAssignment.role : 'No assignment selected'}
@@ -1219,7 +1219,7 @@ export function MatchingOrganizationView({
                               <TabsContent value="evidence" className="space-y-2.5 pt-3">
                                 <div className="p-3 bg-[#fdfcfa] border border-proofound-stone/50 rounded-xl space-y-2 text-xs">
                                   <p className="font-semibold text-proofound-charcoal">
-                                    Evidence Review
+                                    Reason-coded Evidence Review
                                   </p>
 
                                   <div className="space-y-1.5">

@@ -6,6 +6,7 @@ import { spawnSync } from 'node:child_process';
 const args = process.argv.slice(2);
 const command = args[0];
 const extraArgs = args.slice(1);
+const DEFAULT_PULL_TIMEOUT_MS = 120_000;
 
 function runGit(commandArgs) {
   const result = spawnSync('git', commandArgs, {
@@ -38,6 +39,47 @@ function readOptionValue(flag) {
 
 function hasFlag(flag) {
   return extraArgs.includes(flag);
+}
+
+function readPositiveIntegerEnv(name, fallback) {
+  const rawValue = process.env[name];
+  if (!rawValue) {
+    return fallback;
+  }
+
+  const parsedValue = Number.parseInt(rawValue, 10);
+  if (Number.isFinite(parsedValue) && parsedValue > 0) {
+    return parsedValue;
+  }
+
+  console.warn(
+    `[vercel-command] Ignoring invalid ${name}=${JSON.stringify(rawValue)}; using ${fallback}ms.`
+  );
+  return fallback;
+}
+
+function getTimeoutMs() {
+  if (command !== 'pull') {
+    return undefined;
+  }
+
+  return readPositiveIntegerEnv('VERCEL_PULL_TIMEOUT_MS', DEFAULT_PULL_TIMEOUT_MS);
+}
+
+function exitFromSpawnResult(result, timeoutMs) {
+  if (result.error?.code === 'ETIMEDOUT') {
+    console.error(
+      `[vercel-command] Vercel ${command} timed out after ${timeoutMs}ms. Retry once Vercel is responsive.`
+    );
+    process.exit(124);
+  }
+
+  if (result.error) {
+    console.error(`[vercel-command] Failed to run Vercel ${command}: ${result.error.message}`);
+    process.exit(1);
+  }
+
+  process.exit(result.status ?? 1);
 }
 
 function buildGitMeta() {
@@ -137,15 +179,18 @@ function findDeploymentUrl(output) {
 }
 
 const vercelArgs = buildCommandArgs();
+const timeoutMs = getTimeoutMs();
 
 if (command !== 'deploy-prebuilt') {
   const result = spawnSync('npx', ['vercel@latest', ...vercelArgs], {
     cwd: process.cwd(),
     env: process.env,
     stdio: 'inherit',
+    timeout: timeoutMs,
+    killSignal: 'SIGTERM',
   });
 
-  process.exit(result.status ?? 1);
+  exitFromSpawnResult(result, timeoutMs);
 }
 
 const deployResult = spawnSync('npx', ['vercel@latest', ...vercelArgs], {
