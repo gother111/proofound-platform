@@ -122,13 +122,28 @@ const FIRST_PROOF_UPLOAD_RETRY_MESSAGE =
   'Upload could not be saved. Your proof details are still here; try again or choose another file.';
 const FIRST_PROOF_SAVE_RETRY_MESSAGE =
   'First Proof Pack could not be saved. Your details are still here; please try again.';
-const FIRST_PROOF_SAFE_UPLOAD_ERRORS = new Set([
-  'The uploaded file type did not match its file signature.',
-  'The uploaded file is not allowed for this proof or document flow.',
-  'The uploaded file is too large for this upload flow.',
-  'The upload could not be accepted for this flow.',
-  'Security token could not be initialized. Please refresh and try again.',
-  'Failed to upload file. Please try again.',
+const FIRST_PROOF_SAFE_UPLOAD_ERRORS = new Map([
+  [
+    'The uploaded file type did not match its file signature.',
+    'The uploaded file type did not match its file signature.',
+  ],
+  [
+    'The uploaded file is not allowed for this proof or document flow.',
+    'The uploaded file is not allowed for this proof or document flow.',
+  ],
+  [
+    'The uploaded file is too large for this upload flow.',
+    'The uploaded file is too large for this upload flow.',
+  ],
+  [
+    'The upload could not be accepted for this flow.',
+    'The upload could not be accepted for this flow.',
+  ],
+  [
+    'Security token could not be initialized. Please refresh and try again.',
+    'Security token could not be initialized. Please refresh and try again.',
+  ],
+  ['Failed to upload file. Please try again.', FIRST_PROOF_UPLOAD_RETRY_MESSAGE],
 ]);
 const FIRST_PROOF_SAFE_ACTION_ERRORS = new Set([
   'Choose one real context before publishing.',
@@ -153,8 +168,9 @@ const FIRST_PROOF_SAFE_ACTION_ERRORS = new Set([
 ]);
 
 function firstProofUploadErrorMessage(message: string) {
-  if (FIRST_PROOF_SAFE_UPLOAD_ERRORS.has(message)) {
-    return message;
+  const safeMessage = FIRST_PROOF_SAFE_UPLOAD_ERRORS.get(message);
+  if (safeMessage) {
+    return safeMessage;
   }
 
   dispatchClientErrorDiagnostic(

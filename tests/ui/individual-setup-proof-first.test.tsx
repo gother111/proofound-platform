@@ -413,6 +413,35 @@ describe('IndividualSetup first-proof flow', () => {
     expect(screen.getByLabelText('Proof file *')).toBeEnabled();
   });
 
+  it('maps generic returned first-proof upload failures to preserved-details retry copy', async () => {
+    const genericFailure = 'Failed to upload file. Please try again.';
+    uploadFileMock.mockResolvedValueOnce({
+      success: false,
+      error: genericFailure,
+    });
+
+    render(<IndividualSetup />);
+
+    fillBasicDetails();
+    fireEvent.click(screen.getByRole('radio', { name: /file upload/i }));
+
+    const file = new File(['proof'], 'starter-proof.pdf', { type: 'application/pdf' });
+    fireEvent.change(screen.getByLabelText('Proof file *'), {
+      target: { files: [file] },
+    });
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(
+      'Upload could not be saved. Your proof details are still here; try again or choose another file.'
+    );
+    expect(alert).not.toHaveTextContent(genericFailure);
+    expect(dispatchClientErrorDiagnosticMock).not.toHaveBeenCalledWith(
+      'onboarding.individual.first_proof_upload_returned_error',
+      expect.any(Error)
+    );
+    expect(screen.getByLabelText('Proof file *')).toBeEnabled();
+  });
+
   it('logs unexpected first-proof upload failures while keeping upload retryable', async () => {
     const uploadError = new Error('network down');
     uploadFileMock.mockRejectedValueOnce(uploadError);

@@ -117,6 +117,37 @@ describe('first proof entry point', () => {
     );
   });
 
+  it('maps generic returned upload failures to preserved-details retry copy', async () => {
+    const genericFailure = 'Failed to upload file. Please try again.';
+    uploadFileMock.mockResolvedValueOnce({
+      success: false,
+      error: genericFailure,
+    });
+
+    render(<FirstProofDialog {...firstProofProps} />);
+
+    fireEvent.change(screen.getByLabelText('Proof title'), {
+      target: { value: 'Launch review artifact' },
+    });
+    fireEvent.change(screen.getByLabelText('Upload proof file'), {
+      target: {
+        files: [new File(['proof'], 'launch-review.pdf', { type: 'application/pdf' })],
+      },
+    });
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(
+      'Upload could not be saved. Your proof details are still here; try again or choose another file.'
+    );
+    expect(alert).not.toHaveTextContent(genericFailure);
+    expect(dispatchClientDiagnosticMock).not.toHaveBeenCalledWith(
+      'proofs.first_proof.upload_returned_error',
+      expect.anything()
+    );
+    expect(screen.getByLabelText('Proof title')).toHaveValue('Launch review artifact');
+    expect(screen.getByText('Selected: launch-review.pdf')).toBeInTheDocument();
+  });
+
   it('keeps failed first proof saves safe, diagnostic, and retryable', async () => {
     const rawFailure = 'storage policy leaked-ish';
     const onOpenChange = vi.fn();

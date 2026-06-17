@@ -59,13 +59,28 @@ const FIRST_PROOF_SAVE_FAILED_MESSAGE =
   'Proof was not saved. Your proof details are still here; review them and try again.';
 const FIRST_PROOF_UPLOAD_RETRY_MESSAGE =
   'Upload could not be saved. Your proof details are still here; try again or choose another file.';
-const FIRST_PROOF_SAFE_UPLOAD_ERRORS = new Set([
-  'The uploaded file type did not match its file signature.',
-  'The uploaded file is not allowed for this proof or document flow.',
-  'The uploaded file is too large for this upload flow.',
-  'The upload could not be accepted for this flow.',
-  'Security token could not be initialized. Please refresh and try again.',
-  'Failed to upload file. Please try again.',
+const FIRST_PROOF_SAFE_UPLOAD_ERRORS = new Map([
+  [
+    'The uploaded file type did not match its file signature.',
+    'The uploaded file type did not match its file signature.',
+  ],
+  [
+    'The uploaded file is not allowed for this proof or document flow.',
+    'The uploaded file is not allowed for this proof or document flow.',
+  ],
+  [
+    'The uploaded file is too large for this upload flow.',
+    'The uploaded file is too large for this upload flow.',
+  ],
+  [
+    'The upload could not be accepted for this flow.',
+    'The upload could not be accepted for this flow.',
+  ],
+  [
+    'Security token could not be initialized. Please refresh and try again.',
+    'Security token could not be initialized. Please refresh and try again.',
+  ],
+  ['Failed to upload file. Please try again.', FIRST_PROOF_UPLOAD_RETRY_MESSAGE],
 ]);
 
 function getResponseStatus(response: Response) {
@@ -89,8 +104,9 @@ function getReturnedError(payload: unknown) {
 }
 
 function firstProofUploadErrorMessage(returnedError: string) {
-  if (FIRST_PROOF_SAFE_UPLOAD_ERRORS.has(returnedError)) {
-    return returnedError;
+  const safeMessage = FIRST_PROOF_SAFE_UPLOAD_ERRORS.get(returnedError);
+  if (safeMessage) {
+    return safeMessage;
   }
 
   dispatchClientDiagnostic('proofs.first_proof.upload_returned_error', {
