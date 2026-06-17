@@ -25,6 +25,10 @@ interface RedactModeToggleProps {
   showLabel?: boolean;
 }
 
+const REDACT_MODE_UPDATE_FAILED_TITLE = 'Redact mode was not changed';
+const REDACT_MODE_UPDATE_FAILED_DESCRIPTION =
+  'Your current privacy view is unchanged. Retry redact mode before sharing your screen.';
+
 export function RedactModeToggle({ enabled, onChange, showLabel = true }: RedactModeToggleProps) {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -40,7 +44,9 @@ export function RedactModeToggle({ enabled, onChange, showLabel = true }: Redact
       }
     } catch (error) {
       dispatchClientErrorDiagnostic('privacy.redact_mode.toggle_failed', error);
-      toast.error('Failed to update redact mode');
+      toast.error(REDACT_MODE_UPDATE_FAILED_TITLE, {
+        description: REDACT_MODE_UPDATE_FAILED_DESCRIPTION,
+      });
     } finally {
       setIsLoading(false);
     }
