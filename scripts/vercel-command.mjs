@@ -7,6 +7,7 @@ const args = process.argv.slice(2);
 const command = args[0];
 const extraArgs = args.slice(1);
 const DEFAULT_PULL_TIMEOUT_MS = 120_000;
+const DEFAULT_BUILD_TIMEOUT_MS = 900_000;
 const DEFAULT_DEPLOY_TIMEOUT_MS = 600_000;
 
 function runGit(commandArgs) {
@@ -66,6 +67,10 @@ function getTimeoutMs() {
 
   if (command === 'deploy-prebuilt') {
     return readPositiveIntegerEnv('VERCEL_DEPLOY_TIMEOUT_MS', DEFAULT_DEPLOY_TIMEOUT_MS);
+  }
+
+  if (command === 'build') {
+    return readPositiveIntegerEnv('VERCEL_BUILD_TIMEOUT_MS', DEFAULT_BUILD_TIMEOUT_MS);
   }
 
   return undefined;

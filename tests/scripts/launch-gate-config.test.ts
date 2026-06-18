@@ -2145,9 +2145,12 @@ describe('launch gate package configuration', () => {
     );
 
     expect(vercelCommand).toContain('DEFAULT_PULL_TIMEOUT_MS = 120_000');
+    expect(vercelCommand).toContain('DEFAULT_BUILD_TIMEOUT_MS = 900_000');
     expect(vercelCommand).toContain('DEFAULT_DEPLOY_TIMEOUT_MS = 600_000');
     expect(vercelCommand).toContain('VERCEL_PULL_TIMEOUT_MS');
+    expect(vercelCommand).toContain('VERCEL_BUILD_TIMEOUT_MS');
     expect(vercelCommand).toContain('VERCEL_DEPLOY_TIMEOUT_MS');
+    expect(vercelCommand).toContain("command === 'build'");
     expect(vercelCommand).toContain("command === 'deploy-prebuilt'");
     expect(vercelCommand).toContain("result.error?.code === 'ETIMEDOUT'");
     expect(vercelCommand).toContain('process.exit(124)');
