@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 const { notFoundMock } = vi.hoisted(() => ({
@@ -459,6 +459,42 @@ describe('Public individual portfolio page', () => {
 
     expect(screen.getByRole('link', { name: /^share link$/i })).toHaveClass('min-h-11');
     expect(screen.getByRole('link', { name: /^request contact$/i })).toHaveClass('min-h-11');
+  });
+
+  it('keeps public empty-state actions touch-sized and keyboard visible', async () => {
+    const baseProjection = buildProjection();
+
+    vi.mocked(resolvePublicIndividualPortfolioAccessByHandle).mockResolvedValue({
+      status: 'accessible',
+      projection: buildProjection({
+        publicProofCount: 0,
+        visibility: {
+          ...baseProjection.visibility,
+          contact: false,
+          workEmail: false,
+        },
+        exportData: {
+          ...baseProjection.exportData,
+          proofPacks: [],
+        },
+      }) as any,
+    });
+
+    const element = await PortfolioPage({
+      params: Promise.resolve({ handle: 'jane' }),
+      searchParams: Promise.resolve({}),
+    });
+
+    render(element);
+
+    const emptyState = screen.getByText(/no selected proof packs are available yet/i).parentElement;
+    expect(emptyState).not.toBeNull();
+
+    const requestContactLink = within(emptyState as HTMLElement).getByRole('link', {
+      name: /^request contact$/i,
+    });
+    expect(requestContactLink).toHaveClass('min-h-11');
+    expect(requestContactLink).toHaveClass('focus-visible:ring-2');
   });
 
   it('renders proof trust signals and ownership as readable public-safe details', async () => {

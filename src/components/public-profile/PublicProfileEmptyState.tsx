@@ -25,7 +25,7 @@ export function PublicProfileEmptyState({
             <Link
               key={`${action.label}-${action.href}`}
               href={action.href}
-              className="rounded-full border border-[#D9D5CC] bg-white px-3 py-1 text-xs font-medium text-foreground hover:border-proofound-forest/45 hover:text-proofound-forest"
+              className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#D9D5CC] bg-white px-3 py-2 text-xs font-medium text-foreground transition-colors hover:border-proofound-forest/45 hover:text-proofound-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
             >
               {action.label}
             </Link>
