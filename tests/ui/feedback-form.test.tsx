@@ -180,6 +180,10 @@ describe('FeedbackForm', () => {
 
     expect(screen.getByText('Share workflow feedback')).toBeInTheDocument();
     expect(screen.queryByText('Share feedback with the candidate')).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/Your response is anonymized for the review workflow/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/other side/i)).not.toBeInTheDocument();
   });
 
   it('submits when required fields are provided', async () => {

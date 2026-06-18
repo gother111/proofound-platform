@@ -4,6 +4,12 @@ export const VISUAL_FEEDBACK_TOKENS = {
   pendingCandidateToOrg: 'visual-feedback-token-candidate-0000001',
 } as const;
 
+const VISUAL_FEEDBACK_EXPIRY_DAYS = 30;
+
+function buildFutureVisualFeedbackExpiry() {
+  return new Date(Date.now() + VISUAL_FEEDBACK_EXPIRY_DAYS * 24 * 60 * 60 * 1000).toISOString();
+}
+
 export function feedbackVisualFixturesEnabled() {
   return (
     process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true' &&
@@ -32,7 +38,7 @@ export function buildVisualFeedbackTokenResponse(token: string) {
   return {
     token,
     direction: 'candidate_to_org' as const,
-    expiresAt: '2026-06-18T08:00:00.000Z',
+    expiresAt: buildFutureVisualFeedbackExpiry(),
     usedAt: null,
     structuredFeedbackRequired: false,
     feedbackContract: {

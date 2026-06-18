@@ -32,6 +32,7 @@ describe('GET /api/feedback/token/[token] visual fixture', () => {
 
     expect(response.status).toBe(200);
     expect(payload.token).toBe(VISUAL_FEEDBACK_TOKENS.pendingCandidateToOrg);
+    expect(new Date(payload.expiresAt).getTime()).toBeGreaterThan(Date.now());
     expect(payload.template.name).toMatch(/Candidate to organization/i);
     expect(payload.questions).toHaveLength(2);
     expect(createAdminClient).not.toHaveBeenCalled();

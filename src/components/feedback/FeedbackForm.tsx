@@ -247,7 +247,8 @@ export function FeedbackForm({
       <CardHeader className={headerClassName}>
         <CardTitle className="text-lg">{directionCopy}</CardTitle>
         <p className="text-sm text-muted-foreground">
-          Your name will not be shown to the other side. Required questions are labeled Required.
+          Your response is anonymized for the review workflow. Required questions are labeled
+          Required.
         </p>
       </CardHeader>
       <CardContent className={contentClassName}>

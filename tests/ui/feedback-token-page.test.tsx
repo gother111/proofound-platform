@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
 import FeedbackTokenPage from '@/app/(public)/feedback/[token]/page';
+import { VISUAL_FEEDBACK_TOKENS } from '@/lib/feedback/visual-fixtures';
 
 vi.mock('@/components/feedback/FeedbackForm', () => ({
   default: ({ template, token }: any) => (
@@ -33,6 +34,7 @@ function mockTokenResponse(body: unknown, ok = true) {
 describe('FeedbackTokenPage', () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllEnvs();
     vi.unstubAllGlobals();
   });
 
@@ -140,10 +142,26 @@ describe('FeedbackTokenPage', () => {
 
     expect(screen.getByText('Interview feedback')).toBeInTheDocument();
     expect(
-      screen.getByText('Share quick feedback. Your name will be hidden from the other side.')
+      screen.getByText('Share quick feedback. Your response is anonymized for the review workflow.')
     ).toBeInTheDocument();
     expect(screen.getByTestId('feedback-token-form')).toHaveTextContent(
       'Candidate feedback for valid-token'
     );
+  });
+
+  it('keeps the visual fixture token on the active form path', async () => {
+    vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'true');
+    vi.stubEnv('PROOFOUND_VISUAL_FIXTURES', 'true');
+    vi.stubEnv('VERCEL_ENV', 'development');
+    vi.stubGlobal('fetch', vi.fn());
+
+    await renderFeedbackTokenPage(VISUAL_FEEDBACK_TOKENS.pendingCandidateToOrg);
+
+    expect(screen.getByText('Interview feedback')).toBeInTheDocument();
+    expect(screen.getByTestId('feedback-token-form')).toHaveTextContent(
+      `Candidate to organization interview feedback for ${VISUAL_FEEDBACK_TOKENS.pendingCandidateToOrg}`
+    );
+    expect(screen.queryByText('Feedback link expired')).not.toBeInTheDocument();
+    expect(global.fetch).not.toHaveBeenCalled();
   });
 });

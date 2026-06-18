@@ -133,7 +133,7 @@ export default async function FeedbackTokenPage({
             Interview feedback
           </h1>
           <p className="text-sm leading-6 text-muted-foreground">
-            Share quick feedback. Your name will be hidden from the other side.
+            Share quick feedback. Your response is anonymized for the review workflow.
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
