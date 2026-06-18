@@ -37,6 +37,11 @@ describe('MessageThread', () => {
     expect(
       screen.getByText(/text-only; paste\/drop disabled for proof-review privacy/i)
     ).toBeInTheDocument();
+    const composer = screen.getByRole('textbox', { name: 'Proof-review message' });
+    expect(composer).toHaveAccessibleDescription(
+      /text-only; paste\/drop disabled for proof-review privacy/i
+    );
+    expect(composer).toHaveAccessibleDescription(/0\/500/i);
     expect(screen.queryByText(/say hello/i)).not.toBeInTheDocument();
   });
 

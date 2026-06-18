@@ -9,7 +9,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useId, useRef } from 'react';
 import { format } from 'date-fns';
 import { AlertTriangle, ArrowLeft, Loader2, Lock, MessageSquare, Send } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -66,6 +66,8 @@ export function MessageThread({
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const composerHelpId = useId();
+  const characterCountId = useId();
   const { toast } = useToast();
 
   // Auto-scroll to bottom when new messages arrive
@@ -317,6 +319,8 @@ export function MessageThread({
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
                 onKeyDown={handleKeyDown}
+                aria-label="Proof-review message"
+                aria-describedby={`${composerHelpId} ${characterCountId}`}
                 placeholder="Type your message... (paste and drag-drop disabled)"
                 className="flex-1 min-h-[80px] resize-none"
                 maxLength={MAX_MESSAGE_LENGTH + 50} // Allow typing slightly over to show warning
@@ -340,12 +344,18 @@ export function MessageThread({
             </div>
 
             <div className="flex items-start justify-between gap-3 text-xs">
-              <span className="inline-flex min-w-0 items-start gap-1.5 leading-5 text-muted-foreground">
+              <span
+                id={composerHelpId}
+                className="inline-flex min-w-0 items-start gap-1.5 leading-5 text-muted-foreground"
+              >
                 <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                 <span>Text-only; paste/drop disabled for proof-review privacy.</span>
                 <span className="hidden sm:inline"> Press Enter to send.</span>
               </span>
-              <span className={cn('flex-shrink-0 leading-5', characterCountColor())}>
+              <span
+                id={characterCountId}
+                className={cn('flex-shrink-0 leading-5', characterCountColor())}
+              >
                 {messageText.length}/{MAX_MESSAGE_LENGTH}
               </span>
             </div>
