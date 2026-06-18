@@ -28,12 +28,24 @@ vi.mock('@/components/ui/v2/AppSurface', () => ({
 }));
 
 vi.mock('@/components/ui/button', () => ({
-  Button: ({ asChild, children, ...props }: any) =>
-    asChild && React.isValidElement(children) ? (
-      React.cloneElement(children, props)
-    ) : (
-      <button {...props}>{children}</button>
-    ),
+  Button: ({ asChild, children, className, size, ...props }: any) => {
+    const mergedClassName = [size === 'touch' ? 'min-h-[44px]' : '', className]
+      .filter(Boolean)
+      .join(' ');
+
+    if (asChild && React.isValidElement(children)) {
+      return React.cloneElement(children, {
+        ...props,
+        className: [children.props.className, mergedClassName].filter(Boolean).join(' '),
+      });
+    }
+
+    return (
+      <button {...props} className={mergedClassName || undefined}>
+        {children}
+      </button>
+    );
+  },
 }));
 
 vi.mock('@/components/decisions/DecisionDialog', () => ({
@@ -151,7 +163,10 @@ describe('organization interviews page actions', () => {
       screen.queryByRole('heading', { name: /no active interview workflow yet/i })
     ).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /retry interviews/i }));
+    const retryInterviewsButton = screen.getByRole('button', { name: /retry interviews/i });
+    expect(retryInterviewsButton).toHaveClass('min-h-[44px]');
+
+    fireEvent.click(retryInterviewsButton);
 
     await waitFor(() => {
       expect(getInterviewCorridorItemsMock).toHaveBeenCalledTimes(2);
@@ -162,10 +177,9 @@ describe('organization interviews page actions', () => {
     expect(
       screen.getByText(/once a proof submission moves into interview coordination/i)
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /review assignment queue/i })).toHaveAttribute(
-      'href',
-      '/app/o/acme/assignments'
-    );
+    const assignmentQueueLink = screen.getByRole('link', { name: /review assignment queue/i });
+    expect(assignmentQueueLink).toHaveAttribute('href', '/app/o/acme/assignments');
+    expect(assignmentQueueLink).toHaveClass('min-h-[44px]');
   });
 
   it('makes scheduled interviews with pending meeting links explicit', async () => {
@@ -295,10 +309,20 @@ describe('organization interviews page actions', () => {
     expect(screen.getByText('Manual')).toBeInTheDocument();
     expect(screen.queryByText('zoom')).not.toBeInTheDocument();
 
+    expect(screen.getByRole('link', { name: /join meeting/i })).toHaveClass('min-h-11');
+    expect(screen.getByRole('link', { name: /add to calendar/i })).toHaveClass('min-h-11');
+    expect(screen.getByRole('button', { name: /\.ics/i })).toHaveClass('min-h-[44px]');
+    expect(screen.getByRole('button', { name: /edit interview/i })).toHaveClass('min-h-[44px]');
+    expect(screen.getByRole('button', { name: /cancel interview/i })).toHaveClass('min-h-[44px]');
+    expect(screen.getByRole('button', { name: /mark complete/i })).toHaveClass('min-h-[44px]');
+    expect(screen.getByRole('button', { name: /mark no-show/i })).toHaveClass('min-h-[44px]');
+
     fireEvent.click(screen.getByRole('button', { name: /edit interview/i }));
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /save changes/i })).toBeInTheDocument();
     });
+    expect(screen.getByLabelText('Date')).toHaveClass('min-h-11');
+    expect(screen.getByLabelText('Time')).toHaveClass('min-h-11');
     fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
 
     await waitFor(() => {
@@ -507,7 +531,10 @@ describe('organization interviews page actions', () => {
     ).toBe(false);
     expect(reasonField).toHaveValue('Moving to the reviewer availability window');
 
-    fireEvent.click(within(alert).getByRole('button', { name: /retry update/i }));
+    const retryUpdateButton = within(alert).getByRole('button', { name: /retry update/i });
+    expect(retryUpdateButton).toHaveClass('min-h-[44px]');
+
+    fireEvent.click(retryUpdateButton);
 
     await waitFor(() => {
       expect(editAttempts).toBe(2);
@@ -624,7 +651,12 @@ describe('organization interviews page actions', () => {
     ).toBe(false);
     expect(cancelReasonField).toHaveValue('Need to move due to conflict');
 
-    fireEvent.click(within(alert).getByRole('button', { name: /retry cancellation/i }));
+    const retryCancellationButton = within(alert).getByRole('button', {
+      name: /retry cancellation/i,
+    });
+    expect(retryCancellationButton).toHaveClass('min-h-[44px]');
+
+    fireEvent.click(retryCancellationButton);
 
     await waitFor(() => {
       expect(actionAttempts['/api/interviews/cancel']).toBe(2);
@@ -668,7 +700,10 @@ describe('organization interviews page actions', () => {
       )
     ).toBe(false);
 
-    fireEvent.click(within(alert).getByRole('button', { name: /retry completion/i }));
+    const retryCompletionButton = within(alert).getByRole('button', { name: /retry completion/i });
+    expect(retryCompletionButton).toHaveClass('min-h-[44px]');
+
+    fireEvent.click(retryCompletionButton);
 
     await waitFor(() => {
       expect(actionAttempts['/api/interviews/complete']).toBe(2);
@@ -716,7 +751,10 @@ describe('organization interviews page actions', () => {
     ).toBe(false);
     expect(noShowReasonField).toHaveValue('Candidate missed the scheduled call');
 
-    fireEvent.click(within(alert).getByRole('button', { name: /retry no-show/i }));
+    const retryNoShowButton = within(alert).getByRole('button', { name: /retry no-show/i });
+    expect(retryNoShowButton).toHaveClass('min-h-[44px]');
+
+    fireEvent.click(retryNoShowButton);
 
     await waitFor(() => {
       expect(actionAttempts['/api/interviews/no-show']).toBe(2);
@@ -838,6 +876,9 @@ describe('organization interviews page actions', () => {
       expect(screen.getByText('Engagement: Awaiting both confirmations')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /confirm engagement/i })).toBeInTheDocument();
     });
+
+    expect(screen.getByLabelText('Engagement type')).toHaveClass('min-h-11');
+    expect(screen.getByRole('button', { name: /confirm engagement/i })).toHaveClass('min-h-[44px]');
 
     fireEvent.change(screen.getByLabelText('Engagement type'), {
       target: { value: 'full_time' },
@@ -1031,7 +1072,12 @@ describe('organization interviews page actions', () => {
     ).toBe(false);
     expect(screen.getByLabelText('Engagement type')).toHaveValue('full_time');
 
-    fireEvent.click(within(alert).getByRole('button', { name: 'Retry confirmation' }));
+    const retryConfirmationButton = within(alert).getByRole('button', {
+      name: 'Retry confirmation',
+    });
+    expect(retryConfirmationButton).toHaveClass('min-h-[44px]');
+
+    fireEvent.click(retryConfirmationButton);
 
     await waitFor(() => {
       expect(
@@ -1073,5 +1119,8 @@ describe('organization interviews page actions', () => {
       expect(screen.getByText('Rescheduled 1 time')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /reschedule limit reached/i })).toBeDisabled();
     });
+    expect(screen.getByRole('button', { name: /reschedule limit reached/i })).toHaveClass(
+      'min-h-[44px]'
+    );
   });
 });

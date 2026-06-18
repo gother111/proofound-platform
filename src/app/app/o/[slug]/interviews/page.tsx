@@ -728,10 +728,10 @@ export default function OrganizationInterviewsPage() {
         <Button
           type="button"
           variant="outline"
-          size="sm"
+          size="touch"
           onClick={onRetry}
           disabled={isRetrying}
-          className="mt-3 h-8 rounded-full border-amber-300 bg-white px-3 text-xs font-semibold text-amber-950 hover:bg-amber-100"
+          className="mt-3 rounded-full border-amber-300 bg-white px-3 text-xs font-semibold text-amber-950 hover:bg-amber-100"
         >
           {isRetrying ? 'Retrying...' : retryLabel}
         </Button>
@@ -815,8 +815,8 @@ export default function OrganizationInterviewsPage() {
               </div>
               <Button
                 variant="outline"
-                size="sm"
-                className="flex min-h-10 shrink-0 items-center justify-center gap-2"
+                size="touch"
+                className="flex shrink-0 items-center justify-center gap-2"
                 onClick={() => {
                   void loadInterviews();
                 }}
@@ -839,7 +839,7 @@ export default function OrganizationInterviewsPage() {
               workflow stage, the privacy status, and the next action.
             </p>
             {assignmentsHref ? (
-              <Button asChild variant="outline" size="sm" className="min-h-10">
+              <Button asChild variant="outline" size="touch">
                 <Link href={assignmentsHref}>Review assignment queue</Link>
               </Button>
             ) : null}
@@ -920,7 +920,7 @@ export default function OrganizationInterviewsPage() {
                                   href={interview.interview.meetingUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-proofound-stone/80 bg-white px-3 text-sm font-medium text-proofound-forest hover:bg-proofound-parchment/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+                                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-proofound-stone/80 bg-white px-3 text-sm font-medium text-proofound-forest hover:bg-proofound-parchment/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
                                 >
                                   Join Meeting
                                   <ExternalLink className="h-3 w-3" />
@@ -929,15 +929,15 @@ export default function OrganizationInterviewsPage() {
                                   href={buildGoogleCalendarUrl(toCalendarPayload(interview))}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-proofound-stone/80 bg-white px-3 text-sm font-medium text-proofound-forest hover:bg-proofound-parchment/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+                                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-proofound-stone/80 bg-white px-3 text-sm font-medium text-proofound-forest hover:bg-proofound-parchment/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
                                 >
                                   Add to calendar
                                   <CalendarPlus className="h-3 w-3" />
                                 </a>
                                 <Button
                                   variant="outline"
-                                  size="sm"
-                                  className="min-h-10 px-3 text-xs"
+                                  size="touch"
+                                  className="px-3 text-xs"
                                   onClick={() => downloadInterviewIcs(toCalendarPayload(interview))}
                                 >
                                   <Download className="mr-1 h-3 w-3" />
@@ -993,7 +993,8 @@ export default function OrganizationInterviewsPage() {
                           matchAgreedAt={scheduleAnchorDateFor(interview)}
                           existingInterviewsCount={0}
                           variant="default"
-                          size="sm"
+                          size="touch"
+                          className="w-full"
                           onScheduled={() => {
                             void loadInterviews();
                           }}
@@ -1004,10 +1005,10 @@ export default function OrganizationInterviewsPage() {
                         <>
                           <Button
                             variant="outline"
-                            size="sm"
+                            size="touch"
                             onClick={() => openEditDialog(interview)}
                             disabled={!canEditInterview(interview)}
-                            className="flex min-h-10 w-full items-center justify-center gap-2"
+                            className="flex w-full items-center justify-center gap-2"
                           >
                             <Pencil className="h-4 w-4" />
                             {(interview.interview?.rescheduleCount ?? 0) > 0
@@ -1016,10 +1017,10 @@ export default function OrganizationInterviewsPage() {
                           </Button>
                           <Button
                             variant="outline"
-                            size="sm"
+                            size="touch"
                             onClick={() => openCancelDialog(interview)}
                             disabled={isCancellingInterviewId === interview.interview?.id}
-                            className="flex min-h-10 w-full items-center justify-center gap-2 border-[#E0C9C1] text-[#A03A2A]"
+                            className="flex w-full items-center justify-center gap-2 border-[#E0C9C1] text-[#A03A2A]"
                           >
                             <XCircle className="h-4 w-4" />
                             {isCancellingInterviewId === interview.interview?.id
@@ -1033,10 +1034,10 @@ export default function OrganizationInterviewsPage() {
                         <>
                           <Button
                             variant="default"
-                            size="sm"
+                            size="touch"
                             onClick={() => openCompleteDialog(interview)}
                             disabled={isCompletingInterviewId === interview.interview?.id}
-                            className="flex min-h-10 w-full items-center justify-center gap-2 bg-proofound-forest text-white hover:bg-proofound-forest/90"
+                            className="flex w-full items-center justify-center gap-2 bg-proofound-forest text-white hover:bg-proofound-forest/90"
                           >
                             <FileCheck className="h-4 w-4" />
                             {isCompletingInterviewId === interview.interview?.id
@@ -1045,10 +1046,10 @@ export default function OrganizationInterviewsPage() {
                           </Button>
                           <Button
                             variant="outline"
-                            size="sm"
+                            size="touch"
                             onClick={() => openNoShowDialog(interview)}
                             disabled={isMarkingNoShowInterviewId === interview.interview?.id}
-                            className="flex min-h-10 w-full items-center justify-center gap-2"
+                            className="flex w-full items-center justify-center gap-2"
                           >
                             <XCircle className="h-4 w-4" />
                             {isMarkingNoShowInterviewId === interview.interview?.id
@@ -1061,9 +1062,9 @@ export default function OrganizationInterviewsPage() {
                       {canRecordDecision(interview) && interview.interview?.id ? (
                         <Button
                           variant="default"
-                          size="sm"
+                          size="touch"
                           onClick={() => handleOpenDecisionDialog(interview)}
-                          className="flex min-h-10 w-full items-center justify-center gap-2 bg-proofound-forest text-white hover:bg-proofound-forest/90"
+                          className="flex w-full items-center justify-center gap-2 bg-proofound-forest text-white hover:bg-proofound-forest/90"
                         >
                           <FileCheck className="h-4 w-4" />
                           Record Decision
@@ -1087,7 +1088,7 @@ export default function OrganizationInterviewsPage() {
                                 [verification.id]: event.target.value,
                               }));
                             }}
-                            className="h-10 w-full rounded-md border border-gray-300 px-3 text-sm"
+                            className="min-h-11 w-full rounded-md border border-gray-300 px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
                           >
                             <option value="">Select engagement type</option>
                             <option value="full_time">Full-time</option>
@@ -1097,10 +1098,10 @@ export default function OrganizationInterviewsPage() {
                           </select>
                           <Button
                             variant="outline"
-                            size="sm"
+                            size="touch"
                             onClick={() => handleConfirmEngagement(interview)}
                             disabled={isConfirmingEngagementId === verification.id}
-                            className="flex min-h-10 w-full items-center justify-center gap-2"
+                            className="flex w-full items-center justify-center gap-2"
                           >
                             <FileCheck className="h-4 w-4" />
                             {isConfirmingEngagementId === verification.id
@@ -1120,12 +1121,12 @@ export default function OrganizationInterviewsPage() {
                                 <Button
                                   type="button"
                                   variant="outline"
-                                  size="sm"
+                                  size="touch"
                                   onClick={() => {
                                     void handleConfirmEngagement(interview);
                                   }}
                                   disabled={isConfirmingEngagementId === verification.id}
-                                  className="mt-2 h-8 rounded-full border-amber-300 bg-white px-3 text-xs font-semibold text-amber-950 hover:bg-amber-100"
+                                  className="mt-2 rounded-full border-amber-300 bg-white px-3 text-xs font-semibold text-amber-950 hover:bg-amber-100"
                                 >
                                   Retry confirmation
                                 </Button>
@@ -1181,7 +1182,7 @@ export default function OrganizationInterviewsPage() {
                       setInterviewDialogFeedback(null);
                     }
                   }}
-                  className="h-10 w-full rounded-md border border-proofound-stone/70 px-3 text-sm"
+                  className="min-h-11 w-full rounded-md border border-proofound-stone/70 px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
                 />
               </div>
 
@@ -1202,7 +1203,7 @@ export default function OrganizationInterviewsPage() {
                       setInterviewDialogFeedback(null);
                     }
                   }}
-                  className="h-10 w-full rounded-md border border-proofound-stone/70 px-3 text-sm"
+                  className="min-h-11 w-full rounded-md border border-proofound-stone/70 px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
                 />
               </div>
 
