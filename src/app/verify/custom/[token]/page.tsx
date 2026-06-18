@@ -63,6 +63,7 @@ type VerificationData = {
   response_message?: string | null;
   items: VerifyItem[];
 };
+type SubmissionIntent = 'accept' | 'decline' | 'yes' | 'partly' | 'no';
 
 function resolveHumanObservedSubmitPayload(args: {
   action: 'accept' | 'decline';
@@ -137,6 +138,13 @@ function verificationSubmitError(error?: string | null) {
   return VERIFICATION_RESPONSE_RETRY_MESSAGE;
 }
 
+function resolveSubmissionIntent(
+  action: 'accept' | 'decline',
+  humanObservedVerdict?: 'yes' | 'partly' | 'no'
+): SubmissionIntent {
+  return humanObservedVerdict ?? action;
+}
+
 export default function VerifyCustomRequestPage() {
   const params = useParams();
   const router = useRouter();
@@ -144,6 +152,7 @@ export default function VerifyCustomRequestPage() {
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [submittingAction, setSubmittingAction] = useState<SubmissionIntent | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<VerificationData | null>(null);
   const [responseMessage, setResponseMessage] = useState('');
@@ -213,6 +222,7 @@ export default function VerifyCustomRequestPage() {
     }
 
     setSubmitting(true);
+    setSubmittingAction(resolveSubmissionIntent(action, humanObservedVerdict));
     setError(null);
 
     try {
@@ -263,6 +273,7 @@ export default function VerifyCustomRequestPage() {
       setError(VERIFICATION_RESPONSE_RETRY_MESSAGE);
     } finally {
       setSubmitting(false);
+      setSubmittingAction(null);
     }
   };
 
@@ -370,7 +381,7 @@ export default function VerifyCustomRequestPage() {
                     : `You've verified ${data?.requester_name}'s selected profile artifacts.`}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Your response helps strengthen trust and credibility on Proofound.
+                  Your response stays attached to the selected artifacts in this request.
                 </p>
               </>
             ) : submittedAction === 'partly' ? (
@@ -533,7 +544,7 @@ export default function VerifyCustomRequestPage() {
                 onClick={() => handleSubmit('decline', 'no')}
                 disabled={submitting}
               >
-                {submitting ? (
+                {submittingAction === 'no' ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : (
                   <XCircle className="h-4 w-4 mr-2" />
@@ -546,7 +557,7 @@ export default function VerifyCustomRequestPage() {
                 onClick={() => handleSubmit('accept', 'partly')}
                 disabled={submitting}
               >
-                {submitting ? (
+                {submittingAction === 'partly' ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : (
                   <MinusCircle className="h-4 w-4 mr-2" />
@@ -558,7 +569,7 @@ export default function VerifyCustomRequestPage() {
                 onClick={() => handleSubmit('accept', 'yes')}
                 disabled={submitting}
               >
-                {submitting ? (
+                {submittingAction === 'yes' ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : (
                   <CheckCircle2 className="h-4 w-4 mr-2" />
@@ -574,7 +585,7 @@ export default function VerifyCustomRequestPage() {
                 onClick={() => handleSubmit('decline')}
                 disabled={submitting}
               >
-                {submitting ? (
+                {submittingAction === 'decline' ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : (
                   <XCircle className="h-4 w-4 mr-2" />
@@ -586,7 +597,7 @@ export default function VerifyCustomRequestPage() {
                 onClick={() => handleSubmit('accept')}
                 disabled={submitting}
               >
-                {submitting ? (
+                {submittingAction === 'accept' ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : (
                   <CheckCircle2 className="h-4 w-4 mr-2" />

@@ -66,6 +66,69 @@ describe('verification link visual fixtures', () => {
     expect(apiFetchMock).not.toHaveBeenCalled();
   });
 
+  it('shows progress only on the selected bounded-attestation action', async () => {
+    routeParams = { token: 'skill-response-token' };
+    vi.stubEnv('NEXT_PUBLIC_PROOFOUND_VISUAL_FIXTURES', 'false');
+    vi.stubEnv('PROOFOUND_VISUAL_FIXTURES', 'false');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({
+          verification: {
+            id: 'request-1',
+            verification_type: 'skill',
+            skill_name: 'TypeScript migration',
+            skill_code: 'typescript',
+            requester_name: 'Mika Andersson',
+            requester_email: 'mika@example.com',
+            verifier_source: 'peer',
+            verifier_relationship: 'peer',
+            request_kind: 'human_observed_attestation',
+            attestation_request: {
+              skillIds: ['skill-1'],
+              skillLabels: ['TypeScript migration'],
+            },
+            status: 'pending',
+            created_at: '2026-03-01T10:00:00.000Z',
+            expires_at: '2026-03-15T10:00:00.000Z',
+          },
+        }),
+      }))
+    );
+
+    let resolveSubmit: (response: Response) => void = () => {};
+    apiFetchMock.mockReturnValueOnce(
+      new Promise<Response>((resolve) => {
+        resolveSubmit = resolve;
+      })
+    );
+
+    render(<VerifySkillPage />);
+
+    await screen.findByText('TypeScript migration');
+
+    fireEvent.click(screen.getByRole('button', { name: /Partly/i }));
+
+    await waitFor(() => {
+      expect(document.querySelectorAll('.animate-spin')).toHaveLength(1);
+    });
+    expect(screen.getByRole('button', { name: /No/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /Partly/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /Yes/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /No/i }).querySelector('.animate-spin')).toBeNull();
+    expect(
+      screen.getByRole('button', { name: /Partly/i }).querySelector('.animate-spin')
+    ).not.toBeNull();
+    expect(screen.getByRole('button', { name: /Yes/i }).querySelector('.animate-spin')).toBeNull();
+
+    resolveSubmit({ ok: true, json: async () => ({}) } as Response);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Partial Response Recorded/i)).toBeInTheDocument();
+    });
+  });
+
   it('renders the filled custom verifier bundle and records a local visual response', async () => {
     routeParams = { token: VISUAL_VERIFY_TOKENS.customBundle };
 
@@ -93,6 +156,73 @@ describe('verification link visual fixtures', () => {
       expect(screen.getByText(/Thank You/i)).toBeInTheDocument();
     });
     expect(apiFetchMock).not.toHaveBeenCalled();
+  });
+
+  it('shows progress only on the selected custom verification action', async () => {
+    routeParams = { token: 'custom-response-token' };
+    vi.stubEnv('NEXT_PUBLIC_PROOFOUND_VISUAL_FIXTURES', 'false');
+    vi.stubEnv('PROOFOUND_VISUAL_FIXTURES', 'false');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({
+          request: {
+            id: 'custom-request-1',
+            requester_name: 'Elena Proof',
+            relationship: 'peer',
+            request_kind: 'generic_verification',
+            status: 'pending',
+            created_at: '2026-03-01T10:00:00.000Z',
+            expires_at: '2026-03-15T10:00:00.000Z',
+            items: [
+              {
+                id: 'item-1',
+                artifact_type: 'project',
+                artifact_id: 'project-1',
+                display_label: 'Launch proof packet',
+                claim_template: 'Can you verify this project?',
+                claim_label: 'Verify the launch proof packet.',
+                support_label: 'Direct review',
+                status: 'pending',
+              },
+            ],
+          },
+        }),
+      }))
+    );
+
+    let resolveSubmit: (response: Response) => void = () => {};
+    apiFetchMock.mockReturnValueOnce(
+      new Promise<Response>((resolve) => {
+        resolveSubmit = resolve;
+      })
+    );
+
+    render(<VerifyCustomRequestPage />);
+
+    await screen.findByText('Verify the launch proof packet.');
+
+    fireEvent.click(screen.getByRole('button', { name: /Verify Artifacts/i }));
+
+    await waitFor(() => {
+      expect(document.querySelectorAll('.animate-spin')).toHaveLength(1);
+    });
+    expect(screen.getByRole('button', { name: /Decline/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /Verify Artifacts/i })).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: /Decline/i }).querySelector('.animate-spin')
+    ).toBeNull();
+    expect(
+      screen.getByRole('button', { name: /Verify Artifacts/i }).querySelector('.animate-spin')
+    ).not.toBeNull();
+
+    resolveSubmit({ ok: true, json: async () => ({}) } as Response);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Thank You/i)).toBeInTheDocument();
+    });
+    expect(screen.getByText(/selected artifacts in this request/i)).toBeInTheDocument();
   });
 
   it('shows neutral invalid-link copy for failed skill verification links', async () => {

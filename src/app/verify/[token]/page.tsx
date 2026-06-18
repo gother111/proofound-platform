@@ -36,6 +36,7 @@ import {
 } from '@/lib/verification/visual-link-fixtures';
 
 type VerificationStatus = 'pending' | 'accepted' | 'declined' | 'expired' | 'failed';
+type SubmissionIntent = 'accept' | 'decline' | 'yes' | 'partly' | 'no';
 
 interface SkillVerificationData {
   id: string;
@@ -218,6 +219,13 @@ function verificationSubmitError(error?: string | null) {
   return VERIFICATION_RESPONSE_RETRY_MESSAGE;
 }
 
+function resolveSubmissionIntent(
+  action: 'accept' | 'decline',
+  humanObservedVerdict?: 'yes' | 'partly' | 'no'
+): SubmissionIntent {
+  return humanObservedVerdict ?? action;
+}
+
 export default function VerifySkillPage() {
   const params = useParams();
   const router = useRouter();
@@ -230,6 +238,7 @@ export default function VerifySkillPage() {
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [submittingAction, setSubmittingAction] = useState<SubmissionIntent | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<VerificationData | null>(null);
   const [responseMessage, setResponseMessage] = useState('');
@@ -342,6 +351,7 @@ export default function VerifySkillPage() {
     }
 
     setSubmitting(true);
+    setSubmittingAction(resolveSubmissionIntent(action, humanObservedVerdict));
     setError(null);
     setAuthRequired(false);
 
@@ -400,6 +410,7 @@ export default function VerifySkillPage() {
       setError(VERIFICATION_RESPONSE_RETRY_MESSAGE);
     } finally {
       setSubmitting(false);
+      setSubmittingAction(null);
     }
   };
 
@@ -816,7 +827,7 @@ export default function VerifySkillPage() {
                 onClick={() => handleSubmit('decline')}
                 disabled={submitting}
               >
-                {submitting ? (
+                {submittingAction === 'decline' ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : (
                   <XCircle className="h-4 w-4 mr-2" />
@@ -828,7 +839,7 @@ export default function VerifySkillPage() {
                 onClick={() => handleSubmit('accept')}
                 disabled={submitting}
               >
-                {submitting ? (
+                {submittingAction === 'accept' ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : (
                   <CheckCircle2 className="h-4 w-4 mr-2" />
@@ -844,7 +855,7 @@ export default function VerifySkillPage() {
                 onClick={() => handleSubmit('decline', 'no')}
                 disabled={submitting}
               >
-                {submitting ? (
+                {submittingAction === 'no' ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : (
                   <XCircle className="h-4 w-4 mr-2" />
@@ -857,7 +868,7 @@ export default function VerifySkillPage() {
                 onClick={() => handleSubmit('accept', 'partly')}
                 disabled={submitting}
               >
-                {submitting ? (
+                {submittingAction === 'partly' ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : (
                   <MinusCircle className="h-4 w-4 mr-2" />
@@ -869,7 +880,7 @@ export default function VerifySkillPage() {
                 onClick={() => handleSubmit('accept', 'yes')}
                 disabled={submitting}
               >
-                {submitting ? (
+                {submittingAction === 'yes' ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : (
                   <CheckCircle2 className="h-4 w-4 mr-2" />
