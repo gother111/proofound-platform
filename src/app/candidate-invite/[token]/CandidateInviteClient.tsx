@@ -1255,15 +1255,16 @@ export function CandidateInviteClient({
                     </div>
                   ) : null}
 
-                  <div className="rounded-lg border border-proofound-stone bg-white/70 p-3 text-xs leading-5 text-proofound-charcoal/60">
-                    Account controls: manage privacy, export, and deletion from{' '}
-                    <Link
-                      href={accountSaveControls.privacyDataControlsUrl}
-                      className="font-medium text-proofound-forest"
-                    >
-                      privacy settings
-                    </Link>
-                    .
+                  <div className="flex flex-col gap-3 rounded-lg border border-proofound-stone bg-white/70 p-3 text-xs leading-5 text-proofound-charcoal/60 sm:flex-row sm:items-center sm:justify-between">
+                    <p>
+                      Account controls stay available after submission: privacy, export, and
+                      deletion remain in individual settings.
+                    </p>
+                    <Button asChild variant="outline" className="w-full shrink-0 sm:w-auto">
+                      <Link href={accountSaveControls.privacyDataControlsUrl}>
+                        Open privacy settings
+                      </Link>
+                    </Button>
                   </div>
                 </div>
               ) : null}
@@ -1314,29 +1315,26 @@ export function CandidateInviteClient({
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                     <Button asChild className="w-full sm:w-auto">
                       <Link href={accountSaveControls.proofWorkspaceUrl}>Open Proof Packs</Link>
                     </Button>
-                    <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
-                      <Link
-                        href={accountSaveControls.profileVisibilityUrl}
-                        className="font-medium text-proofound-forest hover:text-proofound-charcoal"
-                      >
-                        Visibility
-                      </Link>
-                      <Link
-                        href={accountSaveControls.privacyDataControlsUrl}
-                        className="font-medium text-proofound-forest hover:text-proofound-charcoal"
-                      >
-                        Export or delete
-                      </Link>
-                      <Link
-                        href={accountSaveControls.assignmentReviewUrl}
-                        className="font-medium text-proofound-forest hover:text-proofound-charcoal"
-                      >
-                        Assignment review
-                      </Link>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                      <Button asChild variant="outline" className="w-full sm:w-auto">
+                        <Link href={accountSaveControls.profileVisibilityUrl}>
+                          Open visibility settings
+                        </Link>
+                      </Button>
+                      <Button asChild variant="outline" className="w-full sm:w-auto">
+                        <Link href={accountSaveControls.privacyDataControlsUrl}>
+                          Export or delete data
+                        </Link>
+                      </Button>
+                      <Button asChild variant="outline" className="w-full sm:w-auto">
+                        <Link href={accountSaveControls.assignmentReviewUrl}>
+                          Open assignment review
+                        </Link>
+                      </Button>
                     </div>
                   </div>
                 </div>

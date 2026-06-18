@@ -273,6 +273,10 @@ describe('CandidateInviteClient test_match flow', () => {
     expect(
       screen.queryByPlaceholderText(/00000000-0000-0000-0000-000000000000/)
     ).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /open privacy settings/i })).toHaveAttribute(
+      'href',
+      '/app/i/settings/privacy'
+    );
 
     fireEvent.click(screen.getByRole('button', { name: /review assignment proof/i }));
     fireEvent.click(screen.getByLabelText(/I reviewed the visibility summary/i));
@@ -1178,6 +1182,22 @@ describe('CandidateInviteClient test_match flow', () => {
     await waitFor(() => {
       expect(screen.getByText(/saved privately to your submission workspace/i)).toBeInTheDocument();
     });
+    expect(screen.getByRole('link', { name: /open proof packs/i })).toHaveAttribute(
+      'href',
+      '/app/i/profile?profileView=full&tab=proof_packs'
+    );
+    expect(screen.getByRole('link', { name: /open visibility settings/i })).toHaveAttribute(
+      'href',
+      '/app/i/profile?profileView=full&tab=visibility'
+    );
+    expect(screen.getByRole('link', { name: /export or delete data/i })).toHaveAttribute(
+      'href',
+      '/app/i/settings/privacy'
+    );
+    expect(screen.getByRole('link', { name: /open assignment review/i })).toHaveAttribute(
+      'href',
+      '/app/i/matching'
+    );
     expect(
       screen.queryByText(/saved privately to your candidate workspace/i)
     ).not.toBeInTheDocument();
