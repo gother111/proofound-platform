@@ -86,7 +86,7 @@ export function PublicProofPackList({ proofPacks }: PublicProofPackListProps) {
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div
                   className="flex min-w-0 flex-1 flex-wrap gap-1.5"
-                  aria-label="Proof trust signals"
+                  aria-label={`Proof trust signals for ${pack.title}`}
                 >
                   {trustSignals.map((signal) => (
                     <span
@@ -111,6 +111,7 @@ export function PublicProofPackList({ proofPacks }: PublicProofPackListProps) {
                     onClick={() => toggleExpand(pack.id)}
                     aria-expanded={isExpanded}
                     aria-controls={detailsId}
+                    aria-label={`${isExpanded ? 'Hide' : 'Show'} proof context for ${pack.title}`}
                     className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-md px-3 text-xs font-semibold text-proofound-forest transition-colors hover:bg-proofound-forest/5 hover:text-[#143829] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 sm:-mr-2 sm:ml-0"
                   >
                     <span>{isExpanded ? 'Hide proof context' : 'Show proof context'}</span>

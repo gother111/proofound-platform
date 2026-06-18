@@ -409,7 +409,12 @@ describe('Public individual portfolio page', () => {
 
     render(element);
 
-    const contextToggle = screen.getByRole('button', { name: /show proof context/i });
+    expect(
+      screen.getByLabelText('Proof trust signals for Proof Pack: Product Strategy')
+    ).toBeInTheDocument();
+    const contextToggle = screen.getByRole('button', {
+      name: 'Show proof context for Proof Pack: Product Strategy',
+    });
     expect(contextToggle).toHaveClass('min-h-11');
 
     fireEvent.click(contextToggle);
@@ -421,7 +426,9 @@ describe('Public individual portfolio page', () => {
     const evidenceLink = screen.getByRole('link', { name: /open launch memo/i });
     expect(evidenceLink).toHaveAttribute('href', 'https://example.com/launch-memo');
     expect(evidenceLink).toHaveClass('min-h-11');
-    const collapseToggle = screen.getByRole('button', { name: /hide proof context/i });
+    const collapseToggle = screen.getByRole('button', {
+      name: 'Hide proof context for Proof Pack: Product Strategy',
+    });
     const proofContext = screen.getByText('Proof context');
     expect(collapseToggle).toBeInTheDocument();
     expect(collapseToggle).toHaveAttribute('aria-controls', 'proof-context-pack-1');
