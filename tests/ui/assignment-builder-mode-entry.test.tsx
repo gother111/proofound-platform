@@ -261,6 +261,11 @@ describe('Assignment builder lean corridor', () => {
     expect(screen.getAllByText('What proof would count').length).toBeGreaterThan(0);
     expect(screen.getAllByText('What practical constraints are real').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Internal review and publish').length).toBeGreaterThan(0);
+    const mobileProgress = screen.getByTestId('assignment-mobile-progress');
+    expect(within(mobileProgress).getByText('Step 1 of 5')).toBeInTheDocument();
+    expect(within(mobileProgress).getByText('20% drafted')).toBeInTheDocument();
+    expect(within(mobileProgress).queryByText('Step 1 of 4')).not.toBeInTheDocument();
+    expect(within(mobileProgress).queryByText('25% drafted')).not.toBeInTheDocument();
     expect(screen.queryByTestId('advanced-mode-opt-in')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Advanced' })).not.toBeInTheDocument();
     expect(screen.queryByText('Weight Matrix')).not.toBeInTheDocument();

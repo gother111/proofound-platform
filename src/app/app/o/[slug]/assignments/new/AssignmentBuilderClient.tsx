@@ -791,6 +791,8 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
 
   const isDraftLoadBlocked = workflowFeedback?.kind === 'draft_load';
   const shouldShowBuilderSections = !isHydratingDraft && !isDraftLoadBlocked;
+  const builderStepTotal = STEPS.length;
+  const mobileProgressPercent = Math.round((currentStep / builderStepTotal) * 100);
 
   return (
     <AppSurface>
@@ -1024,17 +1026,20 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
               </Card>
             ) : null}
 
-            <div className="rounded-2xl border border-proofound-stone/70 bg-white/75 p-4 lg:hidden">
+            <div
+              className="rounded-2xl border border-proofound-stone/70 bg-white/75 p-4 lg:hidden"
+              data-testid="assignment-mobile-progress"
+            >
               <div className="mb-3 flex items-center justify-between text-xs font-semibold text-proofound-forest">
                 <span>
-                  Step {currentStep} of {STEPS.length - 1}
+                  Step {currentStep} of {builderStepTotal}
                 </span>
-                <span>{Math.round((currentStep / (STEPS.length - 1)) * 100)}% drafted</span>
+                <span>{mobileProgressPercent}% drafted</span>
               </div>
               <div className="mb-3 h-1 overflow-hidden rounded-full bg-proofound-stone/30">
                 <div
                   className="h-full bg-proofound-forest transition-all duration-300"
-                  style={{ width: `${(currentStep / (STEPS.length - 1)) * 100}%` }}
+                  style={{ width: `${mobileProgressPercent}%` }}
                 />
               </div>
               <p className="mt-1 font-display text-xl font-semibold text-proofound-charcoal">
