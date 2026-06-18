@@ -244,6 +244,46 @@ describe('MatchingOrganizationView launch corridor', () => {
     expect(screen.queryByText('No proof submissions shortlisted yet')).not.toBeInTheDocument();
   });
 
+  it('prioritizes needs-proof labels over generic review-ready labels', async () => {
+    apiFetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        items: [
+          {
+            id: 'match-needs-proof',
+            assignmentId: 'assignment-1',
+            reviewStage: 'blind_review',
+            revealScope: 'blind',
+            corridorState: 'blind_review',
+            discoveryStatus: 'review_ready_match',
+            fitBand: 'needs_more_proof',
+            introGate: 'intro_hold_missing_fresh_relevant_proof',
+            reviewCard: {
+              candidateLabel: 'Submission E4P1',
+              fitSummary: {
+                headline: 'Needs more fresh role-relevant proof.',
+                bullets: ['Intro stays blocked until the proof gate is satisfied.'],
+                reasonCodes: ['fresh_proof_missing'],
+              },
+            },
+            profile: {
+              skills: {
+                devops: { level: 4 },
+              },
+            },
+          },
+        ],
+      }),
+    });
+
+    render(<MatchingOrganizationView assignments={assignments as any} onCreateNew={vi.fn()} />);
+
+    expect(await screen.findByText('Submission E4P1')).toBeInTheDocument();
+    expect(screen.getAllByText('Needs more proof').length).toBeGreaterThan(0);
+    expect(screen.getByText('Fresh proof needed')).toBeInTheDocument();
+    expect(screen.queryByText('Review ready')).not.toBeInTheDocument();
+  });
+
   it('stays on the assignment match API and never calls archived test-match endpoints', async () => {
     apiFetchMock.mockImplementation(async (url: string) => {
       if (url === '/api/match/assignment') {

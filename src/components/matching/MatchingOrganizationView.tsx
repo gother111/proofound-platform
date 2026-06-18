@@ -144,6 +144,18 @@ function readableMatchLabel(value?: string | null, labels: Record<string, string
   return labels[value] ?? value.replace(/_/g, ' ');
 }
 
+function fitBandRequiresMoreReviewEvidence(fitBand?: string | null) {
+  return fitBand === 'needs_more_proof' || fitBand === 'constraint_or_trust_hold';
+}
+
+function primarySubmissionReviewLabel(match: any) {
+  if (fitBandRequiresMoreReviewEvidence(match.fitBand)) {
+    return readableMatchLabel(match.fitBand, FIT_BAND_LABELS);
+  }
+
+  return readableMatchLabel(match.discoveryStatus, DISCOVERY_STATUS_LABELS);
+}
+
 export function MatchingOrganizationView({
   assignments,
   onCreateNew,
@@ -776,11 +788,8 @@ export function MatchingOrganizationView({
                       const skillsList = match.profile?.skills
                         ? Object.keys(match.profile.skills).slice(0, 3)
                         : [];
-                      const discoveryLabel = readableMatchLabel(
-                        match.discoveryStatus,
-                        DISCOVERY_STATUS_LABELS
-                      );
                       const fitLabel = readableMatchLabel(match.fitBand, FIT_BAND_LABELS);
+                      const primaryReviewLabel = primarySubmissionReviewLabel(match);
 
                       return (
                         <button
@@ -808,12 +817,12 @@ export function MatchingOrganizationView({
                               <Badge className="bg-amber-50 text-amber-600 border-amber-200 text-[9px]">
                                 Requested
                               </Badge>
-                            ) : discoveryLabel ? (
+                            ) : primaryReviewLabel ? (
                               <Badge
                                 variant="outline"
                                 className="text-[9px] border-proofound-stone/70"
                               >
-                                {discoveryLabel}
+                                {primaryReviewLabel}
                               </Badge>
                             ) : null}
                           </div>
@@ -823,7 +832,7 @@ export function MatchingOrganizationView({
                               'Clear proof-backed alignment.'}
                           </p>
 
-                          {fitLabel && (
+                          {fitLabel && fitLabel !== primaryReviewLabel && (
                             <p className="text-[10px] font-medium text-proofound-charcoal/70">
                               {fitLabel}
                             </p>
@@ -878,14 +887,15 @@ export function MatchingOrganizationView({
                               {readableMatchLabel(
                                 activeMatch.discoveryStatus,
                                 DISCOVERY_STATUS_LABELS
-                              ) && (
-                                <Badge variant="outline" className="text-[10px] font-semibold">
-                                  {readableMatchLabel(
-                                    activeMatch.discoveryStatus,
-                                    DISCOVERY_STATUS_LABELS
-                                  )}
-                                </Badge>
-                              )}
+                              ) &&
+                                !fitBandRequiresMoreReviewEvidence(activeMatch.fitBand) && (
+                                  <Badge variant="outline" className="text-[10px] font-semibold">
+                                    {readableMatchLabel(
+                                      activeMatch.discoveryStatus,
+                                      DISCOVERY_STATUS_LABELS
+                                    )}
+                                  </Badge>
+                                )}
                               {readableMatchLabel(activeMatch.fitBand, FIT_BAND_LABELS) && (
                                 <Badge variant="outline" className="text-[10px] font-semibold">
                                   {readableMatchLabel(activeMatch.fitBand, FIT_BAND_LABELS)}
