@@ -905,12 +905,12 @@ export function MatchingOrganizationView({
 
                           <div className="flex flex-col gap-2 w-full sm:w-auto">
                             {activeSegment === 'queue' ? (
-                              <div className="flex items-center gap-2">
+                              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                                 <Button
                                   onClick={() => handleReviewAction(activeMatch.id, 'shortlist')}
                                   disabled={Boolean(activeReviewActionPending)}
                                   loading={activeReviewActionPending?.action === 'shortlist'}
-                                  className="bg-proofound-forest hover:bg-proofound-forest/90 text-white rounded-full text-xs font-semibold px-4 py-2 flex-1 sm:flex-initial"
+                                  className="w-full bg-proofound-forest hover:bg-proofound-forest/90 text-white rounded-full text-xs font-semibold px-4 py-2 sm:w-auto sm:flex-initial"
                                 >
                                   {activeReviewActionPending?.action === 'shortlist'
                                     ? 'Saving...'
@@ -921,7 +921,7 @@ export function MatchingOrganizationView({
                                   variant="outline"
                                   disabled={Boolean(activeReviewActionPending)}
                                   loading={activeReviewActionPending?.action === 'pass'}
-                                  className="border-proofound-stone text-proofound-charcoal bg-white rounded-full text-xs font-semibold px-4 py-2 flex-1 sm:flex-initial"
+                                  className="w-full border-proofound-stone text-proofound-charcoal bg-white rounded-full text-xs font-semibold px-4 py-2 sm:w-auto sm:flex-initial"
                                 >
                                   {activeReviewActionPending?.action === 'pass'
                                     ? 'Saving...'

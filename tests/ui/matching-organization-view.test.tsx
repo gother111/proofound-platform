@@ -217,6 +217,22 @@ describe('MatchingOrganizationView', () => {
     expect(screen.queryByText(/Complete proof details, work samples/i)).not.toBeInTheDocument();
   });
 
+  it('stacks opposing review actions on mobile to reduce accidental taps', async () => {
+    renderView();
+
+    const shortlistButton = await screen.findByRole('button', { name: 'Shortlist' });
+    const declineButton = screen.getByRole('button', { name: 'Decline' });
+    const actionGroup = shortlistButton.parentElement;
+
+    expect(actionGroup).not.toBeNull();
+    expect(actionGroup).toHaveClass('flex-col');
+    expect(actionGroup).toHaveClass('sm:flex-row');
+    expect(shortlistButton).toHaveClass('w-full');
+    expect(shortlistButton).toHaveClass('sm:w-auto');
+    expect(declineButton).toHaveClass('w-full');
+    expect(declineButton).toHaveClass('sm:w-auto');
+  });
+
   it('keeps desktop submission selection inside the split review console', async () => {
     mockViewport(false);
     const scrollIntoViewMock = vi.fn();

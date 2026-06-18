@@ -7,6 +7,7 @@ export const VISUAL_ASSIGNMENT_FIXTURE_IDS = new Set([
 
 export const VISUAL_ASSIGNMENT_MUTATION_DRAFT_ID = '22222222-2222-4222-8222-222222222222';
 export const VISUAL_ASSIGNMENT_MOCK_ORG_ID = '99999999-9999-4999-9999-999999999999';
+const VISUAL_ASSIGNMENT_REFERENCE_TIME = Date.UTC(2026, 5, 17, 12, 0, 0);
 
 export type VisualAssignmentFixture = {
   id: string;
@@ -46,7 +47,7 @@ export function isVisualAssignmentFixtureId(assignmentId: string) {
 }
 
 export function buildVisualAssignmentFixtures(orgId: string): VisualAssignmentFixture[] {
-  const now = Date.now();
+  const now = VISUAL_ASSIGNMENT_REFERENCE_TIME;
   const isoHoursAgo = (hours: number) => new Date(now - hours * 60 * 60 * 1000).toISOString();
 
   return [
