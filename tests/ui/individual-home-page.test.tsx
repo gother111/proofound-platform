@@ -42,12 +42,12 @@ describe('IndividualHomePage', () => {
     expect(screen.getByRole('heading', { name: /welcome back, mock/i })).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: /start proof/i })).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ className: expect.stringContaining('min-h-9') }),
+        expect.objectContaining({ className: expect.stringContaining('min-h-11') }),
       ])
     );
     expect(screen.getAllByRole('link', { name: /view request/i })).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ className: expect.stringContaining('min-h-9') }),
+        expect.objectContaining({ className: expect.stringContaining('min-h-11') }),
       ])
     );
     expect(screen.getByRole('link', { name: /export or delete/i })).toHaveAttribute(
