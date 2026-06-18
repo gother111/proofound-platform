@@ -7,6 +7,7 @@ import { MatchingOrganizationView } from '@/components/matching/MatchingOrganiza
 const apiFetchMock = vi.fn();
 const routerPushMock = vi.fn();
 const routerReplaceMock = vi.fn();
+const searchParamsMock = vi.fn(() => new URLSearchParams());
 const dispatchClientErrorDiagnosticMock = vi.fn();
 
 vi.mock('next/navigation', () => ({
@@ -15,7 +16,7 @@ vi.mock('next/navigation', () => ({
     push: routerPushMock,
     replace: routerReplaceMock,
   }),
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => searchParamsMock(),
 }));
 
 vi.mock('@/lib/api/fetch', () => ({
@@ -49,6 +50,21 @@ const buildAssignment = () => ({
     lastCandidateAt: '2026-06-14T00:00:00.000Z',
     lastReviewChangeAt: null,
     lastActivityAt: '2026-06-14T00:00:00.000Z',
+  },
+});
+
+const buildDraftAssignment = () => ({
+  ...buildAssignment(),
+  id: 'assignment-draft',
+  role: 'Partner readiness analyst',
+  status: 'draft',
+  createdAt: '2026-06-17T10:00:00.000Z',
+  matchingSummary: {
+    candidateCount: 0,
+    reviewChangeCount: 0,
+    lastCandidateAt: null,
+    lastReviewChangeAt: null,
+    lastActivityAt: null,
   },
 });
 
@@ -109,6 +125,7 @@ function renderView() {
 describe('MatchingOrganizationView', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    searchParamsMock.mockReturnValue(new URLSearchParams());
     mockViewport(true);
     vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
       callback(0);
@@ -187,6 +204,53 @@ describe('MatchingOrganizationView', () => {
       'id',
       'review-shortlist-panel'
     );
+  });
+
+  it('routes draft assignments to review and publish instead of submission-processing copy', async () => {
+    searchParamsMock.mockReturnValue(new URLSearchParams({ matching: 'assignment-draft' }));
+
+    render(
+      <MatchingOrganizationView
+        assignments={[buildAssignment(), buildDraftAssignment()]}
+        onCreateNew={vi.fn()}
+      />
+    );
+
+    expect(
+      await screen.findByRole('heading', { name: 'Publish this assignment before review starts' })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'This assignment is still a draft, so no proof submissions are entering the blind review queue yet.'
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Review and publish assignment' })).toHaveAttribute(
+      'href',
+      '/app/o/test-org/assignments/assignment-draft/review'
+    );
+    expect(screen.queryByText('No proof submissions yet')).not.toBeInTheDocument();
+    expect(document.body.textContent ?? '').not.toMatch(/actively processing submissions/i);
+    expect(apiFetchMock).not.toHaveBeenCalled();
+  });
+
+  it('keeps active empty assignments in the proof-submission waiting state', async () => {
+    apiFetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ items: [] }),
+    });
+
+    renderView();
+
+    expect(await screen.findByText('No proof submissions yet')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "We are actively processing submissions against your assignment's proof requirements. Keep this corridor open."
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'Publish this assignment before review starts' })
+    ).not.toBeInTheDocument();
+    expect(apiFetchMock).toHaveBeenCalledWith('/api/match/assignment', expect.any(Object));
   });
 
   it('brings selected proof details into view on mobile submission selection', async () => {

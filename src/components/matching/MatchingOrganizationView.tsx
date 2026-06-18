@@ -156,6 +156,28 @@ function primarySubmissionReviewLabel(match: any) {
   return readableMatchLabel(match.discoveryStatus, DISCOVERY_STATUS_LABELS);
 }
 
+function assignmentAcceptsProofSubmissions(assignment?: Assignment | null) {
+  return assignment?.status === 'active';
+}
+
+function inactiveAssignmentReviewCopy(assignment: Assignment) {
+  if (assignment.status === 'draft') {
+    return {
+      title: 'Publish this assignment before review starts',
+      body: 'This assignment is still a draft, so no proof submissions are entering the blind review queue yet.',
+      action: 'Review and publish assignment',
+    };
+  }
+
+  return {
+    title: 'Proof submissions are paused for this assignment',
+    body: `This assignment is ${assignmentStatusLabel(
+      assignment.status
+    ).toLowerCase()}, so the review queue stays unchanged until it is open again.`,
+    action: 'Review assignment context',
+  };
+}
+
 export function MatchingOrganizationView({
   assignments,
   onCreateNew,
@@ -297,6 +319,12 @@ export function MatchingOrganizationView({
 
   const fetchMatches = useCallback(async () => {
     if (!selectedAssignment) return;
+    if (currentAssignment && !assignmentAcceptsProofSubmissions(currentAssignment)) {
+      setMatches([]);
+      setLoadError(null);
+      setIsLoading(false);
+      return;
+    }
 
     setIsLoading(true);
     setLoadError(null);
@@ -330,7 +358,7 @@ export function MatchingOrganizationView({
     } finally {
       setIsLoading(false);
     }
-  }, [selectedAssignment]);
+  }, [currentAssignment, selectedAssignment]);
 
   // Fetch matches when the selected assignment changes
   useEffect(() => {
@@ -536,6 +564,9 @@ export function MatchingOrganizationView({
     activeSegment === 'queue' ? 'review-queue-panel' : 'review-shortlist-panel';
   const activeSegmentTabId =
     activeSegment === 'queue' ? 'review-queue-tab' : 'review-shortlist-tab';
+  const inactiveReviewCopy = currentAssignment
+    ? inactiveAssignmentReviewCopy(currentAssignment)
+    : null;
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 md:px-0 space-y-6">
@@ -681,6 +712,28 @@ export function MatchingOrganizationView({
               >
                 <RefreshCcw className="mr-2 h-4 w-4" aria-hidden="true" />
                 Retry review queue
+              </Button>
+            </div>
+          ) : !assignmentAcceptsProofSubmissions(currentAssignment) ? (
+            <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-proofound-stone/60 bg-white/70 p-8 text-center">
+              <Lock className="mb-3 h-8 w-8 text-proofound-forest" aria-hidden="true" />
+              <h3 className="text-base font-semibold text-proofound-charcoal">
+                {inactiveReviewCopy?.title}
+              </h3>
+              <p className="mt-1 max-w-md text-sm leading-6 text-muted-foreground">
+                {inactiveReviewCopy?.body}
+              </p>
+              <p className="mt-2 max-w-md text-xs leading-5 text-muted-foreground">
+                Review the assignment context, proof expectations, and trust requirements before
+                opening this corridor to submissions.
+              </p>
+              <Button
+                asChild
+                className="mt-4 min-h-11 rounded-full bg-proofound-forest px-5 text-white hover:bg-proofound-forest/90"
+              >
+                <Link href={`/app/o/${slug}/assignments/${currentAssignment.id}/review`}>
+                  {inactiveReviewCopy?.action}
+                </Link>
               </Button>
             </div>
           ) : matches.length === 0 ? (
