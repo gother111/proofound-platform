@@ -113,7 +113,7 @@ export function DownloadOrganizationPdfButton({
     <div className="flex w-full flex-col items-stretch gap-1.5 sm:w-auto sm:items-start">
       <Button
         variant="outline"
-        size="sm"
+        size="touch"
         onClick={handleDownload}
         disabled={loading}
         className={cn(

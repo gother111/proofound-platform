@@ -36,6 +36,24 @@ describe('public portfolio action feedback', () => {
     delete (navigator as Partial<Navigator>).clipboard;
   });
 
+  it('renders public trust actions with touch-safe targets by default', () => {
+    render(
+      <div>
+        <CopyTextButton endpoint="/api/public-summary" />
+        <ShareLinkButton url="https://proofound.io/portfolio/jane" />
+        <DownloadPdfButton endpoint="/api/public-export" />
+        <DownloadOrganizationPdfButton slug="acme" />
+      </div>
+    );
+
+    expect(screen.getByRole('button', { name: /copy proof summary/i })).toHaveClass('min-h-[44px]');
+    expect(screen.getByRole('button', { name: /copy share link/i })).toHaveClass('min-h-[44px]');
+    expect(screen.getByRole('button', { name: /download trust pdf/i })).toHaveClass('min-h-[44px]');
+    expect(screen.getByRole('button', { name: /download organization pdf/i })).toHaveClass(
+      'min-h-[44px]'
+    );
+  });
+
   it('confirms proof summary copy inline instead of using a browser alert', async () => {
     fetchMock.mockResolvedValueOnce(new Response('Proof summary text', { status: 200 }));
 

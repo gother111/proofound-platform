@@ -584,21 +584,21 @@ function TraceableSummaryBlock({
         {summary.segments.map((segment) => (
           <div
             key={segment.key}
-            className="rounded-lg border border-white/60 bg-white/60 px-3 py-2 shadow-sm"
+            className="min-w-0 rounded-lg border border-white/60 bg-white/60 px-3 py-2 shadow-sm"
           >
             <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
               {segment.label}
             </p>
             <p className="mt-1 text-sm leading-5 text-foreground">{segment.value}</p>
             {segment.sources.length > 0 ? (
-              <div className="mt-2 flex flex-wrap gap-1.5">
+              <div className="mt-2 flex min-w-0 flex-wrap gap-1.5">
                 {segment.sources.map((source) => (
                   <span
                     key={`${segment.key}-${source.id}`}
-                    className="inline-flex max-w-full items-center rounded-full border border-[#D9D5CC] bg-[#F8F6F0] px-2 py-0.5 text-[11px] text-muted-foreground"
+                    className="inline-flex min-w-0 max-w-full items-center rounded-full border border-[#D9D5CC] bg-[#F8F6F0] px-2 py-0.5 text-[11px] text-muted-foreground"
                     title={source.detail ? `${source.label}: ${source.detail}` : source.label}
                   >
-                    <span className="truncate">{source.label}</span>
+                    <span className="min-w-0 truncate">{source.label}</span>
                   </span>
                 ))}
               </div>

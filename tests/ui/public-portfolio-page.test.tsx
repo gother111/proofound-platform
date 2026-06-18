@@ -303,6 +303,15 @@ describe('Public individual portfolio page', () => {
     expect(screen.getByText('Company size: 11-50')).toBeInTheDocument();
     expect(screen.getByText('Work area: Product strategy')).toBeInTheDocument();
     expect(screen.getByText('Industry: Proof-first assignment review')).toBeInTheDocument();
+    const traceableSourceLabels = screen
+      .getAllByText('Proof Pack: Product Strategy')
+      .filter((label) => label.classList.contains('truncate'));
+    expect(traceableSourceLabels).toHaveLength(3);
+    traceableSourceLabels.forEach((label) => {
+      expect(label).toHaveClass('min-w-0');
+      expect(label.parentElement).toHaveClass('min-w-0', 'max-w-full');
+      expect(label.parentElement?.parentElement?.parentElement).toHaveClass('min-w-0');
+    });
     expect(screen.queryByText('Industry: Proof-first hiring')).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /public trust summary/i })).toBeInTheDocument();
     expect(

@@ -66,7 +66,7 @@ export function CopyTextButton({
     <div className="flex w-full flex-col items-stretch gap-1.5 sm:w-auto sm:items-start">
       <Button
         variant="outline"
-        size="sm"
+        size="touch"
         onClick={handleCopy}
         disabled={loading}
         className={cn('w-full justify-center gap-2 sm:w-auto', className)}
