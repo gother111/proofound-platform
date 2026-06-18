@@ -8,6 +8,7 @@ dns.setDefaultResultOrder('ipv4first');
 
 import { assertMockDatabaseAllowed, getEnv } from '@/lib/env';
 
+import { buildPostgresConnectionOptions } from './postgres-options';
 import * as schema from './schema';
 
 const { DATABASE_URL: connectionString } = getEnv(false);
@@ -72,12 +73,7 @@ if (!connectionString) {
 }
 
 const queryClient = connectionString
-  ? postgres(connectionString, {
-      idle_timeout: 10,
-      max_lifetime: 60 * 30,
-      ssl: process.env.NODE_ENV === 'production' ? 'require' : false,
-      prepare: false,
-    })
+  ? postgres(connectionString, buildPostgresConnectionOptions())
   : null;
 
 const dbInstance: DbType = connectionString ? drizzle(queryClient!, { schema }) : createMockDb();
