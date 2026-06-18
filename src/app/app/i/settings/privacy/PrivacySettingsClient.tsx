@@ -193,7 +193,7 @@ export function PrivacySettingsClient() {
                   size="sm"
                   onClick={() => void fetchVisibility()}
                   disabled={visibilityRefreshing}
-                  className="mt-3 min-h-10 w-full gap-2 bg-white/70 sm:w-auto"
+                  className="mt-3 min-h-[44px] w-full gap-2 bg-white/70 sm:w-auto"
                 >
                   <RefreshCcw className="h-4 w-4" aria-hidden="true" />
                   {visibilityRefreshing ? 'Retrying...' : 'Retry privacy preferences'}

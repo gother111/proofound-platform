@@ -107,7 +107,10 @@ describe('deferred settings loaders', () => {
       });
       expect(toastErrorMock).not.toHaveBeenCalledWith('Failed to load privacy settings');
 
-      fireEvent.click(screen.getByRole('button', { name: /retry privacy preferences/i }));
+      const retryButton = screen.getByRole('button', { name: /retry privacy preferences/i });
+      expect(retryButton).toHaveClass('min-h-[44px]');
+
+      fireEvent.click(retryButton);
 
       await waitFor(() => {
         expect(screen.queryByRole('alert')).not.toBeInTheDocument();
@@ -148,7 +151,10 @@ describe('deferred settings loaders', () => {
       });
       expect(toastErrorMock).not.toHaveBeenCalledWith('Failed to load privacy settings');
 
-      fireEvent.click(screen.getByRole('button', { name: /retry privacy preferences/i }));
+      const retryButton = screen.getByRole('button', { name: /retry privacy preferences/i });
+      expect(retryButton).toHaveClass('min-h-[44px]');
+
+      fireEvent.click(retryButton);
 
       await waitFor(() => {
         expect(screen.queryByRole('alert')).not.toBeInTheDocument();

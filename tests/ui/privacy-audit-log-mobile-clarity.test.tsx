@@ -78,7 +78,10 @@ describe('privacy audit log mobile clarity', () => {
     expect(alert).toHaveTextContent('Your privacy records are still safe');
     expect(screen.queryByText('No activity recorded yet')).not.toBeInTheDocument();
 
-    fireEvent.click(within(alert).getByRole('button', { name: 'Retry account history' }));
+    const retryButton = within(alert).getByRole('button', { name: 'Retry account history' });
+    expect(retryButton).toHaveClass('min-h-[44px]');
+
+    fireEvent.click(retryButton);
 
     await waitFor(() => {
       expect(screen.getAllByText('Created profile').length).toBeGreaterThan(0);

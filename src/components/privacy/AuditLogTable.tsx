@@ -214,7 +214,7 @@ export function AuditLogTable({ title = 'Account history' }: AuditLogTableProps)
                 size="sm"
                 onClick={() => void fetchAuditLog()}
                 disabled={loading}
-                className="min-h-10 w-full gap-2 bg-white/70 sm:w-auto"
+                className="min-h-[44px] w-full gap-2 bg-white/70 sm:w-auto"
               >
                 <RefreshCcw className="h-4 w-4" aria-hidden="true" />
                 Retry account history
