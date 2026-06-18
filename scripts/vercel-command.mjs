@@ -7,6 +7,7 @@ const args = process.argv.slice(2);
 const command = args[0];
 const extraArgs = args.slice(1);
 const DEFAULT_PULL_TIMEOUT_MS = 120_000;
+const DEFAULT_DEPLOY_TIMEOUT_MS = 600_000;
 
 function runGit(commandArgs) {
   const result = spawnSync('git', commandArgs, {
@@ -59,11 +60,15 @@ function readPositiveIntegerEnv(name, fallback) {
 }
 
 function getTimeoutMs() {
-  if (command !== 'pull') {
-    return undefined;
+  if (command === 'pull') {
+    return readPositiveIntegerEnv('VERCEL_PULL_TIMEOUT_MS', DEFAULT_PULL_TIMEOUT_MS);
   }
 
-  return readPositiveIntegerEnv('VERCEL_PULL_TIMEOUT_MS', DEFAULT_PULL_TIMEOUT_MS);
+  if (command === 'deploy-prebuilt') {
+    return readPositiveIntegerEnv('VERCEL_DEPLOY_TIMEOUT_MS', DEFAULT_DEPLOY_TIMEOUT_MS);
+  }
+
+  return undefined;
 }
 
 function exitFromSpawnResult(result, timeoutMs) {
@@ -197,10 +202,16 @@ const deployResult = spawnSync('npx', ['vercel@latest', ...vercelArgs], {
   cwd: process.cwd(),
   env: process.env,
   encoding: 'utf8',
+  timeout: timeoutMs,
+  killSignal: 'SIGTERM',
 });
 
 printCapturedOutput(deployResult.stdout, process.stderr);
 printCapturedOutput(deployResult.stderr, process.stderr);
+
+if (deployResult.error) {
+  exitFromSpawnResult(deployResult, timeoutMs);
+}
 
 if (deployResult.status !== 0) {
   process.exit(deployResult.status ?? 1);

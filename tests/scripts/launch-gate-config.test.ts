@@ -2138,14 +2138,17 @@ describe('launch gate package configuration', () => {
     expect(workflow).toContain('Vercel daily deployment quota available');
   });
 
-  it('keeps Vercel pull bounded during production deploy retries', () => {
+  it('keeps Vercel CLI calls bounded during production deploy retries', () => {
     const vercelCommand = fs.readFileSync(
       path.join(repoRoot, 'scripts/vercel-command.mjs'),
       'utf8'
     );
 
     expect(vercelCommand).toContain('DEFAULT_PULL_TIMEOUT_MS = 120_000');
+    expect(vercelCommand).toContain('DEFAULT_DEPLOY_TIMEOUT_MS = 600_000');
     expect(vercelCommand).toContain('VERCEL_PULL_TIMEOUT_MS');
+    expect(vercelCommand).toContain('VERCEL_DEPLOY_TIMEOUT_MS');
+    expect(vercelCommand).toContain("command === 'deploy-prebuilt'");
     expect(vercelCommand).toContain("result.error?.code === 'ETIMEDOUT'");
     expect(vercelCommand).toContain('process.exit(124)');
   });
