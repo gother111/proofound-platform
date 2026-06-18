@@ -909,6 +909,7 @@ export function MatchingOrganizationView({
                                 <Button
                                   onClick={() => handleReviewAction(activeMatch.id, 'shortlist')}
                                   disabled={Boolean(activeReviewActionPending)}
+                                  loading={activeReviewActionPending?.action === 'shortlist'}
                                   className="bg-proofound-forest hover:bg-proofound-forest/90 text-white rounded-full text-xs font-semibold px-4 py-2 flex-1 sm:flex-initial"
                                 >
                                   {activeReviewActionPending?.action === 'shortlist'
@@ -919,6 +920,7 @@ export function MatchingOrganizationView({
                                   onClick={() => handleReviewAction(activeMatch.id, 'pass')}
                                   variant="outline"
                                   disabled={Boolean(activeReviewActionPending)}
+                                  loading={activeReviewActionPending?.action === 'pass'}
                                   className="border-proofound-stone text-proofound-charcoal bg-white rounded-full text-xs font-semibold px-4 py-2 flex-1 sm:flex-initial"
                                 >
                                   {activeReviewActionPending?.action === 'pass'
@@ -959,9 +961,12 @@ export function MatchingOrganizationView({
                                       activeMatch.canRequestIntro === false ||
                                       Boolean(activeReviewActionPending)
                                     }
+                                    loading={activeReviewActionPending?.action === 'request_intro'}
                                     className="min-h-11 w-full rounded-full bg-proofound-forest px-4 py-2 text-xs font-semibold text-white hover:bg-proofound-forest/90"
                                   >
-                                    <Lock className="w-3.5 h-3.5 mr-1.5" />
+                                    {activeReviewActionPending?.action !== 'request_intro' ? (
+                                      <Lock className="w-3.5 h-3.5 mr-1.5" />
+                                    ) : null}
                                     {activeReviewActionPending?.action === 'request_intro'
                                       ? 'Saving...'
                                       : 'Request intro'}
@@ -986,6 +991,7 @@ export function MatchingOrganizationView({
                                   onClick={() => handleReviewAction(activeMatch.id, 'pass')}
                                   variant="ghost"
                                   disabled={Boolean(activeReviewActionPending)}
+                                  loading={activeReviewActionPending?.action === 'pass'}
                                   className="min-h-11 w-full rounded-full py-2 text-xs font-medium text-muted-foreground hover:bg-proofound-stone/20"
                                 >
                                   {activeReviewActionPending?.action === 'pass'
@@ -1009,6 +1015,12 @@ export function MatchingOrganizationView({
                                   variant="outline"
                                   size="touch"
                                   disabled={Boolean(activeReviewActionPending)}
+                                  loading={
+                                    activeReviewActionPending?.matchId ===
+                                      activeReviewActionError.matchId &&
+                                    activeReviewActionPending?.action ===
+                                      activeReviewActionError.action
+                                  }
                                   onClick={() =>
                                     handleReviewAction(
                                       activeReviewActionError.matchId,
@@ -1017,7 +1029,12 @@ export function MatchingOrganizationView({
                                   }
                                   className="mt-2 rounded-full border-amber-300 bg-white px-3 text-xs text-amber-950 hover:bg-amber-100"
                                 >
-                                  <RefreshCcw className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                                  {activeReviewActionPending?.matchId !==
+                                    activeReviewActionError.matchId ||
+                                  activeReviewActionPending?.action !==
+                                    activeReviewActionError.action ? (
+                                    <RefreshCcw className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                                  ) : null}
                                   Retry {activeReviewActionError.label.toLowerCase()}
                                 </Button>
                               </div>

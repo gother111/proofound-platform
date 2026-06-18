@@ -43,6 +43,15 @@ vi.mock('sonner', () => ({
   },
 }));
 
+function createDeferred<T>() {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  const promise = new Promise<T>((res) => {
+    resolve = res;
+  });
+
+  return { promise, resolve };
+}
+
 describe('MatchingOrganizationView launch corridor', () => {
   const assignments = [
     {
@@ -383,6 +392,69 @@ describe('MatchingOrganizationView launch corridor', () => {
       })
     );
     expect(apiFetchMock).toHaveBeenCalledTimes(3);
+  });
+
+  it('marks review actions busy while a proof-submission update is saving', async () => {
+    const reviewUpdate = createDeferred<{
+      ok: boolean;
+      json: () => Promise<Record<string, unknown>>;
+    }>();
+
+    apiFetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          items: [
+            {
+              id: 'match-1',
+              assignmentId: 'assignment-1',
+              reviewStage: 'blind_review',
+              revealScope: 'blind',
+              corridorState: 'generated',
+              canRequestIntro: true,
+              reviewCard: {
+                candidateLabel: 'Submission A7F2',
+                fitSummary: {
+                  headline: 'Fresh proof signals are attached.',
+                  bullets: [],
+                  reasonCodes: [],
+                },
+              },
+              profile: {
+                skills: {},
+              },
+            },
+          ],
+        }),
+      })
+      .mockReturnValueOnce(reviewUpdate.promise);
+
+    render(<MatchingOrganizationView assignments={assignments as any} onCreateNew={vi.fn()} />);
+
+    expect(await screen.findByText('Submission A7F2')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Shortlist' }));
+
+    const savingButton = await screen.findByRole('button', { name: 'Saving...' });
+    expect(savingButton).toBeDisabled();
+    expect(savingButton).toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByRole('button', { name: 'Decline' })).toBeDisabled();
+
+    reviewUpdate.resolve({
+      ok: true,
+      json: async () => ({
+        reviewStage: 'shortlisted',
+        revealScope: 'shortlist_identity',
+        progressiveRevealStage: 'shortlist_identity',
+        corridorState: 'shortlist',
+        visibleIdentityFields: [],
+      }),
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: 'Saving...' })).not.toBeInTheDocument();
+    });
+    expect(screen.getByRole('button', { name: /view shortlist and intros \(1\)/i })).toBeEnabled();
   });
 
   it('uses shortlist-specific recovery copy when removing a shortlisted submission fails', async () => {
