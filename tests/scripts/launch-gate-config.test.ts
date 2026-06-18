@@ -2569,8 +2569,15 @@ describe('launch gate package configuration', () => {
     );
 
     expect(skillVerificationEmail).toContain('hello@proofound.io');
+    expect(skillVerificationEmail).toContain(
+      'show verified skill evidence to organizations reviewing real work'
+    );
+    expect(skillVerificationEmail).not.toContain('Proofound community');
+    expect(skillVerificationEmail).not.toContain('showcase their verified skills');
     expect(deletionEmail).toContain('https://proofound.io');
     expect(deletionEmail).toContain('privacy@proofound.io');
+    expect(deletionEmail).toContain('trusting Proofound with your proof and privacy');
+    expect(deletionEmail).not.toContain('being part of the Proofound community');
     expect(orgSetup).toContain('proofound.io/portfolio/org/');
     expect(calendarInvite).toContain('@proofound.io');
   });

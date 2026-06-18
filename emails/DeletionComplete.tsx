@@ -65,8 +65,8 @@ export const DeletionComplete = (_props: DeletionCompleteProps) => {
           <Section style={thanksBox}>
             <Heading style={h2}>Thank You</Heading>
             <Text style={text}>
-              Thank you for being part of the Proofound community. We&apos;re sorry to see you go,
-              but we respect your decision and privacy.
+              Thank you for trusting Proofound with your proof and privacy. We&apos;re sorry to see
+              you go, but we respect your decision and privacy.
             </Text>
             <Text style={text}>
               If you&apos;d like to join Proofound again in the future, you&apos;re always welcome

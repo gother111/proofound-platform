@@ -60,8 +60,8 @@ export default function SkillVerificationRequest({
             )}
 
             <Text style={paragraph}>
-              Your verification helps build trust in the Proofound community and enables{' '}
-              {requesterName} to showcase their verified skills to potential organizations.
+              Your verification helps make this skill easier to trust and helps {requesterName} show
+              verified skill evidence to organizations reviewing real work.
             </Text>
 
             <Hr style={hr} />
