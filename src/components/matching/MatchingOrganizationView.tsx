@@ -532,8 +532,8 @@ export function MatchingOrganizationView({
             Proof submission review
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Select an assignment, review proof-backed submissions, and request intros only when the
-            evidence is ready.
+            Select an assignment, review proof-backed submissions, and request introductions only
+            when the evidence is ready.
           </p>
         </div>
         <div className="flex items-center gap-2">

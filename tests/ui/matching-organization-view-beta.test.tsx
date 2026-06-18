@@ -96,9 +96,14 @@ describe('MatchingOrganizationView launch corridor', () => {
     expect(screen.getByText('Proof submission review')).toBeInTheDocument();
     expect(
       screen.getByText(
-        'Select an assignment, review proof-backed submissions, and request intros only when the evidence is ready.'
+        'Select an assignment, review proof-backed submissions, and request introductions only when the evidence is ready.'
       )
     ).toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        'Select an assignment, review proof-backed submissions, and request intros only when the evidence is ready.'
+      )
+    ).not.toBeInTheDocument();
     expect(screen.getByText('Assignment corridors')).toBeInTheDocument();
 
     await waitFor(() => {

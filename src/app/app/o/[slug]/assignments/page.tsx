@@ -45,7 +45,7 @@ export default async function OrgAssignmentsAliasPage({
                 </h1>
                 <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
                   Create one proof-led assignment, review submissions blind by default, and move
-                  ready participants toward intro and interview.
+                  ready participants toward introductions and interviews.
                 </p>
               </div>
             </div>
