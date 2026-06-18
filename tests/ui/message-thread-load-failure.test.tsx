@@ -24,7 +24,10 @@ describe('MessageThreadLoadFailure', () => {
     expect(alert).toHaveTextContent('Privacy and reveal state were not changed.');
     expect(alert).not.toHaveTextContent(/^Thread messages could not load$/);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    const backButton = screen.getByRole('button', { name: 'Back' });
+    expect(backButton).toHaveClass('min-h-[44px]');
+
+    fireEvent.click(backButton);
     fireEvent.click(screen.getByRole('button', { name: 'Retry thread messages' }));
 
     expect(onBack).toHaveBeenCalledTimes(1);

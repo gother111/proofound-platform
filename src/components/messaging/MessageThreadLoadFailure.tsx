@@ -28,7 +28,7 @@ export function MessageThreadLoadFailure({
           <Button
             type="button"
             variant="ghost"
-            size="sm"
+            size="touch"
             onClick={onBack}
             className="-ml-2 mb-4 md:hidden"
           >
