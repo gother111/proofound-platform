@@ -2132,6 +2132,9 @@ describe('launch gate package configuration', () => {
     expect(workflow).toContain('node ./scripts/vercel-deploy-quota-check.mjs >> "$GITHUB_OUTPUT"');
     expect(workflow).toContain('Explain Vercel deployment quota wait');
     expect(workflow).toContain("steps.vercel_quota.outputs.available != 'false'");
+    expect(workflow).toContain('api-deployments-free-per-day');
+    expect(workflow).toContain('quota_exhausted=true');
+    expect(workflow).toContain('Vercel deploy rejected by daily quota during deploy');
     expect(workflow).toContain('Vercel daily deployment quota available');
   });
 

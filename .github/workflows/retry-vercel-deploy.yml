@@ -309,7 +309,25 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
-          deployment_url="$(npm run --silent vercel:deploy:prebuilt:production)"
+          deploy_log="$(mktemp)"
+          set +e
+          deployment_url="$(npm run --silent vercel:deploy:prebuilt:production 2>"${deploy_log}")"
+          deploy_status=$?
+          set -e
+
+          cat "${deploy_log}" >&2
+
+          if [ "${deploy_status}" -ne 0 ]; then
+            if grep -q "api-deployments-free-per-day" "${deploy_log}"; then
+              echo "::notice title=Vercel deployment quota exhausted::Skipping production deploy retry because Vercel rejected the deploy at the daily deployment limit. Re-run after the quota window resets."
+              echo "quota_exhausted=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+
+            exit "${deploy_status}"
+          fi
+
+          echo "quota_exhausted=false" >> "$GITHUB_OUTPUT"
           echo "url=${deployment_url}" >> "$GITHUB_OUTPUT"
 
       - name: Write deployment summary
@@ -328,6 +346,7 @@ jobs:
             echo "- Active prebuilt deploy already running: \`${{ steps.pending.outputs.exists }}\`"
             echo "- Vercel daily deployment quota available: \`${{ steps.vercel_quota.outputs.available || 'not-checked' }}\`"
             echo "- Vercel daily deployment quota reason: \`${{ steps.vercel_quota.outputs.reason || 'not-checked' }}\`"
+            echo "- Vercel deploy rejected by daily quota during deploy: \`${{ steps.deploy.outputs.quota_exhausted || 'not-checked' }}\`"
             if [ -n "${{ steps.deploy.outputs.url }}" ]; then
               echo "- Prebuilt deployment URL: ${{ steps.deploy.outputs.url }}"
             fi
