@@ -2555,6 +2555,7 @@ describe('launch gate package configuration', () => {
       path.join(repoRoot, 'emails/SkillVerificationRequest.tsx'),
       'utf8'
     );
+    const compactSkillVerificationEmail = compactWhitespace(skillVerificationEmail);
     const deletionEmail = fs.readFileSync(
       path.join(repoRoot, 'emails/DeletionComplete.tsx'),
       'utf8'
@@ -2569,7 +2570,7 @@ describe('launch gate package configuration', () => {
     );
 
     expect(skillVerificationEmail).toContain('hello@proofound.io');
-    expect(skillVerificationEmail).toContain(
+    expect(compactSkillVerificationEmail).toContain(
       'show verified skill evidence to organizations reviewing real work'
     );
     expect(skillVerificationEmail).not.toContain('Proofound community');
@@ -5065,6 +5066,7 @@ describe('launch gate package configuration', () => {
 
     expect(activeReadinessCopy).toContain('Day 1 proof link ready');
     expect(activeReadinessCopy).toContain('build matching readiness');
+    expect(activeReadinessCopy).toContain('Steps required before assignment reviews can open');
     expect(activeReadinessCopy).toContain('Prepare assignment reviews at your pace');
     expect(activeReadinessCopy).toContain('Assignment reviews open in order');
     expect(activeReadinessCopy).toContain('Set up assignment review preferences');
@@ -5107,6 +5109,7 @@ describe('launch gate package configuration', () => {
       'visible after a match',
       'Set up your matching profile',
       'make better matches available',
+      'active, verified matches',
       'legacy Atlas flows',
       'profile can start receiving matches',
     ]) {

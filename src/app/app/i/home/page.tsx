@@ -192,7 +192,7 @@ export default async function IndividualHomePage() {
                     Readiness corridor
                   </h2>
                   <p className="text-xs text-muted-foreground">
-                    Steps required for active, verified matches
+                    Steps required before assignment reviews can open
                   </p>
                 </div>
                 {unresolvedReadinessSteps > 0 ? (
