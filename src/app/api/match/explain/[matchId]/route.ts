@@ -27,6 +27,7 @@ import {
   buildVisualIndividualMatches,
   buildVisualOrgMatches,
 } from '@/lib/matching/visual-fixtures';
+import { internalValueLabel } from '@/lib/copy/labels';
 import { log } from '@/lib/log';
 
 const visualAssignmentFixturesEnabled = () =>
@@ -182,7 +183,7 @@ export async function GET(
           const yourLevel = gap?.have ?? detail.level ?? 0;
 
           return {
-            skillName: skillName.replace(/-/g, ' '),
+            skillName: internalValueLabel(skillName),
             requiredLevel,
             yourLevel,
             met: yourLevel >= requiredLevel,
@@ -249,7 +250,7 @@ export async function GET(
       // Format skillsMatch
       const required = Object.entries(foundMock.profile.skills).map(
         ([name, detail]: [string, any]) => ({
-          skillName: name.replace(/-/g, ' '),
+          skillName: internalValueLabel(name),
           requiredLevel: 3,
           yourLevel: detail.level,
           met: detail.level >= 3,

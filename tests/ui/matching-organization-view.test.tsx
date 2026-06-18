@@ -148,6 +148,10 @@ describe('MatchingOrganizationView', () => {
     const submissionBButton = screen.getByRole('button', {
       name: /Select Submission B for proof review\./i,
     });
+    expect(screen.getAllByText('Program Operations').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Stakeholder Updates').length).toBeGreaterThan(0);
+    expect(screen.queryByText('program-operations')).not.toBeInTheDocument();
+    expect(screen.queryByText('stakeholder-updates')).not.toBeInTheDocument();
     expect(submissionAButton).toHaveAttribute('aria-pressed', 'true');
     expect(submissionBButton).toHaveAttribute('aria-pressed', 'false');
 

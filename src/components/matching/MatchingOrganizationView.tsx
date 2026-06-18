@@ -32,6 +32,7 @@ import { reasonCodeDisplayLabel } from '@/lib/matching/reason-codes';
 import { getOrganizationRecoveryActions } from '@/lib/ui/recovery-actions';
 import { CardGridSkeleton } from '@/components/skeletons/CoreLoadingPrimitives';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { internalValueLabel } from '@/lib/copy/labels';
 
 interface Assignment {
   id: string;
@@ -836,7 +837,7 @@ export function MatchingOrganizationView({
                                   variant="secondary"
                                   className="text-[9px] bg-proofound-stone/30 text-proofound-charcoal px-1.5 py-0 font-medium"
                                 >
-                                  {skill}
+                                  {internalValueLabel(skill)}
                                 </Badge>
                               ))}
                             </div>

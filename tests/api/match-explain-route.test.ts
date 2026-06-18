@@ -268,7 +268,7 @@ describe('GET /api/match/explain/[matchId]', () => {
     expect(body.skillsMatch.required).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          skillName: 'proof systems',
+          skillName: 'Proof Systems',
           requiredLevel: 4,
           yourLevel: 4,
           met: true,
@@ -281,6 +281,43 @@ describe('GET /api/match/explain/[matchId]', () => {
         workMode: { match: true, details: 'contract' },
       })
     );
+    expect(mocks.dbExecute).not.toHaveBeenCalled();
+  });
+
+  it('serves organization visual fixture explanations with readable proof-anchor labels', async () => {
+    vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'true');
+    vi.stubEnv('PROOFOUND_VISUAL_FIXTURES', 'true');
+
+    const response = await GET(
+      new NextRequest('https://example.com/api/match/explain/visual-match-1'),
+      {
+        params: Promise.resolve({ matchId: 'visual-match-1' }),
+      }
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.matchId).toBe('visual-match-1');
+    expect(body.rank).toBeUndefined();
+    expect(body.rankMode).toBe('band');
+    expect(body.exactRankAvailable).toBe(false);
+    expect(body.scoreVisibility).toBe('internal_ordering_only');
+    expect(body.skillsMatch.required).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          skillName: 'Program Operations',
+          requiredLevel: 3,
+          met: true,
+        }),
+        expect.objectContaining({
+          skillName: 'Stakeholder Updates',
+          requiredLevel: 3,
+          met: true,
+        }),
+      ])
+    );
+    expect(JSON.stringify(body.skillsMatch.required)).not.toContain('program operations');
+    expect(JSON.stringify(body.skillsMatch.required)).not.toContain('stakeholder updates');
     expect(mocks.dbExecute).not.toHaveBeenCalled();
   });
 
