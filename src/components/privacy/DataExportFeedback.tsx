@@ -48,11 +48,11 @@ export function DataExportFeedback({
             <Button
               type="button"
               variant="outline"
-              size="sm"
+              size="touch"
               onClick={onAction}
               disabled={actionDisabled}
               className={cn(
-                'mt-3 h-8 rounded-full bg-white px-3 text-xs font-semibold',
+                'mt-3 rounded-full bg-white px-3 text-xs font-semibold',
                 kind === 'error'
                   ? 'border-[#F0D2B8] text-[#7A3A18] hover:bg-[#FFF1E3]'
                   : 'border-[#d8e6d2] text-proofound-forest hover:bg-[#edf7e8]'

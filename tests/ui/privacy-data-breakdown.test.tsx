@@ -92,7 +92,7 @@ describe('privacy data breakdown', () => {
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Export could not start');
     expect(alert).toHaveTextContent('We could not prepare your data export');
-    expect(screen.getByRole('button', { name: /Retry export/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Retry export/i })).toHaveClass('min-h-[44px]');
     expect(alertSpy).not.toHaveBeenCalled();
     expect(global.fetch).toHaveBeenCalledWith('/api/user/export');
   });
@@ -160,6 +160,7 @@ describe('privacy data breakdown', () => {
 
       const alert = await screen.findByRole('alert');
       expect(alert).toHaveTextContent('Export could not start');
+      expect(screen.getByRole('button', { name: /Retry export/i })).toHaveClass('min-h-[44px]');
 
       fireEvent.click(screen.getByRole('button', { name: /Retry export/i }));
 
