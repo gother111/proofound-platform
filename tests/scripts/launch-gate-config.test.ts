@@ -5100,6 +5100,8 @@ describe('launch gate package configuration', () => {
       'visible after a match',
       'Set up your matching profile',
       'make better matches available',
+      'legacy Atlas flows',
+      'profile can start receiving matches',
     ]) {
       expect(activeReadinessCopy).not.toContain(staleCopy);
     }
@@ -5497,7 +5499,7 @@ describe('launch gate package configuration', () => {
     const compactSupportWorkflowCopy = compactWhitespace(supportWorkflowCopy);
 
     expect(supportWorkflowCopy).toContain('proof-backed submissions');
-    expect(supportWorkflowCopy).toContain('assignment-review recovery actions');
+    expect(supportWorkflowCopy).toContain('proof submissions can move back into review');
     expect(supportWorkflowCopy).toContain('proof-led assignment reviews');
     expect(supportWorkflowCopy).toContain('assignment-review workflows');
     expect(supportWorkflowCopy).toContain('assignment-review workflow narrow');
@@ -5537,6 +5539,9 @@ describe('launch gate package configuration', () => {
     for (const staleCopy of [
       'proof-backed candidates',
       'candidate pipeline recovery actions',
+      'assignment-review recovery actions',
+      'legacy Atlas flows',
+      'profile can start receiving matches',
       'better-fit opportunities',
       'relevant opportunities',
       'match you with opportunities',

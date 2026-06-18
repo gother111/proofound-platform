@@ -20,9 +20,13 @@ describe('recovery actions', () => {
     expect(actions.map((action) => action.description).join(' ')).toContain(
       'better-fit assignment reviews'
     );
+    expect(actions.map((action) => action.description).join(' ')).toContain(
+      'assignment reviews can evaluate fit'
+    );
     expect(actions.map((action) => action.description).join(' ')).not.toContain(
       'better-fit opportunities'
     );
+    expect(actions.map((action) => action.description).join(' ')).not.toContain('legacy Atlas');
     expect(new Set(actions.map((action) => action.actionUrl)).size).toBe(3);
   });
 
@@ -48,6 +52,7 @@ describe('recovery actions', () => {
       'Start with a skill you can connect to real proof.'
     );
     expect(actions.map((action) => action.description).join(' ')).not.toMatch(/Expertise Atlas/i);
+    expect(actions.map((action) => action.description).join(' ')).not.toMatch(/legacy Atlas/i);
   });
 
   it('returns exactly 3 organization actions and keeps proof matching copy submission-led', () => {
@@ -57,10 +62,11 @@ describe('recovery actions', () => {
     expect(actions).toHaveLength(3);
     expect(actions.map((action) => action.title)).toContain('Turn on proof matching');
     expect(combinedCopy).toContain('proof-backed submissions');
-    expect(combinedCopy).toContain('assignment-review recovery actions');
+    expect(combinedCopy).toContain('proof submissions can move back into review');
     expect(combinedCopy).not.toContain('candidate matching');
     expect(combinedCopy).not.toContain('proof-backed candidates');
     expect(combinedCopy).not.toContain('candidate pipeline');
+    expect(combinedCopy).not.toContain('recovery actions');
     expect(new Set(actions.map((action) => action.actionUrl)).size).toBe(3);
   });
 

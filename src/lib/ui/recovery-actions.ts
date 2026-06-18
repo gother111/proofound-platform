@@ -32,7 +32,7 @@ const INDIVIDUAL_BASE_ACTIONS: RecoveryAction[] = [
   {
     id: 'add-skill',
     title: 'Strengthen your Public Page proof',
-    description: 'Refresh proof items so matching can evaluate fit without legacy Atlas flows.',
+    description: 'Connect proof items to visible skills so assignment reviews can evaluate fit.',
     actionUrl: '/app/i/profile',
   },
   {
@@ -63,7 +63,7 @@ const INDIVIDUAL_DESCRIPTION_OVERRIDES: Record<
     'add-proof': 'Add your first proof artifact to strengthen credibility and readiness.',
   },
   'profile-incomplete': {
-    'turn-on-matchable': 'Finish matching preferences so your profile can start receiving matches.',
+    'turn-on-matchable': 'Finish matching preferences so assignment reviews stay relevant.',
   },
 };
 
@@ -173,7 +173,7 @@ export function getOrganizationRecoveryActions(
       {
         id: 'turn-on-candidate-matching',
         title: 'Turn on proof matching',
-        description: 'Open matching and activate assignment-review recovery actions.',
+        description: 'Open matching so proof submissions can move back into review.',
         actionUrl: `${basePath}/assignments?focus=matchable`,
       },
     ],
