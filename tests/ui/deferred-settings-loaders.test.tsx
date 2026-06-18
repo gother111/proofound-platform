@@ -210,18 +210,35 @@ describe('deferred settings loaders', () => {
   });
 
   it('lets users retry privacy controls after the chunk fails', async () => {
+    let resolveRetry!: (value: { PrivacySettingsClient: React.ComponentType }) => void;
+    const retryLoad = new Promise<{ PrivacySettingsClient: React.ComponentType }>((resolve) => {
+      resolveRetry = resolve;
+    });
     const loadPrivacySettingsView = vi
       .fn()
       .mockRejectedValueOnce(new Error('chunk missing'))
-      .mockResolvedValueOnce({
-        PrivacySettingsClient: () => <div>Privacy controls ready</div>,
-      });
+      .mockReturnValueOnce(retryLoad);
 
     render(<DeferredPrivacySettingsClient loadPrivacySettingsView={loadPrivacySettingsView} />);
 
-    expect(await screen.findByText('Privacy controls could not load')).toBeInTheDocument();
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Privacy controls could not load');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Retry privacy controls' }));
+    const retryButton = screen.getByRole('button', { name: 'Retry privacy controls' });
+    expect(retryButton).toHaveClass('min-h-[44px]', 'w-full');
+    expect(retryButton).toHaveAttribute('aria-describedby', 'privacy-loader-error-help');
+
+    fireEvent.click(retryButton);
+
+    const retryingButton = screen.getByRole('button', { name: 'Retrying privacy controls' });
+    expect(retryingButton).toBeDisabled();
+    expect(retryingButton).toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByRole('alert')).toHaveTextContent('Privacy controls could not load');
+    expect(loadPrivacySettingsView).toHaveBeenCalledTimes(2);
+
+    resolveRetry({
+      PrivacySettingsClient: () => <div>Privacy controls ready</div>,
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Privacy controls ready')).toBeInTheDocument();
