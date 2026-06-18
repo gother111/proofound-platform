@@ -244,7 +244,12 @@ describe('Assignment builder lean corridor', () => {
     expect(
       screen.getByRole('button', { name: /import existing assignment brief/i })
     ).toBeInTheDocument();
-    expect(screen.getByTestId('assignment-demo-path')).toHaveTextContent(/start.*middle.*finish/i);
+    const demoPath = screen.getByTestId('assignment-demo-path');
+    expect(demoPath).toHaveAttribute(
+      'aria-label',
+      'Assignment path: define value, map proof, review before publish'
+    );
+    expect(demoPath).toHaveTextContent(/value.*proof.*review/i);
     expect(screen.getByText(/what this assignment path proves/i)).toBeInTheDocument();
     expect(
       screen.getByText(

@@ -858,17 +858,18 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
                   </p>
                 </div>
                 <div
+                  aria-label="Assignment path: define value, map proof, review before publish"
                   className="grid grid-cols-3 gap-2 text-center text-[11px] font-semibold uppercase tracking-[0.12em] text-proofound-forest"
                   data-testid="assignment-demo-path"
                 >
                   <span className="rounded-md border border-proofound-stone/70 bg-[#f8f6f1] px-2 py-2">
-                    Start
+                    Value
                   </span>
                   <span className="rounded-md border border-proofound-stone/70 bg-[#f8f6f1] px-2 py-2">
-                    Middle
+                    Proof
                   </span>
                   <span className="rounded-md border border-proofound-stone/70 bg-[#f8f6f1] px-2 py-2">
-                    Finish
+                    Review
                   </span>
                 </div>
               </div>
