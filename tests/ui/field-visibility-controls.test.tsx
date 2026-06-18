@@ -92,6 +92,40 @@ describe('FieldVisibilityControls', () => {
     expect(apiFetchMock).toHaveBeenNthCalledWith(2, '/api/user/privacy-settings');
   });
 
+  it('keeps preview tabs and primary privacy actions touch-safe on mobile', async () => {
+    apiFetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        fieldVisibility: { displayName: 'public' },
+        redactMode: false,
+      }),
+    } as Response);
+
+    render(<FieldVisibilityControls userId="user-1" />);
+
+    const saveButton = await screen.findByRole('button', { name: 'Save Privacy Settings' });
+    const resetButton = screen.getByRole('button', { name: 'Reset to Defaults' });
+    expect(saveButton).toHaveClass('w-full', 'sm:w-auto');
+    expect(resetButton).toHaveClass('w-full', 'sm:w-auto');
+
+    const settingsTab = screen.getByRole('tab', { name: 'Settings' });
+    const previewTab = screen.getByRole('tab', { name: 'Audience Preview' });
+    expect(previewTab.parentElement).toHaveClass('min-h-[44px]');
+    expect(settingsTab).toHaveClass('min-h-11');
+    expect(previewTab).toHaveClass('min-h-11');
+
+    fireEvent.mouseDown(previewTab, { button: 0, ctrlKey: false });
+    fireEvent.mouseUp(previewTab, { button: 0, ctrlKey: false });
+    fireEvent.click(previewTab);
+    await waitFor(() => expect(previewTab).toHaveAttribute('aria-selected', 'true'));
+
+    for (const name of ['Public Page', 'Trusted review', 'Assignment review']) {
+      const previewButton = screen.getByRole('button', { name });
+      expect(previewButton).toHaveClass('h-11', 'min-h-[44px]', 'min-w-[44px]');
+      expect(previewButton).toHaveClass('w-full', 'sm:w-auto');
+    }
+  });
+
   it('keeps failed saves visible and retryable without surfacing returned privacy errors', async () => {
     apiFetchMock
       .mockResolvedValueOnce({

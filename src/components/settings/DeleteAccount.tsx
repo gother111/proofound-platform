@@ -181,9 +181,10 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
                 <Button
                   type="button"
                   variant="outline"
-                  size="sm"
+                  size="touch"
                   onClick={() => void fetchAccountStatus()}
                   disabled={loading}
+                  className="w-full sm:w-auto"
                 >
                   Retry status
                 </Button>
@@ -254,7 +255,7 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
 
       {/* Confirmation Dialog */}
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="max-h-[min(92vh,720px)] overflow-y-auto sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle className="text-xl font-['Crimson_Pro'] flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-red-600" />
@@ -315,7 +316,7 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
             )}
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button
               variant="outline"
               onClick={() => {
@@ -326,6 +327,7 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
                 setError(null);
               }}
               disabled={deleting}
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
@@ -334,6 +336,7 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
               onClick={handleDeleteRequest}
               disabled={deleting || confirmText !== 'DELETE MY ACCOUNT' || !password}
               aria-describedby={error ? 'settings-delete-account-error' : undefined}
+              className="w-full sm:w-auto"
             >
               {deleting ? (
                 <>

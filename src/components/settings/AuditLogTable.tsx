@@ -201,10 +201,10 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
         <Button
           type="button"
           variant="outline"
-          size="sm"
+          size="touch"
           onClick={() => fetchAuditLog(0)}
           disabled={loading}
-          className="min-h-10 w-full gap-2 bg-white/70 sm:w-auto"
+          className="w-full gap-2 bg-white/70 sm:w-auto"
         >
           <RefreshCcw className="h-4 w-4" aria-hidden="true" />
           Retry account history
@@ -234,7 +234,7 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
             </div>
             <Button
               variant="outline"
-              size="sm"
+              size="touch"
               onClick={handleExportCSV}
               disabled={data.events.length === 0}
               className="w-full justify-center sm:w-auto"
@@ -273,9 +273,9 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
+                    size="touch"
                     onClick={handleExportCSV}
-                    className="min-h-10 w-full gap-2 bg-white/70 sm:w-auto"
+                    className="w-full gap-2 bg-white/70 sm:w-auto"
                   >
                     <Download className="h-4 w-4" aria-hidden="true" />
                     Retry download
@@ -350,7 +350,13 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
           {/* Load More Button */}
           {data.hasMore && (
             <div className="mt-6 text-center">
-              <Button variant="outline" onClick={handleLoadMore} disabled={loadingMore}>
+              <Button
+                variant="outline"
+                size="touch"
+                onClick={handleLoadMore}
+                disabled={loadingMore}
+                className="w-full sm:w-auto"
+              >
                 {loadingMore ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />

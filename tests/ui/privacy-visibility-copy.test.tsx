@@ -122,9 +122,11 @@ describe('privacy visibility copy', () => {
       <IndividualFieldVisibilityControls userId="user-1" initialVisibility={{}} onSave={onSave} />
     );
 
-    expect(
-      screen.getByRole('button', { name: 'Show privacy guidance for Location' })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Show privacy guidance for Location' })).toHaveClass(
+      'h-11',
+      'w-11',
+      'shrink-0'
+    );
     expect(screen.getAllByText('Privacy default').length).toBeGreaterThan(0);
 
     fireEvent.change(screen.getByLabelText('Location'), {

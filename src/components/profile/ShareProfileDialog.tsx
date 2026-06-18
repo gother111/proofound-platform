@@ -255,7 +255,7 @@ export function ShareProfileDialog({
       setCopied(null);
       setCopyFeedback({
         kind: 'error',
-        message: `${label} could not be copied. Select the text manually or try again.`,
+        message: `${label} could not be copied. Select the visible text or try again.`,
       });
       toast({
         title: 'Copy did not work',
@@ -367,8 +367,8 @@ export function ShareProfileDialog({
           <TabsContent value="link" className="space-y-3 mt-4">
             <div>
               <Label>Shareable URL</Label>
-              <div className="flex gap-2 mt-2">
-                <Input value={generatedSnippet.url} readOnly />
+              <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                <Input className="min-h-[44px]" value={generatedSnippet.url} readOnly />
                 <Button
                   type="button"
                   size="icon"
@@ -401,14 +401,14 @@ export function ShareProfileDialog({
               <Label>HTML Embed Code</Label>
               <div className="mt-2 space-y-2">
                 <textarea
-                  className="w-full h-32 p-3 text-xs font-mono rounded border"
+                  className="h-32 min-h-[44px] w-full rounded border p-3 font-mono text-xs"
                   value={embedCode}
                   readOnly
                 />
                 <Button
                   type="button"
                   variant="outline"
-                  size="sm"
+                  size="touch"
                   onClick={() => void handleCopy(embedCode, 'Embed code')}
                   className="w-full"
                 >
@@ -427,8 +427,8 @@ export function ShareProfileDialog({
             <div className="space-y-3">
               <div>
                 <Label>Proof-safe outreach copy</Label>
-                <div className="flex gap-2 mt-2">
-                  <Input value={shareTexts.outreach} readOnly />
+                <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                  <Input className="min-h-[44px]" value={shareTexts.outreach} readOnly />
                   <Button
                     type="button"
                     size="icon"

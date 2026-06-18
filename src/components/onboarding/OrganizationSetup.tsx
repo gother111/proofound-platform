@@ -245,7 +245,7 @@ export function OrganizationSetup() {
                     {copyFeedback.kind === 'error' ? (
                       <input
                         aria-label="Organization trust page link for manual copy"
-                        className="min-h-10 w-full rounded-md border border-proofound-stone bg-white px-2 text-xs text-proofound-charcoal dark:border-border dark:bg-background dark:text-foreground"
+                        className="min-h-[44px] w-full rounded-md border border-proofound-stone bg-white px-2 text-xs text-proofound-charcoal dark:border-border dark:bg-background dark:text-foreground"
                         onFocus={(event) => event.currentTarget.select()}
                         readOnly
                         value={success.portfolioUrl}

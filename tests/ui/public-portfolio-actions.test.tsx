@@ -105,9 +105,9 @@ describe('public portfolio action feedback', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Public page link could not be copied. Select the link below or try again.'
     );
-    expect(screen.getByLabelText('Share link for manual copy')).toHaveValue(
-      'https://proofound.io/portfolio/jane'
-    );
+    const manualCopyInput = screen.getByLabelText('Share link for manual copy');
+    expect(manualCopyInput).toHaveValue('https://proofound.io/portfolio/jane');
+    expect(manualCopyInput).toHaveClass('min-h-[44px]');
     expect(
       screen.queryByText('Public page link could not be copied. Try again.')
     ).not.toBeInTheDocument();
@@ -129,9 +129,9 @@ describe('public portfolio action feedback', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Organization trust page link could not be copied. Select the link below or try again.'
     );
-    expect(screen.getByLabelText('Organization trust page link for manual copy')).toHaveValue(
-      'https://proofound.io/portfolio/org/acme'
-    );
+    const manualCopyInput = screen.getByLabelText('Organization trust page link for manual copy');
+    expect(manualCopyInput).toHaveValue('https://proofound.io/portfolio/org/acme');
+    expect(manualCopyInput).toHaveClass('min-h-[44px]');
     expect(
       screen.queryByText('Organization trust page link could not be copied. Try again.')
     ).not.toBeInTheDocument();

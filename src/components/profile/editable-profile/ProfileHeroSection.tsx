@@ -75,18 +75,21 @@ export function ProfileHeroSection({
                   </h1>
                   <Button
                     variant="ghost"
-                    size="sm"
+                    size="icon"
+                    aria-label="Edit profile basics"
+                    title="Edit profile basics"
                     onClick={onEditProfile}
-                    className="h-8"
+                    className="text-muted-foreground hover:text-foreground"
                     disabled={pending.updatingBasicInfo || isPending}
                   >
-                    <Edit3 className="w-3 h-3" />
+                    <Edit3 className="h-4 w-4" />
                   </Button>
                   <Button
                     variant={profile.redactMode ? 'default' : 'outline'}
-                    size="sm"
+                    size="touch"
+                    aria-pressed={profile.redactMode}
                     onClick={() => onToggleRedact(!profile.redactMode)}
-                    className={`h-8 gap-1.5 ${
+                    className={`gap-1.5 ${
                       profile.redactMode
                         ? 'bg-amber-500 hover:bg-amber-600 text-white'
                         : 'text-muted-foreground hover:text-foreground'
@@ -100,21 +103,21 @@ export function ProfileHeroSection({
                   >
                     {profile.redactMode ? (
                       <>
-                        <EyeOff className="w-3 h-3" />
+                        <EyeOff className="h-4 w-4" />
                         <span className="text-xs">Hidden</span>
                       </>
                     ) : (
                       <>
-                        <Eye className="w-3 h-3" />
+                        <Eye className="h-4 w-4" />
                         <span className="text-xs">Visible</span>
                       </>
                     )}
                   </Button>
                   <Button
                     variant="outline"
-                    size="sm"
+                    size="touch"
                     onClick={onShare}
-                    className="h-8 gap-1.5 text-muted-foreground hover:text-foreground"
+                    className="gap-1.5 text-muted-foreground hover:text-foreground"
                     title="Share your profile"
                   >
                     <Share2 className="w-3 h-3" />

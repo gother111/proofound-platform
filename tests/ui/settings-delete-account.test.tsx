@@ -50,6 +50,8 @@ describe('settings DeleteAccount', () => {
       'settings.delete_account.status_load_failed',
       loadError
     );
+    expect(screen.getByRole('button', { name: /retry status/i })).toHaveClass('min-h-[44px]');
+    expect(screen.getByRole('button', { name: /retry status/i })).toHaveClass('w-full');
 
     fireEvent.click(screen.getByRole('button', { name: /retry status/i }));
 
@@ -81,6 +83,9 @@ describe('settings DeleteAccount', () => {
     render(<DeleteAccount userId="user-1" />);
 
     fireEvent.click(await screen.findByRole('button', { name: /delete my account/i }));
+    expect(screen.getByRole('dialog')).toHaveClass('max-h-[min(92vh,720px)]');
+    expect(screen.getByRole('button', { name: /cancel/i })).toHaveClass('w-full');
+    expect(screen.getByRole('button', { name: /^delete account$/i })).toHaveClass('w-full');
     fireEvent.change(screen.getByLabelText(/enter your password to confirm/i), {
       target: { value: 'incorrect-password' },
     });

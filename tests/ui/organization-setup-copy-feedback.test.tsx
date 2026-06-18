@@ -234,9 +234,9 @@ describe('OrganizationSetup trust page link feedback', () => {
     expect(screen.getByRole('alert')).toHaveTextContent(
       'Organization trust page link could not be copied. Select the link below or try again.'
     );
-    expect(screen.getByLabelText('Organization trust page link for manual copy')).toHaveValue(
-      'http://localhost:3000/portfolio/org/acme'
-    );
+    const manualCopyInput = screen.getByLabelText('Organization trust page link for manual copy');
+    expect(manualCopyInput).toHaveValue('http://localhost:3000/portfolio/org/acme');
+    expect(manualCopyInput).toHaveClass('min-h-[44px]');
     expect(
       screen.queryByText('Organization trust page link could not be copied. Try again.')
     ).not.toBeInTheDocument();

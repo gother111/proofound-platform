@@ -36,7 +36,11 @@ vi.mock('@/components/ui/dialog', () => ({
 }));
 
 vi.mock('@/components/ui/button', () => ({
-  Button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+  Button: ({ children, size, ...props }: any) => (
+    <button data-size={size} {...props}>
+      {children}
+    </button>
+  ),
 }));
 
 vi.mock('@/components/ui/input', () => ({
@@ -245,6 +249,33 @@ describe('ShareProfileDialog', () => {
     );
   });
 
+  it('keeps generated manual-copy fields touch-safe', async () => {
+    render(
+      <ShareProfileDialog
+        isOpen={true}
+        onClose={() => {}}
+        userName="Jane Doe"
+        userHeadline="Proof operations lead"
+        publicPagePath="/portfolio/jane-doe"
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /generate shareable link/i }));
+
+    const shareableUrl = await screen.findByDisplayValue(/\/portfolio\/jane-doe$/);
+    expect(shareableUrl).toHaveClass('min-h-[44px]');
+    expect(
+      screen.getByDisplayValue(
+        "Review Jane Doe's proof-backed Public Page on Proofound - Proof operations lead"
+      )
+    ).toHaveClass('min-h-[44px]');
+    expect(document.querySelector('textarea')).toHaveClass('min-h-[44px]');
+    expect(screen.getByRole('button', { name: /copy embed code/i })).toHaveAttribute(
+      'data-size',
+      'touch'
+    );
+  });
+
   it('keeps failed copy actions visible and retryable without hiding the share URL', async () => {
     clipboardWriteTextMock.mockRejectedValueOnce(new Error('Clipboard permission denied'));
 
@@ -265,7 +296,7 @@ describe('ShareProfileDialog', () => {
 
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent(
-      'Shareable URL could not be copied. Select the text manually or try again.'
+      'Shareable URL could not be copied. Select the visible text or try again.'
     );
     expect(screen.getByDisplayValue(/\/portfolio\/jane-doe$/)).toBeVisible();
     expect(screen.getByRole('button', { name: 'Copy shareable URL' })).toBeEnabled();

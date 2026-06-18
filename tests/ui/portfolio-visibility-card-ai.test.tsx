@@ -132,6 +132,22 @@ describe('PortfolioVisibilityCard AI privacy preflight', () => {
     });
   });
 
+  it('keeps visibility action buttons touch-safe on small screens', async () => {
+    render(<PortfolioVisibilityCard />);
+
+    const privacyButton = await screen.findByRole('button', {
+      name: /check privacy before publishing/i,
+    });
+    const saveButton = screen.getByRole('button', { name: /save visibility/i });
+
+    expect(privacyButton).toHaveClass('min-h-[44px]');
+    expect(privacyButton).toHaveClass('min-w-[44px]');
+    expect(privacyButton).toHaveClass('w-full');
+    expect(saveButton).toHaveClass('min-h-[44px]');
+    expect(saveButton).toHaveClass('min-w-[44px]');
+    expect(saveButton).toHaveClass('w-full');
+  });
+
   it('hides the privacy preflight button and shows manual guidance when AI UI is disabled', async () => {
     global.fetch = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);

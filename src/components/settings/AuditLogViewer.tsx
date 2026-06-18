@@ -221,15 +221,20 @@ export function AuditLogViewer() {
   return (
     <Card variant="bento">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
               Account history
             </CardTitle>
             <CardDescription>Complete history of your account activity</CardDescription>
           </div>
-          <Button variant="outline" size="sm" onClick={handleExport}>
+          <Button
+            variant="outline"
+            size="touch"
+            onClick={handleExport}
+            className="w-full justify-center sm:w-auto"
+          >
             <Download className="h-4 w-4 mr-2" />
             Download
           </Button>
@@ -250,10 +255,10 @@ export function AuditLogViewer() {
               <Button
                 type="button"
                 variant="outline"
-                size="sm"
+                size="touch"
                 onClick={() => void loadEvents()}
                 disabled={isLoading}
-                className="min-h-10 w-full gap-2 bg-white/70 sm:w-auto"
+                className="w-full gap-2 bg-white/70 sm:w-auto"
               >
                 <RefreshCcw className="h-4 w-4" aria-hidden="true" />
                 Retry account history
@@ -263,8 +268,8 @@ export function AuditLogViewer() {
         ) : null}
 
         {/* Search and Stats */}
-        <div className="flex items-center justify-between gap-4">
-          <div className="relative flex-1 max-w-sm">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <div className="relative w-full sm:max-w-sm sm:flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               placeholder="Search activity..."
@@ -343,19 +348,31 @@ export function AuditLogViewer() {
 
         {/* Pagination */}
         {total > LIMIT && (
-          <div className="flex items-center justify-between pt-4 border-t">
+          <div className="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="text-sm text-gray-600 dark:text-gray-400">
               Showing {offset + 1}-{Math.min(offset + LIMIT, total)} of {total}
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={handlePrevPage} disabled={offset === 0}>
+            <div className="grid grid-cols-1 gap-2 sm:flex sm:items-center">
+              <Button
+                variant="outline"
+                size="touch"
+                onClick={handlePrevPage}
+                disabled={offset === 0}
+                className="w-full justify-center sm:w-auto"
+              >
                 <ChevronLeft className="h-4 w-4 mr-1" />
                 Previous
               </Button>
-              <span className="text-sm text-gray-600 dark:text-gray-400">
+              <span className="text-center text-sm text-gray-600 dark:text-gray-400">
                 Page {currentPage} of {totalPages}
               </span>
-              <Button variant="outline" size="sm" onClick={handleNextPage} disabled={!hasMore}>
+              <Button
+                variant="outline"
+                size="touch"
+                onClick={handleNextPage}
+                disabled={!hasMore}
+                className="w-full justify-center sm:w-auto"
+              >
                 Next
                 <ChevronRight className="h-4 w-4 ml-1" />
               </Button>

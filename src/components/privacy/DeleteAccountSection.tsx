@@ -186,7 +186,7 @@ export function DeleteAccountSection() {
       </Card>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={handleDialogOpenChange}>
-        <AlertDialogContent className="max-w-md">
+        <AlertDialogContent className="max-h-[min(92vh,720px)] max-w-md overflow-y-auto">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-destructive">
               <AlertTriangle className="h-5 w-5" />
@@ -270,8 +270,10 @@ export function DeleteAccountSection() {
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+          <AlertDialogFooter className="gap-2 sm:gap-0">
+            <AlertDialogCancel disabled={deleting} className="w-full sm:w-auto">
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={(event) => {
                 event.preventDefault();
@@ -279,7 +281,7 @@ export function DeleteAccountSection() {
               }}
               disabled={deleting || confirmText !== CONFIRMATION_PHRASE || !password}
               aria-describedby={deleteError ? 'delete-account-error' : undefined}
-              className="bg-destructive hover:bg-destructive/90"
+              className="w-full bg-destructive hover:bg-destructive/90 sm:w-auto"
             >
               {deleting ? 'Deleting account...' : 'Delete Account'}
             </AlertDialogAction>

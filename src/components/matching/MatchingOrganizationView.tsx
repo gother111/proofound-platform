@@ -664,7 +664,7 @@ export function MatchingOrganizationView({
                 type="button"
                 variant="outline"
                 onClick={() => void fetchMatches()}
-                className="mx-auto mt-4 min-h-10 rounded-full border-proofound-stone/85 bg-white px-4 text-proofound-forest hover:border-proofound-forest hover:bg-proofound-parchment/30"
+                className="mx-auto mt-4 min-h-[44px] rounded-full border-proofound-stone/85 bg-white px-4 text-proofound-forest hover:border-proofound-forest hover:bg-proofound-parchment/30"
               >
                 <RefreshCcw className="mr-2 h-4 w-4" aria-hidden="true" />
                 Retry review queue

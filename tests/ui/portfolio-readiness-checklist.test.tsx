@@ -59,4 +59,12 @@ describe('PortfolioReadinessChecklist', () => {
     expect(screen.getByText('Publish one public-safe proof item')).toBeInTheDocument();
     expect(screen.getByText('5/6')).toBeInTheDocument();
   });
+
+  it('keeps the checklist toggle easy to tap on small screens', () => {
+    render(<PortfolioReadinessChecklist completionState={buildState({})} />);
+
+    const toggle = screen.getByRole('button', { name: 'Collapse checklist' });
+
+    expect(toggle).toHaveClass('h-11', 'w-11', 'shrink-0');
+  });
 });

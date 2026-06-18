@@ -93,6 +93,33 @@ describe('individual matching mobile clarity', () => {
     expect(screen.getByRole('button', { name: 'Add' }).parentElement).toHaveClass('flex-col');
   });
 
+  it('keeps selected focus chips easy to remove on touch screens', () => {
+    const onChange = vi.fn();
+
+    render(
+      <FocusAreasSection
+        profile={{
+          desiredRoles: ['Product Manager'],
+          preferredIndustryKeys: ['information_and_communication'],
+          orgTypes: [],
+        }}
+        onChange={onChange}
+      />
+    );
+
+    const roleRemove = screen.getByRole('button', { name: 'Remove Product Manager' });
+    const industryRemove = screen.getByRole('button', {
+      name: 'Remove Information and communication',
+    });
+
+    expect(roleRemove).toHaveClass('min-h-[44px]', 'min-w-[44px]');
+    expect(industryRemove).toHaveClass('min-h-[44px]', 'min-w-[44px]');
+
+    fireEvent.click(roleRemove);
+
+    expect(onChange).toHaveBeenCalledWith({ desiredRoles: [] });
+  });
+
   it('keeps filter actions in a sticky footer and announces active filters clearly', () => {
     render(
       <EnhancedMatchFilters

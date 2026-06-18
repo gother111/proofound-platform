@@ -184,11 +184,27 @@ export function CookiePreferences({ onSave }: CookiePreferencesProps) {
   return (
     <div className="space-y-6">
       {/* Quick actions */}
-      <div className="flex gap-3">
-        <Button onClick={handleAcceptAll} variant="default" size="sm" disabled={isSaving}>
+      <div
+        aria-label="Cookie preference quick actions"
+        className="flex flex-col gap-3 sm:flex-row sm:flex-wrap"
+        role="group"
+      >
+        <Button
+          onClick={handleAcceptAll}
+          variant="default"
+          size="touch"
+          disabled={isSaving}
+          className="w-full sm:w-auto"
+        >
           Accept All
         </Button>
-        <Button onClick={handleRejectAll} variant="outline" size="sm" disabled={isSaving}>
+        <Button
+          onClick={handleRejectAll}
+          variant="outline"
+          size="touch"
+          disabled={isSaving}
+          className="w-full sm:w-auto"
+        >
           Reject All (Essential Only)
         </Button>
       </div>
@@ -267,7 +283,7 @@ export function CookiePreferences({ onSave }: CookiePreferencesProps) {
       ) : null}
 
       {/* Save button */}
-      <div className="flex items-center justify-between pt-4 border-t">
+      <div className="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2 text-sm">
           {hasChanges ? (
             <>
@@ -282,7 +298,12 @@ export function CookiePreferences({ onSave }: CookiePreferencesProps) {
           )}
         </div>
 
-        <Button onClick={handleSave} disabled={!hasChanges || isSaving} size="lg">
+        <Button
+          onClick={handleSave}
+          disabled={!hasChanges || isSaving}
+          size="touch"
+          className="w-full sm:w-auto"
+        >
           {isSaving ? 'Saving...' : 'Save Preferences'}
         </Button>
       </div>

@@ -82,7 +82,7 @@ export function ShareLinkButton({ url, className, surface = 'public-page' }: Sha
           {feedback.kind === 'error' ? (
             <input
               aria-label={copy.manualLabel}
-              className="min-h-10 w-full rounded-md border border-[#D9D5CC] bg-white px-2 text-xs text-foreground"
+              className="min-h-[44px] w-full rounded-md border border-[#D9D5CC] bg-white px-2 text-xs text-foreground"
               onFocus={(event) => event.currentTarget.select()}
               readOnly
               value={url}

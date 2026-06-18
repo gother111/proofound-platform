@@ -43,6 +43,9 @@ describe('DeleteAccountSection', () => {
     render(<DeleteAccountSection />);
 
     fireEvent.click(screen.getByRole('button', { name: /delete account now/i }));
+    expect(screen.getByRole('alertdialog')).toHaveClass('max-h-[min(92vh,720px)]');
+    expect(screen.getByRole('button', { name: /cancel/i })).toHaveClass('w-full');
+    expect(screen.getByRole('button', { name: /^delete account$/i })).toHaveClass('w-full');
     fireEvent.change(screen.getByLabelText(/password/i), {
       target: { value: 'incorrect-password' },
     });

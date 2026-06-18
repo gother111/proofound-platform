@@ -63,6 +63,37 @@ describe('CookiePreferences copy', () => {
     expect(screen.queryByText(/Ad targeting/i)).not.toBeInTheDocument();
   });
 
+  it('keeps consent actions touch-safe and stackable for narrow settings screens', () => {
+    render(<CookiePreferences />);
+
+    const quickActions = screen.getByRole('group', {
+      name: 'Cookie preference quick actions',
+    });
+    const acceptAll = screen.getByRole('button', { name: 'Accept All' });
+    const rejectOptional = screen.getByRole('button', {
+      name: 'Reject All (Essential Only)',
+    });
+    const savePreferences = screen.getByRole('button', { name: 'Save Preferences' });
+    const analyticsSwitch = screen.getByRole('switch', { name: /toggle analytics cookies/i });
+    const marketingSwitch = screen.getByRole('switch', { name: /toggle marketing cookies/i });
+
+    expect(quickActions).toHaveClass('flex-col');
+    expect(quickActions).toHaveClass('sm:flex-row');
+    expect(acceptAll).toHaveClass('h-11');
+    expect(acceptAll).toHaveClass('min-h-[44px]');
+    expect(acceptAll).toHaveClass('w-full');
+    expect(rejectOptional).toHaveClass('h-11');
+    expect(rejectOptional).toHaveClass('min-h-[44px]');
+    expect(rejectOptional).toHaveClass('w-full');
+    expect(savePreferences).toHaveClass('h-11');
+    expect(savePreferences).toHaveClass('min-h-[44px]');
+    expect(savePreferences).toHaveClass('w-full');
+    expect(analyticsSwitch).toHaveClass('h-11');
+    expect(analyticsSwitch).toHaveClass('w-[68px]');
+    expect(marketingSwitch).toHaveClass('h-11');
+    expect(marketingSwitch).toHaveClass('w-[68px]');
+  });
+
   it('names the browser-stored consent loading state without implying changes were made', () => {
     render(<CookiePreferencesLoading />);
 

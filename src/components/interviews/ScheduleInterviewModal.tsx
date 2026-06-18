@@ -145,6 +145,12 @@ export function ScheduleInterviewModal({
     }
   }, [availableDates, selectedDate, selectedTime, timeSlots]);
 
+  const clearMutableScheduleError = () => {
+    if (error && error !== INTERVIEW_RESCHEDULE_LIMIT_MESSAGE) {
+      setError(null);
+    }
+  };
+
   const handleSubmit = async () => {
     setError(null);
 
@@ -231,7 +237,13 @@ export function ScheduleInterviewModal({
           <Calendar className="w-4 h-4 inline mr-2" />
           Date
         </Label>
-        <Select value={selectedDate} onValueChange={setSelectedDate}>
+        <Select
+          value={selectedDate}
+          onValueChange={(value) => {
+            setSelectedDate(value);
+            clearMutableScheduleError();
+          }}
+        >
           <SelectTrigger id="interview-date">
             <SelectValue placeholder="Select a date" />
           </SelectTrigger>
@@ -254,7 +266,13 @@ export function ScheduleInterviewModal({
           <Clock className="w-4 h-4 inline mr-2" />
           Time ({timezone})
         </Label>
-        <Select value={selectedTime} onValueChange={setSelectedTime}>
+        <Select
+          value={selectedTime}
+          onValueChange={(value) => {
+            setSelectedTime(value);
+            clearMutableScheduleError();
+          }}
+        >
           <SelectTrigger id="interview-time">
             <SelectValue placeholder="Select a time" />
           </SelectTrigger>
@@ -280,7 +298,13 @@ export function ScheduleInterviewModal({
           <Video className="w-4 h-4 inline mr-2" />
           Video platform
         </Label>
-        <Select value={platform} onValueChange={() => setPlatform('manual')}>
+        <Select
+          value={platform}
+          onValueChange={() => {
+            setPlatform('manual');
+            clearMutableScheduleError();
+          }}
+        >
           <SelectTrigger id="platform">
             <SelectValue />
           </SelectTrigger>
@@ -298,7 +322,10 @@ export function ScheduleInterviewModal({
         <Label htmlFor="manualMeetingProvider">Meeting link provider</Label>
         <Select
           value={manualMeetingProvider || undefined}
-          onValueChange={(value) => setManualMeetingProvider(value as ManualMeetingProvider)}
+          onValueChange={(value) => {
+            setManualMeetingProvider(value as ManualMeetingProvider);
+            clearMutableScheduleError();
+          }}
         >
           <SelectTrigger
             id="manualMeetingProvider"
@@ -324,7 +351,10 @@ export function ScheduleInterviewModal({
           id="manualMeetingLink"
           type="url"
           value={manualMeetingLink}
-          onChange={(event) => setManualMeetingLink(event.target.value)}
+          onChange={(event) => {
+            setManualMeetingLink(event.target.value);
+            clearMutableScheduleError();
+          }}
           placeholder="https://meet.google.com/... or another secure meeting URL"
           aria-invalid={linkHasError || undefined}
           aria-describedby={linkHasError ? `${linkHelpId} ${errorMessageId}` : linkHelpId}

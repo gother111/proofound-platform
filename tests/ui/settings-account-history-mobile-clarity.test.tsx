@@ -62,6 +62,36 @@ describe('settings account history mobile clarity', () => {
     expect(mobileCard).toHaveTextContent('Protected');
     expect(mobileCard).toHaveTextContent('Unknown browser on a very narrow mobile viewport');
     expect(mobileCard.parentElement).toHaveClass('md:hidden');
+    expect(screen.getByRole('button', { name: 'Download activity' })).toHaveClass('min-h-[44px]');
+  });
+
+  it('keeps embedded account history pagination touch-safe', async () => {
+    apiFetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        events: [
+          {
+            id: 'event-1',
+            timestamp: '2026-05-16T01:30:00.000Z',
+            action: 'Created profile',
+            ipHash: 'protected-reference',
+            device: 'Unknown browser',
+          },
+        ],
+        total: 75,
+        limit: 50,
+        offset: 0,
+        hasMore: true,
+      }),
+    } as Response);
+
+    render(<AuditLogTable userId="current" />);
+
+    expect(await screen.findByRole('button', { name: 'Download activity' })).toHaveClass(
+      'min-h-[44px]'
+    );
+    expect(screen.getByRole('button', { name: /load more/i })).toHaveClass('min-h-[44px]');
+    expect(screen.getByRole('button', { name: /load more/i })).toHaveClass('w-full');
   });
 
   it('keeps account history load failures safe, diagnostic, and retryable', async () => {
@@ -95,6 +125,9 @@ describe('settings account history mobile clarity', () => {
     expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
       'settings.account_history.load_failed',
       rawFailure
+    );
+    expect(within(alert).getByRole('button', { name: 'Retry account history' })).toHaveClass(
+      'min-h-[44px]'
     );
 
     fireEvent.click(within(alert).getByRole('button', { name: 'Retry account history' }));
@@ -145,6 +178,9 @@ describe('settings account history mobile clarity', () => {
         title: 'Account history could not load',
         variant: 'destructive',
       })
+    );
+    expect(within(alert).getByRole('button', { name: 'Retry account history' })).toHaveClass(
+      'min-h-[44px]'
     );
 
     fireEvent.click(within(alert).getByRole('button', { name: 'Retry account history' }));
@@ -211,7 +247,9 @@ describe('settings account history mobile clarity', () => {
       expect(alert).toHaveTextContent('Account history download could not start');
       expect(alert).toHaveTextContent('Your activity list is still visible');
       expect(alert).not.toHaveTextContent('raw browser download failure');
-      expect(within(alert).getByRole('button', { name: 'Retry download' })).toBeInTheDocument();
+      expect(within(alert).getByRole('button', { name: 'Retry download' })).toHaveClass(
+        'min-h-[44px]'
+      );
       expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
         'settings.account_history.export_failed',
         expect.any(Error)
@@ -231,5 +269,33 @@ describe('settings account history mobile clarity', () => {
       URL.revokeObjectURL = originalRevokeObjectURL;
       createElementSpy.mockRestore();
     }
+  });
+
+  it('keeps the legacy account history viewer actions touch-safe on mobile', async () => {
+    apiFetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        events: [
+          {
+            id: 'event-1',
+            timestamp: '2026-05-16T01:30:00.000Z',
+            action: 'Created profile',
+            ipHash: 'protected-reference',
+            device: 'Unknown browser',
+          },
+        ],
+        total: 75,
+        limit: 50,
+        offset: 0,
+        hasMore: true,
+      }),
+    } as Response);
+
+    render(<AuditLogViewer />);
+
+    expect(await screen.findByRole('button', { name: 'Download' })).toHaveClass('min-h-[44px]');
+    expect(screen.getByRole('button', { name: /previous/i })).toHaveClass('min-h-[44px]');
+    expect(screen.getByRole('button', { name: /next/i })).toHaveClass('min-h-[44px]');
+    expect(screen.getByRole('button', { name: /next/i })).toHaveClass('w-full');
   });
 });

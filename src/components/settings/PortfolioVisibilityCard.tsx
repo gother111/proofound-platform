@@ -307,7 +307,7 @@ export function PortfolioVisibilityCard() {
             <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
               {assistiveAiEnabled ? (
                 <Button
-                  size="sm"
+                  size="touch"
                   variant="outline"
                   onClick={checkPrivacy}
                   disabled={checking}
@@ -324,7 +324,12 @@ export function PortfolioVisibilityCard() {
                   )}
                 </Button>
               ) : null}
-              <Button size="sm" onClick={save} disabled={saving} className="w-full sm:w-auto">
+              <Button
+                size="touch"
+                onClick={save}
+                disabled={saving}
+                className="w-full justify-center sm:w-auto"
+              >
                 {saving ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...

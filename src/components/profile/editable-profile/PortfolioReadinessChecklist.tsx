@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { CheckCircle2, Circle, ChevronDown, ChevronUp } from 'lucide-react';
 
+import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import type { IndividualProfileCompletionState } from '@/lib/profile/completion-flow';
 
@@ -80,13 +81,16 @@ export function PortfolioReadinessChecklist({ completionState }: PortfolioReadin
               <span className="font-medium text-muted-foreground">Next: </span>
               {nextItem ? nextItem.nextAction : 'Ready to review'}
             </div>
-            <button
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
               onClick={() => setIsOpen(!isOpen)}
-              className="flex h-8 w-8 items-center justify-center rounded-md border border-proofound-stone/60 hover:bg-[#fbf8f1] transition-colors"
+              className="h-11 w-11 shrink-0 rounded-md border border-proofound-stone/60 text-proofound-charcoal hover:bg-[#fbf8f1] hover:text-proofound-forest"
               aria-label={isOpen ? 'Collapse checklist' : 'Expand checklist'}
             >
               {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </button>
+            </Button>
           </div>
         </div>
 

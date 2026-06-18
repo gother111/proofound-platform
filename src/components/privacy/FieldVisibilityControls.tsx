@@ -350,7 +350,7 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
               onClick={() => {
                 void fetchPrivacySettings();
               }}
-              className="border-[#D97706] text-[#92400E] hover:bg-[#FEF3C7] dark:border-yellow-700 dark:text-yellow-100 dark:hover:bg-yellow-950/40"
+              className="w-full border-[#D97706] text-[#92400E] hover:bg-[#FEF3C7] sm:w-auto dark:border-yellow-700 dark:text-yellow-100 dark:hover:bg-yellow-950/40"
             >
               <RefreshCcw className="h-4 w-4" aria-hidden="true" />
               Retry privacy controls
@@ -413,9 +413,13 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="settings" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="settings">Settings</TabsTrigger>
-              <TabsTrigger value="preview">Audience Preview</TabsTrigger>
+            <TabsList className="grid h-auto min-h-[44px] w-full grid-cols-2">
+              <TabsTrigger value="settings" className="min-h-11">
+                Settings
+              </TabsTrigger>
+              <TabsTrigger value="preview" className="min-h-11">
+                Audience Preview
+              </TabsTrigger>
             </TabsList>
 
             {/* Settings Tab */}
@@ -508,7 +512,7 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
                     <Button
                       key={audience}
                       variant={activePreview === audience ? 'default' : 'outline'}
-                      size="sm"
+                      size="touch"
                       onClick={() => setActivePreview(audience)}
                       className={
                         activePreview === audience
@@ -587,7 +591,7 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
                 void handleSave();
               }}
               disabled={isSaving}
-              className="shrink-0 border-[#D97706] text-[#92400E] hover:bg-[#FEF3C7] dark:border-yellow-700 dark:text-yellow-100 dark:hover:bg-yellow-950/40"
+              className="w-full shrink-0 border-[#D97706] text-[#92400E] hover:bg-[#FEF3C7] sm:w-auto dark:border-yellow-700 dark:text-yellow-100 dark:hover:bg-yellow-950/40"
             >
               <RefreshCcw className="h-4 w-4" aria-hidden="true" />
               Retry save
@@ -596,11 +600,15 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
         </Card>
       ) : null}
 
-      <div className="flex gap-2 justify-end">
-        <Button variant="outline" onClick={handleResetToDefaults}>
+      <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+        <Button variant="outline" onClick={handleResetToDefaults} className="w-full sm:w-auto">
           Reset to Defaults
         </Button>
-        <Button onClick={handleSave} disabled={isSaving} className="bg-proofound-forest text-white">
+        <Button
+          onClick={handleSave}
+          disabled={isSaving}
+          className="w-full bg-proofound-forest text-white sm:w-auto"
+        >
           {isSaving ? 'Saving...' : 'Save Privacy Settings'}
         </Button>
       </div>

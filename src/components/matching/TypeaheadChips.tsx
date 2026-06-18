@@ -90,7 +90,7 @@ export function TypeaheadChips({
             <button
               type="button"
               onClick={() => handleRemove(key)}
-              className="-mr-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-white/70 hover:text-[#A03A2A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-1"
+              className="-my-2 -mr-2 inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-white/70 hover:text-proofound-terracotta focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-1"
               aria-label={`Remove ${getLabel(key)}`}
             >
               <X className="h-3.5 w-3.5" />

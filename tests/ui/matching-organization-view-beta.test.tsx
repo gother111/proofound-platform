@@ -296,7 +296,10 @@ describe('MatchingOrganizationView launch corridor', () => {
     expect(screen.getByText(/Your review queue is still safe/i)).toBeInTheDocument();
     expect(screen.queryByText('No proof submissions yet')).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /retry review queue/i }));
+    const retryButton = screen.getByRole('button', { name: /retry review queue/i });
+    expect(retryButton).toHaveClass('min-h-[44px]');
+
+    fireEvent.click(retryButton);
 
     expect((await screen.findAllByText('Submission A7F2')).length).toBeGreaterThan(0);
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
