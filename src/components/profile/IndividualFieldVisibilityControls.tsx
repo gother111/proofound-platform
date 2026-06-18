@@ -260,7 +260,7 @@ export function IndividualFieldVisibilityControls({
             return (
               <div
                 key={field.key}
-                className="flex flex-col gap-3 rounded-lg border border-proofound-stone p-3 transition-colors hover:bg-japandi-bg sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+                className="flex flex-col gap-3 rounded-lg border border-proofound-stone p-3 transition-colors hover:bg-japandi-bg lg:flex-row lg:items-center lg:justify-between lg:gap-4"
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
@@ -283,7 +283,7 @@ export function IndividualFieldVisibilityControls({
                   <p className="text-xs text-muted-foreground">{field.description}</p>
                 </div>
 
-                <div className="flex w-full items-center gap-2 sm:w-auto">
+                <div className="flex w-full items-center gap-2 lg:w-auto">
                   <Select
                     value={currentVisibility}
                     disabled={controlsDisabled}
@@ -294,7 +294,7 @@ export function IndividualFieldVisibilityControls({
                       )
                     }
                   >
-                    <SelectTrigger id={field.key} className="w-full sm:w-[140px]">
+                    <SelectTrigger id={field.key} className="w-full lg:w-[280px]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>

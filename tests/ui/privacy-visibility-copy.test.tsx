@@ -33,11 +33,12 @@ vi.mock('@/components/ui/select', () => ({
       )}
     </div>
   ),
-  SelectTrigger: ({ id, value, onValueChange, disabled }: any) => (
+  SelectTrigger: ({ id, value, onValueChange, disabled, className }: any) => (
     <select
       id={id}
       value={value}
       disabled={disabled}
+      className={className}
       onChange={(event) => onValueChange(event.target.value)}
     >
       <option value="public">Public</option>
@@ -80,6 +81,15 @@ describe('privacy visibility copy', () => {
     expect(document.body.textContent ?? '').not.toMatch(/Professional headline/i);
     expect(document.body.textContent ?? '').not.toMatch(/Visible to your connections/i);
     expect(document.body.textContent ?? '').not.toMatch(/Visible after a mutual match/i);
+  });
+
+  it('keeps long trust visibility labels roomy at wide breakpoints', () => {
+    render(
+      <IndividualFieldVisibilityControls userId="user-1" initialVisibility={{}} onSave={vi.fn()} />
+    );
+
+    expect(screen.getByLabelText('Location')).toHaveClass('w-full', 'lg:w-[280px]');
+    expect(screen.getByLabelText('Location')).not.toHaveClass('sm:w-[140px]');
   });
 
   it('shows durable save feedback and clears it when visibility changes again', async () => {
