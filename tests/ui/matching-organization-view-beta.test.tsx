@@ -688,12 +688,17 @@ describe('MatchingOrganizationView launch corridor', () => {
     expect(screen.getByText('New submissions')).toBeInTheDocument();
     expect(screen.getAllByText('2 submissions').length).toBeGreaterThan(0);
     expect(screen.queryByText('2 matches')).not.toBeInTheDocument();
+    const assignmentButton = screen.getByRole('button', {
+      name: /designer.*new submissions/i,
+    });
+    expect(assignmentButton).toHaveAccessibleName(/new submissions/i);
 
-    fireEvent.click(screen.getByRole('button', { name: /designer/i }));
+    fireEvent.click(assignmentButton);
 
     await waitFor(() => {
       expect(screen.queryByText('New submissions')).not.toBeInTheDocument();
     });
+    expect(assignmentButton).not.toHaveAccessibleName(/new submissions/i);
   });
 
   it('uses proof-submission fallback labels when review card labels are missing', async () => {

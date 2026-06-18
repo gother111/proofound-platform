@@ -608,7 +608,7 @@ export function MatchingOrganizationView({
                   key={assignment.id}
                   onClick={() => handleSelectAssignment(assignment.id)}
                   aria-current={isSelected ? 'true' : undefined}
-                  aria-label={`${assignment.role}. ${assignmentStatusLabel(assignment.status)}. ${count} proof submission${count !== 1 ? 's' : ''}.${isSelected ? ' Current assignment corridor.' : ''}`}
+                  aria-label={`${assignment.role}. ${assignmentStatusLabel(assignment.status)}. ${count} proof submission${count !== 1 ? 's' : ''}.${updateBadge ? ` ${updateBadge}.` : ''}${isSelected ? ' Current assignment corridor.' : ''}`}
                   className={`w-full p-4 rounded-xl text-left border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 ${
                     isSelected
                       ? 'border-proofound-forest bg-proofound-parchment/40 ring-1 ring-proofound-forest/50 font-medium'
