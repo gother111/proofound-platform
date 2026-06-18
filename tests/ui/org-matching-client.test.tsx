@@ -96,13 +96,45 @@ describe('OrgMatchingClient assignment loader', () => {
       })
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /retry assignments/i }));
+    const retryButton = screen.getByRole('button', { name: /retry assignments/i });
+    expect(retryButton).toHaveClass('min-h-[44px]');
+
+    fireEvent.click(retryButton);
 
     expect(
       await screen.findByText('Matching review workspace loaded for Field operations lead')
     ).toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps the shortlist redirect notice dismiss control finger-friendly', async () => {
+    window.history.replaceState({}, '', '/app/o/acme/assignments?from=shortlist');
+    (global as any).fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        items: [
+          {
+            id: 'assignment-1',
+            orgId: 'org-1',
+            role: 'Field operations lead',
+            status: 'active',
+            createdAt: '2026-06-11T10:00:00.000Z',
+          },
+        ],
+      }),
+    });
+
+    render(<OrgMatchingClient />);
+
+    expect(await screen.findByText('Shortlist lives inside each assignment')).toBeInTheDocument();
+    const dismissButton = screen.getByRole('button', { name: 'Dismiss' });
+    expect(dismissButton).toHaveClass('min-h-[44px]');
+
+    fireEvent.click(dismissButton);
+
+    expect(screen.queryByText('Shortlist lives inside each assignment')).not.toBeInTheDocument();
+    expect(replaceMock).toHaveBeenCalledWith('/app/o/acme/assignments');
   });
 
   it('keeps the real empty assignment state for successful empty responses', async () => {

@@ -137,7 +137,7 @@ export function OrgMatchingClient() {
           type="button"
           variant="outline"
           onClick={() => void fetchAssignments()}
-          className="mt-4 min-h-10 rounded-full border-proofound-stone/85 bg-white px-4 text-proofound-forest hover:border-proofound-forest hover:bg-proofound-parchment/30"
+          className="mt-4 min-h-[44px] rounded-full border-proofound-stone/85 bg-white px-4 text-proofound-forest hover:border-proofound-forest hover:bg-proofound-parchment/30"
         >
           <RefreshCcw className="mr-2 h-4 w-4" aria-hidden="true" />
           Retry assignments
@@ -168,7 +168,7 @@ export function OrgMatchingClient() {
           <button
             type="button"
             onClick={dismissShortlistNotice}
-            className="inline-flex min-h-9 shrink-0 items-center rounded-md px-3 text-xs font-medium text-proofound-forest hover:bg-white/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+            className="inline-flex min-h-[44px] shrink-0 items-center rounded-md px-3 text-xs font-medium text-proofound-forest hover:bg-white/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
           >
             Dismiss
           </button>
