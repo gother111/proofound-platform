@@ -433,7 +433,7 @@ export function MatchResultCard({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-xs gap-1.5 text-proofound-forest hover:bg-proofound-forest/5"
+                  className="min-h-[44px] gap-1.5 rounded-full px-3 text-xs text-proofound-forest hover:bg-proofound-forest/5"
                   disabled
                   data-testid={MATCH_EXPLAINER_TEST_IDS.trigger}
                   aria-haspopup="dialog"
@@ -445,7 +445,7 @@ export function MatchResultCard({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-xs gap-1.5 text-proofound-forest hover:bg-proofound-forest/5"
+                  className="min-h-[44px] gap-1.5 rounded-full px-3 text-xs text-proofound-forest hover:bg-proofound-forest/5"
                   onClick={fetchMatchExplanation}
                   disabled={isLoadingExplanation}
                   data-testid={MATCH_EXPLAINER_TEST_IDS.trigger}
@@ -540,11 +540,11 @@ export function MatchResultCard({
                   onClick={handleInterested}
                   disabled={orgPrimaryDisabled}
                   style={{ backgroundColor: '#1C4D3A' }}
-                  className="flex-1"
+                  className="min-h-[44px] flex-1"
                 >
                   {orgPrimaryLabel}
                 </Button>
-                <Button size="sm" variant="outline" onClick={onHide}>
+                <Button size="sm" variant="outline" onClick={onHide} className="min-h-[44px]">
                   Pass
                 </Button>
               </div>
@@ -622,7 +622,7 @@ export function MatchResultCard({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 gap-1.5 rounded-full px-2 text-xs text-proofound-forest hover:bg-proofound-forest/5"
+                    className="min-h-[44px] gap-1.5 rounded-full px-3 text-xs text-proofound-forest hover:bg-proofound-forest/5"
                     disabled
                     data-testid={MATCH_EXPLAINER_TEST_IDS.trigger}
                     aria-haspopup="dialog"
@@ -634,7 +634,7 @@ export function MatchResultCard({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 gap-1.5 rounded-full px-2 text-xs text-proofound-forest hover:bg-proofound-forest/5"
+                    className="min-h-[44px] gap-1.5 rounded-full px-3 text-xs text-proofound-forest hover:bg-proofound-forest/5"
                     onClick={fetchMatchExplanation}
                     disabled={isLoadingExplanation}
                     data-testid={MATCH_EXPLAINER_TEST_IDS.trigger}
@@ -746,11 +746,11 @@ export function MatchResultCard({
               size="sm"
               onClick={handleInterested}
               style={{ backgroundColor: '#1C4D3A' }}
-              className="min-w-[8rem] flex-1"
+              className="min-h-[44px] min-w-[8rem] flex-1"
             >
               {isOrgView ? 'Shortlist' : "I'm interested"}
             </Button>
-            <Button size="sm" variant="outline" onClick={onHide}>
+            <Button size="sm" variant="outline" onClick={onHide} className="min-h-[44px]">
               Hide
             </Button>
             <Button
@@ -767,7 +767,7 @@ export function MatchResultCard({
                   ? 'Pause becomes available once this assignment review is saved'
                   : undefined
               }
-              className="text-xs text-muted-foreground hover:bg-japandi-bg"
+              className="min-h-[44px] text-xs text-muted-foreground hover:bg-japandi-bg"
             >
               <BellOff className="w-3.5 h-3.5 mr-1.5" />
               Pause

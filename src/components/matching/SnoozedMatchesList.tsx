@@ -166,7 +166,12 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
         <p className="mb-3 text-xs leading-5 text-muted-foreground">
           Your paused assignment reviews are unchanged. Retry this panel to refresh the list.
         </p>
-        <Button size="sm" variant="outline" onClick={fetchSnoozedMatches} className="text-xs">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={fetchSnoozedMatches}
+          className="min-h-[44px] text-xs"
+        >
           Retry paused reviews
         </Button>
       </Card>
@@ -187,7 +192,7 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
         <Button
           variant="outline"
           onClick={() => router.push('/app/i/matching')}
-          className="border-proofound-forest text-proofound-forest"
+          className="min-h-[44px] border-proofound-forest text-proofound-forest"
         >
           Back to matching feed
         </Button>
@@ -209,7 +214,7 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
 
       {matches.map((match) => (
         <Card variant="bento" key={match.id} className="p-6">
-          <div className="flex items-start justify-between gap-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
             {/* Match Info */}
             <div className="flex-1">
               <div className="flex items-start gap-4">
@@ -237,7 +242,7 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
                   </h3>
                   <p className="text-sm text-muted-foreground mb-2">{match.organization.name}</p>
 
-                  <div className="flex items-center gap-3 mb-3">
+                  <div className="mb-3 flex flex-wrap items-center gap-2 sm:gap-3">
                     <Badge
                       variant="secondary"
                       className="bg-proofound-forest/10 text-proofound-forest border-proofound-forest/20"
@@ -262,12 +267,12 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
             </div>
 
             {/* Actions */}
-            <div className="flex flex-col gap-2">
+            <div className="flex w-full flex-col gap-2 sm:w-auto">
               <Button
                 size="sm"
                 onClick={() => handleUnsnooze(match.id)}
                 disabled={unsnoozing === match.id}
-                className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
+                className="min-h-[44px] w-full bg-proofound-forest text-white hover:bg-proofound-forest/90 sm:w-auto"
               >
                 <Bell className="w-3.5 h-3.5 mr-1.5" />
                 {unsnoozing === match.id ? 'Restoring...' : 'Restore'}

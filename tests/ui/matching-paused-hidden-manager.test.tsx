@@ -121,6 +121,9 @@ describe('matching paused/hidden manager launch safety', () => {
       )
     ).toBeInTheDocument();
     expect(screen.queryByText('No hidden assignment reviews right now.')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Retry hidden reviews' })).toHaveClass(
+      'min-h-[44px]'
+    );
 
     fireEvent.click(screen.getByRole('button', { name: 'Retry hidden reviews' }));
 
@@ -158,7 +161,9 @@ describe('matching paused/hidden manager launch safety', () => {
 
     expect(await screen.findByText('Hidden assignment to restore')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Unhide' }));
+    const restoreButton = screen.getByRole('button', { name: 'Unhide' });
+    expect(restoreButton).toHaveClass('min-h-[44px]');
+    fireEvent.click(restoreButton);
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Assignment review could not be restored. It is still hidden, and you can try again.'
@@ -210,7 +215,7 @@ describe('matching paused/hidden manager launch safety', () => {
     render(<SnoozedMatchesList />);
 
     expect(await screen.findByText('Evidence reviewer')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Restore' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Restore' })).toHaveClass('min-h-[44px]');
     expect(screen.queryByRole('button', { name: /view details/i })).not.toBeInTheDocument();
     expect(document.body.innerHTML).not.toContain('/app/i/matching/assignment-2');
 
@@ -267,7 +272,9 @@ describe('matching paused/hidden manager launch safety', () => {
       )
     ).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Back to matching feed' }));
+    const backButton = screen.getByRole('button', { name: 'Back to matching feed' });
+    expect(backButton).toHaveClass('min-h-[44px]');
+    fireEvent.click(backButton);
 
     expect(pushMock).toHaveBeenCalledWith('/app/i/matching');
   });
@@ -288,6 +295,9 @@ describe('matching paused/hidden manager launch safety', () => {
         'Your paused assignment reviews are unchanged. Retry this panel to refresh the list.'
       )
     ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Retry paused reviews' })).toHaveClass(
+      'min-h-[44px]'
+    );
 
     fireEvent.click(screen.getByRole('button', { name: 'Retry paused reviews' }));
 
@@ -330,7 +340,9 @@ describe('matching paused/hidden manager launch safety', () => {
 
     expect(await screen.findByText('Paused assignment to restore')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Restore' }));
+    const restoreButton = screen.getByRole('button', { name: 'Restore' });
+    expect(restoreButton).toHaveClass('min-h-[44px]');
+    fireEvent.click(restoreButton);
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Assignment review could not be restored. It is still paused, and you can try again.'

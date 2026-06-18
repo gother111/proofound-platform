@@ -151,7 +151,13 @@ describe('individual matching load failure recovery', () => {
       })
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Retry assignment reviews' }));
+    const retryButton = screen.getByRole('button', { name: 'Retry assignment reviews' });
+    expect(retryButton).toHaveClass('min-h-[44px]');
+    expect(screen.getByRole('button', { name: 'Review proof readiness' })).toHaveClass(
+      'min-h-[44px]'
+    );
+
+    fireEvent.click(retryButton);
 
     await waitFor(() => {
       expect(screen.getByText('Matching profile setup ready')).toBeInTheDocument();
@@ -280,6 +286,10 @@ describe('individual matching load failure recovery', () => {
     });
 
     render(<MatchingClient />);
+
+    expect(
+      await screen.findByRole('button', { name: 'Manage paused or hidden reviews' })
+    ).toHaveClass('min-h-[44px]');
 
     fireEvent.click(await screen.findByRole('button', { name: 'Express interest' }));
 

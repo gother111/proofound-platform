@@ -346,14 +346,14 @@ export function MatchingClient() {
               onClick={() => {
                 void fetchMatches();
               }}
-              className="rounded-full bg-proofound-forest px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-proofound-forest/90"
+              className="inline-flex min-h-[44px] items-center justify-center rounded-full bg-proofound-forest px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-proofound-forest/90"
             >
               Retry assignment reviews
             </button>
             <button
               type="button"
               onClick={() => router.push('/app/i/profile?profileView=full&tab=proof_packs')}
-              className="rounded-full border border-proofound-stone px-4 py-2.5 text-sm font-medium text-proofound-charcoal transition-colors hover:border-proofound-forest hover:bg-white"
+              className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-proofound-stone px-4 py-2.5 text-sm font-medium text-proofound-charcoal transition-colors hover:border-proofound-forest hover:bg-white"
             >
               Review proof readiness
             </button>
@@ -417,7 +417,7 @@ export function MatchingClient() {
               onClick={() => {
                 setShowSetup(true);
               }}
-              className="rounded-full border border-proofound-stone bg-white/70 px-3 py-2 text-sm font-medium text-proofound-forest transition-colors hover:border-proofound-forest hover:bg-white"
+              className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-proofound-stone bg-white/70 px-3 py-2 text-sm font-medium text-proofound-forest transition-colors hover:border-proofound-forest hover:bg-white"
             >
               Edit profile
             </button>
@@ -458,7 +458,7 @@ export function MatchingClient() {
                   type="button"
                   key={action.id}
                   onClick={() => router.push(action.actionUrl)}
-                  className="rounded-lg border border-proofound-stone px-3 py-2 text-left hover:border-proofound-forest hover:bg-white"
+                  className="min-h-[44px] rounded-lg border border-proofound-stone px-3 py-2 text-left hover:border-proofound-forest hover:bg-white"
                 >
                   <p className="text-sm font-medium text-foreground">{action.title}</p>
                   <p className="text-xs text-muted-foreground">{action.description}</p>
@@ -487,7 +487,7 @@ export function MatchingClient() {
                   type="button"
                   key={action.id}
                   onClick={() => router.push(action.actionUrl)}
-                  className="w-full rounded-lg border border-proofound-stone bg-white px-3 py-2 transition-colors hover:border-proofound-forest hover:bg-proofound-parchment/30 text-left"
+                  className="min-h-[44px] w-full rounded-lg border border-proofound-stone bg-white px-3 py-2 text-left transition-colors hover:border-proofound-forest hover:bg-proofound-parchment/30"
                 >
                   <p className="text-sm font-medium text-proofound-charcoal">{action.title}</p>
                   <p className="text-xs text-muted-foreground">{action.description}</p>
@@ -592,7 +592,7 @@ export function MatchingClient() {
         <div className="mt-8">
           <button
             onClick={() => setShowManageHiddenSnoozed((prev) => !prev)}
-            className="text-sm text-proofound-forest underline flex items-center gap-2"
+            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full text-sm font-medium text-proofound-forest underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
           >
             {showManageHiddenSnoozed
               ? 'Hide paused/hidden review manager'

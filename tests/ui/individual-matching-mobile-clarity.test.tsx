@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { EnhancedMatchFilters } from '@/components/matching/EnhancedMatchFilters';
 import { FocusAreasSection } from '@/components/matching/FocusAreasSection';
 import { MatchResultCard } from '@/components/matching/MatchResultCard';
+import { MATCH_EXPLAINER_TRIGGER_LABEL } from '@/lib/matching/explainer-contract';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
@@ -75,6 +76,12 @@ describe('individual matching mobile clarity', () => {
 
     expect(screen.getByTestId('match-card')).toBeInTheDocument();
     expect(screen.getByText('proof-systems L4')).toHaveClass('text-proofound-charcoal');
+    expect(screen.getByRole('button', { name: MATCH_EXPLAINER_TRIGGER_LABEL })).toHaveClass(
+      'min-h-[44px]'
+    );
+    expect(screen.getByRole('button', { name: "I'm interested" })).toHaveClass('min-h-[44px]');
+    expect(screen.getByRole('button', { name: 'Hide' })).toHaveClass('min-h-[44px]');
+    expect(screen.getByRole('button', { name: 'Pause' })).toHaveClass('min-h-[44px]');
   });
 
   it('keeps first setup role input full-width before the add action on mobile', () => {

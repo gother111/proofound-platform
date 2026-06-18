@@ -145,7 +145,7 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
         <p className="mb-3 text-xs leading-5 text-muted-foreground">
           Your hidden assignment reviews are unchanged. Retry this panel to refresh the list.
         </p>
-        <Button size="sm" variant="outline" onClick={fetchHidden} className="text-xs">
+        <Button size="sm" variant="outline" onClick={fetchHidden} className="min-h-[44px] text-xs">
           Retry hidden reviews
         </Button>
       </Card>
@@ -191,8 +191,8 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
             className="p-3 rounded border"
             style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}
           >
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-foreground truncate">
                   {match.assignment.title || 'Assignment'}
                 </p>
@@ -206,7 +206,7 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
                   {match.assignment.country ? ` • ${match.assignment.country}` : ''}
                 </p>
               </div>
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="self-start text-xs">
                 Hidden
               </Badge>
             </div>
@@ -217,7 +217,7 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
                 variant="outline"
                 onClick={() => handleUnhide(match.id)}
                 disabled={unhidingId === match.id}
-                className="text-xs"
+                className="min-h-[44px] w-full text-xs sm:w-auto"
               >
                 {unhidingId === match.id ? (
                   <>
