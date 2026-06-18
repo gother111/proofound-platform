@@ -42,6 +42,7 @@ export function PublicProofPackList({ proofPacks }: PublicProofPackListProps) {
     <div className="space-y-4">
       {proofPacks.map((pack) => {
         const isExpanded = expandedIds[pack.id] || false;
+        const detailsId = `proof-context-${pack.id}`;
         const hasExtraDetails =
           pack.verificationSummary ||
           (pack.summary && pack.summary !== pack.outcomesSummary) ||
@@ -81,8 +82,60 @@ export function PublicProofPackList({ proofPacks }: PublicProofPackListProps) {
               <div className="mt-3 text-sm text-foreground leading-relaxed">{pack.summary}</div>
             ) : null}
 
+            <div className="mt-4 space-y-3 border-t border-[#EFECE5]/60 pt-3">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div
+                  className="flex min-w-0 flex-1 flex-wrap gap-1.5"
+                  aria-label="Proof trust signals"
+                >
+                  {trustSignals.map((signal) => (
+                    <span
+                      key={`${pack.id}-${signal.label}`}
+                      className={cn(
+                        'inline-flex max-w-full items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold leading-5',
+                        signal.tone === 'positive'
+                          ? 'border-[#D7E8DE] bg-[#F3FAF6] text-proofound-forest'
+                          : signal.tone === 'warning'
+                            ? 'border-[#E8D9BE] bg-[#FFF8EA] text-[#7A5520]'
+                            : 'border-[#E2DDD3] bg-[#F8F6F0] text-muted-foreground'
+                      )}
+                    >
+                      <span className="truncate">{signal.label}</span>
+                    </span>
+                  ))}
+                </div>
+
+                {hasExtraDetails && (
+                  <button
+                    type="button"
+                    onClick={() => toggleExpand(pack.id)}
+                    aria-expanded={isExpanded}
+                    aria-controls={detailsId}
+                    className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-md px-3 text-xs font-semibold text-proofound-forest transition-colors hover:bg-proofound-forest/5 hover:text-[#143829] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 sm:-mr-2 sm:ml-0"
+                  >
+                    <span>{isExpanded ? 'Hide proof context' : 'Show proof context'}</span>
+                    {isExpanded ? (
+                      <ChevronUp className="h-3 w-3" />
+                    ) : (
+                      <ChevronDown className="h-3 w-3" />
+                    )}
+                  </button>
+                )}
+              </div>
+
+              {pack.ownershipStatement ? (
+                <p className="text-xs leading-5 text-muted-foreground">
+                  <span className="font-semibold text-foreground/80">Role:</span>{' '}
+                  {pack.ownershipStatement}
+                </p>
+              ) : null}
+            </div>
+
             {hasExtraDetails && isExpanded && (
-              <div className="mt-4 space-y-4 border-t border-[#EFECE5]/80 pt-4 animate-accordion-down overflow-hidden">
+              <div
+                id={detailsId}
+                className="mt-3 space-y-4 border-t border-[#EFECE5]/80 pt-4 animate-accordion-down overflow-hidden"
+              >
                 {pack.summary && pack.summary !== pack.outcomesSummary && (
                   <div className="space-y-1">
                     <h4 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
@@ -150,54 +203,6 @@ export function PublicProofPackList({ proofPacks }: PublicProofPackListProps) {
                 )}
               </div>
             )}
-
-            <div className="mt-4 space-y-3 border-t border-[#EFECE5]/60 pt-3">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div
-                  className="flex min-w-0 flex-1 flex-wrap gap-1.5"
-                  aria-label="Proof trust signals"
-                >
-                  {trustSignals.map((signal) => (
-                    <span
-                      key={`${pack.id}-${signal.label}`}
-                      className={cn(
-                        'inline-flex max-w-full items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold leading-5',
-                        signal.tone === 'positive'
-                          ? 'border-[#D7E8DE] bg-[#F3FAF6] text-proofound-forest'
-                          : signal.tone === 'warning'
-                            ? 'border-[#E8D9BE] bg-[#FFF8EA] text-[#7A5520]'
-                            : 'border-[#E2DDD3] bg-[#F8F6F0] text-muted-foreground'
-                      )}
-                    >
-                      <span className="truncate">{signal.label}</span>
-                    </span>
-                  ))}
-                </div>
-
-                {hasExtraDetails && (
-                  <button
-                    type="button"
-                    onClick={() => toggleExpand(pack.id)}
-                    aria-expanded={isExpanded}
-                    className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-md px-3 text-xs font-semibold text-proofound-forest transition-colors hover:bg-proofound-forest/5 hover:text-[#143829] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 sm:-mr-2 sm:ml-0"
-                  >
-                    <span>{isExpanded ? 'Hide proof context' : 'Show proof context'}</span>
-                    {isExpanded ? (
-                      <ChevronUp className="h-3 w-3" />
-                    ) : (
-                      <ChevronDown className="h-3 w-3" />
-                    )}
-                  </button>
-                )}
-              </div>
-
-              {pack.ownershipStatement ? (
-                <p className="text-xs leading-5 text-muted-foreground">
-                  <span className="font-semibold text-foreground/80">Role:</span>{' '}
-                  {pack.ownershipStatement}
-                </p>
-              ) : null}
-            </div>
           </article>
         );
       })}

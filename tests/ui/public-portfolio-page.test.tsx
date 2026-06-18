@@ -421,7 +421,13 @@ describe('Public individual portfolio page', () => {
     const evidenceLink = screen.getByRole('link', { name: /open launch memo/i });
     expect(evidenceLink).toHaveAttribute('href', 'https://example.com/launch-memo');
     expect(evidenceLink).toHaveClass('min-h-11');
-    expect(screen.getByRole('button', { name: /hide proof context/i })).toBeInTheDocument();
+    const collapseToggle = screen.getByRole('button', { name: /hide proof context/i });
+    const proofContext = screen.getByText('Proof context');
+    expect(collapseToggle).toBeInTheDocument();
+    expect(collapseToggle).toHaveAttribute('aria-controls', 'proof-context-pack-1');
+    expect(collapseToggle.compareDocumentPosition(proofContext)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING
+    );
   });
 
   it('keeps public portfolio contact actions touch-sized on narrow layouts', async () => {
