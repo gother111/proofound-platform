@@ -190,13 +190,67 @@ describe('PortfolioVisibilityCard AI privacy preflight', () => {
   it('names each visibility switch so mobile controls remain clear', async () => {
     render(<PortfolioVisibilityCard />);
 
-    expect(await screen.findByRole('switch', { name: /public page enabled/i })).toBeInTheDocument();
+    expect(await screen.findByRole('switch', { name: /public page access/i })).toBeInTheDocument();
     expect(
       screen.getByRole('switch', { name: /header \(name, handle, headline\)/i })
     ).toBeDisabled();
     expect(screen.getByRole('switch', { name: /proof bar block/i })).toBeInTheDocument();
     expect(screen.getByRole('switch', { name: /contact section/i })).toBeInTheDocument();
     expect(screen.queryByRole('switch', { name: /LinkedIn/i })).not.toBeInTheDocument();
+  });
+
+  it('keeps Public Page access copy consistent when the public route is off', async () => {
+    global.fetch = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+
+      if (url === '/api/feature-flags') {
+        return {
+          ok: true,
+          json: async () => ({ flags: { assistiveAiUi: true } }),
+        } as Response;
+      }
+
+      if (url === '/api/portfolio/visibility') {
+        return {
+          ok: true,
+          json: async () => ({
+            visibility: {
+              header: true,
+              proofBar: true,
+              workEmail: false,
+              linkedin: false,
+              identity: true,
+              skills: false,
+              bio: false,
+              contact: false,
+            },
+            publicPageEnabled: false,
+            searchIndexingEnabled: false,
+          }),
+        } as Response;
+      }
+
+      throw new Error(`Unexpected fetch call: ${url}`);
+    }) as any;
+
+    render(<PortfolioVisibilityCard />);
+
+    const publicAccessSwitch = await screen.findByRole('switch', {
+      name: /public page access/i,
+    });
+
+    expect(publicAccessSwitch).not.toBeChecked();
+    expect(screen.getByText('Public Page access')).toBeInTheDocument();
+    expect(
+      screen.getByText(/The public route stays unavailable until you turn this on and save/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Public page is off. The public route will be unavailable/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Public page enabled')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Anyone with the link can view your Public Page.')
+    ).not.toBeInTheDocument();
   });
 
   it('keeps the required Public Page header locked on before saving', async () => {
@@ -336,7 +390,7 @@ describe('PortfolioVisibilityCard AI privacy preflight', () => {
 
     expect(await screen.findByText(/Visibility saved/i)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('switch', { name: /public page enabled/i }));
+    fireEvent.click(screen.getByRole('switch', { name: /public page access/i }));
 
     expect(screen.queryByText(/Visibility saved/i)).not.toBeInTheDocument();
   });
@@ -368,7 +422,7 @@ describe('PortfolioVisibilityCard AI privacy preflight', () => {
       await screen.findByText(/No high-risk privacy concerns were found/i)
     ).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('switch', { name: /public page enabled/i }));
+    fireEvent.click(screen.getByRole('switch', { name: /public page access/i }));
 
     expect(screen.queryByText(/No high-risk privacy concerns were found/i)).not.toBeInTheDocument();
   });

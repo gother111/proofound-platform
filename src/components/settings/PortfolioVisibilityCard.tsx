@@ -94,6 +94,9 @@ export function PortfolioVisibilityCard() {
   const [checking, setChecking] = useState(false);
   const [preflightMessage, setPreflightMessage] = useState<string | null>(null);
   const [saveFeedback, setSaveFeedback] = useState<SaveFeedback | null>(null);
+  const publicPageAccessDescription = publicPageEnabled
+    ? 'Anyone with the link can view your Public Page.'
+    : 'The public route stays unavailable until you turn this on and save.';
 
   useEffect(() => {
     const run = async () => {
@@ -217,8 +220,8 @@ export function PortfolioVisibilityCard() {
         ) : (
           <>
             <VisibilityRow
-              label="Public page enabled"
-              description="Anyone with the link can view your Public Page."
+              label="Public Page access"
+              description={publicPageAccessDescription}
               checked={publicPageEnabled}
               onCheckedChange={() => {
                 setSaveFeedback(null);
