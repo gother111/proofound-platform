@@ -5067,6 +5067,7 @@ describe('launch gate package configuration', () => {
     expect(activeReadinessCopy).toContain('Day 1 proof link ready');
     expect(activeReadinessCopy).toContain('build matching readiness');
     expect(activeReadinessCopy).toContain('Steps required before assignment reviews can open');
+    expect(activeReadinessCopy).toContain('Plan verification');
     expect(activeReadinessCopy).toContain('Prepare assignment reviews at your pace');
     expect(activeReadinessCopy).toContain('Assignment reviews open in order');
     expect(activeReadinessCopy).toContain('Set up assignment review preferences');
@@ -5112,6 +5113,7 @@ describe('launch gate package configuration', () => {
       'active, verified matches',
       'legacy Atlas flows',
       'profile can start receiving matches',
+      'Plan anchor',
     ]) {
       expect(activeReadinessCopy).not.toContain(staleCopy);
     }

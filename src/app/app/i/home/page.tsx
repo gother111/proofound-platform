@@ -98,7 +98,7 @@ export default async function IndividualHomePage() {
           : metrics.pendingVerifications > 0
             ? `${metrics.pendingVerifications} verification request${metrics.pendingVerifications === 1 ? '' : 's'} pending`
             : 'Nothing is exposed yet. Add one trusted source when you are ready.',
-      action: metrics.pendingVerifications > 0 ? 'View request' : 'Plan anchor',
+      action: metrics.pendingVerifications > 0 ? 'View request' : 'Plan verification',
       href: '/app/i/verifications',
       status:
         metrics.verifiedSkills > 0
