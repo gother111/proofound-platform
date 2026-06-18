@@ -78,7 +78,7 @@ export function CopyTextButton({
         ) : (
           <Clipboard className="h-4 w-4" />
         )}
-        {loading ? 'Preparing...' : copied ? 'Copied' : 'Copy proof summary'}
+        {loading ? 'Preparing proof summary...' : copied ? 'Copied' : 'Copy proof summary'}
       </Button>
       {feedback ? (
         <div className="max-w-64 space-y-1.5">

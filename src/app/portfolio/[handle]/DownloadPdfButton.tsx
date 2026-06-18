@@ -115,7 +115,7 @@ export function DownloadPdfButton({
         className={cn('w-full justify-center gap-2 sm:w-auto', className)}
       >
         {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
-        {loading ? 'Preparing...' : 'Download trust PDF'}
+        {loading ? 'Preparing trust PDF...' : 'Download trust PDF'}
       </Button>
       {feedback ? (
         <p

@@ -12,6 +12,15 @@ vi.mock('@/lib/client-diagnostics', () => ({
   dispatchClientErrorDiagnostic: vi.fn(),
 }));
 
+function createDeferredResponse() {
+  let resolve!: (response: Response) => void;
+  const promise = new Promise<Response>((promiseResolve) => {
+    resolve = promiseResolve;
+  });
+
+  return { promise, resolve };
+}
+
 describe('public portfolio action feedback', () => {
   let fetchMock: ReturnType<typeof vi.fn>;
   let clipboardWriteText: ReturnType<typeof vi.fn>;
@@ -66,6 +75,23 @@ describe('public portfolio action feedback', () => {
     );
     expect(clipboardWriteText).toHaveBeenCalledWith('Proof summary text');
     expect(alertSpy).not.toHaveBeenCalled();
+  });
+
+  it('keeps proof-summary copy loading feedback specific while text is prepared', async () => {
+    const deferred = createDeferredResponse();
+    fetchMock.mockReturnValueOnce(deferred.promise);
+
+    render(<CopyTextButton endpoint="/api/public-summary" />);
+
+    fireEvent.click(screen.getByRole('button', { name: /copy proof summary/i }));
+
+    expect(screen.getByRole('button', { name: /preparing proof summary/i })).toBeDisabled();
+
+    deferred.resolve(new Response('', { status: 500 }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Proof summary could not be prepared. Refresh this page or try again.'
+    );
   });
 
   it('confirms share-link copy inline instead of using a browser alert', async () => {
@@ -198,6 +224,28 @@ describe('public portfolio action feedback', () => {
       'Public PDF is still being prepared.'
     );
     expect(alertSpy).not.toHaveBeenCalled();
+  });
+
+  it('keeps trust PDF loading feedback specific while the export is prepared', async () => {
+    const deferred = createDeferredResponse();
+    fetchMock.mockReturnValueOnce(deferred.promise);
+
+    render(<DownloadPdfButton endpoint="/api/public-export" />);
+
+    fireEvent.click(screen.getByRole('button', { name: /download trust pdf/i }));
+
+    expect(screen.getByRole('button', { name: /preparing trust pdf/i })).toBeDisabled();
+
+    deferred.resolve(
+      new Response(JSON.stringify({ message: 'Public PDF is still being prepared.' }), {
+        status: 409,
+        headers: { 'content-type': 'application/json' },
+      })
+    );
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Public PDF is still being prepared.'
+    );
   });
 
   it('keeps individual PDF fallback failures specific to the public portfolio', async () => {
