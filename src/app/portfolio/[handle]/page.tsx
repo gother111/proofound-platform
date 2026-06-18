@@ -312,7 +312,7 @@ export default async function PortfolioPage({
       <JsonLdScripts items={jsonLdItems} idPrefix="public-portfolio-jsonld" />
       <div className="space-y-4">
         <Card variant="bento" className="p-4 sm:p-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="grid gap-x-4 gap-y-2 lg:grid-cols-[minmax(0,1fr)_minmax(220px,0.42fr)] lg:items-start">
             <div className="space-y-2.5">
               <div className="flex items-start gap-3">
                 <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[#1C4D3A] to-[#C76B4A] text-xl font-semibold text-white">
@@ -353,11 +353,6 @@ export default async function PortfolioPage({
               <p className="text-sm text-muted-foreground">
                 {publicBio || 'A proof-first Public Page with public-safe details only.'}
               </p>
-
-              <TraceableSummaryBlock
-                summary={data.traceableSummary}
-                viewerIsOwner={viewerIsOwner}
-              />
             </div>
 
             {!viewerIsOwner ? (
@@ -372,6 +367,13 @@ export default async function PortfolioPage({
                 </p>
               </div>
             ) : null}
+
+            <div className="lg:col-start-1">
+              <TraceableSummaryBlock
+                summary={data.traceableSummary}
+                viewerIsOwner={viewerIsOwner}
+              />
+            </div>
           </div>
         </Card>
 

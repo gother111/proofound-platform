@@ -332,7 +332,14 @@ describe('Public individual portfolio page', () => {
     expect(
       screen.getByText(/request contact through proofound; private details stay closed/i)
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /request introduction/i })).toBeInTheDocument();
+    const requestIntroductionLink = screen.getByRole('link', { name: /request introduction/i });
+    const traceableSummaryHeading = screen.getByRole('heading', {
+      name: /scale \/ focus \/ context/i,
+    });
+    expect(requestIntroductionLink).toBeInTheDocument();
+    expect(requestIntroductionLink.compareDocumentPosition(traceableSummaryHeading)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING
+    );
     expect(screen.getByRole('button', { name: /copy share link/i }).closest('.hidden')).toBeNull();
     expect(
       screen.getByRole('button', { name: /download trust pdf/i }).closest('.hidden')
