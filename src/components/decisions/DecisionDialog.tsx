@@ -340,8 +340,12 @@ export function DecisionDialog({
 
         {/* Decision Options */}
         <div className="space-y-2">
-          <Label>Select Decision</Label>
-          <div className="grid grid-cols-2 gap-3">
+          <Label id="decision-options-label">Select Decision</Label>
+          <div
+            role="group"
+            aria-labelledby="decision-options-label"
+            className="grid grid-cols-1 gap-3 sm:grid-cols-2"
+          >
             {decisionOptions.map((option) => {
               const Icon = option.icon;
               const isSelected = decision === option.value;

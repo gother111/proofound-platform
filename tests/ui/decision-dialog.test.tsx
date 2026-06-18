@@ -82,6 +82,35 @@ describe('DecisionDialog', () => {
     );
   });
 
+  it('labels the decision option group and preserves selected-option state', async () => {
+    mockDecisionWindowFetch([
+      new Response(
+        JSON.stringify({
+          hoursRemaining: 18.5,
+          isOverdue: false,
+          deadline: '2026-03-13T12:00:00.000Z',
+        }),
+        { status: 200 }
+      ),
+    ]);
+
+    renderDecisionDialog();
+
+    expect(await screen.findByText('18h 30m remaining')).toBeInTheDocument();
+
+    const decisionGroup = screen.getByRole('group', { name: 'Select Decision' });
+    const advanceOption = within(decisionGroup).getByRole('button', { name: 'Advance' });
+    const hireOption = within(decisionGroup).getByRole('button', { name: 'Hire' });
+
+    expect(advanceOption).toHaveAttribute('aria-pressed', 'false');
+    expect(hireOption).toHaveAttribute('aria-pressed', 'false');
+
+    fireEvent.click(advanceOption);
+
+    expect(advanceOption).toHaveAttribute('aria-pressed', 'true');
+    expect(hireOption).toHaveAttribute('aria-pressed', 'false');
+  });
+
   it('shows an inline retry state when the decision deadline cannot load', async () => {
     const fetchMock = mockDecisionWindowFetch([
       new Response(JSON.stringify({ error: 'temporary outage' }), { status: 500 }),
