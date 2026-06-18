@@ -92,6 +92,12 @@ describe('LeftNav portfolio gating', () => {
     expect(screen.queryByRole('link', { name: /expertise/i })).not.toBeInTheDocument();
   });
 
+  it('keeps the desktop sidebar collapse control touch safe', () => {
+    render(<LeftNav basePath="/app/o/acme" />);
+
+    expect(screen.getByRole('button', { name: /collapse sidebar/i })).toHaveClass('min-h-[44px]');
+  });
+
   it('treats the verification center as profile-owned instead of communications-owned', () => {
     usePathnameMock.mockReturnValue('/app/i/verifications');
 
