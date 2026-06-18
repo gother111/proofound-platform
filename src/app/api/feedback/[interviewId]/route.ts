@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { log } from '@/lib/log';
+import {
+  buildVisualInterviewFeedbackResponse,
+  feedbackVisualFixturesEnabled,
+} from '@/lib/feedback/visual-fixtures';
 
 const ParamsSchema = z.object({
   interviewId: z.string().uuid(),
@@ -12,6 +16,14 @@ export async function GET(
   { params }: { params: Promise<{ interviewId: string }> }
 ) {
   try {
+    const { interviewId } = ParamsSchema.parse(await params);
+    if (feedbackVisualFixturesEnabled()) {
+      const visualResponse = buildVisualInterviewFeedbackResponse(interviewId);
+      if (visualResponse) {
+        return NextResponse.json(visualResponse);
+      }
+    }
+
     const supabase = await createClient();
     const {
       data: { user },
@@ -21,8 +33,6 @@ export async function GET(
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const { interviewId } = ParamsSchema.parse(await params);
 
     const { data: interview, error: interviewError } = await supabase
       .from('interviews')

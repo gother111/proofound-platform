@@ -1,6 +1,10 @@
 import FeedbackForm from '@/components/feedback/FeedbackForm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import {
+  buildVisualInterviewFeedbackResponse,
+  feedbackVisualFixturesEnabled,
+} from '@/lib/feedback/visual-fixtures';
 
 type FeedbackQuestion = {
   id: string;
@@ -50,6 +54,13 @@ function feedbackDirectionLabel(direction: FeedbackResponse['direction']) {
 }
 
 async function loadFeedback(interviewId: string): Promise<FeedbackApiResponse | null> {
+  if (feedbackVisualFixturesEnabled()) {
+    const visualResponse = buildVisualInterviewFeedbackResponse(interviewId);
+    if (visualResponse) {
+      return visualResponse;
+    }
+  }
+
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
   try {
     const res = await fetch(`${baseUrl}/api/feedback/${interviewId}`, { cache: 'no-store' });
@@ -180,7 +191,8 @@ export default async function InterviewFeedbackPage({
       <div className="space-y-2">
         <h1 className="text-2xl font-semibold">Interview feedback</h1>
         <p className="text-sm text-muted-foreground">
-          Share structured, anonymous feedback and view what the other side shared once submitted.
+          Share structured, anonymous feedback and view anonymized responses once they are
+          submitted.
         </p>
       </div>
 

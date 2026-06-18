@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
 import InterviewFeedbackPage from '@/app/app/interviews/[id]/feedback/page';
+import { VISUAL_FEEDBACK_INTERVIEW_IDS } from '@/lib/feedback/visual-fixtures';
 
 vi.mock('@/components/feedback/FeedbackForm', () => ({
   default: ({ alreadySubmitted, template }: any) => (
@@ -15,6 +16,8 @@ vi.mock('@/components/feedback/FeedbackForm', () => ({
 describe('InterviewFeedbackPage', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
   });
 
   it('gives empty shared feedback a concrete next action', async () => {
@@ -59,8 +62,14 @@ describe('InterviewFeedbackPage', () => {
     expect(screen.getByTestId('feedback-form-org_to_candidate')).toHaveTextContent(
       'Organization workflow feedback open'
     );
+    expect(
+      screen.getByText(
+        'Share structured, anonymous feedback and view anonymized responses once they are submitted.'
+      )
+    ).toBeInTheDocument();
     expect(screen.getByText('Feedback is waiting on submissions')).toBeInTheDocument();
     expect(screen.getByText(/Submit the relevant feedback form above/i)).toBeInTheDocument();
+    expect(screen.queryByText(/other side/i)).not.toBeInTheDocument();
     expect(screen.queryByText('No feedback shared yet.')).not.toBeInTheDocument();
   });
 
@@ -89,5 +98,36 @@ describe('InterviewFeedbackPage', () => {
     );
     expect(screen.queryByTestId('feedback-form-candidate_to_org')).not.toBeInTheDocument();
     expect(screen.queryByText(/temporary feedback outage/i)).not.toBeInTheDocument();
+  });
+
+  it('renders the visual feedback fixture without external fetch state', async () => {
+    vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'true');
+    vi.stubEnv('PROOFOUND_VISUAL_FIXTURES', 'true');
+    vi.stubEnv('VERCEL_ENV', 'development');
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    render(
+      await InterviewFeedbackPage({
+        params: Promise.resolve({ id: VISUAL_FEEDBACK_INTERVIEW_IDS.completed }),
+      })
+    );
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(
+      screen.getByText(
+        'Share structured, anonymous feedback and view anonymized responses once they are submitted.'
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByTestId('feedback-form-candidate_to_org')).toHaveTextContent(
+      'Participant feedback open'
+    );
+    expect(screen.getByTestId('feedback-form-org_to_candidate')).toHaveTextContent(
+      'Organization workflow feedback open'
+    );
+    expect(
+      screen.getByText(/proof packet made the discussion easier to anchor/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/other side/i)).not.toBeInTheDocument();
   });
 });
