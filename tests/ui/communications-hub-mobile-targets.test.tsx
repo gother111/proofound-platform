@@ -54,6 +54,21 @@ describe('CommunicationsHub mobile targets', () => {
     ).toBeInTheDocument();
   });
 
+  it('keeps the active workspace clear of the mobile bottom navigation', () => {
+    render(<CommunicationsHub perspective="individual" />);
+
+    const workspace = screen.getByRole('main', { name: 'messages workspace' });
+    const hubRoot = screen.getByTestId('communications-hub');
+
+    expect(hubRoot).toHaveClass('h-[calc(100dvh-8.25rem)]');
+    expect(hubRoot).toHaveClass('min-h-[calc(100dvh-8.25rem)]');
+    expect(hubRoot).toHaveClass('overflow-hidden');
+    expect(workspace).toHaveClass('pb-[calc(5.5rem+env(safe-area-inset-bottom))]');
+    expect(workspace).toHaveClass('scroll-pb-[calc(5.5rem+env(safe-area-inset-bottom))]');
+    expect(workspace).toHaveClass('md:pb-0');
+    expect(workspace).toHaveClass('md:scroll-pb-0');
+  });
+
   it('keeps organization messages loading contextual while user context resolves', () => {
     usePathnameMock.mockReturnValue('/app/o/acme/communications');
 

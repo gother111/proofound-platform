@@ -2,7 +2,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export default function LoadingIndividualMessages() {
   return (
-    <div className="h-full min-h-[calc(100vh-3.5rem)] flex flex-col md:flex-row">
+    <div className="flex h-full min-h-full flex-col md:flex-row">
       <div className="w-full min-h-0 md:w-80 flex-shrink-0 border-r border-proofound-stone/70 bg-white/70">
         <div className="space-y-3 p-4">
           <p className="text-sm text-muted-foreground" role="status" aria-live="polite">

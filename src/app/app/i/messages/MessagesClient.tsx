@@ -257,7 +257,7 @@ function MessagesPageContent() {
   const rightPaneBgClass = isV2 ? 'bg-transparent' : 'bg-japandi-bg';
 
   return (
-    <div className="h-full min-h-[calc(100vh-3.5rem)] flex flex-col md:flex-row">
+    <div className="flex h-full min-h-full flex-col md:flex-row">
       {/* Left: Conversation List */}
       <div
         className={`w-full min-h-0 md:w-80 flex-shrink-0 ${

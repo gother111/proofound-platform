@@ -110,7 +110,10 @@ export function CommunicationsHub({
   const isOrganization = perspective === 'organization';
 
   return (
-    <div className="flex min-h-[calc(100vh-3.5rem)] w-full flex-col bg-japandi-bg md:h-[calc(100vh-3.5rem)] md:flex-row md:overflow-hidden">
+    <div
+      data-testid="communications-hub"
+      className="flex h-[calc(100dvh-8.25rem)] min-h-[calc(100dvh-8.25rem)] w-full flex-col overflow-hidden bg-japandi-bg md:h-[calc(100vh-3.5rem)] md:min-h-0 md:flex-row"
+    >
       {/* Left Sidebar for Tab/Section Selection */}
       <aside className="flex w-full shrink-0 flex-col gap-5 border-b border-proofound-stone/70 bg-neutral-light-50/95 p-4 md:w-72 md:justify-between md:border-b-0 md:border-r md:p-5">
         <div className="space-y-4 md:space-y-6">
@@ -173,7 +176,10 @@ export function CommunicationsHub({
       </aside>
 
       {/* Right Pane for Active Workspace */}
-      <main className="min-h-0 flex-1 overflow-y-auto" aria-label={`${activeSection} workspace`}>
+      <main
+        className="min-h-0 flex-1 overflow-y-auto pb-[calc(5.5rem+env(safe-area-inset-bottom))] scroll-pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0 md:scroll-pb-0"
+        aria-label={`${activeSection} workspace`}
+      >
         <div className="min-h-full">
           {activeSection === 'messages' ? (
             isOrganization ? (
