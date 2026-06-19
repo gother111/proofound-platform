@@ -293,7 +293,8 @@ describe('Public individual portfolio page', () => {
     render(element);
 
     expect(screen.getByRole('heading', { name: 'Jane Doe' })).toBeInTheDocument();
-    expect(screen.getByText('Direct-link proof snapshot')).toBeInTheDocument();
+    expect(screen.getByText('Proofound Public Page')).toHaveClass('whitespace-nowrap');
+    expect(screen.getByText('Direct-link proof snapshot')).toHaveClass('whitespace-nowrap');
     expect(screen.getByRole('heading', { name: /selected proof packs/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /scale \/ focus \/ context/i })).toBeInTheDocument();
     expect(

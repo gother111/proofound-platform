@@ -263,10 +263,15 @@ export default async function PortfolioPage({
             </div>
           ) : null}
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center gap-2.5 text-sm text-foreground">
-              <Logo size="sm" />
-              <span className="font-medium">Proofound Public Page</span>
-              <Badge variant="outline" className="border-[#D9D5CC] text-muted-foreground">
+            <div className="flex flex-col items-start gap-2 text-sm text-foreground sm:flex-row sm:items-center sm:gap-2.5">
+              <div className="flex min-w-0 items-center gap-2.5">
+                <Logo size="sm" />
+                <span className="whitespace-nowrap font-medium">Proofound Public Page</span>
+              </div>
+              <Badge
+                variant="outline"
+                className="whitespace-nowrap border-[#D9D5CC] text-xs text-muted-foreground sm:text-sm"
+              >
                 Direct-link proof snapshot
               </Badge>
             </div>
