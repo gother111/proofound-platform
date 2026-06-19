@@ -113,6 +113,19 @@ describe('LeftNav portfolio gating', () => {
     );
   });
 
+  it('keeps individual mobile review navigation visibly assignment-review scoped', () => {
+    usePathnameMock.mockReturnValue('/app/i/matching');
+
+    render(<LeftNav basePath="/app/i" />);
+
+    expect(screen.getAllByRole('link', { name: /^assignment review$/i })[0]).toHaveAttribute(
+      'aria-current',
+      'page'
+    );
+    expect(screen.getByText(/^Reviews$/i)).toBeInTheDocument();
+    expect(screen.queryByText(/^Review$/i)).not.toBeInTheDocument();
+  });
+
   it('keeps individual settings discoverable from the account menu', () => {
     render(<TopBarProfileMenu userName="Yurii" basePath="/app/i" onClose={vi.fn()} />);
 
