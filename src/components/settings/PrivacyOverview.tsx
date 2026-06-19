@@ -672,17 +672,27 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
 
       {/* Learn More */}
       <Card variant="bento" className="border-proofound-stone dark:border-border rounded-xl">
-        <CardContent className="pt-6">
-          <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
-            Learn more about how we protect your privacy in our{' '}
-            <a href="/privacy-policy" className="text-proofound-forest hover:underline">
+        <CardContent className="space-y-4 pt-6">
+          <p className="max-w-2xl text-sm leading-6 text-proofound-charcoal/70 dark:text-muted-foreground">
+            Learn more about how Proofound protects privacy, or contact the privacy team for
+            account-specific questions.
+          </p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <a
+              href="/privacy"
+              className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border-2 border-proofound-forest px-4 py-2 text-sm font-medium text-proofound-forest transition-all duration-300 hover:-translate-y-0.5 hover:bg-proofound-forest/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 sm:w-auto"
+            >
+              <FileText className="h-4 w-4" aria-hidden="true" />
               Privacy Policy
             </a>{' '}
-            or contact us at{' '}
-            <a href="mailto:privacy@proofound.io" className="text-proofound-forest hover:underline">
+            <a
+              href="mailto:privacy@proofound.io"
+              className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border-2 border-proofound-forest px-4 py-2 text-sm font-medium text-proofound-forest transition-all duration-300 hover:-translate-y-0.5 hover:bg-proofound-forest/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 sm:w-auto"
+            >
+              <MessagesSquare className="h-4 w-4" aria-hidden="true" />
               privacy@proofound.io
             </a>
-          </p>
+          </div>
         </CardContent>
       </Card>
 

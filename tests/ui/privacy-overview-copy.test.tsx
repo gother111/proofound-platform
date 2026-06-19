@@ -135,6 +135,17 @@ describe('PrivacyOverview copy', () => {
     expect(actions).toHaveClass('sm:col-start-2');
   });
 
+  it('keeps privacy policy and contact links touch-friendly', () => {
+    render(<PrivacyOverview userId="user-1" />);
+
+    const privacyPolicy = screen.getByRole('link', { name: 'Privacy Policy' });
+    const privacyEmail = screen.getByRole('link', { name: 'privacy@proofound.io' });
+
+    expect(privacyPolicy).toHaveAttribute('href', '/privacy');
+    expect(privacyPolicy).toHaveClass('min-h-[44px]', 'w-full', 'sm:w-auto');
+    expect(privacyEmail).toHaveClass('min-h-[44px]', 'w-full', 'sm:w-auto');
+  });
+
   it('uses existing full-page privacy sections instead of opening duplicate drill-downs', () => {
     const target = document.createElement('section');
     target.id = 'privacy-activity';
