@@ -164,7 +164,7 @@ export function MessageThread({
                 type="button"
                 onClick={onBack}
                 aria-label="Back to conversations"
-                className="md:hidden inline-flex items-center justify-center h-10 w-10 rounded-lg border border-border text-foreground hover:bg-japandi-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1C4D3A] focus-visible:ring-offset-2"
+                className="md:hidden inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-border text-foreground hover:bg-japandi-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1C4D3A] focus-visible:ring-offset-2"
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>

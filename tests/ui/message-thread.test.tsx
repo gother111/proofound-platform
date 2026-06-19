@@ -63,6 +63,26 @@ describe('MessageThread', () => {
     expect(container).not.toHaveTextContent('Unknown');
   });
 
+  it('keeps the mobile back control at a comfortable touch size', () => {
+    render(
+      <MessageThread
+        conversationId="conversation-1"
+        messages={[]}
+        currentUserId="user-1"
+        otherPartyName="Organization"
+        stage="masked"
+        onBack={vi.fn()}
+        onSendMessage={vi.fn()}
+      />
+    );
+
+    expect(screen.getByRole('button', { name: 'Back to conversations' })).toHaveClass(
+      'h-11',
+      'w-11',
+      'shrink-0'
+    );
+  });
+
   it('explains blocked paste and drop actions without internal policy codes', () => {
     const { container } = render(
       <>
