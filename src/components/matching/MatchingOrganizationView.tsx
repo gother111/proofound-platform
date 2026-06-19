@@ -860,6 +860,21 @@ export function MatchingOrganizationView({
                   className="grid flex-1 grid-cols-1 gap-6 lg:min-h-0 lg:grid-cols-5 lg:overflow-hidden"
                 >
                   <div className="flex flex-col gap-3 lg:col-span-2 lg:min-h-0 lg:overflow-y-auto lg:pr-1">
+                    {activeMatch ? (
+                      <Button
+                        asChild
+                        variant="outline"
+                        className="min-h-11 w-full justify-center rounded-full border-proofound-stone/85 bg-white text-xs font-semibold text-proofound-forest hover:border-proofound-forest hover:bg-proofound-parchment/30 lg:hidden"
+                      >
+                        <a
+                          href={`#${SELECTED_REVIEW_DETAIL_ID}`}
+                          onClick={handleJumpToReviewDetail}
+                        >
+                          <ArrowRight className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                          Jump to selected proof review
+                        </a>
+                      </Button>
+                    ) : null}
                     {filteredMatches.map((match: any, index: number) => {
                       const isSelected = match.id === activeMatchId;
                       const submissionLabel =
@@ -933,21 +948,6 @@ export function MatchingOrganizationView({
                         </button>
                       );
                     })}
-                    {activeMatch ? (
-                      <Button
-                        asChild
-                        variant="outline"
-                        className="min-h-11 w-full justify-center rounded-full border-proofound-stone/85 bg-white text-xs font-semibold text-proofound-forest hover:border-proofound-forest hover:bg-proofound-parchment/30 lg:hidden"
-                      >
-                        <a
-                          href={`#${SELECTED_REVIEW_DETAIL_ID}`}
-                          onClick={handleJumpToReviewDetail}
-                        >
-                          <ArrowRight className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
-                          Jump to selected proof review
-                        </a>
-                      </Button>
-                    ) : null}
                   </div>
 
                   <div
