@@ -118,8 +118,8 @@ const REVIEW_ACTION_FAILED_MESSAGE =
   'No shortlist, decline, or intro request was changed. Retry this action before moving to the next submission.';
 
 const REVIEW_ACTION_LABELS: Record<ReviewAction, string> = {
-  shortlist: 'Shortlist',
-  pass: 'Decline',
+  shortlist: 'Shortlist submission',
+  pass: 'Decline submission',
   request_intro: 'Request intro',
 };
 
@@ -128,7 +128,7 @@ const REVIEW_ACTION_SEGMENT_LABELS: Record<
   Partial<Record<ReviewAction, string>>
 > = {
   queue: {
-    pass: 'Decline',
+    pass: 'Decline submission',
   },
   shortlist: {
     pass: 'Remove from shortlist',
@@ -978,7 +978,7 @@ export function MatchingOrganizationView({
                                 >
                                   {activeReviewActionPending?.action === 'shortlist'
                                     ? 'Saving...'
-                                    : 'Shortlist'}
+                                    : 'Shortlist submission'}
                                 </Button>
                                 <Button
                                   onClick={() => handleReviewAction(activeMatch.id, 'pass')}
@@ -989,7 +989,7 @@ export function MatchingOrganizationView({
                                 >
                                   {activeReviewActionPending?.action === 'pass'
                                     ? 'Saving...'
-                                    : 'Decline'}
+                                    : 'Decline submission'}
                                 </Button>
                               </div>
                             ) : (

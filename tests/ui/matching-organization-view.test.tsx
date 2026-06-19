@@ -288,8 +288,8 @@ describe('MatchingOrganizationView', () => {
   it('stacks opposing review actions on mobile to reduce accidental taps', async () => {
     renderView();
 
-    const shortlistButton = await screen.findByRole('button', { name: 'Shortlist' });
-    const declineButton = screen.getByRole('button', { name: 'Decline' });
+    const shortlistButton = await screen.findByRole('button', { name: 'Shortlist submission' });
+    const declineButton = screen.getByRole('button', { name: 'Decline submission' });
     const actionGroup = shortlistButton.parentElement;
 
     expect(actionGroup).not.toBeNull();

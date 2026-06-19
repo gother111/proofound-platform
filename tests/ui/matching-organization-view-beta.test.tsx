@@ -407,10 +407,10 @@ describe('MatchingOrganizationView launch corridor', () => {
 
     expect(await screen.findByText('Submission A7F2')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Shortlist' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Shortlist submission' }));
 
     const alert = await screen.findByRole('alert');
-    expect(alert).toHaveTextContent('Shortlist did not save');
+    expect(alert).toHaveTextContent('Shortlist submission did not save');
     expect(alert).toHaveTextContent(
       'No shortlist, decline, or intro request was changed. Retry this action before moving to the next submission.'
     );
@@ -424,7 +424,7 @@ describe('MatchingOrganizationView launch corridor', () => {
       'Review service temporarily unavailable'
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /retry shortlist/i }));
+    fireEvent.click(screen.getByRole('button', { name: /retry shortlist submission/i }));
 
     await waitFor(() => {
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
@@ -478,12 +478,12 @@ describe('MatchingOrganizationView launch corridor', () => {
 
     expect(await screen.findByText('Submission A7F2')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Shortlist' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Shortlist submission' }));
 
     const savingButton = await screen.findByRole('button', { name: 'Saving...' });
     expect(savingButton).toBeDisabled();
     expect(savingButton).toHaveAttribute('aria-busy', 'true');
-    expect(screen.getByRole('button', { name: 'Decline' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Decline submission' })).toBeDisabled();
 
     reviewUpdate.resolve({
       ok: true,
@@ -548,7 +548,7 @@ describe('MatchingOrganizationView launch corridor', () => {
     );
     expect(alert).not.toHaveTextContent('Review service temporarily unavailable');
     expect(screen.getByRole('button', { name: /retry remove from shortlist/i })).toBeEnabled();
-    expect(screen.queryByText('Decline did not save')).not.toBeInTheDocument();
+    expect(screen.queryByText('Decline submission did not save')).not.toBeInTheDocument();
     expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
       'matching.organization_view.review_action_failed',
       expect.any(Error)
@@ -598,7 +598,7 @@ describe('MatchingOrganizationView launch corridor', () => {
     render(<MatchingOrganizationView assignments={assignments as any} onCreateNew={vi.fn()} />);
 
     expect(await screen.findByText('Submission D3C1')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Decline' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Decline submission' }));
 
     await waitFor(() => {
       expect(toast.success).toHaveBeenCalledWith('Submission declined for now.');

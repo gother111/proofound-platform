@@ -4648,6 +4648,8 @@ describe('launch gate package configuration', () => {
     expect(activeMatchingReviewText).toContain('Review proof-backed submissions');
     expect(activeMatchingReviewText).toContain('start reviewing proof submissions');
     expect(activeMatchingReviewText).toContain('No proof submissions shortlisted yet');
+    expect(activeMatchingReviewText).toContain('Shortlist submission');
+    expect(activeMatchingReviewText).toContain('Decline submission');
     expect(activeMatchingReviewText).toContain('Shortlist qualified proof submissions');
     expect(activeMatchingReviewText).toContain(
       'All proof submissions for this assignment have been reviewed.'
