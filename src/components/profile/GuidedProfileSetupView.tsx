@@ -304,7 +304,7 @@ export function GuidedProfileSetupView({
           </div>
           <div className="flex flex-col gap-2 sm:flex-row lg:justify-end shrink-0">
             <Button
-              size="sm"
+              size="touch"
               onClick={dominantAction.onClick}
               data-testid={dominantAction.testId}
               className="w-full bg-proofound-forest text-white hover:bg-proofound-forest/90 sm:w-auto"
@@ -312,7 +312,7 @@ export function GuidedProfileSetupView({
               {dominantAction.label}
             </Button>
             <Button
-              size="sm"
+              size="touch"
               variant="secondary"
               onClick={onOpenFullProfile}
               data-testid="guided-open-full-profile"

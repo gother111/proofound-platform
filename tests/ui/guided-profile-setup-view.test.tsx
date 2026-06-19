@@ -56,6 +56,16 @@ describe('GuidedProfileSetupView', () => {
       screen.getByRole('heading', { name: /start with proof, then choose what to share/i })
     ).toBeInTheDocument();
     expect(screen.getByTestId('guided-dominant-proof-cta')).toBeInTheDocument();
+    expect(screen.getByTestId('guided-dominant-proof-cta')).toHaveClass(
+      'h-11',
+      'min-h-[44px]',
+      'min-w-[44px]'
+    );
+    expect(screen.getByTestId('guided-open-full-profile')).toHaveClass(
+      'h-11',
+      'min-h-[44px]',
+      'min-w-[44px]'
+    );
     expect(screen.queryByText(/complete your profile/i)).not.toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(/profile polish|profile polishing/i);
 
