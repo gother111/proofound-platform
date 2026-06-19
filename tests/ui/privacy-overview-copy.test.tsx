@@ -73,6 +73,16 @@ describe('PrivacyOverview copy', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('Trusted review context')).toBeInTheDocument();
     expect(screen.getByText('Assignment review')).toBeInTheDocument();
+    expect(screen.getByText('Field visibility choices')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Counts show the visibility level selected for each Public Page section/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText('Visible on your Public Page')).toBeInTheDocument();
+    expect(screen.getByText('Visible only in trusted review contexts')).toBeInTheDocument();
+    expect(
+      screen.getByText('Allowed only when assignment-review access applies')
+    ).toBeInTheDocument();
+    expect(screen.getByText('Only visible to you')).toBeInTheDocument();
     expect(screen.getByText(/what stays private until assignment review/i)).toBeInTheDocument();
     expect(
       screen.getByText(/Available only inside assignment-review surfaces/i)
@@ -103,6 +113,7 @@ describe('PrivacyOverview copy', () => {
     expect(screen.queryByText(/Tier 1/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Tier 2/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Tier 3/i)).not.toBeInTheDocument();
+    expect(screen.queryByText('What others can see')).not.toBeInTheDocument();
   });
 
   it('uses existing full-page privacy sections instead of opening duplicate drill-downs', () => {
@@ -129,6 +140,22 @@ describe('PrivacyOverview copy', () => {
     render(<PrivacyOverview userId="user-1" fullPageNavigation />);
 
     fireEvent.click(screen.getAllByRole('button', { name: /review field visibility/i })[0]);
+
+    expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+    expect(focusMock).toHaveBeenCalledWith({ preventScroll: true });
+    expect(screen.queryByText('← Back to Privacy Overview')).not.toBeInTheDocument();
+
+    target.remove();
+  });
+
+  it('routes the full-page visibility summary action to field visibility controls', () => {
+    const target = document.createElement('section');
+    target.id = 'privacy-field-visibility';
+    document.body.appendChild(target);
+
+    render(<PrivacyOverview userId="user-1" fullPageNavigation />);
+
+    fireEvent.click(screen.getByRole('button', { name: /review visibility choices/i }));
 
     expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
     expect(focusMock).toHaveBeenCalledWith({ preventScroll: true });
@@ -182,6 +209,11 @@ describe('PrivacyOverview copy', () => {
     await waitFor(() => {
       expect(screen.getByText('1 section')).toBeInTheDocument();
     });
+    expect(
+      screen.getByRole('group', {
+        name: /Public: 1 section\. Visible on your Public Page\./i,
+      })
+    ).toBeInTheDocument();
   });
 
   it('shows inline export failure feedback instead of a native alert', async () => {

@@ -46,6 +46,33 @@ const EMPTY_VISIBILITY_COUNTS: VisibilityCounts = {
   private: 0,
 };
 
+const VISIBILITY_SUMMARY_ITEMS: Array<{
+  key: keyof VisibilityCounts;
+  label: string;
+  description: string;
+}> = [
+  {
+    key: 'public',
+    label: 'Public',
+    description: 'Visible on your Public Page',
+  },
+  {
+    key: 'network_only',
+    label: 'Trusted review context',
+    description: 'Visible only in trusted review contexts',
+  },
+  {
+    key: 'match_only',
+    label: 'Assignment review',
+    description: 'Allowed only when assignment-review access applies',
+  },
+  {
+    key: 'private',
+    label: 'Private',
+    description: 'Only visible to you',
+  },
+];
+
 export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyOverviewProps) {
   const [showDataBreakdown, setShowDataBreakdown] = useState(false);
   const [showAuditLog, setShowAuditLog] = useState(false);
@@ -278,10 +305,10 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
       {privacySummaryEnabled ? (
         <Card variant="bento" className="border-proofound-stone dark:border-border rounded-xl">
           <CardHeader>
-            <CardTitle className="text-xl font-['Crimson_Pro']">What others can see</CardTitle>
+            <CardTitle className="text-xl font-['Crimson_Pro']">Field visibility choices</CardTitle>
             <CardDescription>
-              Visibility summary across Public Page, trusted review context, assignment review, and
-              private sections
+              Counts show the visibility level selected for each Public Page section. Assignment
+              review still follows access and reveal rules.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -325,34 +352,28 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
               aria-busy={visibilitySummaryLoading}
               aria-live="polite"
             >
-              <div className="rounded-lg border p-3">
-                <p className="font-medium">Public</p>
-                <p className="text-muted-foreground">
-                  {getVisibilitySummaryText(visibilityCounts.public)}
-                </p>
-              </div>
-              <div className="rounded-lg border p-3">
-                <p className="font-medium">Trusted review context</p>
-                <p className="text-muted-foreground">
-                  {getVisibilitySummaryText(visibilityCounts.network_only)}
-                </p>
-              </div>
-              <div className="rounded-lg border p-3">
-                <p className="font-medium">Assignment review</p>
-                <p className="text-muted-foreground">
-                  {getVisibilitySummaryText(visibilityCounts.match_only)}
-                </p>
-              </div>
-              <div className="rounded-lg border p-3">
-                <p className="font-medium">Private</p>
-                <p className="text-muted-foreground">
-                  {getVisibilitySummaryText(visibilityCounts.private)}
-                </p>
-              </div>
+              {VISIBILITY_SUMMARY_ITEMS.map((item) => {
+                const summaryText = getVisibilitySummaryText(visibilityCounts[item.key]);
+
+                return (
+                  <div
+                    key={item.key}
+                    role="group"
+                    aria-label={`${item.label}: ${summaryText}. ${item.description}.`}
+                    className="rounded-lg border p-3"
+                  >
+                    <p className="font-medium">{item.label}</p>
+                    <p className="text-muted-foreground">{summaryText}</p>
+                    <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                      {item.description}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setShowVisibilitySettings(true)}>
-                Preview visibility
+              <Button variant="outline" onClick={reviewFieldVisibility}>
+                Review visibility choices
               </Button>
             </div>
           </CardContent>
