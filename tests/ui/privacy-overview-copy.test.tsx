@@ -116,7 +116,7 @@ describe('PrivacyOverview copy', () => {
     expect(screen.queryByText('What others can see')).not.toBeInTheDocument();
   });
 
-  it('keeps the primary privacy header icon balanced with the full action block', () => {
+  it('keeps the primary privacy header icon paired with the title and copy block', () => {
     render(<PrivacyOverview userId="user-1" />);
 
     const heading = screen.getByRole('heading', { name: 'Your Privacy Controls' });
@@ -129,7 +129,7 @@ describe('PrivacyOverview copy', () => {
     expect(headerGrid?.className).toContain('sm:grid-cols-[3rem_minmax(0,1fr)]');
     expect(headerGrid?.className).toContain('items-start');
     expect(headerGrid?.className).not.toContain('sm:items-center');
-    expect(iconTile).toHaveClass('sm:row-span-2');
+    expect(iconTile).not.toHaveClass('sm:row-span-2');
     expect(iconTile).toHaveClass('sm:self-center');
     expect(actions).toHaveClass('col-span-2');
     expect(actions).toHaveClass('sm:col-start-2');

@@ -247,7 +247,7 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
       >
         <CardContent className="py-6 sm:py-8">
           <div className="grid grid-cols-[2.5rem_minmax(0,1fr)] items-start gap-x-3 gap-y-5 sm:grid-cols-[3rem_minmax(0,1fr)] sm:gap-x-5 sm:gap-y-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-proofound-forest/10 dark:bg-proofound-forest/20 sm:row-span-2 sm:h-12 sm:w-12 sm:self-center">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-proofound-forest/10 dark:bg-proofound-forest/20 sm:h-12 sm:w-12 sm:self-center">
               <Shield className="h-6 w-6 text-proofound-forest dark:text-proofound-parchment" />
             </div>
             <div className="min-w-0">
