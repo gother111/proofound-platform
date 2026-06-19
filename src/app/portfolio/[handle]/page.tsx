@@ -333,25 +333,31 @@ export default async function PortfolioPage({
             </div>
 
             <div className="flex w-full flex-col gap-3 border-t border-[#EFECE5] pt-4 lg:w-auto lg:min-w-[220px] lg:border-t-0 lg:pt-0">
-              {!viewerIsOwner ? (
-                <>
-                  <Button asChild className="bg-proofound-forest text-white hover:bg-[#163d2f]">
+              <div className="flex flex-col gap-3">
+                {!viewerIsOwner ? (
+                  <Button
+                    asChild
+                    className="min-h-11 bg-proofound-forest text-white hover:bg-[#163d2f]"
+                  >
                     <Link href={collaborationHref}>Request introduction</Link>
                   </Button>
-                  <p className="text-xs leading-5 text-muted-foreground">
-                    Private details stay hidden unless the owner explicitly reveals them.
-                    Introduction requests stay routed through Proofound first. Export and copy
-                    actions use only this page&apos;s public-safe details.
-                  </p>
-                </>
-              ) : null}
+                ) : null}
 
-              <PublicPageActionButtons
-                shareUrl={data.shareUrl}
-                viewerIsOwner={viewerIsOwner}
-                publicExportEndpoint={publicExportEndpoint}
-                publicSummaryEndpoint={publicSummaryEndpoint}
-              />
+                <PublicPageActionButtons
+                  shareUrl={data.shareUrl}
+                  viewerIsOwner={viewerIsOwner}
+                  publicExportEndpoint={publicExportEndpoint}
+                  publicSummaryEndpoint={publicSummaryEndpoint}
+                />
+              </div>
+
+              {!viewerIsOwner ? (
+                <p className="text-xs leading-5 text-muted-foreground">
+                  Private details stay hidden unless the owner explicitly reveals them. Introduction
+                  requests stay routed through Proofound first. Export and copy actions use only
+                  this page&apos;s public-safe details.
+                </p>
+              ) : null}
             </div>
 
             <div className="lg:col-start-1">

@@ -353,12 +353,18 @@ describe('Public individual portfolio page', () => {
     expect(
       screen.getByRole('button', { name: /download trust pdf/i }).closest('.hidden')
     ).toBeNull();
-    expect(
-      screen.getByRole('button', { name: /copy proof summary/i }).closest('.hidden')
-    ).toBeNull();
-    expect(
-      screen.getByText(/export and copy actions use only this page's public-safe details/i)
-    ).toBeInTheDocument();
+    expect(requestIntroductionLink.compareDocumentPosition(copyShareButton)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING
+    );
+    const copyProofSummaryButton = screen.getByRole('button', { name: /copy proof summary/i });
+    expect(copyProofSummaryButton.closest('.hidden')).toBeNull();
+    const publicSafeDetailsCopy = screen.getByText(
+      /export and copy actions use only this page's public-safe details/i
+    );
+    expect(copyProofSummaryButton.compareDocumentPosition(publicSafeDetailsCopy)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING
+    );
+    expect(publicSafeDetailsCopy).toBeInTheDocument();
     expect(
       screen.getByText(/introduction requests stay routed through proofound first/i)
     ).toBeInTheDocument();
