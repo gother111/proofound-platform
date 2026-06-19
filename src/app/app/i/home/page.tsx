@@ -255,10 +255,10 @@ export default async function IndividualHomePage() {
                             {step.status}
                           </Badge>
                         </div>
-                        <p className="text-xs text-muted-foreground leading-relaxed sm:max-w-[85%]">
-                          {step.detail}
-                        </p>
-                        <div className="flex sm:hidden items-center justify-between gap-2 pt-2 border-t border-proofound-stone/20">
+                        <div
+                          className="flex sm:hidden items-center justify-between gap-2"
+                          data-testid={`readiness-mobile-action-row-${idx}`}
+                        >
                           <Badge
                             variant="outline"
                             className={cn(
@@ -279,6 +279,9 @@ export default async function IndividualHomePage() {
                             </Link>
                           </Button>
                         </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed sm:max-w-[85%]">
+                          {step.detail}
+                        </p>
                       </div>
 
                       {/* Desktop Action */}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import IndividualHomePage from '@/app/app/i/home/page';
@@ -53,6 +53,15 @@ describe('IndividualHomePage', () => {
     ]) {
       expect(readinessAction.className).toMatch(/min-h-(11|\[44px\])/);
     }
+
+    const firstMobileActionRow = screen.getByTestId('readiness-mobile-action-row-0');
+    const firstProofDetail = screen.getByText(/start with one useful artifact/i);
+
+    expect(firstMobileActionRow).toHaveClass('sm:hidden');
+    expect(within(firstMobileActionRow).getByRole('link', { name: /start proof/i })).toBeVisible();
+    expect(firstMobileActionRow.compareDocumentPosition(firstProofDetail)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING
+    );
 
     expect(screen.getByRole('link', { name: /export or delete/i })).toHaveAttribute(
       'href',
