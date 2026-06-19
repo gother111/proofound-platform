@@ -79,9 +79,14 @@ describe('individual matching mobile clarity', () => {
     expect(screen.getByRole('button', { name: MATCH_EXPLAINER_TRIGGER_LABEL })).toHaveClass(
       'min-h-[44px]'
     );
-    expect(screen.getByRole('button', { name: "I'm interested" })).toHaveClass('min-h-[44px]');
-    expect(screen.getByRole('button', { name: 'Hide' })).toHaveClass('min-h-[44px]');
-    expect(screen.getByRole('button', { name: 'Pause' })).toHaveClass('min-h-[44px]');
+    const proofInterestButton = screen.getByRole('button', { name: 'Submit proof interest' });
+    const hideReviewButton = screen.getByRole('button', { name: 'Hide review' });
+    const pauseReviewButton = screen.getByRole('button', { name: 'Pause review' });
+
+    expect(proofInterestButton).toHaveClass('min-h-[44px]', 'col-span-2');
+    expect(hideReviewButton).toHaveClass('min-h-[44px]', 'min-w-0');
+    expect(pauseReviewButton).toHaveClass('min-h-[44px]', 'min-w-0');
+    expect(proofInterestButton.parentElement).toHaveClass('grid', 'grid-cols-2', 'sm:flex');
   });
 
   it('keeps first setup role input full-width before the add action on mobile', () => {

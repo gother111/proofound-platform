@@ -48,7 +48,7 @@ vi.mock('@/components/matching/MatchResultCard', () => ({
     <div data-testid="match-card">
       <span>{result.id}</span>
       <button type="button" onClick={onInterested}>
-        Express interest
+        Submit proof interest
       </button>
     </div>
   ),
@@ -291,7 +291,7 @@ describe('individual matching load failure recovery', () => {
       await screen.findByRole('button', { name: 'Manage paused or hidden reviews' })
     ).toHaveClass('min-h-[44px]');
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Express interest' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Submit proof interest' }));
 
     await waitFor(() => {
       expect(toastErrorMock).toHaveBeenCalledWith(

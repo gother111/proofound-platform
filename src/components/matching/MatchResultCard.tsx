@@ -741,17 +741,17 @@ export function MatchResultCard({
 
         {/* Actions */}
         {variant === 'blind' && (
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
             <Button
               size="sm"
               onClick={handleInterested}
               style={{ backgroundColor: '#1C4D3A' }}
-              className="min-h-[44px] min-w-[8rem] flex-1"
+              className="col-span-2 min-h-[44px] min-w-0 flex-1 sm:min-w-[8rem]"
             >
-              {isOrgView ? 'Shortlist' : "I'm interested"}
+              {isOrgView ? 'Shortlist' : 'Submit proof interest'}
             </Button>
-            <Button size="sm" variant="outline" onClick={onHide} className="min-h-[44px]">
-              Hide
+            <Button size="sm" variant="outline" onClick={onHide} className="min-h-[44px] min-w-0">
+              {isOrgView ? 'Hide' : 'Hide review'}
             </Button>
             <Button
               size="sm"
@@ -767,10 +767,10 @@ export function MatchResultCard({
                   ? 'Pause becomes available once this assignment review is saved'
                   : undefined
               }
-              className="min-h-[44px] text-xs text-muted-foreground hover:bg-japandi-bg"
+              className="min-h-[44px] min-w-0 text-xs text-muted-foreground hover:bg-japandi-bg"
             >
               <BellOff className="w-3.5 h-3.5 mr-1.5" />
-              Pause
+              Pause review
             </Button>
           </div>
         )}
