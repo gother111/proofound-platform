@@ -245,9 +245,9 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
         variant="bento"
         className="border-proofound-stone dark:border-border rounded-2xl bg-gradient-to-br from-proofound-parchment to-white dark:from-slate-800 dark:to-slate-900"
       >
-        <CardContent className="pt-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-            <div className="w-fit shrink-0 rounded-lg bg-proofound-forest/10 p-3 dark:bg-proofound-forest/20">
+        <CardContent className="py-6 sm:py-8">
+          <div className="grid items-start gap-4 sm:grid-cols-[3rem_minmax(0,1fr)] sm:items-center sm:gap-5">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-proofound-forest/10 dark:bg-proofound-forest/20">
               <Shield className="h-6 w-6 text-proofound-forest dark:text-proofound-parchment" />
             </div>
             <div className="min-w-0 flex-1">
