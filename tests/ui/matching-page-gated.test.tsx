@@ -62,13 +62,13 @@ describe('MatchingPage soft-gated state', () => {
     vi.clearAllMocks();
   });
 
-  it('renders introduction readiness guidance when personalized matching is soft-gated', async () => {
+  it('renders introduction readiness guidance when assignment review is soft-gated', async () => {
     const blockedPayload = {
       items: [],
       meta: {
         softGated: true,
         message:
-          'Browsing is open, but add a few recent skills and one preference to personalize results.',
+          'Browsing is open, but add a few recent skills and one preference so assignment reviews can reach you safely.',
       },
       eligibility: {
         criteria: {
@@ -137,16 +137,18 @@ describe('MatchingPage soft-gated state', () => {
 
     expect(
       screen.getByText(
-        'Browsing is open, but add a few recent skills and one preference to personalize results.'
+        'Browsing is open, but add a few recent skills and one preference so assignment reviews can reach you safely.'
       )
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        'You can keep browsing, but introductions unlock after the required proof, one accepted verification, and intro constraints are current.'
+        'You can keep browsing, but introductions open after the required proof, one accepted verification, and intro constraints are current.'
       )
     ).toBeInTheDocument();
     expect(screen.getByText('Recent skills')).toBeInTheDocument();
     expect(screen.getByText('Strengthen Public Page proof')).toBeInTheDocument();
+    expect(document.body.textContent).not.toContain('personalized matching');
+    expect(document.body.textContent).not.toContain('introductions unlock');
   });
 
   it('renders the empty matching corridor when browsing is eligible but no assignments are ready', async () => {
@@ -174,7 +176,7 @@ describe('MatchingPage soft-gated state', () => {
             topActions: [
               {
                 id: 'visual-match-preferences',
-                title: 'Tune match preferences',
+                title: 'Tune review preferences',
                 description:
                   'Adjust work mode, availability, and compensation before sending interest.',
                 actionUrl: '/app/i/matching/preferences',
@@ -211,7 +213,7 @@ describe('MatchingPage soft-gated state', () => {
         'Nothing needs your attention right now. Keep your proof and preferences current so new assignment reviews can land cleanly.'
       )
     ).toBeInTheDocument();
-    expect(screen.getByText('Tune match preferences')).toBeInTheDocument();
+    expect(screen.getByText('Tune review preferences')).toBeInTheDocument();
     expect(screen.queryByText('Introductions need more proof')).not.toBeInTheDocument();
   });
 

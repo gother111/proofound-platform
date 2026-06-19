@@ -104,7 +104,7 @@ function toEligibilityAction(requirement: ReadinessRequirement): EligibilityActi
 
   return {
     id: requirement.id,
-    title: 'Set browse preferences',
+    title: 'Set assignment-review preferences',
     description: requirement.detail,
     actionUrl: '/app/i/matching/preferences',
   };
@@ -144,12 +144,13 @@ export async function evaluateIndividualMatchability(
     },
     matchingProfile: {
       id: 'matchingProfile',
-      label: 'Browse profile',
+      label: 'Assignment review preferences',
       met: flags.hasMatchingProfile,
       status: flags.hasMatchingProfile ? 'met' : 'unmet',
       current: flags.hasMatchingProfile,
-      required: 'matching profile',
-      detail: 'Create your matching profile so preferences have somewhere to live.',
+      required: 'review preferences',
+      detail:
+        'Save assignment review preferences so constraints and availability have a clear home.',
     },
     intentSignal: {
       id: 'intentSignal',
@@ -188,7 +189,7 @@ export async function evaluateIndividualMatchability(
       ? {
           tier: 'lite' as const,
           message:
-            'Keep browsing. Add a few recent skills and one practical preference to become match-visible.',
+            'Keep browsing. Add a few recent skills and one practical preference so assignment reviews can reach you safely.',
           remaining: {
             skillsWithRecency: Math.max(0, 3 - counts.skillsWithRecency),
             proofCount: 0,
@@ -224,8 +225,8 @@ export async function evaluateIndividualMatchability(
           : 'Browse is active and introductions are available.'
         : 'Browsing stays open while qualified introductions are protected. Add stronger relevant proof and one trusted proof-backed skill when you are ready.'
       : readiness.flags.discoverable
-        ? 'Private browse is active. Add deeper recent proof and availability details to become match-visible.'
-        : 'Browsing stays open while you add a target role, one proof-linked skill, and one practical preference.',
+        ? 'Private browse is active. Add deeper recent proof and availability details before assignment reviews move toward introductions.'
+        : 'Browsing stays open while you add a target role, one proof-linked skill, and one practical preference so assignment reviews can reach you safely.',
     counts: {
       skillsWithRecency: counts.skillsWithRecency,
       proofCount: counts.proofCount,

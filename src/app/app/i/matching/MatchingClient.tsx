@@ -137,7 +137,7 @@ export function MatchingClient() {
       },
       {
         id: 'set-matching-constraints-default',
-        title: 'Set matching constraints',
+        title: 'Set review preferences',
         description: 'Save work mode, availability window, and compensation range.',
         actionUrl: '/app/i/matching/preferences',
       },
@@ -447,7 +447,7 @@ export function MatchingClient() {
           </div>
 
           <p className="mt-4 text-xs text-muted-foreground">
-            You can keep browsing, but introductions unlock after the required proof, one accepted
+            You can keep browsing, but introductions open after the required proof, one accepted
             verification, and intro constraints are current.
           </p>
 

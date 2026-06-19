@@ -318,6 +318,23 @@ describe('evaluateIndividualMatchability', () => {
         '/app/i/profile',
       ])
     );
+    expect(result.message).toContain('assignment reviews can reach you safely');
+    expect(result.nextTierTarget?.message).toContain('assignment reviews can reach you safely');
+    expect(result.criteria.matchingProfile.label).toBe('Assignment review preferences');
+    expect(result.criteria.matchingProfile.required).toBe('review preferences');
+    expect(result.criteria.matchingProfile.detail).toContain('Save assignment review preferences');
+    expect(result.topActions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          title: 'Set assignment-review preferences',
+          actionUrl: '/app/i/matching/preferences',
+        }),
+      ])
+    );
+    const visiblePayloadCopy = JSON.stringify(result);
+    expect(visiblePayloadCopy).not.toContain('matching profile');
+    expect(visiblePayloadCopy).not.toContain('match-visible');
+    expect(visiblePayloadCopy).not.toContain('Set browse preferences');
   });
 });
 

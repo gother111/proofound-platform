@@ -115,7 +115,7 @@ export function toExpertiseStatsPresentation(
           ? {
               tier: 'lite',
               message:
-                'Browsing is available once you connect a few recent skills to anchored proof and add one practical preference so your profile becomes match-visible.',
+                'Browsing is available once you connect a few recent skills to anchored proof and add one practical preference so assignment reviews can reach you safely.',
               remaining: {
                 skillsWithRecency: Math.max(0, 3 - readiness.counts.skillsWithRecency),
                 proofCount: 0,

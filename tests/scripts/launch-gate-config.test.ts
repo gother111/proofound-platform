@@ -5067,6 +5067,7 @@ describe('launch gate package configuration', () => {
       'src/lib/matching/eligibility.ts',
       'src/lib/readiness/individual.ts',
       'src/lib/readiness/individual-state.ts',
+      'src/lib/readiness/presentation.ts',
       'src/lib/ui/recovery-actions.ts',
     ];
 
@@ -5081,7 +5082,10 @@ describe('launch gate package configuration', () => {
     expect(activeReadinessCopy).toContain('Prepare assignment reviews at your pace');
     expect(activeReadinessCopy).toContain('Assignment reviews open in order');
     expect(activeReadinessCopy).toContain('Set up assignment review preferences');
+    expect(activeReadinessCopy).toContain('Set assignment-review preferences');
+    expect(activeReadinessCopy).toContain('Assignment review preferences');
     expect(activeReadinessCopy).toContain('assignment reviews stay relevant');
+    expect(activeReadinessCopy).toContain('assignment reviews can reach you safely');
     expect(activeReadinessCopy).toContain('revisit assignment-review preferences weekly');
     expect(activeReadinessCopy).toContain('review-stage reveal');
     expect(activeReadinessCopy).toContain('Introductions need stronger proof first');
@@ -5118,6 +5122,11 @@ describe('launch gate package configuration', () => {
       'Prepare matching at your pace',
       'Set up matching profile',
       'Matching opens in order',
+      'Set browse preferences',
+      'Set matching constraints',
+      'Create your matching profile',
+      'Browse profile',
+      'match-visible',
       'make matching ready',
       'opening matching further',
       'visible after a match',

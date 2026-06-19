@@ -88,7 +88,7 @@ export function buildVisualMatchingReadinessActions() {
   return [
     {
       id: 'visual-match-preferences',
-      title: 'Tune match preferences',
+      title: 'Tune review preferences',
       description: 'Adjust work mode, availability, and compensation before sending interest.',
       actionUrl: '/app/i/matching/preferences',
     },
