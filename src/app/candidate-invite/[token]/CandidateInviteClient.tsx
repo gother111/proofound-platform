@@ -1272,7 +1272,8 @@ export function CandidateInviteClient({
               {isTestFlow && isClaimedByCurrentUser ? (
                 <div className="space-y-3">
                   <p className="text-sm text-emerald-700">
-                    Assignment review invite accepted. You can now use messages and matching.
+                    Assignment review invite accepted. You can now use messages and assignment
+                    review.
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {invite.communicationsUrl ? (
@@ -1281,7 +1282,7 @@ export function CandidateInviteClient({
                       </Link>
                     ) : null}
                     <Link href="/app/i/matching">
-                      <Button variant="outline">Open Matching</Button>
+                      <Button variant="outline">Open assignment review</Button>
                     </Link>
                   </div>
                 </div>

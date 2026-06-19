@@ -122,7 +122,7 @@ describe('AssignmentReviewClient', () => {
 
     const publishDialog = await screen.findByRole('dialog');
     expect(
-      within(publishDialog).getByText(/starts the proof-led matching corridor/i)
+      within(publishDialog).getByText(/starts the proof-led assignment-review corridor/i)
     ).toBeInTheDocument();
     expect(
       within(publishDialog).getByText(/Publication makes the assignment discoverable/i)

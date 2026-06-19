@@ -5,7 +5,7 @@ import { getRouteMeta } from '@/lib/ui/v2/routeMeta';
 describe('route metadata copy', () => {
   it('keeps active app shell routes aligned with proof-review wording', () => {
     expect(getRouteMeta('/app/i/matching')).toMatchObject({
-      title: 'Matching',
+      title: 'Assignment Review',
       description: 'Review proof-aligned assignment introductions',
     });
     expect(getRouteMeta('/app/i/profile')).toMatchObject({
@@ -57,5 +57,7 @@ describe('route metadata copy', () => {
     expect(descriptions).not.toContain('Your work showcase');
     expect(descriptions).not.toContain('Manage tasks and roles');
     expect(descriptions).not.toContain('Saved submissions and matches');
+
+    expect(getRouteMeta('/app/i/matching').title).not.toBe('Matching');
   });
 });

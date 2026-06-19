@@ -21,7 +21,7 @@ export function ProfileReadinessBanner({
       met: completionState.isPortfolioReady,
     },
     {
-      label: 'Matching preferences saved',
+      label: 'Assignment review preferences saved',
       met:
         completionState.checks.hasTargetRoleFocus &&
         completionState.checks.hasWorkPreference &&

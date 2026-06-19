@@ -116,13 +116,21 @@ describe('PrivacyOverview copy', () => {
     expect(screen.queryByText('What others can see')).not.toBeInTheDocument();
   });
 
-  it('keeps the primary privacy header icon aligned with the title block', () => {
+  it('keeps the primary privacy header icon balanced with the title block', () => {
     render(<PrivacyOverview userId="user-1" />);
 
     const heading = screen.getByRole('heading', { name: 'Your Privacy Controls' });
     const headerGrid = heading.closest('.grid');
+    const iconTile = headerGrid?.firstElementChild;
+    const actions = screen.getAllByRole('button', { name: /review field visibility/i })[0]
+      .parentElement;
 
-    expect(headerGrid).toHaveClass('items-start');
+    expect(headerGrid?.className).toContain('grid-cols-[2.5rem_minmax(0,1fr)]');
+    expect(headerGrid?.className).toContain('sm:grid-cols-[3rem_minmax(0,1fr)]');
+    expect(iconTile).toHaveClass('self-start');
+    expect(actions).toHaveClass('col-span-2');
+    expect(actions).toHaveClass('sm:col-start-2');
+    expect(headerGrid?.className).not.toContain('items-start');
     expect(headerGrid?.className).not.toContain('sm:items-center');
   });
 

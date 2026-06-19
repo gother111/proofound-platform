@@ -132,7 +132,7 @@ export function CommandPaletteDialog({ open, onOpenChange }: CommandPaletteDialo
                 className="relative flex cursor-default select-none items-center rounded-sm px-2 py-2.5 text-sm outline-none aria-selected:bg-proofound-forest aria-selected:text-white data-[disabled]:pointer-events-none data-[disabled]:opacity-50 transition-colors"
               >
                 <Compass className="mr-2 h-4 w-4" />
-                <span>Matching</span>
+                <span>Assignment review</span>
               </Command.Item>
               <Command.Item
                 onSelect={() =>

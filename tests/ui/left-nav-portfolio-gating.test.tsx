@@ -52,10 +52,11 @@ describe('LeftNav portfolio gating', () => {
       'href',
       '/app/i/communications'
     );
-    expect(screen.getAllByRole('link', { name: /matching/i })[0]).toHaveAttribute(
+    expect(screen.getAllByRole('link', { name: /assignment review/i })[0]).toHaveAttribute(
       'href',
       '/app/i/matching'
     );
+    expect(screen.queryByRole('link', { name: /^matching$/i })).not.toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: /^settings$/i })[0]).toHaveAttribute(
       'href',
       '/app/i/settings'

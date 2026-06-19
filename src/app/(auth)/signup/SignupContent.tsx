@@ -102,7 +102,7 @@ export function SignupContent() {
                       </h3>
                       <p className="text-sm leading-6 text-[#44504B]">
                         For professionals who want a clean proof-based portfolio link they can share
-                        today, plus matching as they grow.
+                        today, then assignment reviews when proof and privacy are ready.
                       </p>
                     </div>
                     <div className="mt-auto">

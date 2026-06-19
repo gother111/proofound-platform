@@ -56,7 +56,7 @@ export function TopBar({
 
     if (pathname.includes('/home')) return 'Overview';
     if (pathname.includes('/communications')) return 'Communications';
-    if (pathname.includes('/matching')) return 'Matching';
+    if (pathname.includes('/matching')) return 'Assignment Review';
     if (pathname.includes('/interviews')) return 'Interviews';
     if (pathname.includes('/messages')) return 'Messages';
     if (pathname.includes('/profile')) return 'Profile';

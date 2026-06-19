@@ -5,7 +5,7 @@ export default function LoadingIndividualMatching() {
     <div className="max-w-5xl mx-auto px-4 py-6">
       <div className="mb-6 space-y-2">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-proofound-forest">
-          Matching
+          Assignment review
         </p>
         <h1 className="font-display text-3xl font-semibold tracking-tight text-proofound-charcoal">
           Assignment review workspace

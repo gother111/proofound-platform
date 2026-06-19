@@ -5,10 +5,10 @@ export default function LoadingMatchingPreferences() {
     <div className="mx-auto w-full max-w-4xl px-4 py-8">
       <div className="mb-8 space-y-2">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-proofound-forest">
-          Matching
+          Assignment review
         </p>
         <h1 className="font-display text-3xl font-semibold text-proofound-charcoal">
-          Matching Preferences
+          Assignment Review Preferences
         </h1>
         <p
           className="max-w-2xl text-sm leading-6 text-muted-foreground"

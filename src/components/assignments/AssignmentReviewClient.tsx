@@ -516,7 +516,7 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
                 Publish assignment
               </DialogTitle>
               <DialogDescription>
-                This starts the proof-led matching corridor for this assignment.
+                This starts the proof-led assignment-review corridor for this assignment.
               </DialogDescription>
             </DialogHeader>
 

@@ -83,7 +83,8 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
     {
       href: `${basePath}/matching`,
       icon: Users,
-      label: 'Matching',
+      label: 'Assignment review',
+      mobileLabel: 'Review',
       dataTour: 'matching-link',
     },
     {

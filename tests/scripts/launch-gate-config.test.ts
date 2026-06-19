@@ -5412,6 +5412,7 @@ describe('launch gate package configuration', () => {
   it('keeps active signup and review-entry copy workflow-scoped', () => {
     const workflowEntryCopy = [
       'src/components/auth/SignupForm.tsx',
+      'src/app/(auth)/signup/SignupContent.tsx',
       'src/app/app/o/[slug]/home/page.tsx',
       'src/app/app/o/[slug]/assignments/page.tsx',
       'src/app/app/i/matching/MatchingClient.tsx',
@@ -5423,7 +5424,11 @@ describe('launch gate package configuration', () => {
       'src/app/api/assignments/route.ts',
       'src/lib/assignments/visual-fixtures.ts',
       'src/app/api/ai/assignments/clarify/route.ts',
+      'src/app/candidate-invite/[token]/CandidateInviteClient.tsx',
+      'src/components/assignments/AssignmentReviewClient.tsx',
+      'src/components/matching/OrganizationMatchingEmpty.tsx',
       'src/components/onboarding/OrganizationSetup.tsx',
+      'src/components/onboarding/IndividualContextProofSetup.tsx',
       'src/app/app/o/[slug]/profile/page.tsx',
     ]
       .map((relativePath) => fs.readFileSync(path.join(repoRoot, relativePath), 'utf8'))
@@ -5458,10 +5463,26 @@ describe('launch gate package configuration', () => {
       'One assignment path and one review queue for published work and submissions'
     );
     expect(workflowEntryCopy).toContain('reviewers need to trust the work context');
+    expect(workflowEntryCopy).toContain(
+      'today, then assignment reviews when proof and privacy are ready.'
+    );
+    expect(workflowEntryCopy).toContain('Assignment review preferences');
+    expect(workflowEntryCopy).toContain('Open assignment review with one clear assignment');
+    expect(workflowEntryCopy).toContain('Assignment review is taking longer than usual');
+    expect(workflowEntryCopy).toContain('proof-led assignment-review corridor');
 
     for (const staleCopy of [
       'matching opportunities',
       'open candidate matching',
+      'Open Matching',
+      'plus matching as they grow',
+      'matching corridor',
+      'Matching stays quiet',
+      'Matching is taking longer',
+      'Matching Preferences',
+      'Matching preferences',
+      'matching preferences practical',
+      'proof-led matching corridor',
       'matching corridor, candidate review, and pipeline',
       'relevant opportunities',
       'opportunities aligned with your skills',

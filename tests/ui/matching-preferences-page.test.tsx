@@ -40,9 +40,12 @@ describe('MatchingPreferencesPage', () => {
     const element = await MatchingPreferencesPage();
     render(element);
 
-    expect(screen.getByRole('heading', { name: 'Matching Preferences' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Assignment Review Preferences' })
+    ).toBeInTheDocument();
     expect(screen.getByText(/proof-led assignment reviews/i)).toBeInTheDocument();
     expect(screen.getByText('individual matching setup')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Matching Preferences' })).not.toBeInTheDocument();
     expect(screen.queryByText(/must-have requirements/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/relevant opportunities/i)).not.toBeInTheDocument();
   });

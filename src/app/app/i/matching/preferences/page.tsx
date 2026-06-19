@@ -1,5 +1,5 @@
 /**
- * Matching Preferences Page
+ * Assignment Review Preferences Page
  * /app/i/matching/preferences
  *
  * Implements PRD Gap 5: Dedicated page for matching profile editor
@@ -11,7 +11,7 @@ import { MatchingPreferencesClient } from '@/components/matching/MatchingPrefere
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 
 export const metadata = {
-  title: 'Matching Preferences | Proofound',
+  title: 'Assignment Review Preferences | Proofound',
   description: 'Set your proof-review preferences',
 };
 
@@ -30,7 +30,7 @@ export default async function MatchingPreferencesPage() {
       <div className="mx-auto w-full max-w-4xl px-4 py-8">
         <div className="space-y-2 mb-8">
           <h1 className="font-display text-3xl font-semibold text-proofound-charcoal">
-            Matching Preferences
+            Assignment Review Preferences
           </h1>
           <p className="text-sm leading-6 text-muted-foreground">
             Set your work preferences so proof-led assignment reviews can stay relevant and

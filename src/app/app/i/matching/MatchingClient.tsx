@@ -144,7 +144,7 @@ export function MatchingClient() {
       {
         id: 'proof-readiness-default',
         title: 'Strengthen proof readiness',
-        description: 'Add recent proof and keep your matching preferences practical.',
+        description: 'Add recent proof and keep your assignment-review preferences practical.',
         actionUrl: '/app/i/profile?profileView=full&tab=proof_packs',
       },
     ] as const;
@@ -241,7 +241,7 @@ export function MatchingClient() {
       if (error instanceof Error && error.name === 'AbortError') {
         dispatchClientErrorDiagnostic('matching.client.load_timeout', error);
         setLoadError(
-          'Matching is taking longer than usual. You can retry or review your proof readiness.'
+          'Assignment review is taking longer than usual. You can retry or review your proof readiness.'
         );
       } else {
         dispatchMatchingFailure(

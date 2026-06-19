@@ -238,7 +238,7 @@ export default async function OrganizationHomePage({
                     <p className="text-sm text-muted-foreground leading-relaxed">
                       Your organization trust profile is active. Define a proof-led assignment
                       (real-world context, required evidence, and compensation bounds) to open the
-                      matching corridor.
+                      assignment-review corridor.
                     </p>
                   </div>
                 )}

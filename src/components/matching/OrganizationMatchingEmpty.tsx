@@ -49,7 +49,7 @@ export function OrganizationMatchingEmpty({
 
             <div className="space-y-3">
               <h2 className="font-display text-3xl font-semibold tracking-tight text-proofound-charcoal">
-                Open matching with one clear assignment
+                Open assignment review with one clear assignment
               </h2>
               <p className="max-w-xl text-base leading-relaxed text-muted-foreground">
                 Start with the role context reviewers need: skills, constraints, and proof
@@ -66,7 +66,7 @@ export function OrganizationMatchingEmpty({
                 Create first assignment
               </Button>
               <p className="text-xs font-medium text-muted-foreground">
-                Matching stays quiet until trust and role context are ready.
+                Assignment review stays quiet until trust and role context are ready.
               </p>
             </div>
           </div>

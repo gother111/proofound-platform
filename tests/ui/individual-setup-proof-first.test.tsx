@@ -252,7 +252,8 @@ describe('IndividualSetup first-proof flow', () => {
       screen.getByText(/remains owner-only until you choose public-safe visibility/i)
     ).toBeInTheDocument();
     expect(screen.getAllByText(/public page readiness/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/matching preferences/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/assignment review preferences/i).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/matching preferences/i)).not.toBeInTheDocument();
     expect(screen.getByText(/optional non-self verification/i)).toBeInTheDocument();
     expect(screen.getByText(/intro eligibility still depend/i)).toBeInTheDocument();
     expect(

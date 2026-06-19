@@ -106,7 +106,7 @@ const NEXT_READINESS_STEPS = [
     body: 'Choose what this proof can safely show before it becomes part of your Public Page.',
   },
   {
-    title: 'Matching preferences',
+    title: 'Assignment review preferences',
     body: 'Add the roles, work modes, and engagement types that help reviewers understand your fit.',
   },
   {

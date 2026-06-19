@@ -34,7 +34,7 @@ export const getRouteMeta = (pathname: string): RouteMeta => {
     };
   if (path.includes('/matching'))
     return {
-      title: 'Matching',
+      title: 'Assignment Review',
       description: 'Review proof-aligned assignment introductions',
       icon: Users,
     };
