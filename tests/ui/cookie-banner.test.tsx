@@ -102,9 +102,9 @@ describe('CookieBanner', () => {
       vi.advanceTimersByTime(1000);
     });
 
-    expect(screen.getByRole('link', { name: 'Privacy Policy' })).toHaveClass('min-h-9');
-    expect(screen.getByRole('link', { name: 'Cookie Policy' })).toHaveClass('min-h-9');
-    expect(screen.getByRole('link', { name: 'Cookie Settings' })).toHaveClass('min-h-9');
+    expect(screen.getByRole('link', { name: 'Privacy Policy' })).toHaveClass('min-h-[44px]');
+    expect(screen.getByRole('link', { name: 'Cookie Policy' })).toHaveClass('min-h-[44px]');
+    expect(screen.getByRole('link', { name: 'Cookie Settings' })).toHaveClass('min-h-[44px]');
   });
 
   it('docks first-visit consent on public pages so proof content stays inspectable', () => {
