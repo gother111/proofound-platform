@@ -5561,7 +5561,7 @@ describe('launch gate package configuration', () => {
     );
     expect(supportWorkflowCopy).toContain('proof-review signal');
     expect(supportWorkflowCopy).toContain('review proof-backed submissions');
-    expect(supportWorkflowCopy).toContain('better-fit assignment reviews');
+    expect(supportWorkflowCopy).toContain('assignment reviews stay relevant');
     expect(supportWorkflowCopy).toContain('support proof-led assignment reviews');
     expect(supportWorkflowCopy).toContain('real proof submissions');
     expect(supportWorkflowCopy).toContain('Proof packet redesign for proof review');
@@ -5589,6 +5589,8 @@ describe('launch gate package configuration', () => {
       'candidate pipeline recovery actions',
       'assignment-review recovery actions',
       'legacy Atlas flows',
+      'matching preferences',
+      'proof matching',
       'profile can start receiving matches',
       'better-fit opportunities',
       'relevant opportunities',

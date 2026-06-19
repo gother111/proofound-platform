@@ -37,8 +37,9 @@ const INDIVIDUAL_BASE_ACTIONS: RecoveryAction[] = [
   },
   {
     id: 'turn-on-matchable',
-    title: 'Turn on matchable',
-    description: 'Complete matching preferences to make better-fit assignment reviews available.',
+    title: 'Set assignment-review preferences',
+    description:
+      'Complete work mode, availability, and compensation so assignment reviews stay relevant.',
     actionUrl: '/app/i/matching/preferences',
   },
 ];
@@ -48,7 +49,8 @@ const INDIVIDUAL_DESCRIPTION_OVERRIDES: Record<
   Partial<Record<RecoveryAction['id'], string>>
 > = {
   'matching-blocked': {
-    'turn-on-matchable': 'Complete work mode, availability, and compensation to become matchable.',
+    'turn-on-matchable':
+      'Complete work mode, availability, and compensation so assignment reviews can open.',
   },
   'matching-empty': {
     'add-proof': 'Strengthen verification by attaching proof to one of your strongest skills.',
@@ -63,7 +65,8 @@ const INDIVIDUAL_DESCRIPTION_OVERRIDES: Record<
     'add-proof': 'Add your first proof artifact to strengthen credibility and readiness.',
   },
   'profile-incomplete': {
-    'turn-on-matchable': 'Finish matching preferences so assignment reviews stay relevant.',
+    'turn-on-matchable':
+      'Finish assignment-review preferences so assignment reviews stay relevant.',
   },
 };
 
@@ -167,13 +170,14 @@ export function getOrganizationRecoveryActions(
       {
         id: 'add-skill-requirements',
         title: 'Add skill requirements',
-        description: 'Define required skills so matching can surface proof-backed submissions.',
+        description:
+          'Define required skills so assignment review can surface proof-backed submissions.',
         actionUrl: `${basePath}/assignments/new?focus=skills`,
       },
       {
         id: 'turn-on-candidate-matching',
-        title: 'Turn on proof matching',
-        description: 'Open matching so proof submissions can move back into review.',
+        title: 'Open assignment review',
+        description: 'Open the review path so proof submissions can move back into review.',
         actionUrl: `${basePath}/assignments?focus=matchable`,
       },
     ],
@@ -192,8 +196,9 @@ export function getOrganizationRecoveryActions(
       },
       {
         id: 'turn-on-candidate-matching',
-        title: 'Turn on proof matching',
-        description: 'Re-open matching and re-run proof-submission discovery for this assignment.',
+        title: 'Re-run assignment review',
+        description:
+          'Re-open assignment review and re-run proof-submission discovery for this assignment.',
         actionUrl: assignmentId
           ? `${basePath}/assignments?matching=${encodeURIComponent(assignmentId)}`
           : `${basePath}/assignments?focus=matchable`,

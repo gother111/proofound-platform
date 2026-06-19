@@ -45,6 +45,8 @@ describe('CommunicationsHub mobile targets', () => {
     expect(
       screen.getByText('Introductions, reveal choices, and private threads.')
     ).toBeInTheDocument();
+    expect(screen.getByText('Assignment Review Corridor')).toBeInTheDocument();
+    expect(screen.queryByText('Hiring Corridor')).not.toBeInTheDocument();
     expect(
       screen.getByText(
         'Messages, interview timing, and reveal decisions stay consent-bound before identity-bearing access.'

@@ -29,7 +29,7 @@ describe('route metadata copy', () => {
   it('keeps archived launch-note routes aligned with assignment-review wording', () => {
     expect(getRouteMeta('/app/i/opportunities')).toMatchObject({
       title: 'Launch note',
-      description: 'Assignment discovery stays inside matching for the MVP corridor',
+      description: 'Assignment discovery stays inside the assignment-review corridor',
     });
     expect(getRouteMeta('/app/o/acme/shortlist')).toMatchObject({
       title: 'Shortlist',
@@ -59,5 +59,6 @@ describe('route metadata copy', () => {
     expect(descriptions).not.toContain('Saved submissions and matches');
 
     expect(getRouteMeta('/app/i/matching').title).not.toBe('Matching');
+    expect(getRouteMeta('/app/i/opportunities').description).not.toContain('inside matching');
   });
 });

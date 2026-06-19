@@ -47,7 +47,7 @@ export const getRouteMeta = (pathname: string): RouteMeta => {
   if (path.includes('/opportunities'))
     return {
       title: 'Launch note',
-      description: 'Assignment discovery stays inside matching for the MVP corridor',
+      description: 'Assignment discovery stays inside the assignment-review corridor',
       icon: Briefcase,
     };
   if (path.includes('/app/o/') && path.includes('/profile'))

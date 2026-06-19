@@ -116,7 +116,7 @@ export function CommunicationsHub({
         <div className="space-y-4 md:space-y-6">
           <div className="space-y-1">
             <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-proofound-forest">
-              Hiring Corridor
+              Assignment Review Corridor
             </p>
             <h1 className="font-display text-xl font-semibold text-proofound-charcoal">
               Communications

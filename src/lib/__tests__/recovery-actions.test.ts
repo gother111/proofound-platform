@@ -14,17 +14,20 @@ describe('recovery actions', () => {
       expect.arrayContaining([
         'Add a proof',
         'Strengthen your Public Page proof',
-        'Turn on matchable',
+        'Set assignment-review preferences',
       ])
     );
     expect(actions.map((action) => action.description).join(' ')).toContain(
-      'better-fit assignment reviews'
+      'assignment reviews stay relevant'
     );
     expect(actions.map((action) => action.description).join(' ')).toContain(
       'assignment reviews can evaluate fit'
     );
     expect(actions.map((action) => action.description).join(' ')).not.toContain(
       'better-fit opportunities'
+    );
+    expect(actions.map((action) => action.description).join(' ')).not.toMatch(
+      /matching preferences|matchable/i
     );
     expect(actions.map((action) => action.description).join(' ')).not.toContain('legacy Atlas');
     expect(new Set(actions.map((action) => action.actionUrl)).size).toBe(3);
@@ -55,14 +58,15 @@ describe('recovery actions', () => {
     expect(actions.map((action) => action.description).join(' ')).not.toMatch(/legacy Atlas/i);
   });
 
-  it('returns exactly 3 organization actions and keeps proof matching copy submission-led', () => {
+  it('returns exactly 3 organization actions and keeps review copy submission-led', () => {
     const actions = getOrganizationRecoveryActions('org-matching-empty', 'acme');
     const combinedCopy = actions.map((action) => `${action.title} ${action.description}`).join(' ');
 
     expect(actions).toHaveLength(3);
-    expect(actions.map((action) => action.title)).toContain('Turn on proof matching');
+    expect(actions.map((action) => action.title)).toContain('Open assignment review');
     expect(combinedCopy).toContain('proof-backed submissions');
     expect(combinedCopy).toContain('proof submissions can move back into review');
+    expect(combinedCopy).not.toContain('proof matching');
     expect(combinedCopy).not.toContain('candidate matching');
     expect(combinedCopy).not.toContain('proof-backed candidates');
     expect(combinedCopy).not.toContain('candidate pipeline');
@@ -79,6 +83,7 @@ describe('recovery actions', () => {
     expect(actions[1].actionUrl).toContain('focus=skills');
     expect(combinedCopy).toContain('proof-submission discovery');
     expect(combinedCopy).not.toContain('candidate discovery');
+    expect(combinedCopy).not.toContain('Re-open matching');
     expect(combinedCopy).not.toContain('Turn on candidate matching');
   });
 });
