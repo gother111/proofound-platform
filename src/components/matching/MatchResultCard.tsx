@@ -387,9 +387,9 @@ export function MatchResultCard({
         <Card variant="bento" className="flex h-full flex-col p-5">
           <div className="mb-4 flex items-start justify-between gap-3">
             <div className="space-y-1">
-              <h4 className="text-base font-semibold text-proofound-charcoal">
+              <h2 className="text-base font-semibold text-proofound-charcoal">
                 {orgReviewCard?.candidateLabel || 'Proof Submission'}
-              </h4>
+              </h2>
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline">{privacyCue}</Badge>
                 <Badge variant="secondary">{stateBadgeLabel}</Badge>
@@ -574,13 +574,13 @@ export function MatchResultCard({
         <div className="mb-4 flex min-w-0 flex-col gap-3">
           <div className="min-w-0">
             {isOrgView ? (
-              <h4 className="mb-1 break-words text-base font-medium text-proofound-charcoal">
+              <h2 className="mb-1 break-words text-base font-medium text-proofound-charcoal">
                 {variant === 'revealed' ? 'John Doe' : 'Proof Submission'}
-              </h4>
+              </h2>
             ) : (
-              <h4 className="mb-2 break-words text-base font-semibold leading-6 text-proofound-charcoal">
+              <h2 className="mb-2 break-words text-base font-semibold leading-6 text-proofound-charcoal">
                 {result.assignment?.role || 'Assignment Match'}
-              </h4>
+              </h2>
             )}
 
             <div className="flex flex-wrap items-center gap-2">

@@ -125,6 +125,37 @@ describe('MatchResultCard', () => {
     expect(screen.queryByText('Candidate Match')).not.toBeInTheDocument();
   });
 
+  it('exposes review card titles as section headings for scanability', () => {
+    render(
+      <>
+        <MatchResultCard
+          result={{
+            id: 'match-individual-heading',
+            assignmentId: 'assignment-heading',
+            assignment: {
+              role: 'Proof operations lead',
+            },
+          }}
+          variant="blind"
+        />
+        <MatchResultCard
+          result={{
+            id: 'match-org-heading',
+            profileId: 'profile-heading',
+            reviewStage: 'blind_review',
+            revealScope: 'blind',
+          }}
+          variant="blind"
+        />
+      </>
+    );
+
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Proof operations lead' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Proof Submission' })).toBeInTheDocument();
+  });
+
   it('renders proof-first org review cards without score-first clutter', () => {
     render(
       <MatchResultCard
