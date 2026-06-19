@@ -171,7 +171,7 @@ export function DeleteAccountSection() {
             <ul className="space-y-1 ml-6 text-muted-foreground">
               <li>• Your account is disabled immediately</li>
               <li>• You are signed out and cannot restore the account</li>
-              <li>• Linked profile and match data is deleted or anonymized</li>
+              <li>• Linked profile and assignment-review data is deleted or anonymized</li>
               <li>• You can create a new account later, but deleted data is not recoverable</li>
             </ul>
           </div>

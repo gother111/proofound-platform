@@ -34,6 +34,13 @@ describe('DeleteAccountSection', () => {
     vi.clearAllMocks();
   });
 
+  it('keeps account deletion impact copy aligned with assignment-review language', () => {
+    render(<DeleteAccountSection />);
+
+    expect(screen.getByText(/Linked profile and assignment-review data/i)).toBeInTheDocument();
+    expect(screen.queryByText(/match data/i)).not.toBeInTheDocument();
+  });
+
   it('keeps failed deletion recoverable inside the confirmation dialog', async () => {
     vi.mocked(apiFetch).mockResolvedValue({
       ok: false,
