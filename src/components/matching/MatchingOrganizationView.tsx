@@ -68,6 +68,10 @@ function assignmentStatusLabel(status: string) {
   return ASSIGNMENT_STATUS_LABELS[status] ?? status;
 }
 
+function assignmentLaunchDateLabel(createdAt: string) {
+  return `Launched ${new Date(createdAt).toLocaleDateString()}`;
+}
+
 function proofEvidenceSignalLabel(explanation: any, key: string) {
   return explanation.proofSignals?.[key] ?? 'Not available';
 }
@@ -662,12 +666,20 @@ export function MatchingOrganizationView({
               <h2 className="mt-0.5 line-clamp-2 text-lg font-bold leading-snug text-proofound-charcoal">
                 {currentAssignment ? currentAssignment.role : 'No assignment selected'}
               </h2>
+              {currentAssignment ? (
+                <p
+                  className="mt-1 text-xs leading-5 text-muted-foreground md:hidden"
+                  data-testid="selected-assignment-mobile-launch-date"
+                >
+                  {assignmentLaunchDateLabel(currentAssignment.createdAt)}
+                </p>
+              ) : null}
             </div>
 
             {currentAssignment && (
               <div className="flex items-center gap-3 mt-3 sm:mt-0">
                 <div className="text-xs text-muted-foreground mr-1 hidden md:block">
-                  Launched {new Date(currentAssignment.createdAt).toLocaleDateString()}
+                  {assignmentLaunchDateLabel(currentAssignment.createdAt)}
                 </div>
                 <Button
                   asChild

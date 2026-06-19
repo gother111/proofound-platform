@@ -158,6 +158,11 @@ describe('MatchingOrganizationView', () => {
       name: /Field operations launch lead.*Current assignment corridor/i,
     });
     expect(assignmentButton).toHaveAttribute('aria-current', 'true');
+    const mobileLaunchDate = screen.getByTestId('selected-assignment-mobile-launch-date');
+    expect(mobileLaunchDate).toHaveTextContent(
+      `Launched ${new Date(buildAssignment().createdAt).toLocaleDateString()}`
+    );
+    expect(mobileLaunchDate).toHaveClass('md:hidden');
 
     const submissionAButton = await screen.findByRole('button', {
       name: /Select Submission A for proof review.*Selected/i,
