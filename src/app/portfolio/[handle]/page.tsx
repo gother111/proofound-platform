@@ -271,29 +271,11 @@ export default async function PortfolioPage({
               </Badge>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-              {viewerIsOwner ? (
-                <Button variant="outline" size="sm" asChild>
-                  <Link href="/app/i/profile?profileView=full&tab=visibility">
-                    Manage visibility
-                  </Link>
-                </Button>
-              ) : null}
-              <div className="grid w-full gap-2 sm:w-auto sm:grid-flow-col sm:auto-cols-max sm:items-start">
-                <ShareLinkButton
-                  url={data.shareUrl}
-                  className="min-h-11 w-full justify-center sm:w-auto"
-                />
-                <DownloadPdfButton
-                  endpoint={viewerIsOwner ? undefined : publicExportEndpoint}
-                  className="min-h-11"
-                />
-                <CopyTextButton
-                  endpoint={viewerIsOwner ? undefined : publicSummaryEndpoint}
-                  className="min-h-11"
-                />
-              </div>
-            </div>
+            {viewerIsOwner ? (
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/app/i/profile?profileView=full&tab=visibility">Manage visibility</Link>
+              </Button>
+            ) : null}
           </div>
         </div>
       }
@@ -350,18 +332,27 @@ export default async function PortfolioPage({
               </p>
             </div>
 
-            {!viewerIsOwner ? (
-              <div className="flex w-full flex-col gap-2 border-t border-[#EFECE5] pt-4 lg:w-auto lg:min-w-[220px] lg:border-t-0 lg:pt-0">
-                <Button asChild className="bg-proofound-forest text-white hover:bg-[#163d2f]">
-                  <Link href={collaborationHref}>Request introduction</Link>
-                </Button>
-                <p className="text-xs leading-5 text-muted-foreground">
-                  Private details stay hidden unless the owner explicitly reveals them. Introduction
-                  requests stay routed through Proofound first. Export and copy actions use only
-                  this page&apos;s public-safe details.
-                </p>
-              </div>
-            ) : null}
+            <div className="flex w-full flex-col gap-3 border-t border-[#EFECE5] pt-4 lg:w-auto lg:min-w-[220px] lg:border-t-0 lg:pt-0">
+              {!viewerIsOwner ? (
+                <>
+                  <Button asChild className="bg-proofound-forest text-white hover:bg-[#163d2f]">
+                    <Link href={collaborationHref}>Request introduction</Link>
+                  </Button>
+                  <p className="text-xs leading-5 text-muted-foreground">
+                    Private details stay hidden unless the owner explicitly reveals them.
+                    Introduction requests stay routed through Proofound first. Export and copy
+                    actions use only this page&apos;s public-safe details.
+                  </p>
+                </>
+              ) : null}
+
+              <PublicPageActionButtons
+                shareUrl={data.shareUrl}
+                viewerIsOwner={viewerIsOwner}
+                publicExportEndpoint={publicExportEndpoint}
+                publicSummaryEndpoint={publicSummaryEndpoint}
+              />
+            </div>
 
             <div className="lg:col-start-1">
               <TraceableSummaryBlock
@@ -485,6 +476,35 @@ export default async function PortfolioPage({
 
 function collaborationMailto({ subject, body }: { subject: string; body: string }): string {
   return `mailto:hello@proofound.io?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+function PublicPageActionButtons({
+  shareUrl,
+  viewerIsOwner,
+  publicExportEndpoint,
+  publicSummaryEndpoint,
+}: {
+  shareUrl: string;
+  viewerIsOwner: boolean;
+  publicExportEndpoint: string;
+  publicSummaryEndpoint: string;
+}) {
+  return (
+    <div
+      aria-label="Public Page export and copy actions"
+      className="grid w-full gap-2 sm:grid-cols-3 lg:grid-cols-1 [&>div]:w-full [&_button]:w-full"
+    >
+      <ShareLinkButton url={shareUrl} className="min-h-11 justify-center" />
+      <DownloadPdfButton
+        endpoint={viewerIsOwner ? undefined : publicExportEndpoint}
+        className="min-h-11"
+      />
+      <CopyTextButton
+        endpoint={viewerIsOwner ? undefined : publicSummaryEndpoint}
+        className="min-h-11"
+      />
+    </div>
+  );
 }
 
 function ContactHiddenNotice() {

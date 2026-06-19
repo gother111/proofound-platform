@@ -331,6 +331,14 @@ describe('Public individual portfolio page', () => {
     expect(
       screen.getByText(/request an introduction through proofound; private details stay closed/i)
     ).toBeInTheDocument();
+    const publicHeading = screen.getByRole('heading', { name: 'Jane Doe' });
+    const copyShareButton = screen.getByRole('button', { name: /copy share link/i });
+    expect(copyShareButton.closest('[aria-label="Public Page export and copy actions"]')).not.toBe(
+      null
+    );
+    expect(publicHeading.compareDocumentPosition(copyShareButton)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING
+    );
     const requestIntroductionLink = screen.getAllByRole('link', {
       name: /request introduction/i,
     })[0];
