@@ -718,26 +718,28 @@ export function MatchResultCard({
           )}
         </div>
 
-        <div className="mb-3 flex-1">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Why this review
-          </p>
-          <div className="space-y-1.5">
-            {proofSignals.map((signal) => (
-              <div
-                key={signal.key}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-proofound-stone/70 bg-white px-3 py-2"
-              >
-                <span className="text-xs font-medium capitalize text-proofound-charcoal">
-                  {contributionLabel(signal.key)}
-                </span>
-                <span className="rounded-full bg-proofound-parchment px-2 py-0.5 text-xs text-muted-foreground">
-                  {signal.support}
-                </span>
-              </div>
-            ))}
+        {proofSignals.length > 0 ? (
+          <div className="mb-3 flex-1">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Why this review
+            </p>
+            <div className="space-y-1.5">
+              {proofSignals.map((signal) => (
+                <div
+                  key={signal.key}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-proofound-stone/70 bg-white px-3 py-2"
+                >
+                  <span className="text-xs font-medium capitalize text-proofound-charcoal">
+                    {contributionLabel(signal.key)}
+                  </span>
+                  <span className="rounded-full bg-proofound-parchment px-2 py-0.5 text-xs text-muted-foreground">
+                    {signal.support}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        ) : null}
 
         {/* Actions */}
         {variant === 'blind' && (

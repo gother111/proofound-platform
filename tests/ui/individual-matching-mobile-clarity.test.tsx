@@ -89,6 +89,33 @@ describe('individual matching mobile clarity', () => {
     expect(proofInterestButton.parentElement).toHaveClass('grid', 'grid-cols-2', 'sm:flex');
   });
 
+  it('does not render an empty proof-signal section when no reasons are available', () => {
+    render(
+      <MatchResultCard
+        result={{
+          id: 'visual-individual-match-empty-signals',
+          assignmentId: 'visual-assignment-proof-empty',
+          assignment: {
+            role: 'Evidence systems consultant',
+            locationMode: 'remote',
+            workMode: 'contract',
+            hoursMin: 16,
+            hoursMax: 24,
+            skills: {
+              'proof-systems': { level: 4 },
+            },
+          },
+          proofSignals: [],
+        }}
+        variant="blind"
+        skills={[{ id: 'proof-systems', label: 'proof-systems', level: 4 }]}
+      />
+    );
+
+    expect(screen.getByRole('button', { name: MATCH_EXPLAINER_TRIGGER_LABEL })).toBeInTheDocument();
+    expect(screen.queryByText('Why this review')).not.toBeInTheDocument();
+  });
+
   it('keeps first setup role input full-width before the add action on mobile', () => {
     render(<FocusAreasSection profile={{ desiredRoles: [], orgTypes: [] }} onChange={vi.fn()} />);
 
