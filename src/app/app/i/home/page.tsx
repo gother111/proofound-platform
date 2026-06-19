@@ -285,8 +285,8 @@ export default async function IndividualHomePage() {
                       <div className="hidden sm:flex shrink-0 self-center">
                         <Button
                           variant="outline"
-                          size="sm"
-                          className="border-proofound-stone hover:bg-proofound-forest/5 text-proofound-charcoal text-xs font-medium"
+                          size="touch"
+                          className="min-h-11 border-proofound-stone text-xs font-medium text-proofound-charcoal hover:bg-proofound-forest/5"
                           asChild
                         >
                           <Link href={step.href}>
