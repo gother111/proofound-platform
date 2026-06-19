@@ -120,18 +120,24 @@ describe('PrivacyOverview copy', () => {
     render(<PrivacyOverview userId="user-1" />);
 
     const heading = screen.getByRole('heading', { name: 'Your Privacy Controls' });
-    const headerRow = heading.parentElement;
-    const iconTile = headerRow?.firstElementChild;
-    const bodyBlock = headerRow?.nextElementSibling;
+    const titleBlock = heading.parentElement;
+    const contentCluster = titleBlock?.parentElement;
+    const headerGrid = contentCluster?.parentElement;
+    const iconTile = headerGrid?.firstElementChild;
     const actions = screen.getAllByRole('button', { name: /review field visibility/i })[0]
       .parentElement;
 
-    expect(headerRow).toHaveClass('flex');
-    expect(headerRow).toHaveClass('items-center');
+    expect(headerGrid).toHaveClass('grid');
+    expect(headerGrid).toHaveClass('grid-cols-[2.5rem_minmax(0,1fr)]');
+    expect(headerGrid).toHaveClass('sm:grid-cols-[3rem_minmax(0,1fr)]');
+    expect(headerGrid).toHaveClass('sm:items-center');
     expect(iconTile).toHaveClass('shrink-0');
-    expect(iconTile).not.toHaveClass('sm:self-center');
+    expect(iconTile).toHaveClass('sm:self-center');
+    expect(contentCluster).toHaveClass('min-w-0');
+    expect(contentCluster).toHaveClass('space-y-5');
+    expect(contentCluster).not.toHaveClass('sm:pl-[4.25rem]');
+    expect(titleBlock).toHaveClass('space-y-2');
     expect(heading).not.toHaveClass('mb-2');
-    expect(bodyBlock).toHaveClass('sm:pl-[4.25rem]');
     expect(actions).toHaveClass('grid');
     expect(actions).toHaveClass('sm:flex');
   });

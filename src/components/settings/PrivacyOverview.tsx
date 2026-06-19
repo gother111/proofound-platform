@@ -246,20 +246,20 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
         className="border-proofound-stone dark:border-border rounded-2xl bg-gradient-to-br from-proofound-parchment to-white dark:from-slate-800 dark:to-slate-900"
       >
         <CardContent className="py-6 sm:py-8">
-          <div className="space-y-5">
-            <div className="flex items-center gap-3 sm:gap-5">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-proofound-forest/10 dark:bg-proofound-forest/20 sm:h-12 sm:w-12">
-                <Shield className="h-6 w-6 text-proofound-forest dark:text-proofound-parchment" />
-              </div>
-              <h2 className="min-w-0 text-2xl font-['Crimson_Pro'] font-semibold text-proofound-charcoal dark:text-foreground">
-                Your Privacy Controls
-              </h2>
+          <div className="grid grid-cols-[2.5rem_minmax(0,1fr)] items-start gap-x-3 gap-y-4 sm:grid-cols-[3rem_minmax(0,1fr)] sm:items-center sm:gap-x-5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-proofound-forest/10 dark:bg-proofound-forest/20 sm:h-12 sm:w-12 sm:self-center">
+              <Shield className="h-6 w-6 text-proofound-forest dark:text-proofound-parchment" />
             </div>
-            <div className="min-w-0 space-y-5 sm:pl-[4.25rem]">
-              <p className="max-w-3xl break-words text-proofound-charcoal/70 dark:text-muted-foreground">
-                Review what can appear on your Public Page, what stays private until assignment
-                review, and where export or deletion controls live.
-              </p>
+            <div className="min-w-0 space-y-5">
+              <div className="min-w-0 space-y-2">
+                <h2 className="min-w-0 text-2xl font-['Crimson_Pro'] font-semibold text-proofound-charcoal dark:text-foreground">
+                  Your Privacy Controls
+                </h2>
+                <p className="max-w-3xl break-words text-proofound-charcoal/70 dark:text-muted-foreground">
+                  Review what can appear on your Public Page, what stays private until assignment
+                  review, and where export or deletion controls live.
+                </p>
+              </div>
               <div className="grid grid-cols-1 gap-3 sm:flex sm:flex-wrap">
                 <Button
                   onClick={reviewFieldVisibility}
