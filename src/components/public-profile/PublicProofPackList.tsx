@@ -192,7 +192,7 @@ export function PublicProofPackList({ proofPacks }: PublicProofPackListProps) {
                                 aria-label={`Open ${item.title}`}
                                 className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-md px-2 text-xs font-semibold text-proofound-forest transition-colors hover:bg-proofound-forest/5 hover:text-[#143829] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
                               >
-                                Open
+                                Open evidence
                                 <ExternalLink className="h-3 w-3" />
                               </a>
                             )}

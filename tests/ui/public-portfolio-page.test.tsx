@@ -436,6 +436,8 @@ describe('Public individual portfolio page', () => {
     const evidenceLink = screen.getByRole('link', { name: /open launch memo/i });
     expect(evidenceLink).toHaveAttribute('href', 'https://example.com/launch-memo');
     expect(evidenceLink).toHaveClass('min-h-11');
+    expect(evidenceLink).toHaveTextContent('Open evidence');
+    expect(screen.queryByText(/^Open$/)).not.toBeInTheDocument();
     const collapseToggle = screen.getByRole('button', {
       name: 'Hide proof context for Proof Pack: Product Strategy',
     });
