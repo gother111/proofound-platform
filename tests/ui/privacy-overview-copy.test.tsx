@@ -120,19 +120,20 @@ describe('PrivacyOverview copy', () => {
     render(<PrivacyOverview userId="user-1" />);
 
     const heading = screen.getByRole('heading', { name: 'Your Privacy Controls' });
-    const headerGrid = heading.closest('.grid');
-    const iconTile = headerGrid?.firstElementChild;
+    const headerRow = heading.parentElement;
+    const iconTile = headerRow?.firstElementChild;
+    const bodyBlock = headerRow?.nextElementSibling;
     const actions = screen.getAllByRole('button', { name: /review field visibility/i })[0]
       .parentElement;
 
-    expect(headerGrid?.className).toContain('grid-cols-[2.5rem_minmax(0,1fr)]');
-    expect(headerGrid?.className).toContain('sm:grid-cols-[3rem_minmax(0,1fr)]');
-    expect(headerGrid?.className).toContain('items-start');
-    expect(headerGrid?.className).not.toContain('sm:items-center');
-    expect(iconTile).not.toHaveClass('sm:row-span-2');
-    expect(iconTile).toHaveClass('sm:self-center');
-    expect(actions).toHaveClass('col-span-2');
-    expect(actions).toHaveClass('sm:col-start-2');
+    expect(headerRow).toHaveClass('flex');
+    expect(headerRow).toHaveClass('items-center');
+    expect(iconTile).toHaveClass('shrink-0');
+    expect(iconTile).not.toHaveClass('sm:self-center');
+    expect(heading).not.toHaveClass('mb-2');
+    expect(bodyBlock).toHaveClass('sm:pl-[4.25rem]');
+    expect(actions).toHaveClass('grid');
+    expect(actions).toHaveClass('sm:flex');
   });
 
   it('keeps privacy policy and contact links touch-friendly', () => {

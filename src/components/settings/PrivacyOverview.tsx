@@ -246,57 +246,58 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
         className="border-proofound-stone dark:border-border rounded-2xl bg-gradient-to-br from-proofound-parchment to-white dark:from-slate-800 dark:to-slate-900"
       >
         <CardContent className="py-6 sm:py-8">
-          <div className="grid grid-cols-[2.5rem_minmax(0,1fr)] items-start gap-x-3 gap-y-5 sm:grid-cols-[3rem_minmax(0,1fr)] sm:gap-x-5 sm:gap-y-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-proofound-forest/10 dark:bg-proofound-forest/20 sm:h-12 sm:w-12 sm:self-center">
-              <Shield className="h-6 w-6 text-proofound-forest dark:text-proofound-parchment" />
-            </div>
-            <div className="min-w-0">
-              <h2 className="text-2xl font-['Crimson_Pro'] font-semibold text-proofound-charcoal dark:text-foreground mb-2">
+          <div className="space-y-5">
+            <div className="flex items-center gap-3 sm:gap-5">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-proofound-forest/10 dark:bg-proofound-forest/20 sm:h-12 sm:w-12">
+                <Shield className="h-6 w-6 text-proofound-forest dark:text-proofound-parchment" />
+              </div>
+              <h2 className="min-w-0 text-2xl font-['Crimson_Pro'] font-semibold text-proofound-charcoal dark:text-foreground">
                 Your Privacy Controls
               </h2>
+            </div>
+            <div className="min-w-0 space-y-5 sm:pl-[4.25rem]">
               <p className="max-w-3xl break-words text-proofound-charcoal/70 dark:text-muted-foreground">
                 Review what can appear on your Public Page, what stays private until assignment
                 review, and where export or deletion controls live.
               </p>
+              <div className="grid grid-cols-1 gap-3 sm:flex sm:flex-wrap">
+                <Button
+                  onClick={reviewFieldVisibility}
+                  className="w-full justify-center bg-proofound-forest hover:bg-proofound-forest/90 sm:w-auto"
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Review field visibility
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleExportData}
+                  disabled={isExporting}
+                  className="w-full justify-center sm:w-auto"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  {isExporting ? 'Preparing...' : 'Download my data'}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => showInlineOrFocus('privacy-activity', () => setShowAuditLog(true))}
+                  className="w-full justify-center sm:w-auto"
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  View account history
+                </Button>
+              </div>
+              {exportFeedback ? (
+                <DataExportFeedback
+                  kind={exportFeedback.kind}
+                  title={exportFeedback.title}
+                  actionLabel={exportFeedback.kind === 'error' ? 'Retry export' : undefined}
+                  actionDisabled={isExporting}
+                  onAction={exportFeedback.kind === 'error' ? handleExportData : undefined}
+                >
+                  {exportFeedback.message}
+                </DataExportFeedback>
+              ) : null}
             </div>
-            <div className="col-span-2 grid grid-cols-1 gap-3 sm:col-span-1 sm:col-start-2 sm:flex sm:flex-wrap">
-              <Button
-                onClick={reviewFieldVisibility}
-                className="w-full justify-center bg-proofound-forest hover:bg-proofound-forest/90 sm:w-auto"
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                Review field visibility
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleExportData}
-                disabled={isExporting}
-                className="w-full justify-center sm:w-auto"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                {isExporting ? 'Preparing...' : 'Download my data'}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => showInlineOrFocus('privacy-activity', () => setShowAuditLog(true))}
-                className="w-full justify-center sm:w-auto"
-              >
-                <Eye className="h-4 w-4 mr-2" />
-                View account history
-              </Button>
-            </div>
-            {exportFeedback ? (
-              <DataExportFeedback
-                kind={exportFeedback.kind}
-                title={exportFeedback.title}
-                className="col-span-2 sm:col-span-1 sm:col-start-2"
-                actionLabel={exportFeedback.kind === 'error' ? 'Retry export' : undefined}
-                actionDisabled={isExporting}
-                onAction={exportFeedback.kind === 'error' ? handleExportData : undefined}
-              >
-                {exportFeedback.message}
-              </DataExportFeedback>
-            ) : null}
           </div>
         </CardContent>
       </Card>
