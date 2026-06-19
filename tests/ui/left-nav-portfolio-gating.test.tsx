@@ -188,4 +188,16 @@ describe('LeftNav portfolio gating', () => {
     expect(container.querySelector('[data-tour="portfolio-link"]')).not.toBeNull();
     expect(container.querySelector('[data-tour="candidates"]')).toBeNull();
   });
+
+  it('keeps org mobile navigation labels tied to assignment review and trust', () => {
+    usePathnameMock.mockReturnValue('/app/o/acme/assignments');
+
+    render(<LeftNav basePath="/app/o/acme" />);
+
+    expect(screen.getAllByText(/^Assignments$/i)).toHaveLength(2);
+    expect(screen.getByText(/^Trust$/i)).toBeInTheDocument();
+    expect(screen.getByText(/^Preview$/i)).toBeInTheDocument();
+    expect(screen.queryByText(/^Work$/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Profile$/i)).not.toBeInTheDocument();
+  });
 });

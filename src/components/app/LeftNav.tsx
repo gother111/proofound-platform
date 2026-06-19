@@ -109,11 +109,11 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
     label: item.label,
     mobileLabel:
       item.hrefSuffix === '/assignments'
-        ? 'Work'
+        ? 'Assignments'
         : item.hrefSuffix === '/communications'
           ? 'Inbox'
           : item.hrefSuffix === '/profile'
-            ? 'Profile'
+            ? 'Trust'
             : item.hrefSuffix === '/portfolio'
               ? 'Preview'
               : item.label,
