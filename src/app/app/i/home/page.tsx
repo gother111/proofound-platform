@@ -164,7 +164,7 @@ export default async function IndividualHomePage() {
             </h1>
             <p className="text-sm text-muted-foreground max-w-2xl">
               {hasProof
-                ? 'Your proof records are structured. Review your verified skills and publish your public page to align with the matching corridor.'
+                ? 'Your proof records are structured. Review your verified skills and Public Page visibility before assignment review opens.'
                 : 'Start by creating your first proof record. Shaping a single trusted work sample or artifact makes your profile ready.'}
             </p>
           </div>
@@ -325,7 +325,7 @@ export default async function IndividualHomePage() {
                   Trust & privacy controls
                 </h3>
                 <p className="text-[11px] text-muted-foreground mt-0.5">
-                  Manage your data visibility and corridor access
+                  Manage visibility, export, and assignment-review access
                 </p>
               </div>
 
@@ -358,8 +358,8 @@ export default async function IndividualHomePage() {
                   Private-first corridor
                 </h4>
                 <p className="text-[11px] leading-relaxed text-proofound-charcoal">
-                  Your profile and evidence stay private by default. Organizations only see blind
-                  profiles and proof details unless you explicitly approve a reveal request.
+                  Your profile and evidence stay private by default. Organizations only see
+                  privacy-safe proof summaries until you explicitly approve a reveal request.
                 </p>
               </div>
             </div>

@@ -2,7 +2,7 @@
  * First-Run Guided Tour (Flow I-03)
  *
  * PRD Requirement: First-run guided tour that progressively reveals UI
- * Steps: Navigation → Overview → Profile → Portfolio Visibility → Matching → Settings
+ * Steps: Navigation → Overview → Profile → Portfolio Visibility → Assignment Review → Settings
  *
  * Features:
  * - Progressive reveal with styled background
@@ -57,9 +57,9 @@ const individualTourSteps: TourStep[] = [
   },
   {
     id: 'navigation',
-    title: 'Your Navigation',
+    title: 'Your navigation',
     description:
-      'This sidebar is your command center. Access your overview, profile, Proof Packs, matching, and more from here.',
+      'This sidebar is your launch map. Access your overview, profile, Proof Packs, assignment review, and settings from here.',
     icon: Compass,
     target: '[data-tour="left-nav"]',
     placement: 'right',
@@ -94,9 +94,9 @@ const individualTourSteps: TourStep[] = [
   },
   {
     id: 'matching',
-    title: 'Matching',
+    title: 'Assignment review',
     description:
-      'Matching stays secondary to your portfolio. Once your portfolio is published, review aligned assignments and qualified introductions.',
+      'Assignment review comes after proof and privacy are ready. Use this area for aligned assignments and qualified introductions.',
     icon: Target,
     target: '[data-tour="matching-link"]',
     placement: 'right',
@@ -105,7 +105,7 @@ const individualTourSteps: TourStep[] = [
     id: 'settings',
     title: 'Settings & Privacy',
     description:
-      'Control your privacy, visibility, account access, and data. Export your data anytime, delete your account instantly—your data, your control.',
+      'Control your privacy, visibility, account access, and data. Export your data anytime, or delete your account instantly.',
     icon: Settings,
     target: '[data-tour="settings-link"]',
     placement: 'right',
@@ -114,7 +114,7 @@ const individualTourSteps: TourStep[] = [
     id: 'complete',
     title: "You're all set",
     description:
-      "You can restart this tour anytime from Settings → Help. Start with one Proof Pack, then use matching when you're ready.",
+      'You can restart this tour anytime from Settings. Start with one Proof Pack, then prepare assignment reviews when proof and privacy are ready.',
     icon: Home,
     placement: 'center',
   },

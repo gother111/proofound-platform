@@ -5074,7 +5074,7 @@ describe('launch gate package configuration', () => {
       .join('\n');
 
     expect(activeReadinessCopy).toContain('Day 1 proof link ready');
-    expect(activeReadinessCopy).toContain('build matching readiness');
+    expect(activeReadinessCopy).toContain('prepare assignment-review');
     expect(activeReadinessCopy).toContain('Steps required before assignment reviews can open');
     expect(activeReadinessCopy).toContain('Plan verification');
     expect(activeReadinessCopy).toContain('Prepare assignment reviews at your pace');
@@ -5111,6 +5111,7 @@ describe('launch gate package configuration', () => {
       'unlock the decision step',
       'unlock personalized browse results',
       'candidate set',
+      'build matching readiness',
       'Prepare matching at your pace',
       'Set up matching profile',
       'Matching opens in order',
@@ -5379,6 +5380,8 @@ describe('launch gate package configuration', () => {
     expect(activeTourCopy).toContain('Ready to start proof review');
     expect(activeTourCopy).toContain('start a proof-first assignment review');
     expect(activeTourCopy).toContain('staged introductions stay inside the proof-first workflow');
+    expect(activeTourCopy).toContain('Assignment review comes after proof and privacy are ready');
+    expect(activeTourCopy).toContain('Set assignment-review preferences');
 
     for (const staleCopy of [
       'Connect with mission-aligned opportunities',
@@ -5398,6 +5401,9 @@ describe('launch gate package configuration', () => {
       'Review proof-led candidate context',
       'review proof-led candidate context',
       'trust basics candidates and reviewers',
+      'Matching remains secondary',
+      'Set up your matching preferences -',
+      'Add one proof-linked skill and one matching preference',
     ]) {
       expect(combined).not.toContain(staleCopy);
     }

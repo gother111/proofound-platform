@@ -31,7 +31,8 @@ export function PersonaChoice({ onSelect }: PersonaChoiceProps) {
                 Individual
               </CardTitle>
               <CardDescription className="text-base text-proofound-charcoal/70 dark:text-muted-foreground">
-                Launch a clean Public Page link you can share today, then build matching readiness
+                Launch a clean Public Page link you can share today, then prepare assignment-review
+                readiness
               </CardDescription>
             </div>
             <Button
@@ -55,7 +56,7 @@ export function PersonaChoice({ onSelect }: PersonaChoiceProps) {
               </CardTitle>
               <CardDescription className="text-base text-proofound-charcoal/70 dark:text-muted-foreground">
                 Publish a clean public organization link on day 1, then create one assignment and
-                review a shortlist
+                review proof submissions blind by default
               </CardDescription>
             </div>
             <Button

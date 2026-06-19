@@ -116,6 +116,16 @@ describe('PrivacyOverview copy', () => {
     expect(screen.queryByText('What others can see')).not.toBeInTheDocument();
   });
 
+  it('keeps the primary privacy header icon aligned with the title block', () => {
+    render(<PrivacyOverview userId="user-1" />);
+
+    const heading = screen.getByRole('heading', { name: 'Your Privacy Controls' });
+    const headerGrid = heading.closest('.grid');
+
+    expect(headerGrid).toHaveClass('items-start');
+    expect(headerGrid?.className).not.toContain('sm:items-center');
+  });
+
   it('uses existing full-page privacy sections instead of opening duplicate drill-downs', () => {
     const target = document.createElement('section');
     target.id = 'privacy-activity';

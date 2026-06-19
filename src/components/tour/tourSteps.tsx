@@ -30,7 +30,7 @@ export const individualTourSteps: Step[] = [
     target: 'body',
     content: (
       <div className="space-y-3">
-        <h2 className="text-lg font-semibold text-foreground">Welcome to Proofound! 👋</h2>
+        <h2 className="text-lg font-semibold text-foreground">Welcome to Proofound</h2>
         <p className="text-sm text-muted-foreground">
           Your day-1 goal is to create one artifact-backed Proof Pack. This quick tour takes about 2
           minutes.
@@ -47,7 +47,7 @@ export const individualTourSteps: Step[] = [
     target: '[data-tour="left-nav"]',
     content: (
       <div className="space-y-2">
-        <h3 className="text-base font-semibold text-foreground">Your Navigation</h3>
+        <h3 className="text-base font-semibold text-foreground">Your navigation</h3>
         <p className="text-sm text-muted-foreground">
           This sidebar is your home base. It helps you move between the narrow launch sections of
           Proofound.
@@ -94,7 +94,7 @@ export const individualTourSteps: Step[] = [
         <h3 className="text-base font-semibold text-foreground">Portfolio Visibility</h3>
         <p className="text-sm text-muted-foreground">
           Profile owns Proof Packs and the visibility controls for your clean, proof-based link.
-          Matching remains secondary until proof and privacy are ready.
+          Assignment review comes after proof and privacy are ready.
         </p>
       </div>
     ),
@@ -105,7 +105,7 @@ export const individualTourSteps: Step[] = [
     target: '[data-tour="matching-link"]',
     content: (
       <div className="space-y-2">
-        <h3 className="text-base font-semibold text-foreground">Matching Profile</h3>
+        <h3 className="text-base font-semibold text-foreground">Assignment review preferences</h3>
         <p className="text-sm text-muted-foreground">
           Set your preferences for work: availability, compensation, location, and more. This helps
           us review assignments that fit your life.
@@ -136,7 +136,7 @@ export const individualTourSteps: Step[] = [
     target: 'body',
     content: (
       <div className="space-y-3">
-        <h2 className="text-lg font-semibold text-foreground">You're all set! 🎉</h2>
+        <h2 className="text-lg font-semibold text-foreground">You're all set</h2>
         <p className="text-sm text-muted-foreground">
           Start with your <strong>Proof Packs</strong> in Profile, then publish only the public-safe
           evidence you choose. Assignment review comes after proof and privacy are ready.
@@ -148,7 +148,7 @@ export const individualTourSteps: Step[] = [
           <ul className="text-xs text-muted-foreground list-disc list-inside space-y-1 mt-1">
             <li>Publish one public-safe proof item</li>
             <li>Add one proof item you want to show publicly</li>
-            <li>Add one proof-linked skill and one matching preference</li>
+            <li>Add one proof-linked skill and one assignment-review preference</li>
             <li>Complete stronger proof and constraints for qualified introductions</li>
           </ul>
         </div>
@@ -167,7 +167,7 @@ export const organizationTourSteps: Step[] = [
     target: 'body',
     content: (
       <div className="space-y-3">
-        <h2 className="text-lg font-semibold text-foreground">Welcome to Proofound! 👋</h2>
+        <h2 className="text-lg font-semibold text-foreground">Welcome to Proofound</h2>
         <p className="text-sm text-muted-foreground">
           Your first win is to publish a clean organization portfolio link that your team can share
           today. This tour takes about 2 minutes.
@@ -251,7 +251,7 @@ export const organizationTourSteps: Step[] = [
     target: 'body',
     content: (
       <div className="space-y-3">
-        <h2 className="text-lg font-semibold text-foreground">Ready to start proof review! 🎉</h2>
+        <h2 className="text-lg font-semibold text-foreground">Ready to start proof review</h2>
         <p className="text-sm text-muted-foreground">
           Start by sharing your Public Page link, then create your first <strong>Assignment</strong>{' '}
           with the proof, context, and constraints reviewers need.

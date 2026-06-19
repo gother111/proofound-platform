@@ -40,6 +40,12 @@ describe('IndividualHomePage', () => {
     render(await IndividualHomePage());
 
     expect(screen.getByRole('heading', { name: /welcome back, mock/i })).toBeInTheDocument();
+    expect(
+      screen.getByText(/Manage visibility, export, and assignment-review access/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/privacy-safe proof summaries/i)).toBeInTheDocument();
+    expect(screen.queryByText(/matching corridor/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/blind profiles/i)).not.toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: /start proof/i })).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ className: expect.stringContaining('min-h-11') }),

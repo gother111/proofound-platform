@@ -7,6 +7,7 @@ import {
 import {
   individualTourSteps as staticIndividualTourSteps,
   organizationTourSteps as staticOrganizationTourSteps,
+  tourStyles as staticTourStyles,
 } from '@/lib/tour/tour-steps';
 
 const activeTourTargets = new Set([
@@ -51,5 +52,14 @@ describe('tour navigation contract', () => {
     expect(targets).not.toContain('[data-tour="projects-section"]');
     expect(targets).not.toContain('[data-tour="team-section"]');
     expect(targets.every((target) => activeTourTargets.has(target))).toBe(true);
+  });
+
+  it('keeps static tour helper chrome aligned to Proofound brand tokens', () => {
+    expect(staticTourStyles.options.primaryColor).toBe('#1C4D3A');
+    expect(staticTourStyles.options.textColor).toBe('#2D3330');
+    expect(staticTourStyles.options.backgroundColor).toBe('#FCFBF8');
+    expect(staticTourStyles.options.overlayColor).toBe('rgba(45, 51, 48, 0.4)');
+    expect(staticTourStyles.buttonNext.backgroundColor).toBe('#1C4D3A');
+    expect(JSON.stringify(staticTourStyles)).not.toContain('#2563eb');
   });
 });

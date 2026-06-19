@@ -35,7 +35,7 @@ export const individualTourSteps: Step[] = [
   {
     target: '[data-tour="matching-link"]',
     content:
-      "Set up your matching preferences - what kind of work you're looking for, your availability, location preferences, and compensation expectations.",
+      'Set assignment-review preferences: work type, availability, location, and compensation expectations.',
     placement: 'bottom',
   },
   {
@@ -81,7 +81,7 @@ export const organizationTourSteps: Step[] = [
   {
     target: '[data-tour="assignments-link"]',
     content:
-      'Review reason-coded proof context here. Matching support stays internal to assignment review and staged introductions.',
+      'Review reason-coded proof context here. Review support stays internal to assignment review and staged introductions.',
     placement: 'bottom',
   },
   {
@@ -112,11 +112,11 @@ export const organizationTourSteps: Step[] = [
 
 export const tourStyles = {
   options: {
-    primaryColor: '#2563eb', // blue-600
-    textColor: '#1f2937', // gray-800
-    backgroundColor: '#ffffff',
-    overlayColor: 'rgba(0, 0, 0, 0.5)',
-    arrowColor: '#ffffff',
+    primaryColor: '#1C4D3A',
+    textColor: '#2D3330',
+    backgroundColor: '#FCFBF8',
+    overlayColor: 'rgba(45, 51, 48, 0.4)',
+    arrowColor: '#FCFBF8',
     zIndex: 10000,
   },
   tooltip: {
@@ -125,7 +125,7 @@ export const tourStyles = {
     borderRadius: 8,
   },
   buttonNext: {
-    backgroundColor: '#2563eb',
+    backgroundColor: '#1C4D3A',
     fontSize: 14,
     padding: '8px 16px',
     borderRadius: 6,
