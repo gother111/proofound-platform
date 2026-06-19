@@ -226,11 +226,6 @@ export default async function PortfolioPage({
     body: `Hi Proofound team, I would like to request an introduction to ${displayName}. Public Page: ${data.shareUrl}`,
   });
 
-  const requestContactHref = collaborationMailto({
-    subject: `Request contact for ${displayName}`,
-    body: `Hi Proofound team, please help me connect with ${displayName}. Public Page: ${data.shareUrl}`,
-  });
-
   const publicSummaryEndpoint = `/api/portfolio/public/${encodeURIComponent(data.handle)}/summary`;
   const publicExportEndpoint = `/api/portfolio/public/${encodeURIComponent(data.handle)}/export`;
   const pagePath = `/portfolio/${encodeURIComponent(data.handle)}`;
@@ -393,7 +388,9 @@ export default async function PortfolioPage({
                       : 'No selected Proof Packs are available yet.'
                   }
                   actions={
-                    !viewerIsOwner ? [{ label: 'Request contact', href: requestContactHref }] : []
+                    !viewerIsOwner
+                      ? [{ label: 'Request introduction', href: collaborationHref }]
+                      : []
                   }
                 />
               )}
@@ -472,8 +469,8 @@ export default async function PortfolioPage({
                 />
                 {!viewerIsOwner ? (
                   <ContactPill
-                    href={requestContactHref}
-                    label="Request contact"
+                    href={collaborationHref}
+                    label="Request introduction"
                     icon={<Mail className="h-4 w-4" />}
                   />
                 ) : null}
@@ -500,8 +497,8 @@ function ContactHiddenNotice() {
             Contact is hidden on this Public Page.
           </p>
           <p className="mt-1 text-xs leading-5 text-muted-foreground">
-            Request contact through Proofound; private details stay closed unless the owner chooses
-            to reveal them.
+            Request an introduction through Proofound; private details stay closed unless the owner
+            chooses to reveal them.
           </p>
         </div>
       </div>

@@ -329,9 +329,11 @@ describe('Public individual portfolio page', () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/contact is hidden on this public page/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/request contact through proofound; private details stay closed/i)
+      screen.getByText(/request an introduction through proofound; private details stay closed/i)
     ).toBeInTheDocument();
-    const requestIntroductionLink = screen.getByRole('link', { name: /request introduction/i });
+    const requestIntroductionLink = screen.getAllByRole('link', {
+      name: /request introduction/i,
+    })[0];
     const traceableSummaryHeading = screen.getByRole('heading', {
       name: /scale \/ focus \/ context/i,
     });
@@ -359,6 +361,7 @@ describe('Public individual portfolio page', () => {
     expect(screen.queryByText(/wider screens/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/my next challenge/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/mission & vision/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /^request contact$/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/stockholm, sweden/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /return to menu/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /return home/i })).not.toBeInTheDocument();
@@ -458,7 +461,11 @@ describe('Public individual portfolio page', () => {
     render(element);
 
     expect(screen.getByRole('link', { name: /^share link$/i })).toHaveClass('min-h-11');
-    expect(screen.getByRole('link', { name: /^request contact$/i })).toHaveClass('min-h-11');
+    const requestIntroductionLinks = screen.getAllByRole('link', {
+      name: /^request introduction$/i,
+    });
+    expect(requestIntroductionLinks[requestIntroductionLinks.length - 1]).toHaveClass('min-h-11');
+    expect(screen.queryByRole('link', { name: /^request contact$/i })).not.toBeInTheDocument();
   });
 
   it('keeps public empty-state actions touch-sized and keyboard visible', async () => {
@@ -490,11 +497,11 @@ describe('Public individual portfolio page', () => {
     const emptyState = screen.getByText(/no selected proof packs are available yet/i).parentElement;
     expect(emptyState).not.toBeNull();
 
-    const requestContactLink = within(emptyState as HTMLElement).getByRole('link', {
-      name: /^request contact$/i,
+    const requestIntroductionLink = within(emptyState as HTMLElement).getByRole('link', {
+      name: /^request introduction$/i,
     });
-    expect(requestContactLink).toHaveClass('min-h-11');
-    expect(requestContactLink).toHaveClass('focus-visible:ring-2');
+    expect(requestIntroductionLink).toHaveClass('min-h-11');
+    expect(requestIntroductionLink).toHaveClass('focus-visible:ring-2');
   });
 
   it('renders proof trust signals and ownership as readable public-safe details', async () => {
