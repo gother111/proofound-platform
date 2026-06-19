@@ -649,7 +649,7 @@ describe('MatchingOrganizationView launch corridor', () => {
         })
       );
     });
-    expect(pushMock).toHaveBeenCalledWith('/app/o/acme/assignments?matching=assignment-2');
+    expect(pushMock).toHaveBeenCalledWith('/app/o/acme/assignments?assignment=assignment-2');
     const editAssignmentLink = screen.getByRole('link', { name: 'Edit assignment context' });
     expect(editAssignmentLink).toHaveAttribute(
       'href',

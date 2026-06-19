@@ -175,10 +175,10 @@ export function getOrganizationRecoveryActions(
         actionUrl: `${basePath}/assignments/new?focus=skills`,
       },
       {
-        id: 'turn-on-candidate-matching',
+        id: 'open-assignment-review',
         title: 'Open assignment review',
         description: 'Open the review path so proof submissions can move back into review.',
-        actionUrl: `${basePath}/assignments?focus=matchable`,
+        actionUrl: `${basePath}/assignments?focus=assignment-review`,
       },
     ],
     'assignment-no-matches': [
@@ -195,13 +195,13 @@ export function getOrganizationRecoveryActions(
         actionUrl: `${assignmentReviewPath}?focus=skills`,
       },
       {
-        id: 'turn-on-candidate-matching',
+        id: 'open-assignment-review',
         title: 'Re-run assignment review',
         description:
           'Re-open assignment review and re-run proof-submission discovery for this assignment.',
         actionUrl: assignmentId
-          ? `${basePath}/assignments?matching=${encodeURIComponent(assignmentId)}`
-          : `${basePath}/assignments?focus=matchable`,
+          ? `${basePath}/assignments?assignment=${encodeURIComponent(assignmentId)}`
+          : `${basePath}/assignments?focus=assignment-review`,
       },
     ],
   };

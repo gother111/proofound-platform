@@ -266,7 +266,7 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
 
       if (response.ok) {
         setPublishDialogOpen(false);
-        router.push(`/app/o/${slug}/assignments?matching=${encodeURIComponent(assignmentId)}`);
+        router.push(`/app/o/${slug}/assignments?assignment=${encodeURIComponent(assignmentId)}`);
       } else {
         setPublishDialogOpen(false);
         const errorData = await response.json().catch(() => ({}));

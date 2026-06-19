@@ -187,7 +187,7 @@ export function MatchingOrganizationView({
   const searchParams = useSearchParams();
   const rawSlug = (params as { slug?: string | string[] })?.slug;
   const slug = Array.isArray(rawSlug) ? rawSlug[0] : rawSlug;
-  const queryAssignmentId = searchParams.get('matching') || searchParams.get('assignment') || '';
+  const queryAssignmentId = searchParams.get('assignment') || searchParams.get('matching') || '';
 
   const [selectedAssignment, setSelectedAssignment] = useState<string>(
     queryAssignmentId || (assignments[0]?.id ?? '')
@@ -262,7 +262,7 @@ export function MatchingOrganizationView({
     setSelectedAssignment(assignmentId);
     markAssignmentViewed(assignmentId);
     if (slug) {
-      router.push(`/app/o/${slug}/assignments?matching=${encodeURIComponent(assignmentId)}`);
+      router.push(`/app/o/${slug}/assignments?assignment=${encodeURIComponent(assignmentId)}`);
     }
   };
 

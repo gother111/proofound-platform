@@ -64,6 +64,8 @@ describe('recovery actions', () => {
 
     expect(actions).toHaveLength(3);
     expect(actions.map((action) => action.title)).toContain('Open assignment review');
+    expect(actions[2].id).toBe('open-assignment-review');
+    expect(actions[2].actionUrl).toBe('/app/o/acme/assignments?focus=assignment-review');
     expect(combinedCopy).toContain('proof-backed submissions');
     expect(combinedCopy).toContain('proof submissions can move back into review');
     expect(combinedCopy).not.toContain('proof matching');
@@ -81,6 +83,8 @@ describe('recovery actions', () => {
     expect(actions).toHaveLength(3);
     expect(actions[0].actionUrl).toContain('/app/o/acme/assignments/assignment-1/review');
     expect(actions[1].actionUrl).toContain('focus=skills');
+    expect(actions[2].id).toBe('open-assignment-review');
+    expect(actions[2].actionUrl).toBe('/app/o/acme/assignments?assignment=assignment-1');
     expect(combinedCopy).toContain('proof-submission discovery');
     expect(combinedCopy).not.toContain('candidate discovery');
     expect(combinedCopy).not.toContain('Re-open matching');

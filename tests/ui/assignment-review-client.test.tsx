@@ -142,7 +142,7 @@ describe('AssignmentReviewClient', () => {
         }),
       });
     });
-    expect(pushMock).toHaveBeenCalledWith('/app/o/acme/assignments?matching=assignment-1');
+    expect(pushMock).toHaveBeenCalledWith('/app/o/acme/assignments?assignment=assignment-1');
     expect(confirmSpy).not.toHaveBeenCalled();
   });
 
@@ -194,7 +194,7 @@ describe('AssignmentReviewClient', () => {
     await waitFor(() => {
       expect(apiFetch).toHaveBeenCalledTimes(2);
     });
-    expect(pushMock).toHaveBeenCalledWith('/app/o/acme/assignments?matching=assignment-1');
+    expect(pushMock).toHaveBeenCalledWith('/app/o/acme/assignments?assignment=assignment-1');
   });
 
   it('keeps structured publish block reasons visible without noisy returned diagnostics', async () => {
