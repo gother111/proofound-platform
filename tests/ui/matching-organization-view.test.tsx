@@ -182,6 +182,17 @@ describe('MatchingOrganizationView', () => {
       'id',
       'review-queue-panel'
     );
+    expect(screen.getByLabelText('Selected proof submission review')).toHaveAttribute(
+      'id',
+      'selected-proof-submission-review'
+    );
+
+    const selectedReviewJumpLink = screen.getByRole('link', {
+      name: /Jump to selected proof review/i,
+    });
+    expect(selectedReviewJumpLink).toHaveAttribute('href', '#selected-proof-submission-review');
+    expect(selectedReviewJumpLink).toHaveClass('min-h-11');
+    expect(selectedReviewJumpLink).toHaveClass('lg:hidden');
 
     fireEvent.click(submissionBButton);
 
@@ -255,9 +266,30 @@ describe('MatchingOrganizationView', () => {
 
   it('brings selected proof details into view on mobile submission selection', async () => {
     const scrollIntoViewMock = vi.fn();
+    const pushStateMock = vi.spyOn(window.history, 'pushState');
     window.HTMLElement.prototype.scrollIntoView = scrollIntoViewMock;
 
     renderView();
+
+    const selectedReviewJumpLink = await screen.findByRole('link', {
+      name: /Jump to selected proof review/i,
+    });
+    expect(selectedReviewJumpLink).toHaveAttribute('href', '#selected-proof-submission-review');
+    expect(selectedReviewJumpLink).toHaveClass('min-h-11');
+    expect(selectedReviewJumpLink).toHaveClass('lg:hidden');
+    expect(screen.getByLabelText('Selected proof submission review')).toHaveClass('scroll-mt-24');
+
+    fireEvent.click(selectedReviewJumpLink);
+
+    await waitFor(() => {
+      expect(pushStateMock).toHaveBeenCalledWith(null, '', '#selected-proof-submission-review');
+      expect(scrollIntoViewMock).toHaveBeenCalledWith({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    });
+
+    scrollIntoViewMock.mockClear();
 
     const submissionBLabel = await screen.findByText('Submission B');
     const submissionBButton = submissionBLabel.closest('button');
@@ -283,6 +315,7 @@ describe('MatchingOrganizationView', () => {
     expect(screen.queryByText('proof_overlap')).not.toBeInTheDocument();
     expect(screen.queryByText('Strongest Proof Package')).not.toBeInTheDocument();
     expect(screen.queryByText(/Complete proof details, work samples/i)).not.toBeInTheDocument();
+    pushStateMock.mockRestore();
   });
 
   it('stacks opposing review actions on mobile to reduce accidental taps', async () => {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -116,6 +116,7 @@ type ReviewActionError = ReviewActionState & {
 
 const REVIEW_ACTION_FAILED_MESSAGE =
   'No shortlist, decline, or intro request was changed. Retry this action before moving to the next submission.';
+const SELECTED_REVIEW_DETAIL_ID = 'selected-proof-submission-review';
 
 const REVIEW_ACTION_LABELS: Record<ReviewAction, string> = {
   shortlist: 'Shortlist submission',
@@ -290,6 +291,19 @@ export function MatchingOrganizationView({
   const handleSelectMatch = useCallback(
     (matchId: string) => {
       setActiveMatchId(matchId);
+      scrollReviewDetailIntoViewOnMobile();
+    },
+    [scrollReviewDetailIntoViewOnMobile]
+  );
+
+  const handleJumpToReviewDetail = useCallback(
+    (event: MouseEvent<HTMLAnchorElement>) => {
+      event.preventDefault();
+
+      if (typeof window !== 'undefined') {
+        window.history.pushState(null, '', `#${SELECTED_REVIEW_DETAIL_ID}`);
+      }
+
       scrollReviewDetailIntoViewOnMobile();
     },
     [scrollReviewDetailIntoViewOnMobile]
@@ -907,13 +921,29 @@ export function MatchingOrganizationView({
                         </button>
                       );
                     })}
+                    {activeMatch ? (
+                      <Button
+                        asChild
+                        variant="outline"
+                        className="min-h-11 w-full justify-center rounded-full border-proofound-stone/85 bg-white text-xs font-semibold text-proofound-forest hover:border-proofound-forest hover:bg-proofound-parchment/30 lg:hidden"
+                      >
+                        <a
+                          href={`#${SELECTED_REVIEW_DETAIL_ID}`}
+                          onClick={handleJumpToReviewDetail}
+                        >
+                          <ArrowRight className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                          Jump to selected proof review
+                        </a>
+                      </Button>
+                    ) : null}
                   </div>
 
                   <div
+                    id={SELECTED_REVIEW_DETAIL_ID}
                     ref={reviewDetailRef}
                     tabIndex={-1}
                     aria-label="Selected proof submission review"
-                    className="flex flex-col space-y-6 rounded-xl border border-proofound-stone/60 bg-white/80 p-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 lg:col-span-3 lg:min-h-0 lg:overflow-y-auto"
+                    className="flex scroll-mt-24 flex-col space-y-6 rounded-xl border border-proofound-stone/60 bg-white/80 p-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 lg:col-span-3 lg:min-h-0 lg:scroll-mt-0 lg:overflow-y-auto"
                   >
                     {!activeMatch ? (
                       <div className="flex-1 flex flex-col justify-center items-center text-center py-12">
