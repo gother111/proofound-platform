@@ -60,7 +60,6 @@ function buildAccessibleAccess() {
             verificationStatus: 'verified',
             verificationSummary: 'Scoped verification supports this Proof Pack.',
             freshnessState: 'fresh',
-            proofQualityScore: 0.8,
             schemaVersion: 'proof_pack/v2',
             artifactCount: 1,
             contextLabel: 'Product Strategy',

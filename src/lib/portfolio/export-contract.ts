@@ -22,7 +22,7 @@ export type PortfolioExportProofPack = {
   verificationStatus: string;
   verificationSummary: string;
   freshnessState: string;
-  proofQualityScore: number | null;
+  proofQualityScore?: number | null;
   schemaVersion: string;
   artifactCount: number;
   contextLabel: string | null;

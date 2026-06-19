@@ -270,9 +270,11 @@ describe('fetchTrustExportData', () => {
     expect(exportData?.proofPacks).toEqual([
       expect.objectContaining({
         id: 'pack-anchored',
+        proofQualityScore: 0.8,
       }),
       expect.objectContaining({
         id: 'pack-orphan',
+        proofQualityScore: 0.4,
       }),
     ]);
   });

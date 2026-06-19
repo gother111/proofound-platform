@@ -1057,7 +1057,6 @@ async function loadIndividualProofOverview(profileId: string): Promise<PublicPro
           hiddenContextTerms
         ) || '',
       freshnessState: aggregate.freshnessState,
-      proofQualityScore: publicSafePack.contract.proofQualityScore,
       schemaVersion: publicSafePack.contract.schemaVersion,
       artifactCount: publicSafePack.items.length,
       contextLabel: publicPackContextLabel,
@@ -1335,7 +1334,6 @@ function buildMockPublicIndividualPortfolioProjection(): PublicIndividualPortfol
       verificationStatus: 'verified',
       verificationSummary: 'Evidence attested by a former manager and a cross-functional peer.',
       freshnessState: 'current',
-      proofQualityScore: 92,
       schemaVersion: PORTFOLIO_EXPORT_SCHEMA_VERSION,
       artifactCount: 3,
       contextLabel: 'Operations workflow redesign',
@@ -1378,7 +1376,6 @@ function buildMockPublicIndividualPortfolioProjection(): PublicIndividualPortfol
       verificationStatus: 'partially_verified',
       verificationSummary: 'Peer-attested with public artifacts available.',
       freshnessState: 'recent',
-      proofQualityScore: 84,
       schemaVersion: PORTFOLIO_EXPORT_SCHEMA_VERSION,
       artifactCount: 2,
       contextLabel: 'Proof-first assignment-review research',

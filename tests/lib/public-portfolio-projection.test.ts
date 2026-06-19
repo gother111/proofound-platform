@@ -364,6 +364,8 @@ describe('public portfolio projection', () => {
         ],
       }),
     ]);
+    expect(projection?.exportData.proofPacks[0]).not.toHaveProperty('proofQualityScore');
+    expect(JSON.stringify(projection?.exportData)).not.toContain('proofQualityScore');
     expect(JSON.stringify(projection)).not.toContain('Jane Doe Resume.pdf');
   });
 
@@ -497,6 +499,7 @@ describe('public portfolio projection', () => {
     expect(projection?.publicDisplayName).toBe('Mika Andersson');
     expect(projection?.minimumContentMet).toBe(true);
     expect(projection?.exportData.proofPacks).toHaveLength(2);
+    expect(JSON.stringify(projection?.exportData.proofPacks)).not.toContain('proofQualityScore');
     expect(projection?.publicSkills.length).toBeGreaterThan(3);
     expect(db.execute).not.toHaveBeenCalled();
   });

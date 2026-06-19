@@ -172,7 +172,6 @@ function buildProjection(overrides: Partial<any> = {}) {
           verificationStatus: 'verified',
           verificationSummary: 'Scoped verification supports this Proof Pack.',
           freshnessState: 'fresh',
-          proofQualityScore: 0.8,
           schemaVersion: 'proof_pack/v2',
           artifactCount: 1,
           contextLabel: 'Product Strategy',
@@ -423,6 +422,7 @@ describe('Public individual portfolio page', () => {
       name: 'Show proof context for Proof Pack: Product Strategy',
     });
     expect(contextToggle).toHaveClass('min-h-11');
+    expect(contextToggle).not.toHaveClass('sm:-mr-2');
 
     fireEvent.click(contextToggle);
 
@@ -590,7 +590,6 @@ describe('Public individual portfolio page', () => {
               verificationStatus: 'unverified',
               verificationSummary: 'Public-safe proof only.',
               freshnessState: 'fresh',
-              proofQualityScore: null,
               schemaVersion: 'proof_pack/v2',
               artifactCount: 1,
               contextLabel: 'Project',
