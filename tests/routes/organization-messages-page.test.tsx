@@ -127,11 +127,14 @@ describe('organization messages page', () => {
 
     expect(
       screen.getByText(
-        'Choose a thread from the list to review protected messages, introduction steps, and reveal context.'
+        'Assignment conversations stay private in this corridor. Choose a thread from the list to review protected messages, introduction steps, and reveal context.'
       )
     ).toBeInTheDocument();
     expect(
       screen.queryByText(/Conversations appear after an assignment and introduction are ready/i)
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Choose a thread when one appears in the list/i)
     ).not.toBeInTheDocument();
     expect(screen.getByText('Identity remains protected before reveal')).toBeInTheDocument();
   });

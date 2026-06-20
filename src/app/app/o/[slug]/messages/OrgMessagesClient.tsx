@@ -359,8 +359,8 @@ function OrganizationMessagesPageContent({ currentUserId, hideHeader }: OrgMessa
                 </p>
                 <p className="text-sm leading-6 text-muted-foreground">
                   {conversations.length > 0
-                    ? 'Choose a thread from the list to review protected messages, introduction steps, and reveal context.'
-                    : 'Assignment conversations open after a proof-safe introduction. Choose a thread when one appears in the list.'}
+                    ? 'Assignment conversations stay private in this corridor. Choose a thread from the list to review protected messages, introduction steps, and reveal context.'
+                    : 'Assignment conversations stay quiet until a proof-safe introduction is open. Choose a thread when one appears in the list.'}
                 </p>
                 <p className="inline-flex items-center gap-2 pt-2 text-xs font-medium text-proofound-charcoal/70">
                   <Lock className="h-3.5 w-3.5" />
