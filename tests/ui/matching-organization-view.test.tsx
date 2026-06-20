@@ -163,6 +163,12 @@ describe('MatchingOrganizationView', () => {
       `Launched ${new Date(buildAssignment().createdAt).toLocaleDateString()}`
     );
     expect(mobileLaunchDate).toHaveClass('md:hidden');
+    const selectedAssignmentHeading = screen.getByRole('heading', {
+      name: 'Field operations launch lead',
+    });
+    expect(selectedAssignmentHeading).toHaveClass('text-balance');
+    expect(selectedAssignmentHeading).toHaveClass('max-w-3xl');
+    expect(selectedAssignmentHeading).not.toHaveClass('line-clamp-2');
 
     const submissionAButton = await screen.findByRole('button', {
       name: /Select Submission A for proof review.*Selected/i,

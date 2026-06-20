@@ -108,11 +108,14 @@ export function DownloadPdfButton({
   return (
     <div className="flex w-full flex-col items-stretch gap-1.5 sm:w-auto sm:items-start">
       <Button
-        variant="secondary"
+        variant="outline"
         size="touch"
         onClick={handleDownload}
         disabled={loading}
-        className={cn('w-full justify-center gap-2 sm:w-auto', className)}
+        className={cn(
+          'w-full justify-center gap-2 border-proofound-stone/85 bg-white/60 text-proofound-charcoal shadow-none hover:border-proofound-forest/70 hover:bg-proofound-forest/5 hover:text-proofound-forest sm:w-auto',
+          className
+        )}
       >
         {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
         {loading ? 'Preparing trust PDF...' : 'Download trust PDF'}

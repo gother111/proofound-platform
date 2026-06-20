@@ -658,12 +658,12 @@ export function MatchingOrganizationView({
         {/* RIGHT AREA: Selected Assignment Workspace */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Workspace Subheader / Actions */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-white/75 backdrop-blur-sm border border-proofound-stone/60 rounded-xl p-4 mb-4 shrink-0">
+          <div className="bg-white/75 backdrop-blur-sm border border-proofound-stone/60 rounded-xl p-4 mb-4 shrink-0">
             <div className="min-w-0">
               <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-proofound-forest">
                 Review proof-backed submissions
               </span>
-              <h2 className="mt-0.5 line-clamp-2 text-lg font-bold leading-snug text-proofound-charcoal">
+              <h2 className="mt-1 max-w-3xl text-balance text-lg font-bold leading-7 tracking-normal text-proofound-charcoal md:text-xl">
                 {currentAssignment ? currentAssignment.role : 'No assignment selected'}
               </h2>
               {currentAssignment ? (
@@ -677,7 +677,7 @@ export function MatchingOrganizationView({
             </div>
 
             {currentAssignment && (
-              <div className="flex items-center gap-3 mt-3 sm:mt-0">
+              <div className="mt-3 flex flex-col gap-2 border-t border-proofound-stone/50 pt-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="text-xs text-muted-foreground mr-1 hidden md:block">
                   {assignmentLaunchDateLabel(currentAssignment.createdAt)}
                 </div>

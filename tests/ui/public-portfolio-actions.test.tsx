@@ -58,6 +58,12 @@ describe('public portfolio action feedback', () => {
     expect(screen.getByRole('button', { name: /copy proof summary/i })).toHaveClass('min-h-[44px]');
     expect(screen.getByRole('button', { name: /copy share link/i })).toHaveClass('min-h-[44px]');
     expect(screen.getByRole('button', { name: /download trust pdf/i })).toHaveClass('min-h-[44px]');
+    expect(screen.getByRole('button', { name: /download trust pdf/i })).toHaveClass(
+      'border-proofound-stone/85'
+    );
+    expect(screen.getByRole('button', { name: /download trust pdf/i })).toHaveClass(
+      'text-proofound-charcoal'
+    );
     expect(screen.getByRole('button', { name: /download organization pdf/i })).toHaveClass(
       'min-h-[44px]'
     );
