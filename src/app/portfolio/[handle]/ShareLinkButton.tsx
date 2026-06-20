@@ -66,7 +66,11 @@ export function ShareLinkButton({ url, className, surface = 'public-page' }: Sha
           className
         )}
       >
-        {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+        {copied ? (
+          <Check className="h-4 w-4" aria-hidden="true" />
+        ) : (
+          <Copy className="h-4 w-4" aria-hidden="true" />
+        )}
         {copied ? 'Copied' : 'Copy share link'}
       </Button>
       {feedback ? (

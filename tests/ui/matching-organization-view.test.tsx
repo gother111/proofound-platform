@@ -279,6 +279,20 @@ describe('MatchingOrganizationView', () => {
     expect(apiFetchMock).toHaveBeenCalledWith('/api/match/assignment', expect.any(Object));
   });
 
+  it('keeps the mobile review console clear of the fixed bottom navigation', async () => {
+    renderView();
+
+    await screen.findByRole('button', {
+      name: /Select Submission A for proof review.*Selected/i,
+    });
+
+    const workspace = screen.getByTestId('assignment-review-mobile-workspace');
+    expect(workspace).toHaveClass('pb-[calc(5.5rem+env(safe-area-inset-bottom))]');
+    expect(workspace).toHaveClass('scroll-pb-[calc(5.5rem+env(safe-area-inset-bottom))]');
+    expect(workspace).toHaveClass('md:pb-0');
+    expect(workspace).toHaveClass('md:scroll-pb-0');
+  });
+
   it('brings selected proof details into view on mobile submission selection', async () => {
     const scrollIntoViewMock = vi.fn();
     const pushStateMock = vi.spyOn(window.history, 'pushState');

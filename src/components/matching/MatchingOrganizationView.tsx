@@ -782,7 +782,10 @@ export function MatchingOrganizationView({
               )}
             </div>
           ) : (
-            <div className="flex-1 flex flex-col min-h-0">
+            <div
+              data-testid="assignment-review-mobile-workspace"
+              className="flex min-h-0 flex-1 flex-col pb-[calc(5.5rem+env(safe-area-inset-bottom))] scroll-pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0 md:scroll-pb-0"
+            >
               <div
                 className="flex border-b border-proofound-stone/50 mb-4 shrink-0"
                 role="tablist"

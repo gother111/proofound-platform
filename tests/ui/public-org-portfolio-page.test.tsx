@@ -331,8 +331,16 @@ describe('Organization public portfolio page', () => {
 
     expect(screen.getByRole('heading', { name: longName })).toHaveClass('break-words');
     expect(screen.getByRole('link', { name: /return to menu/i })).toHaveClass('w-full');
+    expect(screen.getByRole('link', { name: /return to menu/i })).toHaveClass(
+      'text-muted-foreground'
+    );
     expect(screen.getByRole('button', { name: /copy share link/i })).toHaveClass('w-full');
     expect(screen.getByRole('link', { name: /website/i })).toHaveClass('w-full');
+    expect(screen.getByRole('link', { name: /website/i })).toHaveClass('border-proofound-stone/85');
+    expect(screen.getByRole('link', { name: /website/i })).toHaveAttribute(
+      'aria-label',
+      expect.stringContaining('opens in a new tab')
+    );
     expect(screen.getByText(longWebsite)).toHaveClass('break-words');
     expect(
       screen.getByText(/a short purpose statement has not been published yet/i)

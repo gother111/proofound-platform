@@ -75,11 +75,11 @@ export function CopyTextButton({
         )}
       >
         {loading ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
         ) : copied ? (
-          <ClipboardCheck className="h-4 w-4" />
+          <ClipboardCheck className="h-4 w-4" aria-hidden="true" />
         ) : (
-          <Clipboard className="h-4 w-4" />
+          <Clipboard className="h-4 w-4" aria-hidden="true" />
         )}
         {loading ? 'Preparing proof summary...' : copied ? 'Copied' : 'Copy proof summary'}
       </Button>

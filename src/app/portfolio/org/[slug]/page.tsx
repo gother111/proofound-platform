@@ -270,15 +270,6 @@ export default async function OrganizationPortfolioPage({
             </div>
 
             <div className="grid w-full gap-2 sm:w-auto sm:grid-flow-col sm:auto-cols-max sm:items-center lg:justify-end">
-              <Button variant="outline" size="sm" asChild>
-                <Link
-                  href={returnPath}
-                  className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 sm:w-auto"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  {returnLabel}
-                </Link>
-              </Button>
               <ShareLinkButton
                 url={data.shareUrl}
                 surface="organization-trust-page"
@@ -292,12 +283,22 @@ export default async function OrganizationPortfolioPage({
                   href={data.organization.website}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex min-h-11 w-full items-center justify-center gap-2 break-words rounded-md border border-[#D9D5CC] bg-[#FCFBF8] px-3 py-2 text-sm text-foreground hover:border-proofound-forest/40 hover:text-proofound-forest sm:w-auto"
+                  className="inline-flex min-h-11 w-full items-center justify-center gap-2 break-words rounded-xl border border-proofound-stone/85 bg-white/60 px-3 py-2 text-sm text-proofound-charcoal shadow-none hover:border-proofound-forest/70 hover:bg-proofound-forest/5 hover:text-proofound-forest sm:w-auto"
+                  aria-label={`Visit ${data.publicDisplayName} website (opens in a new tab)`}
                 >
-                  <Globe2 className="h-4 w-4" />
+                  <Globe2 className="h-4 w-4" aria-hidden="true" />
                   Website
                 </a>
               ) : null}
+              <Button variant="ghost" size="sm" asChild>
+                <Link
+                  href={returnPath}
+                  className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 text-muted-foreground hover:text-proofound-forest sm:w-auto"
+                >
+                  <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                  {returnLabel}
+                </Link>
+              </Button>
             </div>
           </div>
         </div>
