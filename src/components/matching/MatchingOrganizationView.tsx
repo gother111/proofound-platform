@@ -633,20 +633,20 @@ export function MatchingOrganizationView({
                       : 'border-proofound-stone/60 bg-white/70 hover:border-proofound-forest/50 hover:bg-white'
                   }`}
                 >
-                  <div className="flex flex-wrap items-center gap-1.5 justify-between">
-                    <span className="block line-clamp-2 text-sm font-semibold leading-5 text-proofound-charcoal">
-                      {assignment.role}
-                    </span>
-                    {updateBadge && (
-                      <Badge className="border-proofound-forest/20 bg-[#eef4eb] text-proofound-forest text-[9px] px-1 py-0">
-                        {updateBadge}
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+                  <span className="block break-words text-sm font-semibold leading-5 text-proofound-charcoal line-clamp-2">
+                    {assignment.role}
+                  </span>
+                  <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 justify-between text-xs text-muted-foreground">
                     <span>{assignmentStatusLabel(assignment.status)}</span>
-                    <span>
-                      {count} submission{count !== 1 ? 's' : ''}
+                    <span className="flex flex-wrap items-center justify-end gap-1.5">
+                      {updateBadge ? (
+                        <Badge className="border-proofound-forest/20 bg-[#eef4eb] text-proofound-forest text-[9px] px-1 py-0">
+                          {updateBadge}
+                        </Badge>
+                      ) : null}
+                      <span>
+                        {count} submission{count !== 1 ? 's' : ''}
+                      </span>
                     </span>
                   </div>
                 </button>

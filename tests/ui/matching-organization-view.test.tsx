@@ -170,6 +170,10 @@ describe('MatchingOrganizationView', () => {
     expect(selectedAssignmentHeading).toHaveClass('max-w-3xl');
     expect(selectedAssignmentHeading).not.toHaveClass('line-clamp-2');
 
+    const assignmentSidebarTitle = assignmentButton.querySelector('.line-clamp-2');
+    expect(assignmentSidebarTitle).toHaveTextContent('Field operations launch lead');
+    expect(assignmentSidebarTitle).toHaveClass('break-words');
+
     const submissionAButton = await screen.findByRole('button', {
       name: /Select Submission A for proof review.*Selected/i,
     });

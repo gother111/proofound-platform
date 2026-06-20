@@ -67,6 +67,12 @@ describe('public portfolio action feedback', () => {
     expect(screen.getByRole('button', { name: /download organization pdf/i })).toHaveClass(
       'min-h-[44px]'
     );
+    expect(screen.getByRole('button', { name: /download organization pdf/i })).toHaveClass(
+      'border-proofound-stone/85'
+    );
+    expect(screen.getByRole('button', { name: /download organization pdf/i })).toHaveClass(
+      'text-proofound-charcoal'
+    );
   });
 
   it('confirms proof summary copy inline instead of using a browser alert', async () => {

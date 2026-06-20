@@ -61,7 +61,10 @@ export function ShareLinkButton({ url, className, surface = 'public-page' }: Sha
         variant="outline"
         size="touch"
         onClick={handleCopy}
-        className={cn('w-full justify-center gap-2 sm:w-auto', className)}
+        className={cn(
+          'w-full justify-center gap-2 border-proofound-stone/85 bg-white/60 text-proofound-charcoal shadow-none hover:border-proofound-forest/70 hover:bg-proofound-forest/5 hover:text-proofound-forest sm:w-auto',
+          className
+        )}
       >
         {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
         {copied ? 'Copied' : 'Copy share link'}

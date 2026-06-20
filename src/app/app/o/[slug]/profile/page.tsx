@@ -62,19 +62,22 @@ export default async function OrganizationProfilePage({
         <section className="grid items-start gap-4 md:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
           <Card className="border-black/[0.04] dark:border-white/5">
             <CardHeader>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
                   <h1 className="font-display text-2xl font-semibold leading-none tracking-tight text-proofound-charcoal">
                     Organization Trust Page
                   </h1>
-                  <CardDescription className="max-w-2xl leading-6">
-                    This is the launch-facing organization trust page used to support one assignment
-                    path and a clean review queue.
-                  </CardDescription>
+                  <Badge
+                    variant={canEdit ? 'default' : 'secondary'}
+                    className="w-fit shrink-0 self-start"
+                  >
+                    {canEdit ? 'Editable' : 'Review only'}
+                  </Badge>
                 </div>
-                <Badge variant={canEdit ? 'default' : 'secondary'}>
-                  {canEdit ? 'Editable' : 'Review only'}
-                </Badge>
+                <CardDescription className="max-w-2xl leading-6">
+                  This is the launch-facing organization trust page used to support one assignment
+                  path and a clean review queue.
+                </CardDescription>
               </div>
             </CardHeader>
             <CardContent className="space-y-5 text-sm text-muted-foreground">

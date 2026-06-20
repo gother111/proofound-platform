@@ -45,6 +45,9 @@ describe('Organization trust page editor', () => {
     render(element);
 
     expect(screen.getByRole('heading', { name: 'Organization Trust Page' })).toBeInTheDocument();
+    const editBadge = screen.getByText('Editable');
+    expect(editBadge).toHaveClass('w-fit');
+    expect(editBadge).toHaveClass('shrink-0');
     expect(
       screen.getByText(
         /mission, why the work matters, verified domain path, and operating context/i

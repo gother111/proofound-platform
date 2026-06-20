@@ -117,7 +117,7 @@ export function DownloadOrganizationPdfButton({
         onClick={handleDownload}
         disabled={loading}
         className={cn(
-          'inline-flex w-full items-center justify-center gap-1.5 sm:w-auto',
+          'w-full justify-center gap-2 border-proofound-stone/85 bg-white/60 text-proofound-charcoal shadow-none hover:border-proofound-forest/70 hover:bg-proofound-forest/5 hover:text-proofound-forest sm:w-auto',
           className
         )}
       >

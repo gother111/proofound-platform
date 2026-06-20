@@ -69,7 +69,10 @@ export function CopyTextButton({
         size="touch"
         onClick={handleCopy}
         disabled={loading}
-        className={cn('w-full justify-center gap-2 sm:w-auto', className)}
+        className={cn(
+          'w-full justify-center gap-2 border-proofound-stone/85 bg-white/60 text-proofound-charcoal shadow-none hover:border-proofound-forest/70 hover:bg-proofound-forest/5 hover:text-proofound-forest sm:w-auto',
+          className
+        )}
       >
         {loading ? (
           <Loader2 className="h-4 w-4 animate-spin" />
