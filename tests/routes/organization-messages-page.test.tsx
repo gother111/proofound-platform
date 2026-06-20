@@ -118,6 +118,24 @@ describe('organization messages page', () => {
     );
   });
 
+  it('guides organization reviewers to select a loaded thread without implying the list is empty', async () => {
+    render(<OrgMessagesClient currentUserId="user-1" />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Submission A')).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByText(
+        'Choose a thread from the list to review protected messages, introduction steps, and reveal context.'
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Conversations appear after an assignment and introduction are ready/i)
+    ).not.toBeInTheDocument();
+    expect(screen.getByText('Identity remains protected before reveal')).toBeInTheDocument();
+  });
+
   it('loads conversations with the server-provided current user', async () => {
     render(<OrgMessagesClient currentUserId="user-1" />);
 

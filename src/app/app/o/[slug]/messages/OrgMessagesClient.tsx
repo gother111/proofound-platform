@@ -358,8 +358,9 @@ function OrganizationMessagesPageContent({ currentUserId, hideHeader }: OrgMessa
                   Select a conversation
                 </p>
                 <p className="text-sm leading-6 text-muted-foreground">
-                  Conversations appear after an assignment and introduction are ready. Choose a
-                  thread when one opens in the list.
+                  {conversations.length > 0
+                    ? 'Choose a thread from the list to review protected messages, introduction steps, and reveal context.'
+                    : 'Assignment conversations open after a proof-safe introduction. Choose a thread when one appears in the list.'}
                 </p>
                 <p className="inline-flex items-center gap-2 pt-2 text-xs font-medium text-proofound-charcoal/70">
                   <Lock className="h-3.5 w-3.5" />
