@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { getActiveOrg, requireAuth } from '@/lib/auth';
 import { getVerifiedOrganizationDomainPath } from '@/lib/organizations/trust-profile';
+import { buildOrgTrustReadiness, countReadyTrustItems } from '@/lib/organizations/trust-readiness';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,29 +33,16 @@ export default async function OrganizationProfilePage({
     trustStatus: org.trustStatus ?? null,
     verified: org.verified,
   });
-  const trustItems = [
-    {
-      label: 'Organization name',
-      detail: org.displayName || 'Missing',
-      ready: Boolean(org.displayName),
-    },
-    {
-      label: 'Why work matters',
-      detail: org.tagline || 'Add a short reason this work matters.',
-      ready: Boolean(org.tagline),
-    },
-    {
-      label: 'Mission',
-      detail: org.mission || 'Add the mission this assignment path supports.',
-      ready: Boolean(org.mission),
-    },
-    {
-      label: 'Domain path',
-      detail: verifiedDomainPath ?? 'Needs verified domain signal.',
-      ready: Boolean(verifiedDomainPath),
-    },
-  ];
-  const readyTrustCount = trustItems.filter((item) => item.ready).length;
+  const operatingContext = org.workingContext ?? null;
+  const trustItems = buildOrgTrustReadiness({
+    displayName: org.displayName,
+    whyWorkMatters: org.tagline,
+    mission: org.mission,
+    operatingContext,
+    domainPathDetail: verifiedDomainPath,
+    domainReady: Boolean(verifiedDomainPath),
+  });
+  const readyTrustCount = countReadyTrustItems(trustItems);
 
   return (
     <AppSurface>
@@ -114,18 +102,20 @@ export default async function OrganizationProfilePage({
               <h2 className="font-display text-lg font-semibold leading-none tracking-tight text-proofound-charcoal">
                 Launch corridor
               </h2>
-              <CardDescription>Trust basics ready: {readyTrustCount}/4</CardDescription>
+              <CardDescription>
+                Launch essentials ready: {readyTrustCount}/{trustItems.length}
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 text-sm text-muted-foreground">
               <div className="flex items-start gap-3">
-                <ShieldCheck className="mt-0.5 h-4 w-4 text-foreground/70" />
+                <ShieldCheck className="mt-0.5 h-4 w-4 text-foreground/70" aria-hidden="true" />
                 <div>
                   <p className="font-medium text-foreground">Organization trust page</p>
                   <p>Mission, why the work matters, verified domain path, and operating context.</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <Users className="mt-0.5 h-4 w-4 text-foreground/70" />
+                <Users className="mt-0.5 h-4 w-4 text-foreground/70" aria-hidden="true" />
                 <div>
                   <p className="font-medium text-foreground">Assignments & matches</p>
                   <p>
@@ -134,7 +124,7 @@ export default async function OrganizationProfilePage({
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <Globe2 className="mt-0.5 h-4 w-4 text-foreground/70" />
+                <Globe2 className="mt-0.5 h-4 w-4 text-foreground/70" aria-hidden="true" />
                 <div>
                   <p className="font-medium text-foreground">Public preview</p>
                   <p>

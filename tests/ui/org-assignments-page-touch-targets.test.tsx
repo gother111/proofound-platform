@@ -14,10 +14,13 @@ vi.mock('@/app/app/o/[slug]/matching/OrgMatchingClient', () => ({
 
 describe('OrgAssignmentsAliasPage', () => {
   it('keeps the organization breadcrumb finger-friendly', async () => {
-    render(await OrgAssignmentsAliasPage({ params: Promise.resolve({ slug: 'acme' }) }));
+    const { container } = render(
+      await OrgAssignmentsAliasPage({ params: Promise.resolve({ slug: 'acme' }) })
+    );
 
     const organizationLink = screen.getByRole('link', { name: 'Organization' });
     expect(organizationLink).toHaveAttribute('href', '/app/o/acme/home');
     expect(organizationLink).toHaveClass('min-h-11');
+    expect(container.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
   });
 });

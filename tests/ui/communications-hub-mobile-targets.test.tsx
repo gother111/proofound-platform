@@ -57,7 +57,7 @@ describe('CommunicationsHub mobile targets', () => {
   it('keeps the active workspace clear of the mobile bottom navigation', () => {
     render(<CommunicationsHub perspective="individual" />);
 
-    const workspace = screen.getByRole('main', { name: 'messages workspace' });
+    const workspace = screen.getByRole('region', { name: 'messages workspace' });
     const hubRoot = screen.getByTestId('communications-hub');
 
     expect(hubRoot).toHaveClass('h-[calc(100dvh-8.25rem)]');

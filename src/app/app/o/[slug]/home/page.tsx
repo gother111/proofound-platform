@@ -19,6 +19,7 @@ import {
   visualAssignmentFixturesEnabled,
   VISUAL_ASSIGNMENT_MOCK_ORG_ID,
 } from '@/lib/assignments/visual-fixtures';
+import { buildOrgTrustReadiness, countReadyTrustItems } from '@/lib/organizations/trust-readiness';
 import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -123,13 +124,17 @@ export default async function OrganizationHomePage({
     verified: org.verified,
   });
 
-  const missionReady = Boolean(org.mission?.trim());
-  const domainReady = Boolean(verifiedDomainPath || org.verified);
-  const contextReady = Boolean(
-    org.workingContext?.trim() || org.hiringProcessSummary?.trim() || org.tagline?.trim()
-  );
-  const trustReadyCount = [missionReady, domainReady, contextReady].filter(Boolean).length;
-  const needsTrustWork = trustReadyCount < 3;
+  const operatingContext = org.workingContext ?? null;
+  const trustItems = buildOrgTrustReadiness({
+    displayName: org.displayName,
+    whyWorkMatters: org.tagline,
+    mission: org.mission,
+    operatingContext,
+    domainPathDetail: verifiedDomainPath,
+    domainReady: Boolean(verifiedDomainPath),
+  });
+  const trustReadyCount = countReadyTrustItems(trustItems);
+  const needsTrustWork = trustReadyCount < trustItems.length;
 
   const inviteAction = inviteMemberFormAction.bind(null, org.id) as (
     state: OrgInviteFormState,
@@ -221,11 +226,11 @@ export default async function OrganizationHomePage({
                     </h2>
                     <p className="text-sm text-muted-foreground leading-relaxed">
                       Before you can publish assignments and receive proof-backed matches, complete
-                      the organization trust page. Domain verification, mission, and working context
-                      keep review grounded.
+                      the organization trust page. Name, mission, why the work matters, operating
+                      context, and verified domain path keep review grounded.
                     </p>
                     <div className="text-xs text-muted-foreground font-medium pt-2">
-                      Progress: {trustReadyCount}/3 trust elements completed
+                      Progress: {trustReadyCount}/{trustItems.length} launch essentials ready
                     </div>
                   </div>
                 )}

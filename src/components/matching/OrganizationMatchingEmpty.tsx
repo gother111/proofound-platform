@@ -44,7 +44,11 @@ export function OrganizationMatchingEmpty({
         <div className="grid gap-8 lg:grid-cols-[1fr_0.95fr] lg:items-center">
           <div className="space-y-6 text-left">
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-proofound-stone/70 bg-white shadow-sm">
-              <Users className="w-10 h-10 text-proofound-forest" strokeWidth={1.5} />
+              <Users
+                className="w-10 h-10 text-proofound-forest"
+                strokeWidth={1.5}
+                aria-hidden="true"
+              />
             </div>
 
             <div className="space-y-3">
@@ -84,7 +88,7 @@ export function OrganizationMatchingEmpty({
                     className="flex gap-3 rounded-xl bg-proofound-parchment/50 p-3"
                   >
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-proofound-forest">
-                      <Icon className="h-4 w-4" />
+                      <Icon className="h-4 w-4" aria-hidden="true" />
                     </div>
                     <div>
                       <p className="text-sm font-medium text-proofound-charcoal">{step.label}</p>
@@ -109,7 +113,7 @@ export function OrganizationMatchingEmpty({
                 }
                 router.push(action.actionUrl);
               }}
-              className="group flex min-h-32 flex-col rounded-xl border border-proofound-stone/70 bg-white/70 p-4 transition-colors hover:border-proofound-forest hover:bg-white"
+              className="group flex min-h-32 flex-col rounded-xl border border-proofound-stone/70 bg-white/70 p-4 transition-colors hover:border-proofound-forest hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
             >
               <h3 className="mb-2 text-sm font-semibold text-proofound-charcoal transition-colors group-hover:text-proofound-forest">
                 {action.title}

@@ -56,6 +56,30 @@ interface NavItem {
   lockReason?: string | null;
 }
 
+function isNavItemActive(pathname: string | null, href: string, activeHrefs: string[] = []) {
+  if (!pathname) {
+    return false;
+  }
+
+  return [href, ...activeHrefs].some((candidate) => {
+    if (pathname === candidate) {
+      return true;
+    }
+
+    return pathname.startsWith(`${candidate}/`);
+  });
+}
+
+function getMobileNavAccessibleLabel(item: NavItem) {
+  const mobileLabel = item.mobileLabel ?? item.label;
+
+  if (mobileLabel === item.label) {
+    return item.label;
+  }
+
+  return `${mobileLabel}, ${item.label}`;
+}
+
 export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
@@ -158,11 +182,7 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
               const Icon = item.icon;
               const isLocked = Boolean(item.locked);
               const activeHrefs = item.activeHrefs ?? [];
-              const isActive =
-                !isLocked &&
-                (pathname === item.href ||
-                  pathname?.startsWith(item.href) ||
-                  activeHrefs.some((href) => pathname === href || pathname?.startsWith(href)));
+              const isActive = !isLocked && isNavItemActive(pathname, item.href, activeHrefs);
               const tooltipText = !isExpanded
                 ? isLocked
                   ? `${item.label} (Locked)`
@@ -284,13 +304,10 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
           {mobileNavItems.map((item) => {
             const Icon = item.icon;
             const mobileLabel = item.mobileLabel ?? item.label;
+            const mobileAccessibleLabel = getMobileNavAccessibleLabel(item);
             const isLocked = Boolean(item.locked);
             const activeHrefs = item.activeHrefs ?? [];
-            const isActive =
-              !isLocked &&
-              (pathname === item.href ||
-                pathname?.startsWith(item.href) ||
-                activeHrefs.some((href) => pathname === href || pathname?.startsWith(href)));
+            const isActive = !isLocked && isNavItemActive(pathname, item.href, activeHrefs);
 
             if (isLocked) {
               return (
@@ -298,7 +315,7 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
                   key={item.href}
                   type="button"
                   className="relative flex flex-1 min-w-0 flex-col items-center gap-1 px-1 py-2 rounded-lg min-h-[64px] justify-center text-muted-foreground/60 cursor-not-allowed pointer-events-auto"
-                  aria-label={`${item.label} (locked)`}
+                  aria-label={`${mobileAccessibleLabel} (locked)`}
                   aria-disabled="true"
                   title={item.lockReason || ''}
                 >
@@ -320,7 +337,7 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
                     : 'text-muted-foreground hover:text-proofound-charcoal'
                 }`}
                 aria-current={isActive ? 'page' : undefined}
-                aria-label={item.label}
+                aria-label={mobileAccessibleLabel}
               >
                 {/* Fluid Active Indicator */}
                 {isActive && (

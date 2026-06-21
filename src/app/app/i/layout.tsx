@@ -11,7 +11,7 @@ import { SpotlightProvider } from '@/components/ui/spotlight-provider';
  * Design: Two-column layout with sidebar navigation and top bar
  * Accessibility:
  * - Semantic HTML structure with proper landmark regions
- * - Main content has ID for skip-to-content link
+ * - Main content has a dedicated skip target for the skip-to-content link
  * - Proper heading hierarchy within child pages
  * Responsive: Sidebar collapses on mobile, bottom tab bar alternative
  */
@@ -35,10 +35,11 @@ export default async function IndividualLayout({ children }: { children: React.R
         <LeftNav basePath="/app/i" isBetaTesting={user.isBetaTesting} />
         <div className="flex-1 flex flex-col min-w-0">
           <TopBar userName={userName} userInitials={userInitials} basePath="/app/i" />
-          {/* Main content region with ID for skip-to-content link */}
+          {/* Main content region with the app-shell skip target. */}
           {/* Reserve mobile space for the fixed bottom navigation. */}
           <main
-            id="main-content"
+            id="app-main-content"
+            data-app-main
             className="relative mb-[4.75rem] flex-1 overflow-y-auto overflow-x-hidden pb-[calc(5.5rem+env(safe-area-inset-bottom))] scroll-pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:mb-0 md:pb-0 md:scroll-pb-0"
             role="main"
             aria-label="Main content"

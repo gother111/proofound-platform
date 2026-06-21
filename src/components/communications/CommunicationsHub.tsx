@@ -176,7 +176,7 @@ export function CommunicationsHub({
       </aside>
 
       {/* Right Pane for Active Workspace */}
-      <main
+      <section
         className="min-h-0 flex-1 overflow-y-auto pb-[calc(5.5rem+env(safe-area-inset-bottom))] scroll-pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0 md:scroll-pb-0"
         aria-label={`${activeSection} workspace`}
       >
@@ -197,7 +197,7 @@ export function CommunicationsHub({
             <IndividualInterviewsPage />
           )}
         </div>
-      </main>
+      </section>
     </div>
   );
 }

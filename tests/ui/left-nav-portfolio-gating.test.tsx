@@ -133,6 +133,10 @@ describe('LeftNav portfolio gating', () => {
       'href',
       '/app/i/settings'
     );
+    expect(screen.getByRole('menuitem', { name: /account settings/i })).toHaveClass('min-h-11');
+    expect(screen.getByRole('menuitem', { name: /account settings/i })).toHaveClass(
+      'focus-visible:ring-2'
+    );
     expect(screen.getByRole('menuitem', { name: /privacy controls/i })).toHaveAttribute(
       'href',
       '/app/i/settings/privacy'
@@ -149,6 +153,8 @@ describe('LeftNav portfolio gating', () => {
       'href',
       '/auth/logout'
     );
+    expect(screen.getByRole('menuitem', { name: /log out/i })).toHaveClass('min-h-11');
+    expect(screen.getByRole('menuitem', { name: /log out/i })).toHaveClass('focus-visible:ring-2');
   });
 
   it('keeps org account menu inside the organization trust page corridor', () => {
@@ -212,5 +218,42 @@ describe('LeftNav portfolio gating', () => {
     expect(screen.getByText(/^Preview$/i)).toBeInTheDocument();
     expect(screen.queryByText(/^Work$/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/^Profile$/i)).not.toBeInTheDocument();
+  });
+
+  it('keeps abbreviated mobile labels inside the accessible nav names', () => {
+    usePathnameMock.mockReturnValue('/app/o/acme/communications');
+
+    render(<LeftNav basePath="/app/o/acme" />);
+
+    expect(screen.getByRole('link', { name: 'Inbox, Communications' })).toHaveTextContent('Inbox');
+    expect(screen.getByRole('link', { name: 'Trust, Organization Trust Page' })).toHaveTextContent(
+      'Trust'
+    );
+    expect(screen.getByRole('link', { name: 'Preview, Public Preview' })).toHaveTextContent(
+      'Preview'
+    );
+  });
+
+  it('does not mark the trust nav active on the public preview route', () => {
+    usePathnameMock.mockReturnValue('/app/o/acme/portfolio');
+
+    render(<LeftNav basePath="/app/o/acme" />);
+
+    expect(screen.getAllByRole('link', { name: /organization trust page/i })).toSatisfy(
+      (links: HTMLElement[]) => links.every((link) => !link.hasAttribute('aria-current'))
+    );
+    expect(screen.getAllByRole('link', { name: /public preview/i })).toSatisfy(
+      (links: HTMLElement[]) => links.every((link) => link.getAttribute('aria-current') === 'page')
+    );
+  });
+
+  it('keeps assignment subroutes on the assignments nav item', () => {
+    usePathnameMock.mockReturnValue('/app/o/acme/assignments/assignment-1/review');
+
+    render(<LeftNav basePath="/app/o/acme" />);
+
+    expect(screen.getAllByRole('link', { name: /^assignments$/i })).toSatisfy(
+      (links: HTMLElement[]) => links.every((link) => link.getAttribute('aria-current') === 'page')
+    );
   });
 });

@@ -28,7 +28,7 @@ export default async function OrgAssignmentsAliasPage({
           <div className="flex flex-col gap-6 px-5 py-6 sm:flex-row sm:items-start sm:justify-between sm:px-6">
             <div className="flex min-w-0 flex-1 gap-4 sm:gap-5">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[#dfead5] text-proofound-forest shadow-sm ring-1 ring-black/5 sm:h-14 sm:w-14">
-                <ClipboardCheck className="h-7 w-7" />
+                <ClipboardCheck className="h-7 w-7" aria-hidden="true" />
               </div>
               <div className="min-w-0">
                 <nav className="mb-2 flex min-h-11 items-center gap-1 text-xs text-muted-foreground">
