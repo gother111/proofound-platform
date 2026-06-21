@@ -119,7 +119,7 @@ describe('organization messages page', () => {
   });
 
   it('guides organization reviewers to select a loaded thread without implying the list is empty', async () => {
-    render(<OrgMessagesClient currentUserId="user-1" />);
+    const { container } = render(<OrgMessagesClient currentUserId="user-1" />);
 
     await waitFor(() => {
       expect(screen.getByText('Submission A')).toBeInTheDocument();
@@ -137,6 +137,7 @@ describe('organization messages page', () => {
       screen.queryByText(/Choose a thread when one appears in the list/i)
     ).not.toBeInTheDocument();
     expect(screen.getByText('Identity remains protected before reveal')).toBeInTheDocument();
+    expect(container.querySelectorAll('svg:not([aria-hidden="true"])')).toHaveLength(0);
   });
 
   it('loads conversations with the server-provided current user', async () => {
@@ -378,13 +379,14 @@ describe('organization messages page', () => {
     pathnameValue = '/app/o/acme/communications';
     searchParamsValue = 'section=messages&conversation=missing-conversation';
 
-    render(<OrgMessagesClient currentUserId="user-1" />);
+    const { container } = render(<OrgMessagesClient currentUserId="user-1" />);
 
     const status = await screen.findByRole('status');
     expect(status).toHaveTextContent('Assignment thread link unavailable');
     expect(status).toHaveTextContent('no longer available to this workspace');
     expect(status).toHaveTextContent('Review details and reveal state remain protected');
     expect(screen.queryByTestId('message-thread')).not.toBeInTheDocument();
+    expect(container.querySelectorAll('svg:not([aria-hidden="true"])')).toHaveLength(0);
 
     fireEvent.click(screen.getByRole('button', { name: 'Show available conversations' }));
 

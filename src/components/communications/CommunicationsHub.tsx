@@ -78,7 +78,10 @@ function OrganizationMessagesLoading() {
       className="flex h-full min-h-[320px] items-center justify-center rounded-xl border border-proofound-stone/70 bg-white/70 px-5 text-center shadow-sm"
     >
       <div className="max-w-sm space-y-3">
-        <Loader2 className="mx-auto h-5 w-5 animate-spin text-proofound-forest" />
+        <Loader2
+          className="mx-auto h-5 w-5 animate-spin text-proofound-forest"
+          aria-hidden="true"
+        />
         <div className="space-y-1">
           <p className="text-sm font-semibold text-proofound-charcoal">
             Preparing organization messages
@@ -139,7 +142,7 @@ export function CommunicationsHub({
                   key={section.id}
                   href={sectionHref(section.id)}
                   className={cn(
-                    'flex min-h-11 w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors focus-visible:outline-none sm:w-auto',
+                    'flex min-h-11 w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-light-50 sm:w-auto',
                     isActive
                       ? 'border-proofound-forest bg-proofound-forest text-white shadow-sm'
                       : 'border-proofound-stone/50 bg-white/60 text-proofound-charcoal hover:border-proofound-forest/40 hover:bg-white'
@@ -147,7 +150,7 @@ export function CommunicationsHub({
                   aria-current={isActive ? 'page' : undefined}
                   aria-label={`Switch to ${section.label.toLowerCase()}: ${section.description}`}
                 >
-                  <Icon className="h-4 w-4 shrink-0" />
+                  <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
                   <div className="min-w-0">
                     <span className="block text-xs font-semibold">{section.label}</span>
                     <span
@@ -168,7 +171,7 @@ export function CommunicationsHub({
         {/* Bottom Supporting Privacy/Trust Panel */}
         <div className="space-y-1 rounded-lg border border-proofound-stone/60 bg-white/50 p-3">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-proofound-charcoal">
-            <Handshake className="h-3.5 w-3.5 text-proofound-forest shrink-0" />
+            <Handshake className="h-3.5 w-3.5 text-proofound-forest shrink-0" aria-hidden="true" />
             <span>Secure Corridor</span>
           </div>
           <p className="text-[10px] leading-4 text-muted-foreground">{corridorCopy[perspective]}</p>

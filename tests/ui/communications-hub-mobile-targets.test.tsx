@@ -32,7 +32,7 @@ describe('CommunicationsHub mobile targets', () => {
   });
 
   it('renders the section switch as a full-height touch target', () => {
-    render(<CommunicationsHub perspective="individual" />);
+    const { container } = render(<CommunicationsHub perspective="individual" />);
 
     const switchLink = screen.getByRole('link', {
       name: /Switch to interviews: Interview times, decisions, and visible feedback/i,
@@ -42,6 +42,9 @@ describe('CommunicationsHub mobile targets', () => {
     expect(switchLink).toHaveClass('min-h-11');
     expect(switchLink).toHaveClass('w-full');
     expect(switchLink).toHaveClass('sm:w-auto');
+    expect(switchLink).toHaveClass('focus-visible:ring-2');
+    expect(switchLink).toHaveClass('focus-visible:ring-proofound-forest');
+    expect(container.querySelectorAll('svg:not([aria-hidden="true"])')).toHaveLength(0);
     expect(
       screen.getByText('Introductions, reveal choices, and private threads.')
     ).toBeInTheDocument();

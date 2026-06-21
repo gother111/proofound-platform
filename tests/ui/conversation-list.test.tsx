@@ -21,12 +21,15 @@ const baseConversation: Conversation = {
 
 describe('ConversationList', () => {
   it('uses empty-state helper copy when no conversations exist', () => {
-    render(<ConversationList conversations={[]} onSelect={vi.fn()} mode="individual" />);
+    const { container } = render(
+      <ConversationList conversations={[]} onSelect={vi.fn()} mode="individual" />
+    );
 
     expect(
       screen.getByText('Conversations appear after a proof-safe introduction.')
     ).toBeInTheDocument();
     expect(screen.getByText('No conversations yet')).toBeInTheDocument();
+    expect(container.querySelectorAll('svg:not([aria-hidden="true"])')).toHaveLength(0);
   });
 
   it('uses active-list helper copy when conversations exist', () => {
@@ -62,7 +65,7 @@ describe('ConversationList', () => {
   });
 
   it('shows a recoverable search empty state for conversation filters', () => {
-    render(
+    const { container } = render(
       <ConversationList conversations={[baseConversation]} onSelect={vi.fn()} mode="individual" />
     );
 
@@ -71,6 +74,7 @@ describe('ConversationList', () => {
     });
 
     expect(screen.getByText('No conversations match “billing”')).toBeInTheDocument();
+    expect(container.querySelectorAll('svg:not([aria-hidden="true"])')).toHaveLength(0);
     expect(
       screen.getByText(
         'Search checks participant labels, assignment titles, and recent proof-corridor messages.'
@@ -87,7 +91,7 @@ describe('ConversationList', () => {
   it('keeps load failures separate from the empty conversations state', () => {
     const retry = vi.fn();
 
-    render(
+    const { container } = render(
       <ConversationList
         conversations={[]}
         onSelect={vi.fn()}
@@ -98,6 +102,7 @@ describe('ConversationList', () => {
     );
 
     expect(screen.getByRole('alert')).toHaveTextContent('Conversations could not load');
+    expect(container.querySelectorAll('svg:not([aria-hidden="true"])')).toHaveLength(0);
     expect(screen.getByRole('alert')).toHaveTextContent(
       'Your conversation threads are still safe. Retry this section to load messages.'
     );

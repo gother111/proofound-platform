@@ -302,7 +302,7 @@ function OrganizationMessagesPageContent({ currentUserId, hideHeader }: OrgMessa
               className="m-auto mx-6 max-w-md rounded-2xl border border-proofound-stone/70 bg-white/70 p-8 text-center shadow-sm"
             >
               <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#fff1d6] text-[#8a5b00]">
-                <AlertTriangle className="h-6 w-6" />
+                <AlertTriangle className="h-6 w-6" aria-hidden="true" />
               </div>
               <div className="space-y-3">
                 <p className="font-display text-xl font-semibold text-proofound-charcoal">
@@ -313,7 +313,7 @@ function OrganizationMessagesPageContent({ currentUserId, hideHeader }: OrgMessa
                   closed, expired, or require a different role.
                 </p>
                 <p className="inline-flex items-center justify-center gap-2 text-xs font-medium text-proofound-charcoal/70">
-                  <Lock className="h-3.5 w-3.5" />
+                  <Lock className="h-3.5 w-3.5" aria-hidden="true" />
                   Review details and reveal state remain protected
                 </p>
                 <button
@@ -351,7 +351,7 @@ function OrganizationMessagesPageContent({ currentUserId, hideHeader }: OrgMessa
           ) : (
             <div className="mx-6 max-w-md rounded-2xl border border-proofound-stone/70 bg-white/60 p-8 text-center shadow-sm">
               <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-proofound-parchment text-proofound-forest">
-                <MessageSquare className="h-6 w-6" />
+                <MessageSquare className="h-6 w-6" aria-hidden="true" />
               </div>
               <div className="space-y-2">
                 <p className="font-display text-xl font-semibold text-proofound-charcoal">
@@ -363,7 +363,7 @@ function OrganizationMessagesPageContent({ currentUserId, hideHeader }: OrgMessa
                     : 'Assignment conversations stay quiet until a proof-safe introduction is open. Choose a thread when one appears in the list.'}
                 </p>
                 <p className="inline-flex items-center gap-2 pt-2 text-xs font-medium text-proofound-charcoal/70">
-                  <Lock className="h-3.5 w-3.5" />
+                  <Lock className="h-3.5 w-3.5" aria-hidden="true" />
                   Identity remains protected before reveal
                 </p>
               </div>

@@ -137,7 +137,10 @@ export function ConversationList({
               : 'Conversations appear after a proof-safe introduction.'}
         </p>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground"
+            aria-hidden="true"
+          />
           <Input
             type="text"
             aria-label="Search conversations"
@@ -157,7 +160,7 @@ export function ConversationList({
             role="alert"
           >
             <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-[#fff1d6] text-[#8a5b00]">
-              <AlertTriangle className="h-5 w-5" />
+              <AlertTriangle className="h-5 w-5" aria-hidden="true" />
             </div>
             <p className="text-sm font-medium text-proofound-charcoal">
               Conversations could not load
@@ -169,7 +172,7 @@ export function ConversationList({
                 onClick={onRetry}
                 className="mt-4 inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-proofound-stone/80 bg-white px-3 text-xs font-medium text-proofound-forest transition-colors hover:border-proofound-forest hover:bg-proofound-parchment/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
               >
-                <RefreshCcw className="h-3.5 w-3.5" />
+                <RefreshCcw className="h-3.5 w-3.5" aria-hidden="true" />
                 Retry conversations
               </button>
             ) : null}
@@ -177,7 +180,7 @@ export function ConversationList({
         ) : filteredConversations.length === 0 && !hasSearchQuery ? (
           <div className="mx-4 mt-4 rounded-2xl border border-dashed border-proofound-stone/80 bg-proofound-parchment/45 p-6 text-center">
             <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white text-proofound-forest">
-              <MessageSquare className="h-5 w-5" />
+              <MessageSquare className="h-5 w-5" aria-hidden="true" />
             </div>
             <p className="text-sm font-medium text-proofound-charcoal">{emptyCopy.title}</p>
             <p className="mx-auto mt-2 max-w-64 text-xs leading-5 text-muted-foreground">
@@ -196,7 +199,7 @@ export function ConversationList({
             aria-live="polite"
           >
             <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-proofound-parchment text-proofound-forest">
-              <Search className="h-5 w-5" />
+              <Search className="h-5 w-5" aria-hidden="true" />
             </div>
             <p className="text-sm font-medium text-proofound-charcoal">
               No conversations match &ldquo;{trimmedSearchQuery}&rdquo;
