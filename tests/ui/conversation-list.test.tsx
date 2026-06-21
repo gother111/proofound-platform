@@ -82,7 +82,12 @@ describe('ConversationList', () => {
     ).toBeInTheDocument();
     expect(screen.queryByText(baseConversation.otherPartyName)).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Clear search' }));
+    const clearSearchButton = screen.getByRole('button', { name: 'Clear search' });
+
+    expect(clearSearchButton).toHaveClass('min-h-11');
+    expect(clearSearchButton).toHaveClass('focus-visible:ring-2');
+
+    fireEvent.click(clearSearchButton);
 
     expect(screen.getByText(baseConversation.otherPartyName)).toBeInTheDocument();
     expect(screen.queryByText('No conversations match “billing”')).not.toBeInTheDocument();

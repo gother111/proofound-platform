@@ -211,7 +211,7 @@ export function ConversationList({
             <button
               type="button"
               onClick={() => setSearchQuery('')}
-              className="mt-4 rounded-full border border-proofound-stone bg-white px-3 py-1.5 text-xs font-medium text-proofound-forest transition-colors hover:border-proofound-forest hover:bg-proofound-parchment/30"
+              className="mt-4 inline-flex min-h-11 items-center justify-center rounded-full border border-proofound-stone bg-white px-4 text-xs font-medium text-proofound-forest transition-colors hover:border-proofound-forest hover:bg-proofound-parchment/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
             >
               Clear search
             </button>
