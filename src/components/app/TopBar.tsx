@@ -54,12 +54,17 @@ export function TopBar({
 
     if (!pathname) return 'Overview';
 
+    const isOrgRoute = pathname.includes('/app/o/');
+
     if (pathname.includes('/home')) return 'Overview';
     if (pathname.includes('/communications')) return 'Communications';
     if (pathname.includes('/matching')) return 'Assignment Review';
     if (pathname.includes('/interviews')) return 'Interviews';
     if (pathname.includes('/messages')) return 'Messages';
+    if (isOrgRoute && pathname.includes('/profile')) return 'Organization Trust Page';
     if (pathname.includes('/profile')) return 'Profile';
+    if (isOrgRoute && pathname.includes('/portfolio')) return 'Public Preview';
+    if (pathname.includes('/portfolio')) return 'Portfolio';
     if (pathname.includes('/settings')) return 'Settings';
     if (pathname.includes('/verifications')) return 'Verifications';
     if (pathname.includes('/assignments')) return 'Assignments';

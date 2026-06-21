@@ -69,4 +69,20 @@ describe('TopBar header actions', () => {
     expect(screen.getByText('Overview')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Customize' })).not.toBeInTheDocument();
   });
+
+  it('uses org-specific trust and preview titles in the fallback header', () => {
+    mockPathname = '/app/o/acme/profile';
+    const { rerender } = render(
+      <TopBar userName="Acme" userInitials="AC" basePath="/app/o/acme" />
+    );
+
+    expect(screen.getByText('Organization Trust Page')).toBeInTheDocument();
+    expect(screen.queryByText(/^Profile$/)).not.toBeInTheDocument();
+
+    mockPathname = '/app/o/acme/portfolio';
+    rerender(<TopBar userName="Acme" userInitials="AC" basePath="/app/o/acme" />);
+
+    expect(screen.getByText('Public Preview')).toBeInTheDocument();
+    expect(screen.queryByText(/^Overview$/)).not.toBeInTheDocument();
+  });
 });
