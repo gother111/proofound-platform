@@ -216,6 +216,7 @@ function StepRail({ phase }: { phase: Exclude<SetupPhase, 'success'> }) {
         return (
           <div
             key={step.id}
+            aria-current={status === 'active' ? 'step' : undefined}
             className={`rounded-lg border p-3 text-sm ${
               status === 'active'
                 ? 'border-proofound-forest bg-proofound-parchment/70'
@@ -225,8 +226,15 @@ function StepRail({ phase }: { phase: Exclude<SetupPhase, 'success'> }) {
             }`}
           >
             <div className="flex items-center gap-2">
-              <Icon className="h-4 w-4 text-proofound-forest" />
+              <Icon className="h-4 w-4 text-proofound-forest" aria-hidden="true" />
               <span className="font-medium text-proofound-charcoal">{step.label}</span>
+              <span className="sr-only">
+                {status === 'active'
+                  ? 'Current step'
+                  : status === 'completed'
+                    ? 'Completed step'
+                    : 'Upcoming step'}
+              </span>
             </div>
           </div>
         );
@@ -608,7 +616,7 @@ export function IndividualSetup({
         <Card className="rounded-lg border-proofound-stone dark:border-border">
           <CardHeader>
             <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-proofound-forest/10 text-proofound-forest">
-              <CheckCircle2 className="h-6 w-6" />
+              <CheckCircle2 className="h-6 w-6" aria-hidden="true" />
             </div>
             <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
               First Proof Pack created
@@ -778,7 +786,7 @@ export function IndividualSetup({
               onClick={() => setPhase('basic_details')}
               className="mb-4 inline-flex items-center gap-2 text-sm text-proofound-charcoal/70 transition-colors hover:text-proofound-forest dark:text-muted-foreground dark:hover:text-primary"
             >
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
               Back to basic details
             </button>
             <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
@@ -794,7 +802,7 @@ export function IndividualSetup({
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="space-y-1">
                     <p className="text-sm font-semibold text-proofound-charcoal dark:text-foreground">
-                      Optional private CV scaffolding
+                      Start from CV - draft your proof foundation
                     </p>
                     <p className="text-sm leading-6 text-proofound-charcoal/70 dark:text-muted-foreground">
                       Use your CV only to draft private context. Review, skip, discard, or edit
@@ -807,8 +815,8 @@ export function IndividualSetup({
                     className="shrink-0"
                     onClick={() => setIsCvImportOpen(true)}
                   >
-                    <FileUp className="mr-2 h-4 w-4" />
-                    Start from CV
+                    <FileUp className="mr-2 h-4 w-4" aria-hidden="true" />
+                    Draft from CV
                   </Button>
                 </div>
               </div>
@@ -849,7 +857,7 @@ export function IndividualSetup({
                       checked={proof.inputMode === 'link'}
                       onChange={() => setProof((current) => ({ ...current, inputMode: 'link' }))}
                     />
-                    <Link2 className="h-4 w-4 text-proofound-forest" />
+                    <Link2 className="h-4 w-4 text-proofound-forest" aria-hidden="true" />
                     Link
                   </label>
                   <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-proofound-stone bg-white p-3 text-sm text-proofound-charcoal dark:border-border dark:bg-background dark:text-foreground">
@@ -860,7 +868,7 @@ export function IndividualSetup({
                       checked={proof.inputMode === 'file'}
                       onChange={() => setProof((current) => ({ ...current, inputMode: 'file' }))}
                     />
-                    <FileUp className="h-4 w-4 text-proofound-forest" />
+                    <FileUp className="h-4 w-4 text-proofound-forest" aria-hidden="true" />
                     File upload
                   </label>
                 </div>
@@ -899,12 +907,19 @@ export function IndividualSetup({
                     </p>
                   ) : null}
                   {isUploading ? (
-                    <p className="flex items-center gap-2 text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                    <p
+                      className="flex items-center gap-2 text-sm text-proofound-charcoal/70 dark:text-muted-foreground"
+                      aria-live="polite"
+                    >
+                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                       Uploading proof...
                     </p>
                   ) : null}
-                  {uploadError ? <p className="text-sm text-red-600">{uploadError}</p> : null}
+                  {uploadError ? (
+                    <p className="text-sm text-red-600" role="alert">
+                      {uploadError}
+                    </p>
+                  ) : null}
                 </div>
               )}
 
@@ -1063,7 +1078,7 @@ export function IndividualSetup({
                         ])
                       }
                     >
-                      <Plus className="mr-2 h-4 w-4" />
+                      <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
                       Add
                     </Button>
                   ) : null}
@@ -1090,7 +1105,7 @@ export function IndividualSetup({
                             }
                             aria-label={`Remove outcome ${index + 1}`}
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-4 w-4" aria-hidden="true" />
                           </Button>
                         ) : null}
                       </div>
@@ -1209,7 +1224,7 @@ export function IndividualSetup({
                                 }
                                 aria-label={`Remove confirmer ${index + 1}`}
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-4 w-4" aria-hidden="true" />
                               </Button>
                             ) : null}
                           </div>
@@ -1291,7 +1306,7 @@ export function IndividualSetup({
                           ])
                         }
                       >
-                        <Plus className="mr-2 h-4 w-4" />
+                        <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
                         Add confirmer
                       </Button>
                     ) : null}
@@ -1309,7 +1324,10 @@ export function IndividualSetup({
               </div>
 
               {error ? (
-                <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950/30 dark:text-red-300">
+                <p
+                  className="rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950/30 dark:text-red-300"
+                  role="alert"
+                >
                   {error}
                 </p>
               ) : null}
@@ -1323,12 +1341,12 @@ export function IndividualSetup({
                 >
                   {isLoading ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saving first proof...
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                      <span aria-live="polite">Saving first proof...</span>
                     </>
                   ) : verificationAction === 'send_now' ? (
                     <>
-                      <Send className="mr-2 h-4 w-4" />
+                      <Send className="mr-2 h-4 w-4" aria-hidden="true" />
                       Save and send request
                     </>
                   ) : (

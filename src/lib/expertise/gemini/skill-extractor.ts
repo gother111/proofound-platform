@@ -272,7 +272,7 @@ async function extractSkillCandidates(params: {
       totalTokenCount: response.tokenUsage.totalTokens,
     },
     modelUsed: trimModelName(response.model || params.model),
-    provider: response.provider,
+    provider: 'gemini',
     promptVersion: response.promptVersion,
     feature: response.feature,
   };

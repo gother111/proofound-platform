@@ -159,10 +159,10 @@ describe('IndividualSetup first-proof flow', () => {
 
     fillBasicDetails();
 
-    expect(screen.getByText(/Optional private CV scaffolding/i)).toBeInTheDocument();
+    expect(screen.getByText(/Start from CV - draft your proof foundation/i)).toBeInTheDocument();
     expect(screen.queryByText(/score|rank|shortlist/i)).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /Start from CV/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Draft from CV/i }));
     expect(await screen.findByTestId('start-from-cv-dialog')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /Continue manually/i }));
@@ -250,6 +250,18 @@ describe('IndividualSetup first-proof flow', () => {
     ).toBeInTheDocument();
     expect(screen.queryByText(/% complete/i)).not.toBeInTheDocument();
     expect(pushMock).not.toHaveBeenCalled();
+  });
+
+  it('announces first-proof validation errors in an alert region', () => {
+    render(<IndividualSetup />);
+
+    fillBasicDetails();
+    fireEvent.submit(
+      screen.getByRole('button', { name: /save first proof pack/i }).closest('form')!
+    );
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Add one proof link before saving.');
+    expect(completeIndividualOnboardingMock).not.toHaveBeenCalled();
   });
 
   it('hands off to the scaffold profile even when the portfolio already has a public URL', async () => {

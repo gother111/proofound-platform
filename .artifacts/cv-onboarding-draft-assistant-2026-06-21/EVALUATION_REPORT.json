@@ -1,0 +1,21 @@
+{
+  "date": "2026-06-21",
+  "scope": "Start from CV draft assistant hardening slice",
+  "evaluation_type": "local deterministic and mocked provider tests",
+  "real_cv_data_used": false,
+  "external_trial_provider_used": false,
+  "status": "partial",
+  "passed": [
+    "provider policy blocks real CV data for DeepSeek/NVIDIA trial providers",
+    "draft output separates explicit, inferred, and future idea items",
+    "unsupported skills and canonical mappings carry no trust, matching, or verification lift",
+    "accept endpoint validates accepted IDs against stored session payload",
+    "route and UI tests preserve invite/onboarding gating"
+  ],
+  "not_completed": [
+    "30-case synthetic corpus",
+    "12 synthetic PDF fixture evaluation",
+    "live synthetic provider smoke for non-Gemini trial providers",
+    "database-backed privacy/RLS session tests"
+  ]
+}

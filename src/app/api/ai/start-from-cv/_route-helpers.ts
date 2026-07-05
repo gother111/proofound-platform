@@ -130,10 +130,18 @@ export function safeStartFromCvMessage(code: string) {
       return 'Explicit consent is required before CV processing.';
     case 'UNSUPPORTED_MIME_TYPE':
       return 'Start from CV supports PDF, PNG, and JPG/JPEG files only.';
+    case 'FILE_SIGNATURE_MISMATCH':
+      return 'The uploaded file content does not match its declared file type.';
     case 'FILE_TOO_LARGE':
       return 'Start from CV supports files up to the configured size limit.';
     case 'TOO_MANY_PAGES':
       return 'Start from CV supports CV PDFs up to the configured page limit.';
+    case 'START_FROM_CV_SESSION_EXPIRED':
+      return 'This Start from CV session expired. Delete it and upload again.';
+    case 'START_FROM_CV_INVALID_SESSION_STATE':
+      return 'This Start from CV session is not ready for that action.';
+    case 'START_FROM_CV_ACCEPTED_DRAFT_NOT_IN_SESSION':
+      return 'Only drafts from this Start from CV session can be accepted.';
     case 'USER_DAILY_LIMIT_EXCEEDED':
     case 'GLOBAL_DAILY_LIMIT_EXCEEDED':
       return 'Start from CV is temporarily rate limited.';

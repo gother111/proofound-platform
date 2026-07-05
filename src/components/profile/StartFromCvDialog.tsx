@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FileUp, Loader2, ShieldCheck, Trash2 } from 'lucide-react';
+import { CheckSquare, FileUp, Loader2, ShieldCheck, Trash2, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -23,15 +23,33 @@ type DraftBucket =
   | 'volunteeringContextDrafts'
   | 'proofPackIdeaDrafts'
   | 'artifactLinkDrafts'
-  | 'unsupportedSkillDrafts';
+  | 'unsupportedSkillDrafts'
+  | 'skillMappingDrafts'
+  | 'outcomeQuestionDrafts'
+  | 'futureProjectIdeaDrafts';
 
-const DRAFT_BUCKETS: Array<{ key: DraftBucket; label: string }> = [
-  { key: 'workContextDrafts', label: 'Work context drafts' },
-  { key: 'educationContextDrafts', label: 'Education context drafts' },
-  { key: 'volunteeringContextDrafts', label: 'Volunteering context drafts' },
-  { key: 'proofPackIdeaDrafts', label: 'Proof Pack ideas' },
-  { key: 'artifactLinkDrafts', label: 'Artifact and link suggestions' },
-  { key: 'unsupportedSkillDrafts', label: 'Unsupported skill suggestions' },
+const DRAFT_BUCKETS: Array<{
+  key: DraftBucket;
+  label: string;
+  savedAs: 'private_context' | 'session_note';
+}> = [
+  { key: 'workContextDrafts', label: 'Work context drafts', savedAs: 'private_context' },
+  { key: 'educationContextDrafts', label: 'Education context drafts', savedAs: 'private_context' },
+  {
+    key: 'volunteeringContextDrafts',
+    label: 'Volunteering context drafts',
+    savedAs: 'private_context',
+  },
+  { key: 'proofPackIdeaDrafts', label: 'Proof Pack ideas', savedAs: 'session_note' },
+  { key: 'artifactLinkDrafts', label: 'Artifact and link suggestions', savedAs: 'session_note' },
+  {
+    key: 'unsupportedSkillDrafts',
+    label: 'Unsupported skill suggestions',
+    savedAs: 'session_note',
+  },
+  { key: 'skillMappingDrafts', label: 'Canonical skill mapping drafts', savedAs: 'session_note' },
+  { key: 'outcomeQuestionDrafts', label: 'Outcome questions', savedAs: 'session_note' },
+  { key: 'futureProjectIdeaDrafts', label: 'Future project ideas', savedAs: 'session_note' },
 ];
 
 const DRAFT_TITLE_FIELDS: Record<DraftBucket, string> = {
@@ -41,6 +59,9 @@ const DRAFT_TITLE_FIELDS: Record<DraftBucket, string> = {
   proofPackIdeaDrafts: 'titleSuggestion',
   artifactLinkDrafts: 'label',
   unsupportedSkillDrafts: 'skillLabel',
+  skillMappingDrafts: 'skillLabel',
+  outcomeQuestionDrafts: 'question',
+  futureProjectIdeaDrafts: 'titleSuggestion',
 };
 
 const DRAFT_BODY_FIELDS: Record<DraftBucket, { key: string; list?: true }> = {
@@ -50,6 +71,9 @@ const DRAFT_BODY_FIELDS: Record<DraftBucket, { key: string; list?: true }> = {
   proofPackIdeaDrafts: { key: 'possibleClaim' },
   artifactLinkDrafts: { key: 'sourceContext' },
   unsupportedSkillDrafts: { key: 'sourceContext' },
+  skillMappingDrafts: { key: 'canonicalSkillLabel' },
+  outcomeQuestionDrafts: { key: 'whyItMatters' },
+  futureProjectIdeaDrafts: { key: 'prompt' },
 };
 
 function getDraftTitle(item: Record<string, unknown>) {
@@ -59,6 +83,7 @@ function getDraftTitle(item: Record<string, unknown>) {
     item.titleSuggestion ||
     item.label ||
     item.skillLabel ||
+    item.question ||
     'Private draft'
   );
 }
@@ -68,10 +93,25 @@ function getDraftBody(item: Record<string, unknown>) {
     item.shortContextSummary ||
     item.contributionSummary ||
     item.possibleClaim ||
+    item.prompt ||
+    item.whyItMatters ||
+    item.canonicalSkillLabel ||
     item.sourceContext ||
     item.missingEvidenceWarning ||
     'Review before keeping.'
   );
+}
+
+function getEpistemicLabel(item: Record<string, unknown>) {
+  switch (item.epistemicStatus) {
+    case 'explicit':
+      return 'Found in document';
+    case 'future_idea':
+      return 'Future idea';
+    case 'inferred':
+    default:
+      return 'Inferred - confirm';
+  }
 }
 
 function getEditableDraftText(item: Record<string, unknown>, field: { key: string; list?: true }) {
@@ -102,6 +142,11 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
   const [acceptedIds, setAcceptedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hasDraftSuggestions = session
+    ? DRAFT_BUCKETS.some(
+        ({ key }) => ((session[key] as Array<Record<string, unknown>>) || []).length > 0
+      )
+    : false;
 
   async function startExtraction() {
     if (!file || !consented) {
@@ -209,6 +254,18 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
     });
   }
 
+  function selectAllDrafts() {
+    if (!session) return;
+    const ids = DRAFT_BUCKETS.flatMap(({ key }) =>
+      ((session[key] as Array<Record<string, unknown>>) || []).map((item) => String(item.id))
+    );
+    setAcceptedIds(new Set(ids));
+  }
+
+  function clearSelectedDrafts() {
+    setAcceptedIds(new Set());
+  }
+
   function updateDraftField(
     bucket: DraftBucket,
     id: string,
@@ -242,14 +299,17 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
         <div className="flex items-start gap-3">
           <ShieldCheck className="mt-0.5 h-5 w-5 text-proofound-forest" aria-hidden="true" />
           <div className="space-y-2 text-sm text-muted-foreground">
-            <p className="font-medium text-foreground">Start from your CV</p>
+            <p className="font-medium text-foreground">
+              Start from CV - draft your proof foundation
+            </p>
             <p>
-              Upload your CV to create private editable drafts. Nothing is published, verified,
-              scored, ranked, or shown to organizations unless you choose what to keep later.
+              Upload your CV to create private editable drafts for review. Nothing is published,
+              verified, scored, ranked, or shown to organizations unless you choose what to keep
+              later.
             </p>
             <ul className="list-disc space-y-1 pl-5">
               <li>CV processing is optional.</li>
-              <li>The CV may be processed by Google Cloud Document AI and Gemini if enabled.</li>
+              <li>External OCR or structuring runs only when the approved provider gates pass.</li>
               <li>Extracted information becomes private draft suggestions only.</li>
               {surface === START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE ? (
                 <li>Use it only as optional scaffolding before creating assignment proof.</li>
@@ -284,7 +344,16 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
             />
             <span>I consent to optional CV processing for private draft suggestions.</span>
           </label>
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          {error ? (
+            <p className="text-sm text-destructive" role="alert">
+              {error}
+            </p>
+          ) : null}
+          {loading ? (
+            <p className="text-sm text-muted-foreground" aria-live="polite">
+              Creating private drafts...
+            </p>
+          ) : null}
           <div className="flex flex-wrap gap-2">
             <Button
               type="button"
@@ -292,11 +361,11 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
               disabled={loading || !file || !consented}
             >
               {loading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
               ) : (
-                <FileUp className="mr-2 h-4 w-4" />
+                <FileUp className="mr-2 h-4 w-4" aria-hidden="true" />
               )}
-              Create private drafts
+              Create private proof drafts
             </Button>
             <Button type="button" variant="outline" onClick={onApplyComplete}>
               Continue manually
@@ -312,8 +381,28 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
               ))}
             </div>
           ) : null}
+          {session.providerPolicyWarnings.length > 0 ? (
+            <div className="rounded-lg border border-proofound-stone/70 bg-white p-3 text-sm text-muted-foreground">
+              {session.providerPolicyWarnings.slice(0, 3).map((warning) => (
+                <p key={warning}>{warning}</p>
+              ))}
+            </div>
+          ) : null}
 
-          {DRAFT_BUCKETS.map(({ key, label }) => {
+          {!hasDraftSuggestions ? (
+            <div
+              className="rounded-lg border border-proofound-stone/60 bg-white p-4 text-sm text-muted-foreground"
+              role="status"
+            >
+              <p className="font-medium text-foreground">No private draft suggestions found</p>
+              <p className="mt-1 leading-6">
+                This CV did not produce draft context that is safe to keep here. Continue manually
+                and add the proof you want reviewers to inspect.
+              </p>
+            </div>
+          ) : null}
+
+          {DRAFT_BUCKETS.map(({ key, label, savedAs }) => {
             const items = (session[key] as Array<Record<string, unknown>>) || [];
             if (items.length === 0) return null;
             const titleField = DRAFT_TITLE_FIELDS[key];
@@ -336,6 +425,16 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
                           onCheckedChange={(value) => toggleAccepted(id, value === true)}
                         />
                         <div className="min-w-0 flex-1 space-y-2">
+                          <div className="flex flex-wrap gap-2">
+                            <span className="rounded-full border border-proofound-stone/70 px-2 py-0.5 text-xs text-muted-foreground">
+                              {getEpistemicLabel(item)}
+                            </span>
+                            <span className="rounded-full border border-proofound-stone/70 px-2 py-0.5 text-xs text-muted-foreground">
+                              {savedAs === 'private_context'
+                                ? 'Saves as private context'
+                                : 'Saves as review note'}
+                            </span>
+                          </div>
                           <Input
                             aria-label={`${label} title`}
                             value={
@@ -364,6 +463,11 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
                               matching, or verification lift.
                             </span>
                           ) : null}
+                          {key === 'skillMappingDrafts' ? (
+                            <span className="block text-xs text-amber-700">
+                              Canonical skill suggestion only. Confirm evidence before using.
+                            </span>
+                          ) : null}
                         </div>
                       </div>
                     );
@@ -373,20 +477,42 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
             );
           })}
 
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          {error ? (
+            <p className="text-sm text-destructive" role="alert">
+              {error}
+            </p>
+          ) : null}
+          {loading ? (
+            <p className="text-sm text-muted-foreground" aria-live="polite">
+              Saving selected drafts...
+            </p>
+          ) : null}
           <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" onClick={selectAllDrafts} disabled={loading}>
+              <CheckSquare className="mr-2 h-4 w-4" aria-hidden="true" />
+              Select all
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={clearSelectedDrafts}
+              disabled={loading || acceptedIds.size === 0}
+            >
+              <X className="mr-2 h-4 w-4" aria-hidden="true" />
+              Clear selection
+            </Button>
             <Button
               type="button"
               onClick={acceptSelected}
               disabled={loading || acceptedIds.size === 0}
             >
-              Accept selected drafts
+              Save selected drafts
             </Button>
             <Button type="button" variant="outline" onClick={onApplyComplete}>
               Continue manually
             </Button>
             <Button type="button" variant="outline" onClick={deleteSession} disabled={loading}>
-              <Trash2 className="mr-2 h-4 w-4" />
+              <Trash2 className="mr-2 h-4 w-4" aria-hidden="true" />
               Delete import session
             </Button>
           </div>

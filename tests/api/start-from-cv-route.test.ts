@@ -62,6 +62,9 @@ vi.mock('@/lib/ai/start-from-cv', () => ({
           proofPackIdeaDrafts: z.array(z.any()).default([]),
           artifactLinkDrafts: z.array(z.any()).default([]),
           unsupportedSkillDrafts: z.array(z.any()).default([]),
+          skillMappingDrafts: z.array(z.any()).default([]),
+          outcomeQuestionDrafts: z.array(z.any()).default([]),
+          futureProjectIdeaDrafts: z.array(z.any()).default([]),
         })
         .strict(),
     })
@@ -125,6 +128,9 @@ describe('Start from CV API routes', () => {
       proofPackIdeaDrafts: [],
       artifactLinkDrafts: [],
       unsupportedSkillDrafts: [],
+      skillMappingDrafts: [],
+      outcomeQuestionDrafts: [],
+      futureProjectIdeaDrafts: [],
       discardedUnsafeItems: [],
       requiresUserReview: true,
     });
@@ -139,6 +145,9 @@ describe('Start from CV API routes', () => {
       proofPackIdeaDrafts: [],
       artifactLinkDrafts: [],
       unsupportedSkillDrafts: [],
+      skillMappingDrafts: [],
+      outcomeQuestionDrafts: [],
+      futureProjectIdeaDrafts: [],
       discardedUnsafeItems: [],
       requiresUserReview: true,
     };
@@ -315,6 +324,9 @@ describe('Start from CV API routes', () => {
           proofPackIdeaDrafts: [],
           artifactLinkDrafts: [],
           unsupportedSkillDrafts: [],
+          skillMappingDrafts: [],
+          outcomeQuestionDrafts: [],
+          futureProjectIdeaDrafts: [],
         },
       }),
       params()

@@ -12,7 +12,13 @@ import {
   startFromCvImportSessions,
   volunteering,
 } from '@/db/schema';
-import { generateJson, resolveAiAssistantsEnabled } from '@/lib/ai/provider';
+import {
+  generateJson,
+  generateJsonWithDeepSeek,
+  resolveAiAssistantsEnabled,
+} from '@/lib/ai/provider';
+import { resolveDeepSeekProviderApiKey } from '@/lib/ai/provider/deepseek-client';
+import { resolveAiProviderPolicyDecision } from '@/lib/ai/provider/policy';
 import { START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE } from '@/lib/ai/start-from-cv-contract';
 import { AiProviderError } from '@/lib/ai/provider/types';
 import {
@@ -22,6 +28,7 @@ import {
   resolveConfiguredAiMonthlyHardCapSek,
   updateAiUsageLog,
 } from '@/lib/ai/usage-ledger';
+import { suggestSkillsForDocuments } from '@/lib/expertise/cv-import-suggest';
 import { extractTextFromDocument } from '@/lib/expertise/document-extraction-provider';
 import { resolveGcpCvOcrConfig } from '@/lib/expertise/gcp-cv-ocr-config';
 import { extractPdfTextFromBytes } from '@/lib/expertise/pdf-client-extractor';
@@ -59,6 +66,29 @@ const ROLE_TITLE_PATTERN =
 
 type EnvReader = Record<string, string | undefined>;
 
+type StartFromCvDraftBucket =
+  | 'workContextDrafts'
+  | 'educationContextDrafts'
+  | 'volunteeringContextDrafts'
+  | 'proofPackIdeaDrafts'
+  | 'artifactLinkDrafts'
+  | 'unsupportedSkillDrafts'
+  | 'skillMappingDrafts'
+  | 'outcomeQuestionDrafts'
+  | 'futureProjectIdeaDrafts';
+
+const START_FROM_CV_DRAFT_BUCKETS: StartFromCvDraftBucket[] = [
+  'workContextDrafts',
+  'educationContextDrafts',
+  'volunteeringContextDrafts',
+  'proofPackIdeaDrafts',
+  'artifactLinkDrafts',
+  'unsupportedSkillDrafts',
+  'skillMappingDrafts',
+  'outcomeQuestionDrafts',
+  'futureProjectIdeaDrafts',
+];
+
 export type StartFromCvEligibilityContext = {
   userId: string;
   persona?: string | null;
@@ -77,6 +107,15 @@ export type StartFromCvUploadedFile = {
 export type StartFromCvDraftOutput = z.infer<typeof StartFromCvDraftOutputSchema>;
 
 const ConfidenceSchema = z.enum(['low', 'medium', 'high']);
+const EpistemicStatusSchema = z.enum(['explicit', 'inferred', 'future_idea']);
+
+const StartFromCvSourceSpanSchema = z.object({
+  label: z.string().max(80).default('CV snippet'),
+  text: z.string().max(220),
+  pageHint: z.string().max(40).nullable().default(null),
+});
+
+const SourceSpansField = z.array(StartFromCvSourceSpanSchema).max(3).default([]);
 
 export const StartFromCvWorkDraftSchema = z.object({
   id: z.string().min(1),
@@ -87,6 +126,8 @@ export const StartFromCvWorkDraftSchema = z.object({
   possibleProjectOutcomeCandidates: z.array(z.string().max(220)).max(5).default([]),
   confidence: ConfidenceSchema.default('low'),
   sourceSnippetReference: z.string().max(220).nullable().default(null),
+  sourceSpans: SourceSpansField,
+  epistemicStatus: z.literal('explicit').default('explicit'),
   visibility: z.literal('private').default('private'),
 });
 
@@ -96,6 +137,8 @@ export const StartFromCvEducationDraftSchema = z.object({
   programTitle: z.string().max(160).nullable().default(null),
   approximateDates: z.string().max(120).nullable().default(null),
   learningProjectHints: z.array(z.string().max(220)).max(5).default([]),
+  sourceSpans: SourceSpansField,
+  epistemicStatus: z.literal('explicit').default('explicit'),
   visibility: z.literal('private').default('private'),
 });
 
@@ -105,6 +148,8 @@ export const StartFromCvVolunteeringDraftSchema = z.object({
   roleTitle: z.string().max(160).nullable().default(null),
   approximateDates: z.string().max(120).nullable().default(null),
   contributionSummary: z.string().max(700).nullable().default(null),
+  sourceSpans: SourceSpansField,
+  epistemicStatus: z.literal('explicit').default('explicit'),
   visibility: z.literal('private').default('private'),
 });
 
@@ -116,6 +161,8 @@ export const StartFromCvProofPackIdeaDraftSchema = z.object({
   possibleOutcome: z.string().max(500).nullable().default(null),
   missingEvidenceWarning: z.string().max(240),
   privacyWarning: z.string().max(240),
+  sourceSpans: SourceSpansField,
+  epistemicStatus: z.literal('inferred').default('inferred'),
   status: z.literal('draft_only').default('draft_only'),
 });
 
@@ -123,6 +170,8 @@ export const StartFromCvArtifactLinkDraftSchema = z.object({
   id: z.string().min(1),
   label: z.string().max(160),
   sourceContext: z.string().max(220).nullable().default(null),
+  sourceSpans: SourceSpansField,
+  epistemicStatus: z.literal('inferred').default('inferred'),
   status: z.literal('draft_only').default('draft_only'),
   privacyWarning: z.string().max(240),
 });
@@ -131,12 +180,51 @@ export const StartFromCvUnsupportedSkillDraftSchema = z.object({
   id: z.string().min(1),
   skillLabel: z.string().max(120),
   sourceContext: z.string().max(220),
+  sourceSpans: SourceSpansField,
+  epistemicStatus: z.literal('explicit').default('explicit'),
+  evidenceClass: z.literal('unsupported_skill').default('unsupported_skill'),
   status: z.literal('unsupported_draft').default('unsupported_draft'),
   requiresProof: z.literal(true).default(true),
   requiresUserConfirmation: z.literal(true).default(true),
   noTrustLift: z.literal(true).default(true),
   noMatchingLift: z.literal(true).default(true),
   noVerificationState: z.literal(true).default(true),
+});
+
+export const StartFromCvSkillMappingDraftSchema = z.object({
+  id: z.string().min(1),
+  skillLabel: z.string().max(120),
+  canonicalSkillId: z.string().max(120).nullable().default(null),
+  canonicalSkillLabel: z.string().max(120).nullable().default(null),
+  matchMethod: z.enum(['exact', 'synonym', 'fuzzy', 'manual_review']).default('manual_review'),
+  evidenceClass: z.literal('needs_proof').default('needs_proof'),
+  sourceSpans: SourceSpansField,
+  epistemicStatus: z.literal('explicit').default('explicit'),
+  requiresUserConfirmation: z.literal(true).default(true),
+  noTrustLift: z.literal(true).default(true),
+  noMatchingLift: z.literal(true).default(true),
+  noVerificationState: z.literal(true).default(true),
+});
+
+export const StartFromCvOutcomeQuestionDraftSchema = z.object({
+  id: z.string().min(1),
+  anchorDraftId: z.string().min(1).nullable().default(null),
+  question: z.string().max(260),
+  whyItMatters: z.string().max(220),
+  sourceSpans: SourceSpansField,
+  epistemicStatus: z.literal('inferred').default('inferred'),
+  status: z.literal('draft_only').default('draft_only'),
+});
+
+export const StartFromCvFutureProjectIdeaDraftSchema = z.object({
+  id: z.string().min(1),
+  titleSuggestion: z.string().max(180),
+  prompt: z.string().max(500),
+  sourceContext: z.string().max(220).nullable().default(null),
+  sourceSpans: SourceSpansField,
+  epistemicStatus: z.literal('future_idea').default('future_idea'),
+  notCvFact: z.literal(true).default(true),
+  status: z.literal('future_idea').default('future_idea'),
 });
 
 export const StartFromCvDraftOutputSchema = z.object({
@@ -150,7 +238,11 @@ export const StartFromCvDraftOutputSchema = z.object({
   proofPackIdeaDrafts: z.array(StartFromCvProofPackIdeaDraftSchema).default([]),
   artifactLinkDrafts: z.array(StartFromCvArtifactLinkDraftSchema).default([]),
   unsupportedSkillDrafts: z.array(StartFromCvUnsupportedSkillDraftSchema).default([]),
+  skillMappingDrafts: z.array(StartFromCvSkillMappingDraftSchema).default([]),
+  outcomeQuestionDrafts: z.array(StartFromCvOutcomeQuestionDraftSchema).default([]),
+  futureProjectIdeaDrafts: z.array(StartFromCvFutureProjectIdeaDraftSchema).default([]),
   discardedUnsafeItems: z.array(z.string().max(260)).default([]),
+  providerPolicyWarnings: z.array(z.string().max(260)).default([]),
   modelUsed: z.string().nullable().optional(),
   ocrProviderUsed: z.string().nullable().optional(),
   requiresUserReview: z.literal(true).default(true),
@@ -173,12 +265,18 @@ export const StartFromCvAcceptSchema = z
         proofPackIdeaDrafts: z.array(StartFromCvProofPackIdeaDraftSchema).max(20).default([]),
         artifactLinkDrafts: z.array(StartFromCvArtifactLinkDraftSchema).max(20).default([]),
         unsupportedSkillDrafts: z.array(StartFromCvUnsupportedSkillDraftSchema).max(50).default([]),
+        skillMappingDrafts: z.array(StartFromCvSkillMappingDraftSchema).max(50).default([]),
+        outcomeQuestionDrafts: z.array(StartFromCvOutcomeQuestionDraftSchema).max(20).default([]),
+        futureProjectIdeaDrafts: z
+          .array(StartFromCvFutureProjectIdeaDraftSchema)
+          .max(20)
+          .default([]),
       })
       .strict(),
   })
   .strict();
 
-const GeminiStartFromCvSchema = StartFromCvDraftOutputSchema.omit({
+const AiStartFromCvSchema = StartFromCvDraftOutputSchema.omit({
   importSessionId: true,
   extractionStatus: true,
   modelUsed: true,
@@ -188,7 +286,7 @@ const GeminiStartFromCvSchema = StartFromCvDraftOutputSchema.omit({
   sourceType: z.literal('cv').default('cv'),
 });
 
-const GEMINI_START_FROM_CV_JSON_SCHEMA = {
+const START_FROM_CV_JSON_SCHEMA = {
   type: 'object',
   properties: {
     sourceType: { type: 'string', enum: ['cv'] },
@@ -199,6 +297,9 @@ const GEMINI_START_FROM_CV_JSON_SCHEMA = {
     proofPackIdeaDrafts: { type: 'array', maxItems: 12, items: { type: 'object' } },
     artifactLinkDrafts: { type: 'array', maxItems: 12, items: { type: 'object' } },
     unsupportedSkillDrafts: { type: 'array', maxItems: 20, items: { type: 'object' } },
+    skillMappingDrafts: { type: 'array', maxItems: 20, items: { type: 'object' } },
+    outcomeQuestionDrafts: { type: 'array', maxItems: 12, items: { type: 'object' } },
+    futureProjectIdeaDrafts: { type: 'array', maxItems: 12, items: { type: 'object' } },
     discardedUnsafeItems: {
       type: 'array',
       items: { type: 'string', maxLength: 260 },
@@ -233,6 +334,10 @@ export function resolveStartFromCvConfig(env: EnvReader = process.env) {
     env.START_FROM_CV_MAX_FILE_SIZE_MB,
     DEFAULT_MAX_FILE_SIZE_MB
   );
+  const useAiStructuring = parseBoolean(
+    env.START_FROM_CV_USE_AI_STRUCTURING,
+    parseBoolean(env.START_FROM_CV_USE_GEMINI_STRUCTURING, false)
+  );
   return {
     enabled: parseBoolean(env.START_FROM_CV_BETA_ENABLED, false),
     guestFirstProofScaffoldingEnabled: parseBoolean(
@@ -243,7 +348,8 @@ export function resolveStartFromCvConfig(env: EnvReader = process.env) {
     allowedUserIds: parseCsv(env.START_FROM_CV_ALLOWED_USER_IDS),
     allowedOrgIds: parseCsv(env.START_FROM_CV_ALLOWED_ORG_IDS),
     useGcpOcr: parseBoolean(env.START_FROM_CV_USE_GCP_OCR, false),
-    useGeminiStructuring: parseBoolean(env.START_FROM_CV_USE_GEMINI_STRUCTURING, false),
+    useGeminiStructuring: useAiStructuring,
+    useAiStructuring,
     maxFileSizeMb,
     maxFileSizeBytes: maxFileSizeMb * 1024 * 1024,
     maxPages: parsePositiveInt(env.START_FROM_CV_MAX_PAGES, DEFAULT_MAX_PAGES),
@@ -288,14 +394,29 @@ export function getStartFromCvLaunchSummary(env: EnvReader = process.env) {
     }
   }
   if (config.enabled && config.useGeminiStructuring) {
+    const providerPolicy = resolveAiProviderPolicyDecision({
+      feature: START_FROM_CV_FEATURE,
+      dataClassification: 'personal_data',
+      env,
+      requireLiveAdapter: true,
+    });
+    if (!providerPolicy.ok) {
+      blockers.push(`ai_provider_policy_${providerPolicy.reason ?? 'blocked'}`);
+    }
     if (!resolveAiAssistantsEnabled(env)) {
-      blockers.push('gemini_structuring_ai_disabled');
+      blockers.push('ai_structuring_ai_disabled');
     }
     if (resolveAiRawPromptLoggingEnabled(env)) {
-      blockers.push('gemini_structuring_raw_prompt_logging_enabled');
+      blockers.push('ai_structuring_raw_prompt_logging_enabled');
     }
     if (isProductionLikeEnv(env) && resolveConfiguredAiMonthlyHardCapSek(env) === null) {
-      blockers.push('gemini_structuring_ai_hard_cap_missing');
+      blockers.push('ai_structuring_ai_hard_cap_missing');
+    }
+    if (
+      providerPolicy.provider === 'deepseek_v4_flash' &&
+      !resolveDeepSeekProviderApiKey({ env })
+    ) {
+      blockers.push('deepseek_structuring_api_key_missing');
     }
   }
 
@@ -309,6 +430,13 @@ export function getStartFromCvLaunchSummary(env: EnvReader = process.env) {
     allowedOrgCount: config.allowedOrgIds.length,
     useGcpOcr: config.useGcpOcr,
     useGeminiStructuring: config.useGeminiStructuring,
+    useAiStructuring: config.useAiStructuring,
+    aiProvider: resolveAiProviderPolicyDecision({
+      feature: START_FROM_CV_FEATURE,
+      dataClassification: 'personal_data',
+      env,
+      requireLiveAdapter: true,
+    }).provider,
     browserOcrEnabled: config.publicBrowserOcrEnabled,
     maxFileSizeMb: config.maxFileSizeMb,
     maxPages: config.maxPages,
@@ -385,6 +513,7 @@ export async function getStartFromCvSession(input: { sessionId: string; userId: 
   if (!row || row.deletedAt) {
     throw new StartFromCvError('START_FROM_CV_SESSION_NOT_FOUND', 404);
   }
+  assertSessionNotExpired(row);
   return sessionResponseFromRow(row);
 }
 
@@ -411,11 +540,17 @@ export async function extractStartFromCvSession(input: {
   if (!session.consentConfirmedAt) {
     throw new StartFromCvError('CONSENT_REQUIRED', 400);
   }
+  assertSessionNotExpired(session);
+  assertSessionStatus(session, ['created', 'extraction_failed', 'manual_fallback']);
 
   const config = resolveStartFromCvConfig(input.env);
   const mimeType = normalizeMimeType(input.file.type);
   if (!ALLOWED_MIME_TYPES.has(mimeType)) {
     throw new StartFromCvError('UNSUPPORTED_MIME_TYPE', 400);
+  }
+  const detectedMimeType = detectStartFromCvMimeType(input.file.bytes);
+  if (!detectedMimeType || detectedMimeType !== mimeType) {
+    throw new StartFromCvError('FILE_SIGNATURE_MISMATCH', 400);
   }
   if (input.file.size > config.maxFileSizeBytes) {
     throw new StartFromCvError('FILE_TOO_LARGE', 400);
@@ -538,9 +673,18 @@ export async function acceptStartFromCvDrafts(input: {
   if (!session || session.deletedAt) {
     throw new StartFromCvError('START_FROM_CV_SESSION_NOT_FOUND', 404);
   }
+  if (session.status === 'accepted') {
+    return getStartFromCvSession({ sessionId: input.sessionId, userId: input.userId });
+  }
+  assertSessionNotExpired(session);
+  assertSessionStatus(session, ['ready_for_review']);
+  const accepted = validateStartFromCvAcceptedDrafts(
+    input.accepted,
+    coerceDraftPayloadForSession(session)
+  );
 
   await db.transaction(async (tx) => {
-    for (const draft of input.accepted.workContextDrafts) {
+    for (const draft of accepted.workContextDrafts) {
       await tx.insert(experiences).values({
         userId: input.userId,
         title: draft.roleTitle || 'Private work context draft',
@@ -558,7 +702,7 @@ export async function acceptStartFromCvDrafts(input: {
       });
     }
 
-    for (const draft of input.accepted.educationContextDrafts) {
+    for (const draft of accepted.educationContextDrafts) {
       await tx.insert(education).values({
         userId: input.userId,
         institution: draft.institutionLabel || 'Private education context draft',
@@ -571,7 +715,7 @@ export async function acceptStartFromCvDrafts(input: {
       });
     }
 
-    for (const draft of input.accepted.volunteeringContextDrafts) {
+    for (const draft of accepted.volunteeringContextDrafts) {
       await tx.insert(volunteering).values({
         userId: input.userId,
         title: draft.roleTitle || 'Private volunteering context draft',
@@ -589,7 +733,7 @@ export async function acceptStartFromCvDrafts(input: {
       .update(startFromCvImportSessions)
       .set({
         status: 'accepted',
-        acceptedPayload: input.accepted,
+        acceptedPayload: accepted,
         updatedAt: new Date(),
       })
       .where(
@@ -613,6 +757,10 @@ export async function discardStartFromCvSession(input: {
   if (!session || session.deletedAt) {
     throw new StartFromCvError('START_FROM_CV_SESSION_NOT_FOUND', 404);
   }
+  if (session.status === 'accepted') {
+    return { ok: true, deleted: false };
+  }
+  assertSessionNotExpired(session);
 
   await db
     .update(startFromCvImportSessions)
@@ -707,6 +855,29 @@ export async function enforceStartFromCvDailyLimits(userId: string, env?: EnvRea
 function normalizeMimeType(value: string): string {
   const normalized = value.trim().toLowerCase();
   return normalized === 'image/jpg' ? 'image/jpeg' : normalized;
+}
+
+function detectStartFromCvMimeType(bytes: Uint8Array): string | null {
+  if (bytes.byteLength >= 5 && Buffer.from(bytes.slice(0, 5)).toString('ascii') === '%PDF-') {
+    return 'application/pdf';
+  }
+  if (
+    bytes.byteLength >= 8 &&
+    bytes[0] === 0x89 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x4e &&
+    bytes[3] === 0x47 &&
+    bytes[4] === 0x0d &&
+    bytes[5] === 0x0a &&
+    bytes[6] === 0x1a &&
+    bytes[7] === 0x0a
+  ) {
+    return 'image/png';
+  }
+  if (bytes.byteLength >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
+    return 'image/jpeg';
+  }
+  return null;
 }
 
 async function extractReadablePdfText(bytes: Uint8Array): Promise<string> {
@@ -923,15 +1094,38 @@ async function structureStartFromCvDrafts(input: {
   env?: EnvReader;
 }): Promise<StartFromCvDraftOutput> {
   const config = resolveStartFromCvConfig(input.env);
+  const providerPolicy = resolveAiProviderPolicyDecision({
+    feature: START_FROM_CV_FEATURE,
+    dataClassification: 'personal_data',
+    env: input.env,
+    requireLiveAdapter: true,
+  });
   if (config.useGeminiStructuring) {
+    if (!providerPolicy.ok) {
+      return enrichStartFromCvDrafts({
+        draft: buildDeterministicDrafts({
+          importSessionId: input.sessionId,
+          text: input.redactedText,
+          extractionStatus: input.extractionStatus,
+          privacyWarnings: input.privacyWarnings,
+          discardedUnsafeItems: input.discardedUnsafeItems,
+          ocrProviderUsed: input.ocrProviderUsed,
+        }),
+        redactedText: input.redactedText,
+        providerPolicyWarnings: [
+          `AI provider policy blocked live structuring: ${providerPolicy.reason ?? 'blocked'}.`,
+          ...providerPolicy.warnings,
+        ],
+      });
+    }
     try {
-      const result = await generateJson({
+      const generationParams = {
         requestId: `start_cv_struct_${randomUUID().replaceAll('-', '')}`,
         promptVersion: START_FROM_CV_PROMPT_VERSION,
         feature: START_FROM_CV_FEATURE,
-        prompt: buildGeminiPrompt(input.redactedText, input.privacyWarnings),
-        schema: GeminiStartFromCvSchema,
-        responseJsonSchema: GEMINI_START_FROM_CV_JSON_SCHEMA,
+        prompt: buildStartFromCvStructuringPrompt(input.redactedText, input.privacyWarnings),
+        schema: AiStartFromCvSchema,
+        responseJsonSchema: START_FROM_CV_JSON_SCHEMA,
         maxOutputTokens: 1800,
         temperature: 0,
         usage: {
@@ -946,10 +1140,15 @@ async function structureStartFromCvDrafts(input: {
           safeMetadata: {
             prompt_version: START_FROM_CV_PROMPT_VERSION,
             source_type: 'cv',
+            structuring_provider: providerPolicy.provider,
           },
           bypassCache: true,
         },
-      });
+      };
+      const result =
+        providerPolicy.provider === 'deepseek_v4_flash'
+          ? await generateJsonWithDeepSeek(generationParams, { env: input.env })
+          : await generateJson(generationParams);
       const merged = StartFromCvDraftOutputSchema.parse({
         ...result.data,
         importSessionId: input.sessionId,
@@ -961,28 +1160,52 @@ async function structureStartFromCvDrafts(input: {
         ].slice(0, 12),
         modelUsed: result.model,
         ocrProviderUsed: input.ocrProviderUsed,
+        providerPolicyWarnings: providerPolicy.warnings,
         requiresUserReview: true,
       });
       assertNoForbiddenDraftLanguage(merged);
-      return merged;
+      return enrichStartFromCvDrafts({
+        draft: merged,
+        redactedText: input.redactedText,
+        providerPolicyWarnings: providerPolicy.warnings,
+      });
     } catch (error) {
       if (!(error instanceof AiProviderError)) {
         throw error;
       }
+      return enrichStartFromCvDrafts({
+        draft: buildDeterministicDrafts({
+          importSessionId: input.sessionId,
+          text: input.redactedText,
+          extractionStatus: input.extractionStatus,
+          privacyWarnings: input.privacyWarnings,
+          discardedUnsafeItems: input.discardedUnsafeItems,
+          ocrProviderUsed: input.ocrProviderUsed,
+        }),
+        redactedText: input.redactedText,
+        providerPolicyWarnings: [
+          `AI provider failed live structuring: ${error.code}.`,
+          ...providerPolicy.warnings,
+        ],
+      });
     }
   }
 
-  return buildDeterministicDrafts({
-    importSessionId: input.sessionId,
-    text: input.redactedText,
-    extractionStatus: input.extractionStatus,
-    privacyWarnings: input.privacyWarnings,
-    discardedUnsafeItems: input.discardedUnsafeItems,
-    ocrProviderUsed: input.ocrProviderUsed,
+  return enrichStartFromCvDrafts({
+    draft: buildDeterministicDrafts({
+      importSessionId: input.sessionId,
+      text: input.redactedText,
+      extractionStatus: input.extractionStatus,
+      privacyWarnings: input.privacyWarnings,
+      discardedUnsafeItems: input.discardedUnsafeItems,
+      ocrProviderUsed: input.ocrProviderUsed,
+    }),
+    redactedText: input.redactedText,
+    providerPolicyWarnings: [],
   });
 }
 
-function buildGeminiPrompt(text: string, privacyWarnings: string[]) {
+function buildStartFromCvStructuringPrompt(text: string, privacyWarnings: string[]) {
   return [
     'You are Proofound Start from CV.',
     'Convert a user-owned CV into private editable drafts only.',
@@ -995,6 +1218,83 @@ function buildGeminiPrompt(text: string, privacyWarnings: string[]) {
     'Redacted CV text:',
     text.slice(0, 6000),
   ].join('\n');
+}
+
+async function enrichStartFromCvDrafts(input: {
+  draft: StartFromCvDraftOutput;
+  redactedText: string;
+  providerPolicyWarnings: string[];
+}): Promise<StartFromCvDraftOutput> {
+  const warnings = new Set([
+    ...input.draft.providerPolicyWarnings,
+    ...input.providerPolicyWarnings,
+  ]);
+  let skillMappingDrafts = input.draft.skillMappingDrafts;
+
+  try {
+    const mapped = await suggestSkillsForDocuments(
+      {
+        documents: [
+          {
+            document_id: input.draft.importSessionId,
+            file_name: 'redacted-cv-text.txt',
+            text: input.redactedText.slice(0, 12_000),
+            context: 'cv',
+          },
+        ],
+        suggestions_limit: 5,
+      },
+      {
+        maxDocuments: 1,
+        maxCharsPerDocument: 12_000,
+        maxTotalChars: 12_000,
+      },
+      {
+        semanticEnabled: false,
+        suggestionsLimit: 5,
+      }
+    );
+    skillMappingDrafts = mapped.documents
+      .flatMap((document) => document.candidates)
+      .slice(0, 20)
+      .map((candidate) => {
+        const suggestion = candidate.suggestions[0];
+        return StartFromCvSkillMappingDraftSchema.parse({
+          id: `skillmap_${randomUUID()}`,
+          skillLabel: candidate.raw_skill_text,
+          canonicalSkillId: suggestion?.skill_id ?? null,
+          canonicalSkillLabel: suggestion?.skill_name ?? null,
+          matchMethod:
+            suggestion?.match_method === 'exact' || suggestion?.match_method === 'synonym'
+              ? suggestion.match_method
+              : suggestion
+                ? 'fuzzy'
+                : 'manual_review',
+          evidenceClass: 'needs_proof',
+          sourceSpans: candidate.evidence_snippets.slice(0, 2).map((snippet) =>
+            StartFromCvSourceSpanSchema.parse({
+              label: 'Skill mention',
+              text: snippet.slice(0, 220),
+              pageHint: null,
+            })
+          ),
+          epistemicStatus: 'explicit',
+          requiresUserConfirmation: true,
+          noTrustLift: true,
+          noMatchingLift: true,
+          noVerificationState: true,
+        });
+      });
+  } catch {
+    warnings.add('Canonical skill mapping is unavailable; review skill mentions manually.');
+  }
+
+  const output = StartFromCvDraftOutputSchema.parse({
+    ...input.draft,
+    skillMappingDrafts,
+    providerPolicyWarnings: Array.from(warnings).slice(0, 12),
+  });
+  return output;
 }
 
 export function buildDeterministicDrafts(input: {
@@ -1056,6 +1356,8 @@ export function buildDeterministicDrafts(input: {
       possibleProjectOutcomeCandidates: extractOutcomeHints(line),
       confidence: parsed.title || parsed.organization ? 'medium' : 'low',
       sourceSnippetReference: snippetReference(line),
+      sourceSpans: [sourceSpan(line)],
+      epistemicStatus: 'explicit',
       visibility: 'private',
     });
   });
@@ -1067,6 +1369,8 @@ export function buildDeterministicDrafts(input: {
       programTitle: parseContextLine(line).title || line.slice(0, 120),
       approximateDates: extractDates(line),
       learningProjectHints: extractOutcomeHints(line),
+      sourceSpans: [sourceSpan(line)],
+      epistemicStatus: 'explicit',
       visibility: 'private',
     })
   );
@@ -1078,6 +1382,8 @@ export function buildDeterministicDrafts(input: {
       roleTitle: parseContextLine(line).title || line.slice(0, 120),
       approximateDates: extractDates(line),
       contributionSummary: line.slice(0, 500),
+      sourceSpans: [sourceSpan(line)],
+      epistemicStatus: 'explicit',
       visibility: 'private',
     })
   );
@@ -1092,7 +1398,34 @@ export function buildDeterministicDrafts(input: {
       possibleOutcome: extractOutcomeHints(line)[0] ?? null,
       missingEvidenceWarning: 'Missing proof: attach real evidence before this gains trust value.',
       privacyWarning: 'Review private details before turning this into a Proof Pack.',
+      sourceSpans: [sourceSpan(line)],
+      epistemicStatus: 'inferred',
       status: 'draft_only',
+    })
+  );
+
+  const outcomeQuestionDrafts = anchorLines.slice(0, 6).map((line) =>
+    StartFromCvOutcomeQuestionDraftSchema.parse({
+      id: `outcome_${randomUUID()}`,
+      anchorDraftId: null,
+      question: `What measurable result, audience, or delivery evidence belongs with "${line.slice(0, 90)}"?`,
+      whyItMatters: 'Proofound needs evidence-backed outcomes, not a CV bullet copied as a claim.',
+      sourceSpans: [sourceSpan(line)],
+      epistemicStatus: 'inferred',
+      status: 'draft_only',
+    })
+  );
+
+  const futureProjectIdeaDrafts = skillLabels.slice(0, 3).map((skill) =>
+    StartFromCvFutureProjectIdeaDraftSchema.parse({
+      id: `future_${randomUUID()}`,
+      titleSuggestion: `Future proof idea around ${skill}`,
+      prompt: `If ${skill} is important, create a future Proof Pack only after you add a real artifact, outcome, and verification context.`,
+      sourceContext: 'Suggested from a CV skill mention. This is not a past achievement.',
+      sourceSpans: [],
+      epistemicStatus: 'future_idea',
+      notCvFact: true,
+      status: 'future_idea',
     })
   );
 
@@ -1103,6 +1436,8 @@ export function buildDeterministicDrafts(input: {
             id: `artifact_${randomUUID()}`,
             label: 'Possible CV-mentioned link',
             sourceContext: 'A URL was redacted from the CV before drafting.',
+            sourceSpans: [],
+            epistemicStatus: 'inferred',
             status: 'draft_only',
             privacyWarning: 'Re-add only public-safe links you choose to keep.',
           }),
@@ -1114,6 +1449,9 @@ export function buildDeterministicDrafts(input: {
       id: `skill_${randomUUID()}`,
       skillLabel: skill,
       sourceContext: 'Mentioned in redacted CV text.',
+      sourceSpans: [],
+      epistemicStatus: 'explicit',
+      evidenceClass: 'unsupported_skill',
       status: 'unsupported_draft',
       requiresProof: true,
       requiresUserConfirmation: true,
@@ -1134,7 +1472,11 @@ export function buildDeterministicDrafts(input: {
     proofPackIdeaDrafts,
     artifactLinkDrafts,
     unsupportedSkillDrafts,
+    skillMappingDrafts: [],
+    outcomeQuestionDrafts,
+    futureProjectIdeaDrafts,
     discardedUnsafeItems: input.discardedUnsafeItems,
+    providerPolicyWarnings: [],
     modelUsed: null,
     ocrProviderUsed: input.ocrProviderUsed,
     requiresUserReview: true,
@@ -1272,6 +1614,14 @@ function snippetReference(line: string): string {
   return `Snippet: ${line.slice(0, 180)}`;
 }
 
+function sourceSpan(line: string) {
+  return StartFromCvSourceSpanSchema.parse({
+    label: 'CV snippet',
+    text: line.slice(0, 220),
+    pageHint: null,
+  });
+}
+
 function extractSkillLabels(lines: string[]): string[] {
   const coreSkillsIndex = lines.findIndex((line) => /\bCORE SKILLS\b/i.test(line));
   const experienceIndex = lines.findIndex(
@@ -1334,7 +1684,11 @@ function emptyDraftPayload(
     proofPackIdeaDrafts: [],
     artifactLinkDrafts: [],
     unsupportedSkillDrafts: [],
+    skillMappingDrafts: [],
+    outcomeQuestionDrafts: [],
+    futureProjectIdeaDrafts: [],
     discardedUnsafeItems: [],
+    providerPolicyWarnings: [],
     modelUsed: null,
     ocrProviderUsed: null,
     requiresUserReview: true,
@@ -1415,6 +1769,60 @@ async function loadOwnedSession(sessionId: string, userId: string) {
   return rows[0] ?? null;
 }
 
+type StartFromCvSessionRow = NonNullable<Awaited<ReturnType<typeof loadOwnedSession>>>;
+type StartFromCvAcceptedDrafts = z.infer<typeof StartFromCvAcceptSchema>['accepted'];
+
+function isFinalStartFromCvStatus(status: string | null | undefined): boolean {
+  return status === 'accepted' || status === 'discarded' || status === 'deleted';
+}
+
+function assertSessionNotExpired(session: StartFromCvSessionRow) {
+  if (
+    session.expiresAt &&
+    session.expiresAt.getTime() <= Date.now() &&
+    !isFinalStartFromCvStatus(session.status)
+  ) {
+    throw new StartFromCvError('START_FROM_CV_SESSION_EXPIRED', 410);
+  }
+}
+
+function assertSessionStatus(session: StartFromCvSessionRow, allowed: string[]) {
+  if (!allowed.includes(session.status)) {
+    throw new StartFromCvError('START_FROM_CV_INVALID_SESSION_STATE', 409);
+  }
+}
+
+function coerceDraftPayloadForSession(session: StartFromCvSessionRow): StartFromCvDraftOutput {
+  return StartFromCvDraftOutputSchema.parse({
+    ...emptyDraftPayload(session.extractionStatus, {
+      importSessionId: session.id,
+    }),
+    ...(session.draftPayload && typeof session.draftPayload === 'object'
+      ? session.draftPayload
+      : {}),
+    importSessionId: session.id,
+    extractionStatus: session.extractionStatus,
+  });
+}
+
+export function validateStartFromCvAcceptedDrafts(
+  accepted: StartFromCvAcceptedDrafts,
+  storedDraftPayload: StartFromCvDraftOutput
+): StartFromCvAcceptedDrafts {
+  const parsed = StartFromCvAcceptSchema.parse({ accepted }).accepted;
+  for (const bucket of START_FROM_CV_DRAFT_BUCKETS) {
+    const storedIds = new Set(
+      ((storedDraftPayload[bucket] as Array<{ id?: unknown }>) || []).map((item) => String(item.id))
+    );
+    for (const item of (parsed[bucket] as Array<{ id?: unknown }>) || []) {
+      if (!storedIds.has(String(item.id))) {
+        throw new StartFromCvError('START_FROM_CV_ACCEPTED_DRAFT_NOT_IN_SESSION', 400);
+      }
+    }
+  }
+  return parsed;
+}
+
 async function updateSessionAfterExtraction(input: {
   sessionId: string;
   userId: string;
@@ -1472,10 +1880,7 @@ function sessionResponseFromRow(
   sourceDeletedAt: Date | null;
 } {
   const payload = StartFromCvDraftOutputSchema.parse({
-    ...emptyDraftPayload(row.extractionStatus, {
-      importSessionId: row.id,
-    }),
-    ...(row.draftPayload && typeof row.draftPayload === 'object' ? row.draftPayload : {}),
+    ...coerceDraftPayloadForSession(row),
     importSessionId: row.id,
     extractionStatus: row.extractionStatus,
     privacyWarnings: Array.isArray(row.privacyWarnings) ? row.privacyWarnings : [],

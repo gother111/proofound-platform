@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 import type { AiUsageContext } from '@/lib/ai/usage-ledger';
 
-export type AiProviderName = 'gemini';
+export type AiProviderName = 'gemini' | 'deepseek_v4_flash';
 
 export type AiTokenUsage = {
   inputTokens: number;
@@ -47,6 +47,7 @@ export type AiProviderErrorCode =
   | 'budget_cap_not_configured'
   | 'budget_exceeded'
   | 'rate_limited'
+  | 'unsafe_request_payload'
   | 'invalid_json'
   | 'validation_failed'
   | 'quota_exceeded'

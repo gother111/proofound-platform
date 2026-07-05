@@ -1,4 +1,5 @@
 export { generateJson } from '@/lib/ai/provider/gemini-client';
+export { generateJsonWithDeepSeek } from '@/lib/ai/provider/deepseek-client';
 export {
   resolveAiAssistantsEnabled,
   resolveAiModelDefault,

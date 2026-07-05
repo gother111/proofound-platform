@@ -29,6 +29,7 @@ import {
   START_FROM_CV_QUOTA_COUNTED_STATUSES,
   StartFromCvDraftOutputSchema,
   StartFromCvUnsupportedSkillDraftSchema,
+  validateStartFromCvAcceptedDrafts,
 } from '@/lib/ai/start-from-cv';
 import { START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE } from '@/lib/ai/start-from-cv-contract';
 
@@ -198,13 +199,68 @@ describe('Start from CV guardrails', () => {
       proofPackIdeaDrafts: [],
       artifactLinkDrafts: [],
       unsupportedSkillDrafts: [],
+      skillMappingDrafts: [],
+      outcomeQuestionDrafts: [],
+      futureProjectIdeaDrafts: [],
       discardedUnsafeItems: [],
+      providerPolicyWarnings: [],
       requiresUserReview: true,
     });
 
     const serialized = JSON.stringify(parsed);
     expect(parsed.requiresUserReview).toBe(true);
+    expect(parsed.skillMappingDrafts).toEqual([]);
+    expect(parsed.outcomeQuestionDrafts).toEqual([]);
+    expect(parsed.futureProjectIdeaDrafts).toEqual([]);
     expect(serialized).not.toMatch(/score|rank|shortlist|recommendedRole|fitScore/i);
+  });
+
+  it('blocks live Start from CV structuring when a trial provider is selected for real CV data', () => {
+    const summary = getStartFromCvLaunchSummary({
+      START_FROM_CV_BETA_ENABLED: 'true',
+      START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_ENABLED: 'true',
+      START_FROM_CV_OPEN_BETA_ENABLED: 'true',
+      START_FROM_CV_USE_GEMINI_STRUCTURING: 'true',
+      START_FROM_CV_AI_PROVIDER: 'nvidia-deepseek-v4-flash',
+      AI_ASSISTANTS_ENABLED: 'true',
+      NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED: 'false',
+    });
+
+    expect(summary.aiProvider).toBe('nvidia_deepseek_v4_flash');
+    expect(summary.ok).toBe(false);
+    expect(summary.blockers).toContain('ai_provider_policy_data_classification_not_allowed');
+  });
+
+  it('requires a DeepSeek key and personal-data gate before DeepSeek live structuring is ready', () => {
+    const missingKey = getStartFromCvLaunchSummary({
+      START_FROM_CV_BETA_ENABLED: 'true',
+      START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_ENABLED: 'true',
+      START_FROM_CV_OPEN_BETA_ENABLED: 'true',
+      START_FROM_CV_USE_GEMINI_STRUCTURING: 'true',
+      START_FROM_CV_AI_PROVIDER: 'deepseek-v4-flash',
+      START_FROM_CV_DEEPSEEK_PERSONAL_DATA_ENABLED: 'true',
+      AI_ASSISTANTS_ENABLED: 'true',
+      NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED: 'false',
+    });
+
+    expect(missingKey.aiProvider).toBe('deepseek_v4_flash');
+    expect(missingKey.ok).toBe(false);
+    expect(missingKey.blockers).toContain('deepseek_structuring_api_key_missing');
+
+    const ready = getStartFromCvLaunchSummary({
+      START_FROM_CV_BETA_ENABLED: 'true',
+      START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_ENABLED: 'true',
+      START_FROM_CV_OPEN_BETA_ENABLED: 'true',
+      START_FROM_CV_USE_GEMINI_STRUCTURING: 'true',
+      START_FROM_CV_AI_PROVIDER: 'deepseek-v4-flash',
+      START_FROM_CV_DEEPSEEK_PERSONAL_DATA_ENABLED: 'true',
+      START_FROM_CV_DEEPSEEK_API_KEY: 'server-key',
+      AI_ASSISTANTS_ENABLED: 'true',
+      NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED: 'false',
+    });
+
+    expect(ready.ok).toBe(true);
+    expect(ready.blockers).not.toContain('deepseek_structuring_api_key_missing');
   });
 
   it('falls back cleanly instead of creating garbage drafts from noisy extracted PDF text', () => {
@@ -244,9 +300,95 @@ describe('Start from CV guardrails', () => {
     expect(parsed.extractionStatus).toBe('completed');
     expect(parsed.workContextDrafts.length).toBeGreaterThan(0);
     expect(parsed.educationContextDrafts.length).toBeGreaterThan(0);
+    expect(parsed.workContextDrafts[0]).toMatchObject({
+      epistemicStatus: 'explicit',
+      visibility: 'private',
+    });
+    expect(parsed.outcomeQuestionDrafts[0]).toMatchObject({
+      epistemicStatus: 'inferred',
+      status: 'draft_only',
+    });
+    expect(parsed.futureProjectIdeaDrafts[0]).toMatchObject({
+      epistemicStatus: 'future_idea',
+      notCvFact: true,
+    });
     expect(parsed.unsupportedSkillDrafts.map((draft) => draft.skillLabel)).toContain(
       'stakeholder coordination'
     );
+  });
+
+  it('only accepts draft IDs that came from the stored Start from CV session payload', () => {
+    const stored = StartFromCvDraftOutputSchema.parse({
+      importSessionId: '11111111-1111-4111-8111-111111111111',
+      sourceType: 'cv',
+      extractionStatus: 'completed',
+      privacyWarnings: [],
+      workContextDrafts: [
+        {
+          id: 'work-1',
+          roleTitle: 'Draft role',
+          shortContextSummary: 'Draft context.',
+          visibility: 'private',
+        },
+      ],
+      educationContextDrafts: [],
+      volunteeringContextDrafts: [],
+      proofPackIdeaDrafts: [],
+      artifactLinkDrafts: [],
+      unsupportedSkillDrafts: [],
+      skillMappingDrafts: [],
+      outcomeQuestionDrafts: [],
+      futureProjectIdeaDrafts: [],
+      discardedUnsafeItems: [],
+      providerPolicyWarnings: [],
+      requiresUserReview: true,
+    });
+
+    expect(
+      validateStartFromCvAcceptedDrafts(
+        {
+          workContextDrafts: [
+            {
+              ...stored.workContextDrafts[0],
+              roleTitle: 'Edited draft role',
+            },
+          ],
+          educationContextDrafts: [],
+          volunteeringContextDrafts: [],
+          proofPackIdeaDrafts: [],
+          artifactLinkDrafts: [],
+          unsupportedSkillDrafts: [],
+          skillMappingDrafts: [],
+          outcomeQuestionDrafts: [],
+          futureProjectIdeaDrafts: [],
+        },
+        stored
+      ).workContextDrafts[0]?.roleTitle
+    ).toBe('Edited draft role');
+
+    expect(() =>
+      validateStartFromCvAcceptedDrafts(
+        {
+          workContextDrafts: [
+            {
+              id: 'work-outside-session',
+              roleTitle: 'Injected draft',
+              shortContextSummary: 'Should not pass.',
+              visibility: 'private',
+            },
+          ],
+          educationContextDrafts: [],
+          volunteeringContextDrafts: [],
+          proofPackIdeaDrafts: [],
+          artifactLinkDrafts: [],
+          unsupportedSkillDrafts: [],
+          skillMappingDrafts: [],
+          outcomeQuestionDrafts: [],
+          futureProjectIdeaDrafts: [],
+        },
+        stored
+      )
+    ).toThrow(/START_FROM_CV_ACCEPTED_DRAFT_NOT_IN_SESSION/);
   });
 
   it('does not count abandoned created sessions toward the daily import quota', async () => {

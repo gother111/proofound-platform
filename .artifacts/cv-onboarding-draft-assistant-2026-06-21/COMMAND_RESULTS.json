@@ -1,0 +1,70 @@
+{
+  "date": "2026-06-21",
+  "commands": [
+    {
+      "command": "npm run test -- tests/lib/start-from-cv.test.ts tests/lib/ai-provider-policy.test.ts tests/api/start-from-cv-route.test.ts tests/ui/start-from-cv-dialog.test.tsx",
+      "status": "pass",
+      "summary": "4 files, 34 tests passed"
+    },
+    {
+      "command": "npm run test -- tests/ui/profile-context-cv-import.test.tsx tests/ui/individual-setup-proof-first.test.tsx tests/routes/onboarding-page.test.ts tests/api/cv-import-wizard-routes.test.ts tests/lib/ai-launch-guardrails.test.ts tests/lib/ai-provider-usage-controls.test.ts",
+      "status": "pass",
+      "summary": "5 files, 34 tests passed after updating the expected onboarding copy"
+    },
+    {
+      "command": "npm run lint",
+      "status": "pass",
+      "summary": "Lint completed with exit code 0"
+    },
+    {
+      "command": "npm run typecheck",
+      "status": "pass",
+      "summary": "TypeScript no-emit completed with exit code 0"
+    },
+    {
+      "command": "npm run docs:freshness",
+      "status": "pass_with_warnings",
+      "summary": "Exit code 0 in warning mode; 32 pre-existing orphan-doc warnings reported"
+    },
+    {
+      "command": "npm run test:launch:routes",
+      "status": "pass",
+      "summary": "4 files, 25 tests passed"
+    },
+    {
+      "command": "npm run test:launch:ai",
+      "status": "pass",
+      "summary": "43 files, 327 tests passed, then archived admin AI spend page test passed"
+    },
+    {
+      "command": "npm run test:privacy",
+      "status": "blocked",
+      "summary": "Missing NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, and SUPABASE_SERVICE_ROLE_KEY in .env.test"
+    },
+    {
+      "command": "npm run build",
+      "status": "pass",
+      "summary": "Next.js production build completed successfully"
+    },
+    {
+      "command": "npm run db:audit:migrations",
+      "status": "pass_with_warnings",
+      "summary": "Canonical audit passed; DB has 5 extra historical migration rows not present locally"
+    },
+    {
+      "command": "npm run db:drift-check",
+      "status": "pass",
+      "summary": "Migration drift check passed"
+    },
+    {
+      "command": "npx vercel deploy --yes",
+      "status": "pass",
+      "summary": "Preview deployment READY at https://proofound-platform-l277h5x4y-pavlo-samoshkos-projects.vercel.app"
+    },
+    {
+      "command": "Open preview in in-app Browser",
+      "status": "pass",
+      "summary": "Loaded title 'Proofound | Proof Behind the Claim' with zero captured browser console errors"
+    }
+  ]
+}
