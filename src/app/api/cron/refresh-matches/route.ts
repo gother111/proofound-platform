@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { safeApiErrorResponse } from '@/lib/api/errors';
 import { requireInternalOpsRequest } from '@/lib/api/cron-auth';
+import { MATCHING_ENABLED } from '@/lib/featureFlags';
 import { log } from '@/lib/log';
 import {
   countPendingRefreshJobs,
@@ -24,6 +25,16 @@ export async function GET(request: NextRequest) {
     if (unauthorized) {
       log.error('cron.refresh-matches.unauthorized');
       return unauthorized;
+    }
+
+    if (!MATCHING_ENABLED) {
+      const duration = Date.now() - startTime;
+      log.info('cron.refresh-matches.matching-disabled', { durationMs: duration });
+      return NextResponse.json({
+        success: true,
+        skipped: 'matching_disabled',
+        durationMs: duration,
+      });
     }
 
     if (!isMatchingRefreshQueueEnabled()) {

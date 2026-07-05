@@ -53,7 +53,8 @@ DIRECT_URL=postgresql://user:pass@host:5432/db  # Direct (non-pooled) recommende
 # ============================================================================
 NEXT_PUBLIC_APP_ENV=production
 NODE_ENV=production
-MATCHING_FEATURE_ENABLED=true
+# Matching is enabled by default. Set only as an emergency kill switch.
+# MATCHING_FEATURE_ENABLED=false
 NEXT_PUBLIC_WIREFRAME_MODE=false
 RATE_LIMIT_WINDOW_SECONDS=60
 RATE_LIMIT_MAX=30
@@ -682,18 +683,20 @@ NEXT_PUBLIC_APP_ENV=production
 
 ### MATCHING_FEATURE_ENABLED
 
-**Purpose**: Toggle matching system on/off
+**Purpose**: Optional emergency kill switch for the matching system. Matching is enabled when this
+variable is unset.
 
 **Format**:
 
 ```env
-MATCHING_FEATURE_ENABLED=true
+MATCHING_FEATURE_ENABLED=false
 ```
 
 **Values**:
 
+- unset - Matching system enabled by default
 - `true` - Matching system enabled
-- `false` - Matching system disabled
+- `false` - Matching system disabled for emergency use
 
 **Used By**:
 
@@ -701,7 +704,7 @@ MATCHING_FEATURE_ENABLED=true
 - Profile matching UI
 - Match notifications
 
-**Default**: `true`
+**Default**: enabled when unset
 
 ---
 
@@ -1677,7 +1680,7 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 | **Email Sending**                                 | `RESEND_API_KEY`, `EMAIL_FROM`, `NEXT_PUBLIC_SITE_URL`, `LINKEDIN_VERIFICATION_ADMIN_EMAILS` (or `PLATFORM_ADMIN_EMAILS`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | **Cron Jobs**                                     | `CRON_SECRET`, `NEXT_PUBLIC_SITE_URL`, `SUPABASE_SERVICE_ROLE_KEY`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | **File Uploads**                                  | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| **Matching System**                               | `DATABASE_URL`, `MATCHING_FEATURE_ENABLED` (optional), `MATCHING_TWO_STAGE_ENABLED`, `MATCHING_NEAR_SCAN_LIMIT`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| **Matching System**                               | `DATABASE_URL`, `MATCHING_FEATURE_ENABLED=false` (optional emergency kill switch), `MATCHING_TWO_STAGE_ENABLED`, `MATCHING_NEAR_SCAN_LIMIT`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | **Matching Refresh**                              | `MATCHING_REFRESH_QUEUE_ENABLED`, `MATCHING_REFRESH_WORKER_BATCH_SIZE`, `MATCHING_REFRESH_WORKER_CONCURRENCY`, `MATCHING_REFRESH_MAX_ATTEMPTS`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | **Legacy CV Import Engine (archived/non-launch)** | `CV_IMPORT_ENGINE_MODE`, `CV_IMPORT_WIZARD_TIMEOUT_MS`, `CV_IMPORT_SERVER_TIMEOUT_MS`, `CV_IMPORT_MAX_FILE_SIZE_MB`, `CV_IMPORT_MAX_PDF_PAGES`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | **Assistive AI**                                  | `AI_ASSISTANTS_ENABLED`, `AI_GEMINI_PROD_API_KEY`, `AI_GEMINI_STAGING_API_KEY`, `AI_MODEL_DEFAULT`, `AI_MODEL_FALLBACK`, `AI_MODEL_FALLBACK_VERIFIED`, `AI_PROVIDER_SMOKE_LAST_SUCCESS_AT`, `AI_PROVIDER_SMOKE_ARTIFACT_PATH`, `AI_MONTHLY_HARD_CAP_SEK`, `AI_PROD_MONTHLY_HARD_CAP_SEK`, `AI_GLOBAL_DAILY_LIMIT`, `AI_USER_DAILY_LIMIT`, `AI_ORG_DAILY_LIMIT`, `AI_<FEATURE>_DAILY_LIMIT`, `AI_<FEATURE>_MAX_OUTPUT_TOKENS`, `AI_RAW_PROMPT_LOGGING_ENABLED`                                                                                                                                                                                                                                                                                                                                 |
@@ -1720,7 +1723,7 @@ Use this checklist when setting up a new environment:
 
 - [ ] `NODE_ENV` - Environment identifier
 - [ ] `NEXT_PUBLIC_APP_ENV` - App environment
-- [ ] `MATCHING_FEATURE_ENABLED` - Toggle matching
+- [ ] `MATCHING_FEATURE_ENABLED=false` - Emergency matching kill switch
 - [ ] `CV_IMPORT_ENGINE_MODE` - Legacy archived CV import runtime selection, not active MVP rollout
 - [ ] `CV_IMPORT_WIZARD_TIMEOUT_MS` - Wizard timeout override for CV analyze
 - [ ] `CV_IMPORT_SERVER_TIMEOUT_MS` - Global fallback timeout for CV routes

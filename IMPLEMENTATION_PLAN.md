@@ -42,7 +42,7 @@ This plan and the audit **supersede** `Proofound_MVP_Locked_Source_of_Truth_2026
    **Acceptance:** with flag default true and no env override: proof-improve button renders in the proof editing surface; assignment-clarify button renders in the assignment builder; both no-key paths degrade gracefully. Targeted tests for featureFlags pass.
    **Verify:** `npm run lint && npm run typecheck && npm run test -- featureFlags` (adapt test filter to repo convention).
 
-### [ ] P0-2 — Turn matching on by default
+### [x] P0-2 — Turn matching on by default
 
 **Objective:** Matching must not silently depend on a founder-set env var.
 **Files:** `src/lib/featureFlags.ts` (~line 48: `MATCHING_ENABLED = process.env.MATCHING_FEATURE_ENABLED === 'true'`), `.env.example`, `docs/ENV_VARIABLES.md`.

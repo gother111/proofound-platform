@@ -26,6 +26,7 @@ import {
 import { log } from '@/lib/log';
 import { toAnnualCompensationRange } from '@/lib/matching/compensation';
 import { evaluateIndividualMatchability, toSoftGatedPayload } from '@/lib/matching/eligibility';
+import { MATCHING_ENABLED } from '@/lib/featureFlags';
 import {
   buildCanonicalMatchScoreArtifact,
   compareCanonicalMatchOrder,
@@ -150,6 +151,13 @@ export async function POST(request: NextRequest) {
         return authResult;
       }
       user = { id: authResult.user.id };
+    }
+
+    if (!MATCHING_ENABLED) {
+      return NextResponse.json(
+        { error: 'Matching disabled', message: 'Matching is temporarily unavailable.' },
+        { status: 503 }
+      );
     }
 
     const { k = 20 } = validatedData;

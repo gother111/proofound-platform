@@ -44,8 +44,8 @@ export const CLIENT_FEATURE_FLAG_RESPONSE_MAP = {
   proofArtifactOcrBeta: FEATURE_FLAG_KEYS.PROOF_ARTIFACT_OCR_BETA,
 } as const;
 
-// Legacy env gate retained for compatibility.
-export const MATCHING_ENABLED = process.env.MATCHING_FEATURE_ENABLED === 'true';
+// Legacy env gate retained as an emergency kill switch.
+export const MATCHING_ENABLED = process.env.MATCHING_FEATURE_ENABLED !== 'false';
 
 function envFlagDefault(name: string, fallback: boolean) {
   const value = process.env[name];

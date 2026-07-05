@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getInternalApiSecret, requireInternalApiRequest } from '@/lib/api/auth';
+import { MATCHING_ENABLED } from '@/lib/featureFlags';
 import { log } from '@/lib/log';
 import {
   claimJobs,
@@ -44,6 +45,10 @@ export async function GET(request: NextRequest) {
   const unauthorized = requireInternalApiRequest(request);
   if (unauthorized) {
     return unauthorized;
+  }
+
+  if (!MATCHING_ENABLED) {
+    return NextResponse.json({ success: true, skipped: 'matching_disabled' });
   }
 
   if (!isMatchingRefreshQueueEnabled()) {

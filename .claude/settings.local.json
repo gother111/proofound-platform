@@ -5,7 +5,10 @@
       "Bash(git commit -m 'chore: pre-warroom snapshot *)",
       "Bash(git checkout *)",
       "Bash(npm run *)",
-      "Bash(git commit --quiet -m 'P0-0: governance + branch setup, baseline typecheck clean *)"
+      "Bash(git commit --quiet -m 'P0-0: governance + branch setup, baseline typecheck clean *)",
+      "Bash(sed -i '' 's/### \\\\[ \\\\] P0-2 — Turn matching on by default/### [x] P0-2 — Turn matching on by default/' IMPLEMENTATION_PLAN.md)",
+      "Bash(echo 'P0-2 | PASS | pending-sha | matching default-on kill-switch, 503 guards on routes+cron, 145 matching tests green')",
+      "Bash(git commit --quiet -m 'P0-2: invert matching flag to default-on kill-switch semantics *)"
     ]
   }
 }

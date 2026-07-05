@@ -11,6 +11,7 @@ import { getWeightBiasBucket } from '@/lib/core/matching/presets';
 import { mapIndustryListToCanonical } from '@/lib/industry/options';
 import { syncReadinessMilestones } from '@/lib/readiness/analytics';
 import { normalizeEngagementType } from '@/lib/engagement-verifications/service';
+import { MATCHING_ENABLED } from '@/lib/featureFlags';
 
 // Shared handler imported by the kept launch corridor routes.
 export const dynamic = 'force-dynamic';
@@ -167,6 +168,13 @@ export async function GET() {
     }
     const { user } = authContext;
 
+    if (!MATCHING_ENABLED) {
+      return NextResponse.json(
+        { error: 'Matching disabled', message: 'Matching is temporarily unavailable.' },
+        { status: 503 }
+      );
+    }
+
     // Fetch matching profile and auto-bootstrap baseline row if missing.
     let profile = await db.query.matchingProfiles.findFirst({
       where: eq(matchingProfiles.profileId, user.id),
@@ -221,6 +229,14 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const { user } = authContext;
+
+    if (!MATCHING_ENABLED) {
+      return NextResponse.json(
+        { error: 'Matching disabled', message: 'Matching is temporarily unavailable.' },
+        { status: 503 }
+      );
+    }
+
     const body = await request.json();
 
     // Validate input

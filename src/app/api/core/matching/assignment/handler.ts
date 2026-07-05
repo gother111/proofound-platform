@@ -15,7 +15,7 @@ import { normalizeAuthorizedOrgRole } from '@/lib/authz';
 import { scrubDisallowedFields } from '@/lib/core/matching/firewall';
 import { computeAssignmentMatches } from '@/lib/core/matching/assignmentMatcher';
 import { getPreset, normalizeWeights } from '@/lib/core/matching/presets';
-import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
+import { FEATURE_FLAG_KEYS, MATCHING_ENABLED } from '@/lib/featureFlags';
 import { resolveFeatureFlags } from '@/lib/feature-flags/server';
 import { emitLaunchTrace, startLaunchTrace } from '@/lib/launch/trace';
 import { log } from '@/lib/log';
@@ -76,6 +76,19 @@ export async function POST(request: NextRequest) {
     const { user } = authContext;
     trace.actorId = user.id;
     trace.actorType = 'organization_member';
+
+    if (!MATCHING_ENABLED) {
+      emitLaunchTrace(trace, {
+        outcome: 'rejected',
+        state: 'matching_disabled',
+        failureClass: 'dependency_unavailable',
+      });
+      return NextResponse.json(
+        { error: 'Matching disabled', message: 'Matching is temporarily unavailable.' },
+        { status: 503 }
+      );
+    }
+
     const body = await request.json();
 
     const validatedData = MatchRequestSchema.parse(body);

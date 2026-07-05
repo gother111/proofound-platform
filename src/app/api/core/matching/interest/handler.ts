@@ -26,6 +26,7 @@ import {
   resolveCanonicalFallbackState,
 } from '@/lib/matching/review-contract';
 import { syncIntroWorkflowFromInterest } from '@/lib/workflow/service';
+import { MATCHING_ENABLED } from '@/lib/featureFlags';
 
 // Shared handler imported by the kept launch corridor routes.
 export const dynamic = 'force-dynamic';
@@ -221,6 +222,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const { user } = authContext;
+
+    if (!MATCHING_ENABLED) {
+      return NextResponse.json(
+        { error: 'Matching disabled', message: 'Matching is temporarily unavailable.' },
+        { status: 503 }
+      );
+    }
+
     const body = await request.json();
     const validated = InterestSchema.parse(body);
     const { assignmentId, targetProfileId } = validated;
