@@ -20,6 +20,7 @@ import { GET } from '@/app/api/feature-flags/route';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { isFeatureEnabled } from '@/lib/feature-flags/server';
+import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
 
 describe('/api/feature-flags', () => {
   beforeEach(() => {
@@ -54,6 +55,8 @@ describe('/api/feature-flags', () => {
       FF_KILL_SWITCH_INTROS: false,
       FF_KILL_SWITCH_EXACT_RANK: true,
       FF_LEGACY_MVP_SURFACES: false,
+      FF_ASSISTIVE_AI_UI: true,
+      FF_PROOF_ARTIFACT_OCR_BETA: false,
     };
 
     (isFeatureEnabled as any).mockImplementation(async (key: string) => defaults[key]);
@@ -71,6 +74,47 @@ describe('/api/feature-flags', () => {
       killSwitchIntros: false,
       killSwitchExactRank: true,
       legacyMvpSurfaces: false,
+      assistiveAiUi: true,
+      proofArtifactOcrBeta: false,
     });
+  });
+
+  it('keeps assistive AI server and client defaults aligned while OCR beta stays off', async () => {
+    const originalAssistiveAi = process.env.NEXT_PUBLIC_FF_ASSISTIVE_AI_UI;
+    const originalOcrBeta = process.env.NEXT_PUBLIC_FF_PROOF_ARTIFACT_OCR_BETA;
+
+    try {
+      delete process.env.NEXT_PUBLIC_FF_ASSISTIVE_AI_UI;
+      delete process.env.NEXT_PUBLIC_FF_PROOF_ARTIFACT_OCR_BETA;
+      vi.resetModules();
+      const defaults = await import('@/lib/featureFlags');
+
+      expect(defaults.FEATURE_FLAG_DEFAULTS[FEATURE_FLAG_KEYS.ASSISTIVE_AI_UI]).toBe(true);
+      expect(defaults.getFeatureFlagDefault(FEATURE_FLAG_KEYS.ASSISTIVE_AI_UI)).toBe(true);
+      expect(defaults.CLIENT_FF_DEFAULTS.assistiveAiUi).toBe(true);
+
+      expect(defaults.FEATURE_FLAG_DEFAULTS[FEATURE_FLAG_KEYS.PROOF_ARTIFACT_OCR_BETA]).toBe(false);
+      expect(defaults.getFeatureFlagDefault(FEATURE_FLAG_KEYS.PROOF_ARTIFACT_OCR_BETA)).toBe(false);
+      expect(defaults.CLIENT_FF_DEFAULTS.proofArtifactOcrBeta).toBe(false);
+
+      process.env.NEXT_PUBLIC_FF_ASSISTIVE_AI_UI = 'false';
+      vi.resetModules();
+      const overridden = await import('@/lib/featureFlags');
+      expect(overridden.getFeatureFlagDefault(FEATURE_FLAG_KEYS.ASSISTIVE_AI_UI)).toBe(false);
+      expect(overridden.CLIENT_FF_DEFAULTS.assistiveAiUi).toBe(false);
+    } finally {
+      if (originalAssistiveAi == null) {
+        delete process.env.NEXT_PUBLIC_FF_ASSISTIVE_AI_UI;
+      } else {
+        process.env.NEXT_PUBLIC_FF_ASSISTIVE_AI_UI = originalAssistiveAi;
+      }
+
+      if (originalOcrBeta == null) {
+        delete process.env.NEXT_PUBLIC_FF_PROOF_ARTIFACT_OCR_BETA;
+      } else {
+        process.env.NEXT_PUBLIC_FF_PROOF_ARTIFACT_OCR_BETA = originalOcrBeta;
+      }
+      vi.resetModules();
+    }
   });
 });

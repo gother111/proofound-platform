@@ -152,6 +152,26 @@ describe('Proof Pack Assistant UI', () => {
     expect(JSON.stringify(apiFetchMock.mock.calls)).not.toContain('/proofs/proof-1');
   });
 
+  it('renders Improve this proof from the client default before server flags resolve', () => {
+    global.fetch = vi.fn(() => new Promise<Response>(() => {})) as any;
+
+    render(
+      <ProofsSection
+        {...baseProps}
+        proofs={[
+          {
+            id: 'proof-1',
+            proof_type: 'link',
+            title: 'Launch proof',
+            canonicalPackId: '11111111-1111-4111-8111-111111111111',
+          },
+        ]}
+      />
+    );
+
+    expect(screen.getByRole('button', { name: /improve this proof/i })).toBeInTheDocument();
+  });
+
   it('hides the AI button when the assistive AI UI flag is disabled', async () => {
     (global.fetch as any).mockResolvedValueOnce({
       ok: true,

@@ -30,7 +30,7 @@ This plan and the audit **supersede** `Proofound_MVP_Locked_Source_of_Truth_2026
 4. `npm ci` if `node_modules` absent; confirm `npm run typecheck` passes as baseline. Record baseline result in `WAR_ROOM_LOG.md`.
    **Acceptance:** branch exists; baseline typecheck result recorded; addendum present.
 
-### [ ] P0-1 — Enable the assistive-AI layer
+### [x] P0-1 — Enable the assistive-AI layer
 
 **Objective:** Ship the already-built AI assists (proof improve, assignment clarify).
 **Files:** `src/lib/featureFlags.ts` (line ~68: `ASSISTIVE_AI_UI: false`; also `PROOF_ARTIFACT_OCR_BETA` stays off), client default mirror at ~line 95, `.env.example`, `docs/ENV_VARIABLES.md`.

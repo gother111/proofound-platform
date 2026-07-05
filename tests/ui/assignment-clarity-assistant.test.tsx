@@ -118,6 +118,14 @@ describe('Assignment Clarity Assistant UI', () => {
     expect(JSON.stringify(apiFetchMock.mock.calls)).not.toContain('publish');
   });
 
+  it('renders Clarify assignment from the client default before server flags resolve', () => {
+    global.fetch = vi.fn(() => new Promise<Response>(() => {})) as any;
+
+    render(<Harness />);
+
+    expect(screen.getByRole('button', { name: /clarify assignment/i })).toBeInTheDocument();
+  });
+
   it('shows manual guidance without the AI button when the feature flag is disabled', async () => {
     (global.fetch as any).mockResolvedValueOnce({
       ok: true,

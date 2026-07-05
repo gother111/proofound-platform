@@ -821,7 +821,9 @@ AI_ASSISTANTS_ENABLED=false
 
 **Security**:
 
+- `FF_ASSISTIVE_AI_UI` is default-on for the proof-improve and assignment-clarify entry points, but provider calls still require this server-side switch plus a configured provider key and budget/rate caps.
 - When set to `false`, provider calls fail closed before contacting Gemini.
+- When the switch, provider key, or budget is absent, the assist endpoints return deterministic manual fallback guidance instead of crashing.
 - Keep disabled by default unless a pilot enablement has passed the AI launch gates.
 - This is server-only policy. Do not mirror API keys or prompt text into browser variables.
 
