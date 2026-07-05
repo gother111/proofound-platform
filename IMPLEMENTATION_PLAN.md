@@ -19,7 +19,7 @@ This plan and the audit **supersede** `Proofound_MVP_Locked_Source_of_Truth_2026
 
 ## P0 tasks (dispatch in order)
 
-### [ ] P0-0 — Governance + branch setup
+### [x] P0-0 — Governance + branch setup
 
 **Objective:** Make the repo's agent-governance accept this effort; create the working branch.
 **Steps:**

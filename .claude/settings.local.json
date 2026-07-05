@@ -3,7 +3,9 @@
     "allow": [
       "Bash(git add *)",
       "Bash(git commit -m 'chore: pre-warroom snapshot *)",
-      "Bash(git checkout *)"
+      "Bash(git checkout *)",
+      "Bash(npm run *)",
+      "Bash(git commit --quiet -m 'P0-0: governance + branch setup, baseline typecheck clean *)"
     ]
   }
 }
