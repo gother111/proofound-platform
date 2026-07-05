@@ -948,7 +948,7 @@ export async function completeIndividualOnboarding(formData: FormData) {
       success: true,
       handle: normalizedHandle,
       publicPortfolioUrl: buildPublicPortfolioUrl(publicPortfolioPath),
-      scaffoldProfilePath: '/app/i/profile',
+      scaffoldProfilePath: '/app/i/home',
       firstProofPackId: packId,
       firstProofPackCreated: true,
       portfolioReady: readiness.flags.portfolioReady,

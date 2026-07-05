@@ -68,7 +68,7 @@ This plan and the audit **supersede** `Proofound_MVP_Locked_Source_of_Truth_2026
    **Acceptance:** new user with 1 structured proof and zero verifications can publish and open their public `/portfolio/[handle]` URL; page shows `Self-reported` badge; after an accepted verification the badge upgrades; `test:launch:portfolio` suite passes (update assertions that encoded the old gate — note each in the commit message).
    **Verify:** standard gates + `npm run test:launch:portfolio` + `npm run test:privacy` (must stay green — privacy semantics untouched).
 
-### [ ] P0-4 — Wire the "Day-1 win" onboarding finale
+### [x] P0-4 — Wire the "Day-1 win" onboarding finale
 
 **Objective:** Individual onboarding ends with a confirmed, copyable public link.
 **Files:** `src/components/**/PublicPortfolioReadyStep.tsx` (zero call sites today), individual onboarding flow (`IndividualContextProofSetup.tsx` success path / `src/actions/onboarding.ts` redirect target).

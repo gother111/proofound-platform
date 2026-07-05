@@ -2,17 +2,7 @@
 
 import { type FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  ArrowLeft,
-  CheckCircle2,
-  FileUp,
-  Link2,
-  Loader2,
-  Plus,
-  Send,
-  Trash2,
-  UserRound,
-} from 'lucide-react';
+import { ArrowLeft, FileUp, Link2, Loader2, Plus, Send, Trash2, UserRound } from 'lucide-react';
 
 import { completeIndividualOnboarding } from '@/actions/onboarding';
 import { Button } from '@/components/ui/button';
@@ -26,6 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PublicPortfolioReadyStep } from '@/components/onboarding/PublicPortfolioReadyStep';
 import { StartFromCvDialog } from '@/components/profile/StartFromCvDialog';
 import { useStartFromCvBetaStatus } from '@/hooks/useStartFromCvBetaStatus';
 import { START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE } from '@/lib/ai/start-from-cv-contract';
@@ -98,21 +89,6 @@ const VERIFICATION_RELATIONSHIP_OPTIONS: Array<{ value: VerificationRelationship
     { value: 'collaborator', label: 'Collaborator' },
     { value: 'organization_representative', label: 'Organization representative' },
   ];
-
-const NEXT_READINESS_STEPS = [
-  {
-    title: 'Public page readiness',
-    body: 'Choose what this proof can safely show before it becomes part of your Public Page.',
-  },
-  {
-    title: 'Matching preferences',
-    body: 'Add the roles, work modes, and engagement types that help reviewers understand your fit.',
-  },
-  {
-    title: 'Optional non-self verification',
-    body: 'Invite a person or organization to confirm the claim when you want stronger trust support.',
-  },
-];
 
 const MAX_MEASURED_OUTCOMES = 3;
 const MAX_VERIFICATION_CONFIRMERS = 2;
@@ -285,7 +261,7 @@ export function IndividualSetup({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isCvImportOpen, setIsCvImportOpen] = useState(false);
-  const [nextPath, setNextPath] = useState(completionPath || '/app/i/profile');
+  const [publicPortfolioUrl, setPublicPortfolioUrl] = useState('');
   const startFromCvStatus = useStartFromCvBetaStatus();
   const displayName = `${basicDetails.firstName} ${basicDetails.lastName}`.trim();
   const canUseStartFromCv =
@@ -596,7 +572,12 @@ export function IndividualSetup({
         proofSummary,
       }));
       setVerificationFollowup(verificationMessage);
-      setNextPath(completionPath || result.scaffoldProfilePath || '/app/i/profile');
+      setPublicPortfolioUrl(
+        result.publicPortfolioUrl ||
+          (result.handle
+            ? `${window.location.origin}/portfolio/${encodeURIComponent(result.handle)}`
+            : '')
+      );
       setPhase('success');
     } catch {
       setError('Something went wrong. Please try again.');
@@ -605,108 +586,46 @@ export function IndividualSetup({
     }
   }
 
+  async function publishPublicPortfolio() {
+    const response = await fetch('/api/portfolio/visibility', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        publicPageEnabled: true,
+        searchIndexingEnabled: false,
+      }),
+    });
+
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null);
+      return {
+        error:
+          typeof payload?.error === 'string'
+            ? payload.error
+            : 'Could not publish your Public Page. You can try again from profile visibility.',
+      };
+    }
+
+    return { success: true };
+  }
+
   if (phase === 'success') {
-    const proofSource =
-      proof.inputMode === 'file'
-        ? proof.fileName || 'Uploaded proof file'
-        : proof.proofUrl || 'Linked proof artifact';
-
     return (
-      <div className="mx-auto max-w-3xl space-y-6">
-        <Card className="rounded-lg border-proofound-stone dark:border-border">
-          <CardHeader>
-            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-proofound-forest/10 text-proofound-forest">
-              <CheckCircle2 className="h-6 w-6" aria-hidden="true" />
-            </div>
-            <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
-              First Proof Pack created
-            </CardTitle>
-            <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
-              Your portfolio is started with one proof-backed artifact. Stronger intro eligibility
-              can come later through public-safe details, matching preferences, and non-self
-              verification.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="rounded-lg border border-proofound-stone bg-proofound-parchment/60 p-4 text-sm text-proofound-charcoal dark:border-border dark:bg-muted dark:text-foreground">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-[0.08em] text-proofound-charcoal/60 dark:text-muted-foreground">
-                    New Proof Pack
-                  </p>
-                  <p className="mt-1 font-medium">{proof.proofTitle}</p>
-                </div>
-                <span className="rounded-full border border-proofound-stone bg-white px-3 py-1 text-xs text-proofound-charcoal/70 dark:border-border dark:bg-background dark:text-muted-foreground">
-                  {ARTIFACT_TYPE_LABELS[proof.artifactType]}
-                </span>
-              </div>
-              <p className="mt-3 text-proofound-charcoal/70 dark:text-muted-foreground">
-                {proof.proofSummary}
-              </p>
-              {measuredOutcomes.some((outcome) => outcome.statement.trim()) ? (
-                <ul className="mt-3 space-y-2 text-proofound-charcoal/70 dark:text-muted-foreground">
-                  {measuredOutcomes
-                    .filter((outcome) => outcome.statement.trim())
-                    .slice(0, MAX_MEASURED_OUTCOMES)
-                    .map((outcome) => (
-                      <li key={outcome.id}>
-                        Claimed outcome: {outcome.statement}
-                        {outcome.value ? ` · ${outcome.value}` : ''}
-                        {outcome.timeframe ? ` · ${outcome.timeframe}` : ''}
-                      </li>
-                    ))}
-                </ul>
-              ) : null}
-              <p className="mt-3 break-words text-xs text-proofound-charcoal/60 dark:text-muted-foreground">
-                Source: {proofSource}
-              </p>
-            </div>
-
-            {verificationFollowup ? (
-              <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-200">
-                {verificationFollowup}
-              </div>
-            ) : null}
-
-            <div className="space-y-3">
-              <div>
-                <h2 className="font-['Crimson_Pro'] text-xl font-semibold text-proofound-charcoal dark:text-foreground">
-                  Next readiness steps
-                </h2>
-                <p className="mt-1 text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
-                  This first Proof Pack is enough to continue. These steps make the profile safer to
-                  share and stronger for future introductions.
-                </p>
-              </div>
-              <div className="grid gap-3">
-                {NEXT_READINESS_STEPS.map((step) => (
-                  <div
-                    key={step.title}
-                    className="rounded-lg border border-proofound-stone bg-white p-3 dark:border-border dark:bg-background"
-                  >
-                    <p className="text-sm font-medium text-proofound-charcoal dark:text-foreground">
-                      {step.title}
-                    </p>
-                    <p className="mt-1 text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
-                      {step.body}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="flex justify-end">
-              <Button
-                type="button"
-                size="lg"
-                className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
-                onClick={() => router.push(nextPath)}
-              >
-                Continue to scaffold profile
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <PublicPortfolioReadyStep
+        persona="individual"
+        publicPortfolioUrl={publicPortfolioUrl}
+        initiallyPublished={false}
+        onPublish={publishPublicPortfolio}
+        onContinue={() => router.push(completionPath || '/app/i/home')}
+        continueLabel="Continue to home"
+        onDecline={() => router.push('/app/i/home')}
+        previewTitle={proof.proofTitle || 'First Proof Pack'}
+        previewDescription={
+          proof.proofSummary ||
+          'Your first structured proof can be shared as a public-safe portfolio link.'
+        }
+        notice={verificationFollowup}
+      />
     );
   }
 

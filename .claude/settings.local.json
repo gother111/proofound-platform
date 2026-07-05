@@ -9,7 +9,11 @@
       "Bash(sed -i '' 's/### \\\\[ \\\\] P0-2 — Turn matching on by default/### [x] P0-2 — Turn matching on by default/' IMPLEMENTATION_PLAN.md)",
       "Bash(echo 'P0-2 | PASS | pending-sha | matching default-on kill-switch, 503 guards on routes+cron, 145 matching tests green')",
       "Bash(git commit --quiet -m 'P0-2: invert matching flag to default-on kill-switch semantics *)",
-      "Bash(git stash *)"
+      "Bash(git stash *)",
+      "Bash(git push *)",
+      "Bash(sed -i '' 's/### \\\\[ \\\\] P0-4 — Wire the \"Day-1 win\" onboarding finale/### [x] P0-4 — Wire the \"Day-1 win\" onboarding finale/' IMPLEMENTATION_PLAN.md)",
+      "Bash(printf 'P0-4 | PASS | pending-sha | ready-step wired as onboarding finale, copy-link + decline path tested; e2e env-blocked, component-test fallback per spec\\\\n')",
+      "Bash(git commit --quiet -m 'P0-4: wire PublicPortfolioReadyStep as individual onboarding finale *)"
     ]
   }
 }

@@ -71,7 +71,8 @@ describe('IndividualSetup first-proof flow', () => {
     completeIndividualOnboardingMock.mockResolvedValue({
       success: true,
       portfolioReady: false,
-      scaffoldProfilePath: '/app/i/profile',
+      publicPortfolioUrl: 'https://proofound.io/portfolio/jane-founder',
+      scaffoldProfilePath: '/app/i/home',
       firstProofVerificationArtifact: {
         type: 'experience',
         id: '11111111-1111-4111-8111-111111111111',
@@ -82,6 +83,11 @@ describe('IndividualSetup first-proof flow', () => {
       json: async () => ({ request: { id: 'request-1' }, email_sent: true }),
     });
     vi.stubGlobal('fetch', fetchMock);
+    Object.assign(navigator, {
+      clipboard: {
+        writeText: vi.fn().mockResolvedValue(undefined),
+      },
+    });
   });
 
   afterEach(() => {
@@ -238,16 +244,14 @@ describe('IndividualSetup first-proof flow', () => {
     expect(payload.get('proofPackOwnership')).toBe(
       'Created as part of a team effort. I owned a defined part of the work. I owned the proof mapping and launch handoff.'
     );
-    expect(screen.getByText(/first proof pack created/i)).toBeInTheDocument();
-    expect(screen.getByText(/new proof pack/i)).toBeInTheDocument();
-    expect(screen.getByText(/claimed outcome: reduced review time/i)).toBeInTheDocument();
-    expect(screen.getByText(/public page readiness/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/matching preferences/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/optional non-self verification/i)).toBeInTheDocument();
-    expect(screen.getByText(/stronger intro eligibility/i)).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: /continue to scaffold profile/i })
-    ).toBeInTheDocument();
+    expect(screen.getByText(/your public page is ready/i)).toBeInTheDocument();
+    expect(screen.getByText(/launch proof/i)).toBeInTheDocument();
+    expect(screen.getByText(/shows the first proof artifact/i)).toBeInTheDocument();
+    expect(screen.getByText('https://proofound.io/portfolio/jane-founder')).toBeInTheDocument();
+    expect(screen.getAllByText(/self-reported/i).length).toBeGreaterThan(0);
+    expect(screen.getByRole('switch', { name: /publish my public page/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /copy link/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /not now, go to home/i })).toBeInTheDocument();
     expect(screen.queryByText(/% complete/i)).not.toBeInTheDocument();
     expect(pushMock).not.toHaveBeenCalled();
   });
@@ -264,12 +268,12 @@ describe('IndividualSetup first-proof flow', () => {
     expect(completeIndividualOnboardingMock).not.toHaveBeenCalled();
   });
 
-  it('hands off to the scaffold profile even when the portfolio already has a public URL', async () => {
+  it('publishes the ready step before enabling copy and continuing home', async () => {
     completeIndividualOnboardingMock.mockResolvedValueOnce({
       success: true,
       portfolioReady: true,
       publicPortfolioUrl: 'https://proofound.io/portfolio/jane-founder',
-      scaffoldProfilePath: '/app/i/profile?firstProof=created',
+      scaffoldProfilePath: '/app/i/home',
     });
     render(<IndividualSetup />);
 
@@ -288,11 +292,50 @@ describe('IndividualSetup first-proof flow', () => {
       screen.getByRole('button', { name: /save first proof pack/i }).closest('form')!
     );
 
-    await waitFor(() => expect(screen.getByText(/first proof pack created/i)).toBeInTheDocument());
-    fireEvent.click(screen.getByRole('button', { name: /continue to scaffold profile/i }));
+    await waitFor(() => expect(screen.getByText(/your public page is ready/i)).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('switch', { name: /publish my public page/i }));
 
-    expect(pushMock).toHaveBeenCalledWith('/app/i/profile?firstProof=created');
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/api/portfolio/visibility',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({
+            publicPageEnabled: true,
+            searchIndexingEnabled: false,
+          }),
+        })
+      )
+    );
+    expect(screen.getByRole('button', { name: /copy link/i })).not.toBeDisabled();
+
+    fireEvent.click(screen.getByRole('button', { name: /copy link/i }));
+    await waitFor(() =>
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+        'https://proofound.io/portfolio/jane-founder'
+      )
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /continue to home/i }));
+
+    expect(pushMock).toHaveBeenCalledWith('/app/i/home');
     expect(pushMock).not.toHaveBeenCalledWith('https://proofound.io/portfolio/jane-founder');
+  });
+
+  it('lets the user decline publishing and still completes onboarding to home', async () => {
+    render(<IndividualSetup />);
+
+    fillBasicDetails();
+    fillLinkProof();
+    fireEvent.submit(
+      screen.getByRole('button', { name: /save first proof pack/i }).closest('form')!
+    );
+
+    await waitFor(() => expect(screen.getByText(/your public page is ready/i)).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: /not now, go to home/i }));
+
+    expect(pushMock).toHaveBeenCalledWith('/app/i/home');
+    expect(fetchMock).not.toHaveBeenCalledWith('/api/portfolio/visibility', expect.anything());
   });
 
   it('lets the first proof be a single uploaded file', async () => {
