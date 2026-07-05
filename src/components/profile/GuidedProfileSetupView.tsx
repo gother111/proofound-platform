@@ -87,8 +87,8 @@ function buildGuidedSteps(
     checks.hasRealContext,
     checks.hasFirstProof,
     checks.hasStructuredProofPack,
+    checks.hasPublishedPortfolio,
     checks.hasRequiredVerification,
-    checks.hasProofForPublishing,
   ];
   const firstIncompleteIndex = completionMap.findIndex((value) => !value);
   const activeIndex = firstIncompleteIndex === -1 ? completionMap.length - 1 : firstIncompleteIndex;
@@ -180,11 +180,28 @@ function buildGuidedSteps(
       ],
     },
     {
-      id: 'verification',
-      label: 'Optional trust checkpoint',
+      id: 'publish_portfolio',
+      label: 'Publish Public Page',
       detail:
-        'You can finish the first Proof Pack without sending emails. Later, one accepted non-self verification helps unlock stronger trust and intro eligibility.',
+        'Publish a direct-link proof snapshot when one proof-backed signal is public-safe. Broad profile setup and verification are not required for day one.',
       state: resolveStepState(4, activeIndex),
+      icon: Rocket,
+      actions: [
+        {
+          id: 'publish',
+          label: checks.hasPublishedPortfolio ? 'Review Public Page' : 'Publish Public Page',
+          onClick: handlers.onOpenPortfolio,
+          disabled: !checks.hasProofForPublishing,
+          testId: 'guided-publish-cta',
+        },
+      ],
+    },
+    {
+      id: 'verification',
+      label: 'Upgrade trust badge',
+      detail:
+        'Verification upgrades Self-reported proof to Verified and can unlock stronger matching and intro eligibility.',
+      state: resolveStepState(5, activeIndex),
       icon: BadgeCheck,
       actions: [
         {
@@ -194,22 +211,6 @@ function buildGuidedSteps(
           variant: 'outline',
           disabled: !checks.hasStructuredProofPack,
           testId: 'guided-verification-cta',
-        },
-      ],
-    },
-    {
-      id: 'publish_portfolio',
-      label: 'Publish Public Page',
-      detail:
-        'Publish a direct-link proof snapshot when one proof-backed signal is public-safe. Broad profile setup is not required for day one.',
-      state: resolveStepState(5, activeIndex),
-      icon: Rocket,
-      actions: [
-        {
-          id: 'publish',
-          label: checks.hasProofForPublishing ? 'Publish Public Page' : 'Choose what to publish',
-          onClick: checks.hasProofForPublishing ? handlers.onOpenPortfolio : handlers.onOpenProofs,
-          testId: 'guided-publish-cta',
         },
         {
           id: 'matching-preferences',
@@ -260,20 +261,20 @@ export function GuidedProfileSetupView({
           onClick: onOpenProofs,
           testId: 'guided-dominant-proof-cta',
         }
-      : !completionState.checks.hasRequiredVerification
+      : !completionState.checks.hasPublishedPortfolio
         ? {
-            label: 'Review trust options',
-            onClick: onOpenVerification,
+            label: 'Publish Public Page',
+            onClick: onOpenPortfolio,
             testId: 'guided-dominant-proof-cta',
           }
-        : !completionState.checks.hasProofForPublishing
+        : !completionState.checks.hasRequiredVerification
           ? {
-              label: 'Choose proof to publish',
-              onClick: onOpenProofs,
+              label: 'Review trust options',
+              onClick: onOpenVerification,
               testId: 'guided-dominant-proof-cta',
             }
           : {
-              label: 'Publish Public Page',
+              label: 'Review Public Page',
               onClick: onOpenPortfolio,
               testId: 'guided-dominant-proof-cta',
             };

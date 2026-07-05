@@ -54,7 +54,7 @@ This plan and the audit **supersede** `Proofound_MVP_Locked_Source_of_Truth_2026
    **Acceptance:** fresh env with no var set → matching routes/cron active; explicit `false` disables. All existing matching tests pass.
    **Verify:** standard gates + `npm run test -- matching` (targeted).
 
-### [ ] P0-3 — Publish portfolios without verification (badge, not gate)
+### [x] P0-3 — Publish portfolios without verification (badge, not gate)
 
 **Objective:** A candidate can publish a shareable portfolio immediately; verification upgrades a visible trust badge instead of gating existence. **This is the highest-impact task in P0.**
 **Files:** `src/lib/profile/completion-flow.ts` (~lines 124-125: `hasRequiredVerification = acceptedVerificationCount > 0`; `hasProofForPublishing = hasStructuredProofPack && hasRequiredVerification`), `src/lib/portfolio/public-contract.ts` (~line 54 `minimumContentMet` gate), `src/app/portfolio/[handle]/page.tsx`, readiness copy surfaces that reference the old rule.

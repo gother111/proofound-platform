@@ -70,10 +70,6 @@ function resolveProofPackBlockers(completionState: IndividualProfileCompletionSt
     blockers.push('Structure one anchored Proof Pack before you publish.');
   }
 
-  if (!completionState.checks.hasRequiredVerification) {
-    blockers.push('Add one accepted non-self verification tied to anchored proof.');
-  }
-
   if (!completionState.checks.hasPublishedPortfolio) {
     blockers.push('Choose one proof-backed public signal and publish your portfolio.');
   }

@@ -32,12 +32,6 @@ export function PortfolioReadinessChecklist({ completionState }: PortfolioReadin
       passed: completionState.checks.hasFirstProof && completionState.checks.hasStructuredProofPack,
     },
     {
-      id: 'verification',
-      label: 'One non-self verification is accepted',
-      nextAction: 'Request one non-self verification',
-      passed: completionState.checks.hasRequiredVerification,
-    },
-    {
       id: 'publish',
       label: 'Portfolio is published and accessible',
       nextAction: 'Publish one proof-backed signal',
@@ -63,7 +57,8 @@ export function PortfolioReadinessChecklist({ completionState }: PortfolioReadin
                 Public Page readiness
               </h2>
               <p className="text-xs leading-5 text-muted-foreground">
-                Complete one clear proof path before publishing.
+                Complete one clear proof path before publishing. Verification upgrades the trust
+                badge after the page is live.
               </p>
             </div>
           </div>

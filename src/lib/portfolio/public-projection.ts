@@ -1305,10 +1305,7 @@ export async function getPublicIndividualPortfolioProjectionByHandle(
   });
 
   const minimumContentMet = Boolean(
-    profile.handle &&
-      publicDisplayName &&
-      proofOverview.publicProofCount > 0 &&
-      proofOverview.verifiedPublicProofPackCount > 0
+    profile.handle && publicDisplayName && proofOverview.publicProofCount > 0
   );
 
   const effectiveState = deriveEffectivePublicPortfolioState({

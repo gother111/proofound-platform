@@ -190,9 +190,9 @@ const READINESS_EVENT_ACTIONS: Record<string, ReadinessAction> = {
   },
   request_required_verification: {
     id: 'request-required-verification',
-    title: 'Request required verification',
+    title: 'Upgrade trust badge',
     description:
-      'Add one accepted non-self verification tied to anchored proof before the Public Page can be ready.',
+      'Add one accepted non-self verification tied to anchored proof when you want a Verified badge and intro readiness.',
     priority: 'high',
     category: 'verification',
     actionUrl: '/app/i/verifications',
@@ -543,6 +543,7 @@ export function getLaunchReadinessBlockers(input: {
       'engagement_type',
       'proof_coverage',
       'role_relevant_proof',
+      'trusted_signal',
       'location',
     ]);
 
@@ -1036,6 +1037,7 @@ export async function getIndividualReadinessState(
   const matchVisible =
     discoverable &&
     browseReady &&
+    hasTrustedSignal &&
     roleRelevantProofLinkedL4Count >= 3 &&
     anchoredAggregates.length >= 1 &&
     hasBasicAvailability &&
@@ -1081,18 +1083,9 @@ export async function getIndividualReadinessState(
         1
       ),
       buildRequirement(
-        'required_verification',
-        'Accepted non-self verification',
-        'Add one accepted peer, manager, or external verification tied to anchored proof before public visibility can unlock.',
-        '/app/i/verifications',
-        completionState.checks.hasRequiredVerification,
-        completionState.counts.acceptedVerifications,
-        1
-      ),
-      buildRequirement(
         'published_portfolio',
         'Published portfolio',
-        'Publish the portfolio so verified anchored proof is accessible from your public page.',
+        'Publish the portfolio so structured proof is accessible from your public page.',
         '/app/i/profile?profileView=full&tab=visibility',
         completionState.checks.hasPublishedPortfolio
       ),

@@ -51,6 +51,7 @@ function buildProjection(overrides: Partial<any> = {}) {
     publicBio: 'I build measurable change.',
     publicSkills: ['Strategy', 'Research ops'],
     publicProofCount: 1,
+    verifiedPublicProofPackCount: 1,
     traceableSummary: {
       provenanceLabel: 'Generated from public-safe Proof Packs and context tokens',
       hasEnoughData: true,
@@ -247,6 +248,61 @@ describe('Public individual portfolio page', () => {
 
     expect(screen.getByRole('heading', { name: 'jane-hidden' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Jane Hidden' })).not.toBeInTheDocument();
+  });
+
+  it('renders Self-reported trust tier for accessible portfolios without accepted verification', async () => {
+    const baseProjection = buildProjection();
+
+    vi.mocked(resolvePublicIndividualPortfolioAccessByHandle).mockResolvedValue({
+      status: 'accessible',
+      projection: buildProjection({
+        verifiedPublicProofPackCount: 0,
+        signals: {
+          ...baseProjection.signals,
+          verifications: { count: 0 },
+        },
+        exportData: {
+          ...baseProjection.exportData,
+          signals: {
+            ...baseProjection.exportData.signals,
+            verifications: { count: 0 },
+          },
+          proofPacks: baseProjection.exportData.proofPacks.map((pack: any) => ({
+            ...pack,
+            verificationStatus: 'unverified',
+            verificationSummary: 'No scoped verification is recorded for this Proof Pack yet.',
+            evidenceSummary: 'Public memo shared by the owner.',
+          })),
+        },
+      }) as any,
+    });
+
+    const element = await PortfolioPage({
+      params: Promise.resolve({ handle: 'jane' }),
+      searchParams: Promise.resolve({}),
+    });
+
+    render(element);
+
+    expect(screen.getByRole('heading', { name: 'Jane Doe' })).toBeInTheDocument();
+    expect(screen.getAllByText('Self-reported').length).toBeGreaterThanOrEqual(2);
+    expect(screen.queryByText('Verified ✓')).not.toBeInTheDocument();
+  });
+
+  it('upgrades page and proof trust tiers after accepted verification', async () => {
+    vi.mocked(resolvePublicIndividualPortfolioAccessByHandle).mockResolvedValue({
+      status: 'accessible',
+      projection: buildProjection() as any,
+    });
+
+    const element = await PortfolioPage({
+      params: Promise.resolve({ handle: 'jane' }),
+      searchParams: Promise.resolve({}),
+    });
+
+    render(element);
+
+    expect(screen.getAllByText('Verified ✓').length).toBeGreaterThanOrEqual(2);
   });
 
   it('renders public read-only view with updated sections and no owner-only details', async () => {

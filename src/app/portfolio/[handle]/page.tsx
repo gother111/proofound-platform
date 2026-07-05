@@ -140,6 +140,7 @@ export default async function PortfolioPage({
   const publicSummaryEndpoint = `/api/portfolio/public/${encodeURIComponent(data.handle)}/summary`;
   const publicExportEndpoint = `/api/portfolio/public/${encodeURIComponent(data.handle)}/export`;
   const pagePath = `/portfolio/${encodeURIComponent(data.handle)}`;
+  const pageTrustTier = getTrustTier(data.verifiedPublicProofPackCount > 0);
   const jsonLdItems = [
     buildProofoundWebsiteJsonLd(),
     buildWebPageJsonLd({
@@ -180,6 +181,7 @@ export default async function PortfolioPage({
               <Badge variant="outline" className="border-[#D9D5CC] text-muted-foreground">
                 Direct-link proof snapshot
               </Badge>
+              <TrustTierBadge tier={pageTrustTier} />
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
@@ -291,19 +293,17 @@ export default async function PortfolioPage({
                             {pack.contextLabel || 'Selected Proof Pack'}
                           </p>
                         </div>
-                        <Badge variant="outline" className="border-[#D9D5CC] text-muted-foreground">
-                          {pack.verificationStatus === 'verified'
-                            ? 'Verified evidence'
-                            : pack.verificationStatus === 'partially_verified'
-                              ? 'Partially verified'
-                              : 'Public-safe proof'}
-                        </Badge>
+                        <TrustTierBadge
+                          tier={getTrustTier(isVerifiedProofStatus(pack.verificationStatus))}
+                        />
                       </div>
 
                       <div className="grid gap-2 sm:grid-cols-2">
                         <SummaryStat
-                          label="Verification"
-                          value={humanizeVerification(pack.verificationStatus)}
+                          label="Trust tier"
+                          value={getTrustTierLabel(
+                            getTrustTier(isVerifiedProofStatus(pack.verificationStatus))
+                          )}
                         />
                         <SummaryStat
                           label="Freshness"
@@ -514,6 +514,38 @@ function ContactPill({ href, label, icon }: { href: string; label: string; icon?
   );
 }
 
+type TrustTier = 'self_reported' | 'verified';
+
+function getTrustTier(hasAcceptedVerification: boolean): TrustTier {
+  return hasAcceptedVerification ? 'verified' : 'self_reported';
+}
+
+function isVerifiedProofStatus(status: string) {
+  return status === 'verified' || status === 'partially_verified';
+}
+
+function getTrustTierLabel(tier: TrustTier) {
+  return tier === 'verified' ? 'Verified ✓' : 'Self-reported';
+}
+
+function TrustTierBadge({ tier }: { tier: TrustTier }) {
+  const isVerified = tier === 'verified';
+
+  return (
+    <Badge
+      variant="outline"
+      aria-label={`Trust tier: ${getTrustTierLabel(tier)}`}
+      className={
+        isVerified
+          ? 'w-fit border-[#D7E8DE] bg-[#F3FAF6] text-proofound-forest'
+          : 'w-fit border-[#E8E2D8] bg-[#FCFBF8] text-muted-foreground'
+      }
+    >
+      {getTrustTierLabel(tier)}
+    </Badge>
+  );
+}
+
 function countPublicCredentials(
   packs: Array<{ selectedEvidence?: Array<{ artifactKind?: string | null }> }>
 ) {
@@ -648,19 +680,6 @@ function SummaryStat({ label, value, icon }: { label: string; value: string; ico
       </p>
     </div>
   );
-}
-
-function humanizeVerification(status: string) {
-  switch (status) {
-    case 'verified':
-      return 'Verified evidence';
-    case 'partially_verified':
-      return 'Partially verified';
-    case 'disputed':
-      return 'Verification disputed';
-    default:
-      return 'Public-safe proof';
-  }
 }
 
 function humanizeFreshness(state: string) {

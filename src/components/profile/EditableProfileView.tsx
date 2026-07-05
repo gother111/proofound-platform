@@ -39,7 +39,7 @@ function resolvePortfolioGateMessage(lockReason: string | null): string {
     case 'proof':
       return 'Public Page is locked until you add and structure your first proof from the profile Proof Packs tab.';
     case 'verification':
-      return 'Public Page is locked until one accepted non-self verification is tied to anchored proof.';
+      return 'Verification now upgrades the trust badge; publish once one structured proof is ready.';
     case 'publish':
       return 'Public Page is locked until you choose one proof-backed signal to publish from the profile Public Page visibility tab.';
     default:

@@ -511,7 +511,7 @@ describe('public portfolio projection', () => {
     expect(projection?.exportData.proofPacks).toEqual([]);
   });
 
-  it('blocks public access when anchored proof has no accepted non-self verification', async () => {
+  it('allows public access when anchored proof has no accepted non-self verification', async () => {
     vi.mocked(db.execute as any)
       .mockResolvedValueOnce(profileRow())
       .mockResolvedValueOnce({ rows: [] });
@@ -580,8 +580,9 @@ describe('public portfolio projection', () => {
     expect(projection).not.toBeNull();
     expect(projection?.publicProofCount).toBe(1);
     expect(projection?.verifiedPublicProofPackCount).toBe(0);
-    expect(projection?.minimumContentMet).toBe(false);
-    expect(projection?.effectiveState).toBe('unavailable');
+    expect(projection?.minimumContentMet).toBe(true);
+    expect(projection?.effectiveState).toBe('public_link_only');
+    expect(projection?.exportData.proofPacks[0]?.verificationStatus).toBe('unverified');
   });
 
   it('keeps individual Public Pages noindex even when stale data requested search indexing', async () => {

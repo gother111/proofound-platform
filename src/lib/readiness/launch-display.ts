@@ -60,6 +60,7 @@ export function getLaunchReadinessBlockers(
       'engagement_type',
       'proof_coverage',
       'role_relevant_proof',
+      'trusted_signal',
       'location',
     ]);
 

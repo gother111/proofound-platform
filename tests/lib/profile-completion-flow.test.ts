@@ -67,7 +67,7 @@ describe('profile completion flow', () => {
       publishedPortfolio: false,
     });
 
-    const verificationState = evaluateIndividualProfileCompletion({
+    const publishableState = evaluateIndividualProfileCompletion({
       displayName: 'Jane Doe',
       handle: 'jane-doe',
       headline: 'Builder',
@@ -81,7 +81,7 @@ describe('profile completion flow', () => {
       publishedPortfolio: false,
     });
 
-    const publishState = evaluateIndividualProfileCompletion({
+    const verifiedPublishableState = evaluateIndividualProfileCompletion({
       displayName: 'Jane Doe',
       handle: 'jane-doe',
       headline: 'Builder',
@@ -99,11 +99,11 @@ describe('profile completion flow', () => {
     expect(contextState.stage).toBe('real_context');
     expect(firstProofState.stage).toBe('first_proof');
     expect(anchoredPackState.stage).toBe('proof_pack');
-    expect(verificationState.stage).toBe('verification');
-    expect(publishState.stage).toBe('publish_portfolio');
+    expect(publishableState.stage).toBe('publish_portfolio');
+    expect(verifiedPublishableState.stage).toBe('publish_portfolio');
   });
 
-  it('requires safe shell, real context, anchored proof pack, verification, and publication for portfolio readiness', () => {
+  it('requires safe shell, real context, anchored proof pack, and publication for portfolio readiness', () => {
     const readyState = evaluateIndividualProfileCompletion({
       displayName: 'Jane Doe',
       handle: 'jane-doe',
@@ -114,11 +114,12 @@ describe('profile completion flow', () => {
       proofCount: 1,
       proofArtifactCount: 2,
       anchoredProofPackCount: 1,
-      acceptedVerificationCount: 1,
+      acceptedVerificationCount: 0,
       publishedPortfolio: true,
     });
 
     expect(readyState.isCoreProfileComplete).toBe(true);
+    expect(readyState.checks.hasRequiredVerification).toBe(false);
     expect(readyState.isPortfolioReady).toBe(true);
     expect(readyState.portfolioLockCode).toBeNull();
   });
@@ -143,7 +144,7 @@ describe('profile completion flow', () => {
     expect(state.portfolioLockCode).toBe('context');
   });
 
-  it('requires accepted non-self verification before portfolio readiness can unlock', () => {
+  it('keeps verification visible without gating portfolio readiness', () => {
     const state = evaluateIndividualProfileCompletion({
       displayName: 'Jane Doe',
       handle: 'jane-doe',
@@ -159,8 +160,9 @@ describe('profile completion flow', () => {
     });
 
     expect(state.checks.hasRequiredVerification).toBe(false);
-    expect(state.isPortfolioReady).toBe(false);
-    expect(state.portfolioLockCode).toBe('verification');
+    expect(state.checks.hasProofForPublishing).toBe(true);
+    expect(state.isPortfolioReady).toBe(true);
+    expect(state.portfolioLockCode).toBeNull();
   });
 
   it('keeps legacy unanchored proof data readable but not portfolio-ready', () => {

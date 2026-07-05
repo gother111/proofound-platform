@@ -63,8 +63,8 @@ describe('GuidedProfileSetupView', () => {
       'Add one real context',
       'Add your first proof',
       'Structure your first Proof Pack',
-      'Optional trust checkpoint',
       'Publish Public Page',
+      'Upgrade trust badge',
     ];
 
     labels.forEach((label) => {

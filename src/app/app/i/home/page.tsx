@@ -140,13 +140,13 @@ export default async function IndividualHomePage() {
           ? 'Trust anchor verified'
           : metrics.pendingVerifications > 0
             ? 'Trust anchor in review'
-            : 'Trust anchor missing',
+            : 'Trust badge self-reported',
       detail:
         metrics.verifiedSkills > 0
           ? `${metrics.verifiedSkills} accepted trust signal${metrics.verifiedSkills === 1 ? '' : 's'} attached to your proof.`
           : metrics.pendingVerifications > 0
             ? `${metrics.pendingVerifications} verification request${metrics.pendingVerifications === 1 ? '' : 's'} pending`
-            : 'Nothing is exposed yet. Add one trusted source when you are ready.',
+            : 'Publishing can start with structured proof. Add one trusted source when you want the Verified badge and intro readiness.',
       action: metrics.pendingVerifications > 0 ? 'View request' : 'Plan anchor',
       href: '/app/i/verifications',
       status:

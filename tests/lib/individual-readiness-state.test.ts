@@ -185,6 +185,38 @@ describe('getIndividualReadinessState', () => {
     );
   });
 
+  it('lets self-reported structured proof reach portfolio-ready without match visibility', async () => {
+    skillsFindManyMock.mockResolvedValue(
+      ['skill-1', 'skill-2', 'skill-3'].map((id) => ({
+        id,
+        relevance: 'current',
+        lastUsedAt: new Date().toISOString(),
+      }))
+    );
+    listCanonicalProofPackAggregatesForOwnerMock.mockResolvedValue([
+      createAnchoredAggregate({ skillIds: ['skill-1', 'skill-2', 'skill-3'], verification: false }),
+    ]);
+
+    const state = await getIndividualReadinessState('user-1');
+
+    expect(state.flags.portfolioReady).toBe(true);
+    expect(state.flags.browseReady).toBe(true);
+    expect(state.flags.matchVisible).toBe(false);
+    expect(state.flags.introEligible).toBe(false);
+    expect(state.counts.activeTrustAnchorCount).toBe(0);
+    expect(state.missingByState.portfolio_ready).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: 'required_verification' })])
+    );
+    expect(state.missingByState.qualified_intro_ready).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'trusted_signal',
+          label: 'Non-self trust anchor',
+        }),
+      ])
+    );
+  });
+
   it('unlocks intro eligibility only with strong anchored proof and a non-self trust anchor', async () => {
     skillsFindManyMock.mockResolvedValue(
       ['skill-1', 'skill-2', 'skill-3'].map((id) => ({

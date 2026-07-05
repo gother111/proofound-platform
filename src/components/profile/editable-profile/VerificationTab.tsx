@@ -23,8 +23,8 @@ export function VerificationTab({ acceptedVerificationCount }: VerificationTabPr
             <div className="space-y-1">
               <h3 className="text-lg font-semibold text-foreground">Verification</h3>
               <p className="text-sm text-muted-foreground">
-                Verification is scoped, not global. Public readiness requires at least one accepted
-                non-self trust signal tied to anchored proof.
+                Verification is scoped, not global. You can publish with structured proof first;
+                accepted non-self trust upgrades the public badge and supports intro readiness.
               </p>
             </div>
 
@@ -38,7 +38,7 @@ export function VerificationTab({ acceptedVerificationCount }: VerificationTabPr
               <p className="mt-2 text-sm text-muted-foreground">
                 {acceptedVerificationCount > 0
                   ? 'Your profile already has non-self trust attached to it.'
-                  : 'No trust signals are attached yet. Request verification before publishing a public-ready portfolio.'}
+                  : 'No trust signals are attached yet. Your public proof stays Self-reported until one is accepted.'}
               </p>
             </div>
 

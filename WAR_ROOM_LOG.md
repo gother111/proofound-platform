@@ -10,3 +10,6 @@ P0-0 | PASS | (this commit) | branch created; addendum verified in AGENTS.md; ba
 
 P0-1 | PASS | 7ef9fce1 | flag default true, client mirror derives, no-key fallback tested (16+16 tests)
 P0-2 | PASS | pending-sha | matching default-on kill-switch, 503 guards on routes+cron, 145 matching tests green
+P0-3 | PASS | pending-sha | publish gate = structured proof only; badges live; portfolio 65/65, full suite 1904/1904, build OK
+
+- test:privacy blocked in this env (missing NEXT_PUBLIC_SUPABASE_URL/ANON_KEY/SERVICE_ROLE in .env.test) — fails identically at baseline; needs creds for P0-11 disposition

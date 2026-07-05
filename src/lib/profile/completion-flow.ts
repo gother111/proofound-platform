@@ -122,7 +122,7 @@ export function evaluateIndividualProfileCompletion(
   const hasFirstProof = proofArtifactCount > 0;
   const hasStructuredProofPack = anchoredProofPackCount > 0;
   const hasRequiredVerification = acceptedVerificationCount > 0;
-  const hasProofForPublishing = hasStructuredProofPack && hasRequiredVerification;
+  const hasProofForPublishing = hasStructuredProofPack;
   const hasPublishedPortfolio = input.publishedPortfolio === true;
 
   const checks: IndividualProfileCompletionChecks = {
@@ -154,8 +154,6 @@ export function evaluateIndividualProfileCompletion(
     stage = 'first_proof';
   } else if (!checks.hasStructuredProofPack) {
     stage = 'proof_pack';
-  } else if (!checks.hasRequiredVerification) {
-    stage = 'verification';
   } else if (!checks.hasProofForPublishing) {
     stage = 'publish_portfolio';
   }
@@ -164,7 +162,6 @@ export function evaluateIndividualProfileCompletion(
     isCoreProfileComplete &&
     checks.hasRealContext &&
     checks.hasStructuredProofPack &&
-    checks.hasRequiredVerification &&
     checks.hasPublishedPortfolio;
 
   let portfolioLockCode: PortfolioLockCode = null;
@@ -183,10 +180,6 @@ export function evaluateIndividualProfileCompletion(
       portfolioLockCode = 'proof';
       portfolioLockReason =
         'Add at least one anchored Proof Pack before your portfolio can be ready.';
-    } else if (!checks.hasRequiredVerification) {
-      portfolioLockCode = 'verification';
-      portfolioLockReason =
-        'Add one accepted non-self verification tied to anchored proof before your portfolio can be public-ready.';
     } else if (!checks.hasPublishedPortfolio) {
       portfolioLockCode = 'publish';
       portfolioLockReason =
