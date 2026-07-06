@@ -9,33 +9,13 @@ const __dirname = path.dirname(__filename);
 const DEFAULT_NON_MVP_TEST_EXCLUDES = [
   // Archived launch surfaces live under src/archive and are verified separately when needed.
   '**/src/archive/**',
-  // These suites assert the pre-archive behavior of APIs that now intentionally return 410.
-  // The active launch gate keeps direct 410 coverage in tests/api/archived-api-handlers-route.test.ts
-  // and route inventory coverage in tests/api/launch-surface-inventory.test.ts.
-  '**/tests/api/analytics-events-compat-route.test.ts',
-  '**/tests/api/analytics-tour-event-route.test.ts',
-  '**/tests/api/analytics-track-route.test.ts',
-  '**/tests/api/analytics-web-vitals-route.test.ts',
-  '**/tests/api/cv-import-wizard-routes.test.ts',
-  '**/tests/api/performance-track-route.test.ts',
-  // These tests target removed or intentionally gated non-MVP routes/pages that should not block
-  // the default unit test signal for the locked launch corridor.
-  '**/tests/api/messages-legacy-route.test.ts',
-  '**/tests/api/moderation-appeals-route.test.ts',
-  '**/tests/api/moderation-statements-of-reasons-route.test.ts',
-  '**/tests/api/moderation-transparency-report-route.test.ts',
-  '**/tests/api/organization-test-matches-route.test.ts',
-  '**/tests/api/updates-cache-flag-route.test.ts',
-  '**/tests/ui/admin-ai-spend-page.test.tsx',
-  '**/tests/ui/admin-fairness-notes-page.test.tsx',
-  '**/tests/ui/organization-settings-integrations.test.tsx',
+  '**/tests/archive/**',
 ] as const;
 
 const DEFAULT_SLOW_TEST_EXCLUDES = [
   // Quality/benchmark suites remain available through npm run test:slow:non-launch.
   '**/tests/lib/cv-import-suggest-1000-benchmark.test.ts',
   '**/tests/lib/cv-import-suggest-quality.test.ts',
-  '**/tests/lib/cv-import-wizard-quality.test.ts',
 ] as const;
 
 export default defineConfig({

@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { apiFetch } from '@/lib/api/fetch';
 import { useAssistiveAiFlag } from '@/hooks/useAssistiveAiFlag';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 type AssignmentClaritySuggestion = {
   suggestionId?: string | null;
@@ -66,6 +67,12 @@ const FORM_FIELD_BY_REWRITE_FIELD: Record<EditableField, string> = {
   proofExpectations: 'expectedImpact',
 };
 
+const ASSIGNMENT_CLARITY_MANUAL_RETRY_REASON =
+  'Guided suggestions could not load; manual editing still works.';
+const ASSIGNMENT_CLARITY_SAVE_DRAFT_MESSAGE = 'Save a draft before clarifying this assignment.';
+const ASSIGNMENT_CLARITY_RETURNED_FALLBACK_REASON =
+  'Guided suggestions could not load; manual editing still works.';
+
 function buildOutcomeSummary(outcomes: any[] = []) {
   return outcomes
     .map((outcome) =>
@@ -83,6 +90,19 @@ function responseBody(payload: unknown, status = 200) {
     status,
     json: async () => payload,
   };
+}
+
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function hasReturnedError(payload: unknown) {
+  if (!payload || typeof payload !== 'object') return false;
+  const record = payload as { error?: unknown; message?: unknown };
+  return (
+    (typeof record.error === 'string' && record.error.trim().length > 0) ||
+    (typeof record.message === 'string' && record.message.trim().length > 0)
+  );
 }
 
 function buildManualAssignmentClaritySuggestion(
@@ -182,8 +202,22 @@ export function AssignmentClarityAssistant({
     setIsClarifying(true);
     setAcceptedFields(new Set());
     setDismissedFields(new Set());
+    let latestValues: any | null = null;
+
+    const showManualChecklist = (values: any, reason = ASSIGNMENT_CLARITY_MANUAL_RETRY_REASON) => {
+      const payload = buildManualAssignmentClaritySuggestion(values, reason);
+      setSuggestion(payload);
+      setDraft({
+        title: payload.suggestedRewrite.title || '',
+        rolePurpose: payload.suggestedRewrite.rolePurpose || '',
+        outcomeSummary: payload.suggestedRewrite.outcomeSummary || '',
+        proofExpectations: payload.suggestedRewrite.proofExpectations || '',
+      });
+    };
 
     try {
+      const values = form.getValues();
+      latestValues = values;
       const persisted = assignmentId
         ? { assignmentId, orgId }
         : onEnsureDraft
@@ -191,10 +225,9 @@ export function AssignmentClarityAssistant({
           : null;
 
       if (!persisted?.assignmentId) {
-        throw new Error('Save a draft before clarifying this assignment.');
+        throw new Error(ASSIGNMENT_CLARITY_SAVE_DRAFT_MESSAGE);
       }
 
-      const values = form.getValues();
       const outcomeSummary = [values.description, buildOutcomeSummary(values.outcomes || [])]
         .filter(Boolean)
         .join('\n');
@@ -235,20 +268,19 @@ export function AssignmentClarityAssistant({
           fallbackAvailable?: boolean;
         };
         if (errorData.fallbackAvailable) {
-          const payload = buildManualAssignmentClaritySuggestion(
+          showManualChecklist(
             values,
             'AI suggestions are temporarily unavailable; manual editing still works.'
           );
-          setSuggestion(payload);
-          setDraft({
-            title: payload.suggestedRewrite.title || '',
-            rolePurpose: payload.suggestedRewrite.rolePurpose || '',
-            outcomeSummary: payload.suggestedRewrite.outcomeSummary || '',
-            proofExpectations: payload.suggestedRewrite.proofExpectations || '',
-          });
           return;
         }
-        throw new Error(errorData.message || errorData.error || 'Assignment clarity failed.');
+        dispatchClientDiagnostic('assignments.clarity_assistant.returned_error', {
+          status: getResponseStatus(response),
+          hasReturnedError: hasReturnedError(errorData),
+        });
+        showManualChecklist(values, ASSIGNMENT_CLARITY_RETURNED_FALLBACK_REASON);
+        toast.error('Guided suggestions could not load. Manual checklist is ready.');
+        return;
       }
 
       const payload = (await response.json()) as AssignmentClaritySuggestion;
@@ -260,7 +292,15 @@ export function AssignmentClarityAssistant({
         proofExpectations: payload.suggestedRewrite.proofExpectations || '',
       });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Assignment clarity failed.');
+      if (error instanceof Error && error.message === ASSIGNMENT_CLARITY_SAVE_DRAFT_MESSAGE) {
+        toast.error(ASSIGNMENT_CLARITY_SAVE_DRAFT_MESSAGE);
+      } else if (latestValues) {
+        dispatchClientErrorDiagnostic('assignments.clarity_assistant.request_failed', error);
+        showManualChecklist(latestValues);
+        toast.error('Guided suggestions could not load. Manual checklist is ready.');
+      } else {
+        toast.error(ASSIGNMENT_CLARITY_SAVE_DRAFT_MESSAGE);
+      }
     } finally {
       setIsClarifying(false);
     }
@@ -307,10 +347,10 @@ export function AssignmentClarityAssistant({
 
   if (!assistiveAiEnabled) {
     return (
-      <Card className="space-y-3 p-4" data-testid="assignment-clarity-assistant">
+      <Card className="min-w-0 space-y-3 p-4" data-testid="assignment-clarity-assistant">
         <div className="space-y-1">
           <h2 className="text-base font-semibold text-foreground">Assignment clarity</h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="break-words text-sm text-muted-foreground">
             Manual guidance: name the outcome, proof expectations, constraints, and must-have
             capabilities before publishing.
           </p>
@@ -340,8 +380,8 @@ export function AssignmentClarityAssistant({
             <div className="rounded-md border border-proofound-stone bg-white p-3">
               <p className="text-sm font-medium text-foreground">Manual clarity checklist</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Provider assistance was unavailable, so these are deterministic manual prompts.
-                Manual editing still works.
+                Guided suggestions are unavailable right now, so use this checklist to keep editing
+                manually.
               </p>
             </div>
           ) : (

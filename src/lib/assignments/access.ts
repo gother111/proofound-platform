@@ -3,7 +3,11 @@ import { and, eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { assignments, organizationMembers, organizations } from '@/db/schema';
 import { CANONICAL_ORG_ROLE_VALUES, normalizeAuthorizedOrgRole, type OrgRole } from '@/lib/authz';
-import { isMockSupabaseEnabled } from '@/lib/env';
+import {
+  isVisualAssignmentFixtureId,
+  visualAssignmentFixturesEnabled,
+  VISUAL_ASSIGNMENT_MOCK_ORG_ID,
+} from '@/lib/assignments/visual-fixtures';
 
 export const ASSIGNMENT_MUTATION_ROLES = ['org_manager', 'org_owner'] as const;
 export type AssignmentMutationRole = (typeof ASSIGNMENT_MUTATION_ROLES)[number];
@@ -11,6 +15,10 @@ export type AssignmentMutationRole = (typeof ASSIGNMENT_MUTATION_ROLES)[number];
 const MOCK_USER_ID = '88888888-8888-4888-8888-888888888888';
 const MOCK_ORG_ID = '99999999-9999-4999-9999-999999999999';
 const MOCK_ORG_SLUG = 'test-org';
+
+function visualAssignmentAccessFixturesEnabled() {
+  return visualAssignmentFixturesEnabled();
+}
 
 type MembershipContext = {
   orgId?: string | null;
@@ -195,7 +203,7 @@ export async function resolveExplicitUserOrgContext(
   }
 
   if (
-    isMockSupabaseEnabled() &&
+    visualAssignmentAccessFixturesEnabled() &&
     userId === MOCK_USER_ID &&
     (context.orgId === MOCK_ORG_ID || context.orgSlug === MOCK_ORG_SLUG) &&
     hasRequiredRole('org_manager', requiredRoles)
@@ -214,6 +222,23 @@ export async function verifyExplicitAssignmentAccess(
 ): Promise<AssignmentMutationAccessResult> {
   if (!context?.orgId && !context?.orgSlug) {
     return { status: 'missing_org_context' };
+  }
+
+  if (
+    visualAssignmentAccessFixturesEnabled() &&
+    userId === MOCK_USER_ID &&
+    isVisualAssignmentFixtureId(assignmentId) &&
+    (context.orgId === MOCK_ORG_ID ||
+      context.orgId === VISUAL_ASSIGNMENT_MOCK_ORG_ID ||
+      context.orgSlug === MOCK_ORG_SLUG) &&
+    hasRequiredRole('org_manager', requiredRoles)
+  ) {
+    return {
+      status: 'ok',
+      orgId: MOCK_ORG_ID,
+      role: 'org_manager',
+      membershipId: 'visual-assignment-membership',
+    };
   }
 
   const assignment = await db.query.assignments.findFirst({

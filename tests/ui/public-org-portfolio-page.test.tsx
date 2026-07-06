@@ -1,6 +1,6 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const { notFoundMock } = vi.hoisted(() => ({
   notFoundMock: vi.fn(() => {
@@ -65,7 +65,7 @@ function buildProjection(overrides: Partial<any> = {}) {
       operating_region: 'EU',
       verified: true,
       website: 'https://acme.org/',
-      tagline: 'This work matters because trustworthy hiring is still too rare.',
+      tagline: 'This work matters because proof-first assignment review still needs trust.',
       mission: 'Ship impact',
       working_context: 'Small distributed team across Europe with weekly async check-ins.',
       type: 'company',
@@ -79,9 +79,9 @@ function buildProjection(overrides: Partial<any> = {}) {
     metadata: {
       path: '/portfolio/org/acme',
       title: 'Proofound organization portfolio',
-      description: 'Shareable organization profile on Proofound.',
+      description: 'Shareable organization trust page on Proofound.',
       ogTitle: 'Proofound organization portfolio',
-      ogDescription: 'Shareable organization profile on Proofound.',
+      ogDescription: 'Shareable organization trust page on Proofound.',
       useGenericPreview: true,
     },
     jsonLd: {
@@ -126,6 +126,10 @@ function buildProjection(overrides: Partial<any> = {}) {
 }
 
 describe('Organization public portfolio page', () => {
+  afterEach(() => {
+    delete (navigator as Partial<Navigator>).clipboard;
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(createClient).mockResolvedValue({
@@ -158,20 +162,49 @@ describe('Organization public portfolio page', () => {
     render(element);
 
     expect(screen.getByRole('heading', { name: 'Acme' })).toBeInTheDocument();
-    expect(screen.getByText(/public organization profile/i)).toBeInTheDocument();
+    expect(screen.getByText(/public organization trust page/i)).toBeInTheDocument();
     expect(screen.getByText('Shareable by direct link')).toBeInTheDocument();
+    expect(screen.getByText('Proof-first trust page')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /mission \/ purpose/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /what work is offered/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /assignment clarity/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /seriousness of review/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /proof-review readiness/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /organization basics/i })).toBeInTheDocument();
     expect(screen.getByText('acme.org')).toBeInTheDocument();
     expect(screen.getByText(/proof-first product designer/i)).toBeInTheDocument();
     expect(screen.getByText(/own the assignment review loop/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/this page is public trust context, not the review workspace/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/search engines are off; only people with this link can open/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/proof submissions, member details, and private review context stay inside/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /blind-by-default review stays separate from this public page until a proof-review participant consents to reveal/i
+      )
+    ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /return to menu/i })).toHaveAttribute(
       'href',
       '/app/o/acme/home'
     );
+
+    const clipboardWriteText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: {
+        writeText: clipboardWriteText,
+      },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /copy share link/i }));
+
+    expect(await screen.findByText('Organization trust page link copied.')).toBeInTheDocument();
+    expect(clipboardWriteText).toHaveBeenCalledWith('https://proofound.io/portfolio/org/acme');
+
     expect(screen.queryByRole('heading', { name: /values/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: /causes/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: /work culture/i })).not.toBeInTheDocument();
@@ -180,6 +213,13 @@ describe('Organization public portfolio page', () => {
     expect(screen.queryByRole('heading', { name: /goals/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/team members/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/owner@|reviewer@|member@/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/public organization profile/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/minimal public profile/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/minimal trust page/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: /seriousness of review/i })
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Searchable')).not.toBeInTheDocument();
   });
 
   it('falls back to return-home link when returnTo is unsafe', async () => {
@@ -195,11 +235,11 @@ describe('Organization public portfolio page', () => {
           display_name: 'Acme',
           public_portfolio_state: 'public_link_only',
           search_indexing_enabled_at: null,
-          trust_status: 'pending',
-          trust_status_updated_at: null,
-          website_verified_at: null,
+          trust_status: 'domain_verified',
+          trust_status_updated_at: '2026-05-18T00:00:00.000Z',
+          website_verified_at: '2026-05-18T00:00:00.000Z',
           operating_region: null,
-          verified: false,
+          verified: true,
           website: 'https://acme.org/',
           tagline: 'Build trust',
           mission: null,
@@ -235,8 +275,107 @@ describe('Organization public portfolio page', () => {
     expect(screen.getByRole('link', { name: /return home/i })).toHaveAttribute('href', '/');
     expect(screen.getAllByText('Build trust').length).toBeGreaterThan(0);
     expect(
+      screen.getByText(/no active assignment is published on this trust page yet/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/no engagement type published yet/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /assignment context will appear here once the organization publishes review-ready work/i
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText(/proof expectations are not published yet/i)).toBeInTheDocument();
+    expect(
       screen.getByText(/assignment detail will appear here once the organization publishes it/i)
     ).toBeInTheDocument();
+  });
+
+  it('keeps sparse long organization data readable on narrow public portfolio layouts', async () => {
+    const longName =
+      'Nordic Distributed Proof Operations Research Collective For Very Long Public Names';
+    const longWebsite =
+      'https://proof-operations-research-collective.example.com/teams/very-long-public-profile-path';
+
+    vi.mocked(getPublicOrganizationPortfolioProjectionBySlug).mockResolvedValue(
+      buildProjection({
+        publicDisplayName: longName,
+        publicSummary: '',
+        verifiedDomainPath:
+          'proof-operations-research-collective.example.com/verified/organization/domain/path',
+        organization: {
+          id: 'org-1',
+          slug: 'acme',
+          display_name: longName,
+          public_portfolio_state: 'public_link_only',
+          search_indexing_enabled_at: null,
+          trust_status: 'pending',
+          trust_status_updated_at: null,
+          website_verified_at: null,
+          operating_region: null,
+          verified: false,
+          website: longWebsite,
+          tagline: null,
+          mission: null,
+          working_context: null,
+          type: 'company',
+        },
+        assignmentSnapshot: null,
+      }) as any
+    );
+
+    const element = await OrganizationPortfolioPublicPage({
+      params: Promise.resolve({ slug: 'acme' }),
+      searchParams: Promise.resolve({ returnTo: '/app/o/acme/home' }),
+    });
+
+    render(element);
+
+    expect(screen.getByRole('heading', { name: longName })).toHaveClass('break-words');
+    expect(screen.getByRole('link', { name: /return to menu/i })).toHaveClass('w-full');
+    expect(screen.getByRole('link', { name: /return to menu/i })).toHaveClass(
+      'text-muted-foreground'
+    );
+    expect(screen.getByRole('button', { name: /copy share link/i })).toHaveClass('w-full');
+    expect(screen.getByRole('link', { name: /website/i })).toHaveClass('w-full');
+    expect(screen.getByRole('link', { name: /website/i })).toHaveClass('border-proofound-stone/85');
+    expect(screen.getByRole('link', { name: /website/i })).toHaveAttribute(
+      'aria-label',
+      expect.stringContaining('opens in a new tab')
+    );
+    expect(screen.getByText(longWebsite)).toHaveClass('break-words');
+    expect(
+      screen.getByText(/a short purpose statement has not been published yet/i)
+    ).toBeInTheDocument();
+  });
+
+  it('keeps member PDF export available on narrow organization portfolio layouts', async () => {
+    vi.mocked(createClient).mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'member-1' } } }),
+      },
+      from: vi.fn(() => ({
+        select: vi.fn(() => ({
+          eq: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockResolvedValue({ count: 1 }),
+            }),
+          }),
+        })),
+      })),
+    } as any);
+    vi.mocked(getPublicOrganizationPortfolioProjectionBySlug).mockResolvedValue(
+      buildProjection() as any
+    );
+
+    const element = await OrganizationPortfolioPublicPage({
+      params: Promise.resolve({ slug: 'acme' }),
+      searchParams: Promise.resolve({ returnTo: '/app/o/acme/home' }),
+    });
+
+    render(element);
+
+    const downloadButton = screen.getByRole('button', { name: /download organization pdf/i });
+    expect(downloadButton).toHaveClass('w-full');
+    expect(downloadButton.closest('.hidden')).toBeNull();
   });
 
   it('returns generic noindex metadata by default', async () => {
@@ -277,12 +416,82 @@ describe('Organization public portfolio page', () => {
     expect(metadata.openGraph?.title).toBe('Acme Labs on Proofound');
   });
 
-  it('calls notFound when slug has no public portfolio', async () => {
+  it('explains when search indexing is explicitly enabled for public organization trust pages', async () => {
+    vi.mocked(getPublicOrganizationPortfolioProjectionBySlug).mockResolvedValue(
+      buildProjection({ effectiveState: 'public_indexable' }) as any
+    );
+
+    const element = await OrganizationPortfolioPublicPage({
+      params: Promise.resolve({ slug: 'acme' }),
+      searchParams: Promise.resolve({}),
+    });
+
+    render(element);
+
+    expect(screen.getByText('Indexing allowed')).toBeInTheDocument();
+    expect(
+      screen.getByText(/search indexing is explicitly enabled for this organization trust page/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/search engines are off; only people with this link can open/i)
+    ).not.toBeInTheDocument();
+  });
+
+  it('renders the generic unavailable state when slug has no public portfolio', async () => {
     vi.mocked(getPublicOrganizationPortfolioProjectionBySlug).mockResolvedValue(null);
 
-    await expect(
-      OrganizationPortfolioPublicPage({ params: Promise.resolve({ slug: 'missing' }) })
-    ).rejects.toThrow('NOT_FOUND');
-    expect(notFoundMock).toHaveBeenCalledTimes(1);
+    const element = await OrganizationPortfolioPublicPage({
+      params: Promise.resolve({ slug: 'missing' }),
+      searchParams: Promise.resolve({}),
+    });
+
+    const { container } = render(element);
+
+    expect(container.querySelectorAll('main')).toHaveLength(1);
+    expect(
+      screen.getByRole('heading', { name: 'Organization trust page unavailable' })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/this organization link is unavailable/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/No organization trust details were shown from this link/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/only load selected public-safe basics when the owner has an active/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Assignments, member details, and review context stay hidden/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Ask the organization for a fresh public trust page link/i)
+    ).toBeInTheDocument();
+    const trustStatus = screen.getByRole('status');
+    expect(trustStatus).toHaveClass('rounded-xl');
+    expect(trustStatus).toHaveClass('shadow-sm');
+    expect(trustStatus).not.toHaveClass('border-l-4');
+    expect(screen.getByRole('link', { name: 'Return home' })).toHaveAttribute('href', '/');
+    expect(notFoundMock).not.toHaveBeenCalled();
+  });
+
+  it('keeps unavailable organization previews on the safe in-app return path', async () => {
+    vi.mocked(getPublicOrganizationPortfolioProjectionBySlug).mockResolvedValue(null);
+
+    const element = await OrganizationPortfolioPublicPage({
+      params: Promise.resolve({ slug: 'acme' }),
+      searchParams: Promise.resolve({ returnTo: '/app/o/acme/home' }),
+    });
+
+    render(element);
+
+    expect(
+      screen.getByRole('heading', { name: 'Organization trust page unavailable' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /return to menu/i })).toHaveAttribute(
+      'href',
+      '/app/o/acme/home'
+    );
+    expect(screen.queryByRole('link', { name: 'Return home' })).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/No organization trust details were shown from this link/i)
+    ).toBeInTheDocument();
   });
 });

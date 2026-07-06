@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "findingId": "fnd_sig-feat-route-0ed8976d1d-d324af_520515af1e",
+  "featureId": "feat_route_0ed8976d1d",
+  "title": "Expired-preview update can overwrite a concurrent invite state transition",
+  "category": "concurrency",
+  "severity": "medium",
+  "confidence": "medium",
+  "triage": "risk",
+  "evidence": [
+    {
+      "path": "app/api/candidate-invites/[token]/route.ts",
+      "startLine": 67,
+      "endLine": 74,
+      "symbol": "GET",
+      "quote": "if (isInviteExpired(invite.expiresAt) && invite.status !== CANDIDATE_INVITE_STATUS.EXPIRED) {"
+    }
+  ],
+  "reasoning": "The route selects the invite, decides it is expired, and then updates the row by id only. If another request claims or submits proof for the same invite between the select and this update, this preview request can still write status=expired over the newer status because the UPDATE does not compare the previously-read status or exclude terminal/claimed states. That can corrupt the workflow state around the expiry boundary.",
+  "reproduction": "At the expiry boundary, let GET read a pending expired invite, then have a claim/proof request update the same invite before the GET executes its UPDATE. The GET then writes expired by id and returns 404, leaving the invite expired despite the concurrent successful transition.",
+  "recommendation": "Make the expiry update conditional on the row still being in an expirable state, for example by adding a status predicate and claimed/submitted guards, or perform the state decision and update in a transaction with compare-and-set semantics.",
+  "whyTestsDoNotAlreadyCoverThis": "No linked tests cover races between preview expiry handling and claim/proof submission state transitions.",
+  "suggestedRegressionTest": "Add a route-level or repository-level test that simulates a stale preview read followed by a concurrent claim transition, then verifies the preview expiry update does not overwrite the claimed/proof-submitted status.",
+  "minimumFixScope": "Tighten the UPDATE predicate in this route's expiry branch and align any sibling invite routes that perform the same stale-read expiry write.",
+  "status": "fixed",
+  "history": [
+    {
+      "runId": null,
+      "kind": "triage",
+      "status": "fixed",
+      "note": "Fixed manually: expired-preview write is restricted to still-pending, unclaimed, unsubmitted rows; claimed expired preview no-update behavior covered by tests/api/candidate-invites-token-route.test.ts.",
+      "reasoning": null,
+      "commands": [],
+      "createdAt": "2026-05-16T17:18:10.745Z"
+    }
+  ],
+  "signature": "sig_feat-route-0ed8976d1d_d324af21d2",
+  "linkedPatchAttemptIds": [],
+  "createdByRunId": "20260516T164325-52e1d0",
+  "createdAt": "2026-05-16T16:51:37.045Z",
+  "updatedAt": "2026-05-16T17:18:10.744Z"
+}

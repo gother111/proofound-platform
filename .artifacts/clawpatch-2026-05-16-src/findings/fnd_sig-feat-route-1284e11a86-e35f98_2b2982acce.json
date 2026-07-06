@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "findingId": "fnd_sig-feat-route-1284e11a86-e35f98_2b2982acce",
+  "featureId": "feat_route_1284e11a86",
+  "title": "Trust-tier changes are committed before audit writes without an atomic boundary",
+  "category": "data-loss",
+  "severity": "high",
+  "confidence": "medium",
+  "triage": "risk",
+  "evidence": [
+    {
+      "path": "app/api/admin/organizations/[orgId]/verify/route.ts",
+      "startLine": 123,
+      "endLine": 135,
+      "symbol": "POST",
+      "quote": null
+    },
+    {
+      "path": "app/api/admin/organizations/[orgId]/verify/route.ts",
+      "startLine": 136,
+      "endLine": 169,
+      "symbol": "POST",
+      "quote": null
+    },
+    {
+      "path": "app/api/admin/organizations/[orgId]/verify/route.ts",
+      "startLine": 176,
+      "endLine": 187,
+      "symbol": "POST",
+      "quote": null
+    }
+  ],
+  "reasoning": "The organization trust tier is updated first, then the transition row and admin audit log are written in separate awaited operations. If the transition insert or logAdminAction fails after the update succeeds, the route returns 500 while the sensitive trust-tier mutation remains committed without the full audit trail required by the route contract. Retrying can also create misleading later audit history for an already-mutated organization.",
+  "reproduction": "Cause db.insert(organizationTrustTierTransitions) or logAdminAction to throw after db.update(organizations) succeeds. The organization row is already changed, but the handler returns 500 and the corresponding transition/admin audit entry may be missing.",
+  "recommendation": "Wrap the organization update and transition insert in a database transaction, and make the audit write part of the same transactional unit if logAdminAction uses the same database. If the admin logger cannot participate in the transaction, persist an in-transaction audit/outbox record before committing and process the external log separately.",
+  "whyTestsDoNotAlreadyCoverThis": "No linked tests were included for partial failure between the organization update, transition insert, and admin audit log.",
+  "suggestedRegressionTest": "Add a route test that mocks the transition insert or admin logger to fail after the organization update path and asserts that the organization trust-tier fields are not committed without the audit/transition record, or that an in-transaction outbox/audit record is present.",
+  "minimumFixScope": "Route-local transaction/outbox restructuring for the update plus audit trail writes.",
+  "status": "fixed",
+  "history": [
+    {
+      "runId": null,
+      "kind": "triage",
+      "status": "fixed",
+      "note": "Fixed manually: organization trust-tier update and transition insert now run inside one transaction; admin logger remains shared best-effort, with durable transition record covering route-local audit trail. Covered by tests/api/admin-organizations-verify-route.test.ts.",
+      "reasoning": null,
+      "commands": [],
+      "createdAt": "2026-05-16T17:18:25.325Z"
+    }
+  ],
+  "signature": "sig_feat-route-1284e11a86_e35f98f969",
+  "linkedPatchAttemptIds": [],
+  "createdByRunId": "20260516T164325-52e1d0",
+  "createdAt": "2026-05-16T16:53:23.656Z",
+  "updatedAt": "2026-05-16T17:18:25.324Z"
+}

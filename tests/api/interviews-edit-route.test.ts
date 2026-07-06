@@ -8,6 +8,7 @@ import {
   postInterviewUpdateMessageBestEffort,
 } from '@/lib/interviews/messaging';
 import { buildWorkflowView, recordInterviewRescheduleAudit } from '@/lib/workflow/service';
+import { log } from '@/lib/log';
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
@@ -27,6 +28,12 @@ vi.mock('@/lib/workflow/service', () => ({
     timestamps: {},
     allowedActions: [],
   }),
+}));
+
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+  },
 }));
 
 describe('POST /api/interviews/edit', () => {
@@ -90,8 +97,8 @@ describe('POST /api/interviews/edit', () => {
         candidateId: '44444444-4444-4444-8444-444444444444',
         status: 'scheduled',
         scheduledAt: new Date(Date.now() + 30 * 60 * 1000),
-        platform: 'zoom',
-        meetingUrl: 'https://zoom.us/j/meeting',
+        platform: 'manual',
+        meetingUrl: 'https://example.com/manual-room',
         timezone: 'UTC',
         rescheduleCount: 0,
       },
@@ -108,6 +115,57 @@ describe('POST /api/interviews/edit', () => {
     );
 
     expect(response.status).toBe(403);
+  });
+
+  it('returns 400 for malformed JSON before interview authorization lookup', async () => {
+    vi.mocked(createClient).mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { id: orgAdminId } },
+          error: null,
+        }),
+      },
+      from: vi.fn(),
+    } as any);
+
+    const response = await POST(
+      new NextRequest('http://localhost/api/interviews/edit', {
+        method: 'POST',
+        body: '{',
+      })
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
+    expect(canManageInterviewAsOrgAdmin).not.toHaveBeenCalled();
+  });
+
+  it('logs validation failures with structured diagnostics', async () => {
+    vi.mocked(createClient).mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { id: orgAdminId } },
+          error: null,
+        }),
+      },
+      from: vi.fn(),
+    } as any);
+
+    const response = await POST(
+      new NextRequest('http://localhost/api/interviews/edit', {
+        method: 'POST',
+        body: JSON.stringify({
+          interviewId: 'not-a-uuid',
+          scheduledAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+        }),
+      })
+    );
+
+    expect(response.status).toBe(400);
+    expect(log.error).toHaveBeenCalledWith('interviews.edit.failed', {
+      error: expect.objectContaining({ name: 'ZodError' }),
+    });
+    expect(canManageInterviewAsOrgAdmin).not.toHaveBeenCalled();
   });
 
   it('returns 400 when interview is not scheduled', async () => {
@@ -140,8 +198,8 @@ describe('POST /api/interviews/edit', () => {
         candidateId: '44444444-4444-4444-8444-444444444444',
         status: 'completed',
         scheduledAt: new Date(Date.now() + 30 * 60 * 1000),
-        platform: 'zoom',
-        meetingUrl: 'https://zoom.us/j/meeting',
+        platform: 'manual',
+        meetingUrl: 'https://example.com/manual-room',
         timezone: 'UTC',
         rescheduleCount: 0,
       },
@@ -288,6 +346,7 @@ describe('POST /api/interviews/edit', () => {
 
     expect(response.status).toBe(400);
     expect(body.error).toContain('Maximum 1 reschedule');
+    expect(body.error).not.toContain('PRD');
     expect(update).not.toHaveBeenCalled();
     expect(recordInterviewRescheduleAudit).not.toHaveBeenCalled();
   });

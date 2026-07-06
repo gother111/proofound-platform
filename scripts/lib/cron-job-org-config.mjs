@@ -38,7 +38,7 @@ export const CRON_JOB_CLASSIFICATION_TABLE = [
     classification: 'active_launch_automation',
     owner: 'Vercel Cron',
     schedule: '0 8 * * * UTC',
-    launchReason: 'Maintains launch-critical SLA state for the hiring workflow.',
+    launchReason: 'Maintains launch-critical SLA state for the assignment-review workflow.',
     testCoverage: 'tests/scripts/cron-scheduling.test.ts verifies the Vercel cron entry.',
     externalSchedulerAction: 'disable',
     title: 'Proofound - SLA Enforcement',

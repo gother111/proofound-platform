@@ -68,8 +68,8 @@ function createReadinessSnapshot(
       qualified_intro_ready: [
         {
           id: 'trusted_signal',
-          label: 'Verified trust signal',
-          detail: 'Add a verified trust signal.',
+          label: 'Verified proof check',
+          detail: 'Add one accepted verification tied to anchored proof.',
           met: false,
           actionUrl: '/app/i/verifications',
         },
@@ -93,8 +93,8 @@ function createReadinessSnapshot(
       missingRequirements: [
         {
           id: 'trusted_signal',
-          label: 'Trusted or attested proof-backed signal',
-          detail: 'Add a verified or attested proof-backed skill.',
+          label: 'Accepted non-self verification',
+          detail: 'Add one accepted verification tied to proof.',
           met: false,
           actionUrl: '/app/i/verifications',
         },
@@ -255,7 +255,7 @@ describe('evaluateIndividualMatchability', () => {
           portfolio_ready: [
             {
               id: 'public_proof_signal',
-              label: 'One public proof-backed signal',
+              label: 'One public-safe proof item',
               detail: 'Add one proof link.',
               met: false,
               actionUrl: '/app/i/profile?profileView=full&tab=proof_packs',
@@ -318,6 +318,23 @@ describe('evaluateIndividualMatchability', () => {
         '/app/i/profile',
       ])
     );
+    expect(result.message).toContain('Browsing stays open');
+    expect(result.nextTierTarget?.message).toContain('become visible to matching');
+    expect(result.criteria.matchingProfile.label).toBe('Assignment review preferences');
+    expect(result.criteria.matchingProfile.required).toBe('review preferences');
+    expect(result.criteria.matchingProfile.detail).toContain('Save assignment review preferences');
+    expect(result.topActions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          title: 'Set assignment-review preferences',
+          actionUrl: '/app/i/matching/preferences',
+        }),
+      ])
+    );
+    const visiblePayloadCopy = JSON.stringify(result);
+    expect(visiblePayloadCopy).not.toContain('matching profile');
+    expect(visiblePayloadCopy).not.toContain('match-visible');
+    expect(visiblePayloadCopy).not.toContain('Set browse preferences');
   });
 });
 

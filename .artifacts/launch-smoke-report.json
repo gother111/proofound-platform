@@ -1,12 +1,12 @@
 {
   "schemaVersion": 2,
   "scope": "full",
-  "generatedAt": "2026-07-06T13:52:20.338Z",
+  "generatedAt": "2026-07-06T19:44:43.244Z",
   "targetBaseUrl": "http://localhost:3000",
   "executionMode": "local",
   "freshnessThresholdMinutes": 60,
-  "expiresAt": "2026-07-06T14:52:20.338Z",
-  "overallStatus": "pass",
+  "expiresAt": "2026-07-06T20:44:43.244Z",
+  "overallStatus": "fail",
   "ai": {
     "assistantsEnabled": false,
     "rawPromptLoggingEnabled": false,
@@ -19,24 +19,24 @@
       "label": "Individual corridor",
       "status": "pass",
       "checkIds": ["public_individual_portfolio_visible", "proof_creation_case"],
-      "generatedAt": "2026-07-06T13:52:20.338Z"
+      "generatedAt": "2026-07-06T19:44:43.244Z"
     },
     {
       "id": "organization",
       "label": "Organization corridor",
-      "status": "pass",
+      "status": "fail",
       "checkIds": [
         "public_org_trust_fixture_live",
         "full_org_corridor_review_to_engagement_verification"
       ],
-      "generatedAt": "2026-07-06T13:52:20.338Z"
+      "generatedAt": "2026-07-06T19:44:43.244Z"
     },
     {
       "id": "trust_privacy",
       "label": "Trust / privacy corridor",
       "status": "pass",
       "checkIds": ["hidden_portfolio_protected", "privacy_no_leak_case"],
-      "generatedAt": "2026-07-06T13:52:20.338Z"
+      "generatedAt": "2026-07-06T19:44:43.244Z"
     }
   ],
   "checks": [
@@ -51,9 +51,9 @@
       },
       "status": "pass",
       "expectedState": "public_individual_portfolio_visible",
-      "durationMs": 1504,
-      "outputSnippet": "\u001b[7m\u001b[1m\u001b[36m RUN \u001b[39m\u001b[22m\u001b[27m \u001b[36mv1.6.1\u001b[39m \u001b[90m/Users/pavlosamoshko/New project/proofound\u001b[39m\n\n\u001b[90mstdout\u001b[2m | _log (/Users/pavlosamoshko/New project/proofound/node_modules/dotenv/lib/main.js:142:11)\u001b[22m\u001b[39m\n[dotenv@17.2.3] injecting env (32) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit\n\n \u001b[32m✓\u001b[39m tests/ui/public-portfolio-access-consistency.test.tsx \u001b[2m (\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 83\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m1 passed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m2 passed\u001b[39m\u001b[22m\u001b[90m (2)\u001b[39m\n\u001b[2m   Start at \u001b[22m 15:45:10\n\u001b[2m   Duration \u001b[22m 965ms\u001b[2m (transform 123ms, setup 109ms, collect 199ms, tests 83ms, environment 197ms, prepare 41ms)\u001b[22m\n\n\n[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`",
-      "generatedAt": "2026-07-06T13:45:11.819Z"
+      "durationMs": 1445,
+      "outputSnippet": "\u001b[7m\u001b[1m\u001b[36m RUN \u001b[39m\u001b[22m\u001b[27m \u001b[36mv1.6.1\u001b[39m \u001b[90m/Users/pavlosamoshko/New project/proofound\u001b[39m\n\n\u001b[90mstdout\u001b[2m | _log (/Users/pavlosamoshko/New project/proofound/node_modules/dotenv/lib/main.js:142:11)\u001b[22m\u001b[39m\n[dotenv@17.2.3] injecting env (32) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops\n\n \u001b[32m✓\u001b[39m tests/ui/public-portfolio-access-consistency.test.tsx \u001b[2m (\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 77\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m1 passed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m2 passed\u001b[39m\u001b[22m\u001b[90m (2)\u001b[39m\n\u001b[2m   Start at \u001b[22m 21:39:06\n\u001b[2m   Duration \u001b[22m 870ms\u001b[2m (transform 115ms, setup 96ms, collect 185ms, tests 77ms, environment 185ms, prepare 38ms)\u001b[22m\n\n\n[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`",
+      "generatedAt": "2026-07-06T19:39:07.284Z"
     },
     {
       "id": "proof_creation_case",
@@ -66,9 +66,9 @@
       },
       "status": "pass",
       "expectedState": "proof_creation_case_live",
-      "durationMs": 1545,
-      "outputSnippet": "\u001b[7m\u001b[1m\u001b[36m RUN \u001b[39m\u001b[22m\u001b[27m \u001b[36mv1.6.1\u001b[39m \u001b[90m/Users/pavlosamoshko/New project/proofound\u001b[39m\n\n\u001b[90mstdout\u001b[2m | _log (/Users/pavlosamoshko/New project/proofound/node_modules/dotenv/lib/main.js:142:11)\u001b[22m\u001b[39m\n[dotenv@17.2.3] injecting env (32) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops\n\n \u001b[32m✓\u001b[39m tests/api/expertise-user-skill-proofs-route.test.ts \u001b[2m (\u001b[22m\u001b[2m6 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 16\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m1 passed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m6 passed\u001b[39m\u001b[22m\u001b[90m (6)\u001b[39m\n\u001b[2m   Start at \u001b[22m 15:45:12\n\u001b[2m   Duration \u001b[22m 916ms\u001b[2m (transform 82ms, setup 118ms, collect 74ms, tests 16ms, environment 240ms, prepare 51ms)\u001b[22m\n\n\n[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`",
-      "generatedAt": "2026-07-06T13:45:13.365Z"
+      "durationMs": 1151,
+      "outputSnippet": "\u001b[7m\u001b[1m\u001b[36m RUN \u001b[39m\u001b[22m\u001b[27m \u001b[36mv1.6.1\u001b[39m \u001b[90m/Users/pavlosamoshko/New project/proofound\u001b[39m\n\n\u001b[90mstdout\u001b[2m | _log (/Users/pavlosamoshko/New project/proofound/node_modules/dotenv/lib/main.js:142:11)\u001b[22m\u001b[39m\n[dotenv@17.2.3] injecting env (32) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }\n\n \u001b[32m✓\u001b[39m tests/api/expertise-user-skill-proofs-route.test.ts \u001b[2m (\u001b[22m\u001b[2m10 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 17\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m1 passed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m10 passed\u001b[39m\u001b[22m\u001b[90m (10)\u001b[39m\n\u001b[2m   Start at \u001b[22m 21:39:07\n\u001b[2m   Duration \u001b[22m 704ms\u001b[2m (transform 55ms, setup 93ms, collect 56ms, tests 17ms, environment 185ms, prepare 37ms)\u001b[22m\n\n\n[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`",
+      "generatedAt": "2026-07-06T19:39:08.436Z"
     },
     {
       "id": "public_org_trust_fixture_live",
@@ -87,9 +87,9 @@
       },
       "status": "pass",
       "expectedState": "public_org_trust_fixture_live",
-      "durationMs": 23285,
-      "outputSnippet": "[seed_public_org_trust_fixture]\n> proofound@0.1.0 seed:public-org-trust-fixture\n> tsx scripts/seed-public-org-trust-fixture.ts\n\n[dotenv@17.2.3] injecting env (32) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }\n{\n  \"ok\": true,\n  \"mode\": \"seeded\",\n  \"slug\": \"proofound-labs\",\n  \"path\": \"/portfolio/org/proofound-labs\",\n  \"publicationState\": \"public_noindex\",\n  \"seededAt\": \"2026-07-06T13:45:13.756Z\",\n  \"verificationUrl\": null,\n  \"verifiedAt\": null,\n  \"httpStatus\": null\n}\n\n[seeded_public_org_trust_smoke]\n> proofound@0.1.0 test:e2e:org-trust:smoke\n> node ./scripts/playwright-node24.mjs test e2e/public-org-trust.smoke.spec.ts --project=chromium --reporter=line --workers=1\n\n\n\n\n\u001b[2mRunning \u001b[22m1\u001b[2m test using \u001b[22m1\u001b[2m worker\u001b[22m\n\n\u001b[1A\u001b[2K[1/1] [chromium] › e2e/public-org-trust.smoke.spec.ts:26:3 › Seeded public org trust smoke › seeded org trust page returns 200 and stays MVP-safe\n\u001b[1A\u001b[2K\u001b[32m  1 passed\u001b[39m\u001b[2m (19.3s)\u001b[22m\n\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22mBrowserslist: browsers data (caniuse-lite) is 9 months old. Please run:\n\u001b[2m[WebServer] \u001b[22m  npx update-browserslist-db@latest\n\u001b[2m[WebServer] \u001b[22m  Why you should do it regularly: https://github.com/browserslist/update-db#readme",
-      "generatedAt": "2026-07-06T13:45:36.650Z",
+      "durationMs": 18091,
+      "outputSnippet": "[seed_public_org_trust_fixture]\n> proofound@0.1.0 seed:public-org-trust-fixture\n> tsx scripts/seed-public-org-trust-fixture.ts\n\n[dotenv@17.2.3] injecting env (32) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }\n{\n  \"ok\": true,\n  \"mode\": \"seeded\",\n  \"slug\": \"proofound-labs\",\n  \"path\": \"/portfolio/org/proofound-labs\",\n  \"publicationState\": \"public_noindex\",\n  \"seededAt\": \"2026-07-06T19:39:08.744Z\",\n  \"verificationUrl\": null,\n  \"verifiedAt\": null,\n  \"httpStatus\": null\n}\n\n[seeded_public_org_trust_smoke]\n> proofound@0.1.0 test:e2e:org-trust:smoke\n> node ./scripts/playwright-node24.mjs test e2e/public-org-trust.smoke.spec.ts --project=chromium --reporter=line --workers=1\n\n\n\n\n\u001b[2mRunning \u001b[22m1\u001b[2m test using \u001b[22m1\u001b[2m worker\u001b[22m\n\n\u001b[1A\u001b[2K[1/1] [chromium] › e2e/public-org-trust.smoke.spec.ts:26:3 › Seeded public org trust smoke › seeded org trust page returns 200 and stays MVP-safe\n\u001b[1A\u001b[2K\u001b[32m  1 passed\u001b[39m\u001b[2m (14.7s)\u001b[22m\n\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22mBrowserslist: browsers data (caniuse-lite) is 9 months old. Please run:\n\u001b[2m[WebServer] \u001b[22m  npx update-browserslist-db@latest\n\u001b[2m[WebServer] \u001b[22m  Why you should do it regularly: https://github.com/browserslist/update-db#readme",
+      "generatedAt": "2026-07-06T19:39:26.527Z",
       "evidence": {
         "fixtureSlug": "proofound-labs",
         "fixturePath": "/portfolio/org/proofound-labs"
@@ -112,14 +112,19 @@
           "--workers=1"
         ],
         "env": {
-          "NEXT_PUBLIC_USE_MOCK_SUPABASE": "false"
+          "BASE_URL": "",
+          "NEXT_PUBLIC_USE_MOCK_SUPABASE": "false",
+          "PLAYWRIGHT_PORT": "33101",
+          "PLAYWRIGHT_SERVER_MODE": "prod",
+          "PROOFOUND_SKIP_TRANSACTIONAL_EMAIL_DELIVERY": "1"
         }
       },
-      "status": "pass",
+      "status": "fail",
       "expectedState": "full_org_corridor_review_to_engagement_verification_live",
-      "durationMs": 399501,
-      "outputSnippet": "[strict_org_corridor_smoke]\n[dotenv@17.2.3] injecting env (31) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit\n\n\u001b[2mRunning \u001b[22m1\u001b[2m test using \u001b[22m1\u001b[2m worker\u001b[22m\n\n\u001b[1A\u001b[2K[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops\n\n\u001b[1A\u001b[2K[1/1] [chromium] › e2e/strict/org-corridor.strict.spec.ts:225:3 › Strict Authenticated Org Corridor › reruns the launch-binding authenticated org corridor end to end\n\u001b[1A\u001b[2K\u001b[33m  Slow test file: \u001b[39m[chromium] › e2e/strict/org-corridor.strict.spec.ts\u001b[33m (6.2m)\u001b[39m\n\u001b[33m  Consider running tests from slow files in parallel. See: https://playwright.dev/docs/test-parallel\u001b[39m\n\u001b[32m  1 passed\u001b[39m\u001b[2m (6.6m)\u001b[22m\n\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22mBrowserslist: browsers data (caniuse-lite) is 9 months old. Please run:\n\u001b[2m[WebServer] \u001b[22m  npx update-browserslist-db@latest\n\u001b[2m[WebServer] \u001b[22m  Why you should do it regularly: https://github.com/browserslist/update-db#readme",
-      "generatedAt": "2026-07-06T13:52:16.152Z"
+      "durationMs": 313620,
+      "message": "Full org corridor review to engagement verification case failed",
+      "outputSnippet": "f record.\",\"count\":null},\"trustLabels\":[\"Some scoped verification supports parts of this proof record.\",\"Verification partially complete\",\"Policy protected\"],\"fitBand\":null,\"fitSummary\":{\"headline\":\"A requested skill overlaps directly with candidate skill evidence.\",\"bullets\":[\"A requested skill overlaps directly with candidate skill evidence.\",\"Proof text overlaps with the assignment need.\",\"Custom wording overlaps with the assignment outcome language.\"],\"reasonCodes\":[\"canonical_skill_overlap\",\"proof_text_overlap\",\"custom_wording_overlap\",\"adjacent_skill_overlap\",\"fresh_proof_present\",\"non_self_trust_anchor_present\",\"constraint_match\",\"privacy_safe_for_stage\",\"skills_strong\",\"logistics_fit\"]},\"privacy\":{\"reviewState\":\"visible\",\"reasons\":[]}},\"introGate\":\"intro_hold_not_match_visible\",\"canRequestIntro\":false,\"missingGates\":[\"match_visible_candidate\"],\"reasonDetails\":[{\"code\":\"verification_gate_missing\",\"explanation\":\"A required verification or trust gate is still missing.\",\"strength\":\"blocking\",\"evidenceRefs\":[]}],\"anonymousCandidateLabel\":\"Submission AE15\",\"fitBand\":\"relevant_partial\",\"proofSummaries\":[{\"summary\":\"Anchored proof pack used to verify shortlist and privacy gates.\",\"outcome\":\"Portfolio-ready proof-submission seed for strict org lifecycle verification.\",\"ownership\":\"Ownership statement available after deeper review.\",\"freshnessLabel\":\"Fresh\"}],\"progressiveRevealStage\":\"stage2_contextual_reveal\",\"corridorState\":\"request_intro\",\"fallbackState\":\"fairness_suppressed_ranking\",\"why\":{\"explanationVersion\":\"reason-ledger/v1\",\"reasonCodes\":[\"verification_gate_missing\",\"fairness_ranking_suppressed\"],\"fairnessStatus\":\"unavailable\",\"fallbackState\":\"fairness_suppressed_ranking\",\"rankBand\":null,\"summary\":[\"A required verification or trust gate is still missing.\"]}}\n\n    \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\n    Received: \u001b[31mfalse\u001b[39m\n\n    \u001b[0m \u001b[90m 769 |\u001b[39m       introResponse\u001b[33m.\u001b[39mok()\u001b[33m,\u001b[39m\n     \u001b[90m 770 |\u001b[39m       \u001b[32m`request_intro failed with HTTP ${introResponse.status()}: ${introResponseText}`\u001b[39m\n    \u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 771 |\u001b[39m     )\u001b[33m.\u001b[39mtoBeTruthy()\u001b[33m;\u001b[39m\n     \u001b[90m     |\u001b[39m       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n     \u001b[90m 772 |\u001b[39m     \u001b[36mconst\u001b[39m introPayload \u001b[33m=\u001b[39m \u001b[33mJSON\u001b[39m\u001b[33m.\u001b[39mparse(introResponseText) \u001b[36mas\u001b[39m {\n     \u001b[90m 773 |\u001b[39m       conversationId\u001b[33m?\u001b[39m\u001b[33m:\u001b[39m string\u001b[33m;\u001b[39m\n     \u001b[90m 774 |\u001b[39m       introApproved\u001b[33m?\u001b[39m\u001b[33m:\u001b[39m boolean\u001b[33m;\u001b[39m\u001b[0m\n    \u001b[2m    at /Users/pavlosamoshko/New project/proofound/e2e/strict/org-corridor.strict.spec.ts:771:7\u001b[22m\n\n\u001b[2m    attachment #1: \u001b[1mowner-invite-alert-not-visible-after-persistence\u001b[2m (text/plain) \u001b[2m───────────────────\u001b[2m\u001b[22m\n\u001b[2m    url: http://127.0.0.1:33101/app/o/strict-corridor-org-1783366774834-cd731a/home\u001b[22m\n\u001b[2m    \u001b[22m\n\u001b[2m    Skip to main content\u001b[22m\n\u001b[2m    Overview\u001b[22m\n\u001b[2m    Assignments\u001b[22m\n\u001b[2m    Candidates\u001b[22m\n\u001b[2m    Communications\u001b[22m\n\u001b[2m    Organization Trust Page\u001b[22m\n\u001b[2m    Public Preview\u001b[22m\n\u001b[2m    Proofound\u001b[22m\n\u001b[2m    \u001b[22m\n\u001b[2m    Overview\u001b[22m\n\u001b[2m    \u001b[22m\n\u001b[2m    SC\u001b[22m\n\u001b[2m    Current review workspace\u001b[22m\n\u001b[2m    Strict Corridor Org\u001b[22m\n\u001b[2m    \u001b[22m\n\u001b[2m    A focused launch desk for one clean assign...\u001b[22m\n\u001b[2m    \u001b[2m────────────────────────────────────────────────────────────────────────────────────────────────\u001b[2m\u001b[22m\n\n\u001b[2m    Error Context: test-results/strict-org-corridor.strict-d91f7-ted-org-corridor-end-to-end-chromium/error-context.md\u001b[22m\n\n\n\u001b[1A\u001b[2K\u001b[31m  1 failed\u001b[39m\n\u001b[31m    [chromium] › e2e/strict/org-corridor.strict.spec.ts:231:3 › Strict Authenticated Org Corridor › reruns the launch-binding authenticated org corridor end to end \u001b[39m\n\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m(node:26567) TimeoutNegativeWarning: -87980.8314055634 is a negative number.\n\u001b[2m[WebServer] \u001b[22mTimeout duration was set to 1.\n\u001b[2m[WebServer] \u001b[22m(Use `node --trace-warnings ...` to show where the warning was created)",
+      "generatedAt": "2026-07-06T19:44:40.156Z"
     },
     {
       "id": "hidden_portfolio_protected",
@@ -132,9 +137,9 @@
       },
       "status": "pass",
       "expectedState": "hidden_portfolio_protected",
-      "durationMs": 2350,
-      "outputSnippet": "\u001b[7m\u001b[1m\u001b[36m RUN \u001b[39m\u001b[22m\u001b[27m \u001b[36mv1.6.1\u001b[39m \u001b[90m/Users/pavlosamoshko/New project/proofound\u001b[39m\n\n\u001b[90mstdout\u001b[2m | _log (/Users/pavlosamoshko/New project/proofound/node_modules/dotenv/lib/main.js:142:11)\u001b[22m\u001b[39m\n[dotenv@17.2.3] injecting env (32) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }\n\n \u001b[32m✓\u001b[39m tests/ui/public-portfolio-access-consistency.test.tsx \u001b[2m (\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 87\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m1 passed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m2 passed\u001b[39m\u001b[22m\u001b[90m (2)\u001b[39m\n\u001b[2m   Start at \u001b[22m 15:52:16\n\u001b[2m   Duration \u001b[22m 1.50s\u001b[2m (transform 122ms, setup 223ms, collect 212ms, tests 87ms, environment 401ms, prepare 67ms)\u001b[22m\n\n\n[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`",
-      "generatedAt": "2026-07-06T13:52:18.504Z"
+      "durationMs": 1543,
+      "outputSnippet": "\u001b[7m\u001b[1m\u001b[36m RUN \u001b[39m\u001b[22m\u001b[27m \u001b[36mv1.6.1\u001b[39m \u001b[90m/Users/pavlosamoshko/New project/proofound\u001b[39m\n\n\u001b[90mstdout\u001b[2m | _log (/Users/pavlosamoshko/New project/proofound/node_modules/dotenv/lib/main.js:142:11)\u001b[22m\u001b[39m\n[dotenv@17.2.3] injecting env (32) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }\n\n \u001b[32m✓\u001b[39m tests/ui/public-portfolio-access-consistency.test.tsx \u001b[2m (\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 77\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m1 passed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m2 passed\u001b[39m\u001b[22m\u001b[90m (2)\u001b[39m\n\u001b[2m   Start at \u001b[22m 21:44:40\n\u001b[2m   Duration \u001b[22m 967ms\u001b[2m (transform 120ms, setup 98ms, collect 200ms, tests 77ms, environment 269ms, prepare 46ms)\u001b[22m\n\n\n[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`",
+      "generatedAt": "2026-07-06T19:44:41.699Z"
     },
     {
       "id": "privacy_no_leak_case",
@@ -152,9 +157,9 @@
       },
       "status": "pass",
       "expectedState": "privacy_no_leak_enforced",
-      "durationMs": 1834,
-      "outputSnippet": "\u001b[7m\u001b[1m\u001b[36m RUN \u001b[39m\u001b[22m\u001b[27m \u001b[36mv1.6.1\u001b[39m \u001b[90m/Users/pavlosamoshko/New project/proofound\u001b[39m\n\n\u001b[90mstdout\u001b[2m | _log (/Users/pavlosamoshko/New project/proofound/node_modules/dotenv/lib/main.js:142:11)\u001b[22m\u001b[39m\n[dotenv@17.2.3] injecting env (32) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops\n\n\u001b[90mstdout\u001b[2m | _log (/Users/pavlosamoshko/New project/proofound/node_modules/dotenv/lib/main.js:142:11)\u001b[22m\u001b[39m\n[dotenv@17.2.3] injecting env (32) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }\n\n\u001b[90mstdout\u001b[2m | _log (/Users/pavlosamoshko/New project/proofound/node_modules/dotenv/lib/main.js:142:11)\u001b[22m\u001b[39m\n[dotenv@17.2.3] injecting env (32) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit\n\n\u001b[90mstdout\u001b[2m | _log (/Users/pavlosamoshko/New project/proofound/node_modules/dotenv/lib/main.js:142:11)\u001b[22m\u001b[39m\n[dotenv@17.2.3] injecting env (32) from .env.local -- tip: ⚙️  override existing env vars with { override: true }\n\n \u001b[32m✓\u001b[39m tests/lib/effective-visibility.test.ts \u001b[2m (\u001b[22m\u001b[2m5 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 1\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/lib/profile-fetcher.test.ts \u001b[2m (\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 3\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/api/org-match-review-route.test.ts \u001b[2m (\u001b[22m\u001b[2m18 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 39\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/api/conversation-reveal-route.test.ts \u001b[2m (\u001b[22m\u001b[2m7 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 18\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m4 passed\u001b[39m\u001b[22m\u001b[90m (4)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m32 passed\u001b[39m\u001b[22m\u001b[90m (32)\u001b[39m\n\u001b[2m   Start at \u001b[22m 15:52:18\n\u001b[2m   Duration \u001b[22m 1.29s\u001b[2m (transform 337ms, setup 547ms, collect 1.20s, tests 61ms, environment 980ms, prepare 219ms)\u001b[22m\n\n\n[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`",
-      "generatedAt": "2026-07-06T13:52:20.338Z"
+      "durationMs": 1545,
+      "outputSnippet": "\u001b[7m\u001b[1m\u001b[36m RUN \u001b[39m\u001b[22m\u001b[27m \u001b[36mv1.6.1\u001b[39m \u001b[90m/Users/pavlosamoshko/New project/proofound\u001b[39m\n\n\u001b[90mstdout\u001b[2m | _log (/Users/pavlosamoshko/New project/proofound/node_modules/dotenv/lib/main.js:142:11)\u001b[22m\u001b[39m\n[dotenv@17.2.3] injecting env (32) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }\n\n\u001b[90mstdout\u001b[2m | _log (/Users/pavlosamoshko/New project/proofound/node_modules/dotenv/lib/main.js:142:11)\u001b[22m\u001b[39m\n[dotenv@17.2.3] injecting env (32) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit\n\n\u001b[90mstdout\u001b[2m | _log (/Users/pavlosamoshko/New project/proofound/node_modules/dotenv/lib/main.js:142:11)\u001b[22m\u001b[39m\n[dotenv@17.2.3] injecting env (32) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops\n\n\u001b[90mstdout\u001b[2m | _log (/Users/pavlosamoshko/New project/proofound/node_modules/dotenv/lib/main.js:142:11)\u001b[22m\u001b[39m\n[dotenv@17.2.3] injecting env (32) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }\n\n \u001b[32m✓\u001b[39m tests/lib/effective-visibility.test.ts \u001b[2m (\u001b[22m\u001b[2m5 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 2\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/lib/profile-fetcher.test.ts \u001b[2m (\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 3\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/api/org-match-review-route.test.ts \u001b[2m (\u001b[22m\u001b[2m19 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 31\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/api/conversation-reveal-route.test.ts \u001b[2m (\u001b[22m\u001b[2m7 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 17\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m4 passed\u001b[39m\u001b[22m\u001b[90m (4)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m33 passed\u001b[39m\u001b[22m\u001b[90m (33)\u001b[39m\n\u001b[2m   Start at \u001b[22m 21:44:42\n\u001b[2m   Duration \u001b[22m 971ms\u001b[2m (transform 325ms, setup 432ms, collect 1.06s, tests 53ms, environment 814ms, prepare 176ms)\u001b[22m\n\n\n[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`",
+      "generatedAt": "2026-07-06T19:44:43.244Z"
     }
   ]
 }

@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import {
   HumanObservedAttestationFields,
   buildHumanObservedAttestationPayload,
@@ -31,6 +32,57 @@ interface RespondDialogProps {
   getBreadcrumb: (request: any) => string;
   getRequesterName: (request: any) => string;
   getCompetencyLabel: (level: number) => string;
+}
+
+const VERIFICATION_RESPONSE_RETRY_MESSAGE =
+  'Verification response could not be sent. Your response is still here; please try again.';
+const VERIFICATION_RESPONSE_ERROR_MESSAGES = new Map([
+  [
+    'Unauthorized',
+    'Please sign in again before responding to this verification request. Your response is still here.',
+  ],
+  ['Invalid JSON body', VERIFICATION_RESPONSE_RETRY_MESSAGE],
+  ['Verification request not found', 'This verification request is no longer available.'],
+  [
+    'Not authorized to respond to this verification request',
+    'You are not authorized to respond to this verification request.',
+  ],
+  [
+    'This attestation request is missing its bounded skill scope.',
+    'This attestation request is missing its bounded skill scope.',
+  ],
+  ['Validation failed', 'Review the required attestation details before submitting.'],
+  [
+    'Structured attestations marked accept must use verdict yes or partly.',
+    'Structured attestations marked accept must use verdict yes or partly.',
+  ],
+  [
+    'Structured attestations marked decline must use verdict no.',
+    'Structured attestations marked decline must use verdict no.',
+  ],
+  ['Failed to update verification request', VERIFICATION_RESPONSE_RETRY_MESSAGE],
+  ['Internal server error', VERIFICATION_RESPONSE_RETRY_MESSAGE],
+]);
+
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function verificationResponseErrorMessage(message: string, status: number | 'unknown' = 'unknown') {
+  if (/^This verification request has already been \w+/.test(message)) {
+    return message;
+  }
+
+  const safeMessage = VERIFICATION_RESPONSE_ERROR_MESSAGES.get(message);
+  if (safeMessage) {
+    return safeMessage;
+  }
+
+  dispatchClientDiagnostic('verifications.respond.returned_error', {
+    status,
+    hasReturnedError: true,
+  });
+  return VERIFICATION_RESPONSE_RETRY_MESSAGE;
 }
 
 export function RespondDialog({
@@ -101,12 +153,16 @@ export function RespondDialog({
         onComplete(data.request);
         setResponseMessage('');
       } else {
-        const errorData = await response.json();
-        setError(errorData.error || 'Failed to respond to verification request');
+        const errorData = await response.json().catch(() => null);
+        setError(
+          typeof errorData.error === 'string'
+            ? verificationResponseErrorMessage(errorData.error, getResponseStatus(response))
+            : VERIFICATION_RESPONSE_RETRY_MESSAGE
+        );
       }
     } catch (err) {
-      console.error('Error responding to verification:', err);
-      setError('Failed to respond to verification request. Please try again.');
+      dispatchClientErrorDiagnostic('verifications.respond.submit_failed', err);
+      setError(VERIFICATION_RESPONSE_RETRY_MESSAGE);
     } finally {
       setIsSubmitting(false);
     }
@@ -219,7 +275,10 @@ export function RespondDialog({
         )}
 
         {error && (
-          <div className="flex items-center gap-2 p-3 rounded bg-red-50 border border-red-200">
+          <div
+            role="alert"
+            className="flex items-center gap-2 p-3 rounded bg-red-50 border border-red-200"
+          >
             <AlertCircle className="w-4 h-4 text-red-600" />
             <p className="text-sm text-red-600">{error}</p>
           </div>

@@ -1,6 +1,24 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
+const logErrorMock = vi.hoisted(() => vi.fn());
+
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: logErrorMock,
+  },
+}));
+
+const originalNodeEnv = process.env.NODE_ENV;
+
+function restoreNodeEnv() {
+  if (originalNodeEnv) {
+    vi.stubEnv('NODE_ENV', originalNodeEnv);
+  } else {
+    vi.unstubAllEnvs();
+  }
+}
+
 describe('Rate Limiting', () => {
   beforeEach(() => {
     // Clear any rate limit state between tests
@@ -12,15 +30,24 @@ describe('Rate Limiting', () => {
     delete process.env.KV_REST_API_URL;
     delete process.env.KV_REST_API_TOKEN;
     delete process.env.VERCEL_ENV;
+    delete process.env.APP_ENV;
+    delete process.env.NEXT_PUBLIC_APP_ENV;
+    delete process.env.PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK;
+    restoreNodeEnv();
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllEnvs();
     vi.resetModules();
     vi.doUnmock('@vercel/kv');
     delete process.env.KV_REST_API_URL;
     delete process.env.KV_REST_API_TOKEN;
     delete process.env.VERCEL_ENV;
+    delete process.env.APP_ENV;
+    delete process.env.NEXT_PUBLIC_APP_ENV;
+    delete process.env.PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK;
+    restoreNodeEnv();
   });
 
   describe('Rate limit configuration', () => {
@@ -85,8 +112,19 @@ describe('Rate Limiting', () => {
       expect(getRateLimitProfileForPathname('/api/conversations/abc/reveal', 'POST')).toBe(
         RATE_LIMITS.revealIntro
       );
+      expect(getRateLimitProfileForPathname('/api/csrf-token')).toBe(RATE_LIMITS.csrf);
       expect(getRateLimitProfileForPathname('/api/user/password', 'POST')).toBe(RATE_LIMITS.auth);
       expect(getRateLimitProfileForPathname('/api/health')).toBeNull();
+    });
+
+    it('keeps CSRF token issuance fail-closed but separate from auth brute-force limits', async () => {
+      const { RATE_LIMITS } = await import('@/lib/rate-limit/index');
+
+      expect(RATE_LIMITS.csrf.requiresLimiter).toBe(true);
+      expect(RATE_LIMITS.csrf.failClosedOnProviderError).toBe(true);
+      expect(RATE_LIMITS.csrf.allowLocalFallback).toBe(true);
+      expect(RATE_LIMITS.csrf.identifier).not.toBe(RATE_LIMITS.auth.identifier);
+      expect(RATE_LIMITS.csrf.limit).toBeGreaterThan(RATE_LIMITS.auth.limit);
     });
 
     it('does not include token path values in limiter keys', async () => {
@@ -158,6 +196,58 @@ describe('Rate Limiting', () => {
       expect(result.unavailable).toBeUndefined();
     });
 
+    it('allows local smoke to use fallback limiting when next start sets NODE_ENV=production', async () => {
+      vi.stubEnv('NODE_ENV', 'production');
+      process.env.PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK = '1';
+
+      const { RATE_LIMITS, checkRateLimit, getRateLimitDependencyStatus } = await import(
+        '@/lib/rate-limit/index'
+      );
+
+      expect(getRateLimitDependencyStatus()).toEqual({
+        ok: true,
+        required: false,
+        configured: false,
+        missing: ['KV_REST_API_URL', 'KV_REST_API_TOKEN'],
+      });
+
+      const { allowed, result } = await checkRateLimit(
+        new NextRequest('http://127.0.0.1:33100/api/csrf-token', {
+          method: 'GET',
+          headers: { 'x-forwarded-for': '127.0.0.1' },
+        }),
+        RATE_LIMITS.csrf
+      );
+
+      expect(allowed).toBe(true);
+      expect(result.unavailable).toBeUndefined();
+    });
+
+    it('does not let the local smoke fallback weaken explicit launch environments', async () => {
+      const { getRateLimitDependencyStatus } = await import('@/lib/rate-limit/index');
+
+      expect(
+        getRateLimitDependencyStatus({
+          NODE_ENV: 'production',
+          VERCEL_ENV: 'preview',
+          PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK: '1',
+        })
+      ).toEqual({
+        ok: false,
+        required: true,
+        configured: false,
+        missing: ['KV_REST_API_URL', 'KV_REST_API_TOKEN'],
+      });
+
+      expect(
+        getRateLimitDependencyStatus({
+          NODE_ENV: 'production',
+          APP_ENV: 'staging',
+          PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK: '1',
+        }).required
+      ).toBe(true);
+    });
+
     it('still fails closed for assistive AI routes without KV in launch environments', async () => {
       process.env.VERCEL_ENV = 'preview';
 
@@ -188,6 +278,34 @@ describe('Rate Limiting', () => {
       expect(allowed).toBe(false);
       expect(result.unavailable).toBe(true);
       expect(result.failureReason).toBe('missing_configuration');
+    });
+
+    it('logs provider errors with structured diagnostics and fails closed for strict profiles', async () => {
+      const providerError = new Error('kv unavailable');
+      const incr = vi.fn().mockRejectedValue(providerError);
+
+      vi.doMock('@vercel/kv', () => ({
+        kv: { incr, expire: vi.fn(), ttl: vi.fn() },
+      }));
+      process.env.KV_REST_API_URL = 'https://kv.example.test';
+      process.env.KV_REST_API_TOKEN = 'kv-token';
+
+      const { RATE_LIMITS, checkRateLimit } = await import('@/lib/rate-limit/index');
+      const { allowed, result } = await checkRateLimit(
+        new NextRequest('https://proofound.io/api/user/password', {
+          method: 'POST',
+          headers: { 'x-forwarded-for': '203.0.113.9' },
+        }),
+        RATE_LIMITS.auth
+      );
+
+      expect(allowed).toBe(false);
+      expect(result.unavailable).toBe(true);
+      expect(result.failureReason).toBe('provider_error');
+      expect(logErrorMock).toHaveBeenCalledWith('rate_limit.provider_check_failed', {
+        identifier: 'auth',
+        error: providerError,
+      });
     });
   });
 
@@ -278,6 +396,54 @@ describe('Rate Limiting', () => {
       }
 
       expect(activeEntry?.resetAt).toBeGreaterThan(now);
+    });
+
+    it('bounds assistive AI local fallback keys and prunes expired entries before enforcing the cap', async () => {
+      const now = Date.now();
+      const { RATE_LIMITS, checkRateLimit } = await import('@/lib/rate-limit/index');
+      const globalStore = globalThis as typeof globalThis & {
+        __PROFOUND_RATE_LIMIT_STORE__?: Map<string, { count: number; reset: number }>;
+      };
+      const store = globalStore.__PROFOUND_RATE_LIMIT_STORE__;
+
+      expect(store).toBeDefined();
+
+      for (let index = 0; index < 1024; index += 1) {
+        store?.set(`ratelimit:ai-assistive:198.51.100.${index}`, {
+          count: 1,
+          reset: now + 60_000,
+        });
+      }
+
+      const capped = await checkRateLimit(
+        new NextRequest('http://localhost/api/ai/privacy-preflight/check', {
+          method: 'POST',
+          headers: { 'x-forwarded-for': '203.0.113.250' },
+        }),
+        RATE_LIMITS.aiAssistive
+      );
+
+      expect(capped.allowed).toBe(false);
+      expect(capped.result.remaining).toBe(0);
+      expect(store?.size).toBe(1024);
+
+      store?.set('ratelimit:ai-assistive:198.51.100.0', {
+        count: 1,
+        reset: now - 1,
+      });
+
+      const afterPrune = await checkRateLimit(
+        new NextRequest('http://localhost/api/ai/privacy-preflight/check', {
+          method: 'POST',
+          headers: { 'x-forwarded-for': '203.0.113.251' },
+        }),
+        RATE_LIMITS.aiAssistive
+      );
+
+      expect(afterPrune.allowed).toBe(true);
+      expect(store?.has('ratelimit:ai-assistive:198.51.100.0')).toBe(false);
+      expect(store?.has('ratelimit:ai-assistive:203.0.113.251')).toBe(true);
+      expect(store?.size).toBe(1024);
     });
   });
 

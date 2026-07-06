@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export default function ForbiddenPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-japandi-bg">
+    <main className="flex min-h-screen items-center justify-center bg-japandi-bg">
       <div className="max-w-md w-full mx-auto px-4 text-center">
         <div className="mb-6 flex justify-center">
           <div className="p-4 bg-red-100 rounded-full">
@@ -15,28 +15,28 @@ export default function ForbiddenPage() {
         </div>
 
         <h1 className="text-4xl font-bold text-foreground mb-4">403</h1>
-        <h2 className="text-2xl font-semibold text-foreground mb-4">Access Forbidden</h2>
+        <h2 className="text-2xl font-semibold text-foreground mb-4">
+          You do not have access to this page
+        </h2>
 
         <p className="text-muted-foreground mb-8">
           You don&apos;t have permission to access this page. This area is restricted to authorized
           personnel only.
         </p>
 
-        <div className="space-y-3">
-          <Link href="/app/i/home">
-            <Button className="w-full">Go to Overview</Button>
-          </Link>
-          <Link href="/">
-            <Button variant="outline" className="w-full">
-              Go to Home
-            </Button>
-          </Link>
+        <div className="grid gap-3">
+          <Button asChild className="w-full">
+            <Link href="/app/i/home">Go to Overview</Link>
+          </Button>
+          <Button asChild variant="outline" className="w-full">
+            <Link href="/">Go to Home</Link>
+          </Button>
         </div>
 
         <p className="mt-8 text-sm text-muted-foreground">
           If you believe you should have access to this page, please contact your administrator.
         </p>
       </div>
-    </div>
+    </main>
   );
 }

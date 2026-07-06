@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "featureId": "feat_route_2ce04efe72",
+  "title": "Route /api/organizations/:orgId/candidate-invites",
+  "summary": "Web route implemented by app/api/organizations/[orgId]/candidate-invites/route.ts.",
+  "kind": "route",
+  "source": "next-app-route",
+  "confidence": "high",
+  "entrypoints": [
+    {
+      "path": "app/api/organizations/[orgId]/candidate-invites/route.ts",
+      "symbol": null,
+      "route": "/api/organizations/:orgId/candidate-invites",
+      "command": null
+    }
+  ],
+  "ownedFiles": [
+    {
+      "path": "app/api/organizations/[orgId]/candidate-invites/route.ts",
+      "reason": "entrypoint"
+    }
+  ],
+  "contextFiles": [],
+  "tests": [],
+  "tags": ["next", "web"],
+  "trustBoundaries": ["user-input", "network", "serialization"],
+  "status": "pending",
+  "lock": null,
+  "findingIds": [],
+  "patchAttemptIds": [],
+  "analysisHistory": [],
+  "createdAt": "2026-05-16T16:02:40.128Z",
+  "updatedAt": "2026-05-16T16:02:40.128Z"
+}

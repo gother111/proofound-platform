@@ -5,6 +5,9 @@ import { ShareProfileDialog } from '@/components/profile/ShareProfileDialog';
 
 const toastMock = vi.fn();
 const apiFetchMock = vi.fn();
+const clipboardWriteTextMock = vi.fn();
+const dispatchClientDiagnosticMock = vi.fn();
+const dispatchClientErrorDiagnosticMock = vi.fn();
 
 vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({ toast: toastMock }),
@@ -12,6 +15,11 @@ vi.mock('@/hooks/use-toast', () => ({
 
 vi.mock('@/lib/api/fetch', () => ({
   apiFetch: (...args: any[]) => apiFetchMock(...args),
+}));
+
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientDiagnostic: (...args: any[]) => dispatchClientDiagnosticMock(...args),
+  dispatchClientErrorDiagnostic: (...args: any[]) => dispatchClientErrorDiagnosticMock(...args),
 }));
 
 vi.mock('@/hooks/use-responsive-modal-mode', () => ({
@@ -28,7 +36,11 @@ vi.mock('@/components/ui/dialog', () => ({
 }));
 
 vi.mock('@/components/ui/button', () => ({
-  Button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+  Button: ({ children, size, ...props }: any) => (
+    <button data-size={size} {...props}>
+      {children}
+    </button>
+  ),
 }));
 
 vi.mock('@/components/ui/input', () => ({
@@ -73,37 +85,35 @@ vi.mock('@/components/ui/tabs', () => ({
 describe('ShareProfileDialog', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    clipboardWriteTextMock.mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: {
+        writeText: clipboardWriteTextMock,
+      },
+    });
   });
 
-  it('builds embed code from the generated snippet URL', async () => {
-    apiFetchMock.mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        snippet: {
-          id: 'snippet-1',
-          shareToken: 'token123',
-          url: 'https://proofound.io/p/token123',
-        },
-      }),
-    });
-
+  it('builds embed code from the launch Public Page URL without calling archived snippet APIs', async () => {
     render(
       <ShareProfileDialog
         isOpen={true}
         onClose={() => {}}
         userName="Jane Doe"
         userHeadline="Impact Builder"
+        publicPagePath="/portfolio/jane-doe"
       />
     );
 
     fireEvent.click(screen.getByRole('button', { name: /generate shareable link/i }));
 
-    await waitFor(() => expect(apiFetchMock).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(screen.getByDisplayValue(/\/portfolio\/jane-doe$/)).toBeVisible());
 
     const embedTextarea = document.querySelector('textarea') as HTMLTextAreaElement | null;
     expect(embedTextarea).not.toBeNull();
-    expect(embedTextarea?.value).toContain('https://proofound.io/p/token123/embed');
+    expect(embedTextarea?.value).toContain('/portfolio/jane-doe/embed');
     expect(embedTextarea?.value).not.toContain('proofound.com');
+    expect(apiFetchMock).not.toHaveBeenCalledWith('/api/profile/snippet', expect.anything());
   });
 
   it('allows continuous typing in expiration input without focus loss', () => {
@@ -113,6 +123,7 @@ describe('ShareProfileDialog', () => {
         onClose={() => {}}
         userName="Jane Doe"
         userHeadline="Impact Builder"
+        publicPagePath="/portfolio/jane-doe"
       />
     );
 
@@ -130,5 +141,170 @@ describe('ShareProfileDialog', () => {
     fireEvent.change(expirationInput, { target: { value: '30' } });
     expect(expirationInput).toHaveValue(30);
     expect(document.activeElement).toBe(expirationInput);
+  });
+
+  it('disables sharing when a Public Page path is not ready', () => {
+    render(
+      <ShareProfileDialog
+        isOpen={true}
+        onClose={() => {}}
+        userName="Jane Doe"
+        userHeadline="Impact Builder"
+      />
+    );
+
+    expect(screen.getByRole('button', { name: /public page not ready/i })).toBeDisabled();
+    expect(apiFetchMock).not.toHaveBeenCalledWith('/api/profile/snippet', expect.anything());
+  });
+
+  it('keeps public-page sharing proof-safe without branded social copy', async () => {
+    render(
+      <ShareProfileDialog
+        isOpen={true}
+        onClose={() => {}}
+        userName="Jane Doe"
+        userHeadline="Proof operations lead"
+        publicPagePath="/portfolio/jane-doe"
+      />
+    );
+
+    expect(screen.getAllByText('Share Your Public Page').length).toBeGreaterThan(0);
+    expect(document.body.textContent ?? '').not.toMatch(/professional profile/i);
+
+    fireEvent.click(screen.getByRole('button', { name: /generate shareable link/i }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Outreach' })).toBeVisible());
+
+    expect(screen.getByRole('button', { name: 'Outreach' })).toBeInTheDocument();
+    expect(screen.getByText('Proof-safe outreach copy')).toBeInTheDocument();
+    expect(
+      screen.getByDisplayValue(
+        "Review Jane Doe's proof-backed Public Page on Proofound - Proof operations lead"
+      )
+    ).toBeInTheDocument();
+    expect(document.body.textContent ?? '').not.toMatch(/LinkedIn|Twitter|social/i);
+    expect(apiFetchMock).not.toHaveBeenCalledWith('/api/profile/snippet', expect.anything());
+  });
+
+  it('keeps failed share-link generation retryable without raw URL text', async () => {
+    render(
+      <ShareProfileDialog
+        isOpen={true}
+        onClose={() => {}}
+        userName="Jane Doe"
+        userHeadline="Proof operations lead"
+        publicPagePath="http://["
+      />
+    );
+
+    fireEvent.change(screen.getByPlaceholderText(/Days until link expires/i), {
+      target: { value: '30' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /generate shareable link/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(
+      'Public Page link could not be created. Your sharing options are still here; please try again.'
+    );
+    expect(alert).not.toHaveTextContent('Invalid URL');
+    expect(screen.getByPlaceholderText(/Days until link expires/i)).toHaveValue(30);
+    expect(screen.getByRole('button', { name: /generate shareable link/i })).toBeEnabled();
+    expect(screen.queryByDisplayValue(/http:\/\/\[/)).not.toBeInTheDocument();
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith('profile.snippet.generate_failed', {
+      errorName: 'TypeError',
+      hasError: true,
+    });
+    expect(JSON.stringify(dispatchClientDiagnosticMock.mock.calls)).not.toContain('Invalid URL');
+    expect(toastMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Share link not created',
+        description:
+          'Public Page link could not be created. Your sharing options are still here; please try again.',
+        variant: 'destructive',
+      })
+    );
+    expect(apiFetchMock).not.toHaveBeenCalledWith('/api/profile/snippet', expect.anything());
+  });
+
+  it('copies the shareable URL with visible confirmation', async () => {
+    render(
+      <ShareProfileDialog
+        isOpen={true}
+        onClose={() => {}}
+        userName="Jane Doe"
+        userHeadline="Proof operations lead"
+        publicPagePath="/portfolio/jane-doe"
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /generate shareable link/i }));
+    await waitFor(() => expect(screen.getByDisplayValue(/\/portfolio\/jane-doe$/)).toBeVisible());
+
+    fireEvent.click(screen.getByRole('button', { name: 'Copy shareable URL' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('status')).toHaveTextContent('Shareable URL copied to clipboard.');
+    });
+    expect(clipboardWriteTextMock).toHaveBeenCalledWith(
+      expect.stringMatching(/\/portfolio\/jane-doe$/)
+    );
+  });
+
+  it('keeps generated manual-copy fields touch-safe', async () => {
+    render(
+      <ShareProfileDialog
+        isOpen={true}
+        onClose={() => {}}
+        userName="Jane Doe"
+        userHeadline="Proof operations lead"
+        publicPagePath="/portfolio/jane-doe"
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /generate shareable link/i }));
+
+    const shareableUrl = await screen.findByDisplayValue(/\/portfolio\/jane-doe$/);
+    expect(shareableUrl).toHaveClass('min-h-[44px]');
+    expect(
+      screen.getByDisplayValue(
+        "Review Jane Doe's proof-backed Public Page on Proofound - Proof operations lead"
+      )
+    ).toHaveClass('min-h-[44px]');
+    expect(document.querySelector('textarea')).toHaveClass('min-h-[44px]');
+    expect(screen.getByRole('button', { name: /copy embed code/i })).toHaveAttribute(
+      'data-size',
+      'touch'
+    );
+  });
+
+  it('keeps failed copy actions visible and retryable without hiding the share URL', async () => {
+    clipboardWriteTextMock.mockRejectedValueOnce(new Error('Clipboard permission denied'));
+
+    render(
+      <ShareProfileDialog
+        isOpen={true}
+        onClose={() => {}}
+        userName="Jane Doe"
+        userHeadline="Proof operations lead"
+        publicPagePath="/portfolio/jane-doe"
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /generate shareable link/i }));
+    await waitFor(() => expect(screen.getByDisplayValue(/\/portfolio\/jane-doe$/)).toBeVisible());
+
+    fireEvent.click(screen.getByRole('button', { name: 'Copy shareable URL' }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(
+      'Shareable URL could not be copied. Select the visible text or try again.'
+    );
+    expect(screen.getByDisplayValue(/\/portfolio\/jane-doe$/)).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Copy shareable URL' })).toBeEnabled();
+    expect(toastMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Copy did not work',
+        variant: 'destructive',
+      })
+    );
   });
 });

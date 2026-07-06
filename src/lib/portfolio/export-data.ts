@@ -178,7 +178,7 @@ function buildExportProofPack(
     verificationStatus: aggregate.verificationStatus,
     verificationSummary: contract.verificationSummary.summary,
     freshnessState: aggregate.freshnessState,
-    proofQualityScore: contract.proofQualityScore,
+    ...(scope === 'owner_full' ? { proofQualityScore: contract.proofQualityScore } : {}),
     schemaVersion: contract.schemaVersion,
     artifactCount: scope === 'public_safe' ? publicItems.length : aggregate.ownerFull.items.length,
     contextLabel: resolveProofPackContextLabel(aggregate.pack),

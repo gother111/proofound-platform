@@ -12,8 +12,6 @@
  */
 
 import type { Step } from 'react-joyride';
-import { UI_VOCABULARY } from '@/lib/copy/vocabulary';
-
 /**
  * Tour steps for individual users
  *
@@ -32,7 +30,7 @@ export const individualTourSteps: Step[] = [
     target: 'body',
     content: (
       <div className="space-y-3">
-        <h2 className="text-lg font-semibold text-foreground">Welcome to Proofound! 👋</h2>
+        <h2 className="text-lg font-semibold text-foreground">Welcome to Proofound</h2>
         <p className="text-sm text-muted-foreground">
           Your day-1 goal is to create one artifact-backed proof record. This quick tour takes about
           2 minutes.
@@ -49,7 +47,7 @@ export const individualTourSteps: Step[] = [
     target: '[data-tour="left-nav"]',
     content: (
       <div className="space-y-2">
-        <h3 className="text-base font-semibold text-foreground">Your Navigation</h3>
+        <h3 className="text-base font-semibold text-foreground">Your navigation</h3>
         <p className="text-sm text-muted-foreground">
           This sidebar is your home base. It helps you move between the narrow launch sections of
           Proofound.
@@ -60,7 +58,7 @@ export const individualTourSteps: Step[] = [
     disableBeacon: true,
   },
   {
-    target: '[data-tour="dashboard"]',
+    target: '[data-tour="home-link"]',
     content: (
       <div className="space-y-2">
         <h3 className="text-base font-semibold text-foreground">Your Overview</h3>
@@ -79,7 +77,7 @@ export const individualTourSteps: Step[] = [
         <h3 className="text-base font-semibold text-foreground">Your Profile</h3>
         <p className="text-sm text-muted-foreground">
           This is where your proof records, real contexts, and visibility choices live. Start with
-          one proof-backed signal before broad profile polish.
+          one proof-backed signal before extra profile edits.
         </p>
         <p className="text-xs text-muted-foreground pt-2 border-t border-proofound-stone">
           <strong>Tip:</strong> Start with one context-backed proof record.
@@ -96,7 +94,7 @@ export const individualTourSteps: Step[] = [
         <h3 className="text-base font-semibold text-foreground">Portfolio Visibility</h3>
         <p className="text-sm text-muted-foreground">
           Profile owns proof records and the visibility controls for your clean, proof-based link.
-          Matching remains secondary until proof and privacy are ready.
+          Assignment review comes after proof and privacy are ready.
         </p>
       </div>
     ),
@@ -107,7 +105,7 @@ export const individualTourSteps: Step[] = [
     target: '[data-tour="matching-link"]',
     content: (
       <div className="space-y-2">
-        <h3 className="text-base font-semibold text-foreground">Matching Profile</h3>
+        <h3 className="text-base font-semibold text-foreground">Assignment review preferences</h3>
         <p className="text-sm text-muted-foreground">
           Set your preferences for work: availability, compensation, location, and more. This helps
           us review assignments that fit your life.
@@ -126,8 +124,8 @@ export const individualTourSteps: Step[] = [
       <div className="space-y-2">
         <h3 className="text-base font-semibold text-foreground">Settings</h3>
         <p className="text-sm text-muted-foreground">
-          Control your privacy, notifications, and account settings. You can also replay this tour
-          anytime from here.
+          Control your privacy, account access, and launch preferences. You can also replay this
+          tour anytime from here.
         </p>
       </div>
     ),
@@ -138,19 +136,19 @@ export const individualTourSteps: Step[] = [
     target: 'body',
     content: (
       <div className="space-y-3">
-        <h2 className="text-lg font-semibold text-foreground">You're all set! 🎉</h2>
+        <h2 className="text-lg font-semibold text-foreground">You're all set</h2>
         <p className="text-sm text-muted-foreground">
           Start with your <strong>proof records</strong> in Profile, then publish only the
-          public-safe signals you choose. Matching comes after proof and privacy are ready.
+          public-safe proof items you choose. Assignment review comes after proof and privacy are ready.
         </p>
         <div className="pt-3 border-t border-proofound-stone">
           <p className="text-xs text-muted-foreground">
             <strong>Next steps:</strong>
           </p>
           <ul className="text-xs text-muted-foreground list-disc list-inside space-y-1 mt-1">
-            <li>Publish one public-safe proof signal</li>
-            <li>Add one proof-backed signal you want to show publicly</li>
-            <li>Add one proof-linked skill and one matching preference</li>
+            <li>Publish one public-safe proof item</li>
+            <li>Add one proof item you want to show publicly</li>
+            <li>Add one proof-linked skill and one assignment-review preference</li>
             <li>Complete stronger proof and constraints for qualified introductions</li>
           </ul>
         </div>
@@ -169,7 +167,7 @@ export const organizationTourSteps: Step[] = [
     target: 'body',
     content: (
       <div className="space-y-3">
-        <h2 className="text-lg font-semibold text-foreground">Welcome to Proofound! 👋</h2>
+        <h2 className="text-lg font-semibold text-foreground">Welcome to Proofound</h2>
         <p className="text-sm text-muted-foreground">
           Your first win is to publish a clean organization portfolio link that your team can share
           today. This tour takes about 2 minutes.
@@ -185,8 +183,8 @@ export const organizationTourSteps: Step[] = [
       <div className="space-y-2">
         <h3 className="text-base font-semibold text-foreground">Organization Navigation</h3>
         <p className="text-sm text-muted-foreground">
-          Your sidebar helps you manage assignments, review candidates, and track the narrow launch
-          hiring flow.
+          Your sidebar helps you manage assignments, review proof submissions, and track the narrow
+          launch workflow.
         </p>
       </div>
     ),
@@ -199,8 +197,8 @@ export const organizationTourSteps: Step[] = [
       <div className="space-y-2">
         <h3 className="text-base font-semibold text-foreground">Public Portfolio</h3>
         <p className="text-sm text-muted-foreground">
-          Publish your organization proof portfolio and share it externally right away. Matching and
-          hiring workflows stay available after this first step.
+          Publish your organization proof portfolio and share it externally right away. Assignment
+          review and staged introductions stay inside the proof-first workflow.
         </p>
       </div>
     ),
@@ -208,14 +206,13 @@ export const organizationTourSteps: Step[] = [
     disableBeacon: true,
   },
   {
-    target: '[data-tour="assignments"]',
+    target: '[data-tour="assignments-link"]',
     content: (
       <div className="space-y-2">
         <h3 className="text-base font-semibold text-foreground">Assignments</h3>
         <p className="text-sm text-muted-foreground">
-          Create and manage role assignments. Define requirements, and our matching system will find
-          qualified candidates who align with your organization's mission and{' '}
-          {UI_VOCABULARY.pacLabel.toLowerCase()}.
+          Create and manage assignments with outcomes, practical constraints, proof needs, and a
+          clear review path for staged introductions.
         </p>
       </div>
     ),
@@ -223,12 +220,13 @@ export const organizationTourSteps: Step[] = [
     disableBeacon: true,
   },
   {
-    target: '[data-tour="candidates"]',
+    target: '[data-tour="communications-link"]',
     content: (
       <div className="space-y-2">
-        <h3 className="text-base font-semibold text-foreground">Candidates</h3>
+        <h3 className="text-base font-semibold text-foreground">Communications</h3>
         <p className="text-sm text-muted-foreground">
-          Review matched candidates, see their qualifications, and track the hiring process.
+          Review reason-coded proof context, request introductions when appropriate, and keep each
+          workflow stage privacy-aware.
         </p>
       </div>
     ),
@@ -239,10 +237,10 @@ export const organizationTourSteps: Step[] = [
     target: '[data-tour="org-profile"]',
     content: (
       <div className="space-y-2">
-        <h3 className="text-base font-semibold text-foreground">Organization Profile</h3>
+        <h3 className="text-base font-semibold text-foreground">Organization Trust Page</h3>
         <p className="text-sm text-muted-foreground">
-          Share your mission, values, and causes. This helps attract candidates who are aligned with
-          your organization's purpose.
+          Share the narrow trust basics participants and reviewers need before one assignment path:
+          mission, why the work matters, operating context, and domain evidence.
         </p>
       </div>
     ),
@@ -253,10 +251,10 @@ export const organizationTourSteps: Step[] = [
     target: 'body',
     content: (
       <div className="space-y-3">
-        <h2 className="text-lg font-semibold text-foreground">Ready to find great talent! 🎉</h2>
+        <h2 className="text-lg font-semibold text-foreground">Ready to start proof review</h2>
         <p className="text-sm text-muted-foreground">
           Start by sharing your Public Page link, then create your first <strong>Assignment</strong>{' '}
-          to define what you're looking for.
+          with the proof, context, and constraints reviewers need.
         </p>
       </div>
     ),

@@ -1,11 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import type { Experience } from '@/types/profile';
 
 import { Card } from '@/components/ui/card';
 import { TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { ProfileContextDeleteDialog } from './ProfileContextDeleteDialog';
 import { Briefcase, CheckCircle2, FolderOpen, Pencil, Plus, Target, X } from 'lucide-react';
 import {
   contextOutcomeClaimLabel,
@@ -93,6 +95,14 @@ export function JourneySection({
   onEditExperience,
   onDeleteExperience,
 }: JourneyTabProps) {
+  const [experienceToDelete, setExperienceToDelete] = useState<Experience | null>(null);
+
+  const handleConfirmDelete = () => {
+    if (!experienceToDelete) return;
+    onDeleteExperience(experienceToDelete.id);
+    setExperienceToDelete(null);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between mb-4">
@@ -174,7 +184,7 @@ export function JourneySection({
             className="p-6 border-2 hover:border-[#C67B5C]/30 hover:shadow-md transition-all duration-300 group relative overflow-hidden"
           >
             <div className="absolute top-0 left-0 w-1 h-full bg-[#C67B5C] opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="absolute right-4 top-4 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+            <div className="absolute right-4 top-4 flex gap-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
               <Button
                 variant="ghost"
                 size="icon"
@@ -186,11 +196,7 @@ export function JourneySection({
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => {
-                  if (confirm('Are you sure you want to delete this experience?')) {
-                    onDeleteExperience(exp.id);
-                  }
-                }}
+                onClick={() => setExperienceToDelete(exp)}
                 aria-label={`Delete ${exp.title}`}
               >
                 <X className="w-4 h-4" />
@@ -231,6 +237,16 @@ export function JourneySection({
           </Card>
         ))
       )}
+
+      <ProfileContextDeleteDialog
+        contextKind="work context"
+        itemLabel={experienceToDelete?.title ?? 'this work context'}
+        open={Boolean(experienceToDelete)}
+        onConfirm={handleConfirmDelete}
+        onOpenChange={(open) => {
+          if (!open) setExperienceToDelete(null);
+        }}
+      />
     </div>
   );
 }

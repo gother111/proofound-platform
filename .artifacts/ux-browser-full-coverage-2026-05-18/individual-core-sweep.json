@@ -1,0 +1,1356 @@
+[
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Profile Communications Matching Settings Proofound Overview U Proof-first home Add your first proof record Welcome back, there. Start with one work sample, credential, or case study that can be trusted. Start proof record Your Proof Wallet 3 checks Evidence, trust, and sharing state Proof Packs No proof yet. Start with one private record. Pending Trust anchors No trust anchor yet. You can add this after the first proof. Needed Public Page visibility Private by default until you choose to share Locked Add new record Readiness Checklist 3 to resolve First proof artifact Needed Start with one useful artifact. It sta",
+    "clientHeight": 900,
+    "clientWidth": 1440,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Overview"
+      },
+      {
+        "size": "32px",
+        "tag": "h1",
+        "text": "Add your first proof record"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Your Proof Wallet"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Readiness Checklist"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Proof Readiness"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Trust Controls"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "i-home",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 900,
+    "scrollWidth": 1440,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/i/home",
+    "viewportName": "desktop1440"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Profile Communications Matching Settings Proofound Profile U 1/5 Public Page readiness Complete one clear proof path before publishing. NEXT Complete your safe shell Safe shell basics One real context is anchored One real proof is added and structured One non-self verification is accepted Public Page publication Start with proof, not profile polish Build only the parts that make the first proof credible: safe shell, one real context, one structured Proof Pack, then decide what trust signal comes next. Add your first proof Open full profile Create a safe shell Next action Keep the shell light: display name, handle",
+    "clientHeight": 900,
+    "clientWidth": 1440,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Profile"
+      },
+      {
+        "size": "18px",
+        "tag": "h2",
+        "text": "Public Page readiness"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Start with proof, not profile polish"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "i-profile",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 900,
+    "scrollWidth": 1440,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/i/profile",
+    "viewportName": "desktop1440"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Profile Communications Matching Settings Proofound Profile U Loading profile Preparing your proof, visibility, and readiness details.",
+    "clientHeight": 900,
+    "clientWidth": 1440,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Profile"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "i-profile-full",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 900,
+    "scrollWidth": 1440,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/i/profile?profileView=full",
+    "viewportName": "desktop1440"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Profile Communications Matching Settings Proofound Profile U Keep building proof readiness Keep the first milestone anchored in real work. Add proof context, visibility choices, and optional trust signals before broad profile polish. First Proof Pack created Public Page ready Matching preferences saved Non-self verification added Start with one context-backed Proof Pack Public Page is locked until the safe-shell basics are finished. Mock Individual Hidden Share Add location Joined February 2026 Add a tagline A brief statement that captures who you are and what you care about 1/5 Public Page readiness Complete one",
+    "clientHeight": 900,
+    "clientWidth": 1440,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Profile"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Keep building proof readiness"
+      },
+      {
+        "size": "14px",
+        "tag": "h2",
+        "text": "Mock Individual"
+      },
+      {
+        "size": "32px",
+        "tag": "h1",
+        "text": "Mock Individual"
+      },
+      {
+        "size": "18px",
+        "tag": "h2",
+        "text": "Public Page readiness"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Proof readiness"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Proof Packs"
+      },
+      {
+        "size": "18px",
+        "tag": "h2",
+        "text": "Add your first proof"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "i-portfolio",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 900,
+    "scrollWidth": 1440,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/i/profile?profileView=full&tab=proof_packs&portfolioLocked=1&lockReason=safe_shell&proof=first",
+    "viewportName": "desktop1440"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Profile Communications Matching Settings Proofound Settings U Settings Manage your account preferences, security, and privacy Account Interview Scheduling Privacy & Data Email & Authentication Manage your email and password Email admin@test-org.com Change Email Identity Verification Add identity and workplace trust signals with precise badge meanings PROOF VERIFICATIONS / ATTESTATIONS Attach trust to proof, not to profile hype Proof-backed trust belongs on specific Proof Packs and claim snapshots. Use the verification requests area to see which proof, claim, verifier, and outcome each request is tied to. Open pro",
+    "clientHeight": 900,
+    "clientWidth": 1440,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Settings"
+      },
+      {
+        "size": "40px",
+        "tag": "h1",
+        "text": "Settings"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Email & Authentication"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Identity Verification"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Attach trust to proof, not to profile hype"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Optional for portfolio-ready, harder for intros"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Keep account-side checks narrow and honest"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Password"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Language"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Help & Support"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "i-settings",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 900,
+    "scrollWidth": 1440,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/i/settings",
+    "viewportName": "desktop1440"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Profile Communications Matching Settings Proofound Settings U Privacy Settings Control who can see your profile information Your Privacy Controls Proofound is built with privacy at its core. Here's what data we collect and how you control it. Privacy settings Download my data Import data View account history What others can see Visibility summary across Public, Connections, After match, and Private sections Public 0 sections Connections 0 sections After match 0 sections Private 0 sections Preview visibility Quick privacy fixes Three fast actions to review and correct visibility before sharing your profile. Review",
+    "clientHeight": 900,
+    "clientWidth": 1440,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Settings"
+      },
+      {
+        "size": "32px",
+        "tag": "h1",
+        "text": "Privacy Settings"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "Your Privacy Controls"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "What others can see"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Quick privacy fixes"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Profile data"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Skills and expertise"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Projects & work history"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Match history"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Analytics"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "i-privacy",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 900,
+    "scrollWidth": 1440,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/i/settings/privacy",
+    "viewportName": "desktop1440"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Profile Communications Matching Settings Proofound Overview U Proof-first home Add your first proof record Welcome back, there. Start with one work sample, credential, or case study that can be trusted. Start proof record Your Proof Wallet 3 checks Evidence, trust, and sharing state Proof Packs No proof yet. Start with one private record. Pending Trust anchors No trust anchor yet. You can add this after the first proof. Needed Public Page visibility Private by default until you choose to share Locked Add new record Readiness Checklist 3 to resolve First proof artifact Needed Start with one useful artifact. It sta",
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Overview"
+      },
+      {
+        "size": "32px",
+        "tag": "h1",
+        "text": "Add your first proof record"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Your Proof Wallet"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Readiness Checklist"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Proof Readiness"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Trust Controls"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "i-home",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/i/home",
+    "viewportName": "desktop1280"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Profile Communications Matching Settings Proofound Profile U 1/5 Public Page readiness Complete one clear proof path before publishing. NEXT Complete your safe shell Safe shell basics One real context is anchored One real proof is added and structured One non-self verification is accepted Public Page publication Start with proof, not profile polish Build only the parts that make the first proof credible: safe shell, one real context, one structured Proof Pack, then decide what trust signal comes next. Add your first proof Open full profile Create a safe shell Next action Keep the shell light: display name, handle",
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Profile"
+      },
+      {
+        "size": "18px",
+        "tag": "h2",
+        "text": "Public Page readiness"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Start with proof, not profile polish"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "i-profile",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/i/profile",
+    "viewportName": "desktop1280"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Profile Communications Matching Settings Proofound Profile U Keep building proof readiness Keep the first milestone anchored in real work. Add proof context, visibility choices, and optional trust signals before broad profile polish. First Proof Pack created Public Page ready Matching preferences saved Non-self verification added Start with one context-backed Proof Pack Mock Individual Hidden Share Add location Joined February 2026 Add a tagline A brief statement that captures who you are and what you care about 1/5 Public Page readiness Complete one clear proof path before publishing. NEXT Complete your safe she",
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Profile"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Keep building proof readiness"
+      },
+      {
+        "size": "14px",
+        "tag": "h2",
+        "text": "Mock Individual"
+      },
+      {
+        "size": "32px",
+        "tag": "h1",
+        "text": "Mock Individual"
+      },
+      {
+        "size": "18px",
+        "tag": "h2",
+        "text": "Public Page readiness"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Proof readiness"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Context"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Work"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Volunteering"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Education / learning"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "i-profile-full",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/i/profile?profileView=full",
+    "viewportName": "desktop1280"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Profile Communications Matching Settings Proofound Profile U Keep building proof readiness Keep the first milestone anchored in real work. Add proof context, visibility choices, and optional trust signals before broad profile polish. First Proof Pack created Public Page ready Matching preferences saved Non-self verification added Start with one context-backed Proof Pack Public Page is locked until the safe-shell basics are finished. Mock Individual Hidden Share Add location Joined February 2026 Add a tagline A brief statement that captures who you are and what you care about 1/5 Public Page readiness Complete one",
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Profile"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Keep building proof readiness"
+      },
+      {
+        "size": "14px",
+        "tag": "h2",
+        "text": "Mock Individual"
+      },
+      {
+        "size": "32px",
+        "tag": "h1",
+        "text": "Mock Individual"
+      },
+      {
+        "size": "18px",
+        "tag": "h2",
+        "text": "Public Page readiness"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Proof readiness"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Proof Packs"
+      },
+      {
+        "size": "18px",
+        "tag": "h2",
+        "text": "Add your first proof"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "i-portfolio",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/i/profile?profileView=full&tab=proof_packs&portfolioLocked=1&lockReason=safe_shell&proof=first",
+    "viewportName": "desktop1280"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Profile Communications Matching Settings Proofound Settings U Settings Manage your account preferences, security, and privacy Account Interview Scheduling Privacy & Data Email & Authentication Manage your email and password Email admin@test-org.com Change Email Identity Verification Add identity and workplace trust signals with precise badge meanings PROOF VERIFICATIONS / ATTESTATIONS Attach trust to proof, not to profile hype Proof-backed trust belongs on specific Proof Packs and claim snapshots. Use the verification requests area to see which proof, claim, verifier, and outcome each request is tied to. Open pro",
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Settings"
+      },
+      {
+        "size": "40px",
+        "tag": "h1",
+        "text": "Settings"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Email & Authentication"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Identity Verification"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Attach trust to proof, not to profile hype"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Optional for portfolio-ready, harder for intros"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Keep account-side checks narrow and honest"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Password"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Language"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Help & Support"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "i-settings",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/i/settings",
+    "viewportName": "desktop1280"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Profile Communications Matching Settings Proofound Settings U Privacy Settings Control who can see your profile information Your Privacy Controls Proofound is built with privacy at its core. Here's what data we collect and how you control it. Privacy settings Download my data Import data View account history What others can see Visibility summary across Public, Connections, After match, and Private sections Public 0 sections Connections 0 sections After match 0 sections Private 0 sections Preview visibility Quick privacy fixes Three fast actions to review and correct visibility before sharing your profile. Review",
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Settings"
+      },
+      {
+        "size": "32px",
+        "tag": "h1",
+        "text": "Privacy Settings"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "Your Privacy Controls"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "What others can see"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Quick privacy fixes"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Profile data"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Skills and expertise"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Projects & work history"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Match history"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Analytics"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "i-privacy",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/i/settings/privacy",
+    "viewportName": "desktop1280"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Profile Inbox Matching Settings U Proof-first home Add your first proof record Welcome back, there. Start with one work sample, credential, or case study that can be trusted. Start proof record Your Proof Wallet 3 checks Evidence, trust, and sharing state Proof Packs No proof yet. Start with one private record. Pending Trust anchors No trust anchor yet. You can add this after the first proof. Needed Public Page visibility Private by default until you choose to share Locked Add new record Readiness Checklist 3 to resolve First proof artifact Needed Start with one useful artifact. It stays private while you shape i",
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Overview"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Add your first proof record"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Your Proof Wallet"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Readiness Checklist"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Proof Readiness"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Trust Controls"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "i-home",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/i/home",
+    "viewportName": "mobile390"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Profile Inbox Matching Settings U 1/5 Public Page readiness Complete one clear proof path before publishing. NEXT Complete your safe shell Safe shell basics One real context is anchored One real proof is added and structured One non-self verification is accepted Public Page publication Start with proof, not profile polish Build only the parts that make the first proof credible: safe shell, one real context, one structured Proof Pack, then decide what trust signal comes next. Add your first proof Open full profile Create a safe shell Next action Keep the shell light: display name, handle, headline, broad location ",
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Profile"
+      },
+      {
+        "size": "18px",
+        "tag": "h2",
+        "text": "Public Page readiness"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Start with proof, not profile polish"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "i-profile",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/i/profile",
+    "viewportName": "mobile390"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Profile Inbox Matching Settings U Keep building proof readiness Keep the first milestone anchored in real work. Add proof context, visibility choices, and optional trust signals before broad profile polish. First Proof Pack created Public Page ready Matching preferences saved Non-self verification added Start with one context-backed Proof Pack MO Mock Individual Hidden Share Add location Joined February 2026 Add a tagline A brief statement that captures who you are and what you care about 1/5 Public Page readiness Complete one clear proof path before publishing. NEXT Complete your safe shell Safe shell basics One",
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Profile"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Keep building proof readiness"
+      },
+      {
+        "size": "14px",
+        "tag": "h2",
+        "text": "Mock Individual"
+      },
+      {
+        "size": "32px",
+        "tag": "h1",
+        "text": "Mock Individual"
+      },
+      {
+        "size": "18px",
+        "tag": "h2",
+        "text": "Public Page readiness"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Proof readiness"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Context"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Work"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Volunteering"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Education / learning"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "i-profile-full",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/i/profile?profileView=full",
+    "viewportName": "mobile390"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Profile Inbox Matching Settings U Keep building proof readiness Keep the first milestone anchored in real work. Add proof context, visibility choices, and optional trust signals before broad profile polish. First Proof Pack created Public Page ready Matching preferences saved Non-self verification added Start with one context-backed Proof Pack Public Page is locked until the safe-shell basics are finished. MO Mock Individual Hidden Share Add location Joined February 2026 Add a tagline A brief statement that captures who you are and what you care about 1/5 Public Page readiness Complete one clear proof path before",
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Profile"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Keep building proof readiness"
+      },
+      {
+        "size": "14px",
+        "tag": "h2",
+        "text": "Mock Individual"
+      },
+      {
+        "size": "32px",
+        "tag": "h1",
+        "text": "Mock Individual"
+      },
+      {
+        "size": "18px",
+        "tag": "h2",
+        "text": "Public Page readiness"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Proof readiness"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Proof Packs"
+      },
+      {
+        "size": "18px",
+        "tag": "h2",
+        "text": "Add your first proof"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "i-portfolio",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/i/profile?profileView=full&tab=proof_packs&portfolioLocked=1&lockReason=safe_shell&proof=first",
+    "viewportName": "mobile390"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Profile Inbox Matching Settings U Settings Manage your account preferences, security, and privacy Account Interviews Privacy Email & Authentication Manage your email and password Email admin@test-org.com Change Email Identity Verification Add identity and workplace trust signals with precise badge meanings PROOF VERIFICATIONS / ATTESTATIONS Attach trust to proof, not to profile hype Proof-backed trust belongs on specific Proof Packs and claim snapshots. Use the verification requests area to see which proof, claim, verifier, and outcome each request is tied to. Open proof verification requests Ask for verification",
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Settings"
+      },
+      {
+        "size": "40px",
+        "tag": "h1",
+        "text": "Settings"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Email & Authentication"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Identity Verification"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Attach trust to proof, not to profile hype"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Optional for portfolio-ready, harder for intros"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Keep account-side checks narrow and honest"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Password"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Language"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Help & Support"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "i-settings",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/i/settings",
+    "viewportName": "mobile390"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Profile Inbox Matching Settings U Privacy Settings Control who can see your profile information Your Privacy Controls Proofound is built with privacy at its core. Here's what data we collect and how you control it. Privacy settings Download my data Import data View account history What others can see Visibility summary across Public, Connections, After match, and Private sections Public 0 sections Connections 0 sections After match 0 sections Private 0 sections Preview visibility Quick privacy fixes Three fast actions to review and correct visibility before sharing your profile. Review field visibility Check priv",
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Settings"
+      },
+      {
+        "size": "32px",
+        "tag": "h1",
+        "text": "Privacy Settings"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "Your Privacy Controls"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "What others can see"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Quick privacy fixes"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Profile data"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Skills and expertise"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Projects & work history"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Match history"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Analytics"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "i-privacy",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/i/settings/privacy",
+    "viewportName": "mobile390"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Profile Inbox Matching Settings U Proof-first home Add your first proof record Welcome back, there. Start with one work sample, credential, or case study that can be trusted. Start proof record Your Proof Wallet 3 checks Evidence, trust, and sharing state Proof Packs No proof yet. Start with one private record. Pending Trust anchors No trust anchor yet. You can add this after the first proof. Needed Public Page visibility Private by default until you choose to share Locked Add new record Readiness Checklist 3 to resolve First proof artifact Needed Start with one useful artifact. It stays private while you shape i",
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Overview"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Add your first proof record"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Your Proof Wallet"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Readiness Checklist"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Proof Readiness"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Trust Controls"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "i-home",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/i/home",
+    "viewportName": "mobile375"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Profile Inbox Matching Settings U 1/5 Public Page readiness Complete one clear proof path before publishing. NEXT Complete your safe shell Safe shell basics One real context is anchored One real proof is added and structured One non-self verification is accepted Public Page publication Start with proof, not profile polish Build only the parts that make the first proof credible: safe shell, one real context, one structured Proof Pack, then decide what trust signal comes next. Add your first proof Open full profile Create a safe shell Next action Keep the shell light: display name, handle, headline, broad location ",
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Profile"
+      },
+      {
+        "size": "18px",
+        "tag": "h2",
+        "text": "Public Page readiness"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Start with proof, not profile polish"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "i-profile",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/i/profile",
+    "viewportName": "mobile375"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Profile Inbox Matching Settings U Keep building proof readiness Keep the first milestone anchored in real work. Add proof context, visibility choices, and optional trust signals before broad profile polish. First Proof Pack created Public Page ready Matching preferences saved Non-self verification added Start with one context-backed Proof Pack MO Mock Individual Hidden Share Add location Joined February 2026 Add a tagline A brief statement that captures who you are and what you care about 1/5 Public Page readiness Complete one clear proof path before publishing. NEXT Complete your safe shell Safe shell basics One",
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Profile"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Keep building proof readiness"
+      },
+      {
+        "size": "14px",
+        "tag": "h2",
+        "text": "Mock Individual"
+      },
+      {
+        "size": "32px",
+        "tag": "h1",
+        "text": "Mock Individual"
+      },
+      {
+        "size": "18px",
+        "tag": "h2",
+        "text": "Public Page readiness"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Proof readiness"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Context"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Work"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Volunteering"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Education / learning"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "i-profile-full",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/i/profile?profileView=full",
+    "viewportName": "mobile375"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Profile Inbox Matching Settings U Keep building proof readiness Keep the first milestone anchored in real work. Add proof context, visibility choices, and optional trust signals before broad profile polish. First Proof Pack created Public Page ready Matching preferences saved Non-self verification added Start with one context-backed Proof Pack Public Page is locked until the safe-shell basics are finished. MO Mock Individual Hidden Share Add location Joined February 2026 Add a tagline A brief statement that captures who you are and what you care about 1/5 Public Page readiness Complete one clear proof path before",
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Profile"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Keep building proof readiness"
+      },
+      {
+        "size": "14px",
+        "tag": "h2",
+        "text": "Mock Individual"
+      },
+      {
+        "size": "32px",
+        "tag": "h1",
+        "text": "Mock Individual"
+      },
+      {
+        "size": "18px",
+        "tag": "h2",
+        "text": "Public Page readiness"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Proof readiness"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Proof Packs"
+      },
+      {
+        "size": "18px",
+        "tag": "h2",
+        "text": "Add your first proof"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "i-portfolio",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/i/profile?profileView=full&tab=proof_packs&portfolioLocked=1&lockReason=safe_shell&proof=first",
+    "viewportName": "mobile375"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Profile Inbox Matching Settings U Settings Manage your account preferences, security, and privacy Account Interviews Privacy Email & Authentication Manage your email and password Email admin@test-org.com Change Email Identity Verification Add identity and workplace trust signals with precise badge meanings PROOF VERIFICATIONS / ATTESTATIONS Attach trust to proof, not to profile hype Proof-backed trust belongs on specific Proof Packs and claim snapshots. Use the verification requests area to see which proof, claim, verifier, and outcome each request is tied to. Open proof verification requests Ask for verification",
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Settings"
+      },
+      {
+        "size": "40px",
+        "tag": "h1",
+        "text": "Settings"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Email & Authentication"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Identity Verification"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Attach trust to proof, not to profile hype"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Optional for portfolio-ready, harder for intros"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Keep account-side checks narrow and honest"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Password"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Language"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Help & Support"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "i-settings",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/i/settings",
+    "viewportName": "mobile375"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Profile Inbox Matching Settings U",
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Settings"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "i-privacy",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/i/settings/privacy",
+    "viewportName": "mobile375"
+  }
+]

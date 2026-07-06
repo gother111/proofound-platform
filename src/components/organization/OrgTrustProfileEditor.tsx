@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 type OrgTrustProfileEditorProps = {
   org: {
@@ -23,6 +24,26 @@ type OrgTrustProfileEditorProps = {
   };
   canEdit: boolean;
 };
+
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function getReturnedError(payload: unknown) {
+  if (!payload || typeof payload !== 'object') {
+    return '';
+  }
+
+  if ('error' in payload && typeof payload.error === 'string') {
+    return payload.error.trim();
+  }
+
+  if ('message' in payload && typeof payload.message === 'string') {
+    return payload.message.trim();
+  }
+
+  return '';
+}
 
 export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorProps) {
   const router = useRouter();
@@ -62,6 +83,11 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
     { label: 'Domain path', ready: Boolean(website.trim()) },
   ];
   const readyFieldCount = fieldReadiness.filter((item) => item.ready).length;
+  const saveButtonLabel = isPending
+    ? 'Saving...'
+    : hasUnsavedChanges
+      ? 'Save trust page'
+      : 'No changes to save';
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -97,19 +123,27 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
       });
 
       if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(error.error || error.message || 'Failed to update organization profile');
+        const payload = await response.json().catch(() => null);
+        const returnedError = getReturnedError(payload);
+        dispatchClientDiagnostic('organization.trust_profile.save_returned_error', {
+          organizationId: org.id,
+          status: getResponseStatus(response),
+          hasReturnedError: returnedError.length > 0,
+        });
+        throw new Error('organization_trust_profile_save_request_failed');
       }
 
       toast({
-        title: 'Organization profile updated',
-        description: 'The launch-facing organization profile has been saved.',
+        title: 'Organization trust page updated',
+        description: 'The launch-facing organization trust page has been saved.',
       });
       router.refresh();
     } catch (error) {
+      dispatchClientErrorDiagnostic('organization.trust_profile.save_failed', error);
       toast({
-        title: 'Unable to save organization profile',
-        description: error instanceof Error ? error.message : 'Unknown error',
+        title: 'Organization trust page was not saved',
+        description:
+          'Your published trust page was not changed. The edited fields are still here; please try again before continuing.',
         variant: 'destructive',
       });
     } finally {
@@ -122,7 +156,7 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
       <CardHeader>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <CardTitle>Organization profile</CardTitle>
+            <CardTitle>Organization trust page</CardTitle>
             <CardDescription className="max-w-2xl leading-6">
               Keep the launch story narrow and credible: org name, verified domain path, mission,
               why the work matters, and the essential operating context.
@@ -153,7 +187,7 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
                 value={whyWorkMatters}
                 onChange={(event) => setWhyWorkMatters(event.target.value)}
                 disabled={!canEdit || isPending}
-                rows={3}
+                rows={4}
                 placeholder="Explain why the work matters in practical terms."
               />
             </div>
@@ -165,7 +199,7 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
                 value={mission}
                 onChange={(event) => setMission(event.target.value)}
                 disabled={!canEdit || isPending}
-                rows={4}
+                rows={6}
                 placeholder="Explain the mission this assignment path supports."
               />
             </div>
@@ -177,8 +211,8 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
                 value={operatingContext}
                 onChange={(event) => setOperatingContext(event.target.value)}
                 disabled={!canEdit || isPending}
-                rows={4}
-                placeholder="Describe the real operating environment candidates should understand."
+                rows={8}
+                placeholder="Describe the real operating environment proof submitters should understand."
               />
             </div>
 
@@ -218,9 +252,16 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
               </p>
             </div>
             {canEdit ? (
-              <Button type="submit" className="w-full" disabled={isPending || !hasUnsavedChanges}>
-                {isPending ? 'Saving...' : 'Save organization profile'}
-              </Button>
+              <div className="space-y-2">
+                <Button type="submit" className="w-full" disabled={isPending || !hasUnsavedChanges}>
+                  {saveButtonLabel}
+                </Button>
+                {!hasUnsavedChanges ? (
+                  <p className="text-center text-xs text-muted-foreground">
+                    Edit a field to enable saving.
+                  </p>
+                ) : null}
+              </div>
             ) : null}
           </div>
         </form>

@@ -2,9 +2,9 @@
 
 /**
  * Test script to verify Veriff configuration
- * 
+ *
  * Usage: node scripts/test-veriff-config.js
- * 
+ *
  * This script checks:
  * 1. Environment variables are set
  * 2. API credentials format is correct
@@ -22,8 +22,8 @@ function loadEnvFile() {
     const __dirname = dirname(__filename);
     const envPath = join(__dirname, '..', '.env.local');
     const envContent = readFileSync(envPath, 'utf-8');
-    
-    envContent.split('\n').forEach(line => {
+
+    envContent.split('\n').forEach((line) => {
       const trimmed = line.trim();
       if (trimmed && !trimmed.startsWith('#')) {
         const [key, ...valueParts] = trimmed.split('=');
@@ -55,7 +55,7 @@ function log(message, color = 'reset') {
 
 function checkEnvVar(name, required = true) {
   const value = process.env[name];
-  
+
   if (!value) {
     if (required) {
       log(`❌ ${name} is not set`, 'red');
@@ -65,7 +65,7 @@ function checkEnvVar(name, required = true) {
       return true;
     }
   }
-  
+
   // Basic format validation
   if (name.includes('KEY') || name.includes('SECRET')) {
     if (value.length < 10) {
@@ -76,7 +76,7 @@ function checkEnvVar(name, required = true) {
   } else {
     log(`✅ ${name} is set: ${value}`, 'green');
   }
-  
+
   return true;
 }
 
@@ -84,14 +84,14 @@ async function testVeriffConnection() {
   const apiKey = process.env.VERIFF_API_KEY;
   const apiSecret = process.env.VERIFF_API_SECRET;
   const baseUrl = process.env.VERIFF_BASE_URL || 'https://stationapi.veriff.com';
-  
+
   if (!apiKey || !apiSecret) {
     log('\n⚠️  Skipping API connection test (credentials missing)', 'yellow');
     return;
   }
-  
+
   log('\n🔍 Testing Veriff API connection...', 'blue');
-  
+
   try {
     const crypto = await import('crypto');
     const testPayload = JSON.stringify({
@@ -104,21 +104,20 @@ async function testVeriffConnection() {
         timestamp: new Date().toISOString(),
       },
     });
-    
+
     const signature = crypto.default
       .createHmac('sha256', apiSecret)
       .update(testPayload)
       .digest('hex');
-    
+
     // Note: This is just a format test, not a real session creation
     log('✅ Request signature generation works', 'green');
     log(`   Signature length: ${signature.length} chars`, 'blue');
-    
+
     log('\n📝 Configuration Summary:', 'blue');
     log(`   Base URL: ${baseUrl}`, 'blue');
     log(`   API Key: ${apiKey.substring(0, 8)}...${apiKey.substring(apiKey.length - 4)}`, 'blue');
     log(`   API Secret: ${'*'.repeat(apiSecret.length)}`, 'blue');
-    
   } catch (error) {
     log(`❌ Error testing configuration: ${error.message}`, 'red');
   }
@@ -127,7 +126,7 @@ async function testVeriffConnection() {
 async function main() {
   log('\n🧪 Veriff Configuration Test\n', 'blue');
   log('='.repeat(50), 'blue');
-  
+
   const checks = [
     checkEnvVar('VERIFF_API_KEY', true),
     checkEnvVar('VERIFF_API_SECRET', true),
@@ -135,27 +134,29 @@ async function main() {
     checkEnvVar('VERIFF_WEBHOOK_SECRET', false),
     checkEnvVar('NEXT_PUBLIC_SITE_URL', false),
   ];
-  
-  const allPassed = checks.every(check => check);
-  
+
+  const allPassed = checks.every((check) => check);
+
   await testVeriffConnection();
-  
+
   log('\n' + '='.repeat(50), 'blue');
-  
+
   if (allPassed) {
     log('\n✅ All required environment variables are set!', 'green');
     log('\n📋 Next Steps:', 'blue');
     log('   1. Make sure your server is restarted', 'blue');
     log('   2. Configure webhook URL in Veriff Dashboard:', 'blue');
-    log(`      ${process.env.NEXT_PUBLIC_SITE_URL || 'https://yourdomain.com'}/api/verification/veriff/webhook`, 'blue');
+    log(
+      `      ${process.env.NEXT_PUBLIC_SITE_URL || 'https://proofound.io'}/api/verification/veriff/webhook`,
+      'blue'
+    );
     log('   3. Test the verification flow in Settings → Identity Verification', 'blue');
   } else {
     log('\n❌ Some required environment variables are missing!', 'red');
     log('   Please add them to .env.local and restart your server.', 'red');
   }
-  
+
   log('\n', 'reset');
 }
 
 main().catch(console.error);
-

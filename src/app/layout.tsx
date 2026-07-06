@@ -8,6 +8,7 @@ import { GlobalErrorHandler } from '@/components/GlobalErrorHandler';
 import { SkipToContentLink } from '@/components/a11y/SkipToContentLink';
 import { TransitionProvider } from '@/components/ui/transition-provider';
 import { RootClientEnhancements } from '@/components/root/RootClientEnhancements';
+import { log } from '@/lib/log';
 
 /**
  * Root Layout Component
@@ -23,7 +24,7 @@ import { RootClientEnhancements } from '@/components/root/RootClientEnhancements
 export const metadata: Metadata = {
   title: 'Proofound - Focus on what matters',
   description:
-    'A proof-first hiring flow centered on proof records, privacy-safe review, and clear assignment-based hiring.',
+    'A proof-first assignment-review flow centered on proof records, privacy-safe review, and clear assignment-based workflow.',
   icons: {
     icon: [
       { url: '/favicon.svg', type: 'image/svg+xml' },
@@ -57,7 +58,9 @@ export default async function RootLayout({
   try {
     messages = await getMessages();
   } catch (error) {
-    console.error('Failed to load i18n messages:', error);
+    log.error('root_layout.i18n_messages_load_failed', {
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
     // Fallback to empty messages object to prevent page crash
     // The app will still work, just without translations
   }

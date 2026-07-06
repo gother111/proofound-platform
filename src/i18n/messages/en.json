@@ -19,7 +19,7 @@
     "hero": {
       "title": "Proofound",
       "tagline": "Verified proof, not CV noise",
-      "subtitle": "Turn real work into proof profiles and review candidates through privacy-safe evidence instead of CV theater.",
+      "subtitle": "Turn real work into proof profiles and review proof-backed submissions through privacy-safe evidence instead of CV theater.",
       "cta": {
         "join": "Create your proof profile — free",
         "login": "Log in"
@@ -45,7 +45,7 @@
     },
     "organizations": {
       "title": "For Organizations",
-      "description": "Start screening on proof with clearer evidence and privacy-safe signal."
+      "description": "Start screening on proof with clearer context and privacy-safe evidence."
     },
     "principles": {
       "title": "Guiding Principles",
@@ -56,11 +56,11 @@
     "faq": {
       "title": "Frequently Asked Questions",
       "q1": "What makes Proofound different?",
-      "a1": "Proofound centers on verified proof, privacy-safe review, and stronger signal than CVs.",
+      "a1": "Proofound centers on verified proof, privacy-safe review, and stronger proof than CV claims.",
       "q2": "Is Proofound free?",
       "a2": "Individuals can create a proof profile for free. Organizations can start screening on proof and talk to us for rollout support.",
       "q3": "How does verification work?",
-      "a3": "Confirmation supports trust signals around real work while keeping early review privacy-safe by default."
+      "a3": "Confirmation adds context around real work while keeping early review privacy-safe by default."
     },
     "footer": {
       "about": "Cookies",

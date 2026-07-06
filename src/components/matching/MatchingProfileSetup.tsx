@@ -12,13 +12,17 @@ import { DateWindowInput, type DateWindow } from './DateWindowInput';
 import { FocusAreasSection } from './FocusAreasSection';
 import { Slider } from '@/components/ui/slider';
 import { toast } from 'sonner';
-import { BookOpen, ExternalLink } from 'lucide-react';
+import { AlertCircle, BookOpen, ExternalLink } from 'lucide-react';
 import { weightsFromProofSkillsBias } from '@/lib/core/matching/presets';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 interface MatchingProfileSetupProps {
   onComplete: () => void;
   onCancel: () => void;
 }
+
+const MATCHING_PROFILE_SAVE_FAILED_MESSAGE =
+  'Assignment review preferences were not saved. Your preferences are still here; please review and try again.';
 
 /**
  * Single-page setup for individual matching preferences.
@@ -26,6 +30,7 @@ interface MatchingProfileSetupProps {
 export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSetupProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Form state
   const [desiredRoles, setDesiredRoles] = useState<string[]>([]);
@@ -109,11 +114,18 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
       return false;
     }
 
+    if (min > max) {
+      setHoursValidationHint('Minimum desired hours must be lower than maximum desired hours.');
+      return false;
+    }
+
     setHoursValidationHint(null);
     return true;
   };
 
   const handleSubmit = async () => {
+    setSaveError(null);
+
     if (!validateWorkStepHours()) {
       return;
     }
@@ -158,23 +170,35 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const errorMessage =
-          errorData.message || errorData.error || 'Failed to save matching profile';
+        const errorData = (await response.json().catch(() => ({}))) as {
+          message?: unknown;
+          error?: unknown;
+        };
+        const diagnosticMessage =
+          typeof errorData.message === 'string' && errorData.message.trim().length > 0
+            ? errorData.message
+            : typeof errorData.error === 'string' && errorData.error.trim().length > 0
+              ? errorData.error
+              : `Matching profile save failed with status ${response.status}`;
 
-        toast.error(errorMessage);
-        throw new Error(errorMessage);
+        dispatchClientErrorDiagnostic(
+          'matching.profile_setup.save_failed',
+          new Error(diagnosticMessage)
+        );
+        setSaveError(MATCHING_PROFILE_SAVE_FAILED_MESSAGE);
+        toast.error(MATCHING_PROFILE_SAVE_FAILED_MESSAGE);
+        return;
       }
 
-      toast.success('Profile saved. You can keep using matching while you finish setup.');
+      toast.success(
+        'Preferences saved. You can keep using assignment reviews while you finish setup.'
+      );
       onComplete();
       router.refresh();
     } catch (error) {
-      if (error instanceof Error && !error.message.includes('Failed to save')) {
-        toast.error(error.message || 'Failed to save matching profile');
-      } else if (!(error instanceof Error)) {
-        toast.error('Failed to save matching profile. Please try again.');
-      }
+      dispatchClientErrorDiagnostic('matching.profile_setup.save_failed', error);
+      setSaveError(MATCHING_PROFILE_SAVE_FAILED_MESSAGE);
+      toast.error(MATCHING_PROFILE_SAVE_FAILED_MESSAGE);
     } finally {
       setIsSubmitting(false);
     }
@@ -184,10 +208,10 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
     <div className="max-w-3xl mx-auto px-4 py-6">
       <div className="mb-6">
         <h2 className="text-2xl font-semibold mb-2" style={{ color: '#2D3330' }}>
-          Set up your matching profile
+          Set up assignment review preferences
         </h2>
         <p className="text-sm" style={{ color: '#6B6760' }}>
-          Save your focus, proof emphasis, and work preferences to unlock better matches.
+          Save your focus, proof emphasis, and work preferences so assignment reviews stay relevant.
         </p>
       </div>
 
@@ -318,9 +342,19 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
         </section>
       </div>
 
-      <div className="mt-6 flex gap-2">
+      {saveError ? (
+        <div
+          role="alert"
+          className="mt-6 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
+        >
+          <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+          <p>{saveError}</p>
+        </div>
+      ) : null}
+
+      <div className="mt-6 flex flex-col gap-2 pb-20 sm:flex-row sm:pb-0">
         <Button type="button" variant="outline" onClick={onCancel}>
-          Save & Continue Later
+          Continue later
         </Button>
         <Button
           type="button"

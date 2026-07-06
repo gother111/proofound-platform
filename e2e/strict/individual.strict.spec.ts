@@ -10,6 +10,7 @@ import {
   createRuntimeOrganization,
   createRuntimeUser,
   apiDeleteJson,
+  getCsrfToken,
   loginWithUi,
   seedPortfolioReadyCandidate,
   type StrictFixtureState,
@@ -28,6 +29,7 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
   let orgUser: StrictRuntimeUser;
   let onboardingUser: StrictRuntimeUser;
   let organization: StrictRuntimeOrganization;
+  let reviewOrganizationSlug: string;
   let assignment: StrictRuntimeAssignment;
   let match: StrictRuntimeMatch;
   let seededConversation: StrictRuntimeConversation;
@@ -62,6 +64,7 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
       prefix: 'strict-individual-org',
       displayName: 'Strict Individual Org',
     });
+    reviewOrganizationSlug = organization.slug;
 
     assignment = await createRuntimeAssignment(fixture, organization.id, {
       role: 'Strict Full Stack Role',
@@ -84,6 +87,20 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
           `Failed to grant org user access to fallback assignment org: ${fallbackMembershipError.message}`
         );
       }
+
+      const { data: fallbackOrg, error: fallbackOrgError } = await supabase
+        .from('organizations')
+        .select('slug')
+        .eq('id', assignment.orgId)
+        .single();
+
+      if (fallbackOrgError || !fallbackOrg?.slug) {
+        throw new Error(
+          `Failed to resolve fallback assignment organization slug: ${fallbackOrgError?.message ?? 'unknown error'}`
+        );
+      }
+
+      reviewOrganizationSlug = fallbackOrg.slug;
     }
 
     match = await createRuntimeMatch(fixture, assignment.id, individualUser.id);
@@ -118,7 +135,9 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
     await loginWithUi(page, individualUser);
 
     await page.goto('/app/i/profile');
-    await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible();
+    await expect(
+      page.locator('[data-testid="individual-profile-root"], [data-testid="guided-profile-setup"]')
+    ).toBeVisible();
 
     const readinessResponse = await page.request.get('/api/individual/readiness');
     expect(readinessResponse.ok()).toBeTruthy();
@@ -298,9 +317,9 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
     await expect(page.getByRole('heading', { name: 'Matching' })).toBeVisible();
 
     await page.goto('/app/i/home');
-    await expect(page.getByRole('heading', { name: 'Add your first proof record' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Welcome back/i })).toBeVisible();
     await expect(
-      page.getByText(/start with one work sample, credential, or case study that can be trusted\./i)
+      page.getByText(/Your proof records are structured|Start by creating your first proof record/i)
     ).toBeVisible();
   });
 
@@ -342,13 +361,17 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
 
     const shortlistResponse = await apiPostJson(
       page.request,
-      `/api/org/${organization.slug}/matches/${match.id}/review`,
+      `/api/org/${reviewOrganizationSlug}/matches/${match.id}/review`,
       {
         action: 'shortlist',
       }
     );
-    expect(shortlistResponse.ok()).toBeTruthy();
-    const shortlistPayload = (await shortlistResponse.json()) as {
+    const shortlistBody = await shortlistResponse.text();
+    expect(
+      shortlistResponse.ok(),
+      `Shortlist request failed with HTTP ${shortlistResponse.status()}: ${shortlistBody}`
+    ).toBeTruthy();
+    const shortlistPayload = JSON.parse(shortlistBody) as {
       reviewStage?: string;
       revealScope?: string;
     };
@@ -357,7 +380,7 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
 
     const introResponse = await apiPostJson(
       page.request,
-      `/api/org/${organization.slug}/matches/${match.id}/review`,
+      `/api/org/${reviewOrganizationSlug}/matches/${match.id}/review`,
       {
         action: 'request_intro',
       }
@@ -373,7 +396,7 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
 
     const revealRequestResponse = await apiPostJson(
       page.request,
-      `/api/org/${organization.slug}/matches/${match.id}/review`,
+      `/api/org/${reviewOrganizationSlug}/matches/${match.id}/review`,
       {
         action: 'reveal_request',
         requestedScope: 'full_identity',
@@ -389,6 +412,7 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
 
     await page.context().clearCookies();
     await loginWithUi(page, individualUser);
+    await getCsrfToken(page.request, { forceRefresh: true });
 
     const revealApprovalResponse = await apiPostJson(
       page.request,
@@ -405,6 +429,7 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
 
     await page.context().clearCookies();
     await loginWithUi(page, orgUser);
+    await getCsrfToken(page.request, { forceRefresh: true });
 
     const scheduledAt = new Date(Date.now() + 1000 * 60 * 60 * 2).toISOString();
     const scheduleInterviewResponse = await apiPostJson(page.request, '/api/interviews/schedule', {
@@ -493,7 +518,7 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
       expect(visibilityPayload).not.toHaveProperty('mission');
     }
 
-    const dataExportResponse = await page.request.get('/api/data-export');
+    const dataExportResponse = await page.request.get('/api/user/export');
     expect(dataExportResponse.ok()).toBeTruthy();
     const dataExportPayload = (await dataExportResponse.json()) as {
       userId?: string;

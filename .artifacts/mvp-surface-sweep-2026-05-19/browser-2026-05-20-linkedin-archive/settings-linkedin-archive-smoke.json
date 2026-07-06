@@ -1,0 +1,16 @@
+{
+  "bodyExcerpt": "Skip to main content\nOverview\nProfile\nCommunications\nMatching\nSettings\nProofound\n\nSettings\n\nU\n\nLoading settings...",
+  "h1s": [],
+  "hasHorizontalOverflow": false,
+  "hasRuntimeErrorText": false,
+  "mainCount": 1,
+  "staleCopyMatches": [],
+  "title": "Proofound - Focus on what matters",
+  "url": "http://127.0.0.1:33180/app/i/settings",
+  "viewport": {
+    "height": 1354,
+    "width": 1359
+  },
+  "consoleIssues": [],
+  "screenshot": "/Users/yuriibakurov/proofound/.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-linkedin-archive/settings-linkedin-archive-smoke.png"
+}

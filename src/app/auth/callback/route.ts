@@ -2,6 +2,29 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { resolveUserHomePath } from '@/lib/auth';
 import { reconcileVerifierContradictions } from '@/lib/verification/contradiction';
+import { log } from '@/lib/log';
+
+function resolveSafeNextUrl(next: string | null, requestOrigin: string): URL | null {
+  const trimmed = next?.trim();
+  if (!trimmed || trimmed.includes('\\')) {
+    return null;
+  }
+
+  try {
+    const nextUrl = new URL(trimmed, requestOrigin);
+    const isSameOrigin = nextUrl.origin === requestOrigin;
+    const isRelativePath = trimmed.startsWith('/') && !trimmed.startsWith('//');
+    const isSameOriginAbsolute = /^[a-z][a-z\d+\-.]*:/i.test(trimmed) && isSameOrigin;
+
+    if (isSameOrigin && (isRelativePath || isSameOriginAbsolute)) {
+      return nextUrl;
+    }
+  } catch (_) {
+    // ignore invalid next parameter
+  }
+
+  return null;
+}
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -39,10 +62,10 @@ export async function GET(request: NextRequest) {
           });
         }
       } catch (reconcileError) {
-        console.error('Auth callback contradiction reconciliation failed:', reconcileError);
+        log.warn('auth.callback.contradiction_reconcile_failed', { error: reconcileError });
       }
     } catch (exchangeError) {
-      console.error('Failed to exchange OAuth code for session:', exchangeError);
+      log.error('auth.callback.exchange_failed', { error: exchangeError });
       return redirectToLoginWithError(
         'We could not validate your authentication link. Please try again.'
       );
@@ -65,18 +88,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(resetUrl);
   }
 
-  if (next) {
-    try {
-      const nextUrl = new URL(next, requestUrl.origin);
-      const isSameOrigin = nextUrl.origin === requestUrl.origin;
-      const isRelativePath = next.startsWith('/') && !next.startsWith('//');
-
-      if (isSameOrigin || isRelativePath) {
-        return NextResponse.redirect(nextUrl);
-      }
-    } catch (_) {
-      // ignore invalid next parameter
-    }
+  const safeNextUrl = resolveSafeNextUrl(next, requestUrl.origin);
+  if (safeNextUrl) {
+    return NextResponse.redirect(safeNextUrl);
   }
 
   // Use the same Supabase client (which now holds the new session) to compute the destination.

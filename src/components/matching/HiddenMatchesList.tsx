@@ -1,6 +1,6 @@
 /**
- * Hidden Matches List
- * Shows matches the user hid and allows restoring them.
+ * Hidden assignment reviews list.
+ * Shows assignment reviews the user hid and allows restoring them.
  */
 
 'use client';
@@ -10,14 +10,13 @@ import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, EyeOff, Loader2, Undo2 } from 'lucide-react';
+import { EyeOff, Loader2, Undo2 } from 'lucide-react';
 import { apiFetch } from '@/lib/api/fetch';
 import { toast } from 'sonner';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 interface HiddenMatch {
   id: string;
-  assignmentId: string;
-  score: number;
   assignment: {
     title?: string;
     locationMode?: string;
@@ -44,26 +43,30 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
   const [loading, setLoading] = useState(true);
   const [unhidingId, setUnhidingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [restoreError, setRestoreError] = useState<string | null>(null);
 
   const fetchHidden = async () => {
     try {
       setLoading(true);
       setError(null);
+      setRestoreError(null);
       const response = await apiFetch('/api/match/hide');
       if (response.ok) {
         const data: HiddenMatchesResponse = await response.json();
         setHidden(data.matches || []);
       } else {
-        const text = await response.text();
-        setError('Failed to load hidden matches');
-        toast.error('Failed to load hidden matches', {
-          description: text || undefined,
+        const text = await response.text().catch(() => '');
+        setError('Hidden assignment reviews could not load');
+        toast.error('Hidden assignment reviews could not load', {
+          description: text || 'You can retry without leaving matching.',
         });
       }
     } catch (error) {
-      console.error('Failed to fetch hidden matches:', error);
-      setError('Failed to load hidden matches');
-      toast.error('Failed to load hidden matches');
+      dispatchClientErrorDiagnostic('matching.hidden_matches.load_failed', error);
+      setError('Hidden assignment reviews could not load');
+      toast.error('Hidden assignment reviews could not load', {
+        description: 'You can retry without leaving matching.',
+      });
     } finally {
       setLoading(false);
     }
@@ -75,24 +78,31 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
 
   const handleUnhide = async (matchId: string) => {
     setUnhidingId(matchId);
+    setRestoreError(null);
 
     // Optimistically remove the item; keep snapshot for rollback
     const prevHidden = hidden;
     setHidden((prev) => prev.filter((m) => m.id !== matchId));
 
     try {
-      const response = await apiFetch(`/api/match/hide?matchId=${matchId}`, { method: 'DELETE' });
+      const response = await apiFetch(`/api/match/hide?matchId=${encodeURIComponent(matchId)}`, {
+        method: 'DELETE',
+      });
       if (!response.ok) {
-        throw new Error('Failed to unhide match');
+        throw new Error('hidden_assignment_review_restore_failed');
       }
-      toast.success('Match restored', { description: 'It will reappear in your matches list.' });
+      toast.success('Assignment review restored', {
+        description: 'It will reappear in your assignment reviews.',
+      });
 
       // Kick off parallel refreshes so Matching updates immediately
       const warmMatches = apiFetch('/api/match/profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
-      }).catch((err) => console.error('Warm matches fetch failed after unhide:', err));
+      }).catch((err) =>
+        dispatchClientErrorDiagnostic('matching.hidden_matches.warm_after_unhide_failed', err)
+      );
 
       await Promise.allSettled([
         onRestored?.(),
@@ -100,10 +110,13 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
         Promise.resolve().then(() => router.refresh()),
       ]);
     } catch (error) {
-      console.error('Failed to unhide match:', error);
+      dispatchClientErrorDiagnostic('matching.hidden_matches.unhide_failed', error);
       // Roll back optimistic removal
       setHidden(prevHidden);
-      toast.error('Failed to unhide match');
+      setRestoreError(
+        'Assignment review could not be restored. It is still hidden, and you can try again.'
+      );
+      toast.error('Assignment review could not be restored');
     } finally {
       setUnhidingId(null);
     }
@@ -116,21 +129,24 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
           <h3 className="text-sm font-medium text-foreground">Hidden</h3>
           <Loader2 className="w-4 h-4 animate-spin text-proofound-forest" />
         </div>
-        <p className="text-xs text-muted-foreground">Loading hidden matches…</p>
+        <p className="text-xs text-muted-foreground">Loading hidden assignment reviews...</p>
       </Card>
     );
   }
 
   if (error) {
     return (
-      <Card variant="bento" className="p-4 border">
+      <Card variant="bento" className="p-4 border" role="alert" aria-live="assertive">
         <div className="flex items-center gap-2 mb-2 text-[#DC2626]">
           <EyeOff className="w-4 h-4" />
           <h3 className="text-sm font-medium">Hidden</h3>
         </div>
-        <p className="text-sm text-[#DC2626] mb-3">{error}</p>
-        <Button size="sm" variant="outline" onClick={fetchHidden} className="text-xs">
-          Retry
+        <p className="text-sm text-[#DC2626] mb-1">{error}</p>
+        <p className="mb-3 text-xs leading-5 text-muted-foreground">
+          Your hidden assignment reviews are unchanged. Retry this panel to refresh the list.
+        </p>
+        <Button size="sm" variant="outline" onClick={fetchHidden} className="min-h-[44px] text-xs">
+          Retry hidden reviews
         </Button>
       </Card>
     );
@@ -143,7 +159,7 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
           <EyeOff className="w-4 h-4 text-muted-foreground" />
           <h3 className="text-sm font-medium text-foreground">Hidden</h3>
         </div>
-        <p className="text-xs text-muted-foreground">No hidden matches right now.</p>
+        <p className="text-xs text-muted-foreground">No hidden assignment reviews right now.</p>
       </Card>
     );
   }
@@ -158,6 +174,16 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
         </Badge>
       </div>
 
+      {restoreError && (
+        <p
+          className="mb-3 rounded border border-[#FCA5A5] bg-[#FEF2F2] px-3 py-2 text-xs leading-5 text-[#B91C1C]"
+          role="alert"
+          aria-live="assertive"
+        >
+          {restoreError}
+        </p>
+      )}
+
       <div className="space-y-3">
         {hidden.map((match) => (
           <div
@@ -165,10 +191,10 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
             className="p-3 rounded border"
             style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}
           >
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-foreground truncate">
-                  {match.assignment.title || 'Opportunity'}
+                  {match.assignment.title || 'Assignment'}
                 </p>
                 {match.organization?.name && (
                   <p className="text-xs text-muted-foreground truncate">
@@ -180,8 +206,8 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
                   {match.assignment.country ? ` • ${match.assignment.country}` : ''}
                 </p>
               </div>
-              <Badge variant="outline" className="text-xs">
-                {Math.round(match.score * 100)}%
+              <Badge variant="outline" className="self-start text-xs">
+                Hidden
               </Badge>
             </div>
 
@@ -191,7 +217,7 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
                 variant="outline"
                 onClick={() => handleUnhide(match.id)}
                 disabled={unhidingId === match.id}
-                className="text-xs"
+                className="min-h-[44px] w-full text-xs sm:w-auto"
               >
                 {unhidingId === match.id ? (
                   <>
@@ -204,13 +230,6 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
                   </>
                 )}
               </Button>
-              <a
-                href={`/app/i/matching/${match.assignmentId}`}
-                className="text-xs text-proofound-forest hover:underline flex items-center gap-1"
-              >
-                <Eye className="w-3 h-3" />
-                View
-              </a>
             </div>
           </div>
         ))}

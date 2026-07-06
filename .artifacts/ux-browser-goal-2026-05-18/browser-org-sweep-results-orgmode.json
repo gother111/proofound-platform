@@ -1,0 +1,1019 @@
+[
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF",
+    "buttons": [],
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Overview"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Nordic Field Systems"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Corridor Queue"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Launch Summary"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Minimal Access"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "org-home-mobile390",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/home"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF",
+    "buttons": [],
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Organization Profile"
+      },
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Organization Profile"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Launch corridor"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Organization profile"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "org-profile-mobile390",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/profile"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF",
+    "buttons": [],
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Assignments"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Assignments"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "org-assignments-mobile390",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/assignments"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF",
+    "buttons": [],
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Assignments"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "org-assignment-new-mobile390",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/assignments/new"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF",
+    "buttons": [],
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Assignments"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Assignments"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "org-matching-mobile390",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/assignments"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF Messages Review open introductions and keep each thread tied to its proof corridor. O Organization Re: Privacy-safe proof review for a launch corridor with intentionally long assignment title 2 Thanks. I can review the proof pack and keep identity detail... 15 minutes ago Identity protected until reveal approval EP Elena Proof Reviewer Re: Evidence operation",
+    "buttons": [],
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Messages"
+      },
+      {
+        "size": "18px",
+        "tag": "h2",
+        "text": "Messages"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Organization"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Elena Proof Reviewer"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "org-messages-mobile390",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/messages"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF HIRING CORRIDOR Communications Messages and interviews stay together, with reveal and decision steps inside the live corridor where they belong. Proof-safe process center Reveal and interview actions stay visible inside their live corridor surfaces. Messages Conversation threads, introductions, and reveal requests. Interviews Scheduling, decision windows, fe",
+    "buttons": [],
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Communications"
+      },
+      {
+        "size": "32px",
+        "tag": "h1",
+        "text": "Communications"
+      },
+      {
+        "size": "14px",
+        "tag": "h2",
+        "text": "Messages"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Messages"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "org-communications-mobile390",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/communications"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF",
+    "buttons": [],
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Assignments"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Assignments"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "org-shortlist-mobile390",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/assignments"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Test Organization Shareable by direct link Public organization profile Help teams review candidates through concrete work evidence instead of polished claims. Return to menu Copy share link Website MISSION / PURPOSE Help teams review candidates through concrete work evidence instead of polished claims. WHAT WORK IS OFFERED WORK OFFERED Proof-first product reviewer ENGAGEMENT Full time Improve rev",
+    "buttons": [],
+    "clientHeight": 844,
+    "clientWidth": 379,
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Test Organization"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "MISSION / PURPOSE"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "WHAT WORK IS OFFERED"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "ASSIGNMENT CLARITY"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "SERIOUSNESS OF REVIEW"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "ORGANIZATION BASICS"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "org-portfolio-mobile390",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 1902,
+    "scrollWidth": 379,
+    "tinyTargets": [],
+    "title": "Proofound organization portfolio",
+    "url": "http://localhost:33100/portfolio/org/test-org?returnTo=%2Fapp%2Fo%2Ftest-org%2Fhome"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF",
+    "buttons": [],
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Overview"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Nordic Field Systems"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Corridor Queue"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Launch Summary"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Minimal Access"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "org-home-mobile375",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/home"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF",
+    "buttons": [],
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Organization Profile"
+      },
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Organization Profile"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Launch corridor"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Organization profile"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "org-profile-mobile375",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/profile"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF",
+    "buttons": [],
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Assignments"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Assignments"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "org-assignments-mobile375",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/assignments"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF",
+    "buttons": [],
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Assignments"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "org-assignment-new-mobile375",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/assignments/new"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF",
+    "buttons": [],
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Assignments"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Assignments"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "org-matching-mobile375",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/assignments"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF Messages Review open introductions and keep each thread tied to its proof corridor. O Organization Re: Privacy-safe proof review for a launch corridor with intentionally long assignment title 2 Thanks. I can review the proof pack and keep identity detail... 15 minutes ago Identity protected until reveal approval EP Elena Proof Reviewer Re: Evidence operation",
+    "buttons": [],
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Messages"
+      },
+      {
+        "size": "18px",
+        "tag": "h2",
+        "text": "Messages"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Organization"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Elena Proof Reviewer"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "org-messages-mobile375",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/messages"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF HIRING CORRIDOR Communications Messages and interviews stay together, with reveal and decision steps inside the live corridor where they belong. Proof-safe process center Reveal and interview actions stay visible inside their live corridor surfaces. Messages Conversation threads, introductions, and reveal requests. Interviews Scheduling, decision windows, fe",
+    "buttons": [],
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Communications"
+      },
+      {
+        "size": "32px",
+        "tag": "h1",
+        "text": "Communications"
+      },
+      {
+        "size": "14px",
+        "tag": "h2",
+        "text": "Messages"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Messages"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "org-communications-mobile375",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/communications"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF",
+    "buttons": [],
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Assignments"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Assignments"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "org-shortlist-mobile375",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/assignments"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Test Organization Shareable by direct link Public organization profile Help teams review candidates through concrete work evidence instead of polished claims. Return to menu Copy share link Website MISSION / PURPOSE Help teams review candidates through concrete work evidence instead of polished claims. WHAT WORK IS OFFERED WORK OFFERED Proof-first product reviewer ENGAGEMENT Full time Improve rev",
+    "buttons": [],
+    "clientHeight": 667,
+    "clientWidth": 364,
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Test Organization"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "MISSION / PURPOSE"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "WHAT WORK IS OFFERED"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "ASSIGNMENT CLARITY"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "SERIOUSNESS OF REVIEW"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "ORGANIZATION BASICS"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "org-portfolio-mobile375",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 1947,
+    "scrollWidth": 364,
+    "tinyTargets": [],
+    "title": "Proofound organization portfolio",
+    "url": "http://localhost:33100/portfolio/org/test-org?returnTo=%2Fapp%2Fo%2Ftest-org%2Fhome"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Assignments Communications Organization Profile Public Preview Proofound Overview NF",
+    "buttons": [],
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Overview"
+      },
+      {
+        "size": "32px",
+        "tag": "h1",
+        "text": "Nordic Field Systems"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Corridor Queue"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Launch Summary"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Minimal Access"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "org-home-desktop1280",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/home"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Assignments Communications Organization Profile Public Preview Proofound Organization Profile NF",
+    "buttons": [],
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Organization Profile"
+      },
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Organization Profile"
+      },
+      {
+        "size": "18px",
+        "tag": "h3",
+        "text": "Launch corridor"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Organization profile"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "org-profile-desktop1280",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/profile"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Assignments Communications Organization Profile Public Preview Proofound Assignments NF",
+    "buttons": [],
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Assignments"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Assignments"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "org-assignments-desktop1280",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/assignments"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Assignments Communications Organization Profile Public Preview Proofound Assignments NF",
+    "buttons": [],
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Assignments"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "org-assignment-new-desktop1280",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/assignments/new"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Assignments Communications Organization Profile Public Preview Proofound Assignments NF",
+    "buttons": [],
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Assignments"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Assignments"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "org-matching-desktop1280",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/assignments"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Assignments Communications Organization Profile Public Preview Proofound Messages NF Messages Review open introductions and keep each thread tied to its proof corridor. O Organization Re: Privacy-safe proof review for a launch corridor with intentionally long assignment title 2 Thanks. I can review the proof pack and keep identity detail... 15 minutes ago Identity protected until reveal ",
+    "buttons": [],
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Messages"
+      },
+      {
+        "size": "18px",
+        "tag": "h2",
+        "text": "Messages"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Organization"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Elena Proof Reviewer"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "org-messages-desktop1280",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/messages"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Assignments Communications Organization Profile Public Preview Proofound Communications NF HIRING CORRIDOR Communications Messages and interviews stay together, with reveal and decision steps inside the live corridor where they belong. Proof-safe process center Reveal and interview actions stay visible inside their live corridor surfaces. Messages Conversation threads, introductions, and",
+    "buttons": [],
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Communications"
+      },
+      {
+        "size": "32px",
+        "tag": "h1",
+        "text": "Communications"
+      },
+      {
+        "size": "14px",
+        "tag": "h2",
+        "text": "Messages"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Messages"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "org-communications-desktop1280",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/communications"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Assignments Communications Organization Profile Public Preview Proofound Assignments NF",
+    "buttons": [],
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Assignments"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Assignments"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "org-shortlist-desktop1280",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/o/test-org/assignments"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Test Organization Shareable by direct link Public organization profile Help teams review candidates through concrete work evidence instead of polished claims. Return to menu Copy share link Website MISSION / PURPOSE Help teams review candidates through concrete work evidence instead of polished claims. WHAT WORK IS OFFERED WORK OFFERED Proof-first product reviewer ENGAGEMENT Full time Improve rev",
+    "buttons": [],
+    "clientHeight": 800,
+    "clientWidth": 1269,
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Test Organization"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "MISSION / PURPOSE"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "WHAT WORK IS OFFERED"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "ASSIGNMENT CLARITY"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "SERIOUSNESS OF REVIEW"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "ORGANIZATION BASICS"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "org-portfolio-desktop1280",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 971,
+    "scrollWidth": 1269,
+    "tinyTargets": [],
+    "title": "Proofound organization portfolio",
+    "url": "http://localhost:33100/portfolio/org/test-org?returnTo=%2Fapp%2Fo%2Ftest-org%2Fhome"
+  }
+]

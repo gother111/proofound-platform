@@ -1,0 +1,113 @@
+> proofound@0.1.0 test:e2e:org:strict
+> NEXT_PUBLIC_USE_MOCK_SUPABASE=false node ./scripts/playwright-node24.mjs test e2e/strict/organization.strict.spec.ts e2e/strict/org-corridor.strict.spec.ts --project=chromium --reporter=line --workers=1
+
+[1A[2K[2m[WebServer] [22m(node:6080) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m(node:6086) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Parsing of /Users/yuriibakurov/proofound/node_modules/next-intl/dist/esm/production/extractor/format/index.js for build dependencies failed at 'import(t)'.
+[2m[WebServer] [22m<w> Build dependencies behind this expression are ignored and might cause incorrect cache invalidation.
+
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+Running 7 tests using 1 worker
+
+[1A[2K(node:6131) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K(node:6131) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+[1A[2K[1/7] [chromium] › e2e/strict/org-corridor.strict.spec.ts:220:3 › Strict Authenticated Org Corridor › reruns the launch-binding authenticated org corridor end to end
+[1A[2K[chromium] › e2e/strict/org-corridor.strict.spec.ts:220:3 › Strict Authenticated Org Corridor › reruns the launch-binding authenticated org corridor end to end
+[strict-fixtures] retrying /app/o/strict-corridor-org-1778940513337-7fb306/home after failed readiness check on attempt 1/3
+
+[1A[2K[strict-fixtures] retrying /app/o/strict-corridor-org-1778940513337-7fb306/home after failed readiness check on attempt 2/3
+
+[1A[2K  1) [chromium] › e2e/strict/org-corridor.strict.spec.ts:220:3 › Strict Authenticated Org Corridor › reruns the launch-binding authenticated org corridor end to end 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByRole('heading', { name: 'Strict Corridor Org' })
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 10000ms[22m
+    [2m  - waiting for getByRole('heading', { name: 'Strict Corridor Org' })[22m
+
+
+      307 |     await loginWithUi(page, orgOwner);
+      308 |     await gotoWithReadyState(page, `/app/o/${organization.slug}/home`, async () => {
+    > 309 |       await expect(page.getByRole('heading', { name: organization.displayName })).toBeVisible();
+          |                                                                                   ^
+      310 |     });
+      311 |     await expect(page.getByLabel('Collaborator email')).toBeVisible();
+      312 |     await expect(page.getByLabel('Launch role')).toBeVisible();
+        at assertReady (/Users/yuriibakurov/proofound/e2e/strict/org-corridor.strict.spec.ts:309:83)
+        at gotoWithReadyState (/Users/yuriibakurov/proofound/e2e/helpers/strict-fixtures.ts:959:13)
+        at /Users/yuriibakurov/proofound/e2e/strict/org-corridor.strict.spec.ts:308:5
+
+    Error Context: test-results/strict-org-corridor.strict-d91f7-ted-org-corridor-end-to-end-chromium/error-context.md
+
+
+[1A[2K(node:6458) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K(node:6458) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+[1A[2K[2/7] [chromium] › e2e/strict/organization.strict.spec.ts:73:3 › Strict MVP Organization Flows (O-01..O-20) › O-02..O-04 org setup, team roles, and profile contracts are verifiable
+[1A[2K[chromium] › e2e/strict/organization.strict.spec.ts:73:3 › Strict MVP Organization Flows (O-01..O-20) › O-02..O-04 org setup, team roles, and profile contracts are verifiable
+[strict-fixtures] retrying /app/o/strict-org-1778940560767-fc51ccda/home after failed readiness check on attempt 1/3
+
+[1A[2K[strict-fixtures] retrying /app/o/strict-org-1778940560767-fc51ccda/home after failed readiness check on attempt 2/3
+
+[1A[2K  2) [chromium] › e2e/strict/organization.strict.spec.ts:73:3 › Strict MVP Organization Flows (O-01..O-20) › O-02..O-04 org setup, team roles, and profile contracts are verifiable 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByRole('heading', { name: 'Strict Organization' })
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 10000ms[22m
+    [2m  - waiting for getByRole('heading', { name: 'Strict Organization' })[22m
+
+
+      120 |
+      121 |     await gotoWithReadyState(page, `/app/o/${organization.slug}/home`, async () => {
+    > 122 |       await expect(page.getByRole('heading', { name: organization.displayName })).toBeVisible();
+          |                                                                                   ^
+      123 |     });
+      124 |     await expect(page.getByText('Organization review cockpit')).toBeVisible();
+      125 |     await expect(
+        at assertReady (/Users/yuriibakurov/proofound/e2e/strict/organization.strict.spec.ts:122:83)
+        at gotoWithReadyState (/Users/yuriibakurov/proofound/e2e/helpers/strict-fixtures.ts:959:13)
+        at /Users/yuriibakurov/proofound/e2e/strict/organization.strict.spec.ts:121:5
+
+    Error Context: test-results/strict-organization.strict-d8c62-le-contracts-are-verifiable-chromium/error-context.md
+
+
+[1A[2K[3/7] [chromium] › e2e/strict/organization.strict.spec.ts:106:3 › Strict MVP Organization Flows (O-01..O-20) › O-05..O-07 and O-17 assignment create/publish/manage lifecycle is strict
+[1A[2K[4/7] [chromium] › e2e/strict/organization.strict.spec.ts:199:3 › Strict MVP Organization Flows (O-01..O-20) › O-08..O-12 ranked matches, shortlist, messaging, and interview prep are strict
+[1A[2K[5/7] [chromium] › e2e/strict/organization.strict.spec.ts:270:3 › Strict MVP Organization Flows (O-01..O-20) › O-07b draft autosave/update and resume-to-publish contract is strict
+[1A[2K[6/7] [chromium] › e2e/strict/organization.strict.spec.ts:371:3 › Strict MVP Organization Flows (O-01..O-20) › O-13..O-16 interview, archived contract gating, and verification surfaces stay aligned
+[1A[2K[7/7] [chromium] › e2e/strict/organization.strict.spec.ts:387:3 › Strict MVP Organization Flows (O-01..O-20) › O-18..O-20 team permissions and compliance settings are strict
+[1A[2K  2 failed
+    [chromium] › e2e/strict/org-corridor.strict.spec.ts:220:3 › Strict Authenticated Org Corridor › reruns the launch-binding authenticated org corridor end to end 
+    [chromium] › e2e/strict/organization.strict.spec.ts:73:3 › Strict MVP Organization Flows (O-01..O-20) › O-02..O-04 org setup, team roles, and profile contracts are verifiable 
+  5 did not run

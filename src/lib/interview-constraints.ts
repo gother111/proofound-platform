@@ -31,7 +31,7 @@ export function validateInterviewSchedule(
   // Check duration (must be ≤ 30 minutes)
   if (duration > INTERVIEW_CONSTRAINTS.MAX_DURATION_MINUTES) {
     errors.push(
-      `Interview duration cannot exceed ${INTERVIEW_CONSTRAINTS.MAX_DURATION_MINUTES} minutes (PRD requirement)`
+      `Interview duration cannot exceed ${INTERVIEW_CONSTRAINTS.MAX_DURATION_MINUTES} minutes`
     );
   }
 
@@ -56,9 +56,7 @@ export function validateInterviewSchedule(
   }
 
   // Check if interview is too far in future (beyond 30 days)
-  const daysInFuture = Math.floor(
-    (proposedStart.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-  );
+  const daysInFuture = Math.floor((proposedStart.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
 
   if (daysInFuture > 30) {
     errors.push('Interview cannot be scheduled more than 30 days in advance');
@@ -78,7 +76,7 @@ export function canReschedule(rescheduleCount: number): InterviewValidation {
     return {
       valid: false,
       errors: [
-        `Maximum ${INTERVIEW_CONSTRAINTS.ALLOWED_RESCHEDULES} reschedule(s) allowed (PRD requirement)`,
+        `Maximum ${INTERVIEW_CONSTRAINTS.ALLOWED_RESCHEDULES} reschedule allowed. This interview has already used its reschedule.`,
       ],
     };
   }

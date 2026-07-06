@@ -1,6 +1,6 @@
 > Doc Class: `governance`
 > Sync Pair: `Documentation.md`
-> Last Verified: `2026-03-12`
+> Last Verified: `2026-05-21`
 
 # Documentation (Status + Index)
 
@@ -723,7 +723,7 @@ Open risks/TODO:
 
 TODO (missing / validate; do not create here):
 
-- `ACCESSIBILITY_AUDIT_REPORT.md` (expected because `scripts/go-no-go-check.mjs` requires it) (source: scripts/go-no-go-check.mjs)
+- `ACCESSIBILITY_AUDIT_REPORT.md` (current go/no-go evidence dependency for `npm run go:no-go`; the retired `.mjs` gate is archived) (source: scripts/go-no-go-check.ts, scripts/archive/legacy_go_no_go/README.md)
 - `playwright.a11y.config.ts` (expected because `npm run test:a11y` references it) (source: package.json)
 
 ---
@@ -849,9 +849,9 @@ How to verify:
 - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`
 - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`
 - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:a11y`
-- Gate parity (with local server at `http://localhost:3000`):
-  - `BASE_URL=http://localhost:3000 npm run perf:budgets`
-  - `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go`
+- Final launch gate parity (against the intended production-candidate URL):
+  - `BASE_URL=<production-candidate-url> npm run perf:budgets`
+  - `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go`
 - Perf-status source validation:
   - With no analytics rows in the 24h window, `/api/monitoring/perf-status` should return `source: "probe"`.
   - With at least one `api_latency` analytics row present, `/api/monitoring/perf-status` should return `source: "analytics_events"`.
@@ -1106,9 +1106,9 @@ How to verify:
   - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build` (PASS)
   - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:auth` (PASS)
   - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:admin` (PASS)
-- Launch gates:
-  - `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go` (PASS)
-  - `BASE_URL=http://localhost:3000 npm run perf:budgets` (FAIL: TTI budgets only)
+- Historical local launch-gate notes:
+  - `go:no-go` passed in the original local production-server run for this entry; this is not current production-candidate evidence.
+  - `perf:budgets` failed TTI budgets in that local run.
 
 Open risks/TODO:
 
@@ -1618,9 +1618,9 @@ How to verify:
 - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build` (PASS)
 - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:privacy` (PASS)
 - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:privacy:extended` (PASS)
-- Runtime launch gates with local prod server:
-  - `BASE_URL=http://localhost:3000 npm run perf:budgets` (FAIL: desktop/mobile TTI above budget)
-  - `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go` (PASS)
+- Historical local runtime launch-gate notes:
+  - `perf:budgets` failed desktop/mobile TTI budgets in the original local production-server run.
+  - `go:no-go` passed in that local run; this is not current production-candidate evidence.
 
 Open risks/TODO:
 

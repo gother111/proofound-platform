@@ -21,27 +21,39 @@ export interface AdminActionLogParams {
   metadata?: Record<string, any>;
 }
 
+type AdminAuditLogWriter = Pick<typeof db, 'insert'>;
+
+async function buildAdminAuditLogValues(params: AdminActionLogParams) {
+  const headersList = await headers();
+  const ipAddress = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || 'unknown';
+  const userAgent = headersList.get('user-agent') || 'unknown';
+
+  return {
+    adminId: params.adminId,
+    action: params.action,
+    targetType: params.targetType || null,
+    targetId: params.targetId || null,
+    changes: params.changes ? sanitizeLogPayload(params.changes) : null,
+    reason: params.reason || null,
+    ipAddress,
+    userAgent,
+    metadata: params.metadata ? sanitizeLogPayload(params.metadata) : null,
+  };
+}
+
+export async function logAdminActionInTransaction(
+  tx: AdminAuditLogWriter,
+  params: AdminActionLogParams
+): Promise<void> {
+  await tx.insert(adminAuditLog).values(await buildAdminAuditLogValues(params));
+}
+
 /**
  * Log an admin action
  */
 export async function logAdminAction(params: AdminActionLogParams): Promise<void> {
   try {
-    const headersList = await headers();
-    const ipAddress =
-      headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || 'unknown';
-    const userAgent = headersList.get('user-agent') || 'unknown';
-
-    await db.insert(adminAuditLog).values({
-      adminId: params.adminId,
-      action: params.action,
-      targetType: params.targetType || null,
-      targetId: params.targetId || null,
-      changes: params.changes ? sanitizeLogPayload(params.changes) : null,
-      reason: params.reason || null,
-      ipAddress,
-      userAgent,
-      metadata: params.metadata ? sanitizeLogPayload(params.metadata) : null,
-    });
+    await logAdminActionInTransaction(db, params);
 
     log.info('admin_audit.logged', {
       adminId: params.adminId,

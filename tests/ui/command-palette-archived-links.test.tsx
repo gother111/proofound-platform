@@ -29,9 +29,10 @@ describe('CommandPalette archived surface links', () => {
     fireEvent.keyDown(document, { key: 'k', ctrlKey: true });
 
     expect(await screen.findByText('Overview')).toBeInTheDocument();
-    expect(screen.getByText('Matching')).toBeInTheDocument();
+    expect(screen.getByText('Assignment review')).toBeInTheDocument();
     expect(screen.getByText('Portfolio visibility')).toBeInTheDocument();
     expect(screen.getByText('Review verifications')).toBeInTheDocument();
+    expect(screen.queryByText('Matching')).not.toBeInTheDocument();
     expect(screen.queryByText('Expertise Atlas')).not.toBeInTheDocument();
   });
 });

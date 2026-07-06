@@ -13,10 +13,16 @@ import { eq, or, and, sql, desc } from 'drizzle-orm';
 import { z } from 'zod';
 import { log } from '@/lib/log';
 import {
+  buildVisualConversations,
+  visualMessagingFixturesEnabled,
+} from '@/lib/messaging/visual-fixtures';
+import {
   ConversationAccessError,
   ensureConversationForMatch,
   resolveConversationParticipantsForMatch,
 } from '@/lib/messaging/conversation-access';
+
+import { getMatchingVisualState } from '@/lib/matching/visual-fixtures';
 
 // Schema for creating a conversation
 const CreateConversationSchema = z.object({
@@ -35,6 +41,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    if (visualMessagingFixturesEnabled()) {
+      const visualState = getMatchingVisualState(request?.nextUrl);
+      return NextResponse.json({
+        conversations: visualState === 'empty' ? [] : buildVisualConversations(user.id),
+        hasMore: false,
+        nextOffset: null,
+      });
+    }
+
     // Get pagination parameters
     const searchParams = request.nextUrl.searchParams;
     const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);
@@ -48,6 +63,8 @@ export async function GET(request: NextRequest) {
         assignmentId: conversations.assignmentId,
         participantOneId: conversations.participantOneId,
         participantTwoId: conversations.participantTwoId,
+        maskedHandleOne: conversations.maskedHandleOne,
+        maskedHandleTwo: conversations.maskedHandleTwo,
         stage: conversations.stage,
         lastMessageAt: conversations.lastMessageAt,
         createdAt: conversations.createdAt,
@@ -124,7 +141,10 @@ export async function GET(request: NextRequest) {
             displayAvatar = profile.avatarUrl;
           } else {
             // Stage 1: Masked
-            displayName = profile.persona === 'individual' ? 'Candidate' : 'Organization';
+            displayName =
+              conv.participantOneId === user.id
+                ? conv.maskedHandleTwo || 'Organization'
+                : conv.maskedHandleOne || 'Submission';
             displayAvatar = null; // Use generic avatar
           }
         }
@@ -135,7 +155,7 @@ export async function GET(request: NextRequest) {
           assignmentId: conv.assignmentId,
           assignmentRole: assignment[0]?.role || null,
           otherParty: {
-            id: otherPartyId,
+            id: conv.stage === 'revealed' ? otherPartyId : null,
             displayName,
             displayAvatar,
             persona: otherPartyProfile[0]?.persona || 'individual',
@@ -155,7 +175,7 @@ export async function GET(request: NextRequest) {
       nextOffset: hasMore ? offset + limit : null,
     });
   } catch (error) {
-    console.error('Get conversations error:', error);
+    log.error('conversations.list.failed', { error });
     return NextResponse.json({ error: 'Failed to fetch conversations' }, { status: 500 });
   }
 }
@@ -241,9 +261,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Create conversation error:', error);
     log.error('conversation.create.failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error,
     });
     return NextResponse.json({ error: 'Failed to create conversation' }, { status: 500 });
   }

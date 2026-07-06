@@ -8,11 +8,9 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import type { InviteMemberFormState } from '@/actions/org';
 
-export type OrgInviteFormState = {
-  status: 'idle' | 'success' | 'error';
-  message: string | null;
-};
+export type OrgInviteFormState = InviteMemberFormState;
 
 const INITIAL_STATE: OrgInviteFormState = {
   status: 'idle',
@@ -40,8 +38,8 @@ export function OrgCollaboratorInviteCard({
     <div className="space-y-4">
       <div className="space-y-2 text-sm text-muted-foreground">
         <p>
-          Invite one internal collaborator without reopening the broader team surface. Launch roles
-          stay limited to manager or reviewer.
+          Invite one teammate into the assignment review flow. Roles stay limited to manager or
+          reviewer.
         </p>
         <p>
           The invitee receives a single-use acceptance link and joins the org only after accepting
@@ -75,7 +73,7 @@ export function OrgCollaboratorInviteCard({
         />
 
         <div className="space-y-2">
-          <Label htmlFor="invite-role">Launch role</Label>
+          <Label htmlFor="invite-role">Collaborator role</Label>
           <div className="relative">
             <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <select

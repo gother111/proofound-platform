@@ -1,5 +1,8 @@
 # Agent Scratchpad (Session Log)
 
+> Doc Class: `historical`
+> Last Verified: `2026-05-19`
+
 Historical session log archive for work performed in this repo.
 
 Status:
@@ -7,12 +10,15 @@ Status:
 - Frozen for routine per-task updates to reduce PR merge conflicts.
 - Create new logs in `agent/scratchpad/entries/` instead.
 - Use `npm run log:session` to create a sharded session entry.
+- Do not use this legacy file as current launch evidence, current implementation status, or current verification proof.
+- New entries belong in sharded files; the log script creates a real file even when extra arguments are supplied.
 
 Rules:
 
 - Do not rewrite or reorder prior entries.
 - Keep entries concise.
 - Do not include secrets or copy env var values.
+- Do not include private proof content, hidden identity details, raw AI prompts/responses, signed URLs, or private user data.
 
 Format requirements per entry:
 

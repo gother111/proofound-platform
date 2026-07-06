@@ -112,7 +112,7 @@ export function renderLlmsTxt({ detailed = false }: { detailed?: boolean } = {})
     '- Individual Public Pages stay out of search indexing; organization trust pages require publication requirements.'
   );
   lines.push(
-    '- Review stays blind by default until a reveal step is needed inside the hiring flow.'
+    '- Review stays blind by default until a reveal step is needed inside the assignment-review flow.'
   );
   lines.push('');
   lines.push('## Contact');
@@ -126,7 +126,7 @@ export function renderLlmsTxt({ detailed = false }: { detailed?: boolean } = {})
     '- Public Pages and organization trust pages are available on direct URLs only when the owner or organization explicitly publishes public-safe content.'
   );
   lines.push(
-    '- Dynamic portfolio routes are privacy-gated and should not be assumed to be indexable unless the portfolio is explicitly marked searchable.'
+    '- Dynamic portfolio routes are privacy-gated and should not be assumed to be indexable unless publication settings explicitly allow indexing.'
   );
   lines.push('');
 

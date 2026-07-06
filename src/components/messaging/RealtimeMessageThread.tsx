@@ -4,10 +4,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { MessageThread, type Message as ThreadMessage } from './MessageThread';
 import { useRealtimeMessages, type Message as RealtimeMessage } from '@/hooks/useRealtimeMessages';
 import { RevealIdentityCard } from './RevealIdentityCard';
-import { toast } from 'sonner';
 import { Wifi, WifiOff } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { getConversationParticipantLabel } from '@/lib/messaging/participant-label';
+import { createRevealIdentityRetryError } from '@/lib/messaging/reveal-errors';
+import { createMessageSendRetryError } from '@/lib/messaging/send-errors';
 
 export interface RealtimeMessageThreadProps {
   conversationId: string;
@@ -18,6 +21,20 @@ export interface RealtimeMessageThreadProps {
   stage: 'masked' | 'revealed';
   onSendMessage: (content: string) => Promise<void>;
   onBack?: () => void;
+}
+
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function hasReturnedError(payload: unknown) {
+  return Boolean(
+    payload &&
+      typeof payload === 'object' &&
+      'error' in payload &&
+      typeof payload.error === 'string' &&
+      payload.error.trim().length > 0
+  );
 }
 
 /**
@@ -39,6 +56,7 @@ export function RealtimeMessageThread({
   onSendMessage,
   onBack,
 }: RealtimeMessageThreadProps) {
+  const isVisualFixture = conversationId.startsWith('visual-');
   const [messages, setMessages] = useState<ThreadMessage[]>(initialMessages);
   const [isOtherUserTyping, setIsOtherUserTyping] = useState(false);
   const [typingUserId, setTypingUserId] = useState<string | null>(null);
@@ -64,37 +82,63 @@ export function RealtimeMessageThread({
       if (!response.ok) return;
 
       const data = await response.json();
+      const nextStage = data.conversation?.stage === 'revealed' ? 'revealed' : 'masked';
       setConversationState({
-        stage: data.conversation?.stage === 'revealed' ? 'revealed' : 'masked',
+        stage: nextStage,
         currentUserWantsReveal: Boolean(data.conversation?.currentUserWantsReveal),
         otherUserWantsReveal: Boolean(data.conversation?.otherUserWantsReveal),
         canReveal: Boolean(data.conversation?.canReveal),
-        otherPartyName: data.otherParticipant?.displayName || otherPartyName,
+        otherPartyName: getConversationParticipantLabel({
+          stage: nextStage,
+          displayName: data.otherParticipant?.displayName,
+          handle: data.otherParticipant?.handle,
+          fallbackName: otherPartyName,
+        }),
         otherPartyAvatar: data.otherParticipant?.avatarUrl || otherPartyAvatar,
       });
     } catch (error) {
-      console.error('Failed to refresh conversation state:', error);
+      dispatchClientErrorDiagnostic('messages.thread.conversation_refresh_failed', error);
     }
   }, [conversationId, otherPartyAvatar, otherPartyName]);
 
   const handleRevealIdentities = useCallback(async () => {
-    const response = await apiFetch(`/api/conversations/${conversationId}/reveal`, {
-      method: 'POST',
-    });
-    const data = await response.json();
+    const isApproval =
+      conversationState.otherUserWantsReveal && !conversationState.currentUserWantsReveal;
 
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to request reveal');
+    try {
+      const response = await apiFetch(`/api/conversations/${conversationId}/reveal`, {
+        method: 'POST',
+      });
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        dispatchClientDiagnostic('messages.thread.reveal_returned_error', {
+          conversationId,
+          isApproval,
+          status: getResponseStatus(response),
+          hasReturnedError: hasReturnedError(data),
+        });
+        throw new Error('reveal_identity_request_failed');
+      }
+
+      await refreshConversationState();
+      return data;
+    } catch (error) {
+      dispatchClientErrorDiagnostic('messages.thread.reveal_failed', error);
+      throw createRevealIdentityRetryError({ isApproval });
     }
-
-    await refreshConversationState();
-    return data;
-  }, [conversationId, refreshConversationState]);
+  }, [
+    conversationId,
+    conversationState.currentUserWantsReveal,
+    conversationState.otherUserWantsReveal,
+    refreshConversationState,
+  ]);
 
   // Real-time messaging hook
   const { isConnected, startTyping, stopTyping, markAsRead, markAllAsRead } = useRealtimeMessages({
     conversationId,
     userId: currentUserId,
+    disabled: isVisualFixture,
     onNewMessage: useCallback((message: RealtimeMessage) => {
       // Convert to ThreadMessage format
       const threadMessage: ThreadMessage = {
@@ -141,7 +185,10 @@ export function RealtimeMessageThread({
       ...prev,
       stage,
       canReveal: stage === 'masked',
-      otherPartyName,
+      otherPartyName: getConversationParticipantLabel({
+        stage,
+        displayName: otherPartyName,
+      }),
       otherPartyAvatar,
     }));
   }, [otherPartyAvatar, otherPartyName, stage]);
@@ -203,32 +250,34 @@ export function RealtimeMessageThread({
 
       setMessages((prev) => [...prev, optimisticMessage]);
     } catch (error) {
-      console.error('Failed to send message:', error);
-      toast.error('Failed to send message. Please try again.');
+      dispatchClientErrorDiagnostic('messages.thread.send_failed', error);
+      throw createMessageSendRetryError();
     }
   };
 
   return (
     <div className="relative h-full min-h-0 w-full min-w-0 flex flex-col">
       {/* Connection status indicator */}
-      <div className="absolute top-2 right-2 z-10">
-        <Badge
-          variant={isConnected ? 'default' : 'destructive'}
-          className="flex items-center gap-1 text-xs"
-        >
-          {isConnected ? (
-            <>
-              <Wifi className="w-3 h-3" />
-              <span>Live</span>
-            </>
-          ) : (
-            <>
-              <WifiOff className="w-3 h-3" />
-              <span>Connecting...</span>
-            </>
-          )}
-        </Badge>
-      </div>
+      {!isVisualFixture && (
+        <div className="absolute top-2 right-2 z-10">
+          <Badge
+            variant={isConnected ? 'default' : 'destructive'}
+            className="flex items-center gap-1 text-xs"
+          >
+            {isConnected ? (
+              <>
+                <Wifi className="w-3 h-3" />
+                <span>Live</span>
+              </>
+            ) : (
+              <>
+                <WifiOff className="w-3 h-3" />
+                <span>Connecting...</span>
+              </>
+            )}
+          </Badge>
+        </div>
+      )}
 
       {conversationState.canReveal && (
         <div className="border-b bg-background p-4">

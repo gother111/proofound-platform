@@ -2,9 +2,16 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const apiFetchMock = vi.hoisted(() => vi.fn());
+const dispatchClientDiagnosticMock = vi.hoisted(() => vi.fn());
+const dispatchClientErrorDiagnosticMock = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/api/fetch', () => ({
   apiFetch: (...args: unknown[]) => apiFetchMock(...args),
+}));
+
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientDiagnostic: (...args: unknown[]) => dispatchClientDiagnosticMock(...args),
+  dispatchClientErrorDiagnostic: (...args: unknown[]) => dispatchClientErrorDiagnosticMock(...args),
 }));
 
 import { StartFromCvDialog } from '@/components/profile/StartFromCvDialog';
@@ -12,11 +19,61 @@ import { START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE } from '@/lib/ai/st
 
 const sessionId = '11111111-1111-4111-8111-111111111111';
 
+const extractedDraftPayload = {
+  importSessionId: sessionId,
+  sourceType: 'cv',
+  extractionStatus: 'completed',
+  privacyWarnings: [],
+  workContextDrafts: [
+    {
+      id: 'work-1',
+      organizationLabel: 'Acme',
+      roleTitle: 'Original role',
+      approximateDates: '2021 - 2024',
+      shortContextSummary: 'Original private context.',
+      possibleProjectOutcomeCandidates: [],
+      visibility: 'private',
+    },
+  ],
+  educationContextDrafts: [],
+  volunteeringContextDrafts: [],
+  proofPackIdeaDrafts: [],
+  artifactLinkDrafts: [],
+  unsupportedSkillDrafts: [
+    {
+      id: 'skill-1',
+      skillLabel: 'Original skill',
+      sourceContext: 'Mentioned in redacted CV text.',
+      status: 'unsupported_draft',
+      requiresProof: true,
+      requiresUserConfirmation: true,
+      noTrustLift: true,
+      noMatchingLift: true,
+      noVerificationState: true,
+    },
+  ],
+  discardedUnsafeItems: [],
+  requiresUserReview: true,
+};
+
 function jsonResponse(payload: unknown, ok = true) {
   return {
     ok,
     json: async () => payload,
   };
+}
+
+async function createPrivateDrafts() {
+  const file = new File(['%PDF-1.7'], 'candidate-cv.pdf', { type: 'application/pdf' });
+  fireEvent.change(screen.getByLabelText('CV file'), {
+    target: { files: [file] },
+  });
+  fireEvent.click(
+    screen.getByLabelText('I consent to optional CV processing for private draft suggestions.')
+  );
+  fireEvent.click(screen.getByRole('button', { name: /create private drafts/i }));
+
+  expect(await screen.findByDisplayValue('Original role')).toBeInTheDocument();
 }
 
 describe('StartFromCvDialog', () => {
@@ -134,7 +191,7 @@ describe('StartFromCvDialog', () => {
     fireEvent.click(
       screen.getByLabelText('I consent to optional CV processing for private draft suggestions.')
     );
-    fireEvent.click(screen.getByRole('button', { name: /create private proof drafts/i }));
+    fireEvent.click(screen.getByRole('button', { name: /create private drafts/i }));
 
     expect(await screen.findByDisplayValue('Original role')).toBeInTheDocument();
     expect(screen.getAllByText('Found in document').length).toBeGreaterThan(0);
@@ -147,7 +204,7 @@ describe('StartFromCvDialog', () => {
       target: { value: 'Edited context before accepting.' },
     });
     fireEvent.click(screen.getByLabelText('Use Work context drafts: Edited role'));
-    fireEvent.click(screen.getByRole('button', { name: /save selected drafts/i }));
+    fireEvent.click(screen.getByRole('button', { name: /accept selected drafts/i }));
 
     await waitFor(() => expect(onApplyComplete).toHaveBeenCalledTimes(1));
     const acceptCall = apiFetchMock.mock.calls[2] as [string, RequestInit];
@@ -226,11 +283,11 @@ describe('StartFromCvDialog', () => {
     fireEvent.click(
       screen.getByLabelText('I consent to optional CV processing for private draft suggestions.')
     );
-    fireEvent.click(screen.getByRole('button', { name: /create private proof drafts/i }));
+    fireEvent.click(screen.getByRole('button', { name: /create private drafts/i }));
 
     expect(await screen.findByText('No private draft suggestions found')).toBeInTheDocument();
     expect(screen.getByText(/continue manually and add the proof/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /save selected drafts/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /accept selected drafts/i })).toBeDisabled();
 
     fireEvent.click(screen.getByRole('button', { name: /continue manually/i }));
     expect(onApplyComplete).toHaveBeenCalledTimes(1);

@@ -1,0 +1,18 @@
+{
+  "bodyExcerpt": "Skip to main content\nCreate your individual account\n\nStart with email and password. Add details after sign-up.\n\nEMAIL ADDRESS\nPASSWORD\nCONFIRM PASSWORD\nI agree to the Privacy Policy and Terms of Service*\nSend me updates about new features and matching opportunities\nCreate account\nOR CONTINUE WITH\nGoogle\nLinkedIn\n\nAlready have an account? Sign in",
+  "h1s": ["Create your individual account"],
+  "hasGoogleButton": true,
+  "hasHorizontalOverflow": false,
+  "hasLinkedInButton": true,
+  "hasRuntimeErrorText": false,
+  "mainCount": 0,
+  "staleCopyMatches": [],
+  "title": "Individual Sign Up | Proofound",
+  "url": "http://127.0.0.1:33180/signup/individual?next=%2Fapp%2Fi%2Fverifications",
+  "viewport": {
+    "height": 1354,
+    "width": 1359
+  },
+  "consoleIssues": [],
+  "screenshot": "/Users/yuriibakurov/proofound/.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-auth-providers/signup-google-linkedin-auth-smoke.png"
+}

@@ -1,19 +1,19 @@
 /**
- * Next Actions Calculator
+ * Organization readiness next actions
  *
- * Generates intelligent action recommendations based on assignment and matching data.
- * PRD Reference: Part 5 O8 - Company Dashboard Analytics Tiles
+ * Generates proof-first readiness actions based on assignment and submission data.
+ * PRD Reference: Organization assignment-review readiness
  */
 
 import { db } from '@/db';
 import { assignments, matches } from '@/db/schema';
-import { eq, and, lt, gte, sql } from 'drizzle-orm';
+import { eq, and, lt, sql } from 'drizzle-orm';
 import { getRows } from '@/lib/db/rows';
 
 export interface NextAction {
   id: string;
   priority: 'critical' | 'high' | 'medium' | 'low';
-  category: 'assignment' | 'candidate' | 'matching' | 'process';
+  category: 'assignment' | 'matching' | 'process';
   title: string;
   description: string;
   actionLabel: string;
@@ -22,13 +22,22 @@ export interface NextAction {
 }
 
 /**
- * Calculate suggested next actions for an organization
+ * Calculate proof-first next actions for an organization.
  */
-export async function calculateNextActions(organizationId: string): Promise<NextAction[]> {
+export async function calculateNextActions(
+  organizationId: string,
+  organizationSlug?: string | null
+): Promise<NextAction[]> {
   const actions: NextAction[] = [];
-  const now = new Date();
+  const orgAssignmentPath = organizationSlug
+    ? `/app/o/${encodeURIComponent(organizationSlug)}/assignments`
+    : '/app/o';
+  const assignmentReviewPath = (assignmentId: string) =>
+    organizationSlug
+      ? `${orgAssignmentPath}/${encodeURIComponent(assignmentId)}/review`
+      : orgAssignmentPath;
 
-  // 1. Check for stale assignments (>14 days, no shortlist)
+  // 1. Check for stale assignments (>14 days, no proof submissions).
   const staleAssignments = await db.query.assignments.findMany({
     where: and(
       eq(assignments.orgId, organizationId),
@@ -38,7 +47,7 @@ export async function calculateNextActions(organizationId: string): Promise<Next
   });
 
   for (const assignment of staleAssignments) {
-    // Check if there are any matches for this assignment
+    // Check if there are any proof-submission matches for this assignment.
     const matchCount = await db
       .select({ count: sql<number>`count(*)` })
       .from(matches)
@@ -49,52 +58,16 @@ export async function calculateNextActions(organizationId: string): Promise<Next
         id: `stale-assignment-${assignment.id}`,
         priority: 'high',
         category: 'assignment',
-        title: 'No matches for assignment',
-        description: `"${assignment.role || 'Untitled'}" has been active for 14+ days with no matches. Consider adjusting criteria.`,
-        actionLabel: 'Review Criteria',
-        actionUrl: `/o/${organizationId}/assignments/${assignment.id}/edit`,
+        title: 'Assignment needs proof-submission context',
+        description: `"${assignment.role || 'Untitled'}" has been active for 14+ days without proof submissions. Review assignment scope, proof expectations, or publish readiness.`,
+        actionLabel: 'Review assignment',
+        actionUrl: assignmentReviewPath(assignment.id),
         metadata: { assignmentId: assignment.id },
       });
     }
   }
 
-  /*
-  // 2. Check for pending candidate reviews
-  // TODO: Re-enable when applications table is defined
-  const pendingApplications = await db.execute(sql`
-    SELECT 
-      COUNT(*) as pending_count,
-      a.id as assignment_id,
-      a.role
-    FROM applications app
-    JOIN ${assignments} a ON app.assignment_id = a.id
-    WHERE a.organization_id = ${organizationId}
-      AND app.status = 'pending'
-      AND app.created_at < ${new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)}
-    GROUP BY a.id, a.role
-    HAVING COUNT(*) > 0
-    ORDER BY COUNT(*) DESC
-    LIMIT 3
-  `);
-
-  for (const row of pendingApplications.rows as any[]) {
-    const count = parseInt(row.pending_count);
-    if (count > 0) {
-      actions.push({
-        id: `pending-reviews-${row.assignment_id}`,
-        priority: count > 5 ? 'critical' : 'high',
-        category: 'candidate',
-        title: `${count} ${count === 1 ? 'candidate' : 'candidates'} awaiting review`,
-        description: `${row.role || 'Untitled assignment'} has ${count} applications pending for 3+ days.`,
-        actionLabel: 'Review Candidates',
-        actionUrl: `/o/${organizationId}/assignments/${row.assignment_id}/candidates`,
-        metadata: { assignmentId: row.assignment_id, count },
-      });
-    }
-  }
-  */
-
-  // 3. Check for low match quality (average score <0.5)
+  // 2. Check for weak proof-alignment bands without exposing raw score artifacts.
   const lowQualityAssignments = await db.execute(sql`
     SELECT 
       a.id as assignment_id,
@@ -111,64 +84,17 @@ export async function calculateNextActions(organizationId: string): Promise<Next
   `);
 
   for (const row of getRows(lowQualityAssignments) as any[]) {
-    const avgScore = Math.round(parseFloat(row.avg_score) * 100);
     actions.push({
       id: `low-quality-${row.assignment_id}`,
       priority: 'medium',
       category: 'matching',
-      title: 'Low match quality detected',
-      description: `"${row.role || 'Untitled'}" has an average match score of ${avgScore}%. Consider adjusting weight matrix.`,
-      actionLabel: 'Adjust Weights',
-      actionUrl: `/o/${organizationId}/assignments/${row.assignment_id}/edit?tab=weights`,
-      metadata: { assignmentId: row.assignment_id, avgScore },
+      title: 'Proof alignment needs review',
+      description: `"${row.role || 'Untitled'}" is producing weak proof-alignment signals. Tighten required skills, proof gates, or assignment scope.`,
+      actionLabel: 'Review assignment',
+      actionUrl: assignmentReviewPath(row.assignment_id),
+      metadata: { assignmentId: row.assignment_id, proofAlignmentState: 'weak' },
     });
   }
-
-  /*
-  // 4. Check for drop-off patterns (high application rate, low interview rate)
-  // TODO: Re-enable when applications table is defined
-  const dropOffAnalysis = await db.execute(sql`
-    WITH assignment_funnel AS (
-      SELECT 
-        a.id as assignment_id,
-        a.role,
-        COUNT(DISTINCT CASE WHEN app.status = 'submitted' THEN app.id END) as applications,
-        COUNT(DISTINCT CASE WHEN app.status = 'interview_scheduled' THEN app.id END) as interviews
-      FROM ${assignments} a
-      LEFT JOIN applications app ON app.assignment_id = a.id
-      WHERE a.organization_id = ${organizationId}
-        AND a.created_at >= ${new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)}
-      GROUP BY a.id, a.role
-    )
-    SELECT 
-      assignment_id,
-      role,
-      applications,
-      interviews,
-      CASE 
-        WHEN applications > 0 THEN (interviews::float / applications::float)
-        ELSE 0
-      END as conversion_rate
-    FROM assignment_funnel
-    WHERE applications >= 10 
-      AND (interviews::float / NULLIF(applications, 0)::float) < 0.2
-    LIMIT 2
-  `);
-
-  for (const row of dropOffAnalysis.rows as any[]) {
-    const conversionRate = Math.round(parseFloat(row.conversion_rate) * 100);
-    actions.push({
-      id: `high-dropoff-${row.assignment_id}`,
-      priority: 'medium',
-      category: 'process',
-      title: 'High drop-off rate detected',
-      description: `Only ${conversionRate}% of applicants reach interview stage for "${row.role}". Consider simplifying your application process.`,
-      actionLabel: 'Review Process',
-      actionUrl: `/o/${organizationId}/assignments/${row.assignment_id}`,
-      metadata: { assignmentId: row.assignment_id, conversionRate },
-    });
-  }
-  */
 
   // Sort by priority
   const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };

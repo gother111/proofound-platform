@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { pickPrioritizedOrgRepresentative } from '@/lib/messaging/conversation-access';
+import {
+  makeMaskedHandleForPersona,
+  pickPrioritizedOrgRepresentative,
+} from '@/lib/messaging/conversation-access';
 
 describe('conversation org representative selection', () => {
   it('requires explicit active membership state for org representatives', () => {
@@ -21,5 +24,10 @@ describe('conversation org representative selection', () => {
         { userId: 'legacy-owner', role: 'owner', state: 'active' },
       ])
     ).toBeNull();
+  });
+
+  it('keeps masked individual handles proof-submission scoped', () => {
+    expect(makeMaskedHandleForPersona('individual')).toMatch(/^Submission #[A-Z0-9]{6}$/);
+    expect(makeMaskedHandleForPersona('organization')).toMatch(/^Organization #[A-Z0-9]{6}$/);
   });
 });

@@ -3,6 +3,7 @@ import { and, asc, desc, eq, inArray } from 'drizzle-orm';
 import { db } from '@/db';
 import { internalOpsQueueItems } from '@/db/schema';
 import { isSchemaCompatibilityError } from '@/lib/db/schemaCompatibility';
+import { log } from '@/lib/log';
 import type {
   canonicalInternalOpsQueueEntityTypes,
   canonicalInternalOpsQueuePriorities,
@@ -72,7 +73,7 @@ export const INTERNAL_OPS_QUEUE_META = {
   },
   pilot_ops: {
     label: 'Pilot ops',
-    description: 'Pilot coordination tasks that keep the hiring flow narrow and moving.',
+    description: 'Pilot coordination tasks that keep the assignment-review workflow narrow and moving.',
   },
 } satisfies Record<
   InternalOpsQueueType,
@@ -295,7 +296,7 @@ export function buildInternalOpsQueueDetail(
     case 'verification_request':
     case 'verification_bundle': {
       operatorSummary =
-        'Inspect claim-scoped verification progress, corrections, or stale trust signals.';
+        'Inspect claim-scoped verification progress, corrections, or stale verification checks.';
       pushField(
         fields,
         'Claim',
@@ -319,9 +320,13 @@ export function buildInternalOpsQueueDetail(
     case 'conversation':
     case 'match': {
       operatorSummary =
-        'Inspect reveal or consent workflow state without exposing candidate identity.';
+        'Inspect reveal or consent workflow state without exposing participant identity details.';
       pushField(fields, 'Reveal stage', getString(metadata, 'revealStage'));
-      pushField(fields, 'Candidate consent', getString(metadata, 'candidateConsentStatus'));
+      pushField(
+        fields,
+        'Proof-review participant consent',
+        getString(metadata, 'candidateConsentStatus')
+      );
       pushField(fields, 'Organization consent', getString(metadata, 'organizationConsentStatus'));
       pushField(
         fields,
@@ -338,7 +343,11 @@ export function buildInternalOpsQueueDetail(
     case 'decision': {
       operatorSummary = 'Inspect decision workflow state needed for launch support.';
       pushField(fields, 'Decision state', getString(metadata, 'decisionState'));
-      pushField(fields, 'Candidate consent', getString(metadata, 'candidateConsentStatus'));
+      pushField(
+        fields,
+        'Proof-review participant consent',
+        getString(metadata, 'candidateConsentStatus')
+      );
       pushField(fields, 'Export status', getString(metadata, 'exportStatus'));
       checklist = [
         'Support stuck decision workflow without exposing private review notes.',
@@ -354,7 +363,7 @@ export function buildInternalOpsQueueDetail(
       pushField(fields, 'Decision record', getString(metadata, 'decisionId'));
       checklist = [
         'Support only stuck pilot workflow steps.',
-        'Keep organization and candidate private context out of notes.',
+        'Keep participant private context out of notes.',
       ];
       break;
     }
@@ -454,7 +463,7 @@ function isInternalOpsQueueCompatibilityError(error: unknown) {
 }
 
 function warnCompatibilityFallback(operation: 'ensure' | 'list', error: unknown) {
-  console.warn(`internal_ops_queue.${operation}.compatibility_fallback`, error);
+  log.warn(`internal_ops_queue.${operation}.compatibility_fallback`, { error });
 }
 
 function buildCompatibilityFallbackItem(
@@ -591,6 +600,25 @@ export async function listInternalOpsQueueItems(): Promise<InternalOpsQueueGroup
 
     warnCompatibilityFallback('list', error);
     return buildEmptyQueueGroups();
+  }
+}
+
+export async function getInternalOpsQueueItem(id: string): Promise<InternalOpsQueueSummary | null> {
+  try {
+    const row = await db.query.internalOpsQueueItems.findFirst({
+      where: eq(internalOpsQueueItems.id, id),
+    });
+
+    return row ? toSummary(row) : null;
+  } catch (error) {
+    if (!isInternalOpsQueueCompatibilityError(error)) {
+      throw error;
+    }
+
+    throw new InternalOpsQueueMutationError(
+      'compatibility_fallback_unavailable',
+      'Queue detail requires the internal ops queue table to be available.'
+    );
   }
 }
 

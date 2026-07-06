@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "featureId": "feat_route_0b54f0f0fb",
+  "title": "Route /api/assignments/:id/publish",
+  "summary": "Web route implemented by app/api/assignments/[id]/publish/route.ts.",
+  "kind": "route",
+  "source": "next-app-route",
+  "confidence": "high",
+  "entrypoints": [
+    {
+      "path": "app/api/assignments/[id]/publish/route.ts",
+      "symbol": null,
+      "route": "/api/assignments/:id/publish",
+      "command": null
+    }
+  ],
+  "ownedFiles": [
+    {
+      "path": "app/api/assignments/[id]/publish/route.ts",
+      "reason": "entrypoint"
+    }
+  ],
+  "contextFiles": [],
+  "tests": [],
+  "tags": ["next", "web"],
+  "trustBoundaries": ["user-input", "network", "serialization"],
+  "status": "fixed",
+  "lock": null,
+  "findingIds": [
+    "fnd_sig-feat-route-0b54f0f0fb-8eddcc_57e4ef231e",
+    "fnd_sig-feat-route-0b54f0f0fb-379f7b_ddb2dcb442"
+  ],
+  "patchAttemptIds": [],
+  "analysisHistory": [
+    {
+      "runId": "20260516T164325-52e1d0",
+      "kind": "review",
+      "summary": "2 finding(s)",
+      "provider": "codex",
+      "model": null,
+      "createdAt": "2026-05-16T16:46:26.331Z"
+    }
+  ],
+  "createdAt": "2026-05-16T16:02:40.128Z",
+  "updatedAt": "2026-05-16T17:17:56.493Z"
+}

@@ -129,7 +129,7 @@ export const StructuredFeedbackSchema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['reasonCode'],
-        message: 'Candidate feedback must use a candidate-facing reason code.',
+        message: 'Proof-review participant feedback must use a participant-facing reason code.',
       });
     }
 
@@ -171,19 +171,19 @@ export const FALLBACK_COPY: Record<
       statusLabel: 'Qualified intros paused',
       nextActions: [
         'Improve your portfolio or proof',
-        'Complete trust signals or constraints',
+        'Complete verification checks or constraints',
         'Keep browsing and share your portfolio',
       ],
     },
     organization: {
-      title: 'Candidate supply is still thin for this assignment.',
+      title: 'Qualified submission supply is still thin for this assignment.',
       detail:
         'There are not enough qualified introductions yet for this assignment. Review remains open while quality protections stay on.',
-      statusLabel: 'Candidate supply thin',
+      statusLabel: 'Submission supply thin',
       nextActions: [
         'Broaden assignment scope',
         'Request more evidence on strong fits',
-        'Keep reviewing blind profiles',
+        'Keep reviewing blind submissions',
       ],
     },
   },
@@ -195,7 +195,7 @@ export const FALLBACK_COPY: Record<
       statusLabel: 'Assignment supply thin',
       nextActions: [
         'Improve your Public Page or proof',
-        'Complete trust signals or constraints',
+        'Complete verification checks or constraints',
         'Keep browsing and share your Public Page',
       ],
     },
@@ -207,20 +207,20 @@ export const FALLBACK_COPY: Record<
       nextActions: [
         'Broaden assignment scope',
         'Request more evidence on strong fits',
-        'Keep reviewing blind profiles',
+        'Keep reviewing blind submissions',
       ],
     },
   },
   proof_building_weak_coverage: {
     individual: {
-      title: 'Your profile remains shareable and searchable.',
+      title: 'Your Public Page remains shareable with proof context.',
       detail:
-        'Add proof or trust signals to strengthen introduction readiness. Portfolio value comes first even before stronger matching flows unlock.',
+        'Add proof or trust signals to strengthen introduction readiness. Portfolio value comes first while stronger matching flows stay protected.',
       statusLabel: 'Proof coverage in progress',
       nextActions: [
-        'Improve your portfolio or proof',
-        'Complete trust signals or constraints',
-        'Keep browsing and share your portfolio',
+        'Improve your Public Page or proof',
+        'Complete verification checks or constraints',
+        'Keep browsing and share your Public Page',
       ],
     },
     organization: {
@@ -231,7 +231,7 @@ export const FALLBACK_COPY: Record<
       nextActions: [
         'Broaden assignment scope',
         'Request more evidence on strong fits',
-        'Keep reviewing blind profiles',
+        'Keep reviewing blind submissions',
       ],
     },
   },
@@ -243,19 +243,19 @@ export const FALLBACK_COPY: Record<
       statusLabel: 'Verification pending',
       nextActions: [
         'Improve your portfolio or proof',
-        'Complete trust signals or constraints',
+        'Complete verification checks or constraints',
         'Keep browsing and share your portfolio',
       ],
     },
     organization: {
-      title: 'Verification is still in progress for this candidate set.',
+      title: 'Verification is still in progress for this review set.',
       detail:
-        'Stronger trust actions stay paused while review can continue with conservative trust labels and blind-profile review.',
+        'Stronger trust actions stay paused while review can continue with conservative trust labels and blind-submission review.',
       statusLabel: 'Trust pending',
       nextActions: [
         'Broaden assignment scope',
         'Request more evidence on strong fits',
-        'Keep reviewing blind profiles',
+        'Keep reviewing blind submissions',
       ],
     },
   },
@@ -263,23 +263,23 @@ export const FALLBACK_COPY: Record<
     individual: {
       title: 'Shortlist quality is protected right now.',
       detail:
-        'Exact ranking is temporarily hidden to protect shortlist quality. Review can continue without exposing brittle comparative detail.',
-      statusLabel: 'Rank-band mode',
+        'Exact ordering is temporarily hidden to protect shortlist quality. Review can continue without exposing brittle comparative detail.',
+      statusLabel: 'Review-band mode',
       nextActions: [
         'Improve your portfolio or proof',
-        'Complete trust signals or constraints',
+        'Complete verification checks or constraints',
         'Keep browsing and share your portfolio',
       ],
     },
     organization: {
       title: 'Shortlist quality is protected right now.',
       detail:
-        'Exact ranking is temporarily hidden to protect shortlist quality. Review history stays visible while fairness remediation is active.',
-      statusLabel: 'Fairness suppression active',
+        'Exact ordering is temporarily hidden to protect shortlist quality. Review history stays visible while policy review is active.',
+      statusLabel: 'Policy protection active',
       nextActions: [
         'Broaden assignment scope',
         'Request more evidence on strong fits',
-        'Keep reviewing blind profiles',
+        'Keep reviewing blind submissions',
       ],
     },
   },
@@ -291,7 +291,7 @@ export const FALLBACK_COPY: Record<
       statusLabel: 'Intro hold',
       nextActions: [
         'Improve your portfolio or proof',
-        'Complete trust signals or constraints',
+        'Complete verification checks or constraints',
         'Keep browsing and share your portfolio',
       ],
     },
@@ -303,7 +303,7 @@ export const FALLBACK_COPY: Record<
       nextActions: [
         'Broaden assignment scope',
         'Request more evidence on strong fits',
-        'Keep reviewing blind profiles',
+        'Keep reviewing blind submissions',
       ],
     },
   },

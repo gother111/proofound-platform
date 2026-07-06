@@ -5,6 +5,7 @@ import { Briefcase, Globe, PackageOpen, ShieldCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE } from '@/lib/ai/start-from-cv-contract';
 import type { IndividualProfileCompletionState } from '@/lib/profile/completion-flow';
 import type {
   Education,
@@ -104,7 +105,7 @@ export function ProfileTabsSection({
       }}
       className="space-y-8"
     >
-      <TabsList className="w-full justify-start bg-transparent border-b border-border/40 rounded-none h-auto p-0 gap-6 relative">
+      <TabsList className="grid h-auto w-full grid-cols-2 items-stretch gap-2 rounded-lg border border-border/40 bg-white/65 p-1 text-left sm:inline-flex sm:items-center sm:justify-start sm:gap-6 sm:rounded-none sm:border-x-0 sm:border-t-0 sm:bg-transparent sm:p-0">
         {[
           { id: 'context', label: 'Context', icon: Briefcase, color: '#C67B5C' },
           { id: 'proof_packs', label: 'Proof records', icon: PackageOpen, color: '#7A9278' },
@@ -117,12 +118,14 @@ export function ProfileTabsSection({
             <TabsTrigger
               key={tab.id}
               value={tab.id}
-              className="rounded-none border-0 bg-transparent shadow-none px-2 py-3 text-muted-foreground transition-colors hover:text-foreground relative group data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+              className="relative min-h-11 rounded-md border-0 bg-transparent px-2 py-2 text-muted-foreground shadow-none transition-colors hover:text-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none sm:rounded-none sm:py-3"
               style={{ color: isActive ? tab.color : undefined }}
             >
-              <div className="flex items-center gap-2 relative z-10">
+              <div className="relative z-10 flex min-w-0 items-center justify-center gap-2 sm:justify-start">
                 <Icon className="w-4 h-4" />
-                <span>{tab.label}</span>
+                <span className="whitespace-normal text-xs leading-tight sm:whitespace-nowrap sm:text-sm">
+                  {tab.label}
+                </span>
               </div>
               {isActive && (
                 <motion.div
@@ -151,6 +154,7 @@ export function ProfileTabsSection({
         onEditVolunteering={onEditVolunteering}
         onDeleteVolunteering={onDeleteVolunteering}
         onImportComplete={onImportContextComplete}
+        cvScaffoldingSurface={START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE}
       />
 
       <ImpactTab

@@ -20,7 +20,6 @@ import {
 } from '@/db/schema';
 import { requireAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { triggerProfileActivationSurvey } from '@/lib/surveys/sus-triggers';
 import { sendEmail } from '@/lib/email/sender';
 import { resolveCanonicalSiteUrl } from '@/lib/env';
 import { buildExperienceTimeline } from '@/lib/profile/experience-timeline';
@@ -38,8 +37,8 @@ import {
 import {
   hasPrimaryAnchorContext,
   listCanonicalProofPackAggregatesForOwner,
-  listCanonicalSkillProofSummariesForOwner,
   summarizeCanonicalProofOwnerAggregates,
+  summarizeCanonicalSkillProofSummaries,
 } from '@/lib/proofs/canonical-pack';
 import { isAccessiblePublicPortfolioState } from '@/lib/portfolio/public-contract';
 import {
@@ -57,6 +56,7 @@ import {
 } from '@/lib/verification/integrity';
 import { getClaimTemplateLabel } from '@/lib/verification/scoped-contract';
 import { syncReadinessMilestones } from '@/lib/readiness/analytics';
+import { log } from '@/lib/log';
 import type {
   ProfileData,
   BasicInfo,
@@ -83,6 +83,10 @@ import type {
   Volunteering as VolunteeringType,
   FieldVisibility,
 } from '@/types/profile';
+
+function profileActionErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
 
 function coerceDateOnlyString(value: unknown): string | null {
   if (!value) {
@@ -118,9 +122,11 @@ function coerceDateOnlyString(value: unknown): string | null {
 async function checkAndEmitProfileActivation(userId: string): Promise<void> {
   try {
     await syncReadinessMilestones(userId, { source: 'profile_updated' });
-    await triggerProfileActivationSurvey(userId);
   } catch (error) {
-    console.error('Profile activation check failed:', error);
+    log.error('profile.activation_check_failed', {
+      userId,
+      errorMessage: profileActionErrorMessage(error),
+    });
     // Don't throw - activation tracking shouldn't break profile updates
   }
 }
@@ -181,186 +187,185 @@ export async function getProfileData(): Promise<ProfileData> {
         })
         .onConflictDoNothing();
     } catch (error) {
-      console.error('Failed to ensure profiles row exists:', error);
+      log.error('profile.data.ensure_profile_row_failed', {
+        userId: user.id,
+        errorMessage: profileActionErrorMessage(error),
+      });
       // Continue - downstream queries may still work if the profile already exists.
     }
 
-    let profileRow;
+    let profile = null;
+    let profileBasics = null;
     try {
-      [profileRow] = await db
-        .select()
-        .from(individualProfiles)
-        .where(eq(individualProfiles.userId, user.id))
-        .limit(1);
+      const [profileRows, profileBasicsRows] = await Promise.all([
+        db.select().from(individualProfiles).where(eq(individualProfiles.userId, user.id)).limit(1),
+        db
+          .select({
+            displayName: profiles.displayName,
+            handle: profiles.handle,
+            avatarUrl: profiles.avatarUrl,
+            createdAt: profiles.createdAt,
+            publicPortfolioState: profiles.publicPortfolioState,
+          })
+          .from(profiles)
+          .where(eq(profiles.id, user.id))
+          .limit(1),
+      ]);
+      [profile] = profileRows;
+      [profileBasics] = profileBasicsRows;
     } catch (error) {
-      console.error('Failed to fetch profile row:', error);
+      log.error('profile.data.shell_rows_failed', {
+        userId: user.id,
+        errorMessage: profileActionErrorMessage(error),
+      });
       // Continue with empty profile
     }
 
-    if (!profileRow) {
+    if (!profile) {
       try {
-        await db.insert(individualProfiles).values({
-          userId: user.id,
-          skills: [],
-        });
+        [profile] = await db
+          .insert(individualProfiles)
+          .values({
+            userId: user.id,
+            skills: [],
+          })
+          .returning();
       } catch (error) {
-        console.error('Failed to create profile row:', error);
+        log.error('profile.data.create_profile_row_failed', {
+          userId: user.id,
+          errorMessage: profileActionErrorMessage(error),
+        });
         // Continue - profile might already exist
+      }
+
+      if (!profile) {
+        try {
+          [profile] = await db
+            .select()
+            .from(individualProfiles)
+            .where(eq(individualProfiles.userId, user.id))
+            .limit(1);
+        } catch (error) {
+          log.error('profile.data.fetch_after_create_failed', {
+            userId: user.id,
+            errorMessage: profileActionErrorMessage(error),
+          });
+          profile = null;
+        }
       }
     }
 
-    let profile;
-    try {
-      [profile] = await db
-        .select()
-        .from(individualProfiles)
-        .where(eq(individualProfiles.userId, user.id))
-        .limit(1);
-    } catch (error) {
-      console.error('Failed to fetch profile:', error);
-      profile = null;
-    }
-
-    let profileBasics;
-    try {
-      [profileBasics] = await db
+    const relatedDataPromise = Promise.all([
+      db
         .select({
-          displayName: profiles.displayName,
-          handle: profiles.handle,
-          avatarUrl: profiles.avatarUrl,
-          createdAt: profiles.createdAt,
-          publicPortfolioState: profiles.publicPortfolioState,
+          id: impactStories.id,
+          title: impactStories.title,
+          orgDescription: impactStories.orgDescription,
+          impact: impactStories.impact,
+          businessValue: impactStories.businessValue,
+          outcomes: impactStories.outcomes,
+          timeline: impactStories.timeline,
+          timelineStructured: impactStories.timelineStructured,
+          affiliationType: impactStories.affiliationType,
+          affiliationDetails: impactStories.affiliationDetails,
+          roleTitle: impactStories.roleTitle,
+          roleScope: impactStories.roleScope,
+          primaryCause: impactStories.primaryCause,
+          secondaryCauses: impactStories.secondaryCauses,
+          measuredOutcomes: impactStories.measuredOutcomes,
+          supportingArtifacts: impactStories.supportingArtifacts,
+          verified: impactStories.verified,
         })
-        .from(profiles)
-        .where(eq(profiles.id, user.id))
-        .limit(1);
-    } catch (error) {
-      console.error('Failed to fetch profile basics:', error);
-      profileBasics = null;
-    }
+        .from(impactStories)
+        .where(eq(impactStories.userId, user.id)),
+      db
+        .select({
+          id: experiences.id,
+          title: experiences.title,
+          organizationName: experiences.organizationName,
+          organizationType: experiences.organizationType,
+          organizationIndustry: experiences.organizationIndustry,
+          organizationIndustryKey: experiences.organizationIndustryKey,
+          organizationIndustryLabel: experiences.organizationIndustryLabel,
+          organizationIndustryLegacyText: experiences.organizationIndustryLegacyText,
+          organizationEmployeeAmount: experiences.organizationEmployeeAmount,
+          orgDescription: experiences.orgDescription,
+          duration: experiences.duration,
+          startDate: experiences.startDate,
+          endDate: experiences.endDate,
+          outcomes: experiences.outcomes,
+          projects: experiences.projects,
+          measuredOutcomes: experiences.measuredOutcomes,
+          projectEntries: experiences.projectEntries,
+          colleagues: experiences.colleagues,
+          achievements: experiences.achievements,
+          verified: experiences.verified,
+        })
+        .from(experiences)
+        .where(eq(experiences.userId, user.id)),
+      db
+        .select({
+          id: education.id,
+          institution: education.institution,
+          degree: education.degree,
+          duration: education.duration,
+          skills: education.skills,
+          projects: education.projects,
+          measuredOutcomes: education.measuredOutcomes,
+          verified: education.verified,
+        })
+        .from(education)
+        .where(eq(education.userId, user.id)),
+      db
+        .select({
+          id: volunteering.id,
+          title: volunteering.title,
+          orgDescription: volunteering.orgDescription,
+          duration: volunteering.duration,
+          cause: volunteering.cause,
+          impact: volunteering.impact,
+          skillsDeployed: volunteering.skillsDeployed,
+          personalWhy: volunteering.personalWhy,
+          measuredOutcomes: volunteering.measuredOutcomes,
+          verified: volunteering.verified,
+        })
+        .from(volunteering)
+        .where(eq(volunteering.userId, user.id)),
+      db
+        .select({
+          id: skillsTable.id,
+          skillCode: skillsTable.skillCode,
+          skillId: skillsTable.skillId,
+          level: skillsTable.level,
+          nameI18n: skillsTaxonomy.nameI18n,
+        })
+        .from(skillsTable)
+        .leftJoin(skillsTaxonomy, eq(skillsTable.skillCode, skillsTaxonomy.code))
+        .where(eq(skillsTable.profileId, user.id)),
+      ((
+        db as {
+          query?: { matchingProfiles?: { findFirst?: (args: unknown) => Promise<any> } };
+        }
+      ).query?.matchingProfiles?.findFirst?.({
+        where: eq(matchingProfiles.profileId, user.id),
+        columns: {
+          timezone: true,
+          desiredRoles: true,
+          workMode: true,
+          engagementType: true,
+        },
+      }) ?? Promise.resolve(null)) as Promise<any>,
+    ]).catch((error) => {
+      log.error('profile.data.related_rows_failed', {
+        userId: user.id,
+        errorMessage: profileActionErrorMessage(error),
+      });
+      return [[], [], [], [], [], null] as const;
+    });
 
-    let impactRows: any[] = [];
-    let impactVerificationRows: any[] = [];
-    let experienceRows: any[] = [];
-    let educationRows: any[] = [];
-    let volunteeringRows: any[] = [];
-    let skillRows: any[] = [];
-    let matchingProfileRow: Pick<
-      GuidedSetupState,
-      'timezone' | 'desiredRoles' | 'workMode' | 'engagementType'
-    > | null = null;
-
-    try {
-      [impactRows, experienceRows, educationRows, volunteeringRows, skillRows, matchingProfileRow] =
-        await Promise.all([
-          db
-            .select({
-              id: impactStories.id,
-              title: impactStories.title,
-              orgDescription: impactStories.orgDescription,
-              impact: impactStories.impact,
-              businessValue: impactStories.businessValue,
-              outcomes: impactStories.outcomes,
-              timeline: impactStories.timeline,
-              timelineStructured: impactStories.timelineStructured,
-              affiliationType: impactStories.affiliationType,
-              affiliationDetails: impactStories.affiliationDetails,
-              roleTitle: impactStories.roleTitle,
-              roleScope: impactStories.roleScope,
-              primaryCause: impactStories.primaryCause,
-              secondaryCauses: impactStories.secondaryCauses,
-              measuredOutcomes: impactStories.measuredOutcomes,
-              supportingArtifacts: impactStories.supportingArtifacts,
-              verified: impactStories.verified,
-            })
-            .from(impactStories)
-            .where(eq(impactStories.userId, user.id)),
-          db
-            .select({
-              id: experiences.id,
-              title: experiences.title,
-              organizationName: experiences.organizationName,
-              organizationType: experiences.organizationType,
-              organizationIndustry: experiences.organizationIndustry,
-              organizationIndustryKey: experiences.organizationIndustryKey,
-              organizationIndustryLabel: experiences.organizationIndustryLabel,
-              organizationIndustryLegacyText: experiences.organizationIndustryLegacyText,
-              organizationEmployeeAmount: experiences.organizationEmployeeAmount,
-              orgDescription: experiences.orgDescription,
-              duration: experiences.duration,
-              startDate: experiences.startDate,
-              endDate: experiences.endDate,
-              outcomes: experiences.outcomes,
-              projects: experiences.projects,
-              measuredOutcomes: experiences.measuredOutcomes,
-              projectEntries: experiences.projectEntries,
-              colleagues: experiences.colleagues,
-              achievements: experiences.achievements,
-              verified: experiences.verified,
-            })
-            .from(experiences)
-            .where(eq(experiences.userId, user.id)),
-          db
-            .select({
-              id: education.id,
-              institution: education.institution,
-              degree: education.degree,
-              duration: education.duration,
-              skills: education.skills,
-              projects: education.projects,
-              measuredOutcomes: education.measuredOutcomes,
-              verified: education.verified,
-            })
-            .from(education)
-            .where(eq(education.userId, user.id)),
-          db
-            .select({
-              id: volunteering.id,
-              title: volunteering.title,
-              orgDescription: volunteering.orgDescription,
-              duration: volunteering.duration,
-              cause: volunteering.cause,
-              impact: volunteering.impact,
-              skillsDeployed: volunteering.skillsDeployed,
-              personalWhy: volunteering.personalWhy,
-              measuredOutcomes: volunteering.measuredOutcomes,
-              verified: volunteering.verified,
-            })
-            .from(volunteering)
-            .where(eq(volunteering.userId, user.id)),
-          db
-            .select({
-              id: skillsTable.id,
-              skillCode: skillsTable.skillCode,
-              skillId: skillsTable.skillId,
-              level: skillsTable.level,
-              nameI18n: skillsTaxonomy.nameI18n,
-            })
-            .from(skillsTable)
-            .leftJoin(skillsTaxonomy, eq(skillsTable.skillCode, skillsTaxonomy.code))
-            .where(eq(skillsTable.profileId, user.id)),
-          ((
-            db as {
-              query?: { matchingProfiles?: { findFirst?: (args: unknown) => Promise<any> } };
-            }
-          ).query?.matchingProfiles?.findFirst?.({
-            where: eq(matchingProfiles.profileId, user.id),
-            columns: {
-              timezone: true,
-              desiredRoles: true,
-              workMode: true,
-              engagementType: true,
-            },
-          }) ?? Promise.resolve(null)) as Promise<any>,
-        ]);
-    } catch (error) {
-      console.error('Failed to fetch profile related data:', error);
-      // Continue with empty arrays
-    }
-
-    try {
-      impactVerificationRows = (await listCanonicalImpactVerificationRequestsForOwner(user.id)).map(
-        (row) => {
+    const impactVerificationRowsPromise = listCanonicalImpactVerificationRequestsForOwner(user.id)
+      .then((rows) => {
+        const mappedRows = rows.map((row) => {
           const record = mapCanonicalImpactVerificationRequestRecord(row);
           return {
             impactStoryId: record.impact_story_id,
@@ -370,21 +375,65 @@ export async function getProfileData(): Promise<ProfileData> {
             emailSentAt: record.email_sent ? record.created_at : null,
             emailError: record.email_error,
           };
-        }
-      );
+        });
 
-      impactVerificationRows.sort((a, b) => {
-        const left = toIsoStringOrNull(a?.createdAt) || '';
-        const right = toIsoStringOrNull(b?.createdAt) || '';
-        return right.localeCompare(left);
+        mappedRows.sort((a, b) => {
+          const left = toIsoStringOrNull(a?.createdAt) || '';
+          const right = toIsoStringOrNull(b?.createdAt) || '';
+          return right.localeCompare(left);
+        });
+
+        return mappedRows;
+      })
+      .catch((error) => {
+        const verificationMarkers = ['verification_records', 'created_at'];
+        if (!isSchemaDriftError(error, verificationMarkers)) {
+          log.error('profile.data.impact_verification_summary_failed', {
+            userId: user.id,
+            errorMessage: profileActionErrorMessage(error),
+          });
+        }
+        return [];
       });
-    } catch (error) {
-      const verificationMarkers = ['verification_records', 'created_at'];
-      if (!isSchemaDriftError(error, verificationMarkers)) {
-        console.error('Failed to fetch impact verification summaries:', error);
-      }
-      impactVerificationRows = [];
-    }
+
+    const canonicalProofAggregatesPromise = listCanonicalProofPackAggregatesForOwner(
+      'individual_profile',
+      user.id
+    ).catch((error) => {
+      log.error('profile.data.canonical_proof_summary_failed', {
+        userId: user.id,
+        errorMessage: profileActionErrorMessage(error),
+      });
+      return [];
+    });
+
+    const publicationStatePromise = db
+      .select({
+        effectiveState: portfolioPublicationStates.effectiveState,
+      })
+      .from(portfolioPublicationStates)
+      .where(eq(portfolioPublicationStates.subjectId, user.id))
+      .limit(1)
+      .then((rows) => rows[0]?.effectiveState ?? null)
+      .catch((error) => {
+        log.error('profile.data.publication_state_failed', {
+          userId: user.id,
+          errorMessage: profileActionErrorMessage(error),
+        });
+        return null;
+      });
+
+    const [
+      [impactRows, experienceRows, educationRows, volunteeringRows, skillRows, matchingProfileRow],
+      impactVerificationRows,
+      canonicalProofAggregates,
+      publicationState,
+    ] = await Promise.all([
+      relatedDataPromise,
+      impactVerificationRowsPromise,
+      canonicalProofAggregatesPromise,
+      publicationStatePromise,
+    ]);
 
     // Transform L4 skills to profile format
     // Check for proofs to determine verified status
@@ -393,62 +442,24 @@ export async function getProfileData(): Promise<ProfileData> {
     let anchoredProofPackCount = 0;
     let acceptedVerificationCount = 0;
     let publicProofCount = 0;
-    let canonicalProofAggregates: Awaited<
-      ReturnType<typeof listCanonicalProofPackAggregatesForOwner>
-    > = [];
-    try {
-      const skillProofSummaries = await listCanonicalSkillProofSummariesForOwner(user.id);
-      proofArtifactCount = skillProofSummaries.reduce(
-        (sum, summary) => sum + summary.proofCount,
-        0
-      );
-      acceptedVerificationCount = skillProofSummaries.reduce(
-        (sum, summary) => sum + summary.verificationCount,
-        0
-      );
-      trustedSkillIds = new Set(
-        skillProofSummaries
-          .filter((summary) => summary.hasTrustedSignal)
-          .map((summary) => summary.skillId)
-      );
-    } catch {
-      // Continue without proof counts
-    }
+    const canonicalProofSummary = summarizeCanonicalProofOwnerAggregates(canonicalProofAggregates);
+    const skillProofSummaries = summarizeCanonicalSkillProofSummaries(canonicalProofAggregates);
+    anchoredProofPackCount = canonicalProofAggregates.filter((aggregate) =>
+      hasPrimaryAnchorContext(aggregate.pack)
+    ).length;
+    proofArtifactCount = canonicalProofSummary.artifactCount;
+    acceptedVerificationCount = canonicalProofSummary.verifiedVerificationCount;
+    trustedSkillIds = new Set(
+      skillProofSummaries
+        .filter((summary) => summary.hasTrustedSignal)
+        .map((summary) => summary.skillId)
+    );
+    publicProofCount = canonicalProofAggregates.filter(
+      (aggregate) => hasPrimaryAnchorContext(aggregate.pack) && aggregate.publicSafe !== null
+    ).length;
 
-    try {
-      canonicalProofAggregates = await listCanonicalProofPackAggregatesForOwner(
-        'individual_profile',
-        user.id
-      );
-      const canonicalProofSummary =
-        summarizeCanonicalProofOwnerAggregates(canonicalProofAggregates);
-      anchoredProofPackCount = canonicalProofAggregates.filter((aggregate) =>
-        hasPrimaryAnchorContext(aggregate.pack)
-      ).length;
-      proofArtifactCount = canonicalProofSummary.artifactCount;
-      acceptedVerificationCount = canonicalProofSummary.verifiedVerificationCount;
-      publicProofCount = canonicalProofAggregates.filter(
-        (aggregate) => hasPrimaryAnchorContext(aggregate.pack) && aggregate.publicSafe !== null
-      ).length;
-    } catch (error) {
-      console.error('Failed to fetch canonical proof pack summary:', error);
-      anchoredProofPackCount = proofArtifactCount > 0 ? 1 : 0;
-    }
-
-    let publicationEffectiveState = profileBasics?.publicPortfolioState ?? null;
-    try {
-      const [publicationStateRow] = await db
-        .select({
-          effectiveState: portfolioPublicationStates.effectiveState,
-        })
-        .from(portfolioPublicationStates)
-        .where(eq(portfolioPublicationStates.subjectId, user.id))
-        .limit(1);
-      publicationEffectiveState =
-        publicationStateRow?.effectiveState ?? publicationEffectiveState ?? null;
-    } catch (error) {
-      console.error('Failed to fetch portfolio publication state:', error);
-    }
+    const publicationEffectiveState =
+      publicationState ?? profileBasics?.publicPortfolioState ?? null;
     const publishedPortfolio =
       typeof publicationEffectiveState === 'string' &&
       isAccessiblePublicPortfolioState(publicationEffectiveState as any);
@@ -681,7 +692,9 @@ export async function getProfileData(): Promise<ProfileData> {
     ) {
       throw error;
     }
-    console.error('Failed to get profile data:', error);
+    log.error('profile.data.get_failed', {
+      errorMessage: profileActionErrorMessage(error),
+    });
     // Return empty profile structure instead of throwing
     // This prevents the page from crashing completely
     return {
@@ -1481,7 +1494,9 @@ async function resolveRequesterEmailSnapshot(): Promise<string | null> {
     const { data: authUserData } = await supabase.auth.getUser();
     return normalizeEmail(authUserData.user?.email || null);
   } catch (authContextError) {
-    console.warn('impact verification: unable to resolve requester auth email', authContextError);
+    log.warn('profile.impact_verification.requester_email_resolve_failed', {
+      errorMessage: profileActionErrorMessage(authContextError),
+    });
     return null;
   }
 }

@@ -26,6 +26,14 @@ function request(body: unknown) {
   });
 }
 
+function rawRequest(body: string) {
+  return new NextRequest('http://localhost/api/ai/proof-pack/suggest', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body,
+  });
+}
+
 describe('Proof Pack Assistant route', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -62,6 +70,14 @@ describe('Proof Pack Assistant route', () => {
 
     expect(response.status).toBe(503);
     expect(payload.code).toBe('ai_global_kill_switch');
+    expect(mocks.suggestProofPackForUser).not.toHaveBeenCalled();
+  });
+
+  it('rejects malformed JSON before assistant service access', async () => {
+    const response = await POST(rawRequest('{"proofPackId":'));
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
     expect(mocks.suggestProofPackForUser).not.toHaveBeenCalled();
   });
 

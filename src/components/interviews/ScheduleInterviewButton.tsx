@@ -17,7 +17,7 @@ interface ScheduleInterviewButtonProps {
   matchAgreedAt: Date;
   existingInterviewsCount?: number;
   variant?: 'default' | 'outline' | 'ghost';
-  size?: 'default' | 'sm' | 'lg';
+  size?: 'default' | 'sm' | 'lg' | 'touch';
   className?: string;
   onScheduled?: (interview: { id: string; scheduledAt: string; meetingUrl: string }) => void;
 }

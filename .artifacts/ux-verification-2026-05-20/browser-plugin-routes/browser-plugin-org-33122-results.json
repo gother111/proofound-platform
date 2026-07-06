@@ -1,0 +1,55 @@
+[
+  {
+    "id": "org-home-33122",
+    "requestedUrl": "/app/o/test-org/home",
+    "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-plugin-routes/org-home-33122.png",
+    "cookieBannerVisible": false,
+    "finalUrl": "http://localhost:33122/app/o/test-org/home",
+    "h1": "Nordic Field Systems",
+    "horizontalOverflow": 0,
+    "loginVisible": false,
+    "mainTextStart": "",
+    "title": "Proofound - Focus on what matters",
+    "viewport": {
+      "height": 844,
+      "width": 390
+    }
+  },
+  {
+    "id": "org-assignments-33122",
+    "requestedUrl": "/app/o/test-org/assignments",
+    "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-plugin-routes/org-assignments-33122.png",
+    "cookieBannerVisible": false,
+    "finalUrl": "http://localhost:33122/app/o/test-org/assignments",
+    "h1": "Assignments",
+    "horizontalOverflow": 0,
+    "loginVisible": false,
+    "mainTextStart": "Assignment corridorOrganization / AssignmentsAssignmentsAssignment cards own their matching corridor, candidate review, and pipeline context.AssignmentsAssignment workspace is loadingWe are preparing the assignment cards, proof matches, and review context for this workspace.Loading assignments and matches...Create assignment",
+    "title": "Proofound - Focus on what matters",
+    "viewport": {
+      "height": 844,
+      "width": 390
+    }
+  },
+  {
+    "id": "org-communications-33122",
+    "requestedUrl": "/app/o/test-org/communications",
+    "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-plugin-routes/org-communications-33122.png",
+    "cookieBannerVisible": false,
+    "finalUrl": "http://localhost:33122/app/o/test-org/communications",
+    "h1": "",
+    "horizontalOverflow": 0,
+    "loginVisible": false,
+    "mainTextStart": "Hiring CorridorCommunicationsMessagesThreads, intros, and reveal requests.InterviewsScheduling, feedback, and handoff.Secure CorridorMessages, scheduling, and reveal steps stay inside the consent-bound corridor.Preparing organization messagesLoading the team conversation context before showing threads, intros, and reveal requests.",
+    "title": "Proofound - Focus on what matters",
+    "viewport": {
+      "height": 844,
+      "width": 390
+    }
+  },
+  {
+    "id": "org-shortlist-33122",
+    "requestedUrl": "/app/o/test-org/shortlist",
+    "error": "Timed out waiting for tab 2 to navigate to http://localhost:33122/app/o/test-org/shortlist."
+  }
+]

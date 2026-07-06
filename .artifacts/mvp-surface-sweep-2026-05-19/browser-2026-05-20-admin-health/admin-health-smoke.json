@@ -1,0 +1,20 @@
+{
+  "generatedAt": "2026-05-20T03:09:10.523Z",
+  "adminHealthState": {
+    "h1": "Launch Operations",
+    "hasAuditLog": true,
+    "hasBroadAdminLinks": false,
+    "hasCounts": true,
+    "hasExternalProofCopy": true,
+    "hasLaunchHealth": true,
+    "hasOperationsQueues": true,
+    "hasReady": true,
+    "hasRuntimeError": false,
+    "hasSecretLeakTerms": false,
+    "horizontalOverflow": false,
+    "launchHealthSample": "Launch healthLatest repo evidence for launch gates and unresolved external signoff.READY36Pass0Fail0Blocked4OpenStill needs 4 external proof items before final signoff.Generated 5/20/2026, 4:58:33 AM",
+    "mainCount": 1,
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33182/admin"
+  }
+}

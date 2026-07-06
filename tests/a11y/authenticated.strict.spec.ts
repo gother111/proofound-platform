@@ -82,9 +82,9 @@ test.describe('Accessibility - Authenticated Strict Flows', () => {
     expect(accessibilityScanResults.violations).toEqual([]);
   });
 
-  test('Expertise hub should be accessible (authenticated)', async ({ page }) => {
+  test('Proof portfolio workspace should be accessible (authenticated)', async ({ page }) => {
     await loginWithUi(page, authenticatedUser);
-    await page.goto('/app/i/expertise');
+    await page.goto('/app/i/portfolio');
     await waitForUiToSettle(page);
 
     const accessibilityScanResults = await new AxeBuilder({ page })

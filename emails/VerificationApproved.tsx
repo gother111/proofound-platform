@@ -60,21 +60,21 @@ export default function VerificationApproved({
             </Section>
 
             <Text style={paragraph}>
-              This verification strengthens your profile credibility and helps you:
+              This verification strengthens your profile credibility and helps organizations read
+              your proof with more context.
             </Text>
 
             <Text style={benefitsList}>
-              ✓ <strong>Build Trust:</strong> Show potential employers you&apos;re a verified
-              professional
+              ✓ <strong>Build trust:</strong> Show that this verification signal has been checked
               <br />
-              <br />✓ <strong>Improve Matching:</strong> Get better match recommendations based on
-              verified data
+              <br />✓ <strong>Support proof review:</strong> Give organizations clearer context
+              around the proof and experience you choose to share
               <br />
-              <br />✓ <strong>Stand Out:</strong> Verified profiles receive priority in search and
-              matching
+              <br />✓ <strong>Keep control:</strong> Your profile visibility and proof sharing stay
+              privacy staged
               <br />
-              <br />✓ <strong>Access Features:</strong> Unlock premium features available to
-              verified users
+              <br />✓ <strong>Stay ready:</strong> Keep your profile easier to review when you are
+              intro eligible
             </Text>
 
             <Section style={buttonContainer}>
@@ -92,28 +92,31 @@ export default function VerificationApproved({
             <Text style={infoText}>
               {verificationType === 'linkedin' && (
                 <>
-                  Consider adding other verification methods to further strengthen your profile:
+                  Keep your profile and Proof Packs current so this signal supports your review
+                  context:
                   <br />
-                  • Verify your work email for additional credibility
-                  <br />• Complete government ID verification with Veriff
+                  • Add recent proof tied to real work
+                  <br />• Review your public portfolio visibility
                 </>
               )}
 
               {verificationType === 'work-email' && (
                 <>
-                  Consider adding other verification methods to further strengthen your profile:
+                  Keep your profile and Proof Packs current so this signal supports your review
+                  context:
                   <br />
-                  • Connect your LinkedIn profile
-                  <br />• Complete government ID verification with Veriff
+                  • Add recent proof tied to real work
+                  <br />• Review your public portfolio visibility
                 </>
               )}
 
               {verificationType === 'veriff' && (
                 <>
-                  You&apos;ve completed government ID verification! Consider:
+                  Keep your profile and Proof Packs current so this signal supports your review
+                  context:
                   <br />
-                  • Connecting your LinkedIn profile
-                  <br />• Verifying your work email
+                  • Add recent proof tied to real work
+                  <br />• Review your public portfolio visibility
                 </>
               )}
             </Text>
@@ -121,8 +124,8 @@ export default function VerificationApproved({
             <Hr style={hr} />
 
             <Text style={footerText}>
-              Your verified status is displayed on your profile with a verification badge. This
-              helps build trust with potential employers and matches.
+              Your verified status is displayed on your profile with a verification badge. It is a
+              trust signal, not an automated score, rank, or workflow recommendation.
             </Text>
           </Section>
 

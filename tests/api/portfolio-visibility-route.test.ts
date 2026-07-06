@@ -29,16 +29,31 @@ vi.mock('@/lib/portfolio/public-invalidation', () => ({
   revalidatePublicPortfolioByProfileId: vi.fn(),
 }));
 
-import { POST } from '@/app/api/portfolio/visibility/route';
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+  },
+}));
+
+import { GET, POST } from '@/app/api/portfolio/visibility/route';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { computePortfolioPublicationState } from '@/lib/proof-trust/snapshots';
+import { log } from '@/lib/log';
 
 function request(body: Record<string, unknown>) {
   return new NextRequest('http://localhost/api/portfolio/visibility', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
+  });
+}
+
+function rawRequest(body: string) {
+  return new NextRequest('http://localhost/api/portfolio/visibility', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body,
   });
 }
 
@@ -51,7 +66,7 @@ function buildSupabase({
       workEmail: false,
       identity: false,
       proofBar: true,
-      linkedin: true,
+      linkedin: false,
       skills: false,
     },
     headline: 'Proof-first launch work',
@@ -137,7 +152,7 @@ describe('POST /api/portfolio/visibility privacy preflight', () => {
           workEmail: false,
           identity: false,
           proofBar: true,
-          linkedin: true,
+          linkedin: false,
           skills: false,
         },
         headline: 'Launch proof for Jane Doe',
@@ -173,6 +188,15 @@ describe('POST /api/portfolio/visibility privacy preflight', () => {
     expect(supabase.__mocks.profileUpdate).not.toHaveBeenCalled();
   });
 
+  it('returns 400 for malformed JSON before auth or preflight work', async () => {
+    const response = await POST(rawRequest('{'));
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
+    expect(createClient).not.toHaveBeenCalled();
+    expect(computePortfolioPublicationState).not.toHaveBeenCalled();
+  });
+
   it('does not block low-risk publication automatically', async () => {
     const supabase = buildSupabase();
     vi.mocked(createClient).mockResolvedValue(supabase as any);
@@ -189,6 +213,84 @@ describe('POST /api/portfolio/visibility privacy preflight', () => {
     expect(response.status).toBe(200);
     expect(supabase.__mocks.individualUpdate).toHaveBeenCalled();
     expect(supabase.__mocks.profileUpdate).toHaveBeenCalled();
+  });
+
+  it('forces legacy LinkedIn visibility off even when clients request it', async () => {
+    const supabase = buildSupabase({
+      individual: {
+        field_visibility: {
+          header: true,
+          bio: false,
+          contact: false,
+          workEmail: false,
+          identity: true,
+          proofBar: true,
+          linkedin: true,
+          skills: false,
+        },
+        headline: 'Proof-first launch work',
+        bio: '',
+        tagline: null,
+        work_email: 'jane@example.com',
+      },
+    });
+    vi.mocked(createClient).mockResolvedValue(supabase as any);
+
+    const response = await POST(
+      request({
+        publicPageEnabled: true,
+        searchIndexingEnabled: false,
+        linkedin: true,
+      })
+    );
+
+    expect(response.status).toBe(200);
+    expect(supabase.__mocks.individualUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        field_visibility: expect.objectContaining({
+          linkedin: false,
+        }),
+      })
+    );
+  });
+
+  it('keeps the public header visible even when clients request it off', async () => {
+    const supabase = buildSupabase({
+      individual: {
+        field_visibility: {
+          header: false,
+          bio: false,
+          contact: false,
+          workEmail: false,
+          identity: true,
+          proofBar: true,
+          linkedin: false,
+          skills: false,
+        },
+        headline: 'Proof-first launch work',
+        bio: '',
+        tagline: null,
+        work_email: 'jane@example.com',
+      },
+    });
+    vi.mocked(createClient).mockResolvedValue(supabase as any);
+
+    const response = await POST(
+      request({
+        publicPageEnabled: true,
+        searchIndexingEnabled: false,
+        header: false,
+      })
+    );
+
+    expect(response.status).toBe(200);
+    expect(supabase.__mocks.individualUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        field_visibility: expect.objectContaining({
+          header: true,
+        }),
+      })
+    );
   });
 
   it('hard-disables individual search indexing even when requested', async () => {
@@ -212,5 +314,43 @@ describe('POST /api/portfolio/visibility privacy preflight', () => {
         search_indexing_enabled_at: null,
       })
     );
+  });
+
+  it('logs visibility fetch failures with structured diagnostics', async () => {
+    const routeError = new Error('session unavailable');
+    vi.mocked(createClient).mockRejectedValueOnce(routeError);
+
+    const response = await GET();
+    const payload = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(payload).toEqual({ error: 'Failed to fetch visibility' });
+    expect(log.error).toHaveBeenCalledWith('portfolio.visibility.get_failed', {
+      error: routeError,
+    });
+  });
+
+  it('logs visibility profile-state update failures with structured diagnostics', async () => {
+    const profileUpdateError = new Error('profile update failed');
+    const supabase = buildSupabase();
+    supabase.__mocks.profileUpdate.mockReturnValueOnce({
+      eq: vi.fn().mockResolvedValue({ error: profileUpdateError }),
+    });
+    vi.mocked(createClient).mockResolvedValue(supabase as any);
+
+    const response = await POST(
+      request({
+        publicPageEnabled: true,
+        searchIndexingEnabled: false,
+        header: true,
+      })
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(payload).toEqual({ error: 'Failed to save visibility' });
+    expect(log.error).toHaveBeenCalledWith('portfolio.visibility.profile_state_update_failed', {
+      error: profileUpdateError,
+    });
   });
 });

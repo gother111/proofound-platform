@@ -27,10 +27,19 @@ describe('RESIDUAL_LIFECYCLE_APPENDIX', () => {
 });
 
 describe('APPLICATION_VS_INTRO_CONTRACT', () => {
-  it('keeps application and intro conceptually separate while preserving intro as the MVP pipeline object', () => {
+  it('keeps future application objects and intro conceptually separate while preserving intro as the MVP pipeline object', () => {
     expect(APPLICATION_VS_INTRO_CONTRACT.areSeparateObjects).toBe(true);
-    expect(APPLICATION_VS_INTRO_CONTRACT.currentMvpPolicy).toContain('Intro');
+    expect(APPLICATION_VS_INTRO_CONTRACT.relationship).toContain(
+      'A future self-serve application object would represent explicit proof-review participant intent'
+    );
+    expect(APPLICATION_VS_INTRO_CONTRACT.relationship).toContain('submission invite');
+    expect(APPLICATION_VS_INTRO_CONTRACT.currentMvpPolicy).toContain(
+      'outside the active MVP corridor'
+    );
     expect(APPLICATION_VS_INTRO_CONTRACT.duplicationRules).toContain(
+      'At most one active intro may exist per participant profile and assignment.'
+    );
+    expect(APPLICATION_VS_INTRO_CONTRACT.duplicationRules).not.toContain(
       'At most one active intro may exist per candidate_profile_id and assignment_id.'
     );
   });

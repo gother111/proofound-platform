@@ -8,6 +8,7 @@ import {
 import { generateTrustPdf } from '@/lib/portfolio/pdf';
 import { buildTextPack } from '@/lib/portfolio/text-pack';
 import { resolvePublicIndividualPortfolioAccessByHandle } from '@/lib/portfolio/public-projection';
+import { log } from '@/lib/log';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -57,11 +58,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ hand
     const bytes = Uint8Array.from(buffer);
     return respondWithPdf(bytes, `proofound-${data.profile.handle}-trust.pdf`);
   } catch (error) {
-    console.error('public portfolio export failed', {
-      name: error instanceof Error ? error.name : 'UnknownError',
-      message: error instanceof Error ? error.message : 'Unknown error',
-      error,
-    });
+    log.error('portfolio.public_export.failed', { error });
     return NextResponse.json({ error: 'Failed to generate export' }, { status: 500 });
   }
 }

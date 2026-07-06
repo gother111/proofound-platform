@@ -13,12 +13,12 @@
 
 ## 1. Project overview
 
-Proofound MVP is a proof-first, privacy-first hiring and credibility corridor centered on Proof Packs.
+Proofound MVP is a proof-first, privacy-first assignment-review and credibility corridor centered on Proof Packs.
 
 The system has two user sides:
 
 - **individuals** who turn real work into structured Proof Packs and publish a trustworthy proof portfolio
-- **organizations** that define clearer assignments and review people through privacy-safe, explainable proof-backed early review
+- **organizations** that define clearer assignments and review proof submissions through privacy-safe, explainable proof-backed early review
 
 This is not a full recruiting suite, not a public social network, and not an ATS replacement.
 
@@ -29,7 +29,7 @@ This is not a full recruiting suite, not a public social network, and not an ATS
 ### 2.1 Goals
 
 - help users show real capability through proof rather than profile theater
-- help organizations define better hiring inputs through structured assignments
+- help organizations define better assignment-review inputs through structured assignments
 - make early review privacy-safe and explainable
 - make trust signals scoped, honest, and auditable
 - keep the product calm, practical, and launchable
@@ -37,7 +37,7 @@ This is not a full recruiting suite, not a public social network, and not an ATS
 ### 2.2 Non-goals
 
 - generic recruiting administration
-- open candidate marketplace at launch
+- open people marketplace at launch
 - enterprise workflow suite
 - ATS/HRIS replacement
 - vanity growth mechanics
@@ -64,7 +64,7 @@ Best early-fit organizations:
 - startups
 - SMEs
 - accelerators / schools / programs
-- lean hiring teams for project- or outcome-shaped roles
+- lean assignment-review teams for project- or outcome-shaped roles
 
 ---
 
@@ -171,7 +171,7 @@ Supported roles:
 Real-world mapping:
 
 - HR / recruiter → `org_manager`
-- hiring manager → `org_manager` or `org_reviewer`
+- assignment-review owner → `org_manager` or `org_reviewer`
 - executive sponsor → `org_reviewer`
 - future teammate / peer → `org_reviewer`
 
@@ -189,7 +189,7 @@ Real-world mapping:
 3. Publicly, the product is proof-first.
 4. Privately, the product stores contextual scaffolding.
 5. Blind-by-default review is mandatory.
-6. Identity reveal requires candidate consent.
+6. Identity reveal requires proof-review participant consent.
 7. Public publication is separate from matching reveal.
 8. Skills must be tied to proof or context.
 9. Intro-eligible must be harder than portfolio-ready.
@@ -304,8 +304,8 @@ Do not center:
 3. invite collaborators
 4. create assignment
 5. publish assignment
-6. review anonymized candidates
-7. move candidate through intro → reveal → interview → decision
+6. review anonymized proof submissions
+7. move proof-review participant through intro → reveal → interview → decision
 8. record engagement verification
 
 ### 9.2 Organization trust page fields
@@ -360,13 +360,13 @@ Support:
 - second reviewer if needed
 - publish action
 
-### 9.4 Hiring corridor
+### 9.4 Assignment-review corridor
 
 1. shortlist
 2. intro request
-3. candidate intro acceptance
+3. proof-review participant intro acceptance
 4. reveal request
-5. candidate reveal approval
+5. proof-review participant reveal approval
 6. interview round(s)
 7. final decision
 8. engagement recorded
@@ -467,7 +467,7 @@ Accepted evidence examples:
 
 - mutual attestation from both sides
 - offer letter / agreement / SOW / invoice
-- matching org + candidate confirmation
+- matching organization + proof-review participant confirmation
 
 This is a trust state, not legal contract enforcement.
 
@@ -487,7 +487,7 @@ This is a trust state, not legal contract enforcement.
 
 - identity-bearing data hidden in early review
 - public portfolios do not weaken blind review
-- candidate approval required before identity-bearing reveal
+- proof-review participant approval required before identity-bearing reveal
 - narrowest-wins visibility logic enforced everywhere
 - public portfolios non-indexed by default
 - no public people directory
@@ -533,7 +533,7 @@ Manual uploads and previews must be sanitized or held if they contain:
 - team & roles
 - assignments
 - review queue
-- hiring process
+- workflow process
 - settings / audit
 
 ### 12.4 Internal ops pages
@@ -585,7 +585,7 @@ Do not build in MVP:
 - sponsor marketplace UI
 - enterprise dashboards
 - org structure/culture/impact/projects hubs
-- public candidate search index
+- public people search index
 - vanity counters
 - gamified profile maintenance
 - Zen expansion beyond optional private reflections/check-ins
@@ -602,7 +602,7 @@ The MVP is launchable only if:
 - skills are anchored to proof or context
 - verification is scoped and auditable
 - assignment creation is structured and outcome-focused
-- hiring corridor reaches explicit `hire` and engagement verification states
+- assignment-review corridor reaches explicit `hire` and engagement verification states
 - public portfolio and blind review remain separate systems
 
 ---
@@ -626,7 +626,7 @@ The MVP is launchable only if:
 - anonymized review queue
 - reason codes
 
-### Phase 3 — Hiring corridor
+### Phase 3 — Assignment-review corridor
 
 - intro and reveal
 - interview states
@@ -645,6 +645,6 @@ The MVP is launchable only if:
 
 ## 17. Final project statement
 
-Build Proofound MVP as a narrow, proof-first, privacy-safe hiring and credibility corridor.
+Build Proofound MVP as a narrow, proof-first, privacy-safe assignment-review and credibility corridor.
 
 Do not expand it into generic recruiting SaaS. Do not dilute proof into unsupported profile claims. Do not weaken privacy for convenience. Keep the system simple enough to launch and strong enough to be trusted.

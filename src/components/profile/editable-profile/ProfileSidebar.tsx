@@ -85,7 +85,7 @@ export function ProfileSidebar({ profile }: ProfileSidebarProps) {
       <Card className="rounded-2xl border-proofound-stone bg-japandi-bg/70 p-5">
         <p className="text-sm font-medium text-proofound-charcoal">Profile emphasis</p>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          Individual MVP profiles are built from proof, context, skills, freshness, and scoped
+          Individual profiles are built from proof, context, skills, freshness, and scoped
           verification.
         </p>
       </Card>

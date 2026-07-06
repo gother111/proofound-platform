@@ -4,6 +4,7 @@ import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
 import { matches, assignments, organizations } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
+import { log } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
 
@@ -61,7 +62,6 @@ export async function GET() {
           ? {
               id: row.match.id,
               assignmentId: row.assignment.id,
-              score: Number(row.match.score),
               assignment: {
                 title: row.assignment.role,
                 locationMode: row.assignment.locationMode,
@@ -76,9 +76,13 @@ export async function GET() {
       })
       .filter(Boolean);
 
-    return NextResponse.json({ matches: hiddenMatches, count: hiddenMatches.length });
+    return NextResponse.json({
+      matches: hiddenMatches,
+      count: hiddenMatches.length,
+      scoreVisibility: 'internal_ordering_only',
+    });
   } catch (error) {
-    console.error('Failed to fetch hidden matches:', error);
+    log.error('match.hide.list_failed', { error });
     return NextResponse.json({ error: 'Failed to fetch hidden matches' }, { status: 500 });
   }
 }
@@ -95,7 +99,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const { user } = authContext;
-    const body = await request.json();
+    let body: any;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
     const { matchId } = body;
 
     if (!matchId) {
@@ -124,7 +133,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Failed to hide match:', error);
+    log.error('match.hide.update_failed', { error });
     return NextResponse.json({ error: 'Failed to hide match' }, { status: 500 });
   }
 }
@@ -169,7 +178,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Failed to unhide match:', error);
+    log.error('match.hide.delete_failed', { error });
     return NextResponse.json({ error: 'Failed to unhide match' }, { status: 500 });
   }
 }

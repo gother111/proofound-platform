@@ -1,9 +1,9 @@
 /**
  * PII Detection Utility for Messaging System
- * 
+ *
  * Detects Personally Identifiable Information (PII) in message content
  * to warn users before sharing sensitive information in Stage 1 (masked) conversations.
- * 
+ *
  * Reference: DATA_SECURITY_PRIVACY_ARCHITECTURE.md Section 10.6
  */
 
@@ -18,12 +18,12 @@ export interface PIIDetectionResult {
 
 /**
  * Detect PII patterns in text
- * 
+ *
  * Scans for:
  * - Email addresses (name@domain.com)
  * - Phone numbers (US/international formats)
  * - URLs (http:// or www.)
- * 
+ *
  * @param text - Message content to scan
  * @returns Detection results with found patterns
  */
@@ -44,7 +44,8 @@ export function detectPII(text: string): PIIDetectionResult {
 
   // Phone pattern: Various formats
   // Matches: (123) 456-7890, 123-456-7890, +1 123 456 7890, 1234567890
-  const phoneRegex = /(\+?1[-.\s]?)?(\(?\d{3}\)?[-.\s]?)?\d{3}[-.\s]?\d{4}|(\+?\d{1,3}[-.\s]?)?\(?\d{2,4}\)?[-.\s]?\d{2,4}[-.\s]?\d{2,4}/g;
+  const phoneRegex =
+    /(\+?1[-.\s]?)?(\(?\d{3}\)?[-.\s]?)?\d{3}[-.\s]?\d{4}|(\+?\d{1,3}[-.\s]?)?\(?\d{2,4}\)?[-.\s]?\d{2,4}[-.\s]?\d{2,4}/g;
 
   // URL pattern: http:// or www. prefixed URLs
   // Matches: https://example.com, www.example.com, http://sub.domain.com/path
@@ -131,7 +132,7 @@ function isValidUrl(url: string): boolean {
 
 /**
  * Generate user-friendly warning message
- * 
+ *
  * @param detection - PII detection results
  * @returns Warning message for UI
  */
@@ -152,7 +153,7 @@ export function generateWarningMessage(detection: PIIDetectionResult): string {
 
 /**
  * Get short warning label for UI badge
- * 
+ *
  * @param detection - PII detection results
  * @returns Short label like "Email detected" or "PII detected"
  */
@@ -168,7 +169,7 @@ export function getWarningLabel(detection: PIIDetectionResult): string {
 
 /**
  * Check if message should block sending (Stage 1 only)
- * 
+ *
  * @param text - Message content
  * @param conversationStage - Current conversation stage ('masked' or 'revealed')
  * @param forceAllow - User explicitly confirmed to send despite warning
@@ -205,9 +206,9 @@ export function shouldBlockMessage(
 
 /**
  * Redact PII from text (for logging/analytics)
- * 
+ *
  * Replaces detected PII with [REDACTED] for safe logging
- * 
+ *
  * @param text - Text to redact
  * @returns Redacted text
  */
@@ -215,7 +216,10 @@ export function redactPII(text: string): string {
   let redacted = text;
 
   // Redact emails
-  redacted = redacted.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[EMAIL_REDACTED]');
+  redacted = redacted.replace(
+    /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
+    '[EMAIL_REDACTED]'
+  );
 
   // Redact phone numbers
   redacted = redacted.replace(
@@ -227,65 +231,6 @@ export function redactPII(text: string): string {
   redacted = redacted.replace(/(https?:\/\/[^\s]+)|(www\.[^\s]+)/g, '[URL_REDACTED]');
 
   return redacted;
-}
-
-/**
- * Test PII detection accuracy (for debugging)
- * 
- * Run in development to verify detection patterns
- */
-export function testPIIDetection(): void {
-  const testCases = [
-    {
-      text: 'My email is john@example.com',
-      expected: { email: true, phone: false, url: false },
-    },
-    {
-      text: 'Call me at (555) 123-4567',
-      expected: { email: false, phone: true, url: false },
-    },
-    {
-      text: 'Check out https://myportfolio.com',
-      expected: { email: false, phone: false, url: true },
-    },
-    {
-      text: 'Contact me at jane@test.com or 555-1234',
-      expected: { email: true, phone: true, url: false },
-    },
-    {
-      text: 'This is just a normal message without PII',
-      expected: { email: false, phone: false, url: false },
-    },
-    {
-      text: 'Version 1.2.3 is now available', // False positive test
-      expected: { email: false, phone: false, url: false },
-    },
-  ];
-
-  console.log('=== PII Detection Tests ===');
-  let passed = 0;
-  let failed = 0;
-
-  testCases.forEach((testCase, index) => {
-    const result = detectPII(testCase.text);
-    const match =
-      result.containsEmail === testCase.expected.email &&
-      result.containsPhone === testCase.expected.phone &&
-      result.containsUrl === testCase.expected.url;
-
-    if (match) {
-      passed++;
-      console.log(`✓ Test ${index + 1}: PASSED`);
-    } else {
-      failed++;
-      console.log(`✗ Test ${index + 1}: FAILED`);
-      console.log(`  Input: "${testCase.text}"`);
-      console.log(`  Expected: ${JSON.stringify(testCase.expected)}`);
-      console.log(`  Got: email=${result.containsEmail}, phone=${result.containsPhone}, url=${result.containsUrl}`);
-    }
-  });
-
-  console.log(`\nResults: ${passed} passed, ${failed} failed`);
 }
 
 // Example usage:
@@ -301,4 +246,3 @@ export function testPIIDetection(): void {
 //   alert(reason);
 //   // User can choose to send anyway or edit message
 // }
-

@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "findingId": "fnd_sig-feat-route-0ed8976d1d-071c0a_4efae85827",
+  "featureId": "feat_route_0ed8976d1d",
+  "title": "Unauthenticated preview response exposes stable internal workflow identifiers",
+  "category": "security",
+  "severity": "low",
+  "confidence": "medium",
+  "triage": "risk",
+  "evidence": [
+    {
+      "path": "app/api/candidate-invites/[token]/route.ts",
+      "startLine": 157,
+      "endLine": 171,
+      "symbol": "GET",
+      "quote": "const response = NextResponse.json({"
+    },
+    {
+      "path": "app/api/candidate-invites/[token]/route.ts",
+      "startLine": 166,
+      "endLine": 170,
+      "symbol": "GET",
+      "quote": "claimedByProfileId: invite.claimedByProfileId,"
+    }
+  ],
+  "reasoning": "The route is a bearer-token preview endpoint and does not require an authenticated user before returning invite details. The response includes claimedByProfileId, acceptedByProfileId, matchId, and conversationId. A forwarded, logged, or leaked invite URL can therefore disclose stable internal profile and workflow identifiers to someone who is not the invitee. The client can usually be served with safer derived fields, such as whether the current authenticated user owns the claim and whether a communications link should be shown.",
+  "reproduction": "Fetch a claimed invite token without being authenticated as the candidate. The JSON response includes the claimed profile id and, for test matches, match/conversation identifiers when present.",
+  "recommendation": "Do not include raw profile, match, or conversation identifiers in the unauthenticated preview payload. Return them only after authenticating the invitee, or replace them with booleans/derived URLs gated to the current user.",
+  "whyTestsDoNotAlreadyCoverThis": "The feature has no linked tests asserting the unauthenticated preview payload excludes private identifiers.",
+  "suggestedRegressionTest": "Add a GET preview test for an unauthenticated request against a claimed invite and assert the payload does not contain claimedByProfileId, acceptedByProfileId, matchId, or conversationId.",
+  "minimumFixScope": "Adjust this route's response projection and the invite client state shape to use derived authorization-safe fields instead of raw internal ids.",
+  "status": "fixed",
+  "history": [
+    {
+      "runId": null,
+      "kind": "triage",
+      "status": "fixed",
+      "note": "Fixed manually: unauthenticated invite preview no longer returns raw profile, match, or conversation ids; covered by tests/api/candidate-invites-token-route.test.ts and UI shape updates.",
+      "reasoning": null,
+      "commands": [],
+      "createdAt": "2026-05-16T17:17:56.431Z"
+    }
+  ],
+  "signature": "sig_feat-route-0ed8976d1d_071c0a6f1e",
+  "linkedPatchAttemptIds": [],
+  "createdByRunId": "20260516T164325-52e1d0",
+  "createdAt": "2026-05-16T16:51:37.045Z",
+  "updatedAt": "2026-05-16T17:17:56.429Z"
+}

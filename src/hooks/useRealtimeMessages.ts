@@ -7,6 +7,7 @@ import type {
   RealtimePresenceLeavePayload,
 } from '@supabase/realtime-js';
 import { toast } from 'sonner';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 export interface Message {
   id: string;
@@ -27,6 +28,7 @@ interface PresenceState {
 interface UseRealtimeMessagesOptions {
   conversationId: string;
   userId: string;
+  disabled?: boolean;
   onNewMessage?: (message: Message) => void;
   onMessageRead?: (messageId: string) => void;
   onTypingStart?: (userId: string) => void;
@@ -45,6 +47,7 @@ interface UseRealtimeMessagesOptions {
 export function useRealtimeMessages({
   conversationId,
   userId,
+  disabled = false,
   onNewMessage,
   onMessageRead,
   onTypingStart,
@@ -59,6 +62,11 @@ export function useRealtimeMessages({
 
   // Initialize realtime subscription
   useEffect(() => {
+    if (disabled) {
+      setIsConnected(false);
+      return;
+    }
+
     if (!conversationId || !userId) return;
 
     const channelName = `conversation:${conversationId}`;
@@ -121,12 +129,26 @@ export function useRealtimeMessages({
           onTypingStop?.(otherUsers[0]);
         }
       })
-      .on('presence', { event: 'join' }, ({ key, newPresences }: RealtimePresenceJoinPayload<PresenceState>) => {
-        console.log('User joined:', key, newPresences);
-      })
-      .on('presence', { event: 'leave' }, ({ key, leftPresences }: RealtimePresenceLeavePayload<PresenceState>) => {
-        console.log('User left:', key, leftPresences);
-      })
+      .on(
+        'presence',
+        { event: 'join' },
+        ({ key, newPresences }: RealtimePresenceJoinPayload<PresenceState>) => {
+          dispatchClientDiagnostic('messages.realtime.presence_joined', {
+            participant: key === userId ? 'self' : 'other',
+            count: newPresences.length,
+          });
+        }
+      )
+      .on(
+        'presence',
+        { event: 'leave' },
+        ({ key, leftPresences }: RealtimePresenceLeavePayload<PresenceState>) => {
+          dispatchClientDiagnostic('messages.realtime.presence_left', {
+            participant: key === userId ? 'self' : 'other',
+            count: leftPresences.length,
+          });
+        }
+      )
       .subscribe(async (status: string) => {
         if (status === 'SUBSCRIBED') {
           setIsConnected(true);
@@ -157,6 +179,7 @@ export function useRealtimeMessages({
   // Send typing indicator
   const sendTypingIndicator = useCallback(
     async (typing: boolean) => {
+      if (disabled) return;
       if (!channel) return;
 
       try {
@@ -166,10 +189,10 @@ export function useRealtimeMessages({
           typing,
         });
       } catch (error) {
-        console.error('Failed to send typing indicator:', error);
+        dispatchClientErrorDiagnostic('messages.realtime.typing_indicator_failed', error);
       }
     },
-    [channel, userId]
+    [channel, disabled, userId]
   );
 
   // Start typing (with auto-stop after 3 seconds)
@@ -214,6 +237,8 @@ export function useRealtimeMessages({
   // Mark message as read
   const markAsRead = useCallback(
     async (messageId: string) => {
+      if (disabled) return;
+
       try {
         const { error } = await supabase
           .from('messages')
@@ -223,17 +248,19 @@ export function useRealtimeMessages({
           .is('read_at', null);
 
         if (error) {
-          console.error('Failed to mark message as read:', error);
+          dispatchClientErrorDiagnostic('messages.realtime.mark_read_failed', error);
         }
       } catch (error) {
-        console.error('Error marking message as read:', error);
+        dispatchClientErrorDiagnostic('messages.realtime.mark_read_unexpected_failed', error);
       }
     },
-    [conversationId, supabase]
+    [conversationId, disabled, supabase]
   );
 
   // Mark all messages as read
   const markAllAsRead = useCallback(async () => {
+    if (disabled) return;
+
     try {
       const { error } = await supabase
         .from('messages')
@@ -243,12 +270,12 @@ export function useRealtimeMessages({
         .is('read_at', null);
 
       if (error) {
-        console.error('Failed to mark all messages as read:', error);
+        dispatchClientErrorDiagnostic('messages.realtime.mark_all_read_failed', error);
       }
     } catch (error) {
-      console.error('Error marking all messages as read:', error);
+      dispatchClientErrorDiagnostic('messages.realtime.mark_all_read_unexpected_failed', error);
     }
-  }, [conversationId, userId, supabase]);
+  }, [conversationId, disabled, userId, supabase]);
 
   return {
     isConnected,

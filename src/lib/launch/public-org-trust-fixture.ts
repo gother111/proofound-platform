@@ -11,9 +11,9 @@ export const SEEDED_PUBLIC_ORG_TRUST_FIXTURE = {
     displayName: 'Proofound Labs',
     type: 'company' as const,
     website: 'https://proofound.io',
-    tagline: 'Proof-first hiring should stay calm, credible, and privacy-safe.',
+    tagline: 'Proof-first assignment review should stay calm, credible, and privacy-safe.',
     mission:
-      'Build proof-first hiring infrastructure that helps organizations review real work without widening privacy or identity risk.',
+      'Build proof-first review infrastructure that helps organizations review real work without widening privacy or identity risk.',
     workingContext:
       'Small distributed team working asynchronously with tight review loops and documented decisions.',
     operatingRegion: 'Europe/Stockholm',

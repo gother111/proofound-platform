@@ -1,6 +1,5 @@
 import { and, eq, or, sql } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
-import { nanoid } from 'nanoid';
 import { z } from 'zod';
 
 import { db } from '@/db';
@@ -18,12 +17,15 @@ import { safeApiErrorResponse } from '@/lib/api/errors';
 import { withWorkflowMutationIdempotency } from '@/lib/api/workflow-idempotency';
 import { emitFirstQualifiedIntroAsync, emitMatchActioned } from '@/lib/analytics/events';
 import { log } from '@/lib/log';
+import { evaluateIntroGate } from '@/lib/matching/intro-gates';
+import type { DiscoveryStatus, FitBand, IntroGateResult } from '@/lib/matching/types';
 import { sanitizeErrorForLog } from '@/lib/privacy/log-redaction';
+import { getIndividualReadinessState } from '@/lib/readiness/individual-state';
 import {
   appendManualOverrideReason,
   buildProofFirstReviewCard,
   buildVisibilitySafeWhy,
-  getReviewCardProofPackMap,
+  getReviewCardProofPackMapForMatchedOrg,
   getOrgMembershipRole,
   normalizeFairnessStatus,
   resolveCanonicalCorridor,
@@ -42,6 +44,7 @@ import {
   syncRevealRequestTimeoutState,
   syncIntroWorkflowFromInterest,
 } from '@/lib/workflow/service';
+import { makeMaskedHandleForPersona } from '@/lib/messaging/conversation-access';
 
 export const dynamic = 'force-dynamic';
 
@@ -61,6 +64,125 @@ const ReviewMutationSchema = z.object({
     .optional(),
   requestedScope: z.enum(['shortlist_identity', 'full_identity']).optional(),
 });
+
+const DISCOVERY_STATUS_SET = new Set<DiscoveryStatus>([
+  'possible_discovery_match',
+  'review_ready_match',
+  'intro_ready_match',
+]);
+const FIT_BAND_SET = new Set<FitBand>([
+  'strong_evidence_overlap',
+  'relevant_partial',
+  'adjacent_exploratory',
+  'needs_more_proof',
+  'constraint_or_trust_hold',
+]);
+
+function asStringArray(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((entry): entry is string => typeof entry === 'string' && entry.length > 0)
+    : [];
+}
+
+function readSnapshotString(snapshot: unknown, field: string): string | null {
+  if (!snapshot || typeof snapshot !== 'object' || Array.isArray(snapshot)) return null;
+  const value = (snapshot as Record<string, unknown>)[field];
+  return typeof value === 'string' ? value : null;
+}
+
+function resolveStoredDiscoveryStatus(snapshot: unknown, reasonCodes: string[]): DiscoveryStatus {
+  const fromSnapshot = readSnapshotString(snapshot, 'discovery_status');
+  if (fromSnapshot && DISCOVERY_STATUS_SET.has(fromSnapshot as DiscoveryStatus)) {
+    return fromSnapshot as DiscoveryStatus;
+  }
+
+  return reasonCodes.includes('low_supply_expanded_discovery')
+    ? 'possible_discovery_match'
+    : 'review_ready_match';
+}
+
+function resolveStoredFitBand(snapshot: unknown, reasonCodes: string[]): FitBand {
+  const fromSnapshot = readSnapshotString(snapshot, 'fit_band');
+  if (fromSnapshot && FIT_BAND_SET.has(fromSnapshot as FitBand)) {
+    return fromSnapshot as FitBand;
+  }
+
+  if (
+    reasonCodes.includes('privacy_or_policy_hold') ||
+    reasonCodes.includes('constraint_mismatch')
+  ) {
+    return 'constraint_or_trust_hold';
+  }
+
+  if (
+    reasonCodes.includes('fresh_proof_missing') ||
+    reasonCodes.includes('verification_gate_missing')
+  ) {
+    return 'needs_more_proof';
+  }
+
+  if (
+    reasonCodes.includes('adjacent_skill_overlap') ||
+    reasonCodes.includes('custom_wording_overlap') ||
+    reasonCodes.includes('low_supply_expanded_discovery')
+  ) {
+    return 'adjacent_exploratory';
+  }
+
+  if (
+    reasonCodes.includes('canonical_skill_overlap') ||
+    reasonCodes.includes('alias_skill_overlap') ||
+    reasonCodes.includes('proof_text_overlap') ||
+    reasonCodes.includes('role_relevant_outcome')
+  ) {
+    return 'relevant_partial';
+  }
+
+  return 'needs_more_proof';
+}
+
+function hasBlockingConstraintMismatch(snapshot: unknown, reasonCodes: string[]): boolean {
+  if (reasonCodes.includes('constraint_mismatch')) return true;
+  if (!snapshot || typeof snapshot !== 'object' || Array.isArray(snapshot)) return false;
+
+  const gates = (snapshot as Record<string, unknown>).gates;
+  if (!Array.isArray(gates)) return false;
+
+  return gates.some(
+    (gate) =>
+      gate &&
+      typeof gate === 'object' &&
+      (gate as Record<string, unknown>).blocking === true &&
+      (gate as Record<string, unknown>).passed === false
+  );
+}
+
+function introGateResponseFields(result: IntroGateResult) {
+  return {
+    introGate: result.introGate,
+    canRequestIntro: result.canRequestIntro,
+    missingGates: result.missingGates,
+    reasonDetails: result.reasonDetails,
+  };
+}
+
+function reviewCardResponseFields(
+  reviewCard: Awaited<ReturnType<typeof buildReviewCardPayload>>,
+  fitBand: FitBand
+) {
+  return {
+    anonymousCandidateLabel: reviewCard.candidateLabel,
+    fitBand,
+    proofSummaries: [
+      {
+        summary: reviewCard.strongestProof?.summary ?? null,
+        outcome: reviewCard.strongestProof?.outcome ?? null,
+        ownership: reviewCard.strongestProof?.ownership ?? null,
+        freshnessLabel: reviewCard.strongestProof?.freshnessLabel ?? null,
+      },
+    ],
+  };
+}
 
 function getReviewMutationReasonCodes(action: 'shortlist' | 'unshortlist' | 'pass' | 'reject') {
   switch (action) {
@@ -94,7 +216,7 @@ async function buildReviewCardPayload(params: {
   fairnessStatus: ReturnType<typeof normalizeFairnessStatus>;
   revealScope: RevealScope;
 }) {
-  const proofPackByProfileId = await getReviewCardProofPackMap([params.profileId]);
+  const proofPackByProfileId = await getReviewCardProofPackMapForMatchedOrg([params.profileId]);
 
   const reviewCard = buildProofFirstReviewCard({
     profileId: params.profileId,
@@ -156,7 +278,7 @@ function sanitizeBlindReviewString(value: unknown, fallback: string | null) {
   const hasUncertainIdentity =
     ROUTE_PRECISE_LOCATION_PATTERN.test(output) ||
     [...output.matchAll(ROUTE_FULL_NAME_PATTERN)].some(
-      (match) => !/^(Proof Pack|Proofound|Candidate Review)$/i.test(match[0].trim())
+      (match) => !/^(Proof Pack|Proofound|Proof Review)$/i.test(match[0].trim())
     );
 
   if (hasUncertainIdentity) {
@@ -238,6 +360,14 @@ function sanitizeBlindReviewCardForResponse(
   };
 }
 
+import { isMockSupabaseEnabled, visualFixturesRuntimeAllowed } from '@/lib/env';
+import { buildVisualOrgMatches } from '@/lib/matching/visual-fixtures';
+
+const visualAssignmentFixturesEnabled = () =>
+  isMockSupabaseEnabled() &&
+  process.env.PROOFOUND_VISUAL_FIXTURES === 'true' &&
+  visualFixturesRuntimeAllowed();
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; matchId: string }> }
@@ -264,6 +394,76 @@ export async function POST(
       );
     }
 
+    if (visualAssignmentFixturesEnabled() && matchId.startsWith('visual-match-')) {
+      const mockMatches = buildVisualOrgMatches('11111111-1111-4111-8111-111111111111');
+      const foundMock = mockMatches.find((m) => m.id === matchId);
+      if (!foundMock) {
+        return NextResponse.json({ error: 'Match not found' }, { status: 404 });
+      }
+
+      if (parsed.data.action === 'shortlist') {
+        return NextResponse.json({
+          matchId: matchId,
+          reviewStage: 'shortlisted',
+          revealScope: 'shortlist_identity',
+          progressiveRevealStage: 'stage2_contextual_reveal',
+          corridorState: 'shortlist',
+          visibleIdentityFields: [
+            'photo',
+            'country',
+            'city',
+            'desired_roles',
+            'timezone',
+            'right_to_work',
+            'engagement_type',
+            'skills',
+          ],
+          reviewCard: {
+            ...foundMock.reviewCard,
+            candidateLabel: 'Elena Rostova',
+          },
+        });
+      }
+
+      if (parsed.data.action === 'request_intro') {
+        return NextResponse.json({
+          matchId: matchId,
+          reviewStage: 'shortlisted',
+          revealScope: 'full_identity',
+          progressiveRevealStage: 'stage3_unlocked',
+          corridorState: 'intro_approved',
+          conversationId: 'visual-conv-7',
+          introApproved: true,
+          visibleIdentityFields: [
+            'photo',
+            'country',
+            'city',
+            'desired_roles',
+            'timezone',
+            'right_to_work',
+            'engagement_type',
+            'skills',
+            'name',
+            'email',
+            'phone',
+          ],
+          reviewCard: {
+            ...foundMock.reviewCard,
+            candidateLabel: 'Elena Rostova',
+          },
+        });
+      }
+
+      if (parsed.data.action === 'pass') {
+        return NextResponse.json({
+          matchId: matchId,
+          reviewStage: 'passed',
+          revealScope: 'blind',
+          corridorState: 'passed',
+        });
+      }
+    }
+
     const org = await getOrgByIdOrSlug(id);
     if (!org) {
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
@@ -285,6 +485,8 @@ export async function POST(
         reviewOperationalFallbackMode: matchReviewStates.operationalFallbackMode,
         assignmentOperationalFallbackMode: assignments.operationalFallbackMode,
         fairnessStatus: matches.fairnessStatus,
+        reasonCodes: matches.reasonCodes,
+        scoreSnapshotJson: matches.scoreSnapshotJson,
       })
       .from(matches)
       .innerJoin(assignments, eq(assignments.id, matches.assignmentId))
@@ -301,6 +503,8 @@ export async function POST(
           orgId: assignments.orgId,
           assignmentOperationalFallbackMode: assignments.operationalFallbackMode,
           fairnessStatus: matches.fairnessStatus,
+          reasonCodes: matches.reasonCodes,
+          scoreSnapshotJson: matches.scoreSnapshotJson,
         })
         .from(matches)
         .innerJoin(assignments, eq(assignments.id, matches.assignmentId))
@@ -515,7 +719,7 @@ export async function POST(
             }),
             message:
               requestedScope === 'full_identity'
-                ? 'Reveal request sent. Full identity remains locked until the candidate approves.'
+                ? 'Reveal request sent. Full identity remains locked until the proof-review participant approves.'
                 : 'Reveal request recorded.',
           });
         }
@@ -527,10 +731,31 @@ export async function POST(
               matchRow.reviewOperationalFallbackMode ?? matchRow.assignmentOperationalFallbackMode,
             fairnessStatus,
           });
+          const storedReasonCodes = asStringArray(matchRow.reasonCodes);
+          const discoveryStatus = resolveStoredDiscoveryStatus(
+            matchRow.scoreSnapshotJson,
+            storedReasonCodes
+          );
+          const fitBand = resolveStoredFitBand(matchRow.scoreSnapshotJson, storedReasonCodes);
           const stage2Ready =
             matchRow.reviewStage === 'shortlisted' && matchRow.revealScope === 'shortlist_identity';
 
           if (!stage2Ready || fallbackState === 'intro_hold') {
+            const introGate = evaluateIntroGate({
+              discoveryStatus: 'possible_discovery_match',
+              candidate: {
+                matchVisible: false,
+                hasFreshRoleRelevantProof: false,
+                activeNonSelfTrustAnchorCount: 0,
+              },
+              privacy: {
+                privacySafeReviewAvailable: true,
+              },
+              workflow: {
+                matchVisibleForWorkflow: stage2Ready,
+                existingWorkflowAllowsIntroRequest: fallbackState !== 'intro_hold',
+              },
+            });
             const fallbackMode =
               matchRow.reviewOperationalFallbackMode ??
               matchRow.assignmentOperationalFallbackMode ??
@@ -569,11 +794,89 @@ export async function POST(
                 matchId: matchRow.matchId,
                 reviewStage: matchRow.reviewStage,
                 revealScope: matchRow.revealScope,
+                discoveryStatus,
                 visibleIdentityFields: getVisibleIdentityFields(matchRow.revealScope),
+                ...introGateResponseFields(introGate),
+                ...reviewCardResponseFields(reviewCard, fitBand),
                 reviewCard,
                 ...corridor,
                 why: buildVisibilitySafeWhy({
                   reasonCodes: ['fairness_ranking_suppressed'],
+                  fairnessStatus,
+                  fallbackState: corridor.fallbackState,
+                }),
+              },
+              { status: 409 }
+            );
+          }
+
+          const gateReviewCard = await buildReviewCardPayload({
+            profileId: matchRow.profileId,
+            reasonCodes: storedReasonCodes.length > 0 ? storedReasonCodes : ['shortlist_selected'],
+            fairnessStatus,
+            revealScope: matchRow.revealScope,
+          });
+          const readiness = await getIndividualReadinessState(matchRow.profileId);
+          const introGate = evaluateIntroGate({
+            discoveryStatus,
+            candidate: {
+              matchVisible: readiness.flags.matchVisible === true,
+              hasFreshRoleRelevantProof: readiness.counts.freshProofLinkedL4Count24 >= 1,
+              activeNonSelfTrustAnchorCount: readiness.counts.activeTrustAnchorCount,
+              staleContradictedOrRevokedVerificationCounted:
+                readiness.introEligibility.reasonCodes.includes('trust_regressed'),
+              orphanRelevantProofCount: readiness.introEligibility.reasonCodes.includes(
+                'orphan_relevant_proof_blocking_intro'
+              )
+                ? 1
+                : 0,
+            },
+            assignment: {
+              hardConstraintsSatisfied: !hasBlockingConstraintMismatch(
+                matchRow.scoreSnapshotJson,
+                storedReasonCodes
+              ),
+            },
+            privacy: {
+              privacySafeReviewAvailable:
+                gateReviewCard.privacy?.reviewState !== 'held_for_manual_review',
+              policyBlock: storedReasonCodes.includes('privacy_or_policy_hold'),
+              privacyOrRedactionHold:
+                gateReviewCard.privacy?.reviewState === 'held_for_manual_review',
+            },
+            workflow: {
+              matchVisibleForWorkflow: true,
+              existingWorkflowAllowsIntroRequest: true,
+            },
+          });
+
+          if (!introGate.canRequestIntro) {
+            const corridor = resolveCanonicalCorridor({
+              reviewStage: matchRow.reviewStage,
+              revealScope: matchRow.revealScope,
+              surface: 'review_detail',
+              fairnessStatus,
+              operationalFallbackMode:
+                matchRow.reviewOperationalFallbackMode ??
+                matchRow.assignmentOperationalFallbackMode,
+              introRequested: true,
+            });
+
+            return NextResponse.json(
+              {
+                error:
+                  'Intro request is on hold until proof, trust, privacy, and constraint gates are met.',
+                matchId: matchRow.matchId,
+                reviewStage: matchRow.reviewStage,
+                revealScope: matchRow.revealScope,
+                discoveryStatus,
+                visibleIdentityFields: getVisibleIdentityFields(matchRow.revealScope),
+                reviewCard: gateReviewCard,
+                ...introGateResponseFields(introGate),
+                ...reviewCardResponseFields(gateReviewCard, fitBand),
+                ...corridor,
+                why: buildVisibilitySafeWhy({
+                  reasonCodes: introGate.reasonDetails.map((reason) => reason.code),
                   fairnessStatus,
                   fallbackState: corridor.fallbackState,
                 }),
@@ -630,11 +933,14 @@ export async function POST(
               matchId: matchRow.matchId,
               reviewStage: matchRow.reviewStage,
               revealScope: matchRow.revealScope,
+              discoveryStatus,
               visibleIdentityFields: getVisibleIdentityFields(matchRow.revealScope),
               introWorkflowId: intro.id,
               introWorkflowState: intro.state,
               introApproved: false,
               requiresCandidateInterest: true,
+              ...introGateResponseFields(introGate),
+              ...reviewCardResponseFields(reviewCard, fitBand),
               reviewCard,
               ...corridor,
               why: buildVisibilitySafeWhy({
@@ -643,7 +949,7 @@ export async function POST(
                 fallbackState: corridor.fallbackState,
               }),
               message:
-                'Intro request recorded. Proofound will approve the introduction after the candidate reciprocates interest.',
+                'Intro request recorded. Proofound will approve the introduction after the proof-review participant reciprocates interest.',
             });
           }
 
@@ -693,8 +999,8 @@ export async function POST(
                 participantOneId: matchRow.profileId,
                 participantTwoId: user.id,
                 stage: 'masked',
-                maskedHandleOne: `Candidate #${nanoid(6).toUpperCase()}`,
-                maskedHandleTwo: `Organization #${nanoid(6).toUpperCase()}`,
+                maskedHandleOne: makeMaskedHandleForPersona('individual'),
+                maskedHandleTwo: makeMaskedHandleForPersona('organization'),
                 lastMessageAt: new Date(),
               })
               .returning({
@@ -724,11 +1030,14 @@ export async function POST(
               matchId: matchRow.matchId,
               reviewStage: matchRow.reviewStage,
               revealScope: 'shortlist_identity',
+              discoveryStatus,
               visibleIdentityFields: getVisibleIdentityFields('shortlist_identity'),
               introWorkflowId: intro.id,
               introWorkflowState: 'conversation_open',
               introApproved: true,
               conversationId: resolvedConversationId,
+              ...introGateResponseFields(introGate),
+              ...reviewCardResponseFields(reviewCard, fitBand),
               reviewCard,
               ...corridor,
               why: buildVisibilitySafeWhy({
@@ -737,7 +1046,7 @@ export async function POST(
                 fallbackState: corridor.fallbackState,
               }),
               message:
-                'Introduction already approved. Masked messaging is open, and full identity stays locked until the candidate approves reveal.',
+                'Introduction already approved. Masked messaging is open, and full identity stays locked until the proof-review participant approves reveal.',
             });
           }
 
@@ -784,7 +1093,9 @@ export async function POST(
             ]);
 
             const candidateName =
-              candidateProfile?.displayName || candidateProfile?.handle || 'The candidate';
+              candidateProfile?.displayName ||
+              candidateProfile?.handle ||
+              'The proof-review participant';
             const orgName = orgProfile?.displayName || orgProfile?.handle || 'The organization';
 
             await notifyIntroAccepted(user.id, matchRow.matchId, candidateName);
@@ -815,11 +1126,14 @@ export async function POST(
             matchId: matchRow.matchId,
             reviewStage: matchRow.reviewStage,
             revealScope: 'shortlist_identity',
+            discoveryStatus,
             visibleIdentityFields: getVisibleIdentityFields('shortlist_identity'),
             introWorkflowId: intro.id,
             introWorkflowState: 'conversation_open',
             introApproved: true,
             conversationId: resolvedConversationId,
+            ...introGateResponseFields(introGate),
+            ...reviewCardResponseFields(reviewCard, fitBand),
             reviewCard,
             ...corridor,
             why: buildVisibilitySafeWhy({
@@ -828,7 +1142,7 @@ export async function POST(
               fallbackState: corridor.fallbackState,
             }),
             message:
-              'Introduction approved. Masked messaging is open, and full identity stays locked until the candidate approves reveal.',
+              'Introduction approved. Masked messaging is open, and full identity stays locked until the proof-review participant approves reveal.',
           });
         }
 

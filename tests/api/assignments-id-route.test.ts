@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
 import { DELETE, GET, PUT } from '@/app/api/assignments/[id]/route';
@@ -60,7 +60,19 @@ vi.mock('@/lib/log', () => ({
 const params = { params: Promise.resolve({ id: 'assignment-1' }) };
 const principalOrgId = '11111111-1111-4111-8111-111111111111';
 
+function rawRequest(body: string) {
+  return new NextRequest('http://localhost/api/assignments/assignment-1', {
+    method: 'PUT',
+    body,
+    headers: { 'content-type': 'application/json' },
+  });
+}
+
 describe('assignment [id] mutation routes', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     (requireApiAuthContext as any).mockImplementation(async () => {
@@ -94,6 +106,73 @@ describe('assignment [id] mutation routes', () => {
     const res = await GET(req, params);
 
     expect(res.status).toBe(404);
+  });
+
+  it('GET does not let mock mode bypass explicit assignment access', async () => {
+    vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'true');
+    (verifyExplicitAssignmentAccess as any).mockResolvedValue({
+      status: 'missing_org_context',
+    });
+
+    const req = new NextRequest(
+      'http://localhost/api/assignments/22222222-2222-4222-8222-222222222222'
+    );
+
+    const res = await GET(req, {
+      params: Promise.resolve({ id: '22222222-2222-4222-8222-222222222222' }),
+    });
+    const payload = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(payload.error).toBe('Organization context is required');
+    expect(verifyExplicitAssignmentAccess).toHaveBeenCalledWith(
+      'user-1',
+      '22222222-2222-4222-8222-222222222222',
+      { orgId: null, orgSlug: null }
+    );
+    expect(db.query.assignments.findFirst).not.toHaveBeenCalled();
+  });
+
+  it('serves visual fixture assignment updates without touching persistence', async () => {
+    vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'true');
+    vi.stubEnv('PROOFOUND_VISUAL_FIXTURES', 'true');
+    (verifyExplicitAssignmentMutationAccess as any).mockResolvedValue({
+      status: 'ok',
+      orgId: '99999999-9999-4999-9999-999999999999',
+      role: 'org_manager',
+      membershipId: 'visual-assignment-membership',
+    });
+
+    const req = new NextRequest(
+      'http://localhost/api/assignments/22222222-2222-4222-8222-222222222222',
+      {
+        method: 'PUT',
+        body: JSON.stringify({
+          orgSlug: 'test-org',
+          title: 'Updated visual draft',
+          rolePurpose: 'Keep visual assignment QA writable without persistence.',
+          status: 'draft',
+          creationStatus: 'assignment_ready',
+          mustHaveSkills: [{ id: 'program-operations', label: 'Program operations', level: 4 }],
+        }),
+      }
+    );
+
+    const res = await PUT(req, {
+      params: Promise.resolve({ id: '22222222-2222-4222-8222-222222222222' }),
+    });
+    const payload = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(payload.assignment).toMatchObject({
+      id: '22222222-2222-4222-8222-222222222222',
+      orgId: '99999999-9999-4999-9999-999999999999',
+      role: 'Updated visual draft',
+      businessValue: 'Keep visual assignment QA writable without persistence.',
+      creationStatus: 'assignment_ready',
+    });
+    expect(db.transaction).not.toHaveBeenCalled();
+    expect(checkAndEmitAssignmentActivation).not.toHaveBeenCalled();
   });
 
   it('GET returns an assignment for active members with explicit organization context', async () => {
@@ -162,6 +241,46 @@ describe('assignment [id] mutation routes', () => {
 
     const res = await PUT(req, params);
     expect(res.status).toBe(404);
+  });
+
+  it('PUT does not let mock mode bypass assignment mutation access', async () => {
+    vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'true');
+    (verifyExplicitAssignmentMutationAccess as any).mockResolvedValue({
+      status: 'membership_not_found',
+    });
+
+    const req = new NextRequest(
+      'http://localhost/api/assignments/22222222-2222-4222-8222-222222222222',
+      {
+        method: 'PUT',
+        body: JSON.stringify({
+          role: 'Updated role',
+          orgId: principalOrgId,
+        }),
+      }
+    );
+
+    const res = await PUT(req, {
+      params: Promise.resolve({ id: '22222222-2222-4222-8222-222222222222' }),
+    });
+
+    expect(res.status).toBe(404);
+    expect(verifyExplicitAssignmentMutationAccess).toHaveBeenCalledWith(
+      'user-1',
+      '22222222-2222-4222-8222-222222222222',
+      { orgId: principalOrgId, orgSlug: undefined }
+    );
+    expect(db.transaction).not.toHaveBeenCalled();
+  });
+
+  it('PUT rejects malformed JSON before assignment mutation access checks', async () => {
+    const res = await PUT(rawRequest('{"role":'), params);
+    const payload = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(payload.error).toBe('Invalid JSON body');
+    expect(verifyExplicitAssignmentMutationAccess).not.toHaveBeenCalled();
+    expect(db.update).not.toHaveBeenCalled();
   });
 
   it('PUT updates assignment for org owner', async () => {

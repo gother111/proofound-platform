@@ -22,6 +22,11 @@ import {
 import { postInterviewUpdateMessageBestEffort } from '@/lib/interviews/messaging';
 import { mergeInterviewProcessState } from '@/lib/interviews/process-state';
 import { classifyGoogleScheduleError } from '@/lib/interviews/schedule-errors';
+import {
+  buildVisualIndividualInterviewCorridorItems,
+  buildVisualOrgInterviewCorridorItems,
+  interviewVisualFixturesEnabled,
+} from '@/lib/interviews/visual-fixtures';
 import { log } from '@/lib/log';
 
 function isMissingColumnError(error: { code?: string; message?: string } | null, column: string) {
@@ -224,6 +229,22 @@ export async function getInterviewCorridorItems(params: {
 
   if (authError || !user) {
     throw new Error('Unauthorized');
+  }
+
+  if (params.perspective === 'organization' && interviewVisualFixturesEnabled()) {
+    const items = buildVisualOrgInterviewCorridorItems();
+    return {
+      items,
+      count: items.length,
+    };
+  }
+
+  if (params.perspective === 'individual' && interviewVisualFixturesEnabled()) {
+    const items = buildVisualIndividualInterviewCorridorItems();
+    return {
+      items,
+      count: items.length,
+    };
   }
 
   const rows = await listAccessibleHiringCorridorRecords(user.id);
@@ -493,7 +514,7 @@ export async function scheduleInterview(input: z.input<typeof ScheduleInterviewS
 
     if (normalizedPlatform === 'zoom') {
       throw new Error(
-        'Zoom integration is temporarily unavailable. Please select Google Meet or use manual link scheduling.'
+        'Zoom is outside the launch interview surface. Use Google Meet or a manual meeting link.'
       );
     }
 
@@ -639,19 +660,7 @@ export async function scheduleInterview(input: z.input<typeof ScheduleInterviewS
       lastInsertError = insertResult.error;
 
       const missingColumn = extractMissingColumn(insertResult.error);
-      if (!missingColumn) {
-        const isLegacyPlatformEnumError =
-          insertResult.error?.code === '22P02' &&
-          typeof insertResult.error?.message === 'string' &&
-          insertResult.error.message.toLowerCase().includes('platform');
-
-        if (isLegacyPlatformEnumError && insertPayload.platform === 'manual') {
-          insertPayload.platform = 'zoom';
-          continue;
-        }
-
-        throw insertResult.error;
-      }
+      if (!missingColumn) throw insertResult.error;
 
       switch (missingColumn) {
         case 'duration_minutes':
@@ -700,7 +709,12 @@ export async function scheduleInterview(input: z.input<typeof ScheduleInterviewS
         days_since_match: daysSinceMatch,
       });
     } catch (analyticsError) {
-      console.error('Failed to emit interview_scheduled event:', analyticsError);
+      log.error('interview.schedule.analytics_emit_failed', {
+        matchId: data.matchId,
+        interviewId: interview.id,
+        errorMessage:
+          analyticsError instanceof Error ? analyticsError.message : String(analyticsError),
+      });
     }
 
     await postInterviewUpdateMessageBestEffort({

@@ -1,26 +1,22 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { notFoundMock } = vi.hoisted(() => ({
+const { notFoundMock, redirectMock } = vi.hoisted(() => ({
   notFoundMock: vi.fn(() => {
     throw new Error('NEXT_NOT_FOUND');
+  }),
+  redirectMock: vi.fn(() => {
+    throw new Error('NEXT_REDIRECT');
   }),
 }));
 
 vi.mock('next/navigation', () => ({
   notFound: notFoundMock,
+  redirect: redirectMock,
 }));
 
 vi.mock('@/lib/auth', () => ({
   requireAuth: vi.fn(),
   getActiveOrg: vi.fn(),
-}));
-
-vi.mock('@/components/organization/OrgCandidatesWorkspace', () => ({
-  OrgCandidatesWorkspace: ({ orgId }: { orgId: string }) => (
-    <div data-testid="org-candidates-workspace">{orgId}</div>
-  ),
 }));
 
 import OrgCandidatesPage from '@/app/app/o/[slug]/candidates/page';
@@ -41,16 +37,16 @@ describe('organization candidates page', () => {
     });
   });
 
-  it('mounts the private candidates workspace for active organization members', async () => {
-    const element = await OrgCandidatesPage({
-      params: Promise.resolve({ slug: 'acme' }),
-    });
-
-    render(element);
+  it('keeps the private candidates alias gated and redirects active organization members', async () => {
+    await expect(
+      OrgCandidatesPage({
+        params: Promise.resolve({ slug: 'acme' }),
+      })
+    ).rejects.toThrow('NEXT_REDIRECT');
 
     expect(requireAuth).toHaveBeenCalledTimes(1);
     expect(getActiveOrg).toHaveBeenCalledWith('acme', 'user-1');
-    expect(screen.getByTestId('org-candidates-workspace')).toHaveTextContent('org-1');
+    expect(redirectMock).toHaveBeenCalledWith('/app/o/acme/assignments');
   });
 
   it('returns not found when the signed-in user is not a member of the organization', async () => {

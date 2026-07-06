@@ -6,7 +6,6 @@ from python_cv.contracts import (
     PYTHON_INTERNAL_CONTRACT_VERSION,
     PYTHON_INTERNAL_SERVICE_NAME,
 )
-from python_cv.entity_extract import extract_all_entities
 from python_cv.skill_candidate_extract import extract_skill_candidates
 from python_cv.skill_db import SkillDb
 from python_cv.skill_matcher import MatchedCandidate, match_skill_candidates
@@ -80,53 +79,6 @@ def validate_text_limits(text: str, limits: ImportLimits) -> str:
 def validate_total_chars(total_chars: int, limits: ImportLimits) -> None:
     if total_chars > limits.max_total_chars:
         raise ValueError(f"Total payload too large. Maximum is {limits.max_total_chars} characters.")
-
-
-def process_wizard_documents(
-    documents: list[dict[str, str]],
-    skill_db: SkillDb,
-    *,
-    limits: ImportLimits,
-    suggestions_limit: int | None,
-) -> dict[str, object]:
-    validate_documents_limit(len(documents), limits)
-
-    total_chars = 0
-    output_documents: list[dict[str, object]] = []
-    unmapped = 0
-    suggestion_limit = _clamp_suggestions_limit(suggestions_limit)
-
-    for source in documents:
-        document_text = validate_text_limits(source.get("text", ""), limits)
-        total_chars += len(document_text)
-        validate_total_chars(total_chars, limits)
-
-        entities = extract_all_entities(document_text)
-        candidates = extract_skill_candidates(document_text)
-        matched = match_skill_candidates(candidates, skill_db, suggestions_limit=suggestion_limit)
-
-        unmapped += sum(1 for item in matched if item.unmapped_candidate)
-
-        output_documents.append(
-            {
-                "document_id": source["document_id"],
-                "file_name": source["file_name"],
-                "context": "cv",
-                "parsed_text": document_text,
-                "parse_error": source.get("parse_error"),
-                "parse_error_code": source.get("parse_error_code"),
-                "work_experiences": entities["work_experiences"],
-                "learning_experiences": entities["learning_experiences"],
-                "volunteering": entities["volunteering"],
-                "languages": entities["languages"],
-                "skill_candidates": [_serialize_candidate(item) for item in matched],
-            }
-        )
-
-    return {
-        "documents": output_documents,
-        "metadata": _metadata(limits, unmapped),
-    }
 
 
 def process_skill_documents(

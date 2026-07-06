@@ -14,11 +14,11 @@ export function TopBarProfileMenu({ userName, basePath, onClose }: TopBarProfile
     ? [
         { href: '/app/i/settings', label: 'Account settings' },
         { href: '/app/i/settings/privacy', label: 'Privacy controls' },
-        { href: '/app/i/settings?tab=privacy', label: 'Export or delete data' },
-        { href: '/app/i/settings/audit-log', label: 'Audit log' },
+        { href: '/app/i/settings/privacy#privacy-delete', label: 'Export or delete data' },
+        { href: '/app/i/settings/audit-log', label: 'Account history' },
       ]
     : [
-        { href: `${basePath}/profile`, label: 'Organization profile' },
+        { href: `${basePath}/profile`, label: 'Organization trust page' },
         { href: `${basePath}/portfolio`, label: 'Public preview' },
       ];
 
@@ -39,7 +39,7 @@ export function TopBarProfileMenu({ userName, basePath, onClose }: TopBarProfile
           href={item.href}
           role="menuitem"
           onClick={onClose}
-          className="block rounded-md px-2 py-1.5 text-sm outline-none hover:bg-proofound-stone/30 focus:bg-proofound-stone/30"
+          className="flex min-h-11 items-center rounded-md px-3 py-2 text-sm outline-none transition-colors hover:bg-proofound-stone/30 focus-visible:bg-proofound-stone/30 focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
         >
           {item.label}
         </Link>
@@ -49,7 +49,7 @@ export function TopBarProfileMenu({ userName, basePath, onClose }: TopBarProfile
         href="/auth/logout"
         role="menuitem"
         onClick={onClose}
-        className="block w-full rounded-md px-2 py-1.5 text-left text-sm outline-none hover:bg-rose-50 hover:text-rose-600 focus:bg-rose-50 focus:text-rose-600"
+        className="flex min-h-11 w-full items-center rounded-md px-3 py-2 text-left text-sm outline-none transition-colors hover:bg-rose-50 hover:text-rose-600 focus-visible:bg-rose-50 focus-visible:text-rose-600 focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
       >
         Log out
       </Link>

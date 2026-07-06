@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import Link from 'next/link';
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Building2, Mail } from 'lucide-react';
 import { CAPABILITY_TOKEN_CLASSES, inspectCapabilityToken } from '@/lib/security/capability-tokens';
@@ -8,11 +9,60 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { acceptInvitation } from '@/actions/org';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
+import { AcceptInviteVisualClient } from './AcceptInviteVisualClient';
+import {
+  buildVisualOrgInvite,
+  orgInviteVisualFixturesEnabled,
+} from '@/lib/org-invites/visual-fixtures';
 
 export const dynamic = 'force-dynamic';
 
 interface AcceptInvitePageProps {
   searchParams?: Promise<{ token?: string | string[] }>;
+}
+
+function InviteUnavailableCard({
+  title = 'Invite link is unavailable',
+  message = 'The invite may be expired, revoked, or invalid. No organization membership was created from this page.',
+  guidance = 'Ask the organization to resend the invite if you still need access.',
+}: {
+  title?: string;
+  message?: string;
+  guidance?: string;
+}) {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-japandi-bg p-6">
+      <Card className="w-full max-w-lg rounded-[24px] border-proofound-stone bg-white/90 shadow-[0_4px_24px_rgba(29,51,48,0.08)]">
+        <CardHeader className="text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-proofound-forest/10">
+            <Mail className="h-5 w-5 text-proofound-forest" />
+          </div>
+          <h1 className="font-display text-2xl font-semibold leading-none tracking-tight text-proofound-charcoal">
+            {title}
+          </h1>
+          <CardDescription className="leading-6 text-proofound-charcoal/70">
+            {message}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div
+            role="alert"
+            aria-live="assertive"
+            className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-amber-950"
+          >
+            <p className="font-semibold">{title}</p>
+            <p className="mt-1">{guidance}</p>
+            <p className="mt-2 text-xs leading-5">
+              Your current account, role, and organization access are unchanged.
+            </p>
+          </div>
+          <Button asChild variant="outline" className="w-full">
+            <Link href="/">Return home</Link>
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
 
 export default async function AcceptInvitePage({ searchParams }: AcceptInvitePageProps) {
@@ -22,17 +72,19 @@ export default async function AcceptInvitePage({ searchParams }: AcceptInvitePag
 
   if (!token) {
     return (
-      <div className="min-h-screen bg-japandi-bg flex items-center justify-center p-6">
-        <Card className="max-w-lg w-full">
-          <CardHeader>
-            <CardTitle>Invite link is invalid</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-slate-600">
-            This invite link is missing a token. Ask the organization to resend it.
-          </CardContent>
-        </Card>
-      </div>
+      <InviteUnavailableCard
+        title="Invite link is invalid"
+        message="This invite link is missing a token. No organization membership was created from this page."
+        guidance="Open the full invite link from your email, or ask the organization to resend it."
+      />
     );
+  }
+
+  if (orgInviteVisualFixturesEnabled()) {
+    const visualInvite = buildVisualOrgInvite(token);
+    if (visualInvite) {
+      return <AcceptInviteVisualClient invite={visualInvite} />;
+    }
   }
 
   const user = await requireAuth();
@@ -53,18 +105,7 @@ export default async function AcceptInvitePage({ searchParams }: AcceptInvitePag
   });
 
   if (!inspected.ok || inspected.token.source_table !== 'org_invitations') {
-    return (
-      <div className="min-h-screen bg-japandi-bg flex items-center justify-center p-6">
-        <Card className="max-w-lg w-full">
-          <CardHeader>
-            <CardTitle>Invite link is unavailable</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-slate-600">
-            The invite may be expired, revoked, or invalid.
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <InviteUnavailableCard />;
   }
 
   const invitationRecord = await adminClient
@@ -89,36 +130,14 @@ export default async function AcceptInvitePage({ searchParams }: AcceptInvitePag
     .maybeSingle();
 
   if (invitationRecord.error || !invitationRecord.data) {
-    return (
-      <div className="min-h-screen bg-japandi-bg flex items-center justify-center p-6">
-        <Card className="max-w-lg w-full">
-          <CardHeader>
-            <CardTitle>Invite link is unavailable</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-slate-600">
-            The invite may be expired, revoked, or invalid.
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <InviteUnavailableCard />;
   }
 
   const invitationData = invitationRecord.data;
   const orgInfo = Array.isArray(invitationData.org) ? invitationData.org[0] : invitationData.org;
 
   if (!orgInfo?.slug) {
-    return (
-      <div className="min-h-screen bg-japandi-bg flex items-center justify-center p-6">
-        <Card className="max-w-lg w-full">
-          <CardHeader>
-            <CardTitle>Invite link is unavailable</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-slate-600">
-            The invite may be expired, revoked, or invalid.
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <InviteUnavailableCard />;
   }
 
   const { data: existingMembership } = await adminClient
@@ -134,19 +153,23 @@ export default async function AcceptInvitePage({ searchParams }: AcceptInvitePag
 
   return (
     <AppSurface>
-      <div className="flex items-center justify-center px-4 w-full h-[calc(100vh-8rem)]">
-        <Card className="max-w-md w-full">
+      <div className="flex min-h-[calc(100vh-8rem)] w-full items-center justify-center px-4 py-8">
+        <Card className="w-full max-w-md rounded-[24px] border-proofound-stone bg-white/90 shadow-[0_4px_24px_rgba(29,51,48,0.08)]">
           <CardHeader className="text-center">
-            <div className="mx-auto w-12 h-12 rounded-full bg-primary-50 flex items-center justify-center mb-4">
-              <Mail className="w-6 h-6 text-primary-500" />
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-proofound-forest/10">
+              <Mail className="h-5 w-5 text-proofound-forest" />
             </div>
-            <CardTitle>You&apos;re invited!</CardTitle>
-            <CardDescription>You&apos;ve been invited to join an organization</CardDescription>
+            <h1 className="font-display text-2xl font-semibold leading-none tracking-tight text-proofound-charcoal">
+              You&apos;re invited
+            </h1>
+            <CardDescription className="leading-6 text-proofound-charcoal/70">
+              You&apos;ve been invited to join an organization.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="flex items-start gap-4 p-4 bg-primary-50 rounded-lg">
-              <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
-                <Building2 className="w-5 h-5 text-primary-600" />
+            <div className="flex items-start gap-4 rounded-lg bg-proofound-parchment/60 p-4">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-proofound-forest/10">
+                <Building2 className="h-5 w-5 text-proofound-forest" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-neutral-dark-700">{orgInfo?.displayName}</p>
@@ -181,8 +204,12 @@ export default async function AcceptInvitePage({ searchParams }: AcceptInvitePag
               }}
               className="space-y-4"
             >
-              <Button type="submit" className="w-full" size="lg">
-                Accept Invitation
+              <Button
+                type="submit"
+                className="w-full bg-proofound-forest text-white hover:bg-proofound-forest/90"
+                size="lg"
+              >
+                Accept invitation
               </Button>
               <p className="text-xs text-center text-neutral-dark-500">
                 By accepting, you&apos;ll become a member of this organization

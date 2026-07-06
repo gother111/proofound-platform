@@ -4,9 +4,11 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { CheckCircle2, Copy, ExternalLink, ShieldCheck } from 'lucide-react';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 type PersonaType = 'individual' | 'organization';
 type PublishResult = void | { success?: boolean; error?: string };
@@ -24,6 +26,17 @@ interface PublicPortfolioReadyStepProps {
   previewDescription?: string;
   notice?: string | null;
 }
+
+type CopyFeedback = {
+  kind: 'success' | 'error';
+  message: string;
+};
+
+const COPY_FAILURE_MESSAGES: Record<PersonaType, string> = {
+  individual: 'Portfolio link could not be copied. Select the link below or try again.',
+  organization:
+    'Organization trust page link could not be copied. Select the link below or try again.',
+};
 
 function normalizePortfolioUrl(input: string): string {
   const trimmed = input.trim();
@@ -57,6 +70,7 @@ export function PublicPortfolioReadyStep({
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [copyFeedback, setCopyFeedback] = useState<CopyFeedback | null>(null);
   const resolvedUrl = useMemo(
     () => normalizePortfolioUrl(publicPortfolioUrl),
     [publicPortfolioUrl]
@@ -65,16 +79,16 @@ export function PublicPortfolioReadyStep({
   const heading =
     persona === 'organization'
       ? isPublished
-        ? 'Your organization portfolio is live'
-        : 'Your organization portfolio is ready'
+        ? 'Your organization trust page is live'
+        : 'Your organization trust page is ready'
       : isPublished
         ? 'Your Public Page is live'
         : 'Your Public Page is ready';
 
   const description =
     persona === 'organization'
-      ? 'Day 1 win unlocked. Publish by direct link, preview it, copy it, and share it. Search engines stay off until you opt in.'
-      : 'Day 1 win unlocked. Publish by direct link, preview it, copy it, and share it. Verification upgrades the trust badge later.';
+      ? 'Public Page link ready. Publish by direct link, preview it, copy it, and share it. Search engines stay off until you opt in.'
+      : 'Public Page link ready. Publish by direct link, preview it, copy it, and share it. Verification upgrades the trust badge later.';
 
   async function handlePublish(checked: boolean) {
     if (!checked || isPublished || isPublishing) return;
@@ -103,23 +117,27 @@ export function PublicPortfolioReadyStep({
     if (!isPublished || !resolvedUrl) return;
 
     try {
+      setCopyFeedback(null);
       await navigator.clipboard.writeText(resolvedUrl);
-      await fetch('/api/analytics/track', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          eventType: 'portfolio_share_link_copied',
-          entityType: 'profile',
-          properties: {
-            source: 'onboarding_success',
-            persona,
-          },
-        }),
-      });
       setCopied(true);
-      window.setTimeout(() => setCopied(false), 1600);
-    } catch {
+      setCopyFeedback({
+        kind: 'success',
+        message:
+          persona === 'organization'
+            ? 'Organization trust page link copied.'
+            : 'Portfolio link copied.',
+      });
+      window.setTimeout(() => {
+        setCopied(false);
+        setCopyFeedback(null);
+      }, 1600);
+    } catch (error) {
+      dispatchClientErrorDiagnostic('onboarding.public_portfolio_ready.copy_failed', error);
       setCopied(false);
+      setCopyFeedback({
+        kind: 'error',
+        message: COPY_FAILURE_MESSAGES[persona],
+      });
     }
   }
 
@@ -149,7 +167,7 @@ export function PublicPortfolioReadyStep({
               <h2 className="mt-1 font-['Crimson_Pro'] text-xl font-semibold">
                 {previewTitle ||
                   (persona === 'organization'
-                    ? 'Organization proof portfolio'
+                    ? 'Organization trust page'
                     : 'First proof record')}
               </h2>
             </div>
@@ -179,10 +197,10 @@ export function PublicPortfolioReadyStep({
               >
                 {isPublished
                   ? persona === 'organization'
-                    ? 'Organization portfolio published by direct link'
+                    ? 'Organization trust page published by direct link'
                     : 'Public Page published by direct link'
                   : persona === 'organization'
-                    ? 'Publish organization portfolio by direct link'
+                    ? 'Publish organization trust page by direct link'
                     : 'Publish my Public Page by direct link'}
               </Label>
               <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
@@ -197,7 +215,7 @@ export function PublicPortfolioReadyStep({
               onCheckedChange={(checked) => void handlePublish(checked)}
               aria-label={
                 persona === 'organization'
-                  ? 'Publish organization portfolio by direct link'
+                  ? 'Publish organization trust page by direct link'
                   : 'Publish my Public Page by direct link'
               }
             />
@@ -211,7 +229,7 @@ export function PublicPortfolioReadyStep({
 
         <div className="rounded-xl border border-proofound-stone bg-proofound-parchment/60 p-4 text-sm text-proofound-charcoal dark:border-border dark:bg-muted dark:text-foreground">
           <p className="mb-2 text-xs uppercase tracking-wide text-proofound-charcoal/60 dark:text-muted-foreground">
-            {persona === 'organization' ? 'Public portfolio URL' : 'Public Page URL'}
+            {persona === 'organization' ? 'Organization trust page URL' : 'Public Page URL'}
           </p>
           <p className="break-all font-mono text-sm">{resolvedUrl}</p>
         </div>
@@ -272,6 +290,42 @@ export function PublicPortfolioReadyStep({
             </Button>
           ) : null}
         </div>
+
+        {copyFeedback ? (
+          <div className="space-y-3">
+            <p
+              className={
+                copyFeedback.kind === 'error'
+                  ? 'text-sm text-red-600'
+                  : 'text-sm text-proofound-forest dark:text-emerald-300'
+              }
+              role={copyFeedback.kind === 'error' ? 'alert' : 'status'}
+            >
+              {copyFeedback.message}
+            </p>
+            {copyFeedback.kind === 'error' ? (
+              <div className="space-y-2">
+                <Label htmlFor="manual-public-portfolio-copy" className="text-sm">
+                  {persona === 'organization'
+                    ? 'Organization trust page link for manual copy'
+                    : 'Portfolio link for manual copy'}
+                </Label>
+                <Input
+                  id="manual-public-portfolio-copy"
+                  readOnly
+                  value={resolvedUrl}
+                  aria-label={
+                    persona === 'organization'
+                      ? 'Organization trust page link for manual copy'
+                      : 'Portfolio link for manual copy'
+                  }
+                  className="min-h-[44px]"
+                  onFocus={(event) => event.currentTarget.select()}
+                />
+              </div>
+            ) : null}
+          </div>
+        ) : null}
 
         <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
           Share the link with a hiring team, collaborator, or on a profile post when you are ready.

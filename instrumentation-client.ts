@@ -3,63 +3,93 @@ import * as Sentry from '@sentry/nextjs';
 // Next.js loads this file on the client before application code.
 // Keep initialization side-effectful. Sentry's Next.js SDK may require
 // router transition instrumentation hooks to be exported from this module.
-export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
+const sentryDsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
 
-Sentry.init({
-  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+export const onRouterTransitionStart = sentryDsn
+  ? Sentry.captureRouterTransitionStart
+  : () => undefined;
 
-  // Set environment
-  environment: process.env.NEXT_PUBLIC_VERCEL_ENV || process.env.NODE_ENV || 'development',
+function readSamplingRate(value: string | undefined, fallback: number): number {
+  if (!value) return fallback;
 
-  // Adjust this value in production, or use tracesSampler for greater control
-  tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+  const parsed = Number.parseFloat(value);
+  if (!Number.isFinite(parsed)) return fallback;
 
-  // Setting this option to true will print useful information to the console while you're setting up Sentry.
-  debug: false,
+  return Math.min(1, Math.max(0, parsed));
+}
 
-  // Capture Replay for 10% of all sessions,
-  // plus 100% of sessions with an error
-  replaysOnErrorSampleRate: 1.0,
-  replaysSessionSampleRate: 0.1,
+if (sentryDsn) {
+  Sentry.init({
+    dsn: sentryDsn,
 
-  integrations: [
-    Sentry.replayIntegration({
-      // Mask all text content, enable when needed for debugging
-      maskAllText: true,
-      blockAllMedia: true,
-    }),
-    Sentry.browserTracingIntegration(),
-  ],
+    // Set environment
+    environment: process.env.NEXT_PUBLIC_VERCEL_ENV || process.env.NODE_ENV || 'development',
 
-  // Ignore common errors
-  ignoreErrors: [
-    // Browser extensions
-    'top.GLOBALS',
-    'chrome-extension://',
-    'moz-extension://',
-    // Network errors
-    'NetworkError',
-    'Network request failed',
-    'Failed to fetch',
-    // Auth errors (handled by UI)
-    'Invalid login credentials',
-    'User not found',
-    // Abort errors
-    'AbortError',
-    'The user aborted a request',
-  ],
+    // Adjust this value in production, or use tracesSampler for greater control
+    tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
 
-  beforeSend(event) {
-    // Don't send events in development unless explicitly enabled
-    if (process.env.NODE_ENV === 'development' && !process.env.NEXT_PUBLIC_SENTRY_DEBUG) {
-      return null;
-    }
+    // Setting this option to true will print useful information to the console while you're setting up Sentry.
+    debug: false,
 
-    // Filter out events without error info
-    if (!event.exception && !event.message) {
-      return null;
-    }
+    // Privacy-first launch default: session replay is opt-in per target.
+    replaysOnErrorSampleRate: readSamplingRate(
+      process.env.NEXT_PUBLIC_SENTRY_REPLAY_ON_ERROR_SAMPLE_RATE,
+      0
+    ),
+    replaysSessionSampleRate: readSamplingRate(
+      process.env.NEXT_PUBLIC_SENTRY_REPLAY_SESSION_SAMPLE_RATE,
+      0
+    ),
 
-    return event;
-  },
-});
+    integrations: [
+      Sentry.replayIntegration({
+        // Mask all text content, enable when needed for debugging
+        maskAllText: true,
+        blockAllMedia: true,
+      }),
+      Sentry.browserTracingIntegration(),
+    ],
+
+    // Ignore common errors
+    ignoreErrors: [
+      // Browser extensions
+      'top.GLOBALS',
+      'chrome-extension://',
+      'moz-extension://',
+      // Network errors
+      'NetworkError',
+      'Network request failed',
+      'Failed to fetch',
+      // Auth errors (handled by UI)
+      'Invalid login credentials',
+      'User not found',
+      // Abort errors
+      'AbortError',
+      'The user aborted a request',
+    ],
+
+    beforeSend(event) {
+      // Don't send events in development unless explicitly enabled
+      if (process.env.NODE_ENV === 'development' && !process.env.NEXT_PUBLIC_SENTRY_DEBUG) {
+        return null;
+      }
+
+      // Filter out events without error info
+      if (!event.exception && !event.message) {
+        return null;
+      }
+
+      if (event.user) {
+        event.user = { id: event.user.id };
+      }
+
+      if (event.request) {
+        delete event.request.cookies;
+        delete event.request.headers;
+        delete event.request.data;
+      }
+
+      return event;
+    },
+  });
+}

@@ -38,7 +38,7 @@ export function HeroManifesto({ shouldReduceMotion }: HeroManifestoProps) {
 
             <p className="text-lg md:text-xl text-muted-foreground leading-relaxed font-sans max-w-[500px]">
               Proofound helps people turn real work into clear, shareable proof — and helps
-              organizations find talent through evidence, not noise.
+              organizations review assignment submissions through evidence, not noise.
             </p>
           </div>
 

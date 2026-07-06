@@ -17,6 +17,14 @@ import { computeAssignmentMatches } from '@/lib/core/matching/assignmentMatcher'
 import { getPreset, normalizeWeights } from '@/lib/core/matching/presets';
 import { FEATURE_FLAG_KEYS, MATCHING_ENABLED } from '@/lib/featureFlags';
 import { resolveFeatureFlags } from '@/lib/feature-flags/server';
+import { evaluateIntroGate } from '@/lib/matching/intro-gates';
+import { describeReasonCodes } from '@/lib/matching/reason-codes';
+import { getMatchingVisualState, buildVisualOrgMatches } from '@/lib/matching/visual-fixtures';
+import type { DiscoveryStatus, FitBand, IntroGate, MatchReasonDetail } from '@/lib/matching/types';
+import {
+  VISUAL_ASSIGNMENT_FIXTURE_IDS,
+  visualAssignmentFixturesEnabled,
+} from '@/lib/assignments/visual-fixtures';
 import { emitLaunchTrace, startLaunchTrace } from '@/lib/launch/trace';
 import { log } from '@/lib/log';
 import {
@@ -24,9 +32,8 @@ import {
   buildCanonicalMatchPersistenceFields,
   buildProofFirstReviewCard,
   buildVisibilitySafeWhy,
-  canMutateReview,
   ensureMatchReviewState,
-  getReviewCardProofPackMap,
+  getReviewCardProofPackMapForMatchedOrg,
   getRankBand,
   getVisibleIdentityFields,
   normalizeFairnessStatus,
@@ -35,8 +42,22 @@ import {
   resolveCanonicalFallbackState,
 } from '@/lib/matching/review-contract';
 
-// Shared handler imported by the kept launch corridor routes.
 export const dynamic = 'force-dynamic';
+
+function toVisibilitySafeAssignmentMatchItem<T extends Record<string, unknown>>(item: T) {
+  const {
+    score: _score,
+    scoreTotal: _scoreTotal,
+    subscores: _subscores,
+    subscoresJson: _subscoresJson,
+    scoreSnapshotJson: _scoreSnapshotJson,
+    contributions: _contributions,
+    focusBoost: _focusBoost,
+    ...safeItem
+  } = item;
+
+  return safeItem;
+}
 
 // Validation schema
 const MatchRequestSchema = z.object({
@@ -48,6 +69,172 @@ const MatchRequestSchema = z.object({
   annLimit: z.number().positive().max(1000).optional(), // Stage-1 ANN retrieval limit
   refresh: z.boolean().optional(), // Force recomputation instead of returning saved matches
 });
+
+const DISCOVERY_STATUS_SET = new Set<DiscoveryStatus>([
+  'possible_discovery_match',
+  'review_ready_match',
+  'intro_ready_match',
+]);
+const FIT_BAND_SET = new Set<FitBand>([
+  'strong_evidence_overlap',
+  'relevant_partial',
+  'adjacent_exploratory',
+  'needs_more_proof',
+  'constraint_or_trust_hold',
+]);
+
+function readSnapshotString(snapshot: unknown, field: string): string | null {
+  if (!snapshot || typeof snapshot !== 'object' || Array.isArray(snapshot)) return null;
+  const value = (snapshot as Record<string, unknown>)[field];
+  return typeof value === 'string' ? value : null;
+}
+
+function resolveDiscoveryStatus(snapshot: unknown, reasonCodes: string[]): DiscoveryStatus {
+  const fromSnapshot = readSnapshotString(snapshot, 'discovery_status');
+  if (fromSnapshot && DISCOVERY_STATUS_SET.has(fromSnapshot as DiscoveryStatus)) {
+    return fromSnapshot as DiscoveryStatus;
+  }
+
+  if (reasonCodes.includes('low_supply_expanded_discovery')) {
+    return 'possible_discovery_match';
+  }
+
+  if (reasonCodes.some((code) => code.endsWith('_overlap'))) {
+    return 'review_ready_match';
+  }
+
+  return 'review_ready_match';
+}
+
+function resolveFitBand(snapshot: unknown, reasonCodes: string[]): FitBand {
+  const fromSnapshot = readSnapshotString(snapshot, 'fit_band');
+  if (fromSnapshot && FIT_BAND_SET.has(fromSnapshot as FitBand)) {
+    return fromSnapshot as FitBand;
+  }
+
+  if (
+    reasonCodes.includes('privacy_or_policy_hold') ||
+    reasonCodes.includes('constraint_mismatch')
+  ) {
+    return 'constraint_or_trust_hold';
+  }
+
+  if (
+    reasonCodes.includes('fresh_proof_missing') ||
+    reasonCodes.includes('verification_gate_missing')
+  ) {
+    return 'needs_more_proof';
+  }
+
+  if (
+    reasonCodes.includes('adjacent_skill_overlap') ||
+    reasonCodes.includes('custom_wording_overlap') ||
+    reasonCodes.includes('low_supply_expanded_discovery')
+  ) {
+    return 'adjacent_exploratory';
+  }
+
+  if (
+    reasonCodes.includes('canonical_skill_overlap') ||
+    reasonCodes.includes('alias_skill_overlap') ||
+    reasonCodes.includes('proof_text_overlap') ||
+    reasonCodes.includes('role_relevant_outcome')
+  ) {
+    return 'relevant_partial';
+  }
+
+  return 'needs_more_proof';
+}
+
+function buildProofSummaries(reviewCard: ReturnType<typeof buildProofFirstReviewCard>) {
+  const strongestProof = reviewCard.strongestProof;
+  if (!strongestProof) return [];
+
+  return [
+    {
+      summary: strongestProof.summary ?? null,
+      outcome: strongestProof.outcome ?? null,
+      ownership: strongestProof.ownership ?? null,
+      freshnessLabel: strongestProof.freshnessLabel ?? null,
+    },
+  ];
+}
+
+function buildSkillClusters(reasonDetails: MatchReasonDetail[]) {
+  return reasonDetails
+    .filter((reason) =>
+      [
+        'canonical_skill_overlap',
+        'alias_skill_overlap',
+        'adjacent_skill_overlap',
+        'custom_wording_overlap',
+      ].includes(reason.code)
+    )
+    .map((reason) => ({
+      reasonCode: reason.code,
+      label: reason.code.replace(/_/g, ' '),
+      strength: reason.strength,
+    }));
+}
+
+function buildSafeReviewMetadata(params: {
+  reasonCodes: string[];
+  scoreSnapshotJson?: unknown;
+  reviewCard: ReturnType<typeof buildProofFirstReviewCard>;
+  reviewStage: string;
+  revealScope: string;
+  fallbackState: string | null;
+}) {
+  const discoveryStatus = resolveDiscoveryStatus(params.scoreSnapshotJson, params.reasonCodes);
+  const fitBand = resolveFitBand(params.scoreSnapshotJson, params.reasonCodes);
+  const introGate = evaluateIntroGate({
+    discoveryStatus,
+    candidate: {
+      matchVisible: discoveryStatus !== 'possible_discovery_match',
+      hasFreshRoleRelevantProof: params.reasonCodes.includes('fresh_proof_present'),
+      activeNonSelfTrustAnchorCount: params.reasonCodes.includes('non_self_trust_anchor_present')
+        ? 1
+        : 0,
+    },
+    assignment: {
+      hardConstraintsSatisfied: !params.reasonCodes.includes('constraint_mismatch'),
+    },
+    privacy: {
+      privacySafeReviewAvailable:
+        params.reviewCard.privacy?.reviewState !== 'held_for_manual_review',
+      policyBlock: params.reasonCodes.includes('privacy_or_policy_hold'),
+      privacyOrRedactionHold: params.reviewCard.privacy?.reviewState === 'held_for_manual_review',
+    },
+    workflow: {
+      matchVisibleForWorkflow:
+        params.reviewStage === 'shortlisted' ? params.revealScope === 'shortlist_identity' : true,
+      existingWorkflowAllowsIntroRequest: params.fallbackState !== 'intro_hold',
+    },
+  });
+  const canRequestIntro =
+    introGate.canRequestIntro &&
+    params.reviewStage === 'shortlisted' &&
+    params.revealScope === 'shortlist_identity';
+  const reasonDetails = describeReasonCodes(params.reasonCodes);
+  const supplyState = params.reasonCodes.includes('low_supply_expanded_discovery')
+    ? 'browse_only_low_candidate_supply'
+    : params.fallbackState === 'intro_hold'
+      ? 'intro_hold_insufficient_qualified_intros'
+      : null;
+
+  return {
+    anonymousCandidateLabel: params.reviewCard.candidateLabel,
+    discoveryStatus,
+    fitBand,
+    introGate: (canRequestIntro ? 'intro_ready' : introGate.introGate) as IntroGate,
+    canRequestIntro,
+    proofSummaries: buildProofSummaries(params.reviewCard),
+    skillClusters: buildSkillClusters(reasonDetails),
+    reasonDetails,
+    missingGates: canRequestIntro ? [] : introGate.missingGates,
+    supplyState,
+  };
+}
 
 /**
  * POST /api/match/assignment
@@ -76,7 +263,6 @@ export async function POST(request: NextRequest) {
     const { user } = authContext;
     trace.actorId = user.id;
     trace.actorType = 'organization_member';
-
     if (!MATCHING_ENABLED) {
       emitLaunchTrace(trace, {
         outcome: 'rejected',
@@ -89,13 +275,125 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      emitLaunchTrace(trace, {
+        outcome: 'rejected',
+        state: 'shortlist_validation_failed',
+        failureClass: 'invalid_json_body',
+      });
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
 
     const validatedData = MatchRequestSchema.parse(body);
     const { assignmentId, k = 20, annLimit = 500 } = validatedData;
     const useTwoStage = false;
     const refresh = validatedData.refresh === true;
     trace.objectRefs.assignmentId = assignmentId;
+
+    if (visualAssignmentFixturesEnabled() && VISUAL_ASSIGNMENT_FIXTURE_IDS.has(assignmentId)) {
+      const visualState = getMatchingVisualState(request.url);
+      if (visualState === 'empty') {
+        emitLaunchTrace(trace, {
+          outcome: 'fallback',
+          state: 'browse_only_low_candidate_supply',
+          details: {
+            resultCount: 0,
+            cached: true,
+            fixture: true,
+          },
+        });
+
+        return NextResponse.json({
+          items: [],
+          meta: {
+            total: 0,
+            returned: 0,
+            durationMs: Date.now() - startTime,
+            weights: {},
+            twoStage: false,
+            hasMissionVisionScores: false,
+            cached: true,
+            fairness: {
+              status: 'not_evaluated',
+              evaluationId: null,
+            },
+            launchFallback: {
+              mode: 'browse_only_low_candidate_supply',
+              activeModes: ['browse_only_low_candidate_supply'],
+              introCorridorLive: null,
+              exactRankLive: null,
+            },
+          },
+        });
+      }
+
+      // Default: Return the 7 visual mock matches with the same public-safe review
+      // contract as live matching results.
+      const mockItems = buildVisualOrgMatches(assignmentId).map((item) => {
+        const reasonCodes = Array.isArray(item.reasonCodes) ? item.reasonCodes : [];
+        const reviewCard = item.reviewCard as ReturnType<typeof buildProofFirstReviewCard>;
+        const visualReviewSignals = item.scoreSnapshotJson;
+        const safeReview = buildSafeReviewMetadata({
+          reasonCodes,
+          scoreSnapshotJson: visualReviewSignals,
+          reviewCard,
+          reviewStage: typeof item.reviewStage === 'string' ? item.reviewStage : 'blind_review',
+          revealScope: typeof item.revealScope === 'string' ? item.revealScope : 'blind',
+          fallbackState:
+            typeof item.operationalFallbackMode === 'string' ? item.operationalFallbackMode : null,
+        });
+
+        return toVisibilitySafeAssignmentMatchItem({
+          ...item,
+          anonymousCandidateLabel: safeReview.anonymousCandidateLabel,
+          discoveryStatus: safeReview.discoveryStatus,
+          fitBand: safeReview.fitBand,
+          introGate: safeReview.introGate,
+          canRequestIntro: safeReview.canRequestIntro,
+          proofSummaries: safeReview.proofSummaries,
+          skillClusters: safeReview.skillClusters,
+          reasonDetails: safeReview.reasonDetails,
+          missingGates: safeReview.missingGates,
+          supplyState: safeReview.supplyState,
+        });
+      });
+      emitLaunchTrace(trace, {
+        outcome: 'success',
+        state: 'shortlist_generated',
+        details: {
+          resultCount: mockItems.length,
+          cached: true,
+          fixture: true,
+        },
+      });
+
+      return NextResponse.json({
+        items: mockItems,
+        meta: {
+          total: mockItems.length,
+          returned: mockItems.length,
+          durationMs: Date.now() - startTime,
+          weights: {},
+          twoStage: false,
+          hasMissionVisionScores: false,
+          cached: true,
+          scoreVisibility: 'internal_ordering_only',
+          fairness: {
+            status: 'pass',
+            evaluationId: 'visual-evaluation-id',
+          },
+          launchFallback: {
+            mode: null,
+            activeModes: [],
+            introCorridorLive: null,
+            exactRankLive: null,
+          },
+        },
+      });
+    }
 
     const assignment = await db.query.assignments.findFirst({
       where: eq(assignments.id, assignmentId),
@@ -168,7 +466,7 @@ export async function POST(request: NextRequest) {
           db.query.matchingProfiles.findMany({
             where: inArray(matchingProfiles.profileId, profileIds),
           }),
-          getReviewCardProofPackMap(profileIds),
+          getReviewCardProofPackMapForMatchedOrg(profileIds),
         ]);
         const reviewStateByMatchId = new Map(reviewStateRows.map((row) => [row.matchId, row]));
         const profileById = new Map(profileRows.map((row) => [row.profileId, row]));
@@ -220,19 +518,42 @@ export async function POST(request: NextRequest) {
             const reasonCodes = (row.reasonCodes || []) as Array<
               Parameters<typeof buildVisibilitySafeWhy>[0]['reasonCodes'][number]
             >;
+            const reviewCard = buildProofFirstReviewCard({
+              profileId: row.profileId,
+              reasonCodes,
+              fairnessStatus,
+              verificationCount,
+              proofPack: proofPackByProfileId.get(row.profileId) ?? null,
+              fitBand: rankBand,
+            });
+            const cachedReviewSignals = row.scoreSnapshotJson;
+            const safeReview = buildSafeReviewMetadata({
+              reasonCodes,
+              scoreSnapshotJson: cachedReviewSignals,
+              reviewCard,
+              reviewStage: reviewState.reviewStage,
+              revealScope: reviewState.revealScope,
+              fallbackState: cachedFallbackState,
+            });
 
             return {
               profileId: row.profileId,
-              score: Number(row.score),
-              scoreTotal: row.scoreTotal,
-              subscoresJson: row.subscoresJson,
-              scoreSnapshotJson: row.scoreSnapshotJson,
               reasonCodes,
+              reasonDetails: safeReview.reasonDetails,
               profile: profile ? scrubDisallowedFields(profile) : null,
               id: row.id,
               reviewStage: reviewState.reviewStage,
               revealScope: reviewState.revealScope,
               visibleIdentityFields: getVisibleIdentityFields(reviewState.revealScope),
+              anonymousCandidateLabel: safeReview.anonymousCandidateLabel,
+              discoveryStatus: safeReview.discoveryStatus,
+              fitBand: safeReview.fitBand,
+              introGate: safeReview.introGate,
+              canRequestIntro: safeReview.canRequestIntro,
+              proofSummaries: safeReview.proofSummaries,
+              skillClusters: safeReview.skillClusters,
+              missingGates: safeReview.missingGates,
+              supplyState: safeReview.supplyState,
               ...corridor,
               fairness: {
                 status: fairnessStatus,
@@ -245,14 +566,7 @@ export async function POST(request: NextRequest) {
                 fallbackState: cachedFallbackState,
                 rankBand,
               }),
-              reviewCard: buildProofFirstReviewCard({
-                profileId: row.profileId,
-                reasonCodes,
-                fairnessStatus,
-                verificationCount,
-                proofPack: proofPackByProfileId.get(row.profileId) ?? null,
-                fitBand: rankBand,
-              }),
+              reviewCard,
             };
           }),
           meta: {
@@ -263,6 +577,7 @@ export async function POST(request: NextRequest) {
             twoStage: false,
             hasMissionVisionScores: false,
             cached: true,
+            scoreVisibility: 'internal_ordering_only',
             fairness: {
               status: cachedFairnessStatus,
               evaluationId: null,
@@ -353,7 +668,6 @@ export async function POST(request: NextRequest) {
       actorType: 'user_account',
     });
     const fairnessStatus = normalizeFairnessStatus(fairnessEvaluation.status);
-    const canViewExactRank = canMutateReview(membershipRole);
     const flags = await resolveFeatureFlags(
       [
         FEATURE_FLAG_KEYS.QUALIFIED_INTRO_CORRIDOR,
@@ -371,9 +685,7 @@ export async function POST(request: NextRequest) {
     const introCorridorLive =
       flags[FEATURE_FLAG_KEYS.QUALIFIED_INTRO_CORRIDOR] &&
       !flags[FEATURE_FLAG_KEYS.KILL_SWITCH_INTROS];
-    const exactRankLive =
-      flags[FEATURE_FLAG_KEYS.EXACT_RANK_EXPOSURE] &&
-      !flags[FEATURE_FLAG_KEYS.KILL_SWITCH_EXACT_RANK];
+    const exactRankLive = false;
     const fallbackModes = [
       ...(items.length === 0 ? (['browse_only_low_candidate_supply'] as const) : []),
       ...(!introCorridorLive ? (['intro_hold_insufficient_qualified_intros'] as const) : []),
@@ -402,11 +714,9 @@ export async function POST(request: NextRequest) {
         })
       : [];
     const reviewStateByMatchId = new Map(reviewStateRows.map((row) => [row.matchId, row]));
-    const proofPackByProfileId = await getReviewCardProofPackMap(
+    const proofPackByProfileId = await getReviewCardProofPackMapForMatchedOrg(
       items.map((item) => item.profileId)
     );
-    const showExactRank = canViewExactRank && fairnessStatus === 'pass' && exactRankLive;
-
     emitLaunchTrace(trace, {
       outcome: primaryFallbackMode ? 'fallback' : 'success',
       state: primaryFallbackMode ?? 'shortlist_generated',
@@ -442,24 +752,47 @@ export async function POST(request: NextRequest) {
           typeof item.profile.verified === 'object'
             ? Object.values(item.profile.verified as Record<string, unknown>).filter(Boolean).length
             : 0;
+        const reviewCard = buildProofFirstReviewCard({
+          profileId: item.profileId,
+          reasonCodes: item.reasonCodes,
+          fairnessStatus,
+          verificationCount,
+          proofPack: proofPackByProfileId.get(item.profileId) ?? null,
+          fitBand: rankBand,
+        });
+        const computedReviewSignals = item.scoreSnapshotJson;
+        const safeReview = buildSafeReviewMetadata({
+          reasonCodes: item.reasonCodes,
+          scoreSnapshotJson: computedReviewSignals,
+          reviewCard,
+          reviewStage: reviewState.reviewStage,
+          revealScope: reviewState.revealScope,
+          fallbackState: canonicalFallbackState,
+        });
 
         return {
           profileId: item.profileId,
-          score: item.score,
-          scoreTotal: item.scoreTotal,
-          subscoresJson: item.subscoresJson,
-          scoreSnapshotJson: item.scoreSnapshotJson,
           reasonCodes: item.reasonCodes,
+          reasonDetails: safeReview.reasonDetails,
           profile: item.profile,
           id: matchId,
           reviewStage: reviewState.reviewStage,
           revealScope: reviewState.revealScope,
           visibleIdentityFields: getVisibleIdentityFields(reviewState.revealScope),
+          anonymousCandidateLabel: safeReview.anonymousCandidateLabel,
+          discoveryStatus: safeReview.discoveryStatus,
+          fitBand: safeReview.fitBand,
+          introGate: safeReview.introGate,
+          canRequestIntro: safeReview.canRequestIntro,
+          proofSummaries: safeReview.proofSummaries,
+          skillClusters: safeReview.skillClusters,
+          missingGates: safeReview.missingGates,
+          supplyState: safeReview.supplyState,
           ...corridor,
           fairness: {
             status: fairnessStatus,
           },
-          rank: showExactRank ? index + 1 : null,
+          rank: null,
           rankBand,
           why: buildVisibilitySafeWhy({
             reasonCodes: item.reasonCodes,
@@ -467,18 +800,13 @@ export async function POST(request: NextRequest) {
             fallbackState: canonicalFallbackState,
             rankBand,
           }),
-          reviewCard: buildProofFirstReviewCard({
-            profileId: item.profileId,
-            reasonCodes: item.reasonCodes,
-            fairnessStatus,
-            verificationCount,
-            proofPack: proofPackByProfileId.get(item.profileId) ?? null,
-            fitBand: rankBand,
-          }),
+          reviewCard,
         };
       }),
       meta: {
         ...meta,
+        weights: {},
+        scoreVisibility: 'internal_ordering_only',
         fairness: {
           status: fairnessStatus,
           evaluationId: fairnessEvaluation.id,

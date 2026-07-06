@@ -68,6 +68,7 @@ import { PATCH } from '@/app/api/engagement-verifications/[id]/route';
 describe('PATCH /api/engagement-verifications/[id]', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllEnvs();
     mocks.requireApiAuth.mockResolvedValue({
       user: { id: 'candidate-1' },
       supabase: { id: 'supabase' },
@@ -179,12 +180,128 @@ describe('PATCH /api/engagement-verifications/[id]', () => {
     expect(mocks.confirmEngagementVerification).not.toHaveBeenCalled();
   });
 
+  it('confirms the individual interview visual fixture without touching the database', async () => {
+    vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'true');
+    vi.stubEnv('PROOFOUND_VISUAL_FIXTURES', 'true');
+    vi.stubEnv('PROOFOUND_INTERVIEWS_VISUAL_STATE', 'filled');
+    vi.stubEnv('VERCEL_ENV', 'development');
+
+    const response = await PATCH(
+      new NextRequest(
+        'https://example.com/api/engagement-verifications/visual-individual-engagement-verification-1',
+        {
+          method: 'PATCH',
+          body: JSON.stringify({
+            confirm: true,
+            engagementType: 'full_time',
+          }),
+        }
+      ),
+      {
+        params: Promise.resolve({ id: 'visual-individual-engagement-verification-1' }),
+      }
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(body.engagementVerification).toEqual(
+      expect.objectContaining({
+        id: 'visual-individual-engagement-verification-1',
+        decisionId: 'visual-individual-decision-1',
+        status: 'pending_organization_confirmation',
+        statusLabel: 'Awaiting organization confirmation',
+        engagementType: 'full_time',
+        organizationConfirmedAt: null,
+        uploadedEvidencePresent: false,
+        proofHookStatus: 'not_ready',
+        verifiedAt: null,
+      })
+    );
+    expect(body.engagementVerification.candidateConfirmedAt).toEqual(expect.any(String));
+    expect(body.engagementVerification.workflow).toEqual(
+      expect.objectContaining({
+        state: 'pending_organization_confirmation',
+        displayState: 'Awaiting organization confirmation',
+      })
+    );
+    expect(mocks.findEngagementVerification).not.toHaveBeenCalled();
+    expect(mocks.confirmEngagementVerification).not.toHaveBeenCalled();
+  });
+
+  it('confirms the organization interview visual fixture without touching the database', async () => {
+    vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'true');
+    vi.stubEnv('PROOFOUND_VISUAL_FIXTURES', 'true');
+    vi.stubEnv('PROOFOUND_INTERVIEWS_VISUAL_STATE', 'filled');
+    vi.stubEnv('VERCEL_ENV', 'development');
+
+    const response = await PATCH(
+      new NextRequest(
+        'https://example.com/api/engagement-verifications/visual-engagement-verification-1',
+        {
+          method: 'PATCH',
+          body: JSON.stringify({
+            confirm: true,
+            engagementType: 'contract',
+          }),
+        }
+      ),
+      {
+        params: Promise.resolve({ id: 'visual-engagement-verification-1' }),
+      }
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(body.engagementVerification).toEqual(
+      expect.objectContaining({
+        id: 'visual-engagement-verification-1',
+        decisionId: 'visual-decision-1',
+        status: 'pending_candidate_confirmation',
+        statusLabel: 'Awaiting proof-review participant confirmation',
+        engagementType: 'contract_consulting',
+        candidateConfirmedAt: null,
+        uploadedEvidencePresent: false,
+        proofHookStatus: 'not_ready',
+        verifiedAt: null,
+      })
+    );
+    expect(body.engagementVerification.organizationConfirmedAt).toEqual(expect.any(String));
+    expect(body.engagementVerification.workflow).toEqual(
+      expect.objectContaining({
+        state: 'pending_candidate_confirmation',
+        displayState: 'Awaiting proof-review participant confirmation',
+      })
+    );
+    expect(mocks.findEngagementVerification).not.toHaveBeenCalled();
+    expect(mocks.confirmEngagementVerification).not.toHaveBeenCalled();
+  });
+
   it('returns 400 for malformed JSON without treating it as a server error', async () => {
     const response = await PATCH(
       new NextRequest('https://example.com/api/engagement-verifications/engagement-1', {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
         body: '{',
+      }),
+      {
+        params: Promise.resolve({ id: 'engagement-1' }),
+      }
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body).toEqual({ error: 'Invalid JSON body' });
+    expect(mocks.findEngagementVerification).not.toHaveBeenCalled();
+    expect(mocks.confirmEngagementVerification).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 for missing JSON bodies without treating them as server errors', async () => {
+    const response = await PATCH(
+      new NextRequest('https://example.com/api/engagement-verifications/engagement-1', {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
       }),
       {
         params: Promise.resolve({ id: 'engagement-1' }),

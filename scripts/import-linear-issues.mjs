@@ -1,17 +1,9 @@
 #!/usr/bin/env node
 /**
- * Linear Issues Bulk Import Script
- * 
- * This script creates all issues in Linear based on LINEAR_ORGANIZATION_PLAN.md
- * 
- * Prerequisites:
- * 1. Get your Linear API key from: https://linear.app/settings/api
- * 2. Set LINEAR_API_KEY environment variable: export LINEAR_API_KEY="your_key_here"
- * 3. Or create .env.local with LINEAR_API_KEY=your_key_here
- * 4. Install dependencies: npm install node-fetch dotenv
- * 
- * Usage:
- *   node scripts/import-linear-issues.mjs
+ * Historical Linear Issues Bulk Import Script
+ *
+ * This script creates issues in Linear from the archived 2025 bootstrap plan. It is not current
+ * MVP launch guidance and is fail-closed unless explicitly re-enabled for historical recovery.
  */
 
 import fetch from 'node-fetch';
@@ -24,6 +16,13 @@ config({ path: '.env.local' });
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+if (process.env.PROOFOUND_ALLOW_LEGACY_LINEAR_IMPORT !== 'true') {
+  console.error(
+    'Refusing to run historical Linear bulk import. Set PROOFOUND_ALLOW_LEGACY_LINEAR_IMPORT=true only after confirming this archived import is intentionally desired.'
+  );
+  process.exit(1);
+}
 
 const LINEAR_API_KEY = process.env.LINEAR_API_KEY || process.env.LINEAR_API_KEY;
 
@@ -631,4 +630,3 @@ async function main() {
 }
 
 main();
-

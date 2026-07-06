@@ -2,9 +2,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { logAPILatency } from '@/lib/monitoring/api-latency';
 import { emitAnalyticsEventAsync } from '@/lib/analytics/events';
+import { log } from '@/lib/log';
 
 vi.mock('@/lib/analytics/events', () => ({
   emitAnalyticsEventAsync: vi.fn(),
+}));
+
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+  },
 }));
 
 describe('logAPILatency', () => {
@@ -50,5 +57,28 @@ describe('logAPILatency', () => {
     const event = (emitAnalyticsEventAsync as any).mock.calls[0][0];
     expect(event.properties.meets_target).toBe(false);
     expect(event.properties.duration_ms).toBe(2500);
+  });
+
+  it('logs analytics failures without breaking the request path', async () => {
+    vi.mocked(emitAnalyticsEventAsync).mockImplementationOnce(() => {
+      throw new Error('analytics unavailable');
+    });
+
+    await expect(
+      logAPILatency({
+        path: '/api/flaky',
+        method: 'GET',
+        duration: 120,
+        status: 200,
+        requestId: 'req-flaky',
+      })
+    ).resolves.toBeUndefined();
+
+    expect(log.error).toHaveBeenCalledWith('monitoring.api_latency.log_failed', {
+      path: '/api/flaky',
+      method: 'GET',
+      requestId: 'req-flaky',
+      error: 'analytics unavailable',
+    });
   });
 });

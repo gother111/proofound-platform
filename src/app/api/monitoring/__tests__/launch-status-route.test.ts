@@ -12,8 +12,15 @@ vi.mock('@/lib/ai/usage-ledger', () => ({
   getAiLaunchOperationalSummary: vi.fn(),
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+  },
+}));
+
 import { GET } from '../launch-status/route';
 import { getAiLaunchOperationalSummary } from '@/lib/ai/usage-ledger';
+import { log } from '@/lib/log';
 import {
   getHttpMonitorKeysNeedingRefresh,
   getPersistedLaunchSyntheticStatus,
@@ -419,6 +426,7 @@ describe('/api/monitoring/launch-status', () => {
         required: true,
         configured: false,
         missing: ['RESEND_API_KEY'],
+        deliverySkipped: false,
         provider: 'resend',
       })
     );
@@ -427,6 +435,76 @@ describe('/api/monitoring/launch-status', () => {
         code: 'missing_email_provider_dependency',
         source: 'dependency',
         monitorKeys: ['email_provider_dependency'],
+      }),
+    ]);
+  });
+
+  it('blocks launch status when transactional email delivery is explicitly skipped', async () => {
+    vi.stubEnv('PROOFOUND_SKIP_TRANSACTIONAL_EMAIL_DELIVERY', 'true');
+    (getPersistedLaunchSyntheticStatus as any).mockResolvedValue(buildStatus());
+
+    const response = await GET(authenticatedRequest());
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(body.ok).toBe(false);
+    expect(body.readinessState).toBe('blocked');
+    expect(body.dependencies.emailProvider).toEqual(
+      expect.objectContaining({
+        ok: false,
+        required: true,
+        configured: false,
+        missing: [],
+        deliverySkipped: true,
+        provider: 'resend',
+      })
+    );
+    expect(body.notReadyReasons).toEqual([
+      expect.objectContaining({
+        code: 'missing_email_provider_dependency',
+        source: 'dependency',
+        monitorKeys: ['email_provider_dependency'],
+      }),
+    ]);
+  });
+
+  it('blocks launch status when live target env contains forbidden bypass keys', async () => {
+    vi.stubEnv('VERCEL_ENV', 'preview');
+    vi.stubEnv('KV_REST_API_URL', 'https://kv.example.test');
+    vi.stubEnv('KV_REST_API_TOKEN', 'kv-token');
+    vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'true');
+    vi.stubEnv('MOCK_ORG_MODE', 'true');
+    vi.stubEnv('MOCK_PLATFORM_ROLE', 'platform_admin');
+    vi.stubEnv('PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK', '1');
+    vi.stubEnv('PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE', '1');
+    vi.stubEnv('DEBUG_INGEST_URL', 'https://debug.example/ingest');
+    (getPersistedLaunchSyntheticStatus as any).mockResolvedValue(buildStatus());
+
+    const response = await GET(authenticatedRequest());
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(body.ok).toBe(false);
+    expect(body.readinessState).toBe('blocked');
+    expect(body.dependencies.forbiddenLiveLaunchEnv).toEqual(
+      expect.objectContaining({
+        ok: false,
+        required: true,
+        forbiddenKeys: expect.arrayContaining([
+          'NEXT_PUBLIC_USE_MOCK_SUPABASE',
+          'MOCK_ORG_MODE',
+          'PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK',
+          'PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE',
+          'DEBUG_INGEST_URL',
+          'MOCK_PLATFORM_ROLE',
+        ]),
+      })
+    );
+    expect(body.notReadyReasons).toEqual([
+      expect.objectContaining({
+        code: 'forbidden_launch_environment_config',
+        source: 'dependency',
+        monitorKeys: ['launch_environment_config'],
       }),
     ]);
   });
@@ -749,6 +827,7 @@ describe('/api/monitoring/launch-status', () => {
   });
 
   it('returns blocked stale persisted monitor evidence when live refresh fails entirely', async () => {
+    const refreshError = new Error('network exploded');
     (getPersistedLaunchSyntheticStatus as any).mockResolvedValue(
       buildStatus({
         ok: false,
@@ -767,9 +846,7 @@ describe('/api/monitoring/launch-status', () => {
       })
     );
     (getHttpMonitorKeysNeedingRefresh as any).mockReturnValue(['api_health']);
-    (getLaunchSyntheticStatusWithFreshHttpRevalidation as any).mockRejectedValue(
-      new Error('network exploded')
-    );
+    (getLaunchSyntheticStatusWithFreshHttpRevalidation as any).mockRejectedValue(refreshError);
 
     const response = await GET(authenticatedRequest());
     const body = await response.json();
@@ -792,6 +869,10 @@ describe('/api/monitoring/launch-status', () => {
         source: 'persisted_http',
       }),
     ]);
+    expect(log.error).toHaveBeenCalledWith('launch_status.live_refresh_failed', {
+      error: refreshError,
+      monitorKeys: ['api_health'],
+    });
   });
 
   it('returns 500 when persisted monitor loading fails', async () => {

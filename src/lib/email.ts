@@ -12,7 +12,6 @@ import WorkEmailVerification from '../../emails/WorkEmailVerification';
 import SkillVerificationRequest from '../../emails/SkillVerificationRequest';
 import NewMatchNotification from '../../emails/NewMatchNotification';
 import FeedbackRequest from '../../emails/FeedbackRequest';
-import ContractSigned from '../../emails/ContractSigned';
 import InterviewScheduled from '../../emails/InterviewScheduled';
 import IdentityRevealed from '../../emails/IdentityRevealed';
 import VerificationApproved from '../../emails/VerificationApproved';
@@ -31,8 +30,10 @@ import {
 } from './email/privacy';
 import { resolveCanonicalSiteUrl } from './env';
 
-// Allow build to succeed without RESEND_API_KEY
-const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder_key');
+type ResendEmailPayload = Parameters<InstanceType<typeof Resend>['emails']['send']>[0];
+type ResendEmailResult = Awaited<ReturnType<InstanceType<typeof Resend>['emails']['send']>>;
+
+const resend = EMAIL_CONFIG.apiKey ? new Resend(EMAIL_CONFIG.apiKey) : null;
 const fromEmail = EMAIL_CONFIG.from;
 
 function recordLegacyEmailFailure(workflow: TransactionalEmailWorkflow, error: unknown) {
@@ -42,6 +43,21 @@ function recordLegacyEmailFailure(workflow: TransactionalEmailWorkflow, error: u
     provider: 'resend',
     reason: 'exception',
   });
+}
+
+async function sendLegacyResendEmail(payload: ResendEmailPayload): Promise<ResendEmailResult> {
+  if (shouldSkipTransactionalEmailDelivery()) {
+    return {
+      data: { id: 'transactional-email-delivery-skipped' },
+      error: null,
+    } as ResendEmailResult;
+  }
+
+  if (!resend) {
+    throw new Error('Email service not configured');
+  }
+
+  return resend.emails.send(payload);
 }
 
 function buildCanonicalEmailUrl(
@@ -90,7 +106,7 @@ export async function sendVerificationEmail(email: string, token: string, person
       template = VerifyEmail({ verifyUrl });
     }
 
-    await resend.emails.send({
+    await sendLegacyResendEmail({
       from: fromEmail,
       to: email,
       subject,
@@ -105,7 +121,7 @@ export async function sendVerificationEmail(email: string, token: string, person
 export async function sendPasswordResetEmail(email: string, token: string) {
   try {
     const resetUrl = buildCanonicalEmailUrl('/reset-password', { token });
-    await resend.emails.send({
+    await sendLegacyResendEmail({
       from: fromEmail,
       to: email,
       subject: 'Reset your password - Proofound',
@@ -130,7 +146,7 @@ export async function sendOrgInviteEmail(
 
   try {
     const inviteUrl = buildCanonicalEmailUrl('/accept-invite', { token });
-    await resend.emails.send({
+    await sendLegacyResendEmail({
       from: fromEmail,
       to: email,
       subject: `You've been invited to join ${orgName} on Proofound`,
@@ -149,7 +165,7 @@ export async function sendCandidateInviteEmail(
   expiryDays: number
 ) {
   try {
-    await resend.emails.send({
+    await sendLegacyResendEmail({
       from: fromEmail,
       to: email,
       subject: `${orgName} invited you to share your Proof Card on Proofound`,
@@ -161,7 +177,7 @@ export async function sendCandidateInviteEmail(
     });
   } catch (error) {
     recordLegacyEmailFailure('candidate_invite', error);
-    throw new Error('Failed to send candidate invite email');
+    throw new Error('Failed to send submission invite email');
   }
 }
 
@@ -171,12 +187,12 @@ export async function sendDeletionScheduledEmail(
   scheduledDate: Date
 ): Promise<void> {
   try {
-    const cancellationUrl = buildCanonicalEmailUrl('/settings', { tab: 'privacy' });
-    await resend.emails.send({
+    const settingsUrl = buildCanonicalEmailUrl('/settings', { tab: 'privacy' });
+    await sendLegacyResendEmail({
       from: fromEmail,
       to: email,
-      subject: 'Account Deletion Scheduled - Proofound',
-      react: DeletionScheduled({ scheduledDate, cancellationUrl }),
+      subject: 'Account Deletion Request Received - Proofound',
+      react: DeletionScheduled({ scheduledDate, settingsUrl }),
     });
   } catch (error) {
     recordLegacyEmailFailure('deletion', error);
@@ -191,12 +207,12 @@ export async function sendDeletionReminderEmail(
   daysRemaining: number
 ): Promise<void> {
   try {
-    const cancellationUrl = buildCanonicalEmailUrl('/settings', { tab: 'privacy' });
-    await resend.emails.send({
+    const settingsUrl = buildCanonicalEmailUrl('/settings', { tab: 'privacy' });
+    await sendLegacyResendEmail({
       from: fromEmail,
       to: email,
-      subject: `${daysRemaining} Days Until Your Proofound Account is Deleted`,
-      react: DeletionReminder({ scheduledDate, daysRemaining, cancellationUrl }),
+      subject: 'Account Deletion Update - Proofound',
+      react: DeletionReminder({ scheduledDate, daysRemaining, settingsUrl }),
     });
   } catch (error) {
     recordLegacyEmailFailure('deletion', error);
@@ -206,7 +222,7 @@ export async function sendDeletionReminderEmail(
 
 export async function sendDeletionCompleteEmail(email: string, userId: string): Promise<void> {
   try {
-    await resend.emails.send({
+    await sendLegacyResendEmail({
       from: fromEmail,
       to: email,
       subject: 'Your Proofound Account Has Been Deleted',
@@ -225,7 +241,7 @@ export async function sendWorkEmailVerification(
 ): Promise<void> {
   try {
     const verifyUrl = buildCanonicalEmailUrl('/verify-work-email', { token });
-    const result = await resend.emails.send({
+    const result = await sendLegacyResendEmail({
       from: fromEmail,
       to: email,
       subject: 'Verify your work email - Proofound',
@@ -256,7 +272,7 @@ export async function sendSkillVerificationRequest(
   try {
     const verifyUrl = buildCanonicalEmailUrl(`/verify/${encodeURIComponent(token)}`);
     const declineUrl = verifyUrl;
-    await resend.emails.send({
+    await sendLegacyResendEmail({
       from: fromEmail,
       to: verifierEmail,
       subject: `${requesterName} requested your skill verification - Proofound`,
@@ -280,7 +296,7 @@ export async function sendMatchNotification(
   recipientName: string,
   matchData: {
     matchType: 'individual' | 'organization';
-    matchScore: number;
+    proofFitLabel?: string;
     roleTitle?: string;
     organizationName?: string;
     topSkillMatches?: string[];
@@ -289,16 +305,16 @@ export async function sendMatchNotification(
 ): Promise<void> {
   try {
     const viewMatchUrl = buildCanonicalEmailUrl(
-      `/app/i/matches/${encodeURIComponent(matchData.matchId)}`
+      `/app/i/matching?matchId=${encodeURIComponent(matchData.matchId)}`
     );
-    await resend.emails.send({
+    await sendLegacyResendEmail({
       from: fromEmail,
       to: recipientEmail,
-      subject: 'You have a new match! - Proofound',
+      subject: 'Proof review ready - Proofound',
       react: NewMatchNotification({
         recipientName,
         matchType: matchData.matchType,
-        matchScore: matchData.matchScore,
+        proofFitLabel: matchData.proofFitLabel,
         roleTitle: matchData.roleTitle,
         organizationName: matchData.organizationName,
         topSkillMatches: matchData.topSkillMatches,
@@ -308,66 +324,6 @@ export async function sendMatchNotification(
   } catch (error) {
     recordLegacyEmailFailure('match', error);
     throw new Error('Failed to send match notification');
-  }
-}
-
-export async function sendContractSignedEmail(
-  recipientEmail: string,
-  recipientName: string,
-  role: 'candidate' | 'organization',
-  contractData: {
-    roleTitle?: string;
-    organizationName?: string;
-    candidateName?: string;
-    contractType: string;
-    startDate?: string;
-    compensationAmount?: number;
-    compensationCurrency?: string;
-    compensationPeriod?: string;
-    contractId: string;
-  },
-  privacy?: WorkflowEmailPrivacyOptions
-): Promise<void> {
-  const maskedStage = privacy?.stage === 'masked';
-  const emailPrivacy = applyWorkflowEmailPrivacy(
-    {
-      subject: 'Contract Successfully Signed - Proofound',
-      organizationName: contractData.organizationName,
-      candidateName: contractData.candidateName,
-    },
-    {
-      neutralSubject: 'Proofound workflow update',
-      identityVisible: false,
-      organizationVisible: false,
-      ...privacy,
-    }
-  );
-
-  try {
-    const viewContractUrl = buildCanonicalEmailUrl(
-      `/app/contracts/${encodeURIComponent(contractData.contractId)}`
-    );
-    await resend.emails.send({
-      from: fromEmail,
-      to: recipientEmail,
-      subject: emailPrivacy.subject,
-      react: ContractSigned({
-        recipientName,
-        role,
-        roleTitle: maskedStage ? undefined : contractData.roleTitle,
-        organizationName: emailPrivacy.organizationName ?? undefined,
-        candidateName: emailPrivacy.candidateName ?? undefined,
-        contractType: contractData.contractType,
-        startDate: contractData.startDate,
-        compensationAmount: contractData.compensationAmount,
-        compensationCurrency: contractData.compensationCurrency,
-        compensationPeriod: contractData.compensationPeriod,
-        viewContractUrl,
-      }),
-    });
-  } catch (error) {
-    recordLegacyEmailFailure('contract', error);
-    throw new Error('Failed to send contract signed email');
   }
 }
 
@@ -381,7 +337,7 @@ export async function sendInterviewScheduledEmail(
     candidateName?: string;
     scheduledAt: string;
     duration: number;
-    platform: 'zoom' | 'google-meet';
+    platform: 'manual' | 'google_meet';
     meetingUrl: string;
     timezone?: string;
     interviewId: string;
@@ -409,7 +365,7 @@ export async function sendInterviewScheduledEmail(
         interviewData.interviewId
       )}`
     );
-    await resend.emails.send({
+    await sendLegacyResendEmail({
       from: fromEmail,
       to: recipientEmail,
       subject: emailPrivacy.subject,
@@ -471,7 +427,7 @@ export async function sendIdentityRevealedEmail(
     if (!viewConversationUrl) {
       throw new Error('canonical_site_url_missing');
     }
-    await resend.emails.send({
+    await sendLegacyResendEmail({
       from: fromEmail,
       to: recipientEmail,
       subject: emailPrivacy.subject,
@@ -515,13 +471,13 @@ export async function sendFeedbackRequestEmail(params: {
 
   try {
     const feedbackUrl = buildCanonicalEmailUrl(`/feedback/${encodeURIComponent(token)}`);
-    await resend.emails.send({
+    await sendLegacyResendEmail({
       from: fromEmail,
       to,
       subject:
         direction === 'candidate_to_org'
           ? 'Share your interview experience'
-          : 'Share feedback with the candidate',
+          : 'Share workflow feedback',
       react: FeedbackRequest({ direction, feedbackUrl, expiresAt, interviewTime }),
     });
   } catch (error) {
@@ -538,7 +494,7 @@ export async function sendVerificationApprovedEmail(
 ): Promise<void> {
   try {
     const viewProfileUrl = buildCanonicalEmailUrl(`/app/profile/${encodeURIComponent(profileId)}`);
-    await resend.emails.send({
+    await sendLegacyResendEmail({
       from: fromEmail,
       to: recipientEmail,
       subject: 'Verification Approved - Proofound',
@@ -604,7 +560,7 @@ export async function sendLinkedInVerificationPendingReviewEmail(params: {
 
   try {
     const adminQueueUrl = buildCanonicalEmailUrl('/admin/verification');
-    await resend.emails.send({
+    await sendLegacyResendEmail({
       from: fromEmail,
       to: recipients,
       subject: `LinkedIn verification pending review: ${params.candidateName}`,
@@ -633,7 +589,7 @@ export async function sendVerificationRejectedEmail(
 ): Promise<void> {
   try {
     const retryUrl = buildCanonicalEmailUrl('/app/i/settings', { tab: 'verification' });
-    await resend.emails.send({
+    await sendLegacyResendEmail({
       from: fromEmail,
       to: recipientEmail,
       subject: 'Verification Not Approved - Proofound',

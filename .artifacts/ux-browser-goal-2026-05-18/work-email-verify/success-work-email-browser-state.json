@@ -1,0 +1,38 @@
+{
+  "mobile": {
+    "bodyText": "Skip to main content\nWork email verified\n\nYour workplace signal is now active while it stays fresh.\n\nWork email verified successfully.\n\nelena.reviewer@northstar-evidence.example\nYour profile now shows an active workplace signal\nOrganizations can see your workplace-verified status while it stays fresh\nYour match quality is improved\n\nYou can return to your profile when ready.\n\nGo to profile now",
+    "hasReadyCopy": true,
+    "hasRedirectCopy": false,
+    "hasSuccess": true,
+    "hasWorkEmail": true,
+    "overflow": {
+      "bodyScrollWidth": 390,
+      "clientWidth": 390,
+      "innerWidth": 390,
+      "scrollWidth": 390
+    },
+    "viewport": {
+      "innerHeight": 844,
+      "innerWidth": 390
+    },
+    "wide": []
+  },
+  "desktop": {
+    "bodyText": "Skip to main content\nWork email verified\n\nYour workplace signal is now active while it stays fresh.\n\nWork email verified successfully.\n\nelena.reviewer@northstar-evidence.example\nYour profile now shows an active workplace signal\nOrganizations can see your workplace-verified status while it stays fresh\nYour match quality is improved\n\nYou can return to your profile when ready.\n\nGo to profile now",
+    "hasReadyCopy": true,
+    "hasRedirectCopy": false,
+    "hasSuccess": true,
+    "hasWorkEmail": true,
+    "overflow": {
+      "bodyScrollWidth": 1280,
+      "clientWidth": 1280,
+      "innerWidth": 1280,
+      "scrollWidth": 1280
+    },
+    "viewport": {
+      "innerHeight": 900,
+      "innerWidth": 1280
+    },
+    "wide": []
+  }
+}

@@ -1,0 +1,236 @@
+{
+  "after": [
+    {
+      "label": "settings",
+      "route": "/app/i/settings",
+      "audit": {
+        "cw": 390,
+        "offenders": [],
+        "overflow": false,
+        "sw": 390,
+        "text": "Skip to main content Overview Profile Inbox Matching Settings U Settings Manage your account preferences, security, and privacy Account Interviews Privacy Email & Authentication Manage your email and password Email admin@test-org.com Change Email Identity Verification Add identity and workplace trust signals with precise badge meanings PROOF VERIFICATIONS / ATTESTATIONS Attach trust to proof, not to profile hype Proof-backed trust belongs on specific Proof Packs and claim snapshots. Use the verification requests area to see which proof, claim, verifier, and outcome each request is tied to. Ope",
+        "url": "http://localhost:33100/app/i/settings"
+      }
+    },
+    {
+      "label": "privacy",
+      "route": "/app/i/settings/privacy",
+      "audit": {
+        "cw": 390,
+        "offenders": [],
+        "overflow": false,
+        "sw": 390,
+        "text": "Skip to main content Overview Profile Inbox Matching Settings U Privacy Settings Control who can see your profile information Your Privacy Controls Proofound is built with privacy at its core. Here's what data we collect and how you control it. Privacy settings Download my data Import data View account history What others can see Visibility summary across Public, Connections, After match, and Private sections Public 0 sections Connections 0 sections After match 0 sections Private 0 sections Preview visibility Quick privacy fixes Three fast actions to review and correct visibility before sharin",
+        "url": "http://localhost:33100/app/i/settings/privacy"
+      }
+    }
+  ],
+  "modalAudit": {
+    "cw": 390,
+    "offenders": [
+      {
+        "cls": "w-full caption-bottom text-sm",
+        "h": 2538,
+        "left": 42,
+        "right": 440,
+        "tag": "TABLE",
+        "text": "Date and timeEventDescriptionAccess detailMay 16, 2026 1:30 AMProfile CreatedCreated profileMore inf",
+        "top": 7032,
+        "w": 398
+      },
+      {
+        "cls": "[&_tr]:border-b",
+        "h": 66,
+        "left": 42,
+        "right": 440,
+        "tag": "THEAD",
+        "text": "Date and timeEventDescriptionAccess detail",
+        "top": 7032,
+        "w": 398
+      },
+      {
+        "cls": "border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted",
+        "h": 66,
+        "left": 42,
+        "right": 440,
+        "tag": "TR",
+        "text": "Date and timeEventDescriptionAccess detail",
+        "top": 7032,
+        "w": 398
+      },
+      {
+        "cls": "h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 w-[150px]",
+        "h": 66,
+        "left": 353,
+        "right": 440,
+        "tag": "TH",
+        "text": "Access detail",
+        "top": 7032,
+        "w": 87
+      },
+      {
+        "cls": "[&_tr:last-child]:border-0",
+        "h": 2473,
+        "left": 42,
+        "right": 440,
+        "tag": "TBODY",
+        "text": "May 16, 2026 1:30 AMProfile CreatedCreated profileMore informationPersonaProtected referenceSignup M",
+        "top": 7098,
+        "w": 398
+      },
+      {
+        "cls": "border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted",
+        "h": 123,
+        "left": 42,
+        "right": 440,
+        "tag": "TR",
+        "text": "May 16, 2026 1:30 AMProfile CreatedCreated profileMore informationPersonaProtected referenceSignup M",
+        "top": 7098,
+        "w": 398
+      },
+      {
+        "cls": "p-4 align-middle [&:has([role=checkbox])]:pr-0 text-xs text-muted-foreground",
+        "h": 123,
+        "left": 353,
+        "right": 440,
+        "tag": "TD",
+        "text": "Protected",
+        "top": 7098,
+        "w": 87
+      },
+      {
+        "cls": "border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted",
+        "h": 123,
+        "left": 42,
+        "right": 440,
+        "tag": "TR",
+        "text": "May 16, 2026 1:30 AMProfile CreatedCreated profileMore informationPersonaindividualSignup Methodemai",
+        "top": 7221,
+        "w": 398
+      },
+      {
+        "cls": "p-4 align-middle [&:has([role=checkbox])]:pr-0 text-xs text-muted-foreground",
+        "h": 123,
+        "left": 353,
+        "right": 440,
+        "tag": "TD",
+        "text": "Protected",
+        "top": 7221,
+        "w": 87
+      },
+      {
+        "cls": "border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted",
+        "h": 123,
+        "left": 42,
+        "right": 440,
+        "tag": "TR",
+        "text": "May 11, 2026 5:48 PMProfile CreatedCreated profileMore informationPersonaProtected referenceSignup M",
+        "top": 7344,
+        "w": 398
+      },
+      {
+        "cls": "p-4 align-middle [&:has([role=checkbox])]:pr-0 text-xs text-muted-foreground",
+        "h": 123,
+        "left": 353,
+        "right": 440,
+        "tag": "TD",
+        "text": "Protected",
+        "top": 7344,
+        "w": 87
+      },
+      {
+        "cls": "border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted",
+        "h": 123,
+        "left": 42,
+        "right": 440,
+        "tag": "TR",
+        "text": "May 11, 2026 5:48 PMProfile CreatedCreated profileMore informationPersonaindividualSignup Methodemai",
+        "top": 7467,
+        "w": 398
+      },
+      {
+        "cls": "p-4 align-middle [&:has([role=checkbox])]:pr-0 text-xs text-muted-foreground",
+        "h": 123,
+        "left": 353,
+        "right": 440,
+        "tag": "TD",
+        "text": "Protected",
+        "top": 7467,
+        "w": 87
+      },
+      {
+        "cls": "border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted",
+        "h": 123,
+        "left": 42,
+        "right": 440,
+        "tag": "TR",
+        "text": "May 11, 2026 5:47 PMProfile CreatedCreated profileMore informationPersonaindividualSignup Methodemai",
+        "top": 7590,
+        "w": 398
+      },
+      {
+        "cls": "p-4 align-middle [&:has([role=checkbox])]:pr-0 text-xs text-muted-foreground",
+        "h": 123,
+        "left": 353,
+        "right": 440,
+        "tag": "TD",
+        "text": "Protected",
+        "top": 7590,
+        "w": 87
+      },
+      {
+        "cls": "border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted",
+        "h": 123,
+        "left": 42,
+        "right": 440,
+        "tag": "TR",
+        "text": "May 11, 2026 5:47 PMProfile CreatedCreated profileMore informationPersonaProtected referenceSignup M",
+        "top": 7713,
+        "w": 398
+      },
+      {
+        "cls": "p-4 align-middle [&:has([role=checkbox])]:pr-0 text-xs text-muted-foreground",
+        "h": 123,
+        "left": 353,
+        "right": 440,
+        "tag": "TD",
+        "text": "Protected",
+        "top": 7713,
+        "w": 87
+      },
+      {
+        "cls": "border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted",
+        "h": 123,
+        "left": 42,
+        "right": 440,
+        "tag": "TR",
+        "text": "May 8, 2026 9:30 AMProfile CreatedCreated profileMore informationPersonaProtected referenceSignup Me",
+        "top": 7836,
+        "w": 398
+      },
+      {
+        "cls": "p-4 align-middle [&:has([role=checkbox])]:pr-0 text-xs text-muted-foreground",
+        "h": 123,
+        "left": 353,
+        "right": 440,
+        "tag": "TD",
+        "text": "Protected",
+        "top": 7836,
+        "w": 87
+      },
+      {
+        "cls": "border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted",
+        "h": 123,
+        "left": 42,
+        "right": 440,
+        "tag": "TR",
+        "text": "May 8, 2026 9:30 AMProfile CreatedCreated profileMore informationPersonaindividualSignup Methodemail",
+        "top": 7959,
+        "w": 398
+      }
+    ],
+    "overflow": false,
+    "sw": 390,
+    "text": "Skip to main content Overview Profile Inbox Matching Settings U Privacy Settings Control who can see your profile information Your Privacy Controls Proofound is built with privacy at its core. Here's what data we collect and how you control it. Privacy settings Download my data Import data View account history What others can see Visibility summary across Public, Connections, After match, and Private sections Public 0 sections Connections 0 sections After match 0 sections Private 0 sections Preview visibility Quick privacy fixes Three fast actions to review and correct visibility before sharing your profile. Review field visibility Check privacy audit log Export and inspect my data Profile d"
+  }
+}

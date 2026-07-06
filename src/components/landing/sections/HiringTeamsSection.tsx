@@ -3,15 +3,15 @@
 const points = [
   {
     title: 'Clearer inputs',
-    body: 'Define the work, expected outcomes, and useful evidence before applications start.',
+    body: 'Define the work, expected outcomes, and useful evidence before proof submissions start.',
   },
   {
     title: 'Better early review',
-    body: 'Review proof-backed candidates instead of drowning in polished claims.',
+    body: 'Review proof-backed submissions instead of drowning in polished claims.',
   },
   {
     title: 'Faster downstream decisions',
-    body: 'Interview fewer people and use the same hiring flow again on the next role.',
+    body: 'Interview fewer people and use the same assignment-review flow again on the next role.',
   },
 ];
 
@@ -21,14 +21,14 @@ export function HiringTeamsSection() {
       <div className="mx-auto grid max-w-[1240px] gap-14 px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-10">
         <div className="max-w-[33rem]">
           <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--landing-action)]">
-            For hiring teams
+            For review teams
           </span>
           <h2 className="mt-5 max-w-[11ch] font-display text-[3rem] leading-[1.02] tracking-[-0.03em] text-[var(--landing-dark)] md:text-[3.45rem]">
             Better assignments create better shortlists.
           </h2>
           <p className="mt-5 text-[1.08rem] leading-8 text-[var(--landing-text)]">
-            Proofound is not another talent feed. It helps lean teams define the work clearly,
-            review fewer stronger candidates, and waste less interview time.
+            Proofound is not another sourcing feed. It helps lean teams define the work clearly,
+            review fewer stronger proof submissions, and waste less interview time.
           </p>
         </div>
 

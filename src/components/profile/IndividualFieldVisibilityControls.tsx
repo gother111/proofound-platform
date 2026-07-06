@@ -1,7 +1,7 @@
 /**
  * Individual Field Visibility Controls
  *
- * Allows individuals to control visibility of profile fields
+ * Allows individuals to control visibility of Public Page fields
  * Supports: public, network_only, match_only, private
  */
 
@@ -22,6 +22,8 @@ import { Eye, Users, Handshake, Lock, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export type IndividualVisibilityLevel = 'public' | 'network_only' | 'match_only' | 'private';
 
@@ -41,27 +43,28 @@ interface IndividualFieldVisibilityControlsProps {
   userId: string;
   initialVisibility: Partial<IndividualFieldVisibility>;
   onSave: (visibility: IndividualFieldVisibility) => Promise<void>;
+  controlsDisabledReason?: string | null;
 }
 
 const VISIBILITY_OPTIONS = [
   {
     value: 'public' as IndividualVisibilityLevel,
     label: 'Public',
-    description: 'Visible to everyone',
+    description: 'Visible on your Public Page',
     icon: Eye,
     color: 'text-green-600',
   },
   {
     value: 'network_only' as IndividualVisibilityLevel,
-    label: 'Connections',
-    description: 'Visible to your connections',
+    label: 'Trusted review context',
+    description: 'Visible only in trusted review contexts',
     icon: Users,
     color: 'text-blue-600',
   },
   {
     value: 'match_only' as IndividualVisibilityLevel,
-    label: 'After match',
-    description: 'Visible after a mutual match',
+    label: 'Assignment review',
+    description: 'Visible only after assignment-review access applies',
     icon: Handshake,
     color: 'text-amber-600',
   },
@@ -85,13 +88,13 @@ const FIELDS = [
     key: 'avatar',
     label: 'Profile photo',
     recommended: 'public',
-    description: 'Your profile picture',
+    description: 'Your Public Page picture',
   },
   {
     key: 'headline',
     label: 'Headline',
     recommended: 'public',
-    description: 'Professional headline or tagline',
+    description: 'Short proof-context headline',
   },
   {
     key: 'location',
@@ -131,10 +134,14 @@ const FIELDS = [
   },
 ];
 
+const PRIVACY_VISIBILITY_SAVE_FAILED_DESCRIPTION =
+  'Your Public Page visibility was not changed. Review the selected fields and retry before leaving this page.';
+
 export function IndividualFieldVisibilityControls({
   userId,
   initialVisibility,
   onSave,
+  controlsDisabledReason,
 }: IndividualFieldVisibilityControlsProps) {
   const [visibility, setVisibility] = useState<IndividualFieldVisibility>({
     displayName: initialVisibility.displayName || 'public',
@@ -150,13 +157,21 @@ export function IndividualFieldVisibilityControls({
 
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [saveFeedback, setSaveFeedback] = useState<{
+    tone: 'success' | 'error';
+    message: string;
+    description: string;
+  } | null>(null);
+  const controlsDisabled = Boolean(controlsDisabledReason);
 
   const handleFieldChange = (
     field: keyof IndividualFieldVisibility,
     value: IndividualVisibilityLevel
   ) => {
+    if (controlsDisabled) return;
     setVisibility((prev) => ({ ...prev, [field]: value }));
     setHasChanges(true);
+    setSaveFeedback(null);
   };
 
   const handleSave = async () => {
@@ -164,13 +179,25 @@ export function IndividualFieldVisibilityControls({
     try {
       await onSave(visibility);
       setHasChanges(false);
+      setSaveFeedback({
+        tone: 'success',
+        message: 'Privacy settings saved',
+        description:
+          'Your Public Page and assignment-review visibility preferences are up to date.',
+      });
       toast.success('Privacy settings saved', {
-        description: 'Your field visibility preferences have been updated',
+        description:
+          'Your Public Page and assignment-review visibility preferences are up to date.',
       });
     } catch (error) {
-      console.error('Failed to save visibility settings:', error);
-      toast.error('Failed to save settings', {
-        description: 'Please try again',
+      dispatchClientErrorDiagnostic('privacy.field_visibility.save_failed', error);
+      setSaveFeedback({
+        tone: 'error',
+        message: 'Privacy settings were not saved',
+        description: PRIVACY_VISIBILITY_SAVE_FAILED_DESCRIPTION,
+      });
+      toast.error('Privacy settings were not saved', {
+        description: PRIVACY_VISIBILITY_SAVE_FAILED_DESCRIPTION,
       });
     } finally {
       setSaving(false);
@@ -187,12 +214,18 @@ export function IndividualFieldVisibilityControls({
   const getVisibilityLabel = (level: string) =>
     VISIBILITY_OPTIONS.find((option) => option.value === level)?.label ?? 'Not set';
 
+  const saveStatusMessage = controlsDisabled
+    ? 'Retry privacy preferences before editing. Saved choices were not loaded.'
+    : hasChanges
+      ? 'You have unsaved changes'
+      : 'All changes saved';
+
   return (
     <Card className="border-proofound-stone">
       <CardHeader>
-        <CardTitle className="text-xl">Profile visibility</CardTitle>
+        <CardTitle className="text-xl">Public Page visibility</CardTitle>
         <CardDescription>
-          Control who can see each part of your profile. Changes apply to all future views.
+          Control which Public Page details are visible and which stay private for future views.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -214,12 +247,20 @@ export function IndividualFieldVisibilityControls({
 
         {/* Field Controls */}
         <div className="space-y-4">
+          {controlsDisabledReason ? (
+            <Alert>
+              <Info className="h-4 w-4" />
+              <AlertTitle>Visibility controls are paused</AlertTitle>
+              <AlertDescription>{controlsDisabledReason}</AlertDescription>
+            </Alert>
+          ) : null}
+
           {FIELDS.map((field) => {
             const currentVisibility = visibility[field.key as keyof IndividualFieldVisibility];
             return (
               <div
                 key={field.key}
-                className="flex items-center justify-between gap-4 p-3 rounded-lg border border-proofound-stone hover:bg-japandi-bg transition-colors"
+                className="flex flex-col gap-3 rounded-lg border border-proofound-stone p-3 transition-colors hover:bg-japandi-bg lg:flex-row lg:items-center lg:justify-between lg:gap-4"
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
@@ -235,16 +276,17 @@ export function IndividualFieldVisibilityControls({
                         variant="secondary"
                         className="text-xs bg-proofound-forest/5 text-proofound-forest"
                       >
-                        Recommended
+                        Privacy default
                       </Badge>
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground">{field.description}</p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex w-full items-center gap-2 lg:w-auto">
                   <Select
                     value={currentVisibility}
+                    disabled={controlsDisabled}
                     onValueChange={(value) =>
                       handleFieldChange(
                         field.key as keyof IndividualFieldVisibility,
@@ -252,7 +294,7 @@ export function IndividualFieldVisibilityControls({
                       )
                     }
                   >
-                    <SelectTrigger id={field.key} className="w-[140px]">
+                    <SelectTrigger id={field.key} className="w-full lg:w-[280px]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -273,13 +315,19 @@ export function IndividualFieldVisibilityControls({
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-11 w-11 shrink-0"
+                          aria-label={`Show privacy guidance for ${field.label}`}
+                        >
                           <Info className="h-4 w-4 text-muted-foreground" />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent side="left" className="max-w-xs">
                         <p className="text-xs">
-                          <strong>Recommended:</strong> {getVisibilityLabel(field.recommended)}
+                          <strong>Privacy default:</strong> {getVisibilityLabel(field.recommended)}
                           <br />
                           {
                             VISIBILITY_OPTIONS.find((opt) => opt.value === field.recommended)
@@ -296,18 +344,39 @@ export function IndividualFieldVisibilityControls({
         </div>
 
         {/* Save Button */}
-        <div className="flex items-center justify-between pt-4 border-t border-proofound-stone">
-          <p className="text-xs text-muted-foreground">
-            {hasChanges ? 'You have unsaved changes' : 'All changes saved'}
+        <div className="flex flex-col gap-3 border-t border-proofound-stone pt-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-muted-foreground" role="status" aria-live="polite">
+            {saveStatusMessage}
           </p>
           <Button
             onClick={handleSave}
-            disabled={!hasChanges || saving}
-            className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
+            disabled={controlsDisabled || !hasChanges || saving}
+            className="w-full bg-proofound-forest text-white hover:bg-proofound-forest/90 sm:w-auto"
           >
             {saving ? 'Saving...' : 'Save privacy settings'}
           </Button>
         </div>
+
+        {saveFeedback ? (
+          saveFeedback.tone === 'error' ? (
+            <Alert variant="destructive">
+              <Info className="h-4 w-4" />
+              <AlertTitle>{saveFeedback.message}</AlertTitle>
+              <AlertDescription>{saveFeedback.description}</AlertDescription>
+            </Alert>
+          ) : (
+            <div
+              role="status"
+              aria-live="polite"
+              className="rounded-lg border border-proofound-forest/20 bg-proofound-success-tint p-4 text-sm text-proofound-forest"
+            >
+              <p className="font-medium">{saveFeedback.message}</p>
+              <p className="mt-1 text-xs leading-5 text-proofound-charcoal/70">
+                {saveFeedback.description}
+              </p>
+            </div>
+          )
+        ) : null}
 
         {/* Privacy Note */}
         <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
@@ -316,9 +385,9 @@ export function IndividualFieldVisibilityControls({
             <div className="text-sm text-blue-900 dark:text-blue-100">
               <p className="font-medium mb-1">Privacy first</p>
               <p className="text-xs">
-                Your privacy settings are applied everywhere your profile appears. Organizations and
-                other users will only see sections based on your visibility choices. You can change
-                these settings anytime.
+                Your privacy settings apply to Public Page and assignment-review surfaces.
+                Organizations only see sections allowed by your visibility choices and reveal state.
+                You can change these settings anytime.
               </p>
             </div>
           </div>

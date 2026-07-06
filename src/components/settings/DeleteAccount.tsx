@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { AlertTriangle, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 interface DeleteAccountProps {
   userId: string;
@@ -23,6 +24,26 @@ interface DeleteAccountProps {
 interface AccountStatus {
   accountStatus: 'active' | 'deleted';
   deletionRequestedAt: string | null;
+}
+
+const ACCOUNT_STATUS_LOAD_RETRY_COPY =
+  'Account deletion status could not load. Your privacy controls are still available; retry this section before deleting.';
+
+const ACCOUNT_DELETE_RETRY_COPY =
+  'Account deletion could not finish. Check your password and confirmation phrase, then try again.';
+
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function hasReturnedMessage(payload: unknown) {
+  return Boolean(
+    payload &&
+      typeof payload === 'object' &&
+      'message' in payload &&
+      typeof payload.message === 'string' &&
+      payload.message.trim().length > 0
+  );
 }
 
 export function DeleteAccount({ userId }: DeleteAccountProps) {
@@ -48,8 +69,10 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
       }
       const data = await response.json();
       setAccountStatus(data);
+      setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load account status');
+      dispatchClientErrorDiagnostic('settings.delete_account.status_load_failed', err);
+      setError(ACCOUNT_STATUS_LOAD_RETRY_COPY);
     } finally {
       setLoading(false);
     }
@@ -82,17 +105,23 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
         }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => null);
 
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to delete account');
+        dispatchClientDiagnostic('settings.delete_account.request_returned_error', {
+          status: getResponseStatus(response),
+          hasReturnedMessage: hasReturnedMessage(data),
+          hasReason: Boolean(reason),
+        });
+        throw new Error('account_deletion_request_failed');
       }
 
       setSuccess('Your account has been deleted permanently.');
       setShowConfirmDialog(false);
       await fetchAccountStatus();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete account');
+      dispatchClientErrorDiagnostic('settings.delete_account.request_failed', err);
+      setError(ACCOUNT_DELETE_RETRY_COPY);
     } finally {
       setDeleting(false);
     }
@@ -137,15 +166,29 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
   // Show deletion form for active accounts
   return (
     <div className="space-y-4">
-      {error && (
+      {error && !showConfirmDialog && (
         <Card
           variant="bento"
           className="border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950 rounded-2xl"
+          role="alert"
+          aria-live="assertive"
         >
           <CardContent className="pt-6">
             <div className="flex items-start gap-3">
               <XCircle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5" />
-              <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
+              <div className="space-y-3">
+                <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="touch"
+                  onClick={() => void fetchAccountStatus()}
+                  disabled={loading}
+                  className="w-full sm:w-auto"
+                >
+                  Retry status
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -155,6 +198,8 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
         <Card
           variant="bento"
           className="border-green-200 dark:border-green-900 bg-green-50 dark:bg-green-950 rounded-2xl"
+          role="status"
+          aria-live="polite"
         >
           <CardContent className="pt-6">
             <div className="flex items-start gap-3">
@@ -210,7 +255,7 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
 
       {/* Confirmation Dialog */}
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="max-h-[min(92vh,720px)] overflow-y-auto sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle className="text-xl font-['Crimson_Pro'] flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-red-600" />
@@ -259,10 +304,19 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
               />
             </div>
 
-            {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+            {error && (
+              <p
+                id="settings-delete-account-error"
+                className="text-sm text-red-600 dark:text-red-400"
+                role="alert"
+                aria-live="assertive"
+              >
+                {error}
+              </p>
+            )}
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button
               variant="outline"
               onClick={() => {
@@ -273,6 +327,7 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
                 setError(null);
               }}
               disabled={deleting}
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
@@ -280,6 +335,8 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
               variant="destructive"
               onClick={handleDeleteRequest}
               disabled={deleting || confirmText !== 'DELETE MY ACCOUNT' || !password}
+              aria-describedby={error ? 'settings-delete-account-error' : undefined}
+              className="w-full sm:w-auto"
             >
               {deleting ? (
                 <>

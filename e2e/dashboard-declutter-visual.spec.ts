@@ -43,9 +43,9 @@ test.describe('Dashboard declutter visual contract', () => {
     await page.goto('/app/i/home', { waitUntil: 'domcontentloaded' });
     await stabilizeDashboard(page);
 
-    await expect(page.getByRole('heading', { name: 'Your Proof Wallet' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Readiness Checklist' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Proof Readiness' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Welcome back/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Readiness corridor' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Trust & privacy controls' })).toBeVisible();
 
     await expect(page.locator('body')).not.toContainText('Current State');
     await expect(page.locator('body')).not.toContainText('Privacy by design');

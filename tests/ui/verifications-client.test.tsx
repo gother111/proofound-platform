@@ -4,11 +4,13 @@ import type { ComponentProps } from 'react';
 
 import { VerificationsClient } from '@/app/app/i/verifications/VerificationsClient';
 
-const { refreshMock, apiFetchMock, bundleDialogSpy } = vi.hoisted(() => ({
-  refreshMock: vi.fn(),
-  apiFetchMock: vi.fn(),
-  bundleDialogSpy: vi.fn(),
-}));
+const { refreshMock, apiFetchMock, bundleDialogSpy, dispatchClientErrorDiagnosticMock } =
+  vi.hoisted(() => ({
+    refreshMock: vi.fn(),
+    apiFetchMock: vi.fn(),
+    bundleDialogSpy: vi.fn(),
+    dispatchClientErrorDiagnosticMock: vi.fn(),
+  }));
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
@@ -18,6 +20,10 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('@/lib/api/fetch', () => ({
   apiFetch: (...args: any[]) => apiFetchMock(...args),
+}));
+
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientErrorDiagnostic: (...args: unknown[]) => dispatchClientErrorDiagnosticMock(...args),
 }));
 
 vi.mock('sonner', () => ({
@@ -137,13 +143,123 @@ describe('VerificationsClient', () => {
     expect(screen.getByText('Jordan Verifier')).toBeInTheDocument();
     expect(screen.queryByText('mentor@company.com')).not.toBeInTheDocument();
 
-    expect(screen.getByRole('tab', { name: /^Incoming/i })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /^Sent/i })).toBeInTheDocument();
+    const incomingTab = screen.getByRole('tab', { name: /^Incoming/i });
+    const sentTab = screen.getByRole('tab', { name: /^Sent/i });
+    expect(incomingTab).toBeInTheDocument();
+    expect(sentTab).toBeInTheDocument();
+    expect(screen.getByRole('tablist')).toHaveClass('min-h-11');
+    expect(incomingTab).toHaveClass('min-h-11');
+    expect(sentTab).toHaveClass('min-h-11');
+
+    expect(screen.getByRole('button', { name: /^All/i })).toHaveClass('min-h-11');
+    expect(screen.getByRole('button', { name: /^Newest$/i })).toHaveClass('min-h-11');
+    expect(screen.getByRole('button', { name: /^Scope$/i })).toHaveClass('min-h-11');
 
     expect(screen.getAllByText('Pending').length).toBeGreaterThan(0);
     expect(screen.getByText('Accepted')).toBeInTheDocument();
-    expect(screen.getByText('Declined')).toBeInTheDocument();
-    expect(screen.getByText('All')).toBeInTheDocument();
+    expect(screen.getAllByText('Declined').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('All').length).toBeGreaterThan(0);
+  });
+
+  it('keeps verification request actions large enough for mobile trust workflows', async () => {
+    render(
+      <VerificationsClient
+        incomingRequests={[makeRequest({ id: 'incoming-touch', status: 'pending' })]}
+        sentRequests={[
+          makeRequest({
+            id: 'sent-touch',
+            verifierEmail: 'mentor@company.com',
+            status: 'pending',
+          }),
+        ]}
+        userEmail="me@proofound.io"
+      />
+    );
+    await settleAssistiveAiFlag();
+
+    expect(screen.getByRole('button', { name: /^Draft scoped request$/i })).toHaveClass(
+      'min-h-[44px]'
+    );
+    expect(screen.getByRole('button', { name: 'Decline' })).toHaveClass('min-h-[44px]');
+    expect(screen.getByRole('button', { name: 'Confirm' })).toHaveClass('min-h-[44px]');
+
+    const sentTab = screen.getByRole('tab', { name: /^Sent/i });
+    fireEvent.mouseDown(sentTab);
+    fireEvent.click(sentTab);
+    fireEvent.keyDown(sentTab, { key: 'Enter' });
+    await waitFor(() => expect(screen.getByText('mentor@company.com')).toBeInTheDocument());
+
+    expect(screen.getByRole('button', { name: 'Resend request' })).toHaveClass('min-h-[44px]');
+    expect(screen.getByRole('button', { name: 'Delete' })).toHaveClass('min-h-[44px]');
+  });
+
+  it('uses clear pending requester copy when profile details are unavailable', async () => {
+    render(
+      <VerificationsClient
+        incomingRequests={[
+          makeRequest({
+            id: 'incoming-missing-profile',
+            profiles: undefined,
+            proofLabel: 'Scoped launch proof',
+          }),
+        ]}
+        sentRequests={[]}
+        userEmail="me@proofound.io"
+      />
+    );
+    await settleAssistiveAiFlag();
+
+    const requestRow = screen.getByTestId('verification-request-row');
+    expect(within(requestRow).getByText('Requester details pending')).toBeInTheDocument();
+    expect(within(requestRow).queryByText('Unknown User')).not.toBeInTheDocument();
+    expect(within(requestRow).getByText('Scoped launch proof')).toBeInTheDocument();
+  });
+
+  it('uses clear pending skill copy when the verification subject details are unavailable', async () => {
+    render(
+      <VerificationsClient
+        incomingRequests={[
+          makeRequest({
+            id: 'incoming-missing-skill',
+            skills: undefined,
+          }),
+        ]}
+        sentRequests={[]}
+        userEmail="me@proofound.io"
+      />
+    );
+    await settleAssistiveAiFlag();
+
+    const requestRow = screen.getByTestId('verification-request-row');
+    expect(within(requestRow).getByText('Skill details pending')).toBeInTheDocument();
+    expect(within(requestRow).queryByText('Unknown Skill')).not.toBeInTheDocument();
+  });
+
+  it('uses clear competency copy when the response dialog receives an unsupported level', async () => {
+    render(
+      <VerificationsClient
+        incomingRequests={[
+          makeRequest({
+            id: 'incoming-unsupported-competency',
+            skills: {
+              id: 'skill-1',
+              competency_level: 99,
+              name_i18n: { en: 'Proof systems' },
+            },
+          }),
+        ]}
+        sentRequests={[]}
+        userEmail="me@proofound.io"
+      />
+    );
+    await settleAssistiveAiFlag();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm' }));
+
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByText('Proof systems')).toBeInTheDocument();
+    expect(within(dialog).getByText('Level not specified')).toBeInTheDocument();
+    expect(within(dialog).queryByText('Unknown')).not.toBeInTheDocument();
   });
 
   it('filters verification state buckets and sorts the list by scope', async () => {
@@ -210,6 +326,58 @@ describe('VerificationsClient', () => {
     const rows = screen.getAllByTestId('verification-request-row');
     expect(rows[0]).toHaveTextContent('Alpha outcome proof');
     expect(rows[1]).toHaveTextContent('Beta corrected proof');
+  });
+
+  it('summarizes the next verification action before the filters', async () => {
+    const incomingRequests = [
+      makeRequest({
+        id: 'attention-failed',
+        subjectType: 'impact_story',
+        subjectId: 'impact-1',
+        verificationKind: 'impact_attestation',
+        requestKind: 'impact_attestation',
+        status: 'failed',
+        proofLabel: 'Outcome proof that needs attention',
+        createdAt: '2026-03-01T10:00:00.000Z',
+      }),
+      makeRequest({
+        id: 'pending-skill',
+        status: 'pending',
+        proofLabel: 'Pending TypeScript skill',
+        createdAt: '2026-03-02T10:00:00.000Z',
+      }),
+      makeRequest({
+        id: 'accepted-skill',
+        status: 'accepted',
+        proofLabel: 'Accepted platform skill',
+        createdAt: '2026-03-03T10:00:00.000Z',
+      }),
+    ];
+
+    render(
+      <VerificationsClient
+        incomingRequests={incomingRequests}
+        sentRequests={[]}
+        userEmail="me@proofound.io"
+      />
+    );
+    await settleAssistiveAiFlag();
+
+    const guidance = screen.getByRole('region', { name: /incoming verification guidance/i });
+    expect(within(guidance).getByText('1 request needs attention.')).toBeInTheDocument();
+    expect(
+      within(guidance).getByText(
+        'Start here for failed, disputed, contradicted, or soon-expiring confirmations.'
+      )
+    ).toBeInTheDocument();
+    expect(within(guidance).getByRole('button', { name: /^1 Attention$/i })).toHaveTextContent('1');
+    expect(within(guidance).getByRole('button', { name: /^1 Pending$/i })).toHaveTextContent('1');
+    expect(within(guidance).getByRole('button', { name: /^1 Active$/i })).toHaveTextContent('1');
+
+    fireEvent.click(within(guidance).getByRole('button', { name: /Show attention/i }));
+
+    expect(screen.getByText('Outcome proof that needs attention')).toBeInTheDocument();
+    expect(screen.queryByText('Pending TypeScript skill')).not.toBeInTheDocument();
   });
 
   it('renders incoming impact-story requests in read-only mode', async () => {
@@ -384,6 +552,199 @@ describe('VerificationsClient', () => {
     );
   });
 
+  it('keeps verification composer fallback generic when AI drafting is unavailable', async () => {
+    apiFetchMock.mockImplementation(async (url: string) => {
+      if (url === '/api/ai/verifications/compose') {
+        return {
+          ok: false,
+          json: async () => ({ fallbackAvailable: true }),
+        };
+      }
+
+      throw new Error(`Unexpected API call: ${url}`);
+    });
+
+    render(
+      <VerificationsClient
+        incomingRequests={[]}
+        sentRequests={[]}
+        userEmail="me@proofound.io"
+        composerProofPacks={[
+          {
+            proofPackId: '11111111-1111-4111-8111-111111111111',
+            claimId: '22222222-2222-4222-8222-222222222222',
+            title: 'Private client launch for Hidden Corp',
+            claimStatement: 'I worked with Hidden Corp executive Nina Secret.',
+            ownershipStatement: 'Private ownership details.',
+            outcomeSummary: 'Private outcome details.',
+            timeframe: '2026 Q1',
+            evidenceTitles: ['Nina Secret original file.pdf'],
+            primarySubjectType: 'skill',
+            primarySubjectId: '22222222-2222-4222-8222-222222222222',
+          },
+        ]}
+      />
+    );
+
+    fireEvent.click(await screen.findByRole('button', { name: /^Draft scoped request$/i }));
+
+    const dialog = screen.getByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: /^Draft scoped request$/i }));
+
+    const fallbackDraft = await screen.findByDisplayValue(/one scoped Proofound claim/i);
+    expect(fallbackDraft).toBeInTheDocument();
+    expect((fallbackDraft as HTMLTextAreaElement).value).not.toContain('Hidden Corp');
+    expect((fallbackDraft as HTMLTextAreaElement).value).not.toContain('Nina Secret');
+  });
+
+  it('keeps verification composer draft failures safe, visible, and retryable', async () => {
+    apiFetchMock
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: 'Drafting service is temporarily unavailable.' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          suggestionId: '33333333-3333-4333-8333-333333333333',
+          subject: 'Can you confirm this TypeScript claim?',
+          message: 'Please confirm this one TypeScript claim from direct observation.',
+          claimScope: 'I used TypeScript in a production migration.',
+          verificationQuestions: ['Can you confirm this specific TypeScript claim?'],
+          privacyNotes: ['Uses selected public-safe fields only.'],
+          tooBroadWarnings: [],
+        }),
+      });
+
+    render(
+      <VerificationsClient
+        incomingRequests={[]}
+        sentRequests={[]}
+        userEmail="me@proofound.io"
+        composerProofPacks={[
+          {
+            proofPackId: '11111111-1111-4111-8111-111111111111',
+            claimId: '22222222-2222-4222-8222-222222222222',
+            title: 'TypeScript migration proof',
+            claimStatement: 'I used TypeScript in a production migration.',
+            ownershipStatement: 'I owned the migration plan.',
+            outcomeSummary: 'The migration shipped.',
+            timeframe: '2026 Q1',
+            evidenceTitles: ['Migration checklist'],
+            primarySubjectType: 'skill',
+            primarySubjectId: '22222222-2222-4222-8222-222222222222',
+          },
+        ]}
+      />
+    );
+
+    fireEvent.click(await screen.findByRole('button', { name: /^Draft scoped request$/i }));
+
+    const dialog = screen.getByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: /^Draft scoped request$/i }));
+
+    const alert = await within(dialog).findByRole('alert');
+    expect(alert).toHaveTextContent('Draft could not be created');
+    expect(alert).toHaveTextContent('Review the selected public-safe fields and try again.');
+    expect(alert).not.toHaveTextContent('Drafting service is temporarily unavailable.');
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'verifications.composer.draft_failed',
+      expect.any(Error)
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
+      'Drafting service is temporarily unavailable.'
+    );
+
+    fireEvent.click(within(dialog).getByRole('button', { name: /^Draft scoped request$/i }));
+
+    expect(
+      await within(dialog).findByDisplayValue(
+        'Please confirm this one TypeScript claim from direct observation.'
+      )
+    ).toBeInTheDocument();
+    expect(within(dialog).queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('keeps failed composer sends safe and visible without clearing the reviewed draft', async () => {
+    apiFetchMock.mockImplementation(async (url: string) => {
+      if (url === '/api/ai/verifications/compose') {
+        return {
+          ok: true,
+          json: async () => ({
+            suggestionId: '33333333-3333-4333-8333-333333333333',
+            subject: 'Can you confirm this TypeScript claim?',
+            message: 'Please confirm this one TypeScript claim from direct observation.',
+            claimScope: 'I used TypeScript in a production migration.',
+            verificationQuestions: ['Can you confirm this specific TypeScript claim?'],
+            privacyNotes: ['Uses selected public-safe fields only.'],
+            tooBroadWarnings: [],
+          }),
+        };
+      }
+
+      if (url === '/api/verification/requests/skill') {
+        return {
+          ok: false,
+          json: async () => ({ error: 'Verification email could not be delivered.' }),
+        };
+      }
+
+      throw new Error(`Unexpected API call: ${url}`);
+    });
+
+    render(
+      <VerificationsClient
+        incomingRequests={[]}
+        sentRequests={[]}
+        userEmail="me@proofound.io"
+        composerProofPacks={[
+          {
+            proofPackId: '11111111-1111-4111-8111-111111111111',
+            claimId: '22222222-2222-4222-8222-222222222222',
+            title: 'TypeScript migration proof',
+            claimStatement: 'I used TypeScript in a production migration.',
+            ownershipStatement: 'I owned the migration plan.',
+            outcomeSummary: 'The migration shipped.',
+            timeframe: '2026 Q1',
+            evidenceTitles: ['Migration checklist'],
+            primarySubjectType: 'skill',
+            primarySubjectId: '22222222-2222-4222-8222-222222222222',
+          },
+        ]}
+      />
+    );
+
+    fireEvent.click(await screen.findByRole('button', { name: /^Draft scoped request$/i }));
+
+    const dialog = screen.getByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: /^Draft scoped request$/i }));
+
+    const draftMessage = await within(dialog).findByDisplayValue(
+      'Please confirm this one TypeScript claim from direct observation.'
+    );
+    fireEvent.change(within(dialog).getByLabelText(/Verifier email address/i), {
+      target: { value: 'mentor@example.com' },
+    });
+    fireEvent.click(within(dialog).getByRole('checkbox', { name: /I reviewed this/i }));
+    fireEvent.click(within(dialog).getByRole('button', { name: /^Send request$/i }));
+
+    const alert = await within(dialog).findByRole('alert');
+    expect(alert).toHaveTextContent('Request could not be sent');
+    expect(alert).toHaveTextContent('The reviewed draft is still here so you can retry.');
+    expect(alert).not.toHaveTextContent('Verification email could not be delivered.');
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'verifications.composer.send_failed',
+      expect.any(Error)
+    );
+    expect(
+      dispatchClientErrorDiagnosticMock.mock.calls.find(
+        ([reason]) => reason === 'verifications.composer.send_failed'
+      )?.[1]
+    ).toMatchObject({ message: 'Verification email could not be delivered.' });
+    expect(draftMessage).toBeInTheDocument();
+    expect(within(dialog).getByDisplayValue('mentor@example.com')).toBeInTheDocument();
+  });
+
   it('hides the scoped request composer when assistive AI UI is disabled', async () => {
     (global.fetch as any).mockResolvedValueOnce({
       ok: true,
@@ -423,7 +784,27 @@ describe('VerificationsClient', () => {
     fireEvent.click(sentTab);
     fireEvent.keyDown(sentTab, { key: 'Enter' });
     await waitFor(() => expect(screen.getByText('mentor@company.com')).toBeInTheDocument());
+
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    const deleteDialog = screen.getByRole('alertdialog');
+
+    expect(
+      within(deleteDialog).getByRole('heading', { name: 'Delete verification request?' })
+    ).toBeInTheDocument();
+    expect(within(deleteDialog).getByText(/mentor@company.com/)).toBeInTheDocument();
+    expect(
+      within(deleteDialog).getByText(/Accepted verification records are not changed/i)
+    ).toBeInTheDocument();
+    expect(apiFetchMock).not.toHaveBeenCalled();
+
+    fireEvent.click(within(deleteDialog).getByRole('button', { name: 'Keep request' }));
+    expect(apiFetchMock).not.toHaveBeenCalled();
+    expect(screen.getByText('mentor@company.com')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    fireEvent.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete request' })
+    );
 
     await waitFor(() =>
       expect(apiFetchMock).toHaveBeenCalledWith(
@@ -469,6 +850,131 @@ describe('VerificationsClient', () => {
     );
   });
 
+  it('keeps resend failures safe, visible, and retryable on the sent request row', async () => {
+    const sentRequests = [
+      makeRequest({
+        id: 'sent-resend-retry-1',
+        verifierEmail: 'mentor@company.com',
+        status: 'pending',
+      }),
+    ];
+    apiFetchMock
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: 'Mailbox provider rejected the resend.' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true }),
+      });
+
+    render(
+      <VerificationsClient
+        incomingRequests={[]}
+        sentRequests={sentRequests}
+        userEmail="me@proofound.io"
+      />
+    );
+
+    const sentTab = screen.getByRole('tab', { name: /^Sent/i });
+    fireEvent.mouseDown(sentTab);
+    fireEvent.click(sentTab);
+    fireEvent.keyDown(sentTab, { key: 'Enter' });
+    await waitFor(() => expect(screen.getByText('mentor@company.com')).toBeInTheDocument());
+
+    fireEvent.click(screen.getByRole('button', { name: 'Resend request' }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Verification request could not be resent');
+    expect(alert).toHaveTextContent(
+      'The original request is still active; retry before creating a new request.'
+    );
+    expect(alert).not.toHaveTextContent('Mailbox provider rejected the resend.');
+    expect(screen.getByText('mentor@company.com')).toBeInTheDocument();
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'verifications.client.sent_request_resend_failed',
+      expect.any(Error)
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
+      'Mailbox provider rejected the resend.'
+    );
+
+    expect(within(alert).getByRole('button', { name: 'Retry resend' })).toHaveClass('min-h-[44px]');
+    fireEvent.click(within(alert).getByRole('button', { name: 'Retry resend' }));
+
+    await waitFor(() => expect(apiFetchMock).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
+  });
+
+  it('keeps failed delete attempts safe and visible without removing the sent request', async () => {
+    const sentRequests = [
+      makeRequest({
+        id: 'sent-delete-retry-1',
+        verifierEmail: 'mentor@company.com',
+        status: 'pending',
+      }),
+    ];
+    apiFetchMock
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: 'Verification service is temporarily unavailable.' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true }),
+      });
+
+    render(
+      <VerificationsClient
+        incomingRequests={[]}
+        sentRequests={sentRequests}
+        userEmail="me@proofound.io"
+      />
+    );
+
+    const sentTab = screen.getByRole('tab', { name: /^Sent/i });
+    fireEvent.mouseDown(sentTab);
+    fireEvent.click(sentTab);
+    fireEvent.keyDown(sentTab, { key: 'Enter' });
+    await waitFor(() => expect(screen.getByText('mentor@company.com')).toBeInTheDocument());
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    fireEvent.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete request' })
+    );
+
+    const dialogAlert = await within(screen.getByRole('alertdialog')).findByRole('alert');
+    expect(dialogAlert).toHaveTextContent('Verification request could not be deleted');
+    expect(dialogAlert).toHaveTextContent('Your request is unchanged; review it and try again.');
+    expect(dialogAlert).not.toHaveTextContent('Verification service is temporarily unavailable.');
+    expect(screen.getAllByText('mentor@company.com').length).toBeGreaterThan(0);
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'verifications.client.sent_request_delete_failed',
+      expect.any(Error)
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
+      'Verification service is temporarily unavailable.'
+    );
+
+    fireEvent.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Keep request' })
+    );
+
+    const rowAlert = await screen.findByRole('alert');
+    expect(rowAlert).toHaveTextContent('Verification request could not be deleted');
+    expect(rowAlert).toHaveTextContent('Your request is unchanged; review it and try again.');
+    expect(rowAlert).not.toHaveTextContent('Verification service is temporarily unavailable.');
+    fireEvent.click(within(rowAlert).getByRole('button', { name: 'Review delete' }));
+    fireEvent.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete request' })
+    );
+
+    await waitFor(() => expect(apiFetchMock).toHaveBeenCalledTimes(2));
+    await waitFor(() => {
+      expect(screen.queryByText('mentor@company.com')).not.toBeInTheDocument();
+    });
+  });
+
   it('opens bundle cancellation dialog for bundled pending sent skill request', async () => {
     const sentRequests = [
       makeRequest({
@@ -499,7 +1005,10 @@ describe('VerificationsClient', () => {
     fireEvent.click(sentTab);
     fireEvent.keyDown(sentTab, { key: 'Enter' });
     await waitFor(() => expect(screen.getByText('bundle@company.com')).toBeInTheDocument());
-    fireEvent.click(screen.getByRole('button', { name: 'Manage legacy bundle' }));
+    expect(screen.getByText('Proof record bundle request sent')).toBeInTheDocument();
+    expect(screen.queryByText(/legacy/i)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Manage bundle' }));
 
     expect(screen.getByTestId('bundle-dialog-open')).toHaveTextContent('bundle-request-1');
     expect(apiFetchMock).not.toHaveBeenCalled();

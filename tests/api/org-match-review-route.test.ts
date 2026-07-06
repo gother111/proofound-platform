@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   buildProofFirstReviewCard: vi.fn(),
   buildVisibilitySafeWhy: vi.fn(),
   getReviewCardProofPackMap: vi.fn(),
+  getReviewCardProofPackMapForMatchedOrg: vi.fn(),
   getVisibleIdentityFields: vi.fn(),
   normalizeFairnessStatus: vi.fn(),
   persistFairnessEvaluationForAssignment: vi.fn(),
@@ -28,6 +29,7 @@ const mocks = vi.hoisted(() => ({
   emitMatchActioned: vi.fn(),
   emitFirstQualifiedIntroAsync: vi.fn(),
   notifyIntroAccepted: vi.fn(),
+  getIndividualReadinessState: vi.fn(),
   logError: vi.fn(),
 }));
 
@@ -56,6 +58,7 @@ vi.mock('@/lib/matching/review-contract', () => ({
   buildProofFirstReviewCard: mocks.buildProofFirstReviewCard,
   buildVisibilitySafeWhy: mocks.buildVisibilitySafeWhy,
   getReviewCardProofPackMap: mocks.getReviewCardProofPackMap,
+  getReviewCardProofPackMapForMatchedOrg: mocks.getReviewCardProofPackMapForMatchedOrg,
   getOrgMembershipRole: mocks.getOrgMembershipRole,
   getVisibleIdentityFields: mocks.getVisibleIdentityFields,
   normalizeFairnessStatus: mocks.normalizeFairnessStatus,
@@ -83,6 +86,10 @@ vi.mock('@/lib/notifications', () => ({
   notifyIntroAccepted: mocks.notifyIntroAccepted,
 }));
 
+vi.mock('@/lib/readiness/individual-state', () => ({
+  getIndividualReadinessState: mocks.getIndividualReadinessState,
+}));
+
 vi.mock('@/lib/log', () => ({
   log: {
     error: mocks.logError,
@@ -90,6 +97,32 @@ vi.mock('@/lib/log', () => ({
 }));
 
 import { POST } from '@/app/api/org/[id]/matches/[matchId]/review/route';
+
+const FORBIDDEN_EARLY_SCORE_KEYS = new Set([
+  'score',
+  'rawScore',
+  'scoreTotal',
+  'subscores',
+  'subscoresJson',
+  'rankScore',
+  'percentage',
+  'embeddingSimilarity',
+  'modelConfidence',
+  'aiVerdict',
+]);
+
+function expectNoEarlyScoreExposure(value: unknown) {
+  if (!value || typeof value !== 'object') return;
+  if (Array.isArray(value)) {
+    value.forEach(expectNoEarlyScoreExposure);
+    return;
+  }
+
+  for (const [key, nested] of Object.entries(value)) {
+    expect(FORBIDDEN_EARLY_SCORE_KEYS.has(key)).toBe(false);
+    expectNoEarlyScoreExposure(nested);
+  }
+}
 
 describe('POST /api/org/[id]/matches/[matchId]/review', () => {
   beforeEach(() => {
@@ -100,8 +133,9 @@ describe('POST /api/org/[id]/matches/[matchId]/review', () => {
     });
     mocks.getOrgMembershipRole.mockResolvedValue('org_manager');
     mocks.getReviewCardProofPackMap.mockResolvedValue(new Map());
+    mocks.getReviewCardProofPackMapForMatchedOrg.mockResolvedValue(new Map());
     mocks.buildProofFirstReviewCard.mockReturnValue({
-      candidateLabel: 'Candidate A7F2',
+      candidateLabel: 'Submission A7F2',
       strongestProof: {
         summary: 'Proof-backed review signal.',
         outcome: 'Outcome summary.',
@@ -152,6 +186,18 @@ describe('POST /api/org/[id]/matches/[matchId]/review', () => {
     mocks.openIntroConversation.mockResolvedValue({
       id: 'intro-2',
       state: 'conversation_open',
+    });
+    mocks.getIndividualReadinessState.mockResolvedValue({
+      flags: {
+        matchVisible: true,
+      },
+      counts: {
+        freshProofLinkedL4Count24: 1,
+        activeTrustAnchorCount: 1,
+      },
+      introEligibility: {
+        reasonCodes: [],
+      },
     });
     mocks.syncRevealRequestTimeoutState.mockImplementation(async ({ conversation }: any) => ({
       conversation,
@@ -217,9 +263,76 @@ describe('POST /api/org/[id]/matches/[matchId]/review', () => {
     expect(body.corridorState).toBe('intro_hold');
     expect(body.reviewCard).toEqual(
       expect.objectContaining({
-        candidateLabel: 'Candidate A7F2',
+        candidateLabel: 'Submission A7F2',
       })
     );
+    expect(mocks.getOrCreateIntroWorkflow).not.toHaveBeenCalled();
+  });
+
+  it('blocks Stage 2 intro requests when the strict intro gate is not ready', async () => {
+    mocks.getIndividualReadinessState.mockResolvedValueOnce({
+      flags: {
+        matchVisible: true,
+      },
+      counts: {
+        freshProofLinkedL4Count24: 1,
+        activeTrustAnchorCount: 0,
+      },
+      introEligibility: {
+        reasonCodes: [],
+      },
+    });
+    mocks.select.mockReset();
+
+    const orgLimit = vi.fn().mockResolvedValue([{ id: 'org-1', slug: 'proofound' }]);
+    const orgWhere = vi.fn().mockReturnValue({ limit: orgLimit });
+    const orgFrom = vi.fn().mockReturnValue({ where: orgWhere });
+
+    const matchLimit = vi.fn().mockResolvedValue([
+      {
+        matchId: 'match-1',
+        assignmentId: 'assignment-1',
+        profileId: 'profile-1',
+        orgId: 'org-1',
+        reviewStage: 'shortlisted',
+        revealScope: 'shortlist_identity',
+        reviewOperationalFallbackMode: null,
+        assignmentOperationalFallbackMode: null,
+        fairnessStatus: 'pass',
+        reasonCodes: ['alias_skill_overlap', 'fresh_proof_present'],
+        scoreSnapshotJson: {
+          discovery_status: 'review_ready_match',
+          fit_band: 'relevant_partial',
+        },
+      },
+    ]);
+    const matchWhere = vi.fn().mockReturnValue({ limit: matchLimit });
+    const matchInnerJoin2 = vi.fn().mockReturnValue({ where: matchWhere });
+    const matchInnerJoin1 = vi.fn().mockReturnValue({ innerJoin: matchInnerJoin2 });
+    const matchFrom = vi.fn().mockReturnValue({ innerJoin: matchInnerJoin1 });
+
+    mocks.select.mockReturnValueOnce({ from: orgFrom }).mockReturnValueOnce({ from: matchFrom });
+
+    const response = await POST(
+      new NextRequest('https://example.com/api/org/proofound/matches/match-1/review', {
+        method: 'POST',
+        body: JSON.stringify({ action: 'request_intro' }),
+      }),
+      {
+        params: Promise.resolve({ id: 'proofound', matchId: 'match-1' }),
+      } as any
+    );
+
+    const body = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(body.discoveryStatus).toBe('review_ready_match');
+    expect(body.fitBand).toBe('relevant_partial');
+    expect(body.introGate).toBe('intro_hold_missing_trust_anchor');
+    expect(body.canRequestIntro).toBe(false);
+    expect(body.missingGates).toContain('active_non_self_trust_anchor');
+    expectNoEarlyScoreExposure(body);
+    expect(mocks.syncIntroWorkflowFromInterest).not.toHaveBeenCalled();
     expect(mocks.getOrCreateIntroWorkflow).not.toHaveBeenCalled();
   });
 
@@ -272,7 +385,7 @@ describe('POST /api/org/[id]/matches/[matchId]/review', () => {
     }
   );
 
-  it('allows active org reviewers to update candidate review state', async () => {
+  it('allows active org reviewers to update match review state', async () => {
     mocks.getOrgMembershipRole.mockResolvedValue('org_reviewer');
     mocks.select.mockReset();
 
@@ -323,11 +436,12 @@ describe('POST /api/org/[id]/matches/[matchId]/review', () => {
 
   it('redacts blind review-card free text at the route boundary before reveal', async () => {
     mocks.buildProofFirstReviewCard.mockReturnValue({
-      candidateLabel: 'Candidate A7F2',
+      candidateLabel: 'Submission A7F2',
       strongestProof: {
         summary:
           'Jane Doe shipped this at Acme Climate AB. Email jane@example.com, call +46 70 123 45 67, see https://linkedin.com/in/janedoe and Jane_Doe_CV.pdf.',
-        outcome: 'Portfolio: https://jane.example and GitHub https://github.com/janedoe/private.',
+        outcome:
+          'Portfolio: https://proofound.example/portfolio/janedoe and GitHub https://github.com/janedoe/private.',
         ownership: 'Jane Doe owned delivery from 221B Baker Street.',
         anchorContext: 'Anchored at Stockholm University',
         freshnessLabel: 'Fresh',
@@ -372,7 +486,8 @@ describe('POST /api/org/[id]/matches/[matchId]/review', () => {
     expect(serialized).not.toContain('+46 70 123 45 67');
     expect(serialized).not.toContain('linkedin.com');
     expect(serialized).not.toContain('github.com');
-    expect(serialized).not.toContain('jane.example');
+    expect(serialized).not.toContain('/portfolio/janedoe');
+    expect(serialized).not.toContain('proofound.example');
     expect(serialized).not.toContain('Jane_Doe_CV.pdf');
     expect(serialized).not.toContain('Acme Climate AB');
     expect(serialized).not.toContain('Stockholm University');
@@ -437,13 +552,33 @@ describe('POST /api/org/[id]/matches/[matchId]/review', () => {
 
     expect(response.status).toBe(200);
     expect(body.introApproved).toBe(true);
+    expect(body.discoveryStatus).toBe('review_ready_match');
+    expect(body.fitBand).toBeDefined();
+    expect(body.introGate).toBe('intro_ready');
+    expect(body.canRequestIntro).toBe(true);
+    expect(body.reasonDetails).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: 'fresh_proof_present',
+        }),
+      ])
+    );
+    expect(body.anonymousCandidateLabel).toBe('Submission A7F2');
+    expect(body.proofSummaries).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          summary: 'Proof-backed review signal.',
+        }),
+      ])
+    );
+    expectNoEarlyScoreExposure(body);
     expect(body.progressiveRevealStage).toBe('stage2_contextual_reveal');
     expect(body.corridorState).toBe('intro_approved');
     expect(body.revealScope).toBe('shortlist_identity');
     expect(body.visibleIdentityFields).toEqual([]);
     expect(body.reviewCard).toEqual(
       expect.objectContaining({
-        candidateLabel: 'Candidate A7F2',
+        candidateLabel: 'Submission A7F2',
       })
     );
     expect(body.conversationId).toBe('conversation-1');
@@ -778,7 +913,7 @@ describe('POST /api/org/[id]/matches/[matchId]/review', () => {
     expect(mocks.getOrCreateIntroWorkflow).not.toHaveBeenCalled();
   });
 
-  it('records reveal requests as pending candidate approval without unlocking identity', async () => {
+  it('records reveal requests as pending participant approval without unlocking identity', async () => {
     mocks.getOrgMembershipRole.mockResolvedValue('org_reviewer');
     mocks.resolveCanonicalCorridor.mockReturnValue({
       progressiveRevealStage: 'stage2_contextual_reveal',
@@ -847,10 +982,11 @@ describe('POST /api/org/[id]/matches/[matchId]/review', () => {
     expect(body.waitingForCandidateApproval).toBe(true);
     expect(body.reviewCard).toEqual(
       expect.objectContaining({
-        candidateLabel: 'Candidate A7F2',
+        candidateLabel: 'Submission A7F2',
       })
     );
-    expect(body.message).toContain('candidate approves');
+    expect(body.message).toContain('proof-review participant approves');
+    expect(body.message).not.toContain('candidate approves');
     expect(mocks.recordRevealEvent).toHaveBeenCalledWith(
       expect.objectContaining({
         actorRole: 'org_reviewer',

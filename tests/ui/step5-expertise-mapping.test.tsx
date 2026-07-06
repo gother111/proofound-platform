@@ -138,6 +138,8 @@ describe('Step5ExpertiseMapping', () => {
       />
     );
 
+    expect(screen.getByText('Step 5: Proof Requirements')).toBeInTheDocument();
+    expect(screen.queryByText('Step 5: Expertise Mapping')).not.toBeInTheDocument();
     expect(screen.getByLabelText('Search skills')).toBeInTheDocument();
     expect(screen.queryByLabelText('Search L4 skills')).not.toBeInTheDocument();
 

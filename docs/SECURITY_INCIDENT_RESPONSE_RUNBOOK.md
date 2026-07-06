@@ -1,534 +1,237 @@
+> Doc Class: `active`
+> Last Verified: `2026-05-19`
+
 # Security Incident Response Runbook
 
-**Version**: 1.0  
-**Last Updated**: November 6, 2025  
-**Owner**: Security Team  
-**Contact**: security@proofound.io
+This runbook covers launch-safe response for security, privacy, and no-leak incidents in the locked MVP corridor. It is operational guidance, not legal advice or proof of compliance by itself.
 
----
+Use this with:
 
-## Overview
+- [alert-configuration.md](./alert-configuration.md)
+- [sentry-setup.md](./sentry-setup.md)
+- [structured-logging.md](./structured-logging.md)
+- [RESEND_SETUP.md](./RESEND_SETUP.md)
+- [internal-ops/reveal-privacy-dispute-sop.md](./internal-ops/reveal-privacy-dispute-sop.md)
+- [internal-ops/redaction-risky-upload-sop.md](./internal-ops/redaction-risky-upload-sop.md)
 
-This runbook provides step-by-step procedures for detecting, responding to, and recovering from security incidents at Proofound. It ensures compliance with GDPR Article 33 (72-hour breach notification requirement) and protects user data.
+## Severity
 
----
+- `P1`: confirmed or likely private data exposure, reveal without consent, public proof leak, export/delete safety failure, auth bypass, admin/internal route exposure, service-role or secret exposure, production app unavailable
+- `P2`: suspected privacy leak without confirmed exposure, verification/reveal dispute stuck, risky upload visible where it should not be, security alert on an active MVP workflow, protected monitor failure
+- `P3`: suspicious activity, noisy alerts, stale evidence, policy/documentation drift without active exposure
 
-## Incident Severity Classification
+GDPR breach assessment and any external notification decision must be made by the designated legal/privacy owner. Start the evidence clock immediately when personal data exposure is suspected, but do not promise a regulatory conclusion before assessment.
 
-| Severity     | Definition                                     | Examples                                     | Response Time        |
-| ------------ | ---------------------------------------------- | -------------------------------------------- | -------------------- |
-| **CRITICAL** | Confirmed data breach with PII exposure        | Database breach, mass account takeover       | Immediate (< 1 hour) |
-| **HIGH**     | Potential breach or significant vulnerability  | RLS policy bypass, authentication bypass     | < 4 hours            |
-| **MEDIUM**   | Security issue without confirmed data exposure | DDoS attack, brute force attempts            | < 24 hours           |
-| **LOW**      | Minor security concerns                        | Suspicious login patterns, scanning attempts | < 48 hours           |
+## First 15 Minutes
 
----
+1. Acknowledge the incident in the approved operator channel.
+2. Assign an incident owner.
+3. Identify the affected route, workflow, primary object, and target environment.
+4. Preserve evidence without copying private payloads into chat, docs, screenshots, or tickets.
+5. Decide whether to enter safe mode:
+   - pause new intros
+   - block reveal actions
+   - hide unsafe public projection
+   - disable affected upload/import path
+   - revoke exposed token or signed URL
+   - rotate exposed credential
 
-## Phase 1: Detection
+Do not run destructive production, database, auth, permission, billing, or infrastructure actions without an explicit target and owner approval unless immediate containment requires credential revocation.
 
-### Automated Detection Triggers
+## Evidence Rules
 
-Security incidents are detected through:
+Preserve:
 
-1. **Sentry Alerts** (configured in `sentry.server.config.ts`)
-   - SECURITY_CRITICAL events
-   - SECURITY_WARNING events
-   - RLS policy violations
+- timestamp and target
+- route or workflow
+- release/deployment id
+- request id or correlation id when available
+- affected object id where safe
+- redacted alert/log excerpt
+- owner and decision timeline
 
-2. **Application Logs** (`src/lib/log.ts`)
-   - Failed authentication attempts (10+ in 5 minutes)
-   - Unusual data access patterns
-   - Unauthorized API access attempts
+Do not preserve in shared docs/tickets:
 
-3. **Manual Reports**
-   - User reports to security@proofound.io
-   - Internal team discovery
-   - Third-party security researcher disclosure
+- passwords, session cookies, auth headers, API keys, provider tokens, service-role keys
+- private proof content, raw evidence, uploaded file contents, private storage paths, signed URLs, filenames
+- hidden identity details before reveal consent
+- verifier private data, allegation text, admin notes, internal queue payloads
+- raw request/response bodies, raw AI prompts, raw model responses, diagnostic dumps
 
-### Detection Checklist
+If unsafe evidence was already pasted somewhere, treat that as a secondary privacy incident and remove/redact it.
 
-When an alert fires:
+## Incident Classes
 
-- [ ] Verify the alert is not a false positive
-- [ ] Determine incident severity using table above
-- [ ] Document initial observations
-- [ ] Alert incident response team
+### Public Projection Or Portfolio Leak
 
----
+Examples:
 
-## Phase 2: Containment (CRITICAL/HIGH Incidents)
+- hidden portfolio content visible publicly
+- private Proof Pack evidence visible on public portfolio
+- public export includes private-only fields
+- public organization trust page exposes internal review details
 
-### Immediate Actions (< 1 hour)
+Containment:
 
-1. **Alert Team**
-   - Post in #security-incidents Slack channel
-   - Tag: @security-team @engineering-leads
-   - Include: Severity, timestamp, initial assessment
+- unpublish or hide affected public projection
+- block affected public route if needed
+- preserve route and object ids only
+- verify no cached public response remains visible
 
-2. **Contain the Breach**
+Verification:
 
-   For database breaches:
+- public portfolio render
+- public summary/export routes
+- privacy/effective-visibility tests
+- Browser check for the affected public route when safe
 
-   ```bash
-   # Revoke compromised API keys immediately
-   # Run in Supabase Dashboard > Settings > API
+### Reveal Or Identity Leak
 
-   # Force logout all users (if needed)
-   # Run in Supabase SQL Editor:
-   UPDATE auth.refresh_tokens SET revoked = true WHERE revoked = false;
-   ```
+Examples:
 
-   For authentication bypass:
+- proof-review participant identity exposed before consent
+- contact details visible in blind review
+- reveal request approved without proof-review participant consent
 
-   ```bash
-   # Rotate JWT secrets (Supabase dashboard)
-   # Enable MFA requirement temporarily
-   ```
+Containment:
 
-   For RLS policy bypass:
+- pause reveal and intro actions for affected assignment/conversation
+- hide identity-bearing fields in review surfaces
+- move issue to privacy/reveal dispute queue
 
-   ```sql
-   -- Disable affected table temporarily
-   ALTER TABLE [affected_table] FORCE ROW LEVEL SECURITY;
+Verification:
 
-   -- Review and fix RLS policies
-   -- Re-enable after verification
-   ```
+- reveal route tests
+- org review/proof-submission card checks
+- internal queue state
+- manual Browser check only with safe test data
 
-3. **Preserve Evidence**
-   - Export relevant logs from Sentry
-   - Capture database query logs (pg_stat_statements)
-   - Screenshot error messages
-   - Save all communications
+### Upload, Import, Or Proof Content Leak
 
-4. **Initial Notification**
-   - Notify platform owner (Yurii Bakurov)
-   - Notify legal counsel (if PII exposed)
-   - Prepare initial incident report
+Examples:
 
----
+- private upload returns public URL
+- quarantine file visible publicly
+- uploaded artifact text logged or sent to external service without approved path
 
-## Phase 3: Assessment (< 4 hours)
+Containment:
 
-### Determine Breach Scope
+- revoke signed URLs
+- disable affected upload/import path
+- move item to manual review or redaction queue
+- delete unsafe cached/text-derived projection if required by policy
 
-Answer these questions:
+Verification:
 
-1. **What data was accessed/exposed?**
-   - [ ] Tier 1 PII (emails, phone numbers)
-   - [ ] Tier 2 Sensitive (compensation data, verifier info)
-   - [ ] Tier 3 Semi-Public (skills, experience)
-   - [ ] Tier 4 Public (org profiles, assignments)
+- upload privacy tests
+- storage policy tests
+- redaction/risky upload SOP
+- affected route/API behavior
 
-2. **How many users affected?**
-   - Query affected user IDs
-   - Export list for notification
-   - Categorize by data sensitivity
+### Auth, Token, Or Session Incident
 
-3. **When did the breach occur?**
-   - Check oldest access timestamp
-   - Determine breach duration
-   - Calculate time to detection
+Examples:
 
-4. **Who was the attacker?**
-   - IP addresses
-   - User agents
-   - Attack patterns
-   - Attribution (if possible)
+- token replay succeeds where it should fail
+- password reset, invite, verification, or reveal token crosses actors
+- session cookie/header appears in logs or Sentry
 
-5. **How did the breach happen?**
-   - Vulnerability exploited
-   - Misconfiguration
-   - Social engineering
-   - Insider threat
+Containment:
 
-### Assessment Template
+- revoke exposed token or capability
+- rotate affected secret when required
+- pause affected token redemption route if the blast radius is unclear
+- preserve only hashed/redacted token references
 
-```
-INCIDENT REPORT: INC-2025-[NUMBER]
+Verification:
 
-Severity: [CRITICAL/HIGH/MEDIUM/LOW]
-Detected: [YYYY-MM-DD HH:MM UTC]
-Contained: [YYYY-MM-DD HH:MM UTC]
+- capability-token and workflow idempotency tests
+- affected route tests
+- Sentry/logging redaction checks
 
-BREACH SCOPE:
-- Data Categories: [List tiers]
-- Users Affected: [Number]
-- Breach Duration: [X hours/days]
-- Attack Vector: [Description]
+### Admin/Internal Exposure
 
-ROOT CAUSE:
-[Detailed explanation]
+Examples:
 
-IMMEDIATE ACTIONS TAKEN:
-- [Action 1]
-- [Action 2]
+- internal queue exposed publicly
+- launch-status/perf-status returns private diagnostics to public users
+- admin audit or diagnostics route lacks required auth
 
-EVIDENCE PRESERVED:
-- [Link to logs]
-- [Link to screenshots]
+Containment:
 
-NEXT STEPS:
-- [Action items]
-```
+- block the route or require auth immediately
+- reduce returned payload to minimal safe shape
+- audit access logs for the affected time window
 
----
+Verification:
 
-## Phase 4: Notification
+- route-surface inventory tests
+- authz policy tests
+- internal monitoring route tests
 
-### GDPR 72-Hour Requirement
+## Assessment
 
-If Tier 1 PII was exposed:
+Answer with evidence:
 
-**Hour 0-24: Internal Assessment**
+- What route/workflow was affected?
+- What object and data class were involved?
+- Was private data actually exposed or only at risk?
+- Which users/orgs could access it?
+- Did the issue affect public, authenticated owner, organization, or admin/internal surfaces?
+- What was the earliest known exposure time?
+- What containment action was taken?
+- What tests or manual checks prove containment?
 
-- Complete breach scope analysis
-- Document all findings
-- Prepare notification materials
+Classify data conservatively. When uncertain, treat as potentially exposed until disproven.
 
-**Hour 24-48: Regulatory Notification**
+## Notification
 
-- Notify supervisory authority (if EU users affected)
-- Provide initial breach report
-- Follow local data protection authority procedures
+External notification decisions depend on legal/privacy assessment. Prepare materials in plain language, but do not send breach notices until approved.
 
-**Hour 48-72: User Notification**
+Notification drafts must avoid:
 
-- Send breach notification emails
-- Update status page
-- Prepare FAQ for support team
+- secrets or internal vulnerability detail that increases risk
+- private proof content or hidden identity details
+- speculative cause or blame
+- promises that cannot be verified
 
-### User Notification Template
+If user notification is required, use transactional email via approved sender configuration and save evidence of what was sent without exposing recipient lists broadly.
 
-```
-Subject: Security Incident Notification - Proofound
+## Remediation
 
-Dear [User Name],
+Remediation should include:
 
-We are writing to inform you of a security incident that may have
-affected your Proofound account.
+- code/configuration fix
+- tests that reproduce and prevent recurrence
+- route-surface classification check if applicable
+- privacy/no-leak review
+- docs/runbook update when behavior changes
+- launch artifact update with residual risk
 
-WHAT HAPPENED:
-On [date], we discovered that [brief description]. We immediately
-took action to [containment actions].
+Credential or secret rotation must be target-specific and recorded without values.
 
-WHAT INFORMATION WAS INVOLVED:
-[List specific data categories - be transparent]
+## Post-Incident Review
 
-WHAT WE'RE DOING:
-- [Security improvements]
-- [Monitoring enhancements]
-- [Additional protections]
+Within one week for P1/P2:
 
-WHAT YOU SHOULD DO:
-- Change your password immediately: [link]
-- Enable two-factor authentication: [link]
-- Monitor your account for suspicious activity
-- Report any concerns to security@proofound.io
+- timeline
+- root cause
+- data involved
+- containment and verification evidence
+- user/regulatory notification decision
+- tests added
+- docs/runbooks updated
+- remaining risks
+- owner and due date for follow-ups
 
-We sincerely apologize for this incident and are committed to
-protecting your data. For questions, contact security@proofound.io.
+Store incident records under the approved internal location. Do not create public repo incident files with private evidence unless explicitly approved and redacted.
 
-Sincerely,
-Proofound Security Team
-```
+## Quick Reference
 
-### Notification Checklist
-
-- [ ] Draft notification email (legal review)
-- [ ] Identify all affected users
-- [ ] Send emails via Resend
-- [ ] Post status page update
-- [ ] Prepare support team with FAQ
-- [ ] Monitor for user questions
-
----
-
-## Phase 5: Remediation
-
-### Short-Term Fixes (< 1 week)
-
-1. **Patch Vulnerability**
-   - Fix code/configuration issue
-   - Deploy patch to production
-   - Verify fix works
-
-2. **Rotate Credentials**
-   - Database passwords
-   - API keys
-   - JWT secrets
-   - Service account tokens
-
-3. **Enhanced Monitoring**
-   - Add specific alerts for this attack vector
-   - Increase logging detail
-   - Set up dashboards
-
-### Long-Term Improvements (< 1 month)
-
-1. **Architecture Changes**
-   - Implement additional security layers
-   - Enhance access controls
-   - Add redundant protections
-
-2. **Process Improvements**
-   - Update security checklist
-   - Enhance code review process
-   - Additional security training
-
-3. **Testing**
-   - Penetration testing
-   - Red team exercise
-   - Automated security scans
-
----
-
-## Phase 6: Post-Incident Review
-
-### Review Meeting (Within 1 week)
-
-Attendees:
-
-- Engineering leads
-- Security team
-- Product owner
-- Legal counsel (if needed)
-
-Agenda:
-
-1. Timeline review
-2. Root cause analysis
-3. Response effectiveness
-4. Lessons learned
-5. Action items
-
-### Post-Incident Report Template
-
-```
-POST-INCIDENT REVIEW: INC-2025-[NUMBER]
-
-Date: [YYYY-MM-DD]
-Attendees: [Names]
-
-INCIDENT SUMMARY:
-[Brief description]
-
-TIMELINE:
-- [HH:MM] Detection
-- [HH:MM] Containment
-- [HH:MM] Assessment complete
-- [HH:MM] Notifications sent
-- [HH:MM] Remediation complete
-
-ROOT CAUSE:
-[Deep dive analysis]
-
-WHAT WENT WELL:
-- [Item 1]
-- [Item 2]
-
-WHAT COULD BE IMPROVED:
-- [Item 1]
-- [Item 2]
-
-ACTION ITEMS:
-| Action | Owner | Due Date | Status |
-|--------|-------|----------|--------|
-| [Action 1] | [Name] | [Date] | [ ] |
-
-LESSONS LEARNED:
-[Key takeaways]
-
-RECOMMENDATIONS:
-[Future improvements]
-```
-
----
-
-## Contact Information
-
-### Primary Contacts
-
-**Security Email**: security@proofound.io  
-**Emergency Phone**: [To be configured]  
-**Status Page**: https://status.proofound.io (future)
-
-### Escalation Path
-
-1. **Level 1**: Engineering Team
-   - First responders
-   - Initial containment
-
-2. **Level 2**: Security Lead
-   - Incident coordination
-   - External communications
-
-3. **Level 3**: Platform Owner
-   - Executive decisions
-   - Legal/regulatory liaison
-
-### External Resources
-
-**Data Protection Authorities**:
-
-- EU GDPR: https://edpb.europa.eu/about-edpb/board/members_en
-- California (CCPA): https://oag.ca.gov/privacy/ccpa
-
-**Incident Response Vendors** (if needed):
-
-- Cloud forensics provider
-- Legal counsel specializing in data breaches
-- PR firm for crisis communications
-
----
-
-## Tools & Access
-
-### Required Access
-
-Incident responders need:
-
-- [ ] Supabase dashboard admin access
-- [ ] Vercel deployment access
-- [ ] Sentry project access
-- [ ] GitHub repository access
-- [ ] Email sending access (Resend)
-- [ ] Analytics dashboard access
-
-### Useful Commands
-
-**Check recent RLS violations** (Supabase SQL Editor):
-
-```sql
-SELECT
-  timestamp,
-  user_id,
-  query,
-  error_message
-FROM pg_stat_statements
-WHERE error_message LIKE '%RLS%'
-  AND timestamp > NOW() - INTERVAL '24 hours'
-ORDER BY timestamp DESC;
-```
-
-**Audit failed login attempts**:
-
-```sql
-SELECT
-  created_at,
-  email,
-  ip_address_hash,
-  error_message
-FROM analytics_events
-WHERE event_type = 'auth_failure'
-  AND created_at > NOW() - INTERVAL '1 hour'
-GROUP BY email
-HAVING COUNT(*) > 5;
-```
-
-**Check recent data exports** (potential exfiltration):
-
-```sql
-SELECT
-  user_id,
-  created_at,
-  properties->>'tables' as exported_tables
-FROM analytics_events
-WHERE event_type = 'data_exported'
-  AND created_at > NOW() - INTERVAL '24 hours'
-ORDER BY created_at DESC;
-```
-
----
-
-## Training & Drills
-
-### Required Training
-
-All engineering team members complete:
-
-- [ ] Security incident response overview (annual)
-- [ ] GDPR compliance training (annual)
-- [ ] Phishing awareness training (quarterly)
-- [ ] Secure coding practices (onboarding + annual)
-
-### Incident Response Drills
-
-**Quarterly Drill Schedule**:
-
-- Q1: Database breach simulation
-- Q2: Authentication bypass scenario
-- Q3: DDoS attack response
-- Q4: Insider threat scenario
-
-**Drill Format**:
-
-1. Scenario introduction (30 min)
-2. Simulated incident response (2 hours)
-3. Debrief and feedback (30 min)
-4. Document lessons learned
-
----
-
-## Appendices
-
-### Appendix A: Breach Notification Templates
-
-Email templates stored in: `emails/` directory
-
-- SecurityIncidentNotification.tsx
-- PasswordResetForced.tsx
-- AccountSuspended.tsx
-
-### Appendix B: Legal Requirements
-
-**GDPR Article 33**: Breach notification to supervisory authority
-
-- Required within 72 hours
-- Must include nature of breach, affected data, contact point, likely consequences, measures taken
-
-**GDPR Article 34**: Breach notification to data subjects
-
-- Required if "high risk to rights and freedoms"
-- Clear and plain language
-- Recommendations for individuals to mitigate
-
-**CCPA Requirements**:
-
-- No specific breach notification timeline
-- Follow California Civil Code Section 1798.82
-
-### Appendix C: Incident Log
-
-All incidents logged in: `docs/incidents/`
-
-Format: `YYYY-MM-DD-incident-brief-description.md`
-
----
-
-## Document Maintenance
-
-**Review Schedule**: Quarterly  
-**Next Review**: February 2026  
-**Version History**:
-
-- v1.0 (2025-11-06): Initial creation
-- [Future updates]
-
-**Change Approval**: Security Lead + Engineering Manager
-
----
-
-## Quick Reference Card
-
-**For immediate incidents**:
-
-1. ⚠️ Alert #security-incidents Slack channel
-2. 🔒 Contain: Revoke access, disable compromised systems
-3. 📝 Document: Screenshot, export logs, preserve evidence
-4. 🔍 Assess: Determine scope using assessment template
-5. 📢 Notify: 72-hour GDPR clock starts for Tier 1 PII breaches
-6. 🔧 Remediate: Fix root cause, rotate credentials
-7. 📊 Review: Post-incident meeting within 1 week
-
-**Emergency Contacts**: security@proofound.io
+1. Acknowledge and assign owner.
+2. Preserve redacted evidence.
+3. Contain the unsafe route, token, projection, upload, reveal, or credential.
+4. Assess data exposure.
+5. Verify containment with tests and safe manual checks.
+6. Coordinate legal/privacy notification if needed.
+7. Patch, test, document, and record residual risk.

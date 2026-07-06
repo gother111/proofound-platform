@@ -52,6 +52,68 @@ function buildSource(overrides: Partial<HiringCorridorSource> = {}): HiringCorri
 }
 
 describe('buildHiringCorridorSnapshot', () => {
+  it('keeps organization-facing early corridor copy proof-review led', () => {
+    const shortlistedSnapshot = buildHiringCorridorSnapshot({
+      source: buildSource(),
+      viewerUserId: 'org-user-1',
+      perspective: 'organization',
+    });
+    const pendingIntroSnapshot = buildHiringCorridorSnapshot({
+      source: buildSource({
+        introId: 'intro-1',
+        introState: 'pending_candidate_interest',
+        introUpdatedAt: new Date('2026-03-11T10:00:00.000Z'),
+        introLastActivityAt: new Date('2026-03-11T10:15:00.000Z'),
+      }),
+      viewerUserId: 'org-user-1',
+      perspective: 'organization',
+    });
+    const orgConfirmIntroSnapshot = buildHiringCorridorSnapshot({
+      source: buildSource({
+        introId: 'intro-1',
+        introState: 'pending_org_confirmation',
+        introUpdatedAt: new Date('2026-03-11T10:00:00.000Z'),
+        introLastActivityAt: new Date('2026-03-11T10:15:00.000Z'),
+      }),
+      viewerUserId: 'org-user-1',
+      perspective: 'organization',
+    });
+    const advancedSnapshot = buildHiringCorridorSnapshot({
+      source: buildSource({
+        introId: 'intro-1',
+        introState: 'interview_handoff',
+        introUpdatedAt: new Date('2026-03-11T10:00:00.000Z'),
+        introLastActivityAt: new Date('2026-03-11T10:15:00.000Z'),
+        conversationId: 'conversation-1',
+        conversationStage: 'revealed',
+        interviewId: 'interview-1',
+        interviewStatus: 'completed',
+        interviewScheduledAt: new Date('2026-03-13T09:00:00.000Z'),
+        interviewCompletedAt: new Date('2026-03-13T09:30:00.000Z'),
+        decisionId: 'decision-1',
+        decisionState: 'advance',
+        decisionUpdatedAt: new Date('2026-03-13T11:00:00.000Z'),
+      }),
+      viewerUserId: 'org-user-1',
+      perspective: 'organization',
+    });
+
+    const visibleCopy = [
+      shortlistedSnapshot?.summary,
+      shortlistedSnapshot?.nextAction.description,
+      pendingIntroSnapshot?.summary,
+      pendingIntroSnapshot?.nextAction.description,
+      orgConfirmIntroSnapshot?.summary,
+      orgConfirmIntroSnapshot?.nextAction.description,
+      advancedSnapshot?.summary,
+    ].join(' ');
+
+    expect(visibleCopy).toContain('proof-review participant');
+    expect(visibleCopy).toContain('still in blind review');
+    expect(visibleCopy).not.toContain('The candidate');
+    expect(visibleCopy).not.toContain('the candidate');
+  });
+
   it('maps reveal approval to interview scheduling for the organization view', () => {
     const snapshot = buildHiringCorridorSnapshot({
       source: buildSource({
@@ -128,7 +190,7 @@ describe('buildHiringCorridorSnapshot', () => {
           id: 'engagement-1',
           decisionId: 'decision-1',
           status: 'pending_candidate_confirmation',
-          statusLabel: 'Waiting for candidate confirmation',
+          statusLabel: 'Waiting for proof-review participant confirmation',
           engagementType: 'full_time',
           createdAt: '2026-03-13T11:00:00.000Z',
           candidateConfirmedAt: null,
@@ -138,7 +200,7 @@ describe('buildHiringCorridorSnapshot', () => {
           verifiedAt: null,
           workflow: {
             state: 'pending_candidate_confirmation',
-            displayState: 'Waiting for candidate confirmation',
+            displayState: 'Waiting for proof-review participant confirmation',
             allowedActions: [],
           },
         },
@@ -152,9 +214,100 @@ describe('buildHiringCorridorSnapshot', () => {
         currentStep: 'engagement_recorded',
         nextAction: expect.objectContaining({
           id: 'confirm_engagement',
+          description:
+            'The engagement has been recorded and now needs your confirmation to finish the assignment-review flow.',
         }),
+        summary:
+          'The engagement has been recorded and the assignment-review flow is waiting for your confirmation.',
       })
     );
+  });
+
+  it('keeps organization engagement-recorded copy proof-review participant led', () => {
+    const snapshot = buildHiringCorridorSnapshot({
+      source: buildSource({
+        introId: 'intro-1',
+        introState: 'interview_handoff',
+        introUpdatedAt: new Date('2026-03-11T10:00:00.000Z'),
+        introLastActivityAt: new Date('2026-03-11T10:15:00.000Z'),
+        conversationId: 'conversation-1',
+        conversationStage: 'revealed',
+        interviewId: 'interview-1',
+        interviewStatus: 'completed',
+        interviewScheduledAt: new Date('2026-03-13T09:00:00.000Z'),
+        interviewCompletedAt: new Date('2026-03-13T09:30:00.000Z'),
+        decisionId: 'decision-1',
+        decisionState: 'hire',
+        decisionUpdatedAt: new Date('2026-03-13T11:00:00.000Z'),
+        engagementVerification: {
+          id: 'engagement-1',
+          decisionId: 'decision-1',
+          status: 'pending_organization_confirmation',
+          statusLabel: 'Waiting for organization confirmation',
+          engagementType: 'full_time',
+          createdAt: '2026-03-13T11:00:00.000Z',
+          candidateConfirmedAt: null,
+          organizationConfirmedAt: null,
+          uploadedEvidencePresent: false,
+          proofHookStatus: 'not_ready',
+          verifiedAt: null,
+          workflow: {
+            state: 'pending_organization_confirmation',
+            displayState: 'Waiting for organization confirmation',
+            allowedActions: [],
+          },
+        },
+      }),
+      viewerUserId: 'org-user-1',
+      perspective: 'organization',
+    });
+
+    expect(snapshot?.nextAction.description).toBe(
+      'Record the engagement details so the proof-review participant can complete the final verification step.'
+    );
+    expect(snapshot?.nextAction.description).not.toContain('so the candidate can complete');
+  });
+
+  it('keeps pending hire-state corridor copy engagement-led instead of hire-decision led', () => {
+    const baseSource = buildSource({
+      introId: 'intro-1',
+      introState: 'interview_handoff',
+      introUpdatedAt: new Date('2026-03-11T10:00:00.000Z'),
+      introLastActivityAt: new Date('2026-03-11T10:15:00.000Z'),
+      conversationId: 'conversation-1',
+      conversationStage: 'revealed',
+      interviewId: 'interview-1',
+      interviewStatus: 'completed',
+      interviewScheduledAt: new Date('2026-03-13T09:00:00.000Z'),
+      interviewCompletedAt: new Date('2026-03-13T09:30:00.000Z'),
+      decisionId: 'decision-1',
+      decisionState: 'hire',
+      decisionUpdatedAt: new Date('2026-03-13T11:00:00.000Z'),
+      engagementVerification: null,
+    });
+
+    const orgSnapshot = buildHiringCorridorSnapshot({
+      source: baseSource,
+      viewerUserId: 'org-user-1',
+      perspective: 'organization',
+    });
+    const individualSnapshot = buildHiringCorridorSnapshot({
+      source: baseSource,
+      viewerUserId: 'candidate-1',
+      perspective: 'individual',
+    });
+
+    const visibleCopy = [
+      orgSnapshot?.summary,
+      orgSnapshot?.nextAction.description,
+      individualSnapshot?.summary,
+      individualSnapshot?.nextAction.description,
+    ].join(' ');
+
+    expect(visibleCopy).toContain('engagement decision is recorded');
+    expect(visibleCopy).toContain('decision stage');
+    expect(visibleCopy).not.toContain('hire decision');
+    expect(visibleCopy).not.toContain('The decision is hire');
   });
 
   it('keeps an active scheduled interview ahead of a completed advance decision', () => {
@@ -183,6 +336,52 @@ describe('buildHiringCorridorSnapshot', () => {
         nextAction: expect.objectContaining({
           id: 'prepare_for_interview',
         }),
+      })
+    );
+  });
+
+  it('describes completed engagement verification as assignment-review flow completion', () => {
+    const snapshot = buildHiringCorridorSnapshot({
+      source: buildSource({
+        introId: 'intro-1',
+        introState: 'interview_handoff',
+        introUpdatedAt: new Date('2026-03-11T10:00:00.000Z'),
+        introLastActivityAt: new Date('2026-03-11T10:15:00.000Z'),
+        conversationId: 'conversation-1',
+        conversationStage: 'revealed',
+        interviewId: 'interview-1',
+        interviewStatus: 'completed',
+        interviewScheduledAt: new Date('2026-03-13T09:00:00.000Z'),
+        interviewCompletedAt: new Date('2026-03-13T09:30:00.000Z'),
+        decisionId: 'decision-1',
+        decisionState: 'hire',
+        decisionUpdatedAt: new Date('2026-03-13T11:00:00.000Z'),
+        engagementVerification: {
+          id: 'engagement-1',
+          decisionId: 'decision-1',
+          status: 'verified',
+          engagementType: 'contract_consulting',
+          createdAt: '2026-03-13T11:00:00.000Z',
+          candidateConfirmedAt: '2026-03-13T11:10:00.000Z',
+          organizationConfirmedAt: '2026-03-13T11:05:00.000Z',
+          uploadedEvidencePresent: false,
+          proofHookStatus: 'not_ready',
+          verifiedAt: '2026-03-13T11:15:00.000Z',
+          workflow: {
+            state: 'verified',
+            displayState: 'Verified',
+            allowedActions: [],
+          },
+        },
+      }),
+      viewerUserId: 'org-user-1',
+      perspective: 'organization',
+    });
+
+    expect(snapshot.nextAction).toEqual(
+      expect.objectContaining({
+        id: 'corridor_complete',
+        description: 'The engagement is verified and the assignment-review flow is complete.',
       })
     );
   });

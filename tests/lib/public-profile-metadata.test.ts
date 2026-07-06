@@ -4,8 +4,8 @@ import {
   buildUnavailablePublicProfileMetadata,
 } from '@/lib/seo/public-profile-metadata';
 
-describe('public profile metadata helpers', () => {
-  it('builds canonical metadata for public profile paths', () => {
+describe('Public Page metadata helpers', () => {
+  it('builds canonical metadata for Public Page paths', () => {
     const metadata = buildPublicProfileMetadata({
       title: 'Proofound Public Page',
       description: 'Public Page summary',
@@ -23,10 +23,10 @@ describe('public profile metadata helpers', () => {
     const metadata = buildPublicProfileMetadata({
       title: 'Example',
       description: 'Example',
-      path: '//p//abc123',
+      path: '//portfolio//jane',
     });
 
-    expect(metadata.alternates?.canonical).toContain('/p/abc123');
+    expect(metadata.alternates?.canonical).toContain('/portfolio/jane');
   });
 
   it('normalizes missing leading slash in paths', () => {
@@ -41,9 +41,9 @@ describe('public profile metadata helpers', () => {
 
   it('omits canonical URL when canonicalPath is null', () => {
     const metadata = buildPublicProfileMetadata({
-      title: 'Snippet',
-      description: 'Snippet metadata',
-      path: '/p/abc123',
+      title: 'Public Page',
+      description: 'Public Page metadata',
+      path: '/portfolio/jane',
       canonicalPath: null,
     });
 
@@ -51,7 +51,7 @@ describe('public profile metadata helpers', () => {
   });
 
   it('returns safe unavailable metadata copy', () => {
-    const metadata = buildUnavailablePublicProfileMetadata('/p/missing-token');
+    const metadata = buildUnavailablePublicProfileMetadata('/portfolio/missing-handle');
     expect(metadata.title).toBe('Public Page Unavailable | Proofound');
     expect(String(metadata.description)).toContain('unavailable');
     expect(metadata.alternates?.canonical).toBeUndefined();

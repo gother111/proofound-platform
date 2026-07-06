@@ -10,6 +10,11 @@ import {
   verifyExplicitAssignmentAccess,
   verifyExplicitAssignmentMutationAccess,
 } from '@/lib/assignments/access';
+import {
+  buildVisualAssignmentDetailResponse,
+  getVisualAssignmentFixtureById,
+  visualAssignmentFixturesEnabled,
+} from '@/lib/assignments/visual-fixtures';
 
 export const dynamic = 'force-dynamic';
 
@@ -76,7 +81,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
     const { user } = authContext;
     const { id: assignmentId } = await params;
-    const body = await request.json();
+    let body: Record<string, unknown>;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
 
     const access = await verifyExplicitAssignmentMutationAccess(
       user.id,
@@ -89,6 +99,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     const validatedOutcomes = OutcomesArraySchema.parse(body.outcomes);
+
+    if (visualAssignmentFixturesEnabled() && access.orgId) {
+      const visualAssignment = getVisualAssignmentFixtureById(assignmentId, access.orgId);
+      if (visualAssignment) {
+        return NextResponse.json({ success: true, count: validatedOutcomes.length });
+      }
+    }
 
     // Delete existing outcomes for this assignment
     await db.delete(assignmentOutcomes).where(eq(assignmentOutcomes.assignmentId, assignmentId));
@@ -155,6 +172,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const accessResponse = assignmentAccessResponse(access);
     if (accessResponse) {
       return accessResponse;
+    }
+
+    if (visualAssignmentFixturesEnabled() && access.orgId) {
+      const visualAssignment = getVisualAssignmentFixtureById(assignmentId, access.orgId);
+      if (visualAssignment) {
+        return NextResponse.json({
+          outcomes: buildVisualAssignmentDetailResponse(visualAssignment).outcomes,
+        });
+      }
     }
 
     const outcomes = await db.query.assignmentOutcomes.findMany({

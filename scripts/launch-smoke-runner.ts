@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 
 import fs from 'node:fs/promises';
+import net from 'node:net';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { pathToFileURL } from 'node:url';
 
 import {
   LAUNCH_SMOKE_FRESHNESS_THRESHOLD_MINUTES,
@@ -17,6 +19,7 @@ import {
   type LaunchSmokeCheckResult,
 } from '../src/lib/launch/smoke-artifact';
 import { buildAiLaunchSmokeState } from '../src/lib/launch/ai-smoke-state';
+import { buildLaunchSmokeScenarioEnv } from '../src/lib/launch/smoke-runner-env';
 
 function readArg(flag: string) {
   const index = process.argv.indexOf(flag);
@@ -60,6 +63,94 @@ function collectCommandOutput(run: ReturnType<typeof spawnSync>) {
   return `${run.stdout ?? ''}\n${run.stderr ?? ''}`.trim();
 }
 
+function sleep(ms: number) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+function getLocalBaseUrlSocket(baseUrl: string) {
+  try {
+    const parsed = new URL(baseUrl);
+    const port = parsed.port
+      ? Number.parseInt(parsed.port, 10)
+      : parsed.protocol === 'https:'
+        ? 443
+        : 80;
+
+    if (!Number.isFinite(port)) {
+      return null;
+    }
+
+    return {
+      host: parsed.hostname.replace(/^\[|\]$/g, ''),
+      port,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function getCommandReleaseBaseUrl(
+  scenarioEnv: Record<string, string | undefined>,
+  fallbackBaseUrl: string
+) {
+  const configuredBaseUrl = scenarioEnv.BASE_URL?.trim();
+  if (configuredBaseUrl) {
+    return configuredBaseUrl;
+  }
+
+  const configuredPort = Number.parseInt(
+    scenarioEnv.PLAYWRIGHT_PORT || process.env.PLAYWRIGHT_PORT || '33100',
+    10
+  );
+  return Number.isFinite(configuredPort) ? `http://127.0.0.1:${configuredPort}` : fallbackBaseUrl;
+}
+
+function isPortAcceptingConnections(host: string, port: number) {
+  return new Promise<boolean>((resolve) => {
+    const socket = net.createConnection({ host, port });
+    let settled = false;
+    const finish = (result: boolean) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      socket.destroy();
+      resolve(result);
+    };
+
+    socket.setTimeout(250);
+    socket.once('connect', () => finish(true));
+    socket.once('timeout', () => finish(false));
+    socket.once('error', () => finish(false));
+  });
+}
+
+async function waitForLocalPlaywrightServerRelease(baseUrl: string) {
+  if (!isLocalLaunchBaseUrl(baseUrl)) {
+    return;
+  }
+
+  const socket = getLocalBaseUrlSocket(baseUrl);
+  if (!socket) {
+    return;
+  }
+
+  const timeoutMs = Number.parseInt(
+    process.env.LAUNCH_SMOKE_LOCAL_SERVER_RELEASE_TIMEOUT_MS || '10000',
+    10
+  );
+  const deadline = Date.now() + Math.max(timeoutMs, 0);
+
+  while (Date.now() < deadline) {
+    if (!(await isPortAcceptingConnections(socket.host, socket.port))) {
+      return;
+    }
+    await sleep(250);
+  }
+}
+
 async function main() {
   const scope = readSmokeScope();
   const artifactPath =
@@ -73,7 +164,15 @@ async function main() {
   const reporter = process.env.LAUNCH_SMOKE_REPORTER ?? 'basic';
   const scenarios = getLaunchSmokeMatrix(scope);
   const checks: LaunchSmokeCheckResult[] = [];
-  const sharedEnv = { BASE_URL: baseUrl };
+  const sharedEnv = {
+    BASE_URL: baseUrl,
+    ...(executionMode === 'local'
+      ? {
+          PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK: '1',
+          PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE: '1',
+        }
+      : {}),
+  };
   const ai = buildAiLaunchSmokeState({ executionMode });
 
   console.log(`Running ${scope} launch smoke checks against ${baseUrl} (${executionMode})`);
@@ -84,6 +183,7 @@ async function main() {
     const outputSegments: string[] = [];
     let status: LaunchSmokeCheckResult['status'] = 'pass';
     let message: string | undefined;
+    let commandReleaseBaseUrl = baseUrl;
 
     if (scenario.runner.kind === 'vitest') {
       const run = executeCommand(
@@ -97,10 +197,13 @@ async function main() {
         message = `${scenario.label} failed`;
       }
     } else {
-      const scenarioEnv = {
-        ...scenario.runner.env,
-        ...sharedEnv,
-      };
+      const scenarioEnv = buildLaunchSmokeScenarioEnv({
+        executionMode,
+        baseUrl,
+        sharedEnv,
+        scenarioEnv: scenario.runner.env,
+      });
+      commandReleaseBaseUrl = getCommandReleaseBaseUrl(scenarioEnv, baseUrl);
 
       for (const preCommand of scenario.runner.preCommands ?? []) {
         const run = executeCommand(preCommand.command, scenarioEnv);
@@ -148,6 +251,10 @@ async function main() {
     } else {
       console.error(summaryLine);
     }
+
+    if (scenario.runner.kind === 'command') {
+      await waitForLocalPlaywrightServerRelease(commandReleaseBaseUrl);
+    }
   }
 
   const generatedAt = new Date().toISOString();
@@ -176,10 +283,12 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  console.error(
-    'Launch smoke runner failed:',
-    error instanceof Error ? error.message : String(error)
-  );
-  process.exit(1);
-});
+if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
+  main().catch((error) => {
+    console.error(
+      'Launch smoke runner failed:',
+      error instanceof Error ? error.message : String(error)
+    );
+    process.exit(1);
+  });
+}

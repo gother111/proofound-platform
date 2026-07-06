@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "findingId": "fnd_sig-feat-route-14511db2ac-aa2b18_434490ad70",
+  "featureId": "feat_route_14511db2ac",
+  "title": "Warning thresholds are looser than the targets reported to operators",
+  "category": "bug",
+  "severity": "medium",
+  "confidence": "high",
+  "triage": "confirmed-bug",
+  "evidence": [
+    {
+      "path": "app/api/cron/health-check/route.ts",
+      "startLine": 72,
+      "endLine": 75,
+      "symbol": "GET",
+      "quote": "if (metrics.ttsc && metrics.ttsc.value > 35) {"
+    },
+    {
+      "path": "app/api/cron/health-check/route.ts",
+      "startLine": 87,
+      "endLine": 90,
+      "symbol": "GET",
+      "quote": "if (metrics.ttfqi && metrics.ttfqi.value > 96) {"
+    },
+    {
+      "path": "app/api/cron/health-check/route.ts",
+      "startLine": 103,
+      "endLine": 106,
+      "symbol": "GET",
+      "quote": "if (metrics.pacLift.lift < 15) {"
+    },
+    {
+      "path": "app/api/cron/health-check/route.ts",
+      "startLine": 112,
+      "endLine": 115,
+      "symbol": "GET",
+      "quote": "if (metrics.pacLift.lift < 12) {"
+    }
+  ],
+  "reasoning": "The route messages state targets of 30 TTSC days, 72 TTFQI hours, 20% proof-fit acceptance lift, and 15% proof-fit contract lift, but the actual comparisons only warn above 35 days, above 96 hours, below 15%, and below 12%. Values that miss the stated targets, such as TTSC 34 days or TTFQI 90 hours, are returned as healthy. This creates false-positive monitoring results for a production health endpoint.",
+  "reproduction": "Mock metrics.ttsc.value as 34 and metrics.ttfqi.value as 90. The endpoint returns checks.ttsc/checks.ttfqi as healthy even though its own warning messages define those as exceeding the targets.",
+  "recommendation": "Make the comparisons match the stated targets, or rename the messages to explicitly describe separate warning thresholds. If the intended policy has both target and warning bands, encode both names clearly in constants.",
+  "whyTestsDoNotAlreadyCoverThis": "No linked route tests were provided, and the threshold policy is encoded inline without tests covering boundary values between target and current warning thresholds.",
+  "suggestedRegressionTest": "Add boundary tests asserting TTSC values above 30, TTFQI values above 72, PAC acceptance lift below 20, and PAC contract lift below 15 produce warning status if those are the intended targets.",
+  "minimumFixScope": "Update the inline threshold constants/comparisons and add focused boundary coverage for this route.",
+  "status": "fixed",
+  "history": [
+    {
+      "runId": null,
+      "kind": "triage",
+      "status": "fixed",
+      "note": "Fixed manually: health-check warning thresholds now match reported TTSC, TTFQI, PAC acceptance, and PAC contract targets; covered by tests/api/cron-health-check-route.test.ts.",
+      "reasoning": null,
+      "commands": [],
+      "createdAt": "2026-05-16T17:18:25.449Z"
+    }
+  ],
+  "signature": "sig_feat-route-14511db2ac_aa2b18217d",
+  "linkedPatchAttemptIds": [],
+  "createdByRunId": "20260516T164325-52e1d0",
+  "createdAt": "2026-05-16T16:54:43.200Z",
+  "updatedAt": "2026-05-16T17:18:25.448Z"
+}

@@ -1,0 +1,31 @@
+> proofound@0.1.0 test:launch:routes
+> npm run test -- tests/api/launch-surface-inventory.test.ts tests/api/launch-page-inventory.test.ts tests/api/archived-api-handlers-route.test.ts src/lib/__tests__/middleware-launch-archive.test.ts
+
+
+> proofound@0.1.0 test
+> node ./scripts/run-vitest-with-timeout.mjs tests/api/launch-surface-inventory.test.ts tests/api/launch-page-inventory.test.ts tests/api/archived-api-handlers-route.test.ts src/lib/__tests__/middleware-launch-archive.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+ ✓ tests/api/launch-surface-inventory.test.ts  (4 tests) 50ms
+ ✓ src/lib/__tests__/middleware-launch-archive.test.ts  (6 tests) 47ms
+ ✓ tests/api/launch-page-inventory.test.ts  (5 tests) 119ms
+ ✓ tests/api/archived-api-handlers-route.test.ts  (10 tests) 6ms
+
+ Test Files  4 passed (4)
+      Tests  25 passed (25)
+   Start at  18:54:35
+   Duration  1.40s (transform 263ms, setup 454ms, collect 739ms, tests 222ms, environment 1.09s, prepare 220ms)

@@ -1,8 +1,8 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import MatchingPage from '@/app/app/i/matching/page';
+import MatchingPage from '@/app/app/i/matching/(workspace)/page';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
@@ -20,7 +20,14 @@ vi.mock('@/components/matching/MatchingProfileSetup', () => ({
 }));
 
 vi.mock('@/components/matching/EnhancedMatchFilters', () => ({
-  EnhancedMatchFilters: () => <div>filters</div>,
+  EnhancedMatchFilters: ({ onFiltersChange }: any) => (
+    <button
+      type="button"
+      onClick={() => onFiltersChange({ skillDomains: [], locationMode: 'onsite' })}
+    >
+      Apply onsite filter
+    </button>
+  ),
 }));
 
 vi.mock('@/components/matching/MatchResultCard', () => ({
@@ -55,13 +62,13 @@ describe('MatchingPage soft-gated state', () => {
     vi.clearAllMocks();
   });
 
-  it('renders browse-readiness guidance when personalized browse is soft-gated', async () => {
+  it('renders introduction readiness guidance when assignment review is soft-gated', async () => {
     const blockedPayload = {
       items: [],
       meta: {
         softGated: true,
         message:
-          'Browsing is open, but add a few recent skills and one preference to personalize results.',
+          'Browsing is open, but add a few recent skills and one preference so assignment reviews can reach you safely.',
       },
       eligibility: {
         criteria: {
@@ -79,7 +86,7 @@ describe('MatchingPage soft-gated state', () => {
         {
           id: 'update-public-portfolio',
           title: 'Strengthen Public Page proof',
-          description: 'Refresh proof-backed work examples and trust signals.',
+          description: 'Refresh proof-backed work examples and verification checks.',
           actionUrl: '/app/i/profile?profileView=full&tab=proof_packs',
         },
       ],
@@ -125,10 +132,157 @@ describe('MatchingPage soft-gated state', () => {
     render(<MatchingPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Browse readiness')).toBeInTheDocument();
+      expect(screen.getByText('Introductions need more proof')).toBeInTheDocument();
     });
 
+    expect(
+      screen.getByText(
+        'Browsing is open, but add a few recent skills and one preference so assignment reviews can reach you safely.'
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'You can keep browsing, but introductions open after the required proof, one accepted verification, and intro constraints are current.'
+      )
+    ).toBeInTheDocument();
     expect(screen.getByText('Recent skills')).toBeInTheDocument();
     expect(screen.getByText('Strengthen Public Page proof')).toBeInTheDocument();
+    expect(document.body.textContent).not.toContain('personalized matching');
+    expect(document.body.textContent).not.toContain('introductions unlock');
+  });
+
+  it('renders the empty matching corridor when browsing is eligible but no assignments are ready', async () => {
+    const fetchMock = vi.fn(async (input: string | URL, init?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input.toString();
+
+      if (url.startsWith('/api/csrf-token')) {
+        return {
+          ok: true,
+          json: async () => ({ token: 'csrf-token' }),
+        };
+      }
+
+      if (url === '/api/matching-profile') {
+        return {
+          ok: true,
+          json: async () => ({ profile: { id: 'user-1' } }),
+        };
+      }
+
+      if (url === '/api/individual/readiness') {
+        return {
+          ok: true,
+          json: async () => ({
+            topActions: [
+              {
+                id: 'visual-match-preferences',
+                title: 'Tune review preferences',
+                description:
+                  'Adjust work mode, availability, and compensation before sending interest.',
+                actionUrl: '/app/i/matching/preferences',
+              },
+            ],
+          }),
+        };
+      }
+
+      if (url === '/api/match/profile' && init?.method === 'POST') {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ items: [], meta: { total: 0 } }),
+        };
+      }
+
+      throw new Error(`Unexpected fetch URL: ${url}`);
+    });
+
+    (global as any).fetch = fetchMock;
+
+    render(<MatchingPage />);
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { name: 'No assignment reviews yet' })
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('heading', { name: 'No matches yet' })).not.toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Nothing needs your attention right now. Keep your proof and preferences current so new assignment reviews can land cleanly.'
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText('Tune review preferences')).toBeInTheDocument();
+    expect(screen.queryByText('Introductions need more proof')).not.toBeInTheDocument();
+  });
+
+  it('keeps filtered-empty copy review-led instead of fit-led', async () => {
+    const fetchMock = vi.fn(async (input: string | URL, init?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input.toString();
+
+      if (url.startsWith('/api/csrf-token')) {
+        return {
+          ok: true,
+          json: async () => ({ token: 'csrf-token' }),
+        };
+      }
+
+      if (url === '/api/matching-profile') {
+        return {
+          ok: true,
+          json: async () => ({ profile: { id: 'user-1' } }),
+        };
+      }
+
+      if (url === '/api/individual/readiness') {
+        return {
+          ok: true,
+          json: async () => ({ topActions: [] }),
+        };
+      }
+
+      if (url === '/api/match/profile' && init?.method === 'POST') {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            items: [
+              {
+                id: 'match-1',
+                assignmentId: 'assignment-1',
+                assignment: {
+                  role: 'Proof operations lead',
+                  locationMode: 'remote',
+                  workMode: 'contract',
+                },
+              },
+            ],
+          }),
+        };
+      }
+
+      throw new Error(`Unexpected fetch URL: ${url}`);
+    });
+
+    (global as any).fetch = fetchMock;
+
+    render(<MatchingPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('match card')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Apply onsite filter' }));
+
+    expect(
+      await screen.findByText(
+        'Review filters are hiding the available assignment reviews. Loosen one filter to widen the review list.'
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText('No assignment reviews fit the current filters')
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Loosen one filter to widen the corridor.')).not.toBeInTheDocument();
   });
 });

@@ -27,7 +27,12 @@ export async function POST(request: NextRequest) {
       return oversizedResponse;
     }
 
-    const formData = await request.formData();
+    let formData: FormData;
+    try {
+      formData = await request.formData();
+    } catch {
+      return NextResponse.json({ error: 'Invalid form data' }, { status: 400 });
+    }
     const file = formData.get('file') as File | null;
     const category = formData.get('category') as string | null; // 'proof', 'certificate', 'artifact'
 

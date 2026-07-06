@@ -15,10 +15,10 @@ import * as React from 'react';
 
 interface DeletionScheduledProps {
   scheduledDate: Date;
-  cancellationUrl: string;
+  settingsUrl: string;
 }
 
-export const DeletionScheduled = ({ scheduledDate, cancellationUrl }: DeletionScheduledProps) => {
+export const DeletionScheduled = ({ scheduledDate, settingsUrl }: DeletionScheduledProps) => {
   const formattedDate = new Intl.DateTimeFormat('en-US', {
     dateStyle: 'full',
     timeStyle: 'short',
@@ -27,18 +27,18 @@ export const DeletionScheduled = ({ scheduledDate, cancellationUrl }: DeletionSc
   return (
     <Html>
       <Head />
-      <Preview>Your Proofound account deletion has been scheduled</Preview>
+      <Preview>Your Proofound account deletion request is being processed</Preview>
       <Body style={main}>
         <Container style={container}>
-          <Heading style={h1}>Account Deletion Scheduled</Heading>
+          <Heading style={h1}>Account Deletion Request Received</Heading>
           <Text style={text}>
-            We&apos;ve received your request to delete your Proofound account. Your account is scheduled
-            for permanent deletion on <strong>{formattedDate}</strong>.
+            We&apos;ve received your request to delete your Proofound account. Proofound processes
+            account deletion as an immediate, irreversible lifecycle request.
           </Text>
 
           <Section style={warningBox}>
             <Text style={warningText}>
-              🕒 You have <strong>30 days</strong> to cancel this request
+              Request recorded on <strong>{formattedDate}</strong>
             </Text>
           </Section>
 
@@ -46,49 +46,46 @@ export const DeletionScheduled = ({ scheduledDate, cancellationUrl }: DeletionSc
             <strong>What will be deleted:</strong>
           </Text>
           <Text style={listText}>
-            • Your profile information (name, bio, photo)
+            • Profile and account identity fields
             <br />
-            • Your matches and connections
+            • Proof Packs, proof items, and public portfolio projections
             <br />
-            • Your messages and conversations
-            <br />
-            • Your preferences and settings
-            <br />
-            • Your activity history
+            • Matching, intro, reveal, interview, and decision records where they identify you
+            <br />• Preferences, settings, and account activity that are not legally retained
           </Text>
 
           <Text style={text}>
-            Some data may be retained for 90 days for legal compliance and fraud prevention, after
-            which it will be permanently deleted.
+            Limited metadata may be retained only when required for legal compliance, fraud
+            prevention, security, or audit obligations, and is minimized where possible.
           </Text>
 
           <Hr style={divider} />
 
           <Text style={text}>
-            <strong>Changed your mind?</strong> You can cancel this deletion request at any time
-            within the next 30 days.
+            <strong>Need to review account privacy settings?</strong> Use the settings link below
+            while your authenticated session is still available.
           </Text>
 
           <Section style={buttonContainer}>
-            <Button style={button} href={cancellationUrl}>
-              Cancel Deletion
+            <Button style={button} href={settingsUrl}>
+              Review Privacy Settings
             </Button>
           </Section>
 
           <Text style={text}>
             Or copy and paste this link in your browser:{' '}
-            <Link href={cancellationUrl} style={link}>
-              {cancellationUrl}
+            <Link href={settingsUrl} style={link}>
+              {settingsUrl}
             </Link>
           </Text>
 
           <Text style={reminderText}>
-            📧 We&apos;ll send you a reminder email 7 days before your account is deleted.
+            We do not support a scheduled cancellation window for account deletion.
           </Text>
 
           <Text style={footer}>
             If you didn&apos;t request account deletion, please contact our support team immediately
-            at privacy@proofound.com
+            at privacy@proofound.io
           </Text>
         </Container>
       </Body>
@@ -192,4 +189,3 @@ const footer = {
   lineHeight: '1.5',
   marginTop: '32px',
 };
-

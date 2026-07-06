@@ -1,0 +1,230 @@
+[
+  {
+    "viewport": "desktop",
+    "route": {
+      "role": "org",
+      "name": "org-home",
+      "path": "/app/o/test-org/home",
+      "cookie": "org_member"
+    },
+    "ok": true,
+    "state": {
+      "href": "http://localhost:33122/app/o/test-org/home",
+      "h1": "Test Organization",
+      "hasHorizontalScroll": false,
+      "bodyText": "Skip to main content\nOverview\nAssignments\nCommunications\nOrganization Trust Page\nPublic Preview\nProofound\n\nOverview\n\nTO\nTest Organization\n\nActive organization corridor console\n\nSigned in as Manager\nCORRIDOR STATUS\nAction Required\nComplete Trust Profile\n\nBefore you can publish assignments and receive proof-backed matches, complete your organization profile. Domain verification, mission statement, and operational context are required to establish corridor safety.\n\nProgress: 0/3 trust elements completed\nComplete Trust Profile\nCollaborator Circle\n\nMembers authorized to review matches\n\nC\nCollaborator\nManager",
+      "cookieBannerVisible": false
+    },
+    "errors": [],
+    "screenshot": ".artifacts/ux-verification-2026-05-20/clean-desktop-org-home.png"
+  },
+  {
+    "viewport": "desktop",
+    "route": {
+      "role": "org",
+      "name": "org-assignments",
+      "path": "/app/o/test-org/assignments",
+      "cookie": "org_member"
+    },
+    "ok": true,
+    "state": {
+      "href": "http://localhost:33122/app/o/test-org/assignments",
+      "h1": "Assignments",
+      "hasHorizontalScroll": false,
+      "bodyText": "Skip to main content\nOverview\nAssignments\nCommunications\nOrganization Trust Page\nPublic Preview\nProofound\n\nAssignments\n\nTO\nAssignment corridor\nOrganization\n/ Assignments\nAssignments\n\nAssignment cards own their matching corridor, candidate review, and pipeline context.\n\nCreate assignment\nOpen matching with one clear assignment\n\nStart with the role context reviewers need: skills, constraints, and proof expectations. Candidate identity stays protected until the corridor is ready.\n\nCreate first assignment\n\nMatching stays quiet until trust and role context are ready.\n\nCORRIDOR SEQUENCE\n\nTrust profile\n\nBasics make the review corridor credible\n\nAssignment\n\nDefine one role with clear proof requirements\n\nCandidate signals\n\nReview starts after the corridor is ready\n\nPublish assignment\n\nCreate and publish an assignment to start attracting candidate signals.\n\nAdd skill requirements\n\nDefine required ",
+      "cookieBannerVisible": false
+    },
+    "errors": [],
+    "screenshot": ".artifacts/ux-verification-2026-05-20/clean-desktop-org-assignments.png"
+  },
+  {
+    "viewport": "desktop",
+    "route": {
+      "role": "org",
+      "name": "org-communications",
+      "path": "/app/o/test-org/communications",
+      "cookie": "org_member"
+    },
+    "ok": true,
+    "state": {
+      "href": "http://localhost:33122/app/o/test-org/communications",
+      "h1": "Communications",
+      "hasHorizontalScroll": false,
+      "bodyText": "Skip to main content\nOverview\nAssignments\nCommunications\nOrganization Trust Page\nPublic Preview\nProofound\n\nCommunications\n\nTO\n\nHIRING CORRIDOR\n\nCommunications\nMessages\nThreads, intros, and reveal requests.\nInterviews\nScheduling, feedback, and handoff.\nSecure Corridor\n\nMessages, scheduling, and reveal steps stay inside the consent-bound corridor.\n\nMessages\n\nAssignment conversations stay private and stage-aware. Candidate identity remains protected until a consented reveal opens the next step.\n\nMessages\n\nConversations appear after a proof-safe introduction.\n\nNo conversations yet\n\nCreate an assignment and approve an introduction before messages open here.\n\nIdentity stays protected until the corridor is ready.\n\nSelect a conversation\n\nConversations appear after an assignment and introduction are ready. Choose a thread when one opens in the list.\n\nCandidate identity remains protected before re",
+      "cookieBannerVisible": false
+    },
+    "errors": [],
+    "screenshot": ".artifacts/ux-verification-2026-05-20/clean-desktop-org-communications.png"
+  },
+  {
+    "viewport": "desktop",
+    "route": {
+      "role": "individual",
+      "name": "individual-home",
+      "path": "/app/i/home",
+      "cookie": "individual"
+    },
+    "ok": true,
+    "state": {
+      "href": "http://localhost:33122/app/i/home",
+      "h1": "Build your proof-first profile",
+      "hasHorizontalScroll": false,
+      "bodyText": "Skip to main content\nOverview\nProfile\nCommunications\nMatching\nSettings\nProofound\n\nOverview\n\nU\nPORTFOLIO READINESS\nSetup Required\nBuild your proof-first profile\n\nWelcome back, there. Start by creating your first proof record. Shaping a single trusted work sample or artifact unlocks your profile.\n\nGuided setup\n\nYour profile is private by default. Candidates stay hidden until they explicitly authorize discovery or initiate a verification check.",
+      "cookieBannerVisible": false
+    },
+    "errors": [],
+    "screenshot": ".artifacts/ux-verification-2026-05-20/clean-desktop-individual-home.png"
+  },
+  {
+    "viewport": "desktop",
+    "route": {
+      "role": "individual",
+      "name": "individual-profile",
+      "path": "/app/i/profile",
+      "cookie": "individual"
+    },
+    "ok": true,
+    "state": {
+      "href": "http://localhost:33122/app/i/profile",
+      "h1": "Guided Profile Setup",
+      "hasHorizontalScroll": false,
+      "bodyText": "Skip to main content\nOverview\nProfile\nCommunications\nMatching\nSettings\nProofound\n\nProfile\n\nU\n1/5\nPublic Page readiness\n\nComplete one clear proof path before publishing.\n\nNext: Complete your safe shell\nSafe shell basics\nOne real context is anchored\nOne real proof is added and structured\nOne non-self verification is accepted\nPublic Page publication\nGuided Profile Setup\n\nBuild only what makes your first proof credible. Start with a light shell, then choose what to share.\n\nAdd your first proof\nOpen full profile\nSTEP 1 OF 6\n0% COMPLETE\n\nCreate a safe shell\n\nActive Step\n\nKeep the shell light: display name, handle, headline, general location and timezone, target role, and work preferences.\n\nFinish safe shell\nSHOW ALL SETUP STEPS",
+      "cookieBannerVisible": false
+    },
+    "errors": [],
+    "screenshot": ".artifacts/ux-verification-2026-05-20/clean-desktop-individual-profile.png"
+  },
+  {
+    "viewport": "desktop",
+    "route": {
+      "role": "individual",
+      "name": "individual-verifications",
+      "path": "/app/i/verifications",
+      "cookie": "individual"
+    },
+    "ok": true,
+    "state": {
+      "href": "http://localhost:33122/app/i/verifications",
+      "h1": "Proof verification requests",
+      "hasHorizontalScroll": false,
+      "bodyText": "Skip to main content\nOverview\nProfile\nCommunications\nMatching\nSettings\nProofound\n\nVerifications\n\nU\nProof verification requests\n\nFollow which proof, claim, verifier, and bounded outcome each request is tied to.\n\nIncoming\nSent\n2\nNo one is waiting on you.\n\nNew confirmation requests will appear here with the claim and outcome attached.\n\n0\nAttention\n0\nPending\n0\nActive\nShow all\nAll\nActive\nPending\nNeeds attention\nDeclined\nExpired / stale\nRevoked / corrected\nNewest\nScope\nNo incoming verifications\n\nNo requests match the current selection.",
+      "cookieBannerVisible": false
+    },
+    "errors": [],
+    "screenshot": ".artifacts/ux-verification-2026-05-20/clean-desktop-individual-verifications.png"
+  },
+  {
+    "viewport": "mobile",
+    "route": {
+      "role": "org",
+      "name": "org-home",
+      "path": "/app/o/test-org/home",
+      "cookie": "org_member"
+    },
+    "ok": true,
+    "state": {
+      "href": "http://localhost:33122/app/o/test-org/home",
+      "h1": "Test Organization",
+      "hasHorizontalScroll": false,
+      "bodyText": "Skip to main content\nOverview\nWork\nInbox\nProfile\nPreview\nTO\nTest Organization\n\nActive organization corridor console\n\nSigned in as Manager\nCORRIDOR STATUS\nAction Required\nComplete Trust Profile\n\nBefore you can publish assignments and receive proof-backed matches, complete your organization profile. Domain verification, mission statement, and operational context are required to establish corridor safety.\n\nProgress: 0/3 trust elements completed\nComplete Trust Profile\nCollaborator Circle\n\nMembers authorized to review matches\n\nC\nCollaborator\nManager",
+      "cookieBannerVisible": false
+    },
+    "errors": [],
+    "screenshot": ".artifacts/ux-verification-2026-05-20/clean-mobile-org-home.png"
+  },
+  {
+    "viewport": "mobile",
+    "route": {
+      "role": "org",
+      "name": "org-assignments",
+      "path": "/app/o/test-org/assignments",
+      "cookie": "org_member"
+    },
+    "ok": true,
+    "state": {
+      "href": "http://localhost:33122/app/o/test-org/assignments",
+      "h1": "Assignments",
+      "hasHorizontalScroll": false,
+      "bodyText": "Skip to main content\nOverview\nWork\nInbox\nProfile\nPreview\nTO\nAssignment corridor\nOrganization\n/ Assignments\nAssignments\n\nAssignment cards own their matching corridor, candidate review, and pipeline context.\n\nCreate assignment\nOpen matching with one clear assignment\n\nStart with the role context reviewers need: skills, constraints, and proof expectations. Candidate identity stays protected until the corridor is ready.\n\nCreate first assignment\n\nMatching stays quiet until trust and role context are ready.\n\nCORRIDOR SEQUENCE\n\nTrust profile\n\nBasics make the review corridor credible\n\nAssignment\n\nDefine one role with clear proof requirements\n\nCandidate signals\n\nReview starts after the corridor is ready\n\nPublish assignment\n\nCreate and publish an assignment to start attracting candidate signals.\n\nAdd skill requirements\n\nDefine required skills so matching can rank candidates accurately.\n\nTurn on can",
+      "cookieBannerVisible": false
+    },
+    "errors": [],
+    "screenshot": ".artifacts/ux-verification-2026-05-20/clean-mobile-org-assignments.png"
+  },
+  {
+    "viewport": "mobile",
+    "route": {
+      "role": "org",
+      "name": "org-communications",
+      "path": "/app/o/test-org/communications",
+      "cookie": "org_member"
+    },
+    "ok": true,
+    "state": {
+      "href": "http://localhost:33122/app/o/test-org/communications",
+      "h1": "Communications",
+      "hasHorizontalScroll": false,
+      "bodyText": "Skip to main content\nOverview\nWork\nInbox\nProfile\nPreview\nTO\n\nHIRING CORRIDOR\n\nCommunications\nMessages\nThreads, intros, and reveal requests.\nInterviews\nScheduling, feedback, and handoff.\nSecure Corridor\n\nMessages, scheduling, and reveal steps stay inside the consent-bound corridor.\n\nMessages\n\nAssignment conversations stay private and stage-aware. Candidate identity remains protected until a consented reveal opens the next step.\n\nMessages\n\nConversations appear after a proof-safe introduction.\n\nNo conversations yet\n\nCreate an assignment and approve an introduction before messages open here.\n\nIdentity stays protected until the corridor is ready.",
+      "cookieBannerVisible": false
+    },
+    "errors": [],
+    "screenshot": ".artifacts/ux-verification-2026-05-20/clean-mobile-org-communications.png"
+  },
+  {
+    "viewport": "mobile",
+    "route": {
+      "role": "individual",
+      "name": "individual-home",
+      "path": "/app/i/home",
+      "cookie": "individual"
+    },
+    "ok": true,
+    "state": {
+      "href": "http://localhost:33122/app/i/home",
+      "h1": "Build your proof-first profile",
+      "hasHorizontalScroll": false,
+      "bodyText": "Skip to main content\nOverview\nProfile\nInbox\nMatching\nSettings\nU\nPORTFOLIO READINESS\nSetup Required\nBuild your proof-first profile\n\nWelcome back, there. Start by creating your first proof record. Shaping a single trusted work sample or artifact unlocks your profile.\n\nGuided setup\n\nYour profile is private by default. Candidates stay hidden until they explicitly authorize discovery or initiate a verification check.",
+      "cookieBannerVisible": false
+    },
+    "errors": [],
+    "screenshot": ".artifacts/ux-verification-2026-05-20/clean-mobile-individual-home.png"
+  },
+  {
+    "viewport": "mobile",
+    "route": {
+      "role": "individual",
+      "name": "individual-profile",
+      "path": "/app/i/profile",
+      "cookie": "individual"
+    },
+    "ok": true,
+    "state": {
+      "href": "http://localhost:33122/app/i/profile",
+      "h1": "Guided Profile Setup",
+      "hasHorizontalScroll": false,
+      "bodyText": "Skip to main content\nOverview\nProfile\nInbox\nMatching\nSettings\nU\n1/5\nPublic Page readiness\n\nComplete one clear proof path before publishing.\n\nNext: Complete your safe shell\nSafe shell basics\nOne real context is anchored\nOne real proof is added and structured\nOne non-self verification is accepted\nPublic Page publication\nGuided Profile Setup\n\nBuild only what makes your first proof credible. Start with a light shell, then choose what to share.\n\nAdd your first proof\nOpen full profile\nSTEP 1 OF 6\n0% COMPLETE\n\nCreate a safe shell\n\nActive Step\n\nKeep the shell light: display name, handle, headline, general location and timezone, target role, and work preferences.\n\nFinish safe shell\nSHOW ALL SETUP STEPS",
+      "cookieBannerVisible": false
+    },
+    "errors": [],
+    "screenshot": ".artifacts/ux-verification-2026-05-20/clean-mobile-individual-profile.png"
+  },
+  {
+    "viewport": "mobile",
+    "route": {
+      "role": "individual",
+      "name": "individual-verifications",
+      "path": "/app/i/verifications",
+      "cookie": "individual"
+    },
+    "ok": true,
+    "state": {
+      "href": "http://localhost:33122/app/i/verifications",
+      "h1": "Proof verification requests",
+      "hasHorizontalScroll": false,
+      "bodyText": "Skip to main content\nOverview\nProfile\nInbox\nMatching\nSettings\nU\nProof verification requests\n\nFollow which proof, claim, verifier, and bounded outcome each request is tied to.\n\nIncoming\nSent\n2\nNo one is waiting on you.\n\nNew confirmation requests will appear here with the claim and outcome attached.\n\n0\nAttention\n0\nPending\n0\nActive\nShow all\nAll\nActive\nPending\nNeeds attention\nDeclined\nExpired / stale\nRevoked / corrected\nNewest\nScope\nNo incoming verifications\n\nNo requests match the current selection.",
+      "cookieBannerVisible": false
+    },
+    "errors": [],
+    "screenshot": ".artifacts/ux-verification-2026-05-20/clean-mobile-individual-verifications.png"
+  }
+]

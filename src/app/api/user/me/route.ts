@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { log } from '@/lib/log';
 
 export async function GET(req: NextRequest) {
   try {
@@ -24,11 +25,7 @@ export async function GET(req: NextRequest) {
       email: user.email,
     });
   } catch (error) {
-    console.error('Failed to fetch current user:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    log.error('user.me.get_failed', { error });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

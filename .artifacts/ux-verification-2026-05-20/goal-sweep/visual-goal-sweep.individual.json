@@ -1,0 +1,1306 @@
+{
+  "generatedAt": "2026-05-20T19:09:01.163Z",
+  "baseURL": "http://127.0.0.1:33123",
+  "results": [
+    {
+      "route": "individual-home",
+      "persona": "individual",
+      "requestedPath": "/app/i/home",
+      "viewport": "desktop",
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/goal-sweep/desktop-individual-home.png",
+      "consoleMessages": [],
+      "title": "Proofound - Focus on what matters",
+      "finalUrl": "http://127.0.0.1:33123/app/i/home",
+      "heading": "Build your proof-first profile",
+      "horizontalOverflow": 0,
+      "cookieBannerVisible": false,
+      "loginVisible": false,
+      "overflowOffenders": [],
+      "primaryActions": [
+        {
+          "tag": "a",
+          "label": "Overview",
+          "href": "/app/i/home",
+          "left": 8,
+          "top": 12,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Profile",
+          "href": "/app/i/profile",
+          "left": 8,
+          "top": 62,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Communications",
+          "href": "/app/i/communications",
+          "left": 8,
+          "top": 112,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Matching",
+          "href": "/app/i/matching",
+          "left": 8,
+          "top": 162,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Settings",
+          "href": "/app/i/settings",
+          "left": 8,
+          "top": 212,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Collapse sidebar",
+          "href": null,
+          "left": 8,
+          "top": 960,
+          "width": 223,
+          "height": 32,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Open profile menu",
+          "href": null,
+          "left": 1380,
+          "top": 6,
+          "width": 44,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Guided setup",
+          "href": "/app/i/profile",
+          "left": 553,
+          "top": 374,
+          "width": 574,
+          "height": 44,
+          "visible": true
+        }
+      ],
+      "mainTextStart": "Portfolio ReadinessSetup RequiredBuild your proof-first profileWelcome back, there. Start by creating your first proof record. Shaping a single trusted work sample or artifact unlocks your profile.Guided setupYour profile is private by default. Candidates stay hidden until they explicitly authorize discovery or initiate a verification check."
+    },
+    {
+      "route": "individual-onboarding",
+      "persona": "individual",
+      "requestedPath": "/onboarding",
+      "viewport": "desktop",
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/goal-sweep/desktop-individual-onboarding.png",
+      "consoleMessages": [],
+      "title": "Proofound - Focus on what matters",
+      "finalUrl": "http://127.0.0.1:33123/onboarding",
+      "heading": "Start with one Proof Pack",
+      "horizontalOverflow": 0,
+      "cookieBannerVisible": false,
+      "loginVisible": false,
+      "overflowOffenders": [],
+      "primaryActions": [
+        {
+          "tag": "button",
+          "label": "Continue to proof artifact",
+          "href": null,
+          "left": 790,
+          "top": 553,
+          "width": 281,
+          "height": 48,
+          "visible": true
+        }
+      ],
+      "mainTextStart": "Skip to main content ← Back to persona choice Start with one Proof Pack Add your name, where you are based, and one artifact that can become your first Proof Pack. Basic details One proof artifact Basic details Name and residence only. The proof comes next. First name * Last name * City or residence * Continue to proof artifact"
+    },
+    {
+      "route": "individual-portfolio",
+      "persona": "individual",
+      "requestedPath": "/app/i/portfolio",
+      "viewport": "desktop",
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/goal-sweep/desktop-individual-portfolio.png",
+      "consoleMessages": [],
+      "title": "Proofound - Focus on what matters",
+      "finalUrl": "http://127.0.0.1:33123/app/i/profile?profileView=full&tab=proof_packs&portfolioLocked=1&lockReason=safe_shell&proof=first",
+      "heading": "Mock Individual",
+      "horizontalOverflow": 0,
+      "cookieBannerVisible": false,
+      "loginVisible": false,
+      "overflowOffenders": [],
+      "primaryActions": [
+        {
+          "tag": "a",
+          "label": "Overview",
+          "href": "/app/i/home",
+          "left": 8,
+          "top": 12,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Profile",
+          "href": "/app/i/profile",
+          "left": 8,
+          "top": 62,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Communications",
+          "href": "/app/i/communications",
+          "left": 8,
+          "top": 112,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Matching",
+          "href": "/app/i/matching",
+          "left": 8,
+          "top": 162,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Settings",
+          "href": "/app/i/settings",
+          "left": 8,
+          "top": 212,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Collapse sidebar",
+          "href": null,
+          "left": 8,
+          "top": 960,
+          "width": 223,
+          "height": 32,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Open profile menu",
+          "href": null,
+          "left": 1380,
+          "top": 6,
+          "width": 44,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "href": null,
+          "left": 674,
+          "top": 461,
+          "width": 44,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Hidden",
+          "href": null,
+          "left": 726,
+          "top": 461,
+          "width": 91,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Share",
+          "href": null,
+          "left": 825,
+          "top": 461,
+          "width": 87,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Add a taglineA brief statement that captures who you are and what you care about",
+          "href": null,
+          "left": 457,
+          "top": 544,
+          "width": 918,
+          "height": 79,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Collapse checklist",
+          "href": null,
+          "left": 1355,
+          "top": 730,
+          "width": 32,
+          "height": 32,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Context",
+          "href": null,
+          "left": 661,
+          "top": 925,
+          "width": 93,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Proof Packs",
+          "href": null,
+          "left": 778,
+          "top": 925,
+          "width": 120,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Verification",
+          "href": null,
+          "left": 922,
+          "top": 925,
+          "width": 117,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Visibility / Portfolio",
+          "href": null,
+          "left": 1063,
+          "top": 925,
+          "width": 166,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Cancel",
+          "href": null,
+          "left": 704,
+          "top": 875,
+          "width": 105,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Save first proof",
+          "href": null,
+          "left": 817,
+          "top": 875,
+          "width": 166,
+          "height": 44,
+          "visible": true
+        }
+      ],
+      "mainTextStart": "Keep building proof readinessKeep the first milestone anchored in real work. Add proof context, visibility choices, and optional verification checks before expanding public details.First Proof Pack createdPublic Page readyMatching preferences savedNon-self verification addedStart with one context-backed Proof PackPublic Page is locked until the safe-shell basics are finished.MOMock IndividualMock IndividualHiddenShareAdd locationJoined February 2026Add a taglineA brief statement that captures who you are and what you care about1/5Public Page readinessComplete one clear proof path before publishing.Next: Complete your safe shellSafe shell basicsOne real context is anchoredOne real proof is ad"
+    },
+    {
+      "route": "individual-profile",
+      "persona": "individual",
+      "requestedPath": "/app/i/profile?profileView=full&tab=proof_packs",
+      "viewport": "desktop",
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/goal-sweep/desktop-individual-profile.png",
+      "consoleMessages": [],
+      "title": "Proofound - Focus on what matters",
+      "finalUrl": "http://127.0.0.1:33123/app/i/profile?profileView=full&tab=proof_packs",
+      "heading": "Mock Individual",
+      "horizontalOverflow": 0,
+      "cookieBannerVisible": false,
+      "loginVisible": false,
+      "overflowOffenders": [],
+      "primaryActions": [
+        {
+          "tag": "a",
+          "label": "Overview",
+          "href": "/app/i/home",
+          "left": 8,
+          "top": 12,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Profile",
+          "href": "/app/i/profile",
+          "left": 8,
+          "top": 62,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Communications",
+          "href": "/app/i/communications",
+          "left": 8,
+          "top": 112,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Matching",
+          "href": "/app/i/matching",
+          "left": 8,
+          "top": 162,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Settings",
+          "href": "/app/i/settings",
+          "left": 8,
+          "top": 212,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Collapse sidebar",
+          "href": null,
+          "left": 8,
+          "top": 960,
+          "width": 223,
+          "height": 32,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Open profile menu",
+          "href": null,
+          "left": 1380,
+          "top": 6,
+          "width": 44,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "href": null,
+          "left": 674,
+          "top": 386,
+          "width": 44,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Hidden",
+          "href": null,
+          "left": 726,
+          "top": 386,
+          "width": 91,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Share",
+          "href": null,
+          "left": 825,
+          "top": 386,
+          "width": 87,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Add a taglineA brief statement that captures who you are and what you care about",
+          "href": null,
+          "left": 457,
+          "top": 469,
+          "width": 918,
+          "height": 79,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Collapse checklist",
+          "href": null,
+          "left": 1355,
+          "top": 655,
+          "width": 32,
+          "height": 32,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Context",
+          "href": null,
+          "left": 661,
+          "top": 850,
+          "width": 93,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Proof Packs",
+          "href": null,
+          "left": 778,
+          "top": 850,
+          "width": 120,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Verification",
+          "href": null,
+          "left": 922,
+          "top": 850,
+          "width": 117,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Visibility / Portfolio",
+          "href": null,
+          "left": 1063,
+          "top": 850,
+          "width": 166,
+          "height": 44,
+          "visible": true
+        }
+      ],
+      "mainTextStart": "Keep building proof readinessKeep the first milestone anchored in real work. Add proof context, visibility choices, and optional verification checks before expanding public details.First Proof Pack createdPublic Page readyMatching preferences savedNon-self verification addedStart with one context-backed Proof PackMOMock IndividualMock IndividualHiddenShareAdd locationJoined February 2026Add a taglineA brief statement that captures who you are and what you care about1/5Public Page readinessComplete one clear proof path before publishing.Next: Complete your safe shellSafe shell basicsOne real context is anchoredOne real proof is added and structuredOne non-self verification is acceptedPublic P"
+    },
+    {
+      "route": "individual-verifications",
+      "persona": "individual",
+      "requestedPath": "/app/i/verifications",
+      "viewport": "desktop",
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/goal-sweep/desktop-individual-verifications.png",
+      "consoleMessages": [],
+      "title": "Proofound - Focus on what matters",
+      "finalUrl": "http://127.0.0.1:33123/app/i/verifications",
+      "heading": "Proof verification requests",
+      "horizontalOverflow": 0,
+      "cookieBannerVisible": false,
+      "loginVisible": false,
+      "overflowOffenders": [],
+      "primaryActions": [
+        {
+          "tag": "a",
+          "label": "Overview",
+          "href": "/app/i/home",
+          "left": 8,
+          "top": 12,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Profile",
+          "href": "/app/i/profile",
+          "left": 8,
+          "top": 62,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Communications",
+          "href": "/app/i/communications",
+          "left": 8,
+          "top": 112,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Matching",
+          "href": "/app/i/matching",
+          "left": 8,
+          "top": 162,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Settings",
+          "href": "/app/i/settings",
+          "left": 8,
+          "top": 212,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Collapse sidebar",
+          "href": null,
+          "left": 8,
+          "top": 960,
+          "width": 223,
+          "height": 32,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Open profile menu",
+          "href": null,
+          "left": 1380,
+          "top": 6,
+          "width": 44,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Incoming2",
+          "href": null,
+          "left": 394,
+          "top": 166,
+          "width": 109,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Sent2",
+          "href": null,
+          "left": 503,
+          "top": 166,
+          "width": 82,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "2Attention",
+          "href": null,
+          "left": 873,
+          "top": 250,
+          "width": 96,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "1Pending",
+          "href": null,
+          "left": 977,
+          "top": 250,
+          "width": 88,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "0Active",
+          "href": null,
+          "left": 1073,
+          "top": 250,
+          "width": 80,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Show attention",
+          "href": null,
+          "left": 1161,
+          "top": 250,
+          "width": 110,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "All(2)",
+          "href": null,
+          "left": 403,
+          "top": 339,
+          "width": 66,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Active",
+          "href": null,
+          "left": 475,
+          "top": 339,
+          "width": 60,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Pending(1)",
+          "href": null,
+          "left": 541,
+          "top": 339,
+          "width": 97,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Needs attention(2)",
+          "href": null,
+          "left": 644,
+          "top": 339,
+          "width": 143,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Declined",
+          "href": null,
+          "left": 793,
+          "top": 339,
+          "width": 74,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Expired / stale",
+          "href": null,
+          "left": 873,
+          "top": 339,
+          "width": 106,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Revoked / corrected",
+          "href": null,
+          "left": 403,
+          "top": 389,
+          "width": 140,
+          "height": 44,
+          "visible": true
+        }
+      ],
+      "mainTextStart": "Proof verification requestsFollow which proof, claim, verifier, and bounded outcome each request is tied to.Incoming2Sent22 requests need attention.Start here for failed, disputed, contradicted, or soon-expiring confirmations.2Attention1Pending0ActiveShow attentionAll(2)ActivePending(1)Needs attention(2)DeclinedExpired / staleRevoked / correctedNewestScopeMAMira AnderssonVerification subject: Proof-first hiring corridor readiness reviewClaim-Confirm that the proof pack clearly connects private source material, review decisions, and a launch-safe candidate story without exposing sensitive details.PendingDeclineConfirmSLSofia LindVerification subject: Review uncertainty reductionClaim-The revi"
+    },
+    {
+      "route": "individual-home",
+      "persona": "individual",
+      "requestedPath": "/app/i/home",
+      "viewport": "mobile",
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/goal-sweep/mobile-individual-home.png",
+      "consoleMessages": [],
+      "title": "Proofound - Focus on what matters",
+      "finalUrl": "http://127.0.0.1:33123/app/i/home",
+      "heading": "Build your proof-first profile",
+      "horizontalOverflow": 0,
+      "cookieBannerVisible": false,
+      "loginVisible": false,
+      "overflowOffenders": [],
+      "primaryActions": [
+        {
+          "tag": "a",
+          "label": "Overview",
+          "href": "/app/i/home",
+          "left": 4,
+          "top": 780,
+          "width": 73,
+          "height": 64,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Profile",
+          "href": "/app/i/profile",
+          "left": 81,
+          "top": 780,
+          "width": 73,
+          "height": 64,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Communications",
+          "href": "/app/i/communications",
+          "left": 158,
+          "top": 780,
+          "width": 73,
+          "height": 64,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Matching",
+          "href": "/app/i/matching",
+          "left": 236,
+          "top": 780,
+          "width": 73,
+          "height": 64,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Settings",
+          "href": "/app/i/settings",
+          "left": 313,
+          "top": 780,
+          "width": 73,
+          "height": 64,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Open profile menu",
+          "href": null,
+          "left": 330,
+          "top": 8,
+          "width": 44,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Guided setup",
+          "href": "/app/i/profile",
+          "left": 57,
+          "top": 361,
+          "width": 276,
+          "height": 44,
+          "visible": true
+        }
+      ],
+      "mainTextStart": "Portfolio ReadinessSetup RequiredBuild your proof-first profileWelcome back, there. Start by creating your first proof record. Shaping a single trusted work sample or artifact unlocks your profile.Guided setupYour profile is private by default. Candidates stay hidden until they explicitly authorize discovery or initiate a verification check."
+    },
+    {
+      "route": "individual-onboarding",
+      "persona": "individual",
+      "requestedPath": "/onboarding",
+      "viewport": "mobile",
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/goal-sweep/mobile-individual-onboarding.png",
+      "consoleMessages": [],
+      "title": "Proofound - Focus on what matters",
+      "finalUrl": "http://127.0.0.1:33123/onboarding",
+      "heading": "Start with one Proof Pack",
+      "horizontalOverflow": 0,
+      "cookieBannerVisible": false,
+      "loginVisible": false,
+      "overflowOffenders": [],
+      "primaryActions": [
+        {
+          "tag": "button",
+          "label": "Continue to proof artifact",
+          "href": null,
+          "left": 68,
+          "top": 740,
+          "width": 281,
+          "height": 48,
+          "visible": true
+        }
+      ],
+      "mainTextStart": "Skip to main content ← Back to persona choice Start with one Proof Pack Add your name, where you are based, and one artifact that can become your first Proof Pack. Basic details One proof artifact Basic details Name and residence only. The proof comes next. First name * Last name * City or residence * Continue to proof artifact"
+    },
+    {
+      "route": "individual-portfolio",
+      "persona": "individual",
+      "requestedPath": "/app/i/portfolio",
+      "viewport": "mobile",
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/goal-sweep/mobile-individual-portfolio.png",
+      "consoleMessages": [],
+      "title": "Proofound - Focus on what matters",
+      "finalUrl": "http://127.0.0.1:33123/app/i/profile?profileView=full&tab=proof_packs&portfolioLocked=1&lockReason=safe_shell&proof=first",
+      "heading": "Mock Individual",
+      "horizontalOverflow": 0,
+      "cookieBannerVisible": false,
+      "loginVisible": false,
+      "overflowOffenders": [],
+      "primaryActions": [
+        {
+          "tag": "a",
+          "label": "Overview",
+          "href": "/app/i/home",
+          "left": 4,
+          "top": 780,
+          "width": 73,
+          "height": 64,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Profile",
+          "href": "/app/i/profile",
+          "left": 81,
+          "top": 780,
+          "width": 73,
+          "height": 64,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Communications",
+          "href": "/app/i/communications",
+          "left": 158,
+          "top": 780,
+          "width": 73,
+          "height": 64,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Matching",
+          "href": "/app/i/matching",
+          "left": 236,
+          "top": 780,
+          "width": 73,
+          "height": 64,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Settings",
+          "href": "/app/i/settings",
+          "left": 313,
+          "top": 780,
+          "width": 73,
+          "height": 64,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Open profile menu",
+          "href": null,
+          "left": 330,
+          "top": 8,
+          "width": 44,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "href": null,
+          "left": 33,
+          "top": 615,
+          "width": 44,
+          "height": 32,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Hidden",
+          "href": null,
+          "left": 85,
+          "top": 615,
+          "width": 91,
+          "height": 32,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Share",
+          "href": null,
+          "left": 184,
+          "top": 615,
+          "width": 87,
+          "height": 32,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Add a taglineA brief statement that captures who you are and what you care about",
+          "href": null,
+          "left": 33,
+          "top": 688,
+          "width": 324,
+          "height": 97,
+          "visible": true
+        }
+      ],
+      "mainTextStart": "Keep building proof readinessKeep the first milestone anchored in real work. Add proof context, visibility choices, and optional verification checks before expanding public details.First Proof Pack createdPublic Page readyMatching preferences savedNon-self verification addedStart with one context-backed Proof PackPublic Page is locked until the safe-shell basics are finished.MOMock IndividualMock IndividualHiddenShareAdd locationJoined February 2026Add a taglineA brief statement that captures who you are and what you care about1/5Public Page readinessComplete one clear proof path before publishing.Next: Complete your safe shellSafe shell basicsOne real context is anchoredOne real proof is ad"
+    },
+    {
+      "route": "individual-profile",
+      "persona": "individual",
+      "requestedPath": "/app/i/profile?profileView=full&tab=proof_packs",
+      "viewport": "mobile",
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/goal-sweep/mobile-individual-profile.png",
+      "consoleMessages": [],
+      "title": "Proofound - Focus on what matters",
+      "finalUrl": "http://127.0.0.1:33123/app/i/profile?profileView=full&tab=proof_packs",
+      "heading": "Mock Individual",
+      "horizontalOverflow": 0,
+      "cookieBannerVisible": false,
+      "loginVisible": false,
+      "overflowOffenders": [],
+      "primaryActions": [
+        {
+          "tag": "a",
+          "label": "Overview",
+          "href": "/app/i/home",
+          "left": 4,
+          "top": 780,
+          "width": 73,
+          "height": 64,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Profile",
+          "href": "/app/i/profile",
+          "left": 81,
+          "top": 780,
+          "width": 73,
+          "height": 64,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Communications",
+          "href": "/app/i/communications",
+          "left": 158,
+          "top": 780,
+          "width": 73,
+          "height": 64,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Matching",
+          "href": "/app/i/matching",
+          "left": 236,
+          "top": 780,
+          "width": 73,
+          "height": 64,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Settings",
+          "href": "/app/i/settings",
+          "left": 313,
+          "top": 780,
+          "width": 73,
+          "height": 64,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Open profile menu",
+          "href": null,
+          "left": 330,
+          "top": 8,
+          "width": 44,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "href": null,
+          "left": 33,
+          "top": 519,
+          "width": 44,
+          "height": 32,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Hidden",
+          "href": null,
+          "left": 85,
+          "top": 519,
+          "width": 91,
+          "height": 32,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Share",
+          "href": null,
+          "left": 184,
+          "top": 519,
+          "width": 87,
+          "height": 32,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Add a taglineA brief statement that captures who you are and what you care about",
+          "href": null,
+          "left": 33,
+          "top": 592,
+          "width": 324,
+          "height": 97,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Collapse checklist",
+          "href": null,
+          "left": 325,
+          "top": 827,
+          "width": 32,
+          "height": 32,
+          "visible": true
+        }
+      ],
+      "mainTextStart": "Keep building proof readinessKeep the first milestone anchored in real work. Add proof context, visibility choices, and optional verification checks before expanding public details.First Proof Pack createdPublic Page readyMatching preferences savedNon-self verification addedStart with one context-backed Proof PackMOMock IndividualMock IndividualHiddenShareAdd locationJoined February 2026Add a taglineA brief statement that captures who you are and what you care about1/5Public Page readinessComplete one clear proof path before publishing.Next: Complete your safe shellSafe shell basicsOne real context is anchoredOne real proof is added and structuredOne non-self verification is acceptedPublic P"
+    },
+    {
+      "route": "individual-verifications",
+      "persona": "individual",
+      "requestedPath": "/app/i/verifications",
+      "viewport": "mobile",
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/goal-sweep/mobile-individual-verifications.png",
+      "consoleMessages": [],
+      "title": "Proofound - Focus on what matters",
+      "finalUrl": "http://127.0.0.1:33123/app/i/verifications",
+      "heading": "Proof verification requests",
+      "horizontalOverflow": 0,
+      "cookieBannerVisible": false,
+      "loginVisible": false,
+      "overflowOffenders": [],
+      "primaryActions": [
+        {
+          "tag": "a",
+          "label": "Overview",
+          "href": "/app/i/home",
+          "left": 4,
+          "top": 780,
+          "width": 73,
+          "height": 64,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Profile",
+          "href": "/app/i/profile",
+          "left": 81,
+          "top": 780,
+          "width": 73,
+          "height": 64,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Communications",
+          "href": "/app/i/communications",
+          "left": 158,
+          "top": 780,
+          "width": 73,
+          "height": 64,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Matching",
+          "href": "/app/i/matching",
+          "left": 236,
+          "top": 780,
+          "width": 73,
+          "height": 64,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Settings",
+          "href": "/app/i/settings",
+          "left": 313,
+          "top": 780,
+          "width": 73,
+          "height": 64,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Open profile menu",
+          "href": null,
+          "left": 330,
+          "top": 8,
+          "width": 44,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Incoming2",
+          "href": null,
+          "left": 18,
+          "top": 175,
+          "width": 109,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Sent2",
+          "href": null,
+          "left": 127,
+          "top": 175,
+          "width": 82,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "2Attention",
+          "href": null,
+          "left": 33,
+          "top": 335,
+          "width": 158,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "1Pending",
+          "href": null,
+          "left": 199,
+          "top": 335,
+          "width": 158,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "0Active",
+          "href": null,
+          "left": 33,
+          "top": 387,
+          "width": 158,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Show attention",
+          "href": null,
+          "left": 33,
+          "top": 439,
+          "width": 324,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "All(2)",
+          "href": null,
+          "left": 27,
+          "top": 527,
+          "width": 165,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Active",
+          "href": null,
+          "left": 198,
+          "top": 527,
+          "width": 165,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Pending(1)",
+          "href": null,
+          "left": 27,
+          "top": 577,
+          "width": 165,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Needs attention(2)",
+          "href": null,
+          "left": 198,
+          "top": 577,
+          "width": 165,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Declined",
+          "href": null,
+          "left": 27,
+          "top": 627,
+          "width": 165,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Expired / stale",
+          "href": null,
+          "left": 198,
+          "top": 627,
+          "width": 165,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Revoked / corrected",
+          "href": null,
+          "left": 27,
+          "top": 677,
+          "width": 165,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Newest",
+          "href": null,
+          "left": 27,
+          "top": 733,
+          "width": 164,
+          "height": 44,
+          "visible": true
+        }
+      ],
+      "mainTextStart": "Proof verification requestsFollow which proof, claim, verifier, and bounded outcome each request is tied to.Incoming2Sent22 requests need attention.Start here for failed, disputed, contradicted, or soon-expiring confirmations.2Attention1Pending0ActiveShow attentionAll(2)ActivePending(1)Needs attention(2)DeclinedExpired / staleRevoked / correctedNewestScopeMAMira AnderssonVerification subject: Proof-first hiring corridor readiness reviewClaim-Confirm that the proof pack clearly connects private source material, review decisions, and a launch-safe candidate story without exposing sensitive details.PendingDeclineConfirmSLSofia LindVerification subject: Review uncertainty reductionClaim-The revi"
+    }
+  ]
+}

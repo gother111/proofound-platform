@@ -53,8 +53,10 @@ export function Step4Practicals({ form, onNext, onBack, isSubmitting = false }: 
   return (
     <div className="space-y-6">
       <div>
-        <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Step 4: What practical constraints are real</h2>
+        <div className="mb-2 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-2xl font-bold leading-tight">
+            Step 4: What practical constraints are real
+          </h2>
           <span className="text-sm text-muted-foreground">Step 4 of 5</span>
         </div>
         <p className="text-muted-foreground">

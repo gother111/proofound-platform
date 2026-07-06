@@ -1,0 +1,104 @@
+[
+  {
+    "route": "/",
+    "actions": [
+      "Skip to main content",
+      "Proofound",
+      "How it works",
+      "For individuals",
+      "For organizations"
+    ],
+    "bodySample": "Skip to main content PROOFOUND How it works For individuals For organizations Sign in Request a pilot Proof behind the claim Proofound turns real work into structured Proof Packs for privacy-safe hiring review before ide",
+    "canonical": "https://proofound.io",
+    "hasNoPublicDemoLeak": true,
+    "hasPasswordInput": false,
+    "heading": "Proof behind the claim",
+    "horizontalOverflow": false,
+    "robots": "",
+    "title": "Proofound | Proof Behind the Claim",
+    "url": "http://localhost:3000/",
+    "viewport": "1359x1354"
+  },
+  {
+    "route": "/login",
+    "actions": ["Skip to main content", "Forgot password?", "Sign in", "Google", "LinkedIn"],
+    "bodySample": "Skip to main content Welcome back Sign in to continue to Proofound EMAIL ADDRESS * PASSWORD * Remember me Forgot password? Sign in OR CONTINUE WITH Google LinkedIn Don't have an account? Create account By signing in, you",
+    "canonical": "",
+    "hasNoPublicDemoLeak": true,
+    "hasPasswordInput": true,
+    "heading": "Welcome back",
+    "horizontalOverflow": false,
+    "robots": "",
+    "title": "Sign In | Proofound",
+    "url": "http://localhost:3000/login",
+    "viewport": "1359x1354"
+  },
+  {
+    "route": "/signup",
+    "actions": [
+      "Skip to main content",
+      "Back",
+      "IndividualFor professionals who want a clean proof-based portfolio link they can share today, plus matching as they grow.Continue as Individual →",
+      "OrganizationFor organizations that need a credible trust page on day 1, then one assignment and a privacy-safe shortlist.Continue as Organization →",
+      "Sign in"
+    ],
+    "bodySample": "Skip to main content Back Join Proofound Choose the account type that fits how you'll use Proofound. Individual For professionals who want a clean proof-based portfolio link they can share today, plus matching as they gr",
+    "canonical": "",
+    "hasNoPublicDemoLeak": true,
+    "hasPasswordInput": false,
+    "heading": "Join Proofound",
+    "horizontalOverflow": false,
+    "robots": "",
+    "title": "Sign Up | Proofound",
+    "url": "http://localhost:3000/signup",
+    "viewport": "1359x1354"
+  },
+  {
+    "route": "/portfolio/demo",
+    "actions": ["Skip to main content"],
+    "bodySample": "Skip to main content PUBLIC PAGE UNAVAILABLE This Public Page link is unavailable. It may be hidden, retired, or not ready for launch-safe sharing. proofound.io/portfolio/demo Public Page unavailable",
+    "canonical": "",
+    "hasNoPublicDemoLeak": true,
+    "hasPasswordInput": false,
+    "heading": "Public Page unavailable",
+    "horizontalOverflow": false,
+    "robots": "noindex, nofollow, nocache",
+    "title": "Public Page Unavailable | Proofound",
+    "url": "http://localhost:3000/portfolio/demo",
+    "viewport": "1359x1354"
+  },
+  {
+    "route": "/portfolio/org/demo",
+    "actions": ["Skip to main content"],
+    "bodySample": "Skip to main content ORGANIZATION PORTFOLIO UNAVAILABLE This organization link is unavailable. It may be hidden, retired, or not yet ready for public sharing. proofound.io/portfolio/org/demo Organization portfolio unavai",
+    "canonical": "",
+    "hasNoPublicDemoLeak": true,
+    "hasPasswordInput": false,
+    "heading": "Organization portfolio unavailable",
+    "horizontalOverflow": false,
+    "robots": "noindex, nofollow, nocache",
+    "title": "Public Page Unavailable | Proofound",
+    "url": "http://localhost:3000/portfolio/org/demo",
+    "viewport": "1359x1354"
+  },
+  {
+    "route": "/privacy",
+    "actions": [
+      "Skip to main content",
+      "Back to Home",
+      "privacy@proofound.com",
+      "View Terms of Service",
+      "View Cookie Policy"
+    ],
+    "bodySample": "Skip to main content Back to Home Privacy Policy Effective date: 2026-02-12 · Version: v1.3.2026-02-12 1. Scope This policy explains how Proofound collects, uses, stores, and protects personal information across account ",
+    "canonical": "https://proofound.io/privacy",
+    "hasNoPublicDemoLeak": true,
+    "hasPasswordInput": false,
+    "heading": "Privacy Policy",
+    "horizontalOverflow": false,
+    "robots": "",
+    "title": "Privacy Policy | Proofound privacy and consent controls",
+    "url": "http://localhost:3000/privacy",
+    "viewport": "1359x1354"
+  }
+]

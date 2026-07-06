@@ -18,14 +18,21 @@ vi.mock('@/lib/verification/sent-request-actions', () => ({
   resendBundleVerificationRequest: vi.fn(),
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+  },
+}));
+
 import { requireApiAuthContext } from '@/lib/auth';
+import { log } from '@/lib/log';
 import { writeVerificationAuditLog } from '@/lib/verification/integrity';
 import {
   cancelCanonicalBundleItems,
   getCanonicalBundleById,
 } from '@/lib/verification/canonical-bundles';
 import { resendBundleVerificationRequest } from '@/lib/verification/sent-request-actions';
-import { PATCH, POST } from '@/app/api/verification/requests/bundles/[requestId]/route';
+import { GET, PATCH, POST } from '@/app/api/verification/requests/bundles/[requestId]/route';
 
 function makeBundleRequest(overrides?: Partial<any>) {
   return {
@@ -154,6 +161,53 @@ describe('PATCH /api/verification/requests/bundles/[requestId]', () => {
       error: 'Only pending artifacts can be canceled.',
     });
     expect(cancelCanonicalBundleItems).not.toHaveBeenCalled();
+  });
+
+  it('logs unexpected cancellation failures with structured diagnostics', async () => {
+    const cancelError = new Error('cancel failed');
+    vi.mocked(getCanonicalBundleById).mockResolvedValue(makeBundleRequest() as any);
+    vi.mocked(cancelCanonicalBundleItems).mockRejectedValue(cancelError);
+
+    const response = await PATCH(
+      new NextRequest('http://localhost/api/verification/requests/bundles/bundle-1', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          action: 'cancel_selected',
+          itemIds: ['11111111-1111-4111-8111-111111111111'],
+        }),
+      }),
+      { params: Promise.resolve({ requestId: 'bundle-1' }) }
+    );
+
+    expect(response.status).toBe(500);
+    expect(log.error).toHaveBeenCalledWith('verification.custom_bundle.patch_failed', {
+      error: cancelError,
+    });
+  });
+});
+
+describe('GET /api/verification/requests/bundles/[requestId]', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(requireApiAuthContext).mockResolvedValue({
+      user: { id: 'user-1' },
+      supabase: {},
+    } as any);
+  });
+
+  it('logs unexpected bundle detail failures with structured diagnostics', async () => {
+    const loadError = new Error('bundle lookup failed');
+    vi.mocked(getCanonicalBundleById).mockRejectedValue(loadError);
+
+    const response = await GET(
+      new NextRequest('http://localhost/api/verification/requests/bundles/bundle-1'),
+      { params: Promise.resolve({ requestId: 'bundle-1' }) }
+    );
+
+    expect(response.status).toBe(500);
+    expect(log.error).toHaveBeenCalledWith('verification.custom_bundle.get_failed', {
+      error: loadError,
+    });
   });
 });
 

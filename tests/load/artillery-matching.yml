@@ -54,7 +54,7 @@ scenarios:
 
       # Request matches
       - post:
-          url: '/api/core/matching/profile'
+          url: '/api/match/profile'
           headers:
             Content-Type: 'application/json'
             x-csrf-token: '{{ csrfToken }}'
@@ -73,7 +73,7 @@ scenarios:
 
       # Request with different mode
       - post:
-          url: '/api/core/matching/profile'
+          url: '/api/match/profile'
           headers:
             Content-Type: 'application/json'
             x-csrf-token: '{{ csrfToken }}'

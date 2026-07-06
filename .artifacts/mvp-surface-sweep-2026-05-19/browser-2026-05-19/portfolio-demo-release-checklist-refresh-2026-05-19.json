@@ -1,0 +1,22 @@
+{
+  "checkedAt": "2026-05-19T13:04:35.716Z",
+  "metrics": {
+    "bodyText": "Skip to main content\nPUBLIC PAGE UNAVAILABLE\n\nThis Public Page link is unavailable. It may be hidden, retired, or not ready for launch-safe sharing.\n\nproofound.io/portfolio/demo\nPublic Page unavailable",
+    "h1": null,
+    "hasNextOverlay": false,
+    "links": [
+      {
+        "href": "http://localhost:33180/portfolio/demo#main-content",
+        "text": "Skip to main content"
+      }
+    ],
+    "location": "http://localhost:33180/portfolio/demo",
+    "title": "Public Page Unavailable | Proofound",
+    "viewport": {
+      "height": 1354,
+      "width": 1359
+    }
+  },
+  "consoleIssues": [],
+  "snapshotExcerpt": "- link \"Skip to main content\":\n  - /url: \"#main-content\"\n- banner:\n  - heading \"Public Page unavailable\" [level=2]\n- paragraph: This Public Page link is unavailable. It may be hidden, retired, or not ready for launch-safe sharing.\n- generic: proofound.io/portfolio/demo\n- generic: Public Page unavailable"
+}

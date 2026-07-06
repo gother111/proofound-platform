@@ -25,16 +25,6 @@ export function FinalCTASection({
       className="relative scroll-mt-24 overflow-hidden px-5 py-10 md:px-10 md:py-20"
       data-testid="landing-final-cta-section"
     >
-      <span
-        id="start-individuals"
-        className="absolute top-0 h-px w-px scroll-mt-24"
-        aria-hidden="true"
-      />
-      <span
-        id="start-organizations"
-        className="absolute top-0 h-px w-px scroll-mt-24"
-        aria-hidden="true"
-      />
       <div className="absolute inset-0 bg-transparent" aria-hidden="true" />
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
         <motion.div
@@ -42,24 +32,22 @@ export function FinalCTASection({
             reduceMotion
               ? undefined
               : {
-                  scale: [1, 1.08, 1],
-                  opacity: [0.24, 0.34, 0.24],
-                  x: [0, 32, 0],
+                  opacity: [0.18, 0.28, 0.18],
+                  y: [0, 10, 0],
                 }
           }
           transition={
             reduceMotion ? undefined : { duration: 18, repeat: Infinity, ease: 'easeInOut' }
           }
-          className="absolute left-[-10%] top-[5%] h-[26rem] w-[26rem] rounded-full bg-proofound-forest/10 blur-[120px]"
+          className="absolute inset-x-0 top-0 h-28 bg-[linear-gradient(180deg,rgba(86,98,79,0.1),rgba(86,98,79,0))]"
         />
         <motion.div
           animate={
             reduceMotion
               ? undefined
               : {
-                  scale: [1, 1.12, 1],
-                  opacity: [0.18, 0.28, 0.18],
-                  x: [0, -24, 0],
+                  opacity: [0.16, 0.26, 0.16],
+                  y: [0, -12, 0],
                 }
           }
           transition={
@@ -67,7 +55,7 @@ export function FinalCTASection({
               ? undefined
               : { duration: 22, repeat: Infinity, ease: 'easeInOut', delay: 1.2 }
           }
-          className="absolute bottom-[-5%] right-[-6%] h-[24rem] w-[24rem] rounded-full bg-proofound-terracotta/12 blur-[110px]"
+          className="absolute inset-x-0 bottom-0 h-32 bg-[linear-gradient(0deg,rgba(139,74,54,0.09),rgba(139,74,54,0))]"
         />
       </div>
 
@@ -90,7 +78,7 @@ export function FinalCTASection({
                     ? { duration: 0 }
                     : { duration: 0.9, delay: 0.08, ease: [0.22, 1, 0.36, 1] }
                 }
-                className="mt-5 font-display text-[2.35rem] leading-[0.95] text-foreground md:text-6xl"
+                className="mt-5 max-w-[11ch] font-display text-[2.3rem] leading-[0.95] text-foreground md:mx-auto md:max-w-none md:text-6xl"
               >
                 Build hiring on stronger proof
               </motion.h2>
@@ -102,7 +90,7 @@ export function FinalCTASection({
                     ? { duration: 0 }
                     : { duration: 0.9, delay: 0.16, ease: [0.22, 1, 0.36, 1] }
                 }
-                className="mx-auto mt-5 max-w-2xl text-base leading-7 text-muted-foreground md:mt-6 md:text-lg md:leading-8"
+                className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground md:mx-auto md:mt-6 md:text-lg md:leading-8"
               >
                 Proofound helps people present real capability through structured evidence, and
                 helps organizations compare proof before time is lost.
@@ -117,9 +105,10 @@ export function FinalCTASection({
                   ? { duration: 0 }
                   : { duration: 0.9, delay: 0.24, ease: [0.22, 1, 0.36, 1] }
               }
-              className="mt-8 grid gap-4 md:mt-12 md:gap-5 lg:grid-cols-2"
+              className="mt-7 grid gap-3 md:mt-12 md:gap-5 lg:grid-cols-2"
             >
               <button
+                id="start-individuals"
                 type="button"
                 onClick={onIndividualSignup ?? onGetStarted}
                 data-testid="landing-final-individual-cta"
@@ -143,6 +132,7 @@ export function FinalCTASection({
               </button>
 
               <button
+                id="start-organizations"
                 type="button"
                 onClick={onOrganizationSignup ?? onGetStarted}
                 data-testid="landing-final-organization-cta"
@@ -153,8 +143,8 @@ export function FinalCTASection({
                 </p>
                 <p className="mt-4 text-3xl font-display leading-tight">Start screening on proof</p>
                 <p className="mt-4 max-w-md text-sm leading-6 text-muted-foreground">
-                  Review work through structured proof, clearer trust signals, and a more
-                  explainable fit model.
+                  Review work through structured proof, clearer verification checks, and a more
+                  explainable assignment-fit review.
                 </p>
                 <span className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-proofound-forest">
                   Start screening on proof

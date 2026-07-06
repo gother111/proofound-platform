@@ -5,7 +5,6 @@ import { and, eq, sql } from 'drizzle-orm';
 import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
 import { matches, verificationRecords } from '@/db/schema';
-import { isMockSupabaseEnabled } from '@/lib/env';
 import {
   listCanonicalProofPackAggregatesForOwner,
   summarizeCanonicalProofOwnerAggregates,
@@ -30,16 +29,6 @@ export interface DashboardMetrics {
 
 export async function getDashboardMetrics(): Promise<DashboardMetrics> {
   const user = await requireAuth();
-
-  if (isMockSupabaseEnabled()) {
-    return {
-      proofStoriesCount: 0,
-      verifiedSkills: 0,
-      pendingVerifications: 0,
-      qualifiedMatches: 0,
-      activeIntroductions: 0,
-    };
-  }
 
   const [canonicalAggregates, verificationStatsRow, matchRows] = await Promise.all([
     listCanonicalProofPackAggregatesForOwner('individual_profile', user.id),

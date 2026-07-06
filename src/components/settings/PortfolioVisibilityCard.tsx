@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Loader2, ShieldCheck } from 'lucide-react';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { useAssistiveAiFlag } from '@/hooks/useAssistiveAiFlag';
 
 type VisibilityFlags = {
@@ -31,16 +32,34 @@ type PrivacyPreflightPayload = {
   fallbackAvailable?: boolean;
 };
 
+type SaveFeedback = {
+  tone: 'success' | 'error';
+  message: string;
+};
+
+type VisibilitySaveErrorPayload = {
+  privacyPreflight?: PrivacyPreflightPayload;
+};
+
 const defaults: VisibilityFlags = {
   header: true,
   proofBar: true,
   workEmail: false,
-  linkedin: true,
+  linkedin: false,
   identity: true,
   skills: false,
   bio: false,
   contact: false,
 };
+
+function normalizeVisibilityFlags(input: Partial<VisibilityFlags> | null | undefined) {
+  return {
+    ...defaults,
+    ...(input ?? {}),
+    header: true,
+    linkedin: false,
+  };
+}
 
 function formatPrivacyPreflightMessage(payload: PrivacyPreflightPayload) {
   const flags = Array.isArray(payload.flags) ? payload.flags : [];
@@ -53,13 +72,17 @@ function formatPrivacyPreflightMessage(payload: PrivacyPreflightPayload) {
     return `${
       payload.safeToPublishSuggestion ||
       'Privacy review is required before publishing. Remove or rewrite flagged private details first.'
-    } ${flags.length} deterministic flag${flags.length === 1 ? '' : 's'} found.${flagDetail}`;
+    } ${flags.length} privacy concern${flags.length === 1 ? '' : 's'} found.${flagDetail}`;
   }
 
   return (
     payload.safeToPublishSuggestion ||
-    'No high-risk deterministic flags were found. This is not a privacy guarantee.'
+    'No high-risk privacy concerns were found. This is not a privacy guarantee.'
   );
+}
+
+async function readVisibilitySaveErrorPayload(res: Response) {
+  return (await res.json().catch(() => null)) as VisibilitySaveErrorPayload | null;
 }
 
 export function PortfolioVisibilityCard() {
@@ -70,6 +93,10 @@ export function PortfolioVisibilityCard() {
   const [saving, setSaving] = useState(false);
   const [checking, setChecking] = useState(false);
   const [preflightMessage, setPreflightMessage] = useState<string | null>(null);
+  const [saveFeedback, setSaveFeedback] = useState<SaveFeedback | null>(null);
+  const publicPageAccessDescription = publicPageEnabled
+    ? 'Anyone with the link can view your Public Page.'
+    : 'The public route stays unavailable until you turn this on and save.';
 
   useEffect(() => {
     const run = async () => {
@@ -78,11 +105,11 @@ export function PortfolioVisibilityCard() {
         const res = await fetch('/api/portfolio/visibility');
         if (res.ok) {
           const data = await res.json();
-          if (data.visibility) setFlags(data.visibility);
+          if (data.visibility) setFlags(normalizeVisibilityFlags(data.visibility));
           setPublicPageEnabled(data.publicPageEnabled !== false);
         }
       } catch (e) {
-        console.error(e);
+        dispatchClientErrorDiagnostic('settings.portfolio_visibility.load_failed', e);
       } finally {
         setLoading(false);
       }
@@ -91,11 +118,18 @@ export function PortfolioVisibilityCard() {
   }, []);
 
   const toggle = (key: keyof VisibilityFlags) => {
+    if (key === 'header') {
+      return;
+    }
+    setSaveFeedback(null);
+    setPreflightMessage(null);
     setFlags((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   const save = async () => {
     setSaving(true);
+    setSaveFeedback(null);
+    const normalizedFlags = normalizeVisibilityFlags(flags);
     try {
       const res = await apiFetch('/api/portfolio/visibility', {
         method: 'POST',
@@ -103,13 +137,34 @@ export function PortfolioVisibilityCard() {
         body: JSON.stringify({
           publicPageEnabled,
           searchIndexingEnabled: false,
-          ...flags,
+          ...normalizedFlags,
         }),
       });
-      if (!res.ok) throw new Error('Save failed');
+      if (!res.ok) {
+        const payload = await readVisibilitySaveErrorPayload(res);
+        if (payload?.privacyPreflight) {
+          setPreflightMessage(formatPrivacyPreflightMessage(payload.privacyPreflight));
+          setSaveFeedback({
+            tone: 'error',
+            message:
+              'Visibility was not saved because privacy review is required. Review the privacy check details above, then remove or rewrite flagged private details before saving again.',
+          });
+          return;
+        }
+        throw new Error('Save failed');
+      }
+      setSaveFeedback({
+        tone: 'success',
+        message: publicPageEnabled
+          ? 'Visibility saved. Your Public Page remains shareable by direct link.'
+          : 'Visibility saved. Your Public Page is now unavailable from the public route.',
+      });
     } catch (e) {
-      console.error(e);
-      alert('Could not save visibility. Please try again.');
+      dispatchClientErrorDiagnostic('settings.portfolio_visibility.save_failed', e);
+      setSaveFeedback({
+        tone: 'error',
+        message: 'Visibility could not be saved. Your previous settings are unchanged.',
+      });
     } finally {
       setSaving(false);
     }
@@ -131,7 +186,7 @@ export function PortfolioVisibilityCard() {
       if (!res.ok) {
         if (payload?.fallbackAvailable) {
           setPreflightMessage(
-            'Privacy preflight is temporarily unavailable. Manual checklist: remove private contact details, hidden identity terms, original filenames, private URLs, and unsupported sensitive details before publishing.'
+            'Privacy check is temporarily unavailable. Manual checklist: remove private contact details, hidden identity terms, original filenames, private URLs, and unsupported sensitive details before publishing.'
           );
           return;
         }
@@ -139,7 +194,7 @@ export function PortfolioVisibilityCard() {
       }
       setPreflightMessage(formatPrivacyPreflightMessage(payload));
     } catch (e) {
-      console.error(e);
+      dispatchClientErrorDiagnostic('settings.portfolio_visibility.privacy_check_failed', e);
       setPreflightMessage(
         'Manual checklist: remove private contact details, hidden identity terms, original filenames, private URLs, and unsupported sensitive details before publishing.'
       );
@@ -153,28 +208,33 @@ export function PortfolioVisibilityCard() {
       <CardHeader>
         <CardTitle>Public Page visibility</CardTitle>
         <CardDescription>
-          A direct-link proof snapshot comes first. Search engines stay off for the MVP.
+          A direct-link proof snapshot comes first. Search engines stay off until you opt in.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3 text-sm text-slate-700">
         {loading ? (
-          <div className="flex items-center gap-2 text-slate-500">
+          <div className="flex items-center gap-2 text-slate-500" role="status" aria-live="polite">
             <Loader2 className="h-4 w-4 animate-spin" />
-            Loading...
+            Loading Public Page visibility controls...
           </div>
         ) : (
           <>
             <VisibilityRow
-              label="Public page enabled"
-              description="Anyone with the link can view your Public Page."
+              label="Public Page access"
+              description={publicPageAccessDescription}
               checked={publicPageEnabled}
-              onCheckedChange={() => setPublicPageEnabled((prev) => !prev)}
+              onCheckedChange={() => {
+                setSaveFeedback(null);
+                setPreflightMessage(null);
+                setPublicPageEnabled((prev) => !prev);
+              }}
             />
             <VisibilityRow
               label="Header (name, handle, headline)"
-              description="Required for a credible Public Page."
+              description="Required so your direct-link Public Page has a trustworthy identity anchor."
               checked={flags.header}
               onCheckedChange={() => toggle('header')}
+              disabled
             />
             <VisibilityRow
               label="Proof bar block"
@@ -192,11 +252,6 @@ export function PortfolioVisibilityCard() {
               label="Work email"
               checked={flags.workEmail}
               onCheckedChange={() => toggle('workEmail')}
-            />
-            <VisibilityRow
-              label="LinkedIn confidence"
-              checked={flags.linkedin}
-              onCheckedChange={() => toggle('linkedin')}
             />
             <VisibilityRow
               label="Skills snapshot"
@@ -238,9 +293,29 @@ export function PortfolioVisibilityCard() {
               </p>
             ) : null}
 
-            <div className="flex flex-wrap gap-2">
+            {saveFeedback ? (
+              <p
+                className={
+                  saveFeedback.tone === 'error'
+                    ? 'rounded-md border border-[#E9C9B8] bg-[#FFF6F0] px-3 py-2 text-xs leading-5 text-[#8A3F21]'
+                    : 'rounded-md border border-proofound-sage/50 bg-proofound-parchment/50 px-3 py-2 text-xs leading-5 text-proofound-forest'
+                }
+                role={saveFeedback.tone === 'error' ? 'alert' : 'status'}
+                aria-live={saveFeedback.tone === 'error' ? 'assertive' : 'polite'}
+              >
+                {saveFeedback.message}
+              </p>
+            ) : null}
+
+            <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
               {assistiveAiEnabled ? (
-                <Button size="sm" variant="outline" onClick={checkPrivacy} disabled={checking}>
+                <Button
+                  size="touch"
+                  variant="outline"
+                  onClick={checkPrivacy}
+                  disabled={checking}
+                  className="w-full justify-center sm:w-auto"
+                >
                   {checking ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Checking...
@@ -252,7 +327,12 @@ export function PortfolioVisibilityCard() {
                   )}
                 </Button>
               ) : null}
-              <Button size="sm" onClick={save} disabled={saving}>
+              <Button
+                size="touch"
+                onClick={save}
+                disabled={saving}
+                className="w-full justify-center sm:w-auto"
+              >
                 {saving ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
@@ -284,11 +364,17 @@ function VisibilityRow({
 }) {
   return (
     <div className="flex items-center justify-between gap-3 rounded-md border border-slate-200 px-3 py-2">
-      <div className="space-y-0.5">
+      <div className="min-w-0 flex-1 space-y-0.5">
         <Label className="text-sm text-slate-800">{label}</Label>
         {description ? <p className="text-xs text-slate-500">{description}</p> : null}
       </div>
-      <Switch checked={checked} onCheckedChange={onCheckedChange} disabled={disabled} />
+      <Switch
+        aria-label={label}
+        checked={checked}
+        onCheckedChange={onCheckedChange}
+        disabled={disabled}
+        className="shrink-0"
+      />
     </div>
   );
 }

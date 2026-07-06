@@ -153,52 +153,53 @@ describe('Analytics Metrics', () => {
     });
   });
 
-  describe('PAC Metric Logic', () => {
+  describe('Proof-Fit Lift Metric Logic', () => {
     it('should calculate lift percentage correctly', () => {
-      const highPacRate = 0.75; // 75%
-      const lowPacRate = 0.55; // 55%
+      const highProofFitRate = 0.75; // 75%
+      const lowProofFitRate = 0.55; // 55%
 
-      const lift = ((highPacRate - lowPacRate) / lowPacRate) * 100;
+      const lift = ((highProofFitRate - lowProofFitRate) / lowProofFitRate) * 100;
 
       expect(lift).toBeCloseTo(36.36, 1); // ~36.36% lift
     });
 
-    it('should identify target achievement for PAC acceptance', () => {
-      const TARGET_PAC_ACCEPTANCE = 20; // % lift
+    it('should identify target achievement for proof-fit acceptance', () => {
+      const TARGET_PROOF_FIT_ACCEPTANCE = 20; // % lift
       const testValues = [
-        { highRate: 0.72, lowRate: 0.60, shouldMeet: true }, // 20% lift
-        { highRate: 0.80, lowRate: 0.60, shouldMeet: true }, // 33.33% lift
-        { highRate: 0.65, lowRate: 0.60, shouldMeet: false }, // 8.33% lift
+        { highRate: 0.72, lowRate: 0.6, shouldMeet: true }, // 20% lift
+        { highRate: 0.8, lowRate: 0.6, shouldMeet: true }, // 33.33% lift
+        { highRate: 0.65, lowRate: 0.6, shouldMeet: false }, // 8.33% lift
       ];
 
       testValues.forEach(({ highRate, lowRate, shouldMeet }) => {
         const lift = ((highRate - lowRate) / lowRate) * 100;
-        const meetingTarget = lift >= TARGET_PAC_ACCEPTANCE;
+        const meetingTarget = lift >= TARGET_PROOF_FIT_ACCEPTANCE;
         expect(meetingTarget).toBe(shouldMeet);
       });
     });
 
-    it('should identify target achievement for PAC contract', () => {
-      const TARGET_PAC_CONTRACT = 15; // % lift
+    it('should identify target achievement for proof-fit contract', () => {
+      const TARGET_PROOF_FIT_CONTRACT = 15; // % lift
       const testValues = [
-        { highRate: 0.70, lowRate: 0.60, shouldMeet: true }, // 16.67% lift
-        { highRate: 0.75, lowRate: 0.60, shouldMeet: true }, // 25% lift
-        { highRate: 0.68, lowRate: 0.60, shouldMeet: false }, // 13.33% lift (below 15%)
+        { highRate: 0.7, lowRate: 0.6, shouldMeet: true }, // 16.67% lift
+        { highRate: 0.75, lowRate: 0.6, shouldMeet: true }, // 25% lift
+        { highRate: 0.68, lowRate: 0.6, shouldMeet: false }, // 13.33% lift (below 15%)
       ];
 
       testValues.forEach(({ highRate, lowRate, shouldMeet }) => {
         const lift = ((highRate - lowRate) / lowRate) * 100;
-        const meetingTarget = lift >= TARGET_PAC_CONTRACT;
+        const meetingTarget = lift >= TARGET_PROOF_FIT_CONTRACT;
         expect(meetingTarget).toBe(shouldMeet);
       });
     });
 
     it('should handle edge case of zero baseline', () => {
-      const highPacRate = 0.50;
-      const lowPacRate = 0.0;
+      const highProofFitRate = 0.5;
+      const lowProofFitRate = 0.0;
 
       // Should handle division by zero gracefully
-      const lift = lowPacRate === 0 ? 0 : ((highPacRate - lowPacRate) / lowPacRate) * 100;
+      const lift =
+        lowProofFitRate === 0 ? 0 : ((highProofFitRate - lowProofFitRate) / lowProofFitRate) * 100;
 
       expect(lift).toBe(0); // Or Infinity if not handled
     });

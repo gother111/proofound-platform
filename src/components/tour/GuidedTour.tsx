@@ -21,6 +21,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Joyride, { CallBackProps, STATUS, EVENTS, ACTIONS } from 'react-joyride';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { individualTourSteps, organizationTourSteps, tourStyles } from './tourSteps';
 import { toast } from 'sonner';
 
@@ -32,9 +33,8 @@ interface GuidedTourProps {
   onSkip: () => void;
 }
 
-export function GuidedTour({ userId, persona, shouldRun, onComplete, onSkip }: GuidedTourProps) {
+export function GuidedTour({ persona, shouldRun, onComplete, onSkip }: GuidedTourProps) {
   const [run, setRun] = useState(false);
-  const [stepIndex, setStepIndex] = useState(0);
 
   const steps = persona === 'individual' ? individualTourSteps : organizationTourSteps;
 
@@ -47,9 +47,9 @@ export function GuidedTour({ userId, persona, shouldRun, onComplete, onSkip }: G
       '[data-tour="left-nav"]', // Navigation sidebar
     ];
 
-    // For individual tours, also check dashboard
+    // For individual tours, also check the current overview navigation target.
     if (persona === 'individual' && steps.length > 2) {
-      criticalSelectors.push('[data-tour="dashboard"]');
+      criticalSelectors.push('[data-tour="home-link"]');
     }
 
     // Check if elements exist in DOM
@@ -60,7 +60,7 @@ export function GuidedTour({ userId, persona, shouldRun, onComplete, onSkip }: G
         const element = document.querySelector(selector);
         return element !== null;
       } catch (error) {
-        console.warn(`Invalid selector for tour: ${selector}`, error);
+        dispatchClientErrorDiagnostic('tour.invalid_selector', error);
         return true; // Assume exists if selector is invalid
       }
     });
@@ -74,18 +74,6 @@ export function GuidedTour({ userId, persona, shouldRun, onComplete, onSkip }: G
       setRun(false);
     }
   }, [shouldRun]);
-
-  // Emit tour started event when tour begins
-  useEffect(() => {
-    if (shouldRun && run) {
-      // Emit analytics event via API to avoid Node.js imports in client component
-      fetch('/api/analytics/tour-event', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, event: 'started' }),
-      }).catch(console.error);
-    }
-  }, [shouldRun, run, userId]);
 
   // Start tour after ensuring elements are available
   useEffect(() => {
@@ -113,11 +101,10 @@ export function GuidedTour({ userId, persona, shouldRun, onComplete, onSkip }: G
         const delay = Math.min(baseDelay * Math.pow(2, attemptCount - 1), maxDelay);
         setTimeout(tryStartTour, delay);
       } else {
-        // Max attempts reached, log warning but start anyway
-        console.warn(
-          'Tour: Some target elements may not be available, but starting tour anyway.',
-          'This may cause some steps to not highlight correctly.'
-        );
+        dispatchClientDiagnostic('tour.targets_unavailable_after_retries', {
+          attempts: maxAttempts,
+          persona,
+        });
         setRun(true);
       }
     };
@@ -130,25 +117,15 @@ export function GuidedTour({ userId, persona, shouldRun, onComplete, onSkip }: G
     return () => {
       clearTimeout(initialTimer);
     };
-  }, [shouldRun, checkElementsAvailable]);
+  }, [shouldRun, checkElementsAvailable, persona]);
 
   const handleJoyrideCallback = useCallback(
     (data: CallBackProps) => {
-      const { status, type, index, action } = data;
-
-      // Update step index for analytics
-      if (type === EVENTS.STEP_AFTER) {
-        setStepIndex(index + 1);
-      }
+      const { status, type, action } = data;
 
       // Handle tour completion
       if (status === STATUS.FINISHED) {
         setRun(false);
-        fetch('/api/analytics/tour-event', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, event: 'completed' }),
-        }).catch(console.error);
         onComplete();
         toast.success('Tour completed! You can replay it anytime from Settings.');
       }
@@ -156,21 +133,21 @@ export function GuidedTour({ userId, persona, shouldRun, onComplete, onSkip }: G
       // Handle tour being skipped
       if (status === STATUS.SKIPPED || action === ACTIONS.CLOSE) {
         setRun(false);
-        fetch('/api/analytics/tour-event', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, event: 'skipped', stepIndex }),
-        }).catch(console.error);
         onSkip();
         toast.info('Tour skipped. You can restart it anytime from Settings.');
       }
 
-      // Log errors
       if (type === EVENTS.ERROR) {
-        console.error('Tour error:', data);
+        dispatchClientDiagnostic('tour.joyride_error', {
+          action,
+          index: data.index,
+          lifecycle: data.lifecycle,
+          status,
+          stepTarget: typeof data.step?.target === 'string' ? data.step.target : 'element',
+        });
       }
     },
-    [userId, onComplete, onSkip, stepIndex]
+    [onComplete, onSkip]
   );
 
   return (

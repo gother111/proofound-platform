@@ -3,8 +3,6 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { NetworkBackground } from '@/components/NetworkBackground';
 import { User, Building2, ArrowLeft } from 'lucide-react';
@@ -38,8 +36,8 @@ export function SignupContent() {
 
   // Account type selection screen
   return (
-    <div
-      className="relative flex min-h-screen items-center justify-center overflow-hidden bg-japandi-bg px-6 py-16 text-foreground"
+    <main
+      className="relative flex min-h-screen items-center justify-center overflow-hidden bg-japandi-bg px-4 py-10 text-foreground sm:px-6 sm:py-16"
       data-testid="signup-choice-screen"
     >
       {/* Proofound network background */}
@@ -51,33 +49,21 @@ export function SignupContent() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(28,77,58,0.08),transparent_55%),radial-gradient(circle_at_85%_80%,rgba(199,107,74,0.07),transparent_65%)]" />
 
       {/* Back to Home */}
-      <motion.button
+      <button
         type="button"
-        initial={{ x: -20 }}
-        animate={{ x: 0 }}
         onClick={() => router.push('/')}
-        className="absolute left-6 top-6 flex min-h-[44px] items-center gap-2 px-2 -mx-2 text-[#44504B] transition-colors hover:text-foreground"
+        className="absolute left-4 top-6 flex min-h-[44px] items-center gap-2 rounded-sm px-3 text-[#44504B] transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 sm:left-6"
       >
         <ArrowLeft className="w-4 h-4" />
         <span className="text-sm">Back</span>
-      </motion.button>
+      </button>
 
       {/* Account Type Selection */}
-      <motion.div
-        initial={{ y: 20 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="relative z-10 w-full max-w-[960px] px-4"
-      >
-        <Card className="mx-auto rounded-[24px] border border-proofound-stone bg-white/95 p-12 shadow-[0_4px_24px_rgba(29,51,48,0.08)] backdrop-blur">
+      <div className="relative z-10 w-full max-w-[960px] px-0 sm:px-4">
+        <Card className="mx-auto rounded-[24px] border border-proofound-stone bg-white/90 p-5 shadow-[0_4px_24px_rgba(29,51,48,0.08)] backdrop-blur sm:p-10 lg:p-12">
           {/* Header */}
-          <div className="text-center mb-12">
-            <motion.div
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2 }}
-              className="mb-4"
-            >
+          <div className="mb-8 text-center sm:mb-12">
+            <div className="mb-4">
               <Image
                 src="/logo.png"
                 alt="Proofound"
@@ -86,7 +72,7 @@ export function SignupContent() {
                 className="mx-auto h-12 w-12"
                 priority
               />
-            </motion.div>
+            </div>
             <h1 className="font-display text-[32px] font-semibold leading-[40px] tracking-[-0.02em] text-foreground">
               Join Proofound
             </h1>
@@ -96,16 +82,16 @@ export function SignupContent() {
           </div>
 
           {/* Account Type Cards */}
-          <div className="mx-auto grid max-w-3xl gap-6 md:grid-cols-2">
+          <div className="mx-auto grid max-w-3xl gap-4 sm:gap-6 md:grid-cols-2">
             {/* Individual Card */}
-            <motion.div initial={{ x: -20 }} animate={{ x: 0 }} transition={{ delay: 0.3 }}>
+            <div className="min-w-0">
               <button
                 type="button"
                 onClick={() => setSignupType('individual')}
                 className="group h-full w-full text-left"
                 data-testid="signup-choice-individual"
               >
-                <Card className="h-full rounded-2xl border border-proofound-stone p-8 transition-all duration-300 hover:-translate-y-1 hover:border-proofound-forest/40 hover:shadow-[0_14px_32px_-16px_rgba(28,77,58,0.3)]">
+                <Card className="h-full rounded-2xl border border-proofound-stone p-5 transition-all duration-300 hover:-translate-y-1 hover:border-proofound-forest/40 hover:shadow-[0_14px_32px_-16px_rgba(28,77,58,0.3)] sm:p-8">
                   <div className="flex flex-col items-start gap-4">
                     <div className="rounded-xl bg-proofound-stone p-4 transition-colors group-hover:bg-proofound-forest/10">
                       <User className="h-8 w-8 text-proofound-forest" />
@@ -116,7 +102,7 @@ export function SignupContent() {
                       </h3>
                       <p className="text-sm leading-6 text-[#44504B]">
                         For professionals who want a clean proof-based portfolio link they can share
-                        today, plus matching as they grow.
+                        today, then assignment reviews when proof and privacy are ready.
                       </p>
                     </div>
                     <div className="mt-auto">
@@ -127,17 +113,17 @@ export function SignupContent() {
                   </div>
                 </Card>
               </button>
-            </motion.div>
+            </div>
 
             {/* Organization Card */}
-            <motion.div initial={{ x: 20 }} animate={{ x: 0 }} transition={{ delay: 0.4 }}>
+            <div className="min-w-0">
               <button
                 type="button"
                 onClick={() => setSignupType('organization')}
                 className="group h-full w-full text-left"
                 data-testid="signup-choice-organization"
               >
-                <Card className="h-full rounded-2xl border border-proofound-stone p-8 transition-all duration-300 hover:-translate-y-1 hover:border-proofound-terracotta/40 hover:shadow-[0_14px_32px_-16px_rgba(199,107,74,0.32)]">
+                <Card className="h-full rounded-2xl border border-proofound-stone p-5 transition-all duration-300 hover:-translate-y-1 hover:border-proofound-terracotta/40 hover:shadow-[0_14px_32px_-16px_rgba(199,107,74,0.32)] sm:p-8">
                   <div className="flex flex-col items-start gap-4">
                     <div className="rounded-xl bg-[#F0E4D8] p-4 transition-colors group-hover:bg-proofound-terracotta/15">
                       <Building2 className="h-8 w-8 text-proofound-terracotta" />
@@ -159,7 +145,7 @@ export function SignupContent() {
                   </div>
                 </Card>
               </button>
-            </motion.div>
+            </div>
           </div>
 
           {/* Sign In Link */}
@@ -169,7 +155,7 @@ export function SignupContent() {
               <button
                 type="button"
                 onClick={() => router.push('/login')}
-                className="font-medium text-proofound-forest hover:text-[#2D5D4A] hover:underline inline-flex min-h-[44px] items-center px-2 -mx-2"
+                className="-mx-2 inline-flex min-h-[44px] items-center rounded-sm px-2 font-medium text-proofound-forest hover:text-[#2D5D4A] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
               >
                 Sign in
               </button>
@@ -182,19 +168,19 @@ export function SignupContent() {
           By creating an account, you agree to our{' '}
           <a
             href="/terms"
-            className="font-medium text-proofound-forest underline underline-offset-2 hover:text-[#2D5D4A]"
+            className="inline-flex min-h-11 items-center rounded-sm px-1 font-medium text-proofound-forest underline underline-offset-2 hover:text-[#2D5D4A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
           >
             Terms of Service
           </a>{' '}
           and{' '}
           <a
             href="/privacy"
-            className="font-medium text-proofound-forest underline underline-offset-2 hover:text-[#2D5D4A]"
+            className="inline-flex min-h-11 items-center rounded-sm px-1 font-medium text-proofound-forest underline underline-offset-2 hover:text-[#2D5D4A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
           >
             Privacy Policy
           </a>
         </p>
-      </motion.div>
-    </div>
+      </div>
+    </main>
   );
 }

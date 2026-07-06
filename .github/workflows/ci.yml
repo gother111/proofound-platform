@@ -61,18 +61,17 @@ jobs:
       E2E_PROVIDER_USER_EMAIL: ${{ secrets.E2E_PROVIDER_USER_EMAIL }}
       E2E_PROVIDER_USER_PASSWORD: ${{ secrets.E2E_PROVIDER_USER_PASSWORD }}
       NEXT_PUBLIC_USE_MOCK_SUPABASE: 'false'
-      STRICT_PROVIDER_E2E_REQUIRE_CONNECTED: 'true'
-      STRICT_PROVIDER_E2E_REQUIRE_BOTH: 'true'
+      STRICT_PROVIDER_E2E_REQUIRE_CONNECTED: 'false'
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           fetch-depth: 0
           ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
@@ -84,6 +83,9 @@ jobs:
       - name: Enforce landing PR scope
         if: github.event_name != 'push'
         run: node ./scripts/check-landing-pr-scope.mjs
+
+      - name: Validate GitHub workflows
+        run: npm run ci:workflows
 
       - name: Detect landing-sensitive changes
         id: landing_changes

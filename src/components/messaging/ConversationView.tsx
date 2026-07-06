@@ -9,16 +9,20 @@
  * Reference: DATA_SECURITY_PRIVACY_ARCHITECTURE.md Section 10
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import { MessageInput } from './MessageInput';
+import { MessageThreadLoadFailure } from './MessageThreadLoadFailure';
 import { RevealIdentityCard } from './RevealIdentityCard';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
-import { CheckCheck, Check, Mail, Phone, Link2 } from 'lucide-react';
+import { CheckCheck, Check, Mail, Phone, Link2, Lock } from 'lucide-react';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { createRevealIdentityRetryError } from '@/lib/messaging/reveal-errors';
+import { createMessageSendRetryError } from '@/lib/messaging/send-errors';
 
 interface Message {
   id: string;
@@ -64,56 +68,84 @@ interface ConversationViewProps {
   conversationId: string;
 }
 
+type ConversationLoadFailure = {
+  title: string;
+  description: string;
+};
+
+const CONVERSATION_THREAD_LOAD_FAILURE: ConversationLoadFailure = {
+  title: 'Conversation thread could not load',
+  description:
+    'This conversation did not finish loading. Messages, reveal requests, and review context are still safe; retry before replying.',
+};
+
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function hasReturnedError(payload: unknown) {
+  return Boolean(
+    payload &&
+      typeof payload === 'object' &&
+      'error' in payload &&
+      typeof payload.error === 'string' &&
+      payload.error.trim().length > 0
+  );
+}
+
 export function ConversationView({ conversationId }: ConversationViewProps) {
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [otherParticipant, setOtherParticipant] = useState<OtherParticipant | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ConversationLoadFailure | null>(null);
   const [sendingMessage, setSendingMessage] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-  // Fetch conversation and messages
-  useEffect(() => {
-    fetchConversation();
-    fetchMessages();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  const loadConversationThread = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const [conversationRes, messagesRes] = await Promise.all([
+        apiFetch(`/api/conversations/${conversationId}`),
+        apiFetch(`/api/conversations/${conversationId}/messages?limit=100`),
+      ]);
+
+      if (!conversationRes.ok) {
+        throw new Error('conversation_load_failed');
+      }
+
+      if (!messagesRes.ok) {
+        throw new Error('conversation_messages_load_failed');
+      }
+
+      const [conversationData, messagesData] = await Promise.all([
+        conversationRes.json(),
+        messagesRes.json(),
+      ]);
+
+      setConversation(conversationData.conversation);
+      setOtherParticipant(conversationData.otherParticipant);
+      setMessages(messagesData.messages);
+    } catch (err) {
+      dispatchClientErrorDiagnostic('messages.conversation_view.load_failed', err);
+      setError(CONVERSATION_THREAD_LOAD_FAILURE);
+    } finally {
+      setLoading(false);
+    }
   }, [conversationId]);
+
+  useEffect(() => {
+    void loadConversationThread();
+  }, [loadConversationThread]);
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
-  const fetchConversation = async () => {
-    try {
-      const res = await apiFetch(`/api/conversations/${conversationId}`);
-      if (!res.ok) throw new Error('Failed to fetch conversation');
-
-      const data = await res.json();
-      setConversation(data.conversation);
-      setOtherParticipant(data.otherParticipant);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load conversation');
-    }
-  };
-
-  const fetchMessages = async () => {
-    try {
-      setLoading(true);
-      const res = await apiFetch(`/api/conversations/${conversationId}/messages?limit=100`);
-      if (!res.ok) throw new Error('Failed to fetch messages');
-
-      const data = await res.json();
-      setMessages(data.messages);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load messages');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSendMessage = async (content: string, piiWarningShown: boolean = false) => {
     try {
@@ -139,7 +171,7 @@ export function ConversationView({ conversationId }: ConversationViewProps) {
       }
 
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to send message');
+        throw createMessageSendRetryError();
       }
 
       // Add message to list
@@ -153,23 +185,33 @@ export function ConversationView({ conversationId }: ConversationViewProps) {
   };
 
   const handleRevealIdentities = async () => {
+    const isApproval =
+      Boolean(conversation?.otherUserWantsReveal) && !Boolean(conversation?.currentUserWantsReveal);
+
     try {
       const res = await apiFetch(`/api/conversations/${conversationId}/reveal`, {
         method: 'POST',
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
 
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to request reveal');
+        dispatchClientDiagnostic('messages.conversation_view.reveal_returned_error', {
+          conversationId,
+          isApproval,
+          status: getResponseStatus(res),
+          hasReturnedError: hasReturnedError(data),
+        });
+        throw new Error('reveal_identity_request_failed');
       }
 
-      // Refresh conversation to get updated reveal status
-      await fetchConversation();
+      // Refresh thread state after a reveal request or approval.
+      await loadConversationThread();
 
       return data;
     } catch (err) {
-      throw err;
+      dispatchClientErrorDiagnostic('messages.conversation_view.reveal_failed', err);
+      throw createRevealIdentityRetryError({ isApproval });
     }
   };
 
@@ -187,9 +229,12 @@ export function ConversationView({ conversationId }: ConversationViewProps) {
 
   if (error) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <p className="text-destructive">{error}</p>
-      </div>
+      <MessageThreadLoadFailure
+        title={error.title}
+        description={error.description}
+        isRetrying={loading}
+        onRetry={loadConversationThread}
+      />
     );
   }
 
@@ -215,8 +260,9 @@ export function ConversationView({ conversationId }: ConversationViewProps) {
           <div className="flex-1">
             <h2 className="font-semibold">{otherParticipant.displayName || 'Unknown User'}</h2>
             {otherParticipant.masked && (
-              <Badge variant="secondary" className="mt-1">
-                🔒 Anonymous
+              <Badge variant="secondary" className="mt-1 gap-1">
+                <Lock className="h-3 w-3" />
+                Identity protected
               </Badge>
             )}
             {conversation.stage === 'revealed' && conversation.revealedAt && (
@@ -243,8 +289,12 @@ export function ConversationView({ conversationId }: ConversationViewProps) {
       <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
         <div className="space-y-4">
           {messages.length === 0 && (
-            <div className="text-center text-muted-foreground">
-              <p>No messages yet. Start the conversation!</p>
+            <div className="mx-auto max-w-sm rounded-lg border border-dashed border-border bg-muted/30 px-4 py-6 text-center">
+              <p className="text-sm font-medium text-foreground">No messages yet</p>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                Keep the first note tied to the assignment, proof, or reveal step so this thread
+                stays review-safe.
+              </p>
             </div>
           )}
 

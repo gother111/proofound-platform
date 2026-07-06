@@ -12,6 +12,7 @@ import {
   inspectCapabilityToken,
 } from '@/lib/security/capability-tokens';
 import { emitLaunchTrace, startLaunchTrace } from '@/lib/launch/trace';
+import { log } from '@/lib/log';
 
 export async function POST(request: NextRequest) {
   const trace = startLaunchTrace({
@@ -261,7 +262,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (insertError || !response) {
-      console.error('Feedback save error', insertError);
+      log.error('feedback.submit.save_failed', { error: insertError });
       return NextResponse.json({ error: 'Could not save feedback' }, { status: 500 });
     }
 
@@ -275,7 +276,7 @@ export async function POST(request: NextRequest) {
 
       const { error: answerError } = await client.from('feedback_answers').insert(answersPayload);
       if (answerError) {
-        console.error('Feedback answers error', answerError);
+        log.error('feedback.submit.answers_failed', { error: answerError });
         return NextResponse.json({ error: 'Could not save answers' }, { status: 500 });
       }
     }
@@ -348,15 +349,8 @@ export async function POST(request: NextRequest) {
         slaBreached: feedbackFollowUp.slaBreached,
       },
     });
-    emitLaunchTrace(trace, {
-      outcome: 'success',
-      state: 'structured_feedback_submitted',
-      details: {
-        responseId: response.id,
-      },
-    });
   } catch (error: any) {
-    console.error('Feedback submit failed', error);
+    log.error('feedback.submit.failed', { error });
 
     if (error.name === 'ZodError') {
       emitLaunchTrace(trace, {

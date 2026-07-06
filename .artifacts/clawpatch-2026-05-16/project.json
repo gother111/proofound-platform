@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "projectId": "prj_https-github-com-gother111-proof_53d29d8a51",
+  "name": "proofound",
+  "rootPath": "/Users/yuriibakurov/proofound",
+  "git": {
+    "remoteUrl": "https://github.com/gother111/proofound-platform.git",
+    "defaultBranch": "master",
+    "currentBranch": "master",
+    "headSha": "679b5aac441286a0d66cbcf82fc1299769a3a594"
+  },
+  "detected": {
+    "languages": ["typescript", "javascript", "python"],
+    "frameworks": ["next", "vitest"],
+    "packageManagers": ["npm"],
+    "commands": {
+      "typecheck": "npm run typecheck",
+      "lint": "npm run lint",
+      "format": "npm run format",
+      "test": "npm run test"
+    }
+  },
+  "createdAt": "2026-05-16T16:00:29.190Z",
+  "updatedAt": "2026-05-16T16:00:29.190Z"
+}

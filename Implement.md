@@ -1,6 +1,6 @@
 > Doc Class: `governance`
 > Sync Pair: `Implement.md`
-> Last Verified: `2026-05-14`
+> Last Verified: `2026-05-19`
 
 # Implementation Operating Contract
 
@@ -25,13 +25,17 @@ Active MVP implementation authority is:
 4. Ask up to 3 questions only if blocked on product intent or missing access/secrets.
 5. Implement in small diffs (separate refactors from behavior changes; prefer incremental commits).
 6. Run verification steps.
-7. Create a task change entry via `npm run log:change` and update relevant runbooks/checklists if commands, architecture, or behavior changed.
-8. Create a session entry via `npm run log:session` at session close-out.
+7. For UI/public/visual changes, use Browser or Playwright evidence with route, viewport, role/mode, and finding.
+8. Update the sweep artifact or relevant docs when behavior, route policy, verification gates, or launch evidence changes.
+9. Create a task change entry via `npm run log:change` only when a durable change note is useful; the command creates a real file.
+10. Create a session entry via `npm run log:session` only when session close-out history is useful; the command creates a real file.
 
 ## Guardrails
 
 - No secrets in the repo. Never paste `.env.local` values into tracked files.
 - Privacy is P0: Supabase RLS and field-visibility semantics must not regress.
-- Keep CI parity in mind: the repo has gates beyond “tests pass” (perf budgets and go/no-go).
+- Keep CI parity in mind: the repo has gates beyond “tests pass” (docs freshness, lint, typecheck, launch smoke, perf budgets, backup/restore evidence, monitoring, and go/no-go).
+- Treat manual-link interview scheduling as the locked MVP default; connected-provider flows are target-scoped.
+- Do not revive archived/post-MVP routes, broad public directory behavior, profile theater, vanity metrics, or broad platform language.
 - Do not let `Proofound_Project_Specification_2026-03-11.md`, audits, or repo snapshots override the locked MVP implementation authority.
 - Treat `agent/scratchpad.md` and `project/Documentation.md` as historical/index files, not per-task append targets.

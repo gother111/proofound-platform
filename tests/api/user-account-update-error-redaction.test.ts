@@ -21,6 +21,16 @@ function makeRequest(path: string, body: Record<string, unknown>) {
   });
 }
 
+function makeRawRequest(path: string, body: string) {
+  return new NextRequest(`https://proofound.io${path}`, {
+    method: 'PUT',
+    headers: {
+      'content-type': 'application/json',
+    },
+    body,
+  });
+}
+
 describe('account update auth-provider error redaction', () => {
   let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
 
@@ -64,6 +74,26 @@ describe('account update auth-provider error redaction', () => {
     expect(logged).not.toContain('User already registered');
   });
 
+  it('returns 400 for malformed email-update JSON before provider work', async () => {
+    const updateUser = vi.fn();
+
+    createClientMock.mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { id: 'user-1', email: 'owner@example.com' } },
+          error: null,
+        }),
+        updateUser,
+      },
+    } as any);
+
+    const response = await updateEmail(makeRawRequest('/api/user/email', '{'));
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
+    expect(updateUser).not.toHaveBeenCalled();
+  });
+
   it('returns a generic password-update error without logging provider details', async () => {
     const updateError = new Error('Provider refused password change for owner@example.com');
     const signInWithPassword = vi.fn().mockResolvedValue({ error: null });
@@ -101,5 +131,28 @@ describe('account update auth-provider error redaction', () => {
     expect(logged).toContain('user.password.update_failed');
     expect(logged).not.toContain('owner@example.com');
     expect(logged).not.toContain('Provider refused password change');
+  });
+
+  it('returns 400 for malformed password-update JSON before provider work', async () => {
+    const signInWithPassword = vi.fn();
+    const updateUser = vi.fn();
+
+    createClientMock.mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { id: 'user-1', email: 'owner@example.com' } },
+          error: null,
+        }),
+        signInWithPassword,
+        updateUser,
+      },
+    } as any);
+
+    const response = await updatePassword(makeRawRequest('/api/user/password', '{'));
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
+    expect(signInWithPassword).not.toHaveBeenCalled();
+    expect(updateUser).not.toHaveBeenCalled();
   });
 });

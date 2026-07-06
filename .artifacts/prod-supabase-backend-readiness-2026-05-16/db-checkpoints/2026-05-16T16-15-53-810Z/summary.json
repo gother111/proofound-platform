@@ -1,0 +1,12 @@
+{
+  "createdAt": "2026-05-16T16:16:04.026Z",
+  "checkpointDir": ".artifacts/prod-supabase-backend-readiness-2026-05-16/db-checkpoints/2026-05-16T16-15-53-810Z",
+  "database": {
+    "database": "postgres",
+    "user_name": "postgres",
+    "server_addr": "2a05:d018:135e:1611:b9d6:b39a:2588:b891/128",
+    "server_port": 5432
+  },
+  "migrationRows": "112",
+  "tablesAudited": 11
+}

@@ -1,5 +1,5 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-05-04`
+> Last Verified: `2026-05-21`
 
 # GCP Document AI Proof Artifact OCR Cloud Run Service
 
@@ -7,7 +7,7 @@ This directory contains the disabled-by-default Cloud Run service for the invite
 
 It is intentionally not deployment wiring. It contains no GCP project IDs, processor IDs, bucket names, service account JSON, credentials, or secrets.
 
-This service is not CV import, not broad OCR, and not a candidate evaluation system. OCR output is draft text only and must not auto-publish, auto-verify, auto-score, auto-rank, shortlist, recommend, or affect match/review/trust/hiring state. Cloud Vision OCR is excluded from this rollout.
+This service is not CV import, not broad OCR, and not a proof-review participant evaluation system. OCR output is draft text only and must not auto-publish, auto-verify, auto-score, auto-rank, shortlist, recommend, or affect match, review, verification, reveal, trust-state, or workflow-decision state. Cloud Vision OCR is excluded from this rollout.
 
 ## Endpoints
 

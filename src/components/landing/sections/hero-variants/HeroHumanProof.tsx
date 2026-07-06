@@ -38,7 +38,8 @@ export function HeroHumanProof({ shouldReduceMotion }: HeroHumanProofProps) {
 
             <p className="text-lg md:text-xl text-muted-foreground leading-relaxed font-sans max-w-[500px]">
               Proofound helps people present real work with clarity and trust — and helps
-              organizations hire through explainable evidence, not just polished claims.
+              organizations review assignment submissions through explainable evidence, not just
+              polished claims.
             </p>
           </div>
 
@@ -100,7 +101,7 @@ export function HeroHumanProof({ shouldReduceMotion }: HeroHumanProofProps) {
                     Impact Verified
                   </h4>
                   <p className="text-xs text-muted-foreground leading-relaxed leading-[1.4]">
-                    "Led the platform redesign, increasing engagement by 35% in Q2."
+                    "Led the checkout proof review, reducing review time by 35% in Q2."
                   </p>
                   <p className="text-[10px] text-foreground/40 mt-3 font-medium uppercase tracking-widest">
                     Confirmed by Design Director

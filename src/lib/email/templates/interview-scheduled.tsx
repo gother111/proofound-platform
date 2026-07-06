@@ -149,7 +149,7 @@ export function InterviewScheduledEmail({
       </div>
 
       <p>
-        Great news! Your interview with <strong>${organizationName}</strong> has been scheduled${assignmentTitle ? ` for the <strong>${assignmentTitle}</strong> opportunity` : ''}.
+        Your interview with <strong>${organizationName}</strong> has been scheduled${assignmentTitle ? ` for the <strong>${assignmentTitle}</strong> assignment review` : ''}. Open Proofound for the current workflow stage, approved context, and meeting details.
       </p>
 
       <div class="interview-details">
@@ -199,25 +199,25 @@ export function InterviewScheduledEmail({
       </div>
 
       <div class="tips">
-        <h3>💡 Interview Tips:</h3>
+        <h3>Interview reminders:</h3>
         <ul>
           <li>Test your video and audio setup 5-10 minutes before the call</li>
           <li>Find a quiet, well-lit location for the interview</li>
-          <li>Review your profile and the assignment details</li>
+          <li>Review relevant Proof Packs, portfolio context, and assignment details</li>
           <li>Prepare questions about the role and organization</li>
-          <li>Be ready to discuss your relevant skills and experience</li>
+          <li>Use Proofound for workflow updates or rescheduling requests</li>
         </ul>
       </div>
 
       <p style="font-size: 14px; color: #6B6760; margin-top: 30px;">
-        Need to reschedule? Contact ${organizationName} as soon as possible through the Proofound messaging system.
+        This email only includes scheduling details. Proof files, private notes, contact details, and reveal-stage context stay inside the authenticated workflow unless they have been explicitly approved for this stage.
       </p>
     </div>
 
     <div class="footer">
       <p>
         Sent by Proofound on behalf of ${organizationName}<br>
-        <a href="https://proofound.com">proofound.com</a>
+        <a href="https://proofound.io">proofound.io</a>
       </p>
     </div>
   </div>
@@ -240,7 +240,7 @@ Interview Scheduled
 
 Hi ${candidateName},
 
-Great news! Your interview with ${organizationName} has been scheduled${assignmentTitle ? ` for the ${assignmentTitle} opportunity` : ''}.
+Your interview with ${organizationName} has been scheduled${assignmentTitle ? ` for the ${assignmentTitle} assignment review` : ''}. Open Proofound for the current workflow stage, approved context, and meeting details.
 
 Interview Details:
 - Date: ${interviewDate}
@@ -248,17 +248,17 @@ Interview Details:
 - Duration: ${duration} minutes
 ${meetingLink ? `- Meeting Link: ${meetingLink}` : ''}
 
-Interview Tips:
+Interview reminders:
 - Test your video and audio setup 5-10 minutes before the call
 - Find a quiet, well-lit location for the interview
-- Review your profile and the assignment details
+- Review relevant Proof Packs, portfolio context, and assignment details
 - Prepare questions about the role and organization
-- Be ready to discuss your relevant skills and experience
+- Use Proofound for workflow updates or rescheduling requests
 
-Need to reschedule? Contact ${organizationName} as soon as possible through the Proofound messaging system.
+This email only includes scheduling details. Proof files, private notes, contact details, and reveal-stage context stay inside the authenticated workflow unless they have been explicitly approved for this stage.
 
 ---
 Sent by Proofound on behalf of ${organizationName}
-https://proofound.com
+https://proofound.io
   `.trim();
 }

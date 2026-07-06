@@ -33,6 +33,11 @@ import {
 } from '@/lib/matching/match-score-contract';
 import { buildCanonicalMatchPersistenceFields } from '@/lib/matching/review-contract';
 import { CONSENT_TYPES } from '@/lib/privacy/consent-contract';
+import {
+  buildVisualIndividualMatches,
+  getMatchingVisualState,
+  matchingVisualFixturesEnabled,
+} from '@/lib/matching/visual-fixtures';
 
 // Shared handler imported by the kept launch corridor routes.
 export const dynamic = 'force-dynamic';
@@ -80,6 +85,34 @@ interface MatchResult {
 
 type CandidatePoolSource = 'full_scan';
 
+function proofSupportLabel(
+  value: number
+): 'Primary reason' | 'Clear support' | 'Needs review' | 'Limited signal' {
+  if (value >= 0.85) return 'Primary reason';
+  if (value >= 0.65) return 'Clear support';
+  if (value >= 0.4) return 'Needs review';
+  return 'Limited signal';
+}
+
+function toVisibilitySafeProfileMatch(item: MatchResult) {
+  return {
+    id: item.id,
+    assignmentId: item.assignmentId,
+    assignment: item.assignment,
+    gaps: item.gaps,
+    missing: item.missing,
+    reasonCodes: item.artifact.reasonCodes,
+    reviewMode: 'reason_coded' as const,
+    proofSignals: Object.entries(item.contributions)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([key, value]) => ({
+        key,
+        support: proofSupportLabel(value),
+      })),
+  };
+}
+
 function resolveAssignmentScanLimit(k: number): number {
   return Math.min(
     MAX_ASSIGNMENT_SCAN_LIMIT,
@@ -121,6 +154,27 @@ export async function POST(request: NextRequest) {
   const startTime = Date.now();
 
   try {
+    const visualState = getMatchingVisualState(request.nextUrl);
+    if (matchingVisualFixturesEnabled() && visualState) {
+      const items = visualState === 'filled' ? buildVisualIndividualMatches() : [];
+      return NextResponse.json({
+        items,
+        meta: {
+          total: items.length,
+          returned: items.length,
+          durationMs: Date.now() - startTime,
+          weights: {},
+          candidatePoolSource: 'visual_fixture',
+          candidatePoolSize: items.length,
+          twoStageEnabled: false,
+          eligibility: {
+            tier: 'introductions_ready',
+            nextTierTarget: null,
+          },
+        },
+      });
+    }
+
     const isInternalCall = isTrustedInternalRequest(request);
     const rawBody = await request.text();
     let body: unknown = {};
@@ -510,7 +564,10 @@ export async function POST(request: NextRequest) {
           }
         }
       } catch (analyticsError) {
-        console.error('Failed to emit first match shown event:', analyticsError);
+        log.error('match.profile.first_match_event_failed', {
+          userId: user.id,
+          error: analyticsError,
+        });
       }
     }
 
@@ -526,24 +583,13 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({
-      items: topKWithIds.map((item) => ({
-        id: item.id,
-        assignmentId: item.assignmentId,
-        score: item.score,
-        scoreTotal: item.scoreTotal,
-        subscores: item.subscores,
-        contributions: item.contributions,
-        gaps: item.gaps,
-        missing: item.missing,
-        assignment: item.assignment,
-        focusBoost: item.focusBoost,
-        reasonCodes: item.artifact.reasonCodes,
-      })),
+      items: topKWithIds.map(toVisibilitySafeProfileMatch),
       meta: {
         total: results.length,
         returned: topKWithIds.length,
         durationMs: duration,
         weights: {},
+        scoreVisibility: 'internal_ordering_only',
         candidatePoolSource,
         candidatePoolSize: activeAssignments.length,
         twoStageEnabled,

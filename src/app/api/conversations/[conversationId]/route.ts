@@ -11,6 +11,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { db, conversations, profiles } from '@/db';
 import { eq } from 'drizzle-orm';
+import { log } from '@/lib/log';
+import {
+  buildVisualConversationDetails,
+  visualMessagingFixturesEnabled,
+} from '@/lib/messaging/visual-fixtures';
 
 interface RouteParams {
   params: Promise<{
@@ -41,6 +46,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (visualMessagingFixturesEnabled()) {
+      const visualConversation = buildVisualConversationDetails(conversationId, user.id);
+      if (visualConversation) {
+        return NextResponse.json(visualConversation);
+      }
     }
 
     // Fetch conversation with RLS protection
@@ -124,7 +136,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       otherParticipant,
     });
   } catch (error) {
-    console.error('Error fetching conversation:', error);
+    log.error('conversation.detail.get_failed', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -189,7 +201,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }
   } catch (error) {
-    console.error('Error updating conversation:', error);
+    log.error('conversation.detail.update_failed', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -54,6 +54,8 @@ describe('profile context CV import', () => {
     startFromCvStatus.visible = false;
     startFromCvStatus.available = false;
     startFromCvStatus.blockers = [];
+    vi.clearAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('hides Start from CV when the beta flag is off', () => {
@@ -151,6 +153,50 @@ describe('profile context CV import', () => {
     expect(onEditExperience).toHaveBeenCalledTimes(1);
     expect(onEditEducation).toHaveBeenCalledTimes(1);
     expect(onEditVolunteering).toHaveBeenCalledTimes(1);
+  });
+
+  it('confirms private context deletion in-app without a browser confirm', () => {
+    const onDeleteExperience = vi.fn();
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    renderContextTab({
+      ...baseProps,
+      experiences: [
+        {
+          id: 'exp-1',
+          title: 'Product Lead',
+          organizationName: 'Acme',
+          orgDescription: 'Led onboarding delivery',
+          duration: '2020 - 2024',
+          outcomes: 'Reduced support load',
+          projects: 'Onboarding workflow',
+          colleagues: 'Product and support',
+          achievements: 'Launch owner',
+          verified: false,
+        },
+      ],
+      onDeleteExperience,
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Delete Product Lead/i }));
+
+    expect(confirmSpy).not.toHaveBeenCalled();
+    expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Delete Product Lead?' })).toBeInTheDocument();
+    expect(screen.getByText(/removes this private work context/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Proof Packs, verification records, and privacy settings/i)
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Keep context/i }));
+    expect(onDeleteExperience).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: /Delete Product Lead/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Delete work context/i }));
+
+    expect(onDeleteExperience).toHaveBeenCalledTimes(1);
+    expect(onDeleteExperience).toHaveBeenCalledWith('exp-1');
+    expect(confirmSpy).not.toHaveBeenCalled();
   });
 
   it('groups private context by supported type and surfaces proof signals', () => {

@@ -1,17 +1,29 @@
 > Doc Class: `historical`
-> Last Verified: `2026-05-04`
+> Last Verified: `2026-05-19`
 
 # Archived Manual Testing Guide: CV Import Feature
 
 > Launch status: archived/non-launch. The CV import wizard is not an active MVP feature and is explicitly excluded from the controlled assistive AI / Document AI OCR rollout. Do not use this guide as MVP launch smoke evidence unless a future approved route-surface change reactivates CV import.
 
-## 🎯 Purpose
+## Purpose
 
-This guide helps you verify that the CV import feature is working correctly after the bug fixes.
+This guide is historical. It documents how the retired CV import wizard used to be manually tested, but the current MVP launch check is the opposite: the legacy wizard must stay unavailable.
 
-## ✅ Pre-Testing Checklist
+Do not follow the scenario checklist below as launch QA. Use the active non-launch hard gate instead:
 
-Before you start testing, ensure:
+```bash
+npx playwright test e2e/cv-import-non-launch.spec.ts
+```
+
+Expected current behavior:
+
+- `/app/i/expertise` returns `404`.
+- `/api/expertise/cv-import/wizard-suggest` returns `410`.
+- No launch navigation exposes the old CV import wizard.
+
+## Historical Pre-Testing Checklist
+
+The checklist below is retained only for old implementation context. It is not current MVP guidance.
 
 - [ ] Your local development server is running (`npm run dev`)
 - [ ] You're logged in as a test user
@@ -28,11 +40,13 @@ Should return > 0 skills.
 
 ---
 
-## 🧪 Test Scenarios
+## Historical Test Scenarios
 
-### Test 1: Basic CV Import Flow ✅
+These scenarios should fail against the current MVP because the legacy UI is intentionally unavailable. They are retained only to explain the old manual QA shape.
 
-**Goal**: Verify complete import workflow from CV text to saved skills.
+### Test 1: Basic CV Import Flow
+
+**Historical goal**: Verify complete import workflow from CV text to saved skills.
 
 **Steps**:
 
@@ -60,26 +74,26 @@ Should return > 0 skills.
 7. Click **"Add X Selected"** button
 8. Wait for success message
 
-**Expected Results**:
+**Historical expected results**:
 
 - ✅ Suggestions appear with skill names and confidence scores
 - ✅ Clicking skills toggles selection (border changes color)
 - ✅ "Add X Selected" button shows correct count
 - ✅ Success toast shows "Successfully added X skill(s)!"
 - ✅ Page refreshes or navigates to Skills Atlas
-- ✅ Skills appear in your Expertise Atlas
+- ✅ Skills appeared in the retired Expertise Atlas
 
 **Check Console**:
 
 - No JavaScript errors
-- Network request to `/api/expertise/auto-suggest` returns 200
+- Historical network request to `/api/expertise/auto-suggest` returned 200 before the route was removed from the active tree
 - Network requests to `/api/expertise/user-skills` return 201
 
 ---
 
 ### Test 2: No Skills Found
 
-**Goal**: Verify graceful handling when no skills are detected.
+**Historical goal**: Verify graceful handling when no skills are detected.
 
 **Steps**:
 
@@ -87,7 +101,7 @@ Should return > 0 skills.
 2. Paste: `The quick brown fox jumps over the lazy dog.`
 3. Click **"Analyze & Suggest Skills"**
 
-**Expected Results**:
+**Historical expected results**:
 
 - ✅ Info toast: "No skills found. Try pasting more detailed text."
 - ✅ No suggestions appear
@@ -97,7 +111,7 @@ Should return > 0 skills.
 
 ### Test 3: Duplicate Skill Handling
 
-**Goal**: Verify system handles duplicate skills gracefully.
+**Historical goal**: Verify system handled duplicate skills gracefully.
 
 **Steps**:
 
@@ -109,11 +123,11 @@ Should return > 0 skills.
    - Select JavaScript again
    - Click Add Selected
 
-**Expected Results**:
+**Historical expected results**:
 
 - ✅ First import: Success message
 - ✅ Second import: Success message (counts as success, skill already exists)
-- ✅ NO duplicate skills in database (verify in Expertise Atlas)
+- ✅ No duplicate skills in database (historically verified in Expertise Atlas)
 - ✅ Console shows skill already exists (but doesn't show error to user)
 
 **Verify in Database**:
@@ -132,7 +146,7 @@ Should return 0 rows (no duplicates).
 
 ### Test 4: Multiple Skills Import
 
-**Goal**: Verify batch import of multiple skills.
+**Historical goal**: Verify batch import of multiple skills.
 
 **Steps**:
 
@@ -149,11 +163,11 @@ Should return 0 rows (no duplicates).
 4. Select 10+ skills
 5. Click Add Selected
 
-**Expected Results**:
+**Historical expected results**:
 
 - ✅ Loading state shown ("Adding...")
 - ✅ Success message: "Successfully added 10 skills!"
-- ✅ All selected skills appear in Expertise Atlas
+- ✅ All selected skills appeared in the retired Expertise Atlas
 - ✅ Default values applied to all:
   - Level: 2 (Competent)
   - Experience: 0 months
@@ -164,7 +178,7 @@ Should return 0 rows (no duplicates).
 
 ### Test 5: Context Switching
 
-**Goal**: Verify CV/JD/General context buttons work.
+**Historical goal**: Verify CV/JD/General context buttons worked.
 
 **Steps**:
 
@@ -174,7 +188,7 @@ Should return 0 rows (no duplicates).
 4. Click **"General Text"** button → verify it's selected
 5. Paste text and analyze with each context
 
-**Expected Results**:
+**Historical expected results**:
 
 - ✅ Only one button selected at a time
 - ✅ Context is sent to API (check Network tab)
@@ -184,7 +198,7 @@ Should return 0 rows (no duplicates).
 
 ### Test 6: Loading States
 
-**Goal**: Verify UI shows proper loading feedback.
+**Historical goal**: Verify UI showed proper loading feedback.
 
 **Steps**:
 
@@ -192,7 +206,7 @@ Should return 0 rows (no duplicates).
 2. Paste long CV (2000+ characters)
 3. Click Analyze and IMMEDIATELY watch the button
 
-**Expected Results**:
+**Historical expected results**:
 
 - ✅ Button text changes to "Analyzing..."
 - ✅ Button is disabled during analysis
@@ -204,7 +218,7 @@ Should return 0 rows (no duplicates).
 2. Click Add Selected
 3. Watch the button
 
-**Expected Results**:
+**Historical expected results**:
 
 - ✅ Button text changes to "Adding..."
 - ✅ Button is disabled while saving
@@ -214,7 +228,7 @@ Should return 0 rows (no duplicates).
 
 ### Test 7: Error Handling
 
-**Goal**: Verify graceful error handling.
+**Historical goal**: Verify graceful error handling.
 
 **Test 7A: Empty Text**
 
@@ -222,7 +236,7 @@ Should return 0 rows (no duplicates).
 2. Leave textarea empty
 3. Try to click Analyze
 
-**Expected**: Button should be disabled.
+**Historical expected result**: Button should be disabled.
 
 **Test 7B: Network Error (Simulate)**
 
@@ -230,7 +244,7 @@ Should return 0 rows (no duplicates).
 2. Set throttling to "Offline"
 3. Paste CV and click Analyze
 
-**Expected**:
+**Historical expected result**:
 
 - ✅ Error toast: "Failed to analyze text"
 - ✅ No crash, UI remains functional
@@ -240,7 +254,7 @@ Should return 0 rows (no duplicates).
 1. Clear your auth cookies
 2. Try to import
 
-**Expected**:
+**Historical expected result**:
 
 - ✅ Redirected to login
 - OR Error message about authentication
@@ -249,14 +263,14 @@ Should return 0 rows (no duplicates).
 
 ### Test 8: UI/UX Verification
 
-**Goal**: Verify proper UI rendering.
+**Historical goal**: Verify proper UI rendering.
 
 **Steps**:
 
 1. Import CV and get suggestions
 2. Inspect each suggestion card
 
-**Expected Results**:
+**Historical expected results**:
 
 - ✅ Skill name is displayed clearly
 - ✅ Confidence badge shows percentage (e.g., "85%")
@@ -270,17 +284,17 @@ Should return 0 rows (no duplicates).
 
 ### Test 9: Data Persistence
 
-**Goal**: Verify skills are actually saved to database.
+**Historical goal**: Verify skills were actually saved to database.
 
 **Steps**:
 
 1. Import and add 3 skills
 2. Note their names
-3. Navigate away from Expertise page
-4. Come back to Expertise page
+3. Navigate away from the retired Expertise page
+4. Come back to the retired Expertise page
 5. Check Skills Atlas tab
 
-**Expected Results**:
+**Historical expected results**:
 
 - ✅ All 3 skills still appear
 - ✅ Skills have correct default values
@@ -314,7 +328,7 @@ Should show your recently imported skills with:
 **Check**:
 
 1. Console for errors
-2. Network tab: `/api/expertise/auto-suggest` response
+2. Historical network tab: `/api/expertise/auto-suggest` response
 3. Response should have `suggestions` array
 
 **Common Issues**:
@@ -361,31 +375,30 @@ Mark each as complete:
 - [ ] Test 8: UI renders correctly
 - [ ] Test 9: Data persists in database
 
-**All tests passing?** ✅ Feature is ready!
+**All historical tests passing?** This no longer means the feature is launch-ready. For the MVP, the required result is that the old route and API remain unavailable.
 
 ---
 
 ## 🎉 Post-Testing
 
-If all tests pass:
+If old workflow tests pass:
 
-1. ✅ Mark the verify-fix todo as complete
-2. ✅ Consider running automated tests: `npm run test:integration -- cv-import`
-3. ✅ Deploy to staging for QA team testing
-4. ✅ Update issue tracker or project board
+1. Do not deploy or promote the retired CV import wizard.
+2. Run the active hard-gate test instead: `npx playwright test e2e/cv-import-non-launch.spec.ts`.
+3. Update issue tracker or project board only if an approved route-surface change reactivates this work.
 
 If tests fail:
 
 1. Document which tests failed
 2. Check the troubleshooting section
 3. Review code changes in:
-   - `/src/app/api/expertise/auto-suggest/route.ts`
-   - `/src/components/expertise/CVJDAutoSuggest.tsx`
+   - historical `/src/app/api/expertise/auto-suggest/route.ts` (removed from the active route tree)
+   - `/src/archive/non_launch_pages/app/i/expertise/implementation/shared-components/expertise/CVJDAutoSuggest.tsx`
 4. Check console logs and network requests
 5. Ask for help if stuck!
 
 ---
 
-**Happy Testing!** 🚀
+Historical note ends here.
 
 If you encounter any issues not covered here, please update this guide or reach out to the team.

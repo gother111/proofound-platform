@@ -1,0 +1,130 @@
+{
+  "generated_at": "2026-05-29T16:14:10Z",
+  "repo_branch": "master",
+  "repo_head": "874f1da8a",
+  "git_status_summary": {
+    "initial": "clean",
+    "final_intentional_changes": [".artifacts/project-source-audit-2026-05-29/"],
+    "notes": [
+      "npm run build modified .artifacts/stale-build-state-cleanup-summary.md as a generated side effect; it was restored so only the audit folder remains intentional."
+    ]
+  },
+  "command_results": [
+    {
+      "command": "git status --short",
+      "result": "pass",
+      "summary": "Initial worktree clean."
+    },
+    {
+      "command": "find . -maxdepth 3 -type f ( -name \"*.md\" -o -name \"*.txt\" -o -name \"*.json\" ) | sort",
+      "result": "ran_noisy",
+      "summary": "Included node_modules and was too noisy for decisions; pruned rg inventory used for analysis."
+    },
+    {
+      "command": "npm run lint",
+      "result": "pass",
+      "summary": "Exit 0."
+    },
+    {
+      "command": "npm run typecheck",
+      "result": "pass",
+      "summary": "Exit 0."
+    },
+    {
+      "command": "npm run build",
+      "result": "pass",
+      "summary": "Build passed with non-fatal webpack/localstorage/edge-runtime warnings."
+    },
+    {
+      "command": "npm run docs:freshness",
+      "result": "pass",
+      "summary": "Passed with no findings."
+    },
+    {
+      "command": "npm run test:privacy",
+      "result": "pass_after_permission_rerun",
+      "summary": "Sandbox DNS failed; network-permitted rerun passed 2 files / 22 tests."
+    },
+    {
+      "command": "npm run test:privacy:extended",
+      "result": "pass_after_permission_rerun",
+      "summary": "Sandbox DNS failed; network-permitted rerun passed 2 files / 31 tests."
+    },
+    {
+      "command": "npm run test -- tests/api/launch-surface-inventory.test.ts tests/api/launch-page-inventory.test.ts src/lib/launch/__tests__/surface-policy.test.ts",
+      "result": "pass",
+      "summary": "Passed 3 files / 21 tests."
+    },
+    {
+      "command": "npm run test:launch:routes",
+      "result": "pass",
+      "summary": "Passed 4 files / 21 tests."
+    },
+    {
+      "command": "npm run test:e2e:landing",
+      "result": "pass_after_permission_rerun",
+      "summary": "Sandbox server bind failed; permitted rerun passed 11 tests."
+    },
+    {
+      "command": "npm run test:launch:smoke -- --artifact .artifacts/project-source-audit-2026-05-29/launch-smoke-report.json",
+      "result": "pass_after_permission_rerun",
+      "summary": "Sandbox server/tsx IPC failed; permitted rerun passed all 6 smoke checks."
+    },
+    {
+      "command": "npm run monitor:launch -- --artifact .artifacts/project-source-audit-2026-05-29/launch-smoke-report.json",
+      "result": "pass_after_local_server_and_permission_rerun",
+      "summary": "Initial endpoint checks failed without a running/fetchable local server; permitted rerun against npm run start passed 10/10."
+    }
+  ],
+  "generated_files": [
+    ".artifacts/project-source-audit-2026-05-29/PROJECT_SOURCE_AUDIT_SUMMARY.md",
+    ".artifacts/project-source-audit-2026-05-29/PROJECT_SOURCE_REPLACEMENT_MAP.md",
+    ".artifacts/project-source-audit-2026-05-29/CURRENT_REPO_TRUTH.md",
+    ".artifacts/project-source-audit-2026-05-29/DOCUMENT_STALENESS_AND_CONFLICTS.md",
+    ".artifacts/project-source-audit-2026-05-29/PROJECT_SOURCE_UPLOAD_PACKAGE.md",
+    ".artifacts/project-source-audit-2026-05-29/NEXT_ACTIONS_FOR_YURII.md",
+    ".artifacts/project-source-audit-2026-05-29/CODEX_AUDIT_INDEX.json",
+    ".artifacts/project-source-audit-2026-05-29/launch-smoke-report.json"
+  ],
+  "recommended_upload_files": [
+    "AGENTS.md",
+    "Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md",
+    "PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md",
+    "PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md",
+    "LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md",
+    "Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md",
+    ".artifacts/project-source-audit-2026-05-29/PROJECT_SOURCE_AUDIT_SUMMARY.md",
+    ".artifacts/project-source-audit-2026-05-29/CURRENT_REPO_TRUTH.md",
+    ".artifacts/project-source-audit-2026-05-29/PROJECT_SOURCE_REPLACEMENT_MAP.md",
+    ".artifacts/project-source-audit-2026-05-29/DOCUMENT_STALENESS_AND_CONFLICTS.md",
+    ".artifacts/project-source-audit-2026-05-29/PROJECT_SOURCE_UPLOAD_PACKAGE.md",
+    ".artifacts/project-source-audit-2026-05-29/NEXT_ACTIONS_FOR_YURII.md",
+    "docs/ai/Proofound_AI_Assistive_Layer_Source_Of_Truth_Addendum_2026-05-03.md",
+    "docs/verification-checklist.md"
+  ],
+  "recommended_archive_files": [
+    "PRD_for_a_web_platform_MVP.master-latest.md",
+    "PRD_for_a_web_platform_MVP.md",
+    "Proofound_PRD_MVP.md",
+    "PRD_TECHNICAL_REQUIREMENTS.md",
+    "LAUNCH_RUNBOOK.md",
+    "Proofound_Project_Specification_2026-03-11.md as active authority",
+    ".artifacts/proofound-route-inventory.md",
+    ".artifacts/proofound-current-state-reality-check.md",
+    ".artifacts/CURRENT_CODEBASE_TRUTH.md",
+    ".artifacts/project-source-refresh-2026-05-14/",
+    "docs/proofound-hard-audit-2026-03-12.md",
+    "docs/proofound-master-audit-2026-03-22.md",
+    "docs/scope-compliance-report-2026-03-24.md",
+    "FULL_PRODUCT_ARCHITECTURE_PLAN.md"
+  ],
+  "unresolved_questions": [
+    "Production-candidate incident/support owner assignments are not freshly evidenced.",
+    "Critical alert configuration is not freshly evidenced.",
+    "Backup/restore drill for the intended production-candidate target is not freshly evidenced.",
+    "Founder go/no-go signoff is not evidenced.",
+    "Full npm audit was not run in this pass; production dependency security is not newly verified here.",
+    "Live https://proofound.io smoke/go-no-go was not run to avoid production-target mutation risk without explicit scope."
+  ],
+  "current_launch_verdict": "Repo-local locked MVP corridor READY based on current checks; full production launch UNVERIFIED / NO-GO until production-candidate operational evidence and founder signoff are refreshed."
+}

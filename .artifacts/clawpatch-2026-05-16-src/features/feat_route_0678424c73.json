@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "featureId": "feat_route_0678424c73",
+  "title": "Route /app/o/:slug/portfolio",
+  "summary": "Web route implemented by app/app/o/[slug]/portfolio/page.tsx.",
+  "kind": "route",
+  "source": "next-app-route",
+  "confidence": "high",
+  "entrypoints": [
+    {
+      "path": "app/app/o/[slug]/portfolio/page.tsx",
+      "symbol": null,
+      "route": "/app/o/:slug/portfolio",
+      "command": null
+    }
+  ],
+  "ownedFiles": [
+    {
+      "path": "app/app/o/[slug]/portfolio/page.tsx",
+      "reason": "entrypoint"
+    }
+  ],
+  "contextFiles": [],
+  "tests": [],
+  "tags": ["next", "web"],
+  "trustBoundaries": ["user-input", "network", "serialization"],
+  "status": "fixed",
+  "lock": null,
+  "findingIds": ["fnd_sig-feat-route-0678424c73-1423c4_61d05f6d33"],
+  "patchAttemptIds": [],
+  "analysisHistory": [
+    {
+      "runId": "20260516T161141-38a836",
+      "kind": "review",
+      "summary": "1 finding(s)",
+      "provider": "codex",
+      "model": null,
+      "createdAt": "2026-05-16T16:15:25.044Z"
+    }
+  ],
+  "createdAt": "2026-05-16T16:02:40.128Z",
+  "updatedAt": "2026-05-16T16:39:32.802Z"
+}

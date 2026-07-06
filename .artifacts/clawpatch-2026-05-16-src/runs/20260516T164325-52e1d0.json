@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "runId": "20260516T164325-52e1d0",
+  "command": "review",
+  "args": [
+    "--root",
+    "/Users/yuriibakurov/proofound/src",
+    "--state-dir",
+    "/Users/yuriibakurov/proofound/.artifacts/clawpatch-2026-05-16-src",
+    "review",
+    "--limit",
+    "10",
+    "--jobs",
+    "1",
+    "--no-input"
+  ],
+  "rootPath": "/Users/yuriibakurov/proofound/src",
+  "headSha": "679b5aac441286a0d66cbcf82fc1299769a3a594",
+  "startedAt": "2026-05-16T16:43:25.860Z",
+  "finishedAt": "2026-05-16T16:55:45.811Z",
+  "status": "completed",
+  "claimedFeatureIds": [
+    "feat_route_0a2d078951",
+    "feat_route_0b54f0f0fb",
+    "feat_route_0b8c982556",
+    "feat_route_0e15449091",
+    "feat_route_0ed8976d1d",
+    "feat_route_0f03247aec",
+    "feat_route_1284e11a86",
+    "feat_route_14511db2ac",
+    "feat_route_16cb62d232",
+    "feat_route_1769d7f40c"
+  ],
+  "findingIds": [
+    "fnd_sig-feat-route-0b54f0f0fb-8eddcc_57e4ef231e",
+    "fnd_sig-feat-route-0b54f0f0fb-379f7b_ddb2dcb442",
+    "fnd_sig-feat-route-0b8c982556-1a568b_9994d181e8",
+    "fnd_sig-feat-route-0ed8976d1d-112f76_b086e04bd8",
+    "fnd_sig-feat-route-0ed8976d1d-d324af_520515af1e",
+    "fnd_sig-feat-route-0ed8976d1d-071c0a_4efae85827",
+    "fnd_sig-feat-route-0f03247aec-6d108f_535e795e67",
+    "fnd_sig-feat-route-0f03247aec-b96920_a885726d84",
+    "fnd_sig-feat-route-1284e11a86-964c27_0e5a115ef6",
+    "fnd_sig-feat-route-1284e11a86-e35f98_2b2982acce",
+    "fnd_sig-feat-route-14511db2ac-0fbcee_b8f9b5a18f",
+    "fnd_sig-feat-route-14511db2ac-aa2b18_434490ad70",
+    "fnd_sig-feat-route-1769d7f40c-73e9ac_5d18fa828d"
+  ],
+  "patchAttemptIds": [],
+  "errors": []
+}

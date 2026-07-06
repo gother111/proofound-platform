@@ -1,0 +1,161 @@
+{
+  "schemaVersion": 2,
+  "scope": "full",
+  "generatedAt": "2026-05-16T20:56:50.554Z",
+  "targetBaseUrl": "http://127.0.0.1:33213",
+  "executionMode": "local",
+  "freshnessThresholdMinutes": 60,
+  "expiresAt": "2026-05-16T21:56:50.554Z",
+  "overallStatus": "fail",
+  "ai": {
+    "assistantsEnabled": false,
+    "rawPromptLoggingEnabled": false,
+    "modelCallRequired": false,
+    "state": "disabled_local_fallback_verified"
+  },
+  "corridors": [
+    {
+      "id": "individual",
+      "label": "Individual corridor",
+      "status": "pass",
+      "checkIds": ["public_individual_portfolio_visible", "proof_creation_case"],
+      "generatedAt": "2026-05-16T20:56:50.554Z"
+    },
+    {
+      "id": "organization",
+      "label": "Organization corridor",
+      "status": "fail",
+      "checkIds": [
+        "public_org_trust_fixture_live",
+        "full_org_corridor_review_to_engagement_verification"
+      ],
+      "generatedAt": "2026-05-16T20:56:50.554Z"
+    },
+    {
+      "id": "trust_privacy",
+      "label": "Trust / privacy corridor",
+      "status": "pass",
+      "checkIds": ["hidden_portfolio_protected", "privacy_no_leak_case"],
+      "generatedAt": "2026-05-16T20:56:50.554Z"
+    }
+  ],
+  "checks": [
+    {
+      "id": "public_individual_portfolio_visible",
+      "corridor": "individual",
+      "label": "Public individual portfolio visible case",
+      "runner": {
+        "kind": "vitest",
+        "label": "vitest",
+        "testFiles": ["tests/ui/public-portfolio-access-consistency.test.tsx"]
+      },
+      "status": "pass",
+      "expectedState": "public_individual_portfolio_visible",
+      "durationMs": 1647,
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (52) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }\n\n ✓ tests/ui/public-portfolio-access-consistency.test.tsx  (2 tests) 68ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  22:52:29\n   Duration  971ms (transform 96ms, setup 106ms, collect 153ms, tests 68ms, environment 205ms, prepare 45ms)\n\n\n(node:21633) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)",
+      "generatedAt": "2026-05-16T20:52:30.650Z"
+    },
+    {
+      "id": "proof_creation_case",
+      "corridor": "individual",
+      "label": "Proof creation case",
+      "runner": {
+        "kind": "vitest",
+        "label": "vitest",
+        "testFiles": ["tests/api/expertise-user-skill-proofs-route.test.ts"]
+      },
+      "status": "pass",
+      "expectedState": "proof_creation_case_live",
+      "durationMs": 1503,
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (52) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`\n\n ✓ tests/api/expertise-user-skill-proofs-route.test.ts  (6 tests) 15ms\n\n Test Files  1 passed (1)\n      Tests  6 passed (6)\n   Start at  22:52:31\n   Duration  784ms (transform 66ms, setup 100ms, collect 64ms, tests 15ms, environment 182ms, prepare 37ms)\n\n\n(node:21686) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)",
+      "generatedAt": "2026-05-16T20:52:32.154Z"
+    },
+    {
+      "id": "public_org_trust_fixture_live",
+      "corridor": "organization",
+      "label": "Seeded public org trust fixture live",
+      "runner": {
+        "kind": "command",
+        "label": "seeded_public_org_trust_smoke",
+        "preCommands": [
+          {
+            "label": "seed_public_org_trust_fixture",
+            "command": ["npm", "run", "seed:public-org-trust-fixture"]
+          }
+        ],
+        "command": ["npm", "run", "test:e2e:org-trust:smoke"]
+      },
+      "status": "pass",
+      "expectedState": "public_org_trust_fixture_live",
+      "durationMs": 10891,
+      "outputSnippet": "[seed_public_org_trust_fixture]\n> proofound@0.1.0 seed:public-org-trust-fixture\n> tsx scripts/seed-public-org-trust-fixture.ts\n\n[dotenv@17.2.3] injecting env (52) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops\n{\n  \"ok\": true,\n  \"mode\": \"seeded\",\n  \"slug\": \"proofound-labs\",\n  \"path\": \"/portfolio/org/proofound-labs\",\n  \"publicationState\": \"public_noindex\",\n  \"seededAt\": \"2026-05-16T20:52:32.709Z\",\n  \"verificationUrl\": null,\n  \"verifiedAt\": null,\n  \"httpStatus\": null\n}\n\n(node:21735) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.\n(Use `node --trace-deprecation ...` to show where the warning was created)\n\n[seeded_public_org_trust_smoke]\n> proofound@0.1.0 test:e2e:org-trust:smoke\n> node ./scripts/playwright-node24.mjs test e2e/public-org-trust.smoke.spec.ts --project=chromium --reporter=line --workers=1\n\n\n\n\nRunning 1 test using 1 worker\n\n\n\n\n\n\u001b[1A\u001b[2K[1/1] [chromium] › e2e/public-org-trust.smoke.spec.ts:26:3 › Seeded public org trust smoke › seeded org trust page returns 200 and stays MVP-safe\n\u001b[1A\u001b[2K  1 passed (7.8s)\n\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m(node:21874) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n\u001b[2m[WebServer] \u001b[22m(Use `node --trace-warnings ...` to show where the warning was created)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m(node:21874) Warning: `--localstorage-file` was provided without a valid path\n\u001b[1A\u001b[2K(node:21884) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n\u001b[1A\u001b[2K(node:21884) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)",
+      "generatedAt": "2026-05-16T20:52:43.045Z",
+      "evidence": {
+        "fixtureSlug": "proofound-labs",
+        "fixturePath": "/portfolio/org/proofound-labs"
+      }
+    },
+    {
+      "id": "full_org_corridor_review_to_engagement_verification",
+      "corridor": "organization",
+      "label": "Full org corridor review to engagement verification case",
+      "runner": {
+        "kind": "command",
+        "label": "strict_org_corridor_smoke",
+        "command": [
+          "node",
+          "./scripts/playwright-node24.mjs",
+          "test",
+          "e2e/strict/org-corridor.strict.spec.ts",
+          "--project=chromium",
+          "--reporter=line",
+          "--workers=1"
+        ],
+        "env": {
+          "NEXT_PUBLIC_USE_MOCK_SUPABASE": "false"
+        }
+      },
+      "status": "fail",
+      "expectedState": "full_org_corridor_review_to_engagement_verification_live",
+      "durationMs": 244101,
+      "message": "Full org corridor review to engagement verification case failed",
+      "outputSnippet": ":\"blind\"},{\"id\":\"2a14112b-735b-4f07-a4b5-db8c0081929f\",\"profileId\":\"ef1162d4-e5fc-4283-a29b-c0d222e975ab\",\"reviewStage\":\"blind_review\",\"revealScope\":\"blind\"},{\"id\":\"c980d9b4-794d-4165-9b50-138980b80274\",\"profileId\":\"fb827bdb-49bf-468c-a091-a333e6c84702\",\"reviewStage\":\"blind_review\",\"revealScope\":\"blind\"},{\"id\":\"3cffcb98-1fcf-4d42-8fcb-565559c8cf94\",\"profileId\":\"9404c1fa-82a7-4d22-9ce3-a9128b1b7d80\",\"reviewStage\":\"blind_review\",\"revealScope\":\"blind\"},{\"id\":\"f2ef49b1-b1ba-4fbd-af2d-a02072851d58\",\"profileId\":\"b39e6819-65d8-400e-9ff0-c903c534c752\",\"reviewStage\":\"blind_review\",\"revealScope\":\"blind\"},{\"id\":\"20245ad2-4592-4af1-b3c6-66f534fd381c\",\"profileId\":\"86d04f68-1fd5-4fb0-a769-6704164e382c\",\"reviewStage\":\"blind_review\",\"revealScope\":\"blind\"},{\"id\":\"bb2ed9bf-b771-4cd3-98e7-b24252a35138\",\"profileId\":\"474299c1-eba1-43fc-a905-fc1aa36e5b55\",\"reviewStage\":\"blind_review\",\"revealScope\":\"blind\"},{\"id\":\"1422fed3-c257-424a-b0b9-93ebe7440d13\",\"profileId\":\"c8e79ec5-8774-44c0-b06e-29b530815eba\",\"reviewStage\":\"blind_review\",\"revealScope\":\"blind\"},{\"id\":\"4714795d-b4be-4303-ab98-a53e68f34f20\",\"profileId\":\"6077aadd-557d-4494-a6ca-02e2d6c042c8\",\"reviewStage\":\"blind_review\",\"revealScope\":\"blind\"},{\"id\":\"38258187-650c-478b-abc7-3664f4e5cfcc\",\"profileId\":\"720e52d2-e05c-489b-b373-144aa31ce0f1\",\"reviewStage\":\"blind_review\",\"revealScope\":\"blind\"},{\"id\":\"b93dc687-238a-480f-9e26-c08c75282bb7\",\"profileId\":\"73baa1e9-1b57-4b8d-a983-f717639d0c60\",\"reviewStage\":\"blind_review\",\"revealScope\":\"blind\"}]\n\n    \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\n    Received: \u001b[31mundefined\u001b[39m\n\n      624 |         }))\n      625 |       )}`\n    > 626 |     ).toBeTruthy();\n          |       ^\n      627 |     expect(blindMatch?.reviewStage).toBe('blind_review');\n      628 |     expect(blindMatch?.revealScope).toBe('blind');\n      629 |     expect(blindMatch?.visibleIdentityFields ?? []).toEqual([]);\n        at /Users/yuriibakurov/proofound/e2e/strict/org-corridor.strict.spec.ts:626:7\n\n    attachment #1: owner-invite-alert-not-visible-after-persistence (text/plain) ───────────────────\n    url: http://127.0.0.1:33213/app/o/strict-corridor-org-1778964770030-349050/home\n    \n    Skip to main content\n    Overview\n    Assignments\n    Communications\n    Organization Profile\n    Public Preview\n    Proofound\n    Overview\n    SC\n    Organization review cockpit\n    Strict Corridor Org\n    \n    A focused launch desk for one clean hiring corridor: co...\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/strict-org-corridor.strict-d91f7-ted-org-corridor-end-to-end-chromium/error-context.md\n\n\n\u001b[1A\u001b[2K  1 failed\n    [chromium] › e2e/strict/org-corridor.strict.spec.ts:231:3 › Strict Authenticated Org Corridor › reruns the launch-binding authenticated org corridor end to end \n\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m(node:22071) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n\u001b[2m[WebServer] \u001b[22m(Use `node --trace-warnings ...` to show where the warning was created)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m(node:22071) Warning: `--localstorage-file` was provided without a valid path\n\u001b[1A\u001b[2K(node:22079) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n\u001b[1A\u001b[2K(node:22079) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m{\"level\":\"warn\",\"event\":\"api.slow\",\"timestamp\":\"2026-05-16T20:54:29.254Z\",\"requestId\":\"nA7kM4mnTtrk\",\"path\":\"/api/assignments\",\"method\":\"POST\",\"route\":\"/api/assignments\",\"durationMs\":5451}\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m[Performance Alert] /api/assignments P95 5451ms exceeds 1500ms\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m(node:22071) TimeoutNegativeWarning: -92782.49794636446 is a negative number.\n\u001b[2m[WebServer] \u001b[22mTimeout duration was set to 1.",
+      "generatedAt": "2026-05-16T20:56:47.146Z"
+    },
+    {
+      "id": "hidden_portfolio_protected",
+      "corridor": "trust_privacy",
+      "label": "Hidden portfolio protected case",
+      "runner": {
+        "kind": "vitest",
+        "label": "vitest",
+        "testFiles": ["tests/ui/public-portfolio-access-consistency.test.tsx"]
+      },
+      "status": "pass",
+      "expectedState": "hidden_portfolio_protected",
+      "durationMs": 1483,
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (52) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }\n\n ✓ tests/ui/public-portfolio-access-consistency.test.tsx  (2 tests) 69ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  22:56:47\n   Duration  814ms (transform 95ms, setup 94ms, collect 147ms, tests 69ms, environment 185ms, prepare 36ms)\n\n\n(node:23657) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)",
+      "generatedAt": "2026-05-16T20:56:48.629Z"
+    },
+    {
+      "id": "privacy_no_leak_case",
+      "corridor": "trust_privacy",
+      "label": "Privacy no-leak case",
+      "runner": {
+        "kind": "vitest",
+        "label": "vitest",
+        "testFiles": [
+          "tests/api/org-match-review-route.test.ts",
+          "tests/lib/effective-visibility.test.ts",
+          "tests/lib/profile-fetcher.test.ts",
+          "tests/api/conversation-reveal-route.test.ts"
+        ]
+      },
+      "status": "pass",
+      "expectedState": "privacy_no_leak_enforced",
+      "durationMs": 1925,
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (52) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (52) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (52) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (52) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com\n\n ✓ tests/lib/effective-visibility.test.ts  (5 tests) 1ms\n ✓ tests/lib/profile-fetcher.test.ts  (2 tests) 2ms\n ✓ tests/api/org-match-review-route.test.ts  (18 tests) 28ms\n ✓ tests/api/conversation-reveal-route.test.ts  (7 tests) 16ms\n\n Test Files  4 passed (4)\n      Tests  32 passed (32)\n   Start at  22:56:49\n   Duration  1.22s (transform 346ms, setup 404ms, collect 1.26s, tests 47ms, environment 815ms, prepare 171ms)\n\n\n(node:23706) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)\n(node:23706) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)\n(node:23706) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)\n(node:23706) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)",
+      "generatedAt": "2026-05-16T20:56:50.554Z"
+    }
+  ]
+}

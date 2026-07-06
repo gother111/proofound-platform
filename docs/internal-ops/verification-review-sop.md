@@ -1,5 +1,5 @@
 > Doc Class: `active`
-> Last Verified: `2026-03-25`
+> Last Verified: `2026-05-19`
 
 # Verification Review SOP
 
@@ -14,7 +14,7 @@ This SOP is claim-scoped. Do not use it as a general profile moderation workflow
 ## Owner and escalation
 
 - Owner: `Support / verification lead`
-- Escalate to `Product / ops lead` if the trust outcome affects reveal, shortlist handling, or a candidate-facing dispute
+- Escalate to `Product / ops lead` if the trust outcome affects reveal, shortlist handling, or a reveal/privacy dispute
 - Escalate to `Engineering on-call` if queue state, verification state, or audit writes are failing
 - Pilot SLA target: first triage within `1 business day`; same-day escalation for active corridor blockers
 
@@ -45,7 +45,7 @@ This SOP is claim-scoped. Do not use it as a general profile moderation workflow
 
 - Keep the item open or in progress if the verifier response does not clearly support the claim.
 - Keep the stronger trust label paused if freshness, contradiction, or identity concerns remain unresolved.
-- Escalate instead of resolving if the dispute now affects reveal permissions or a live hiring decision.
+- Escalate instead of resolving if the dispute now affects reveal permissions or a live intro, interview, or decision path.
 
 ## Audit requirement
 

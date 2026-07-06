@@ -1,6 +1,7 @@
 // @ts-nocheck
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { log } from '@/lib/log';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 function toSlug(input: string): string {
@@ -130,9 +131,9 @@ export async function ensureOrgContextForUser(
     .upsert({ id: userId, persona: 'org_member' }, { onConflict: 'id' });
 
   if (profileErr) {
-    console.warn('[ensureOrgContextForUser] upsert persona failed', {
+    log.warn('organization.context.persona_upsert_failed', {
       userId,
-      error: String(profileErr),
+      errorMessage: profileErr.message,
     });
   }
 

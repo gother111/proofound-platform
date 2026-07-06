@@ -86,7 +86,12 @@ export function rejectOversizedStartFromCvRequest(request: NextRequest): NextRes
 export async function parseStartFromCvFile(request: NextRequest): Promise<StartFromCvUploadedFile> {
   const contentType = request.headers.get('content-type') || '';
   if (contentType.includes('multipart/form-data')) {
-    const formData = await request.formData();
+    let formData: FormData;
+    try {
+      formData = await request.formData();
+    } catch {
+      throw new StartFromCvError('INVALID_FORM_DATA', 400);
+    }
     const file = formData.get('file');
     if (!(file instanceof File)) {
       throw new StartFromCvError('FILE_REQUIRED', 400);
@@ -100,7 +105,14 @@ export async function parseStartFromCvFile(request: NextRequest): Promise<StartF
     };
   }
 
-  const parsed = JsonFileSchema.parse((await request.json()).file);
+  let rawBody: unknown;
+  try {
+    rawBody = await request.json();
+  } catch {
+    throw new StartFromCvError('INVALID_JSON_BODY', 400);
+  }
+
+  const parsed = JsonFileSchema.parse((rawBody as { file?: unknown }).file);
   const bytes = new Uint8Array(Buffer.from(parsed.base64, 'base64'));
   return {
     name: parsed.name ?? null,
@@ -123,7 +135,7 @@ export function safeStartFromCvMessage(code: string) {
     case 'BROWSER_CV_OCR_MUST_STAY_DISABLED':
       return 'Start from CV is not available while browser OCR is enabled.';
     case 'START_FROM_CV_NOT_INVITED':
-      return 'Start from CV beta is not available for this account.';
+      return 'Start from CV is not available for this account.';
     case 'INDIVIDUAL_ONLY':
       return 'Start from CV is available for individual profiles only.';
     case 'CONSENT_REQUIRED':
@@ -145,8 +157,14 @@ export function safeStartFromCvMessage(code: string) {
     case 'USER_DAILY_LIMIT_EXCEEDED':
     case 'GLOBAL_DAILY_LIMIT_EXCEEDED':
       return 'Start from CV is temporarily rate limited.';
+    case 'START_FROM_CV_EXTRACTION_ALREADY_COMPLETED':
+      return 'Start from CV extraction has already been completed for this session.';
     case 'FILE_REQUIRED':
       return 'Upload a CV file before extraction.';
+    case 'INVALID_JSON_BODY':
+      return 'Invalid JSON body.';
+    case 'INVALID_FORM_DATA':
+      return 'Invalid form data.';
     default:
       return 'Start from CV is not available.';
   }

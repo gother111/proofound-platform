@@ -6,13 +6,17 @@
 
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { MessageSquare, Search } from 'lucide-react';
+import { AlertTriangle, MessageSquare, RefreshCcw, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import {
+  getConversationParticipantInitials,
+  getConversationParticipantLabel,
+} from '@/lib/messaging/participant-label';
 
 export interface Conversation {
   id: string;
@@ -32,6 +36,8 @@ interface ConversationListProps {
   onSelect: (id: string) => void;
   isLoading?: boolean;
   mode?: 'individual' | 'organization';
+  loadError?: string | null;
+  onRetry?: () => void;
 }
 
 export function ConversationList({
@@ -40,8 +46,14 @@ export function ConversationList({
   onSelect,
   isLoading = false,
   mode = 'individual',
+  loadError,
+  onRetry,
 }: ConversationListProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const hasConversations = conversations.length > 0;
+  const hasLoadError = Boolean(loadError);
+  const trimmedSearchQuery = searchQuery.trim();
+  const hasSearchQuery = trimmedSearchQuery.length > 0;
   const emptyCopy =
     mode === 'organization'
       ? {
@@ -55,18 +67,26 @@ export function ConversationList({
           helper: 'Your identity remains private until the reveal step.',
         };
 
+  // Get display name based on stage
+  const getDisplayName = useCallback((conv: Conversation) => {
+    return getConversationParticipantLabel({
+      stage: conv.stage,
+      displayName: conv.otherPartyName,
+    });
+  }, []);
+
   // Filter conversations by search query
   const filteredConversations = useMemo(() => {
-    if (!searchQuery.trim()) return conversations;
+    if (!trimmedSearchQuery) return conversations;
 
-    const query = searchQuery.toLowerCase();
+    const query = trimmedSearchQuery.toLowerCase();
     return conversations.filter(
       (conv) =>
-        conv.otherPartyName.toLowerCase().includes(query) ||
+        getDisplayName(conv).toLowerCase().includes(query) ||
         conv.assignmentTitle?.toLowerCase().includes(query) ||
         conv.lastMessage.toLowerCase().includes(query)
     );
-  }, [conversations, searchQuery]);
+  }, [conversations, getDisplayName, trimmedSearchQuery]);
 
   // Truncate message preview
   const truncateMessage = (message: string, maxLength: number = 60) => {
@@ -77,23 +97,6 @@ export function ConversationList({
   // Format timestamp
   const formatTimestamp = (date: Date) => {
     return formatDistanceToNow(new Date(date), { addSuffix: true });
-  };
-
-  // Get display name based on stage
-  const getDisplayName = (conv: Conversation) => {
-    return conv.otherPartyName;
-  };
-
-  // Get avatar initials
-  const getInitials = (name: string) => {
-    if (name === 'Candidate') return 'C';
-    if (name === 'Organization') return 'O';
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
   };
 
   if (isLoading) {
@@ -127,12 +130,20 @@ export function ConversationList({
           Messages
         </h2>
         <p className="mb-3 text-xs leading-5 text-muted-foreground">
-          Conversations appear after a proof-safe introduction.
+          {hasLoadError
+            ? 'Retry the proof-corridor thread list without changing any messages.'
+            : hasConversations
+              ? 'Review open introductions and keep each thread tied to its proof corridor.'
+              : 'Conversations appear after a proof-safe introduction.'}
         </p>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground"
+            aria-hidden="true"
+          />
           <Input
             type="text"
+            aria-label="Search conversations"
             placeholder="Search conversations"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -143,10 +154,33 @@ export function ConversationList({
 
       {/* Conversation list */}
       <div className="divide-y divide-proofound-stone/60">
-        {filteredConversations.length === 0 && !searchQuery && (
+        {loadError ? (
+          <div
+            className="mx-4 mt-4 rounded-2xl border border-proofound-stone/80 bg-white/75 p-5 shadow-sm"
+            role="alert"
+          >
+            <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-[#fff1d6] text-[#8a5b00]">
+              <AlertTriangle className="h-5 w-5" aria-hidden="true" />
+            </div>
+            <p className="text-sm font-medium text-proofound-charcoal">
+              Conversations could not load
+            </p>
+            <p className="mt-2 text-xs leading-5 text-muted-foreground">{loadError}</p>
+            {onRetry ? (
+              <button
+                type="button"
+                onClick={onRetry}
+                className="mt-4 inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-proofound-stone/80 bg-white px-3 text-xs font-medium text-proofound-forest transition-colors hover:border-proofound-forest hover:bg-proofound-parchment/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+              >
+                <RefreshCcw className="h-3.5 w-3.5" aria-hidden="true" />
+                Retry conversations
+              </button>
+            ) : null}
+          </div>
+        ) : filteredConversations.length === 0 && !hasSearchQuery ? (
           <div className="mx-4 mt-4 rounded-2xl border border-dashed border-proofound-stone/80 bg-proofound-parchment/45 p-6 text-center">
             <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white text-proofound-forest">
-              <MessageSquare className="h-5 w-5" />
+              <MessageSquare className="h-5 w-5" aria-hidden="true" />
             </div>
             <p className="text-sm font-medium text-proofound-charcoal">{emptyCopy.title}</p>
             <p className="mx-auto mt-2 max-w-64 text-xs leading-5 text-muted-foreground">
@@ -156,13 +190,31 @@ export function ConversationList({
               {emptyCopy.helper}
             </p>
           </div>
-        )}
+        ) : null}
 
-        {filteredConversations.length === 0 && searchQuery && (
-          <div className="p-8 text-center">
-            <p className="text-sm text-muted-foreground">
-              No conversations match &apos;{searchQuery}&apos;
+        {!loadError && filteredConversations.length === 0 && hasSearchQuery && (
+          <div
+            className="mx-4 mt-4 rounded-2xl border border-dashed border-proofound-stone/80 bg-white/70 p-6 text-center"
+            role="status"
+            aria-live="polite"
+          >
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-proofound-parchment text-proofound-forest">
+              <Search className="h-5 w-5" aria-hidden="true" />
+            </div>
+            <p className="text-sm font-medium text-proofound-charcoal">
+              No conversations match &ldquo;{trimmedSearchQuery}&rdquo;
             </p>
+            <p className="mx-auto mt-2 max-w-64 text-xs leading-5 text-muted-foreground">
+              Search checks participant labels, assignment titles, and recent proof-corridor
+              messages.
+            </p>
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="mt-4 inline-flex min-h-11 items-center justify-center rounded-full border border-proofound-stone bg-white px-4 text-xs font-medium text-proofound-forest transition-colors hover:border-proofound-forest hover:bg-proofound-parchment/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+            >
+              Clear search
+            </button>
           </div>
         )}
 
@@ -185,7 +237,10 @@ export function ConversationList({
                   />
                 ) : null}
                 <AvatarFallback className="bg-proofound-forest text-white">
-                  {getInitials(getDisplayName(conversation))}
+                  {getConversationParticipantInitials(
+                    getDisplayName(conversation),
+                    conversation.stage
+                  )}
                 </AvatarFallback>
               </Avatar>
 
@@ -197,7 +252,7 @@ export function ConversationList({
                       {getDisplayName(conversation)}
                     </h3>
                     {conversation.assignmentTitle && (
-                      <p className="text-xs text-muted-foreground truncate">
+                      <p className="text-xs leading-5 text-muted-foreground line-clamp-2">
                         Re: {conversation.assignmentTitle}
                       </p>
                     )}

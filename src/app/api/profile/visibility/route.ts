@@ -5,6 +5,7 @@ import { profileFieldVisibility } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { ProfileVisibilityLevelSchema, PROFILE_VISIBILITY_DEFAULTS } from '@/lib/contracts/domain';
+import { log } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
 
@@ -68,7 +69,7 @@ export async function GET() {
       impactStories: visibility.impactStories,
     });
   } catch (error) {
-    console.error('Error fetching visibility settings:', error);
+    log.error('profile.visibility.get_failed', { error });
     return NextResponse.json({ error: 'Failed to fetch visibility settings' }, { status: 500 });
   }
 }
@@ -85,7 +86,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const { user } = authContext;
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
 
     // Validate input
     const validated = UpdateVisibilitySchema.parse(body);
@@ -130,7 +136,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid input', details: error.errors }, { status: 400 });
     }
 
-    console.error('Error updating visibility settings:', error);
+    log.error('profile.visibility.update_failed', { error });
     return NextResponse.json({ error: 'Failed to update visibility settings' }, { status: 500 });
   }
 }

@@ -21,6 +21,7 @@ import { StartFromCvDialog } from '@/components/profile/StartFromCvDialog';
 import { useStartFromCvBetaStatus } from '@/hooks/useStartFromCvBetaStatus';
 import { START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE } from '@/lib/ai/start-from-cv-contract';
 import type { StartFromCvScaffoldingSurface } from '@/lib/ai/start-from-cv-contract';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import {
   MAX_PROOF_UPLOAD_SIZE_BYTES,
   PROOF_ALLOWED_EXTENSIONS_LABEL,
@@ -93,6 +94,79 @@ const VERIFICATION_RELATIONSHIP_OPTIONS: Array<{ value: VerificationRelationship
 const MAX_MEASURED_OUTCOMES = 3;
 const MAX_VERIFICATION_CONFIRMERS = 2;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const FIRST_PROOF_UPLOAD_RETRY_MESSAGE =
+  'Upload could not be saved. Your proof details are still here; try again or choose another file.';
+const FIRST_PROOF_SAVE_RETRY_MESSAGE =
+  'First Proof Pack could not be saved. Your details are still here; please try again.';
+const FIRST_PROOF_SAFE_UPLOAD_ERRORS = new Map([
+  [
+    'The uploaded file type did not match its file signature.',
+    'The uploaded file type did not match its file signature.',
+  ],
+  [
+    'The uploaded file is not allowed for this proof or document flow.',
+    'The uploaded file is not allowed for this proof or document flow.',
+  ],
+  [
+    'The uploaded file is too large for this upload flow.',
+    'The uploaded file is too large for this upload flow.',
+  ],
+  [
+    'The upload could not be accepted for this flow.',
+    'The upload could not be accepted for this flow.',
+  ],
+  [
+    'Security token could not be initialized. Please refresh and try again.',
+    'Security token could not be initialized. Please refresh and try again.',
+  ],
+  ['Failed to upload file. Please try again.', FIRST_PROOF_UPLOAD_RETRY_MESSAGE],
+]);
+const FIRST_PROOF_SAFE_ACTION_ERRORS = new Set([
+  'Choose one real context before publishing.',
+  'Finish the basic identity shell before saving your first Proof Pack.',
+  'Add your first proof before saving your first Proof Pack.',
+  'Structure your first Proof Pack before saving it.',
+  'Choose whether the proof was solo or team work and describe what you owned.',
+  'Add 3 to 5 skills this proof actually supports.',
+  'Handle can only contain letters, numbers, hyphens, and underscores',
+  'Handle already taken. Please choose another.',
+  'Failed to complete setup. Please try again.',
+  'Failed to save your work preferences. Please try again.',
+  'Failed to save your first context. Please try again.',
+  'Uploaded file is awaiting privacy review or failed checks.',
+  'Failed to save your first proof. Please try again.',
+  'Every Proof Pack must include a primary anchor.',
+  'Verification-bundle Proof Packs must anchor to experience, education, or volunteering.',
+  'Export Proof Packs must anchor to the owning profile or organization.',
+  'Export Proof Packs must use the owner as their structural anchor.',
+  'Failed to structure your first Proof Pack. Please try again.',
+  'Failed to finish your first Proof Pack. Please try again.',
+]);
+
+function firstProofUploadErrorMessage(message: string) {
+  const safeMessage = FIRST_PROOF_SAFE_UPLOAD_ERRORS.get(message);
+  if (safeMessage) {
+    return safeMessage;
+  }
+
+  dispatchClientErrorDiagnostic(
+    'onboarding.individual.first_proof_upload_returned_error',
+    new Error(message)
+  );
+  return FIRST_PROOF_UPLOAD_RETRY_MESSAGE;
+}
+
+function firstProofActionErrorMessage(message: string) {
+  if (FIRST_PROOF_SAFE_ACTION_ERRORS.has(message)) {
+    return message;
+  }
+
+  dispatchClientErrorDiagnostic(
+    'onboarding.individual.first_proof_returned_error',
+    new Error(message)
+  );
+  return FIRST_PROOF_SAVE_RETRY_MESSAGE;
+}
 
 function createOutcomeDraft(index: number): MeasuredOutcomeDraft {
   return {
@@ -129,6 +203,13 @@ function parseProofSkills(value: string) {
     .split(/[\n,]/)
     .map((skill) => skill.trim())
     .filter(Boolean);
+}
+
+function verificationRequestInvitationCopy(sentCount: number, totalCount: number) {
+  const invitationLabel =
+    totalCount === 1 ? 'verification request invitation' : 'verification request invitations';
+  const deliveryVerb = totalCount === 1 ? 'was' : 'were';
+  return `${sentCount} of ${totalCount} ${invitationLabel} ${deliveryVerb} sent.`;
 }
 
 function buildOwnershipStatement(
@@ -343,7 +424,8 @@ export function IndividualSetup({
       });
 
       if (!result.success || !result.uploadedFileId) {
-        setUploadError(result.message || result.error || 'Upload failed. Please try again.');
+        const uploadMessage = result.message || result.error || FIRST_PROOF_UPLOAD_RETRY_MESSAGE;
+        setUploadError(firstProofUploadErrorMessage(uploadMessage));
         return;
       }
 
@@ -359,8 +441,9 @@ export function IndividualSetup({
           result.fileName ||
           file.name.replace(/\.[^.]+$/, ''),
       }));
-    } catch {
-      setUploadError('Upload failed. Please try again.');
+    } catch (uploadError) {
+      dispatchClientErrorDiagnostic('onboarding.individual.first_proof_upload_failed', uploadError);
+      setUploadError(FIRST_PROOF_UPLOAD_RETRY_MESSAGE);
     } finally {
       setIsUploading(false);
     }
@@ -521,7 +604,7 @@ export function IndividualSetup({
       const result = await completeIndividualOnboarding(onboardingData);
 
       if (result.error) {
-        setError(result.error);
+        setError(firstProofActionErrorMessage(result.error));
         return;
       }
 
@@ -579,8 +662,9 @@ export function IndividualSetup({
             : '')
       );
       setPhase('success');
-    } catch {
-      setError('Something went wrong. Please try again.');
+    } catch (submitError) {
+      dispatchClientErrorDiagnostic('onboarding.individual.first_proof_submit_failed', submitError);
+      setError(FIRST_PROOF_SAVE_RETRY_MESSAGE);
     } finally {
       setIsLoading(false);
     }

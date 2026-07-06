@@ -5,8 +5,18 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { WorkEmailVerificationForm } from '@/components/settings/WorkEmailVerificationForm';
 import { apiFetch } from '@/lib/api/fetch';
 
+const { dispatchClientDiagnosticMock, dispatchClientErrorDiagnosticMock } = vi.hoisted(() => ({
+  dispatchClientDiagnosticMock: vi.fn(),
+  dispatchClientErrorDiagnosticMock: vi.fn(),
+}));
+
 vi.mock('@/lib/api/fetch', () => ({
   apiFetch: vi.fn(),
+}));
+
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientDiagnostic: (...args: unknown[]) => dispatchClientDiagnosticMock(...args),
+  dispatchClientErrorDiagnostic: (...args: unknown[]) => dispatchClientErrorDiagnosticMock(...args),
 }));
 
 vi.mock('@/components/ui/select', () => ({
@@ -24,6 +34,18 @@ describe('WorkEmailVerificationForm', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  it('names the organization selector loading state instead of generic loading copy', () => {
+    vi.mocked(apiFetch).mockReturnValue(new Promise<Response>(() => {}));
+
+    render(<WorkEmailVerificationForm onSuccess={vi.fn()} />);
+
+    expect(screen.getByText('Loading organization list')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Loading organization choices. You can still enter your work email.'
+    );
+    expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
   });
 
   it('submits verification with normalized email and null orgId, while rendering display_name labels', async () => {
@@ -90,6 +112,33 @@ describe('WorkEmailVerificationForm', () => {
     ).toBeInTheDocument();
   });
 
+  it('keeps organization load failures visible and retryable without blocking email verification', async () => {
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({}),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          organizations: [{ id: 'org-1', slug: 'acme', display_name: 'Acme Org' }],
+        }),
+      } as Response);
+
+    render(<WorkEmailVerificationForm onSuccess={vi.fn()} />);
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Organization list could not load');
+    expect(alert).toHaveTextContent('You can still send the confirmation email now');
+    expect(screen.getByRole('button', { name: /send confirmation email/i })).toBeEnabled();
+
+    fireEvent.click(screen.getByRole('button', { name: /retry organization list/i }));
+
+    expect(await screen.findByText('Acme Org')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(apiFetch).toHaveBeenCalledTimes(2);
+  });
+
   it('blocks free email domains and does not call verification send endpoint', async () => {
     vi.mocked(apiFetch).mockResolvedValue({
       ok: true,
@@ -109,5 +158,161 @@ describe('WorkEmailVerificationForm', () => {
 
     expect(vi.mocked(apiFetch)).toHaveBeenCalledTimes(1);
     expect(vi.mocked(apiFetch)).toHaveBeenCalledWith('/api/organizations');
+  });
+
+  it('keeps work email retryable when confirmation send fails', async () => {
+    vi.mocked(apiFetch).mockImplementation(async (url: string) => {
+      if (url === '/api/organizations') {
+        return {
+          ok: true,
+          json: async () => ({ organizations: [] }),
+        } as Response;
+      }
+
+      if (url === '/api/verification/work-email/send') {
+        throw new Error('verification email service unavailable');
+      }
+
+      throw new Error(`Unexpected url: ${url}`);
+    });
+
+    render(<WorkEmailVerificationForm onSuccess={vi.fn()} />);
+
+    await screen.findByText(/No organizations are available/i);
+
+    fireEvent.change(screen.getByLabelText(/work email address/i), {
+      target: { value: 'person@acme.org' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /send confirmation email/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Confirmation email could not be sent. Your work email and organization choice are still here; please try again.'
+    );
+    expect(screen.getByLabelText(/work email address/i)).toHaveValue('person@acme.org');
+    expect(screen.getByRole('button', { name: /send confirmation email/i })).toBeEnabled();
+  });
+
+  it('uses retry copy for unreadable generic send errors without clearing the email', async () => {
+    vi.mocked(apiFetch).mockImplementation(async (url: string) => {
+      if (url === '/api/organizations') {
+        return {
+          ok: true,
+          json: async () => ({ organizations: [] }),
+        } as Response;
+      }
+
+      if (url === '/api/verification/work-email/send') {
+        return {
+          ok: false,
+          json: async () => {
+            throw new Error('invalid json');
+          },
+        } as unknown as Response;
+      }
+
+      throw new Error(`Unexpected url: ${url}`);
+    });
+
+    render(<WorkEmailVerificationForm onSuccess={vi.fn()} />);
+
+    await screen.findByText(/No organizations are available/i);
+
+    fireEvent.change(screen.getByLabelText(/work email address/i), {
+      target: { value: 'person@acme.org' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /send confirmation email/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Confirmation email could not be sent. Your work email and organization choice are still here; please try again.'
+    );
+    expect(screen.getByLabelText(/work email address/i)).toHaveValue('person@acme.org');
+    expect(screen.getByRole('button', { name: /send confirmation email/i })).toBeEnabled();
+  });
+
+  it('shows the safe already-verified account state without logging it as an unexpected error', async () => {
+    vi.mocked(apiFetch).mockImplementation(async (url: string) => {
+      if (url === '/api/organizations') {
+        return {
+          ok: true,
+          json: async () => ({ organizations: [] }),
+        } as Response;
+      }
+
+      if (url === '/api/verification/work-email/send') {
+        return {
+          ok: false,
+          json: async () => ({
+            error: 'This work email is already verified by another account',
+          }),
+        } as Response;
+      }
+
+      throw new Error(`Unexpected url: ${url}`);
+    });
+
+    render(<WorkEmailVerificationForm onSuccess={vi.fn()} />);
+
+    await screen.findByText(/No organizations are available/i);
+
+    fireEvent.change(screen.getByLabelText(/work email address/i), {
+      target: { value: 'person@acme.org' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /send confirmation email/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'This work email is already verified by another account.'
+    );
+    expect(dispatchClientErrorDiagnosticMock).not.toHaveBeenCalledWith(
+      'settings.work_email.send_returned_error',
+      expect.any(Error)
+    );
+  });
+
+  it('hides unexpected returned send errors while preserving diagnostics and retry state', async () => {
+    const rawError = 'SMTP_HOST=smtp.internal timeout for user person@acme.org';
+    vi.mocked(apiFetch).mockImplementation(async (url: string) => {
+      if (url === '/api/organizations') {
+        return {
+          ok: true,
+          json: async () => ({ organizations: [] }),
+        } as Response;
+      }
+
+      if (url === '/api/verification/work-email/send') {
+        return {
+          ok: false,
+          status: 503,
+          json: async () => ({ error: rawError }),
+        } as Response;
+      }
+
+      throw new Error(`Unexpected url: ${url}`);
+    });
+
+    render(<WorkEmailVerificationForm onSuccess={vi.fn()} />);
+
+    await screen.findByText(/No organizations are available/i);
+
+    fireEvent.change(screen.getByLabelText(/work email address/i), {
+      target: { value: 'person@acme.org' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /send confirmation email/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(
+      'Confirmation email could not be sent. Your work email and organization choice are still here; please try again.'
+    );
+    expect(alert).not.toHaveTextContent(rawError);
+    expect(screen.getByLabelText(/work email address/i)).toHaveValue('person@acme.org');
+    expect(screen.getByRole('button', { name: /send confirmation email/i })).toBeEnabled();
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
+      'settings.work_email.send_returned_error',
+      {
+        status: 503,
+        hasReturnedError: true,
+      }
+    );
+    expect(JSON.stringify(dispatchClientDiagnosticMock.mock.calls)).not.toContain(rawError);
+    expect(JSON.stringify(dispatchClientErrorDiagnosticMock.mock.calls)).not.toContain(rawError);
   });
 });

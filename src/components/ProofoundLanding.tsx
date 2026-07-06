@@ -92,7 +92,11 @@ export function ProofoundLanding({
       >
         <div className="mx-auto flex max-w-[88rem] items-center justify-between gap-3 rounded-full px-1 py-0 md:gap-6 md:px-4">
           <div className="flex min-w-0 items-center gap-4">
-            <Link href="/" aria-label="Proofound home" className="flex items-center gap-3">
+            <Link
+              href="/"
+              aria-label="Proofound home"
+              className="flex min-h-11 items-center gap-3 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-[#f6f2ea]"
+            >
               <Image
                 src="/logo.png"
                 alt="Proofound"
@@ -110,19 +114,19 @@ export function ProofoundLanding({
           <nav className="hidden items-center gap-10 text-[1.02rem] text-foreground/66 lg:flex">
             <a
               href="#how-it-works"
-              className="rounded-full transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-[#f6f2ea]"
+              className="inline-flex min-h-11 items-center rounded-full transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-[#f6f2ea]"
             >
               How it works
             </a>
             <a
               href="#comparison"
-              className="rounded-full transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-[#f6f2ea]"
+              className="inline-flex min-h-11 items-center rounded-full transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-[#f6f2ea]"
             >
               Old way vs Proofound
             </a>
             <a
               href="#trust"
-              className="rounded-full transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-[#f6f2ea]"
+              className="inline-flex min-h-11 items-center rounded-full transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-[#f6f2ea]"
             >
               Privacy and trust
             </a>
@@ -132,7 +136,7 @@ export function ProofoundLanding({
             <div className="hidden h-6 w-px bg-border/80 lg:block" aria-hidden="true" />
             <Link
               href="/login"
-              className="hidden rounded-full text-[1.02rem] text-foreground/82 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-[#f6f2ea] lg:inline-flex"
+              className="hidden min-h-11 items-center rounded-full text-[1.02rem] text-foreground/82 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-[#f6f2ea] lg:inline-flex"
             >
               Sign in
             </Link>
@@ -140,7 +144,7 @@ export function ProofoundLanding({
               type="button"
               onClick={handleOrganizationSignup}
               data-testid="landing-header-organization-cta"
-              className="inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-[#65755d] px-3.5 py-2.5 text-[0.8rem] font-medium text-white shadow-[0_16px_30px_-20px_rgba(101,117,93,0.72)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-[#5c6b54] hover:shadow-[0_20px_36px_-22px_rgba(101,117,93,0.78)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-[#f6f2ea] active:translate-y-0 sm:px-5 sm:py-3 sm:text-sm md:px-6"
+              className="inline-flex min-h-11 items-center gap-2 whitespace-nowrap rounded-full bg-[#65755d] px-3.5 py-2.5 text-[0.8rem] font-medium text-white shadow-[0_16px_30px_-20px_rgba(101,117,93,0.72)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-[#5c6b54] hover:shadow-[0_20px_36px_-22px_rgba(101,117,93,0.78)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-[#f6f2ea] active:translate-y-0 sm:px-5 sm:py-3 sm:text-sm md:px-6"
             >
               <span>Start screening on proof</span>
               <ArrowRight className="hidden h-4 w-4 sm:block" aria-hidden="true" />

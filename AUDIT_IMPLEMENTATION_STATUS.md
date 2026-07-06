@@ -1,5 +1,7 @@
-> Doc Class: `active`
-> Last Verified: `2026-03-11`
+> Doc Class: `historical`
+> Last Verified: `2026-05-19`
+
+> Supersession note: this March audit is preserved as historical implementation context. It is not current launch truth and must not override `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, the aligned PRD/technical requirements/runbook/GTM stack, or fresh evidence in `.artifacts/mvp-surface-sweep-2026-05-19/SURFACE_SWEEP.md`, `docs/production-readiness-checklist.md`, and `docs/backlog/phase-exit-checklist.md`. The active go/no-go gate is `npm run go:no-go`, implemented by `scripts/go-no-go-check.ts`; the old `.mjs` gate is archived.
 
 # Proofound Implementation Audit Against Canonical MVP Docs
 
@@ -32,7 +34,7 @@ What keeps this below launch:
 
 ## 2. Source-of-Truth Note
 
-Canonical docs used for this audit, in precedence order:
+Canonical docs used for this historical audit at the time, in then-used precedence order:
 
 1. `Proofound_Project_Specification_2026-03-11.md`
 2. `PRD_TECHNICAL_REQUIREMENTS.md`
@@ -43,7 +45,7 @@ Audit rule used:
 
 - Older PRD mirrors, archived audits, earlier review notes, and prior briefs were ignored unless explicitly referenced by the four canonical documents above.
 - Where those documents conflict, this audit follows the precedence order above.
-- This audit uses the current checked-out contents of those four files as the active baseline.
+- This audit no longer represents the active baseline. Use the locked MVP authority stack plus fresh 2026-05-19 sweep evidence for current launch decisions.
 
 ## 3. Status Scorecard By Domain
 
@@ -126,7 +128,7 @@ Audit rule used:
 | Verification badges, attestations, gates                | Master PRD 5.5                                           | Mostly done | `src/app/api/verification/status/route.ts`, `src/lib/verification/policy.ts`, `src/lib/verification/log-entries.ts`, `tests/lib/verification-policy.test.ts`, `tests/lib/verification-gates.test.ts`                         | Need fuller proof of dispute/revocation/admin-review corridors.                                                                                                                                          | Yes             |
 | Audit logs and reveal audit trail                       | Master PRD 4.1C, 5.5.9, Tech 1.2                         | Mostly done | `src/app/api/user/audit-log/route.ts`, `src/lib/audit/admin-logger.ts`, `src/db/schema.ts` tables `analytics_events`, `reveal_events`, `audit_logs`                                                                          | Export and admin-read paths are present, but canonical acting-principal plus membership-context logging is not fully proven.                                                                             | No              |
 | Feature flags and rollout controls                      | Master PRD 9.2, Tech 5.4, Appendix 7                     | Mostly done | `src/app/api/admin/feature-flags/route.ts`, `src/app/api/admin/feature-flags/[key]/route.ts`, `src/lib/feature-flags/server.ts`, `src/lib/contracts/launch-operations.ts`, `tests/lib/launch-operations-contract.test.ts`    | Stronger operational proof is still needed for production usage and rollback discipline.                                                                                                                 | Yes             |
-| Launch rollout metrics                                  | Master PRD 9.2, Runbook 3 and 5                          | Mostly done | `src/app/api/admin/metrics/rollout/route.ts`, `src/app/api/monitoring/perf-status/route.ts`, `scripts/go-no-go-check.mjs`                                                                                                    | Metric route is implemented, but synthetic monitor source data and production run evidence are not provable from repo alone.                                                                             | Yes             |
+| Launch rollout metrics                                  | Master PRD 9.2, Runbook 3 and 5                          | Mostly done | `src/app/api/admin/metrics/rollout/route.ts`, `src/app/api/monitoring/perf-status/route.ts`, `scripts/go-no-go-check.ts`                                                                                                     | Metric route is implemented, but synthetic monitor source data and production run evidence are not provable from repo alone.                                                                             | Yes             |
 | Performance budgets and alerting                        | Tech 1.3, Runbook 5                                      | Mostly done | `src/lib/performance/api-monitor.ts`, `src/lib/performance/alerting.ts`, `scripts/perf-budgets.mjs`, `src/app/api/cron/performance-check/route.ts`                                                                           | Need stronger CI or smoke proof that budgets are enforced on launch-critical endpoints continuously.                                                                                                     | Yes             |
 | Monitoring, synthetic checks, and health                | Master PRD 9.2, Runbook 5                                | Partial     | `src/app/api/cron/launch-synthetic-checks/route.ts`, `src/app/api/monitoring/launch-status/route.ts`, `src/app/api/monitoring/perf-status/route.ts`, `src/app/api/admin/metrics/rollout/route.ts`                            | Health and synthetic routes exist, but the runbook-required synthetic matrix is only partially implemented and not fully automated.                                                                      | Yes             |
 | Backup, restore, and rollback discipline                | Tech 1.4, 5.2, 7; Runbook 6 and 7                        | Partial     | `docs/launch-restore-drill.md`, `scripts/db-backup-checkpoint.mjs`, `scripts/db-restore-verify.mjs`, `scripts/go-no-go-check.ts`                                                                                             | The repo now contains concrete drill scripts and gating, but it still does not carry committed restore-run evidence or proof that the drill is being exercised at the required cadence.                  | Yes             |

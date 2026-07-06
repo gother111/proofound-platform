@@ -28,6 +28,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { SlidersHorizontal, X, Save } from 'lucide-react';
 import { toast } from 'sonner';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 interface ActiveFilters {
   skillDomains: string[];
@@ -86,7 +87,7 @@ export function EnhancedMatchFilters({
       try {
         setSavedFilters(JSON.parse(saved));
       } catch (error) {
-        console.error('Failed to parse saved filters:', error);
+        dispatchClientErrorDiagnostic('matching.filters.saved_parse_failed', error);
       }
     }
   }, []);
@@ -168,6 +169,7 @@ export function EnhancedMatchFilters({
       <SheetTrigger asChild>
         <Button
           variant="outline"
+          aria-label={activeFilterCount > 0 ? `Filters, ${activeFilterCount} active` : 'Filters'}
           className="border-proofound-stone relative bg-white text-proofound-forest hover:bg-japandi-bg"
         >
           <SlidersHorizontal className="w-4 h-4 mr-2" />
@@ -183,17 +185,17 @@ export function EnhancedMatchFilters({
         </Button>
       </SheetTrigger>
 
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto bg-white text-foreground">
-        <SheetHeader>
+      <SheetContent className="flex h-dvh w-full flex-col overflow-hidden bg-white p-0 text-foreground sm:max-w-lg">
+        <SheetHeader className="px-6 pt-6">
           <SheetTitle className="text-xl font-['Crimson_Pro'] text-foreground">
-            Filter Matches
+            Filter Assignment Reviews
           </SheetTitle>
           <SheetDescription className="text-[#4A4A4A]">
-            Narrow down opportunities by skills, location, work mode, and compensation
+            Narrow review context by skills, location, work mode, and compensation
           </SheetDescription>
         </SheetHeader>
 
-        <div className="space-y-6 py-6">
+        <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-6 py-6 pb-32 sm:pb-6">
           {/* Saved Filters */}
           {savedFilters.length > 0 && (
             <div>
@@ -344,7 +346,7 @@ export function EnhancedMatchFilters({
         </div>
 
         {/* Footer Actions */}
-        <div className="flex gap-2 pt-4 border-t border-proofound-stone">
+        <div className="sticky bottom-0 flex gap-2 border-t border-proofound-stone bg-white px-6 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4 shadow-[0_-8px_20px_rgba(29,51,48,0.06)]">
           <Button
             variant="outline"
             onClick={handleClearAll}

@@ -15,6 +15,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { CAUSES_TAXONOMY } from '@/lib/taxonomy/data';
 import { uploadFile, validateFile } from '@/lib/upload';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import type {
   ImpactStory,
   ImpactStoryArtifact,
@@ -81,6 +82,32 @@ const ARTIFACT_KIND_OPTIONS: ImpactStoryArtifactKind[] = [
   'image',
   'other',
 ];
+const IMPACT_ARTIFACT_UPLOAD_RETRY_MESSAGE =
+  'Artifact upload could not be saved. Your story details are still here; try again or choose another file.';
+const IMPACT_STORY_SAVE_RETRY_MESSAGE =
+  'Impact story could not be saved. Your story details are still here; review them and try again.';
+const IMPACT_STORY_VERIFICATION_RETRY_MESSAGE =
+  'Proof confirmation request could not be sent. Your story details are still here; review the verifier details and try again.';
+const IMPACT_ARTIFACT_SAFE_UPLOAD_ERRORS = new Set([
+  'The uploaded file type did not match its file signature.',
+  'The uploaded file is not allowed for this proof or document flow.',
+  'The uploaded file is too large for this upload flow.',
+  'The upload could not be accepted for this flow.',
+  'Security token could not be initialized. Please refresh and try again.',
+  'Failed to upload file. Please try again.',
+]);
+
+function impactArtifactUploadErrorMessage(message: string) {
+  if (IMPACT_ARTIFACT_SAFE_UPLOAD_ERRORS.has(message)) {
+    return message;
+  }
+
+  dispatchClientErrorDiagnostic(
+    'profile.impact_story.artifact_upload_returned_error',
+    new Error(message)
+  );
+  return IMPACT_ARTIFACT_UPLOAD_RETRY_MESSAGE;
+}
 
 function createOutcomeDraft(seed?: Partial<OutcomeDraft>): OutcomeDraft {
   return {
@@ -328,28 +355,38 @@ export function ImpactStoryForm({
 
     updateArtifact(artifactId, { isUploading: true, error: null });
 
-    const result = await uploadFile({
-      file,
-      type: 'document',
-      category: 'artifact',
-    });
+    try {
+      const result = await uploadFile({
+        file,
+        type: 'document',
+        category: 'artifact',
+      });
 
-    if (!result.success || !result.url) {
+      if (!result.success || !result.url) {
+        const uploadMessage =
+          result.message || result.error || IMPACT_ARTIFACT_UPLOAD_RETRY_MESSAGE;
+        updateArtifact(artifactId, {
+          isUploading: false,
+          error: impactArtifactUploadErrorMessage(uploadMessage),
+        });
+        return;
+      }
+
+      updateArtifact(artifactId, {
+        url: result.url,
+        filePath: result.path || null,
+        mimeType: file.type || null,
+        isUploading: false,
+        error: null,
+        title: (result.artifactDisplayName || result.fileName || file.name || '').trim(),
+      });
+    } catch (error) {
+      dispatchClientErrorDiagnostic('profile.impact_story.artifact_upload_failed', error);
       updateArtifact(artifactId, {
         isUploading: false,
-        error: result.error || result.message || 'Upload failed',
+        error: IMPACT_ARTIFACT_UPLOAD_RETRY_MESSAGE,
       });
-      return;
     }
-
-    updateArtifact(artifactId, {
-      url: result.url,
-      filePath: result.path || null,
-      mimeType: file.type || null,
-      isUploading: false,
-      error: null,
-      title: (result.artifactDisplayName || result.fileName || file.name || '').trim(),
-    });
   };
 
   const validate = () => {
@@ -523,11 +560,8 @@ export function ImpactStoryForm({
       setSubmitMessage('');
       onOpenChange(false);
     } catch (error) {
-      setSubmitMessage(
-        error instanceof Error && error.message
-          ? error.message
-          : 'Unable to save impact story. Please try again.'
-      );
+      dispatchClientErrorDiagnostic('profile.impact_story.save_failed', error);
+      setSubmitMessage(IMPACT_STORY_SAVE_RETRY_MESSAGE);
     } finally {
       setIsSaving(false);
     }
@@ -590,11 +624,8 @@ export function ImpactStoryForm({
           : 'Proof confirmation request sent. Status is now pending.'
       );
     } catch (error) {
-      setVerificationFeedbackMessage(
-        error instanceof Error && error.message
-          ? error.message
-          : 'Failed to send verification request. Please try again.'
-      );
+      dispatchClientErrorDiagnostic('profile.impact_story.verification_send_failed', error);
+      setVerificationFeedbackMessage(IMPACT_STORY_VERIFICATION_RETRY_MESSAGE);
     } finally {
       setIsSendingVerification(false);
     }
@@ -1082,7 +1113,11 @@ export function ImpactStoryForm({
                       {artifact.isUploading && (
                         <p className="text-xs text-muted-foreground">Uploading...</p>
                       )}
-                      {artifact.error && <p className="text-xs text-red-500">{artifact.error}</p>}
+                      {artifact.error && (
+                        <p role="alert" className="text-xs text-red-500">
+                          {artifact.error}
+                        </p>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -1208,7 +1243,7 @@ export function ImpactStoryForm({
 
           <DialogFooter>
             {submitMessage && (
-              <p className="w-full text-sm text-red-600" role="status">
+              <p className="w-full text-sm text-red-600" role="alert">
                 {submitMessage}
               </p>
             )}

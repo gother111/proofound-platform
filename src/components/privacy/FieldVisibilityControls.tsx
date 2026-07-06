@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -21,9 +21,19 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Eye, EyeOff, Lock, Globe, Users, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import {
+  Eye,
+  EyeOff,
+  Lock,
+  Globe,
+  Users,
+  AlertTriangle,
+  CheckCircle2,
+  RefreshCcw,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 type VisibilityLevel = 'public' | 'network' | 'private' | 'hidden';
 
@@ -84,13 +94,6 @@ const PROFILE_FIELDS: FieldConfig[] = [
     defaultVisibility: 'private',
     sensitive: true,
   },
-  {
-    name: 'linkedinProfileUrl',
-    label: 'LinkedIn URL',
-    description: 'Your LinkedIn profile',
-    category: 'contact',
-    defaultVisibility: 'network',
-  },
 
   // Professional
   {
@@ -125,9 +128,19 @@ const VISIBILITY_OPTIONS: Array<{
   description: string;
   icon: any;
 }> = [
-  { value: 'public', label: 'Public', description: 'Visible to everyone', icon: Globe },
-  { value: 'network', label: 'Network', description: 'Visible to connections only', icon: Users },
-  { value: 'private', label: 'Private', description: 'Visible to matched orgs', icon: Lock },
+  { value: 'public', label: 'Public', description: 'Visible on your Public Page', icon: Globe },
+  {
+    value: 'network',
+    label: 'Trusted review context',
+    description: 'Visible only in trusted review contexts',
+    icon: Users,
+  },
+  {
+    value: 'private',
+    label: 'Assignment review',
+    description: 'Visible only when assignment-review access and reveal rules allow it',
+    icon: Lock,
+  },
   { value: 'hidden', label: 'Hidden', description: 'Completely hidden', icon: EyeOff },
 ];
 
@@ -135,35 +148,73 @@ interface FieldVisibilityControlsProps {
   userId: string;
 }
 
+const PRIVACY_FIELD_CONTROLS_LOAD_FAILED_TITLE = 'Privacy field controls could not load';
+const PRIVACY_FIELD_CONTROLS_LOAD_FAILED_MESSAGE =
+  'Your saved privacy choices could not be loaded. Retry before changing field visibility.';
+const PRIVACY_FIELD_CONTROLS_SAVE_FAILED_TITLE = 'Privacy settings were not saved';
+const PRIVACY_FIELD_CONTROLS_SAVE_FAILED_MESSAGE =
+  'Your visibility choices were not saved. They are still selected here; retry before leaving this page.';
+
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function hasReturnedError(payload: unknown) {
+  return Boolean(
+    payload &&
+      typeof payload === 'object' &&
+      'error' in payload &&
+      typeof payload.error === 'string' &&
+      payload.error.trim().length > 0
+  );
+}
+
 export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps) {
   const [fieldVisibility, setFieldVisibility] = useState<Record<string, VisibilityLevel>>({});
   const [redactMode, setRedactMode] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [activePreview, setActivePreview] = useState<'public' | 'network' | 'matched'>('public');
 
-  useEffect(() => {
-    fetchPrivacySettings();
-  }, [userId]);
-
-  const fetchPrivacySettings = async () => {
+  const fetchPrivacySettings = useCallback(async () => {
     try {
       setIsLoading(true);
+      setLoadError(null);
       const response = await apiFetch('/api/user/privacy-settings');
-      if (response.ok) {
-        const data = await response.json();
-        setFieldVisibility(data.fieldVisibility || {});
-        setRedactMode(data.redactMode || false);
+      const data = (await response.json().catch(() => null)) as {
+        fieldVisibility?: Record<string, VisibilityLevel>;
+        redactMode?: boolean;
+      } | null;
+
+      if (!response.ok) {
+        dispatchClientDiagnostic('privacy.field_controls.load_returned_error', {
+          status: getResponseStatus(response),
+          hasReturnedError: hasReturnedError(data),
+        });
+        throw new Error('privacy_field_controls_load_request_failed');
       }
+
+      setFieldVisibility(data?.fieldVisibility || {});
+      setRedactMode(data?.redactMode || false);
     } catch (error) {
-      console.error('Failed to fetch privacy settings:', error);
-      toast.error('Failed to load privacy settings');
+      dispatchClientErrorDiagnostic('privacy.field_controls.load_failed', error);
+      setLoadError(PRIVACY_FIELD_CONTROLS_LOAD_FAILED_MESSAGE);
+      toast.error(PRIVACY_FIELD_CONTROLS_LOAD_FAILED_TITLE, {
+        description: PRIVACY_FIELD_CONTROLS_LOAD_FAILED_MESSAGE,
+      });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    void fetchPrivacySettings();
+  }, [fetchPrivacySettings, userId]);
 
   const handleFieldVisibilityChange = (fieldName: string, visibility: VisibilityLevel) => {
+    setSaveError(null);
     setFieldVisibility((prev) => ({
       ...prev,
       [fieldName]: visibility,
@@ -171,6 +222,7 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
   };
 
   const handleRedactModeToggle = async (enabled: boolean) => {
+    setSaveError(null);
     setRedactMode(enabled);
     if (enabled) {
       // Apply redact mode: set all sensitive fields to hidden
@@ -187,6 +239,7 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
 
   const handleSave = async () => {
     setIsSaving(true);
+    setSaveError(null);
     try {
       const response = await apiFetch('/api/user/privacy-settings', {
         method: 'POST',
@@ -196,19 +249,31 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
           redactMode,
         }),
       });
+      const payload = await response.json().catch(() => null);
 
-      if (!response.ok) throw new Error('Failed to save');
+      if (!response.ok) {
+        dispatchClientDiagnostic('privacy.field_controls.save_returned_error', {
+          status: getResponseStatus(response),
+          hasReturnedError: hasReturnedError(payload),
+        });
+        throw new Error('privacy_field_controls_save_request_failed');
+      }
 
+      setSaveError(null);
       toast.success('Privacy settings saved successfully');
     } catch (error) {
-      console.error('Failed to save privacy settings:', error);
-      toast.error('Failed to save privacy settings');
+      dispatchClientErrorDiagnostic('privacy.field_controls.save_failed', error);
+      setSaveError(PRIVACY_FIELD_CONTROLS_SAVE_FAILED_MESSAGE);
+      toast.error(PRIVACY_FIELD_CONTROLS_SAVE_FAILED_TITLE, {
+        description: PRIVACY_FIELD_CONTROLS_SAVE_FAILED_MESSAGE,
+      });
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleResetToDefaults = () => {
+    setSaveError(null);
     const defaults: Record<string, VisibilityLevel> = {};
     PROFILE_FIELDS.forEach((field) => {
       defaults[field.name] = field.defaultVisibility;
@@ -263,14 +328,47 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
     );
   }
 
+  if (loadError) {
+    return (
+      <Card
+        role="alert"
+        aria-live="assertive"
+        className="border-[#FCD34D] bg-[#FFFBEB] p-6 dark:border-yellow-800 dark:bg-yellow-950/20"
+      >
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+          <AlertTriangle className="h-5 w-5 flex-shrink-0 text-[#D97706]" aria-hidden="true" />
+          <div className="min-w-0 flex-1 space-y-3">
+            <div>
+              <h3 className="font-semibold text-[#92400E] dark:text-yellow-100">
+                {PRIVACY_FIELD_CONTROLS_LOAD_FAILED_TITLE}
+              </h3>
+              <p className="mt-1 text-sm text-[#92400E] dark:text-yellow-200">{loadError}</p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                void fetchPrivacySettings();
+              }}
+              className="w-full border-[#D97706] text-[#92400E] hover:bg-[#FEF3C7] sm:w-auto dark:border-yellow-700 dark:text-yellow-100 dark:hover:bg-yellow-950/40"
+            >
+              <RefreshCcw className="h-4 w-4" aria-hidden="true" />
+              Retry privacy controls
+            </Button>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Redact Mode Toggle */}
       <Card className="border-proofound-stone dark:border-border rounded-2xl">
         <CardHeader>
-          <div className="flex items-start justify-between">
-            <div>
-              <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground flex items-center gap-2">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground flex flex-wrap items-center gap-2">
                 <EyeOff className="w-5 h-5" />
                 Redact Mode
                 <Badge variant="secondary" className="ml-2 bg-[#D97706] text-white">
@@ -279,13 +377,14 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
               </CardTitle>
               <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground mt-2">
                 Instantly hide all sensitive information (location, email, org affiliation) with one
-                toggle. Perfect for when you need to share your profile publicly.
+                toggle. Useful when you need to share your Public Page without exposing private
+                context.
               </CardDescription>
             </div>
             <Switch
               checked={redactMode}
               onCheckedChange={handleRedactModeToggle}
-              className="data-[state=checked]:bg-[#D97706]"
+              className="shrink-0 data-[state=checked]:bg-[#D97706]"
             />
           </div>
         </CardHeader>
@@ -309,14 +408,18 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
             Field-Level Privacy Controls
           </CardTitle>
           <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
-            Control who can see each part of your profile
+            Control Public Page fields and assignment-review visibility
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="settings" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="settings">Settings</TabsTrigger>
-              <TabsTrigger value="preview">Audience Preview</TabsTrigger>
+            <TabsList className="grid h-auto min-h-[44px] w-full grid-cols-2">
+              <TabsTrigger value="settings" className="min-h-11">
+                Settings
+              </TabsTrigger>
+              <TabsTrigger value="preview" className="min-h-11">
+                Audience Preview
+              </TabsTrigger>
             </TabsList>
 
             {/* Settings Tab */}
@@ -334,14 +437,14 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
                       return (
                         <div
                           key={field.name}
-                          className={`flex items-center justify-between p-3 rounded-lg border ${
+                          className={`flex flex-col gap-3 p-3 rounded-lg border sm:flex-row sm:items-center sm:justify-between ${
                             isRedacted
                               ? 'bg-[#FEF3C7] dark:bg-yellow-950/20 border-[#FCD34D]'
                               : 'bg-white dark:bg-background border-proofound-stone dark:border-border'
                           }`}
                         >
-                          <div className="flex-1">
-                            <Label className="text-sm font-medium flex items-center gap-2">
+                          <div className="min-w-0 flex-1">
+                            <Label className="text-sm font-medium flex flex-wrap items-center gap-2">
                               {field.label}
                               {field.sensitive && (
                                 <Badge
@@ -363,7 +466,7 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
                             }
                             disabled={isRedacted}
                           >
-                            <SelectTrigger className="w-[160px]">
+                            <SelectTrigger className="w-full sm:w-[160px]">
                               <SelectValue>
                                 <div className="flex items-center gap-2">
                                   {getVisibilityIcon(visibility)}
@@ -397,26 +500,44 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
 
             {/* Audience Preview Tab */}
             <TabsContent value="preview" className="space-y-4 mt-6">
-              <div className="flex gap-2">
-                {(['public', 'network', 'matched'] as const).map((audience) => (
-                  <Button
-                    key={audience}
-                    variant={activePreview === audience ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setActivePreview(audience)}
-                    className={activePreview === audience ? 'bg-proofound-forest text-white' : ''}
-                  >
-                    {audience === 'public' && <Globe className="w-4 h-4 mr-2" />}
-                    {audience === 'network' && <Users className="w-4 h-4 mr-2" />}
-                    {audience === 'matched' && <Lock className="w-4 h-4 mr-2" />}
-                    {audience.charAt(0).toUpperCase() + audience.slice(1)}
-                  </Button>
-                ))}
+              <div className="grid grid-cols-1 gap-2 sm:flex">
+                {(['public', 'network', 'matched'] as const).map((audience) => {
+                  const audienceLabel =
+                    audience === 'public'
+                      ? 'Public Page'
+                      : audience === 'network'
+                        ? 'Trusted review'
+                        : 'Assignment review';
+                  return (
+                    <Button
+                      key={audience}
+                      variant={activePreview === audience ? 'default' : 'outline'}
+                      size="touch"
+                      onClick={() => setActivePreview(audience)}
+                      className={
+                        activePreview === audience
+                          ? 'w-full bg-proofound-forest text-white sm:w-auto'
+                          : 'w-full sm:w-auto'
+                      }
+                    >
+                      {audience === 'public' && <Globe className="w-4 h-4 mr-2" />}
+                      {audience === 'network' && <Users className="w-4 h-4 mr-2" />}
+                      {audience === 'matched' && <Lock className="w-4 h-4 mr-2" />}
+                      {audienceLabel}
+                    </Button>
+                  );
+                })}
               </div>
 
               <div className="border border-proofound-stone dark:border-border rounded-lg p-4 bg-japandi-bg dark:bg-background/50">
                 <h4 className="text-sm font-semibold text-foreground dark:text-foreground mb-3">
-                  Visible to {activePreview} audience:
+                  Visible in{' '}
+                  {activePreview === 'public'
+                    ? 'Public Page'
+                    : activePreview === 'network'
+                      ? 'trusted review'
+                      : 'assignment review'}
+                  :
                 </h4>
                 <div className="space-y-2">
                   {PROFILE_FIELDS.map((field) => {
@@ -447,11 +568,47 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
       </Card>
 
       {/* Action Buttons */}
-      <div className="flex gap-2 justify-end">
-        <Button variant="outline" onClick={handleResetToDefaults}>
+      {saveError ? (
+        <Card
+          role="alert"
+          aria-live="assertive"
+          className="border-[#FCD34D] bg-[#FFFBEB] p-4 dark:border-yellow-800 dark:bg-yellow-950/20"
+        >
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex min-w-0 gap-3">
+              <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-[#D97706]" />
+              <div className="space-y-1">
+                <h3 className="font-semibold text-[#92400E] dark:text-yellow-100">
+                  {PRIVACY_FIELD_CONTROLS_SAVE_FAILED_TITLE}
+                </h3>
+                <p className="text-sm text-[#92400E] dark:text-yellow-200">{saveError}</p>
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                void handleSave();
+              }}
+              disabled={isSaving}
+              className="w-full shrink-0 border-[#D97706] text-[#92400E] hover:bg-[#FEF3C7] sm:w-auto dark:border-yellow-700 dark:text-yellow-100 dark:hover:bg-yellow-950/40"
+            >
+              <RefreshCcw className="h-4 w-4" aria-hidden="true" />
+              Retry save
+            </Button>
+          </div>
+        </Card>
+      ) : null}
+
+      <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+        <Button variant="outline" onClick={handleResetToDefaults} className="w-full sm:w-auto">
           Reset to Defaults
         </Button>
-        <Button onClick={handleSave} disabled={isSaving} className="bg-proofound-forest text-white">
+        <Button
+          onClick={handleSave}
+          disabled={isSaving}
+          className="w-full bg-proofound-forest text-white sm:w-auto"
+        >
           {isSaving ? 'Saving...' : 'Save Privacy Settings'}
         </Button>
       </div>

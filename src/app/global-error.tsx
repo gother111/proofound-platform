@@ -21,20 +21,22 @@ export default function GlobalError({
   return (
     <html lang="en">
       <body>
-        <div className="flex min-h-screen items-center justify-center bg-proofound-parchment p-4">
+        <div className="flex min-h-screen items-center justify-center bg-proofound-parchment p-4 py-10">
           <Card className="w-full max-w-md">
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="rounded-full bg-red-100 p-3">
-                  <AlertCircle className="h-6 w-6 text-red-600" />
+                <div className="rounded-full bg-proofound-terracotta/10 p-3">
+                  <AlertCircle className="h-6 w-6 text-proofound-terracotta" />
                 </div>
-                <CardTitle className="text-2xl font-display">Something went wrong</CardTitle>
+                <CardTitle className="text-2xl font-display">
+                  Proofound could not finish loading
+                </CardTitle>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-proofound-charcoal/70">
-                We apologize for the inconvenience. An unexpected error has occurred and our team
-                has been notified.
+                Your proof, privacy settings, and review work are still protected. Retry Proofound
+                before continuing.
               </p>
 
               {process.env.NODE_ENV === 'development' && error.message && (
@@ -46,24 +48,24 @@ export default function GlobalError({
                 </div>
               )}
 
-              <div className="flex gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row">
                 <Button
                   onClick={reset}
                   className="flex-1 bg-proofound-forest hover:bg-proofound-forest/90"
                 >
-                  Try again
+                  Retry Proofound
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => (window.location.href = '/')}
                   className="flex-1"
                 >
-                  Go home
+                  Go to home
                 </Button>
               </div>
 
               <p className="text-xs text-center text-proofound-charcoal/50">
-                If this problem persists, please contact support.
+                If this keeps happening, contact support before making changes from this screen.
               </p>
             </CardContent>
           </Card>

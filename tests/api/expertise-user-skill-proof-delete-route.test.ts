@@ -42,6 +42,14 @@ import {
   deleteCanonicalProofArtifactForSkillProof,
 } from '@/lib/canonical/repository';
 import { deleteUploadedFile, deleteUploadedFileByOwnedStoragePath } from '@/lib/uploads/lifecycle';
+import { log } from '@/lib/log';
+
+vi.mock('@/lib/log', () => ({
+  log: {
+    warn: vi.fn(),
+    error: vi.fn(),
+  },
+}));
 
 describe('expertise user-skill proof delete route', () => {
   beforeEach(() => {
@@ -235,5 +243,113 @@ describe('expertise user-skill proof delete route', () => {
     );
     expect(deleteUploadedFile).not.toHaveBeenCalled();
     expect(deleteCanonicalProofArtifactForSkillProof).toHaveBeenCalledWith('proof-legacy');
+  });
+
+  it('logs compatibility legacy delete failures with structured diagnostics', async () => {
+    const legacyDeleteError = new Error('legacy row delete failed');
+    const legacyDeleteEqProfile = vi.fn().mockResolvedValue({ error: legacyDeleteError });
+    const legacyDeleteEqSkill = vi.fn().mockReturnValue({ eq: legacyDeleteEqProfile });
+    const legacyDeleteEqId = vi.fn().mockReturnValue({ eq: legacyDeleteEqSkill });
+    const legacyDelete = vi.fn().mockReturnValue({ eq: legacyDeleteEqId });
+
+    vi.mocked(db.query.proofArtifacts.findFirst as any).mockResolvedValue({
+      id: 'artifact-1',
+      legacySourceId: 'proof-1',
+      ownerType: 'individual_profile',
+      ownerId: 'user-1',
+      subjectType: 'skill',
+      subjectId: 'skill-1',
+      title: 'Canonical proof',
+      artifactKind: 'link',
+      storagePath: null,
+      uploadedFileId: null,
+    });
+
+    vi.mocked(requireApiAuthContext).mockResolvedValue({
+      user: { id: 'user-1' },
+      supabase: {
+        from: vi.fn(() => ({
+          delete: legacyDelete,
+        })),
+      },
+    } as any);
+
+    const response = await DELETE(
+      new NextRequest('http://localhost/api/expertise/user-skills/skill-1/proofs/proof-1', {
+        method: 'DELETE',
+      }),
+      { params: Promise.resolve({ id: 'skill-1', proofId: 'proof-1' }) }
+    );
+
+    expect(response.status).toBe(200);
+    expect(log.warn).toHaveBeenCalledWith('expertise.user_skill_proof.legacy_delete_failed', {
+      error: legacyDeleteError,
+    });
+  });
+
+  it('logs legacy proof delete failures with structured diagnostics', async () => {
+    const deleteError = new Error('legacy proof delete failed');
+    const selectQuery = {
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({
+        data: {
+          id: 'proof-legacy',
+          skill_id: 'skill-1',
+          profile_id: 'user-1',
+          title: 'Legacy proof',
+          proof_type: 'reference',
+          file_path: null,
+        },
+        error: null,
+      }),
+    };
+    const deleteQuery = {
+      eq: vi.fn().mockResolvedValue({ error: deleteError }),
+    };
+    const proofTable = {
+      select: vi.fn(() => selectQuery),
+      delete: vi.fn(() => deleteQuery),
+    };
+
+    vi.mocked(db.query.proofArtifacts.findFirst as any).mockResolvedValue(null);
+    vi.mocked(requireApiAuthContext).mockResolvedValue({
+      user: { id: 'user-1' },
+      supabase: {
+        from: vi.fn(() => proofTable),
+      },
+    } as any);
+
+    const response = await DELETE(
+      new NextRequest('http://localhost/api/expertise/user-skills/skill-1/proofs/proof-legacy', {
+        method: 'DELETE',
+      }),
+      { params: Promise.resolve({ id: 'skill-1', proofId: 'proof-legacy' }) }
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(payload).toEqual({ error: 'Failed to delete proof' });
+    expect(log.error).toHaveBeenCalledWith('expertise.user_skill_proof.delete_failed', {
+      error: deleteError,
+    });
+  });
+
+  it('logs route-level proof delete failures with structured diagnostics', async () => {
+    const routeError = new Error('auth context unavailable');
+    vi.mocked(requireApiAuthContext).mockRejectedValueOnce(routeError);
+
+    const response = await DELETE(
+      new NextRequest('http://localhost/api/expertise/user-skills/skill-1/proofs/proof-legacy', {
+        method: 'DELETE',
+      }),
+      { params: Promise.resolve({ id: 'skill-1', proofId: 'proof-legacy' }) }
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(payload).toEqual({ error: 'Internal server error' });
+    expect(log.error).toHaveBeenCalledWith('expertise.user_skill_proof.delete_route_failed', {
+      error: routeError,
+    });
   });
 });

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { dispatchClientDiagnostic } from '@/lib/client-diagnostics';
 
 export interface SpotlightStep {
   id: string;
@@ -44,9 +45,9 @@ export function useSpotlight() {
   if (!ctx) {
     if (process.env.NODE_ENV !== 'production' && !hasWarnedMissingSpotlightProvider) {
       hasWarnedMissingSpotlightProvider = true;
-      console.warn(
-        'useSpotlight called outside SpotlightProvider. Falling back to no-op behavior.'
-      );
+      dispatchClientDiagnostic('spotlight.provider_missing', {
+        fallback: 'noop',
+      });
     }
     return FALLBACK_SPOTLIGHT_CONTEXT;
   }

@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "findingId": "fnd_sig-feat-route-0678424c73-1423c4_61d05f6d33",
+  "featureId": "feat_route_0678424c73",
+  "title": "Unencoded route slug can change redirect target structure",
+  "category": "security",
+  "severity": "medium",
+  "confidence": "medium",
+  "triage": "risk",
+  "evidence": [
+    {
+      "path": "app/app/o/[slug]/portfolio/page.tsx",
+      "startLine": 8,
+      "endLine": 9,
+      "symbol": "OrganizationPortfolioShortcutPage",
+      "quote": "const returnTo = encodeURIComponent(`/app/o/${slug}/home`);\n  redirect(`/portfolio/org/${slug}?returnTo=${returnTo}`);"
+    }
+  ],
+  "reasoning": "The route parameter is user-controlled and is interpolated directly into both redirect path segments before path-segment encoding. If a slug contains reserved URL characters after decoding, such as slash, question mark, hash, or dot segments, it can change the structure of the redirect URL or the embedded return path rather than being treated as one organization slug segment. The redirect remains relative, so this is not a full external open redirect, but it can misroute users and may bypass route-level assumptions that depend on a single slug segment.",
+  "reproduction": "Request the shortcut with an encoded reserved character in the slug, for example a slug that decodes to `foo?x=1` or `../other`, and observe the generated redirect URL structure changing instead of preserving the value as one segment.",
+  "recommendation": "Encode the slug as a URL path segment before building both URLs, for example `const encodedSlug = encodeURIComponent(slug); const returnTo = encodeURIComponent(`/app/o/${encodedSlug}/home`); redirect(`/portfolio/org/${encodedSlug}?returnTo=${returnTo}`);`. If slugs are restricted elsewhere, also validate that this route rejects or canonicalizes invalid slugs before redirecting.",
+  "whyTestsDoNotAlreadyCoverThis": "No linked tests were provided for this route, and the owned file contains no validation or encoding assertions.",
+  "suggestedRegressionTest": "Add a route-level test that passes slugs containing reserved URL characters and asserts the redirect keeps the slug encoded as a single path segment in both the destination and `returnTo`.",
+  "minimumFixScope": "Update `app/app/o/[slug]/portfolio/page.tsx` to encode or validate `slug` before URL construction, and add focused redirect tests.",
+  "status": "fixed",
+  "history": [
+    {
+      "runId": "20260516T162219-d97e7c",
+      "kind": "revalidate",
+      "status": "open",
+      "note": null,
+      "reasoning": "The original evidence path still exists, but the quoted vulnerable lines do not: src/app/app/o/[slug]/portfolio/page.tsx now sets encodedSlug = encodeURIComponent(slug) and uses encodedSlug in both the redirect path and returnTo. A focused regression test also exists at tests/routes/portfolio-shortcuts.test.tsx and asserts reserved slug characters remain encoded. Direct execution of the current portfolio page confirmed encoded redirects for acme?next=../other, ../other, and foo/bar. However, the same unencoded user-controlled slug redirect pattern remains open in adjacent organization shortcut routes: src/app/app/o/[slug]/shortlist/page.tsx:8 and src/app/app/o/[slug]/matching/page.tsx:7. Direct execution produced structurally changed redirects like /app/o/acme?next=../other/assignments and /app/o/foo/bar/assignments. The focused Vitest run could not complete in this read-only sandbox because Vite attempted to write node_modules/.vite-temp, so the runtime TSX checks and current code are the decisive evidence.",
+      "commands": [
+        "nl -ba 'app/app/o/[slug]/portfolio/page.tsx'",
+        "rg -n 'OrganizationPortfolioShortcutPage|encodedSlug|returnTo|portfolio/org|app/o/.*/portfolio|encodeURIComponent\\(slug\\)' src tests e2e",
+        "nl -ba tests/routes/portfolio-shortcuts.test.tsx",
+        "PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/routes/portfolio-shortcuts.test.tsx",
+        "PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH node --import tsx -e \"const mod = await import('./src/app/app/o/[slug]/portfolio/page.tsx'); for (const slug of ['acme?next=../other','../other','foo/bar']) { try { await mod.default({ params: Promise.resolve({ slug }) }); } catch (e) { console.log(slug + ' => ' + (e.digest || e.message)); } }\"",
+        "nl -ba 'src/app/app/o/[slug]/shortlist/page.tsx'",
+        "nl -ba 'src/app/app/o/[slug]/matching/page.tsx'",
+        "PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH node --import tsx -e \"for (const target of ['./src/app/app/o/[slug]/shortlist/page.tsx','./src/app/app/o/[slug]/matching/page.tsx']) { const mod = await import(target); for (const slug of ['acme?next=../other','../other','foo/bar']) { try { await mod.default({ params: Promise.resolve({ slug }) }); } catch (e) { console.log(target + ' ' + slug + ' => ' + (e.digest || e.message)); } } }\""
+      ],
+      "createdAt": "2026-05-16T16:33:18.308Z"
+    },
+    {
+      "runId": "20260516T163632-41cc6b",
+      "kind": "revalidate",
+      "status": "fixed",
+      "note": null,
+      "reasoning": "The original evidence path still exists at src/app/app/o/[slug]/portfolio/page.tsx, but the vulnerable quote is no longer current: lines 10-13 now derive encodedSlug = encodeURIComponent(slug), use it in returnTo, and redirect to /portfolio/org/${encodedSlug}. The focused regression test file exists at tests/routes/portfolio-shortcuts.test.tsx and includes assertions for reserved slug characters in the portfolio shortcut, plus adjacent shortlist and matching shortcuts. Current code for src/app/app/o/[slug]/shortlist/page.tsx and src/app/app/o/[slug]/matching/page.tsx also encodes slug before redirecting. Direct runtime execution of the three shortcut pages with acme?next=../other, ../other, and foo/bar produced encoded redirect targets, preserving the slug as a single path segment. The Vitest command could not complete in this read-only sandbox because Vite attempted to write node_modules/.vite-temp, so the decisive evidence is the current code, existing regression test source, and direct TSX execution. I also checked remaining /app/o/${slug} redirects; app/app/o/[slug]/invitations/[token]/page.tsx still has an unencoded redirect, but that path is gated by an organization lookup matching organizations.slug and current onboarding validation restricts organization slugs to lowercase letters, numbers, and hyphens, so it is not evidence that this shortcut finding remains open.",
+      "commands": [
+        "sed -n '1,220p' ../AGENTS.md",
+        "nl -ba 'app/app/o/[slug]/portfolio/page.tsx'",
+        "nl -ba 'app/app/o/[slug]/shortlist/page.tsx'",
+        "nl -ba 'app/app/o/[slug]/matching/page.tsx'",
+        "nl -ba '../tests/routes/portfolio-shortcuts.test.tsx'",
+        "rg -n 'portfolio/org|OrganizationPortfolioShortcutPage|encodedSlug|encodeURIComponent\\(slug\\)|returnTo|/app/o/\\$\\{slug\\}|redirect\\(' app ../tests/routes",
+        "rg -n 'redirect\\(`/app/o/\\$\\{(slug|result\\.orgSlug|orgInfo\\.slug)\\}' app ../tests/routes ../tests -g '*.ts' -g '*.tsx'",
+        "nl -ba 'app/app/o/[slug]/invitations/[token]/page.tsx' | sed -n '1,150p'",
+        "nl -ba 'actions/onboarding.ts' | sed -n '120,175p' && nl -ba 'actions/onboarding.ts' | sed -n '980,1070p'",
+        "PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/routes/portfolio-shortcuts.test.tsx",
+        "PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH node --import tsx -e \"for (const target of ['./src/app/app/o/[slug]/portfolio/page.tsx','./src/app/app/o/[slug]/shortlist/page.tsx','./src/app/app/o/[slug]/matching/page.tsx']) { const mod = await import(target); for (const slug of ['acme?next=../other','../other','foo/bar']) { try { await mod.default({ params: Promise.resolve({ slug }) }); } catch (e) { console.log(target + ' ' + slug + ' => ' + (e.digest || e.message)); } } }\""
+      ],
+      "createdAt": "2026-05-16T16:39:32.776Z"
+    }
+  ],
+  "signature": "sig_feat-route-0678424c73_1423c46618",
+  "linkedPatchAttemptIds": [],
+  "createdByRunId": "20260516T161141-38a836",
+  "createdAt": "2026-05-16T16:15:25.043Z",
+  "updatedAt": "2026-05-16T16:39:32.776Z"
+}

@@ -1,0 +1,62 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - main [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - img "Proofound" [ref=e10]
+          - heading "Welcome back" [level=1] [ref=e11]
+          - paragraph [ref=e12]: Sign in to continue to Proofound
+        - form "Sign in form" [ref=e13]:
+          - generic [ref=e14]:
+            - generic [ref=e15]:
+              - img [ref=e16]
+              - text: Email address
+              - generic "required" [ref=e19]: "*"
+            - generic [ref=e20]:
+              - img [ref=e21]
+              - textbox "Email address required" [ref=e26]:
+                - /placeholder: you@example.com
+          - generic [ref=e27]:
+            - generic [ref=e28]:
+              - img [ref=e29]
+              - text: Password
+              - generic "required" [ref=e32]: "*"
+            - generic [ref=e33]:
+              - img [ref=e34]
+              - textbox "Password required" [ref=e39]:
+                - /placeholder: Enter your password
+              - button "Show password" [ref=e40] [cursor=pointer]:
+                - img [ref=e41]
+          - generic [ref=e44]:
+            - generic [ref=e45] [cursor=pointer]:
+              - checkbox "Remember me" [ref=e46]
+              - checkbox
+              - text: Remember me
+            - link "Forgot password?" [ref=e47] [cursor=pointer]:
+              - /url: /reset-password
+          - button "Sign in" [ref=e48] [cursor=pointer]
+        - generic [ref=e50]: Or continue with
+        - generic [ref=e52]:
+          - button "Continue with Google" [ref=e54] [cursor=pointer]:
+            - img [ref=e56]
+            - text: Continue with Google
+          - button "Continue with LinkedIn" [ref=e62] [cursor=pointer]:
+            - img [ref=e64]
+            - text: Continue with LinkedIn
+        - generic [ref=e66]:
+          - text: Don't have an account?
+          - link "Create account" [ref=e67] [cursor=pointer]:
+            - /url: /signup
+      - paragraph [ref=e68]:
+        - text: By signing in, you agree to our
+        - link "Terms of Service" [ref=e69] [cursor=pointer]:
+          - /url: /terms
+        - text: and
+        - link "Privacy Policy" [ref=e70] [cursor=pointer]:
+          - /url: /privacy
+  - alert [ref=e71]
+  - region "Notifications alt+T"
+  - region "Notifications (F8)":
+    - list

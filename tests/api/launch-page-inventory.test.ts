@@ -59,7 +59,20 @@ const REQUIRED_ACTIVE_PAGES = [
   '/app/o/[slug]/shortlist',
 ] as const;
 
+const REQUIRED_ACTIVE_ROUTE_HANDLERS = [
+  '/auth/callback',
+  '/auth/logout',
+  '/llms',
+  '/llms.txt',
+  '/llms-full.txt',
+  '/robots.txt',
+  '/security.txt',
+  '/.well-known/security.txt',
+] as const;
+
 const REQUIRED_INTERNAL_ONLY_PAGES = ['/admin', '/admin/audit', '/admin/verification'] as const;
+
+const ALLOWED_ARCHIVED_ROUTE_HANDLERS = ['/dev/resolve-home'] as const;
 
 const REQUIRED_HARD_GATED_PAGES = [
   '/app/i/opportunities',
@@ -135,6 +148,34 @@ async function collectPagePaths(dir: string): Promise<string[]> {
   return routes.sort();
 }
 
+async function collectRouteHandlerPaths(dir: string): Promise<string[]> {
+  const entries = await readdir(dir, { withFileTypes: true });
+  const routes: string[] = [];
+
+  for (const entry of entries) {
+    const absolutePath = path.join(dir, entry.name);
+
+    if (entry.isDirectory()) {
+      routes.push(...(await collectRouteHandlerPaths(absolutePath)));
+      continue;
+    }
+
+    if (!entry.isFile() || entry.name !== 'route.ts' || absolutePath.includes('/src/app/api/')) {
+      continue;
+    }
+
+    const relativePath = path.relative(PAGE_ROOT, absolutePath).replace(/\\/g, '/');
+    const withoutFilename = relativePath.replace(/\/route\.ts$/, '');
+    const routeSegments = withoutFilename
+      .split('/')
+      .filter(Boolean)
+      .filter((segment) => !(segment.startsWith('(') && segment.endsWith(')')));
+    routes.push(`/${routeSegments.join('/')}`);
+  }
+
+  return routes.sort();
+}
+
 describe('launch page inventory', () => {
   it('keeps the retained MVP page corridor explicitly active', async () => {
     const pages = await collectPagePaths(PAGE_ROOT);
@@ -152,6 +193,26 @@ describe('launch page inventory', () => {
       expect(pages).toContain(page);
       expect(classifyLaunchPagePath(page)).toBe('internal_only_launch_ops');
     }
+  });
+
+  it('keeps non-API route handlers inside explicit launch-surface policy', async () => {
+    const routeHandlers = await collectRouteHandlerPaths(PAGE_ROOT);
+    const explicitRouteHandlers = new Set<string>([
+      ...REQUIRED_ACTIVE_ROUTE_HANDLERS,
+      ...ALLOWED_ARCHIVED_ROUTE_HANDLERS,
+    ]);
+
+    for (const route of REQUIRED_ACTIVE_ROUTE_HANDLERS) {
+      expect(routeHandlers).toContain(route);
+      expect(classifyLaunchPagePath(route)).toBe('active_launch_path');
+    }
+
+    for (const route of ALLOWED_ARCHIVED_ROUTE_HANDLERS) {
+      expect(routeHandlers).toContain(route);
+      expect(classifyLaunchPagePath(route)).toBe('archived');
+    }
+
+    expect(routeHandlers.filter((route) => !explicitRouteHandlers.has(route))).toEqual([]);
   });
 
   it('keeps underbuilt-but-named surfaces hard-gated and out of the compiled launch surface', async () => {

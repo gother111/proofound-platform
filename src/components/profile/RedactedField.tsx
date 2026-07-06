@@ -27,7 +27,7 @@ export function RedactedField({
   if (!isVisible) {
     const messages = {
       private: 'This field is private',
-      match_only: 'Visible to matched organizations only',
+      match_only: 'Visible in assignment review only when reveal rules allow it',
       link_only: 'Visible with profile link only',
     };
 

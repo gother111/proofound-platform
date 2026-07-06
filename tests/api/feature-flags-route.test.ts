@@ -16,6 +16,12 @@ vi.mock('@/lib/feature-flags/server', () => ({
   isFeatureEnabled: vi.fn(),
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+  },
+}));
+
 import { GET } from '@/app/api/feature-flags/route';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';

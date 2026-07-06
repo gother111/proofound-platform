@@ -85,6 +85,17 @@ interface NearMatchResult {
   };
 }
 
+function toVisibilitySafeNearMatch(item: NearMatchResult) {
+  return {
+    assignmentId: item.assignmentId,
+    assignment: item.assignment,
+    reason: item.reason,
+    gaps: item.gaps,
+    missing: item.missing,
+    reviewMode: 'reason_coded' as const,
+  };
+}
+
 /**
  * POST /api/core/matching/near-matches
  *
@@ -114,7 +125,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
 
     // Validate input
     const validatedData = NearMatchRequestSchema.parse(body);
@@ -395,8 +411,9 @@ export async function POST(request: NextRequest) {
       )
     );
 
-    // Return top k
+    // Return top k without raw scoring artifacts. Scores stay internal for ordering only.
     const topK = results.slice(0, k);
+    const visibilitySafeItems = topK.map(toVisibilitySafeNearMatch);
 
     const duration = Date.now() - startTime;
 
@@ -410,14 +427,15 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({
-      items: topK,
+      items: visibilitySafeItems,
       meta: {
         total: results.length,
         returned: topK.length,
         threshold,
         assignmentScanLimit,
         durationMs: duration,
-        weights: weights,
+        weights: {},
+        scoreVisibility: 'internal_ordering_only',
         message:
           topK.length === 0
             ? 'No near matches found. Try adjusting your matching profile or reducing requirements.'

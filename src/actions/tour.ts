@@ -10,6 +10,7 @@ import { db } from '@/db';
 import { profiles } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { requireAuth } from '@/lib/auth';
+import { log } from '@/lib/log';
 import { revalidatePath } from 'next/cache';
 
 /**
@@ -38,7 +39,9 @@ export async function completeTour() {
     });
 
     if (!updatedProfile || !updatedProfile.tourCompleted) {
-      console.error('Tour completion update may have failed - profile not updated');
+      log.error('tour.complete.verify_failed', {
+        userId: user.id,
+      });
       return {
         success: false,
         error: 'Failed to verify tour completion in database',
@@ -52,7 +55,7 @@ export async function completeTour() {
 
     return { success: true };
   } catch (error) {
-    console.error('Failed to complete tour:', error);
+    log.error('tour.complete.failed', { error });
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -81,7 +84,7 @@ export async function resetTour() {
 
     return { success: true };
   } catch (error) {
-    console.error('Failed to reset tour:', error);
+    log.error('tour.reset.failed', { error });
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -111,7 +114,7 @@ export async function getTourStatus() {
       userId: user.id,
     };
   } catch (error) {
-    console.error('Failed to get tour status:', error);
+    log.error('tour.status.failed', { error });
     return {
       success: false,
       tourCompleted: false,

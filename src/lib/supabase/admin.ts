@@ -9,7 +9,6 @@ export function createAdminClient() {
   const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
 
   if (isMockSupabaseEnabled()) {
-    console.log('Using Mock Admin Client');
     return {
       from: (table: string) => ({
         select: () => ({

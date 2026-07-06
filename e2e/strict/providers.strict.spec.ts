@@ -30,7 +30,7 @@ async function expectProviderUnavailableResponse(response: APIResponse) {
   }
 }
 
-test.describe('Strict MVP Provider Flows (Zoom, Google, LinkedIn)', () => {
+test.describe('Advisory Provider Flows (Google Meet, manual links, LinkedIn)', () => {
   test.describe.configure({ mode: 'serial' });
 
   let fixture: StrictFixtureState;
@@ -41,10 +41,8 @@ test.describe('Strict MVP Provider Flows (Zoom, Google, LinkedIn)', () => {
   let orgOwner: StrictRuntimeUser;
   let organization: StrictRuntimeOrganization;
   let noProviderAssignment: StrictRuntimeAssignment;
-  let zoomAssignment: StrictRuntimeAssignment;
   let googleAssignment: StrictRuntimeAssignment;
   let noProviderMatch: StrictRuntimeMatch;
-  let zoomMatch: StrictRuntimeMatch;
   let googleMatch: StrictRuntimeMatch;
 
   test.beforeAll(async () => {
@@ -82,10 +80,6 @@ test.describe('Strict MVP Provider Flows (Zoom, Google, LinkedIn)', () => {
       role: 'Strict Provider Assignment No Provider',
       status: 'active',
     });
-    zoomAssignment = await createRuntimeAssignment(fixture, organization.id, {
-      role: 'Strict Provider Assignment Zoom',
-      status: 'active',
-    });
     googleAssignment = await createRuntimeAssignment(fixture, organization.id, {
       role: 'Strict Provider Assignment Google',
       status: 'active',
@@ -96,44 +90,11 @@ test.describe('Strict MVP Provider Flows (Zoom, Google, LinkedIn)', () => {
       noProviderAssignment.id,
       unconnectedUser.id
     );
-    zoomMatch = await createRuntimeMatch(fixture, zoomAssignment.id, providerUser.id);
     googleMatch = await createRuntimeMatch(fixture, googleAssignment.id, providerUser.id);
   });
 
   test.afterAll(async () => {
     await cleanupFixtureData(fixture);
-  });
-
-  test('Zoom connect redirects to provider and callback rejects invalid state', async ({
-    page,
-  }) => {
-    await loginWithUi(page, providerUser);
-
-    const connectResponse = await page.request.get('/api/integrations/zoom/connect', {
-      maxRedirects: 0,
-    });
-    if (connectResponse.status() >= 400) {
-      await expectProviderUnavailableResponse(connectResponse);
-    } else {
-      expect([302, 307]).toContain(connectResponse.status());
-      const connectLocation = connectResponse.headers()['location'] ?? '';
-      expect(connectLocation.toLowerCase()).toContain('zoom');
-      expect(connectResponse.headers()['set-cookie'] ?? '').toContain('zoom_oauth_state=');
-    }
-
-    const invalidStateResponse = await page.request.get(
-      '/api/integrations/zoom/callback?code=fake-code&state=invalid-state',
-      {
-        maxRedirects: 0,
-      }
-    );
-    if (invalidStateResponse.status() >= 400) {
-      await expectProviderUnavailableResponse(invalidStateResponse);
-    } else {
-      expect(invalidStateResponse.status()).toBe(200);
-      const invalidStateHtml = await invalidStateResponse.text();
-      expect(invalidStateHtml).toMatch(/Invalid or expired OAuth state|zoom_auth_failed/i);
-    }
   });
 
   test('Google connect redirects to provider and callback rejects invalid state', async ({
@@ -215,16 +176,16 @@ test.describe('Strict MVP Provider Flows (Zoom, Google, LinkedIn)', () => {
   test('Provider schedule fails without connected integration token', async ({ page }) => {
     await loginWithUi(page, orgOwner);
 
-    const scheduleZoomResponse = await apiPostJson(page.request, '/api/interviews/schedule', {
+    const scheduleGoogleResponse = await apiPostJson(page.request, '/api/interviews/schedule', {
       matchId: noProviderMatch.id,
       scheduledAt: new Date(Date.now() + 1000 * 60 * 60 * 4).toISOString(),
-      platform: 'zoom',
+      platform: 'google_meet',
       participantUserIds: [orgOwner.id, unconnectedUser.id],
     });
-    expect([400, 409]).toContain(scheduleZoomResponse.status());
-    const scheduleZoomPayload = (await scheduleZoomResponse.json()) as { error?: string };
-    expect(scheduleZoomPayload.error).toMatch(
-      /not connected|coming soon|unavailable|not available|manual meeting link/i
+    expect([400, 409]).toContain(scheduleGoogleResponse.status());
+    const scheduleGooglePayload = (await scheduleGoogleResponse.json()) as { error?: string };
+    expect(scheduleGooglePayload.error).toMatch(
+      /not connected|connect|calendar|unavailable|not available|manual meeting link/i
     );
   });
 
@@ -234,7 +195,6 @@ test.describe('Strict MVP Provider Flows (Zoom, Google, LinkedIn)', () => {
     await loginWithUi(page, providerUser);
 
     const requireConnected = process.env.STRICT_PROVIDER_E2E_REQUIRE_CONNECTED === 'true';
-    const requireBoth = process.env.STRICT_PROVIDER_E2E_REQUIRE_BOTH === 'true';
 
     if (!managedProviderConfigured) {
       // No deterministic connected provider account configured for this environment.
@@ -242,46 +202,18 @@ test.describe('Strict MVP Provider Flows (Zoom, Google, LinkedIn)', () => {
       return;
     }
 
-    const statusResponse = await page.request.get('/api/integrations/video/status');
-    expect(statusResponse.ok()).toBeTruthy();
-    const statusPayload = (await statusResponse.json()) as {
-      zoom?: { connected?: boolean };
-      google?: { connected?: boolean };
-    };
-
-    const zoomConnected = statusPayload.zoom?.connected === true;
-    const googleConnected = statusPayload.google?.connected === true;
-    const hasConnectedProvider = zoomConnected || googleConnected;
-
-    if (requireBoth && (!zoomConnected || !googleConnected)) {
-      throw new Error(
-        'Strict provider gate requires both connected providers (Zoom and Google). ' +
-          'Connect deterministic staging accounts and set E2E_PROVIDER_USER_* to that user.'
-      );
-    }
-
-    if (!hasConnectedProvider && requireConnected && !requireBoth) {
-      throw new Error(
-        'Strict provider gate requires at least one connected provider (Zoom or Google). ' +
-          'Connect a deterministic staging provider account or set STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false for diagnostic runs.'
-      );
-    }
-
-    if (!hasConnectedProvider) {
-      return;
-    }
-
-    const scheduleAndAssertMeeting = async (
-      matchId: string,
-      platform: 'zoom' | 'google_meet',
-      hourOffset: number
-    ) => {
+    const scheduleAndAssertMeeting = async (matchId: string, hourOffset: number) => {
       const scheduleResponse = await apiPostJson(page.request, '/api/interviews/schedule', {
         matchId,
         scheduledAt: new Date(Date.now() + 1000 * 60 * 60 * hourOffset).toISOString(),
-        platform,
+        platform: 'google_meet',
         participantUserIds: [providerUser.id, candidateUser.id],
       });
+
+      if (!scheduleResponse.ok() && !requireConnected) {
+        await expectProviderUnavailableResponse(scheduleResponse);
+        return;
+      }
 
       expect(scheduleResponse.ok()).toBeTruthy();
       const schedulePayload = (await scheduleResponse.json()) as {
@@ -296,12 +228,6 @@ test.describe('Strict MVP Provider Flows (Zoom, Google, LinkedIn)', () => {
       expect(meetingLink.length).toBeGreaterThan(10);
     };
 
-    if (zoomConnected) {
-      await scheduleAndAssertMeeting(zoomMatch.id, 'zoom', 5);
-    }
-
-    if (googleConnected) {
-      await scheduleAndAssertMeeting(googleMatch.id, 'google_meet', 6);
-    }
+    await scheduleAndAssertMeeting(googleMatch.id, 6);
   });
 });

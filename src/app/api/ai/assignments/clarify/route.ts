@@ -10,7 +10,6 @@ import {
   isAiAssistDisabledByKillSwitch,
 } from '@/lib/ai/kill-switches';
 import { requireApiAuthContext } from '@/lib/auth';
-import { isMockSupabaseEnabled } from '@/lib/env';
 import { log } from '@/lib/log';
 import { sanitizeErrorForLog } from '@/lib/privacy/log-redaction';
 
@@ -29,47 +28,14 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
     const payload = AssignmentClarityRequestSchema.parse(body);
     const requestId = crypto.randomUUID();
-
-    if (isMockSupabaseEnabled()) {
-      const title = payload.title?.trim() || 'Focused proof-led assignment';
-      return NextResponse.json({
-        ambiguityFlags: ['Add one concrete outcome and one proof expectation before publishing.'],
-        suggestedRewrite: {
-          title,
-          rolePurpose:
-            payload.outcomeSummary?.trim() ||
-            'Create one clear proof-led hiring flow with privacy-safe review checkpoints.',
-          outcomeSummary:
-            'Define the work outcome, how success will be observed, and which evidence would count.',
-          constraints: {
-            locationMode:
-              typeof payload.constraints === 'object' ? payload.constraints.locationMode : null,
-            city: typeof payload.constraints === 'object' ? payload.constraints.city : null,
-            country: typeof payload.constraints === 'object' ? payload.constraints.country : null,
-            hoursMin: typeof payload.constraints === 'object' ? payload.constraints.hoursMin : null,
-            hoursMax: typeof payload.constraints === 'object' ? payload.constraints.hoursMax : null,
-            compensationSummary: null,
-            startWindow: null,
-          },
-          capabilityExpectations: ['Evidence handling', 'Clear stakeholder communication'],
-          proofExpectations:
-            payload.proofExpectations?.trim() ||
-            'Ask for one proof artifact tied to a real project, with context, ownership, and outcome.',
-          verificationRequirements: payload.verificationRequirements ?? [],
-        },
-        reviewQuestions: [
-          'Which outcome must be visible in the first 30 days?',
-          'Which proof would make this assignment safe to review?',
-        ],
-        excludedOrRiskyCriteria: [],
-        fallback: true,
-        promptVersion: 'ai-assignment-clarity-v1',
-        suggestionId: `mock-assignment-clarity-${requestId}`,
-      });
-    }
 
     const suggestion = await suggestAssignmentClarityForUser({
       userId: authContext.user.id,

@@ -40,7 +40,7 @@ export function LocationInput({ value, onChange }: LocationInputProps) {
             onChange({ ...value, workMode: mode as LocationPreference['workMode'] })
           }
         >
-          <SelectTrigger id="work-mode">
+          <SelectTrigger id="work-mode" aria-label="Work mode">
             <SelectValue placeholder="Select work mode" />
           </SelectTrigger>
           <SelectContent>

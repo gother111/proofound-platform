@@ -24,7 +24,7 @@ describe('interview calendar helpers', () => {
     const ics = buildInterviewIcs(payload);
 
     expect(ics).toContain('BEGIN:VCALENDAR');
-    expect(ics).toContain(`UID:${payload.interviewId}@proofound.com`);
+    expect(ics).toContain(`UID:${payload.interviewId}@proofound.io`);
     expect(ics).toContain('SUMMARY:Proofound interview');
     expect(ics).toContain(payload.meetingUrl);
     expect(ics).toContain('END:VCALENDAR');

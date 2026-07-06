@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { ArrowLeft, Cookie } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Cookie, RotateCcw, ShieldCheck } from 'lucide-react';
 import { CookieSettingsClient } from '@/components/cookies/CookieSettingsClient';
 import { JsonLdScripts } from '@/components/seo/JsonLdScripts';
 import { sanitizeReturnPath } from '@/lib/navigation/sanitize-return-path';
@@ -44,55 +44,99 @@ export default async function CookieSettingsPage({
   return (
     <div className="min-h-screen bg-japandi-bg">
       <JsonLdScripts items={jsonLdItems} idPrefix="cookie-settings-jsonld" />
-      {/* Header */}
-      <header className="border-b bg-white">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+      <header className="border-b border-proofound-stone bg-white/90">
+        <div className="container mx-auto max-w-5xl px-4 py-4">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3">
             <Link
               href={returnTo}
-              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Return to previous page"
+              className="inline-flex min-h-10 min-w-0 items-center gap-2 justify-self-start rounded-md pr-2 text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
             >
               <ArrowLeft className="h-4 w-4" />
-              Return to previous page
+              <span className="truncate">Return to previous page</span>
             </Link>
-            {/* Logo */}
-            <Link href="/" className="font-serif text-2xl font-bold text-proofound-forest">
+            <Link
+              href="/"
+              className="font-serif text-2xl font-bold text-proofound-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+            >
               Proofound
             </Link>
-            <div className="w-24" /> {/* Spacer for centering */}
+            <div aria-hidden="true" />
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-12 max-w-4xl">
-        {/* Page Title */}
+      <main className="container mx-auto max-w-4xl px-4 py-12">
         <div className="mb-8 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
+          <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-proofound-forest/10">
             <Cookie className="h-8 w-8 text-primary" />
           </div>
-          <h1 className="text-4xl font-bold text-proofound-forest mb-3">Cookie Settings</h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Manage your cookie preferences to control how we collect and use your data. Your choices
-            help us respect your privacy while improving your experience.
+          <h1 className="mb-3 font-display text-4xl font-semibold text-proofound-forest">
+            Cookie Settings
+          </h1>
+          <p className="mx-auto max-w-2xl text-lg leading-7 text-muted-foreground">
+            Choose which optional cookies Proofound may use in this browser. Essential cookies stay
+            on so security, consent, and account routes keep working.
           </p>
         </div>
 
-        {/* GDPR Notice */}
-        <div className="mb-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-blue-900">
-            <strong>Your Privacy Matters:</strong> We are committed to protecting your data under
-            GDPR regulations. You can change these settings at any time. Essential cookies are
-            required for the site to function and cannot be disabled.
-          </p>
-        </div>
+        <section
+          aria-labelledby="cookie-privacy-defaults"
+          className="mb-8 rounded-2xl border border-proofound-stone bg-white/85 p-4 shadow-[0_4px_24px_rgba(29,51,48,0.06)] sm:p-5"
+        >
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex min-w-0 gap-3">
+              <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-proofound-forest/10">
+                <ShieldCheck className="h-5 w-5 text-proofound-forest" />
+              </span>
+              <div className="min-w-0">
+                <h2
+                  id="cookie-privacy-defaults"
+                  className="font-display text-xl font-semibold text-proofound-charcoal"
+                >
+                  Privacy-safe defaults
+                </h2>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                  Optional analytics and marketing cookies stay off until you choose them. Saved
+                  choices apply to this browser and can be changed here any time.
+                </p>
+              </div>
+            </div>
+            <span className="inline-flex w-fit items-center gap-2 rounded-full border border-[#D7E8DE] bg-[#F3FAF6] px-3 py-1.5 text-xs font-medium text-proofound-forest">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              Essential only by default
+            </span>
+          </div>
 
-        {/* Cookie Preferences Component with client-side routing */}
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-xl border border-white/60 bg-proofound-parchment/45 p-3">
+              <p className="text-sm font-semibold text-proofound-charcoal">Essential stays on</p>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                Needed for security, session, and consent routing.
+              </p>
+            </div>
+            <div className="rounded-xl border border-white/60 bg-proofound-parchment/45 p-3">
+              <p className="text-sm font-semibold text-proofound-charcoal">Optional starts off</p>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                Analytics and marketing only run after explicit consent.
+              </p>
+            </div>
+            <div className="rounded-xl border border-white/60 bg-proofound-parchment/45 p-3">
+              <p className="flex items-center gap-1.5 text-sm font-semibold text-proofound-charcoal">
+                <RotateCcw className="h-3.5 w-3.5 text-proofound-forest" />
+                Reversible
+              </p>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                Change or withdraw prior choices from this page.
+              </p>
+            </div>
+          </div>
+        </section>
+
         <CookieSettingsClient returnTo={returnTo} />
 
-        {/* Additional Information */}
-        <div className="mt-12 pt-8 border-t space-y-4">
-          <h2 className="text-xl font-semibold text-proofound-forest mb-4">Learn More</h2>
+        <div className="mt-12 space-y-4 border-t pt-8">
+          <h2 className="mb-4 text-xl font-semibold text-proofound-forest">Learn More</h2>
 
           <p className="text-sm leading-6 text-muted-foreground">
             Essential cookies keep authentication, security protections, and core routing stable.
@@ -117,7 +161,7 @@ export default async function CookieSettingsPage({
           <div className="grid gap-4 sm:grid-cols-2">
             <Link
               href="/privacy"
-              className="p-4 border rounded-lg hover:border-primary hover:bg-primary/5 transition-colors"
+              className="rounded-lg border p-4 transition-colors hover:border-primary hover:bg-primary/5"
             >
               <h3 className="font-semibold mb-1">Privacy Policy</h3>
               <p className="text-sm text-muted-foreground">
@@ -127,7 +171,7 @@ export default async function CookieSettingsPage({
 
             <Link
               href="/cookies"
-              className="p-4 border rounded-lg hover:border-primary hover:bg-primary/5 transition-colors"
+              className="rounded-lg border p-4 transition-colors hover:border-primary hover:bg-primary/5"
             >
               <h3 className="font-semibold mb-1">Cookie Policy</h3>
               <p className="text-sm text-muted-foreground">
@@ -137,19 +181,17 @@ export default async function CookieSettingsPage({
           </div>
         </div>
 
-        {/* Support Section */}
         <div className="mt-8 text-center">
           <p className="text-sm text-muted-foreground">
             Have questions about cookies or privacy?{' '}
-            <a href="mailto:privacy@proofound.com" className="text-primary hover:underline">
+            <a href="mailto:privacy@proofound.io" className="text-primary hover:underline">
               Email our privacy team
             </a>
           </p>
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t mt-16 py-8 bg-white">
+      <footer className="mt-16 border-t bg-white py-8">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
           <p>© {new Date().getFullYear()} Proofound. All rights reserved.</p>
         </div>

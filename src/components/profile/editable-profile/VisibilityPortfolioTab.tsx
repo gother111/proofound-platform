@@ -27,7 +27,7 @@ export function VisibilityPortfolioTab({
     {
       icon: Download,
       label: 'Export or delete',
-      href: '/app/i/settings?tab=privacy',
+      href: '/app/i/settings/privacy#privacy-delete',
     },
     {
       icon: History,

@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
-import { PUT } from '@/app/api/organizations/[orgId]/route';
+import { GET, PUT } from '@/app/api/organizations/[orgId]/route';
 import { db } from '@/db';
 import { requireApiAuthContext } from '@/lib/auth';
+import { log } from '@/lib/log';
 
 vi.mock('@/lib/auth', () => ({
   requireApiAuthContext: vi.fn(),
@@ -16,6 +17,12 @@ vi.mock('@/db', () => ({
       organizations: { findFirst: vi.fn() },
     },
     update: vi.fn(),
+  },
+}));
+
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
   },
 }));
 
@@ -35,6 +42,13 @@ function buildPutRequest(body: Record<string, unknown>) {
   });
 }
 
+function buildRawPutRequest(body: string) {
+  return new NextRequest(`http://localhost/api/organizations/${ORG_ID}`, {
+    method: 'PUT',
+    body,
+  });
+}
+
 function mockUpdateReturningOrganization() {
   const returning = vi.fn().mockResolvedValue([{ id: ORG_ID }]);
   const where = vi.fn().mockReturnValue({ returning });
@@ -49,7 +63,7 @@ describe('organizations [orgId] route', () => {
     (db.query.organizations.findFirst as any).mockResolvedValue({
       id: ORG_ID,
       displayName: 'Acme Org',
-      mission: 'Ship trust-first hiring',
+      mission: 'Ship proof-first assignment review',
       tagline: 'Join a focused team',
       workingContext: 'Remote-first collaboration',
       website: 'https://example.com/',
@@ -73,6 +87,23 @@ describe('organizations [orgId] route', () => {
           })),
         })),
       },
+    });
+  });
+
+  it('logs organization fetch failures with structured diagnostics', async () => {
+    const routeError = new Error('organization lookup failed');
+    (db.query.organizations.findFirst as any).mockRejectedValueOnce(routeError);
+
+    const response = await GET(
+      new NextRequest(`http://localhost/api/organizations/${ORG_ID}`),
+      params
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Failed to fetch organization' });
+    expect(log.error).toHaveBeenCalledWith('organization.detail.get_failed', {
+      error: routeError,
     });
   });
 
@@ -132,6 +163,23 @@ describe('organizations [orgId] route', () => {
     expect(body.details.unsupportedFields).toEqual(['industry']);
   });
 
+  it('returns 400 for malformed JSON before principal or membership checks', async () => {
+    const authContext = {
+      user: { id: 'user-1' },
+      supabase: {
+        from: vi.fn(),
+      },
+    };
+    (requireApiAuthContext as any).mockResolvedValue(authContext);
+
+    const response = await PUT(buildRawPutRequest('{'), params);
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
+    expect(authContext.supabase.from).not.toHaveBeenCalled();
+    expect(db.update).not.toHaveBeenCalled();
+  });
+
   it('returns 403 when user role is manager', async () => {
     (requireApiAuthContext as any).mockResolvedValue({
       user: { id: 'user-1' },
@@ -156,14 +204,14 @@ describe('organizations [orgId] route', () => {
     expect(response.status).toBe(403);
   });
 
-  it('normalizes website input and updates lean organization profile fields for an owner', async () => {
+  it('normalizes website input and updates lean organization trust page fields for an owner', async () => {
     const { set } = mockUpdateReturningOrganization();
 
     const response = await PUT(
       buildPutRequest({
         displayName: 'Acme Org',
         whyWorkMatters: 'Join a focused team',
-        mission: 'Ship trust-first hiring',
+        mission: 'Ship proof-first assignment review',
         website: 'example.com',
         operatingContext: 'Remote-first collaboration',
       }),
@@ -175,7 +223,7 @@ describe('organizations [orgId] route', () => {
       expect.objectContaining({
         displayName: 'Acme Org',
         tagline: 'Join a focused team',
-        mission: 'Ship trust-first hiring',
+        mission: 'Ship proof-first assignment review',
         workingContext: 'Remote-first collaboration',
         orgReadiness: 'org_ready',
         website: 'https://example.com/',
@@ -183,12 +231,30 @@ describe('organizations [orgId] route', () => {
     );
   });
 
+  it('logs organization update failures with structured diagnostics', async () => {
+    const routeError = new Error('organization update failed');
+    const where = vi.fn().mockReturnValue({
+      returning: vi.fn().mockRejectedValue(routeError),
+    });
+    const set = vi.fn().mockReturnValue({ where });
+    (db.update as any).mockReturnValue({ set });
+
+    const response = await PUT(buildPutRequest({ displayName: 'Acme Org' }), params);
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Failed to update organization' });
+    expect(log.error).toHaveBeenCalledWith('organization.detail.update_failed', {
+      error: routeError,
+    });
+  });
+
   it('rejects unsupported non-MVP organization fields', async () => {
     const response = await PUT(buildPutRequest({ values: ['Clarity', '', 123] as any }), params);
     const body = await response.json();
 
     expect(response.status).toBe(400);
-    expect(body.error).toContain('Only launch organization profile fields can be updated');
+    expect(body.error).toContain('Only launch organization trust page fields can be updated');
     expect(body.details.unsupportedFields).toEqual(['values']);
     expect(db.update).not.toHaveBeenCalled();
   });

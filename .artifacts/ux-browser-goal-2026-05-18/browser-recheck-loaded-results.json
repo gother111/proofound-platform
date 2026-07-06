@@ -1,0 +1,148 @@
+[
+  {
+    "label": "settings",
+    "route": "/app/i/settings",
+    "state": {
+      "bg": "rgb(243, 240, 232)",
+      "clientWidth": 390,
+      "mainRect": {
+        "h": 783,
+        "w": 390,
+        "x": 0,
+        "y": 61
+      },
+      "overflow": false,
+      "scrollWidth": 390,
+      "text": "Skip to main content Overview Profile Inbox Matching Settings U Settings Manage your account preferences, security, and privacy Account Interviews Privacy Email & Authentication Manage your email and password Email admin@test-org.com Change Email Identity Verification Add identity and workplace trust signals with precise badge meanings PROOF VERIFICATIONS / ATTESTATIONS Attach trust to proof, not to profile hype Proof-backed trust belongs on specific Proof Packs and claim snapshots. Use the verification requests area to see which proof, claim, verifier, and outcome each request is tied to. Open proof verification requests Ask for verification only when a specific proof or claim needs independent confirmation. No scoped proof verifications are active yet. That is okay while staying portfolio-ready. INTRO-READINESS TRUST ANCHORS Optional for portfolio-ready, harder for intros Skipping verification is fine while getting portfolio-ready. It can still block intro-eligible status and some gated intros until you have at least one non-self trust anchor attached to real proof. No non-self trust anchor is active yet. That is okay for portfolio-ready, but it can still hold back intro-readines",
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/i/settings"
+    }
+  },
+  {
+    "label": "privacy",
+    "route": "/app/i/settings/privacy",
+    "state": {
+      "bg": "rgb(243, 240, 232)",
+      "clientWidth": 390,
+      "mainRect": {
+        "h": 783,
+        "w": 390,
+        "x": 0,
+        "y": 61
+      },
+      "overflow": false,
+      "scrollWidth": 390,
+      "text": "Skip to main content Overview Profile Inbox Matching Settings U Privacy Settings Control who can see your profile information Your Privacy Controls Proofound is built with privacy at its core. Here's what data we collect and how you control it. Privacy settings Download my data Import data View account history What others can see Visibility summary across Public, Connections, After match, and Private sections Public 0 sections Connections 0 sections After match 0 sections Private 0 sections Preview visibility Quick privacy fixes Three fast actions to review and correct visibility before sharing your profile. Review field visibility Check privacy audit log Export and inspect my data Profile data Personal Includes: Name, email, location, bio, avatar Purpose: Create your profile and match you with opportunities Visibility: Controlled by your profile settings Skills and expertise Sensitive Includes: Skills, experience, education, verifications Purpose: Help match you with relevant opportunities Visibility: Visible to matched organizations Projects & work history Sensitive Includes: Projects, experiences, impact stories Purpose: Showcase your work and impact Retention: 90 days after acc",
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/i/settings/privacy"
+    }
+  },
+  {
+    "label": "verifications",
+    "route": "/app/i/verifications",
+    "state": {
+      "bg": "rgb(243, 240, 232)",
+      "clientWidth": 390,
+      "mainRect": {
+        "h": 783,
+        "w": 390,
+        "x": 0,
+        "y": 61
+      },
+      "overflow": false,
+      "scrollWidth": 390,
+      "text": "Skip to main content Overview Profile Inbox Matching Settings U Proof verification requests Follow which proof, claim, verifier, and bounded outcome each request is tied to. Incoming 2 Sent 2 Show requests All (2) Active Pending (1) Needs attention (2) Declined Expired / stale Revoked / corrected Newest Scope Showing all requests. Active means accepted and current; pending requests are still waiting for a response. MA Mira Andersson Asked you to confirm a proof-backed claim Pending Manager SCOPE Skill observed in context TIED TO Proof-first hiring corridor readiness review CLAIM Confirm that the proof pack clearly connects private source material, review decisions, and a launch-safe candidate story without exposing sensitive details. OUTCOME IF CONFIRMED This confirmation strengthens the candidate review signal while keeping identity and private evidence bounded. Product leadership › Hiring corridor operations › Privacy-safe proof review Competency: Advanced Proof Pack status: Partially Verified A compact evidence pack tying product decisions, privacy checks, and review outcomes together. Outcomes: Reduced reviewer confusion, clearer safe-shell readiness, and fewer overloaded next ",
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/i/verifications"
+    }
+  },
+  {
+    "label": "messages",
+    "route": "/app/i/messages",
+    "state": {
+      "bg": "rgb(243, 240, 232)",
+      "clientWidth": 390,
+      "mainRect": {
+        "h": 783,
+        "w": 390,
+        "x": 0,
+        "y": 61
+      },
+      "overflow": false,
+      "scrollWidth": 390,
+      "text": "Skip to main content Overview Profile Inbox Matching Settings U Messages Review open introductions and keep each thread tied to its proof corridor. O Organization Re: Privacy-safe proof review for a launch corridor with intentionally long assignment title 2 Thanks. I can review the proof pack and keep identity detail... 15 minutes ago Identity protected until reveal approval EP Elena Proof Reviewer Re: Evidence operations lead The public proof summary is clear. I would keep the next ste... about 18 hours ago Privacy choices Essential cookies keep Proofound working. Optional analytics help us improve the product. We never sell your data. Privacy Policy Cookie Policy Cookie Settings Accept All Essential Only",
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/i/messages"
+    }
+  },
+  {
+    "label": "portfolio-demo",
+    "route": "/portfolio/demo",
+    "state": {
+      "bg": "rgb(243, 240, 232)",
+      "clientWidth": 390,
+      "mainRect": null,
+      "overflow": false,
+      "scrollWidth": 390,
+      "text": "Skip to main content Page not found The page you're looking for doesn't exist or has been moved. Return home Privacy choices Essential cookies keep Proofound working. Optional analytics help us improve the product. We never sell your data. Privacy Policy Cookie Policy Cookie Settings Accept All Essential Only",
+      "title": "Public Page Unavailable | Proofound",
+      "url": "http://localhost:33100/portfolio/demo"
+    }
+  },
+  {
+    "label": "org-demo",
+    "route": "/portfolio/org/demo",
+    "state": {
+      "bg": "rgb(243, 240, 232)",
+      "clientWidth": 390,
+      "mainRect": null,
+      "overflow": false,
+      "scrollWidth": 390,
+      "text": "Skip to main content Page not found The page you're looking for doesn't exist or has been moved. Return home Privacy choices Essential cookies keep Proofound working. Optional analytics help us improve the product. We never sell your data. Privacy Policy Cookie Policy Cookie Settings Accept All Essential Only",
+      "title": "Public Page Unavailable | Proofound",
+      "url": "http://localhost:33100/portfolio/org/demo"
+    }
+  },
+  {
+    "label": "candidate-invite-invalid",
+    "route": "/candidate-invite/not-a-real-token",
+    "state": {
+      "bg": "rgb(243, 240, 232)",
+      "clientWidth": 390,
+      "mainRect": null,
+      "overflow": false,
+      "scrollWidth": 390,
+      "text": "Skip to main content Invitation unavailable Service temporarily unavailable Ask the company to send a new invite if needed. Return home Privacy choices Essential cookies keep Proofound working. Optional analytics help us improve the product. We never sell your data. Privacy Policy Cookie Policy Cookie Settings Accept All Essential Only",
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/candidate-invite/not-a-real-token"
+    }
+  },
+  {
+    "label": "verify-invalid",
+    "route": "/verify/not-a-real-token",
+    "state": {
+      "bg": "rgb(243, 240, 232)",
+      "clientWidth": 390,
+      "mainRect": null,
+      "overflow": false,
+      "scrollWidth": 390,
+      "text": "Skip to main content Unable to load request Service temporarily unavailable Return home Privacy choices Essential cookies keep Proofound working. Optional analytics help us improve the product. We never sell your data. Privacy Policy Cookie Policy Cookie Settings Accept All Essential Only",
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/verify/not-a-real-token"
+    }
+  },
+  {
+    "label": "custom-verify-invalid",
+    "route": "/verify/custom/not-a-real-token",
+    "state": {
+      "bg": "rgb(243, 240, 232)",
+      "clientWidth": 390,
+      "mainRect": null,
+      "overflow": false,
+      "scrollWidth": 390,
+      "text": "Skip to main content Unable to load request Service temporarily unavailable Return home Privacy choices Essential cookies keep Proofound working. Optional analytics help us improve the product. We never sell your data. Privacy Policy Cookie Policy Cookie Settings Accept All Essential Only",
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/verify/custom/not-a-real-token"
+    }
+  }
+]

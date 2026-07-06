@@ -1,0 +1,24 @@
+{
+  "capturedAt": "2026-05-20T06:14:51.386Z",
+  "route": "/app/i/home",
+  "eval": {
+    "hasMain": true,
+    "hasRuntimeErrorText": false,
+    "hasSUSCopy": false,
+    "hasSurveyApiText": false,
+    "noHorizontalOverflow": true,
+    "textSample": "Skip to main content\nOverview\nProfile\nCommunications\nMatching\nSettings\nProofound\n\nOverview\n\nU\nProof-first home\nAdd your first proof record\n\nWelcome back, there. Start with one work sample, credential, or case study that can be trusted.\n\nStart proof record\nYour Proof Wallet\n3 checks\n\nEvidence, trust, and sharing state\n\nProof Packs\n\nNo proof yet. Start with one private record.\n\nPending\n\nTrust anchors\n\nNo trust anchor yet. You can add this after the first proof.\n\nNeeded\n\nPublic Page visibility\n\nPrivate by default until you choose to share\n\nLocked\nAdd new record\nReadiness Checklist\n3 to resolve\n\nFirst proof artifact\n\nNeeded\n\nStart with one useful artifact. It stays private while you shape it.\n\nStart proof\n\nTrust anchor missing\n\nNeeded\n\nNothing is exposed yet. Add one trusted source when you are ready.\n\nPlan anchor\n\nPublic Page not ready yet\n\nLocked\n\nSharing stays off by default until your first proof record is clearer.\n\nManage visibility\nProof Readiness\nChecklist\n\nStart with one proof record\n\n0 accepted trust signals\n0 pending verifications\n0 proof items ready\nPublic Page waits for first proof\nStart proof readiness\nTrust Controls\nAccount\nPrivacy controls\nManage visibility\nExport or delete\nAccount history",
+    "title": "Proofound - Focus on what matters",
+    "url": "http://127.0.0.1:33180/app/i/home",
+    "viewport": {
+      "devicePixelRatio": 2,
+      "height": 1354,
+      "width": 1359
+    }
+  },
+  "errorLogs": [],
+  "screenshot": {
+    "ok": true,
+    "bytes": 110609
+  }
+}

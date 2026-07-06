@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 import { CLIENT_FF_DEFAULTS } from '@/lib/featureFlags';
 
@@ -15,7 +16,10 @@ export function useAssistiveAiFlag() {
         const payload = await response.json();
         setEnabled(payload?.flags?.assistiveAiUi === true);
       } catch (error) {
-        console.error('Failed to load assistive AI feature flag', error);
+        if (error instanceof TypeError && error.message.includes('Failed to parse URL')) {
+          return;
+        }
+        dispatchClientErrorDiagnostic('feature_flags.assistive_ai.load_failed', error);
       }
     };
 

@@ -1,0 +1,16 @@
+{
+  "mode": "canonical",
+  "generatedAt": "2026-05-16T16:24:32.492Z",
+  "localMigrationFileCount": 124,
+  "databaseMigrationRowCount": 125,
+  "appliedWithFileCount": 124,
+  "fileNotAppliedCount": 0,
+  "appliedMissingFileCount": 1,
+  "fileNotApplied": [],
+  "appliedMissingFile": [
+    {
+      "version": "20260317224741_canonicalize_org_role_constraints",
+      "name": "20260317224741_canonicalize_org_role_constraints"
+    }
+  ]
+}

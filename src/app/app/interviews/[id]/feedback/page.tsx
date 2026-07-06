@@ -1,6 +1,10 @@
-import { notFound } from 'next/navigation';
 import FeedbackForm from '@/components/feedback/FeedbackForm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import {
+  buildVisualInterviewFeedbackResponse,
+  feedbackVisualFixturesEnabled,
+} from '@/lib/feedback/visual-fixtures';
 
 type FeedbackQuestion = {
   id: string;
@@ -43,11 +47,65 @@ type FeedbackApiResponse = {
   responses: FeedbackResponse[];
 };
 
+function feedbackDirectionLabel(direction: FeedbackResponse['direction']) {
+  return direction === 'candidate_to_org'
+    ? 'Participant → Organization'
+    : 'Organization → Participant';
+}
+
 async function loadFeedback(interviewId: string): Promise<FeedbackApiResponse | null> {
+  if (feedbackVisualFixturesEnabled()) {
+    const visualResponse = buildVisualInterviewFeedbackResponse(interviewId);
+    if (visualResponse) {
+      return visualResponse;
+    }
+  }
+
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
-  const res = await fetch(`${baseUrl}/api/feedback/${interviewId}`, { cache: 'no-store' });
-  if (!res.ok) return null;
-  return res.json();
+  try {
+    const res = await fetch(`${baseUrl}/api/feedback/${interviewId}`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
+}
+
+function FeedbackUnavailableState({ interviewId }: { interviewId: string }) {
+  return (
+    <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-8">
+      <Card className="border-amber-200 bg-white/90">
+        <CardHeader className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-proofound-forest">
+            Interview feedback
+          </p>
+          <CardTitle>Interview feedback could not load</CardTitle>
+          <p className="text-sm leading-6 text-muted-foreground">
+            Feedback forms and shared responses are unavailable right now. No feedback was submitted
+            from this page, and private interview feedback remains hidden until the record can be
+            loaded.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div
+            role="alert"
+            className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-amber-950"
+          >
+            <p className="font-semibold">Feedback record unavailable</p>
+            <p className="mt-1">
+              Retry this feedback page from the current interview workflow before submitting or
+              reviewing feedback.
+            </p>
+            <Button asChild variant="outline" size="sm" className="mt-4 bg-white">
+              <a href={`/app/interviews/${encodeURIComponent(interviewId)}/feedback`}>
+                Retry feedback
+              </a>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
 
 function ResponseList({
@@ -58,7 +116,19 @@ function ResponseList({
   templates: FeedbackTemplate[];
 }) {
   if (!responses.length) {
-    return <p className="text-sm text-muted-foreground">No feedback shared yet.</p>;
+    return (
+      <Card className="border-dashed border-proofound-stone/80 bg-white/75">
+        <CardContent className="space-y-2 p-4 sm:p-5">
+          <p className="text-sm font-semibold text-proofound-charcoal">
+            Feedback is waiting on submissions
+          </p>
+          <p className="text-sm leading-6 text-muted-foreground">
+            Submit the relevant feedback form above. Once feedback is shared, anonymized responses
+            appear here for the interview record.
+          </p>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
@@ -69,8 +139,7 @@ function ResponseList({
           <Card key={response.id}>
             <CardHeader>
               <CardTitle className="text-base">
-                {template?.name || 'Feedback'} ·{' '}
-                {response.direction === 'candidate_to_org' ? 'Candidate → Org' : 'Org → Candidate'}
+                {template?.name || 'Feedback'} · {feedbackDirectionLabel(response.direction)}
               </CardTitle>
               <p className="text-xs text-muted-foreground">
                 Shared{' '}
@@ -85,7 +154,7 @@ function ResponseList({
                   <div key={answer.id} className="rounded-md border bg-muted/40 p-3">
                     <p className="text-sm font-medium">{question?.prompt || 'Question'}</p>
                     {answer.score !== null && answer.score !== undefined ? (
-                      <p className="text-sm text-muted-foreground">Score: {answer.score}</p>
+                      <p className="text-sm text-muted-foreground">Rating: {answer.score}</p>
                     ) : null}
                     {answer.text_answer ? (
                       <p className="text-sm text-muted-foreground">{answer.text_answer}</p>
@@ -110,7 +179,7 @@ export default async function InterviewFeedbackPage({
   const data = await loadFeedback(id);
 
   if (!data) {
-    notFound();
+    return <FeedbackUnavailableState interviewId={id} />;
   }
 
   const yourResponses = new Set(
@@ -122,7 +191,8 @@ export default async function InterviewFeedbackPage({
       <div className="space-y-2">
         <h1 className="text-2xl font-semibold">Interview feedback</h1>
         <p className="text-sm text-muted-foreground">
-          Share structured, anonymous feedback and view what the other side shared once submitted.
+          Share structured, anonymous feedback and view anonymized responses once they are
+          submitted.
         </p>
       </div>
 

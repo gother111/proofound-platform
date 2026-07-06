@@ -1,91 +1,149 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { type FormEvent, useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { completeOrganizationOnboarding } from '@/actions/onboarding';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { createClient } from '@/lib/supabase/client';
-import { CheckCircle, Copy, ExternalLink } from 'lucide-react';
+import { AlertCircle, CheckCircle, Copy, ExternalLink } from 'lucide-react';
+
+type CopyFeedback = {
+  kind: 'success' | 'error';
+  message: string;
+};
+
+const ORGANIZATION_SETUP_RETRY_MESSAGE =
+  'Organization setup could not be saved. Your details are still here; please try again.';
+const ORGANIZATION_EXISTING_CHECK_FAILED_MESSAGE =
+  'We could not confirm whether your account already belongs to an organization. Retry this check before creating a new organization if you expected an existing workspace.';
+const ORGANIZATION_SETUP_LEGACY_CREATE_ERROR = 'Failed to create organization. Please try again.';
+const ORGANIZATION_TRUST_LINK_COPY_FAILED_MESSAGE =
+  'Organization trust page link could not be copied. Select the link below or try again.';
+
+const ORGANIZATION_SETUP_SAFE_ACTION_ERRORS = new Map([
+  [
+    'Organization name, slug, and type are required',
+    'Organization name, slug, and type are required',
+  ],
+  [
+    'Slug can only contain lowercase letters, numbers, and hyphens',
+    'Slug can only contain lowercase letters, numbers, and hyphens',
+  ],
+  ['Invalid organization type', 'Invalid organization type'],
+  [
+    'You are already connected to an organization. Please contact support to update your organization membership.',
+    'You are already connected to an organization. Please contact support to update your organization membership.',
+  ],
+  [
+    'Organization slug already taken. Please choose another.',
+    'Organization slug already taken. Please choose another.',
+  ],
+  [ORGANIZATION_SETUP_RETRY_MESSAGE, ORGANIZATION_SETUP_RETRY_MESSAGE],
+  [ORGANIZATION_SETUP_LEGACY_CREATE_ERROR, ORGANIZATION_SETUP_RETRY_MESSAGE],
+]);
+
+function organizationSetupActionErrorMessage(message: string) {
+  const safeMessage = ORGANIZATION_SETUP_SAFE_ACTION_ERRORS.get(message);
+  if (safeMessage) {
+    return safeMessage;
+  }
+
+  dispatchClientDiagnostic('onboarding.organization.returned_error', {
+    hasReturnedError: true,
+  });
+  return ORGANIZATION_SETUP_RETRY_MESSAGE;
+}
 
 export function OrganizationSetup() {
-  const router = useRouter();
+  const { push } = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [checkingExisting, setCheckingExisting] = useState(true);
+  const [existingCheckError, setExistingCheckError] = useState<string | null>(null);
   const [success, setSuccess] = useState<{
     orgName: string;
     orgSlug: string;
     portfolioUrl: string;
   } | null>(null);
   const [copied, setCopied] = useState(false);
+  const [copyFeedback, setCopyFeedback] = useState<CopyFeedback | null>(null);
+
+  const checkExistingOrg = useCallback(async () => {
+    try {
+      setCheckingExisting(true);
+      setExistingCheckError(null);
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        return;
+      }
+
+      const { data: existingMemberships } = await supabase
+        .from('organization_members')
+        .select('org_id')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .limit(1);
+
+      if (existingMemberships && existingMemberships.length > 0) {
+        const { data: orgData } = await supabase
+          .from('organizations')
+          .select('slug')
+          .eq('id', existingMemberships[0].org_id)
+          .single();
+
+        if (orgData?.slug) {
+          push(`/app/o/${orgData.slug}/home`);
+          return;
+        }
+      }
+    } catch (err) {
+      dispatchClientErrorDiagnostic('onboarding.organization.existing_check_failed', err);
+      setExistingCheckError(ORGANIZATION_EXISTING_CHECK_FAILED_MESSAGE);
+    } finally {
+      setCheckingExisting(false);
+    }
+  }, [push]);
 
   // Check if user already has an organization on mount
   useEffect(() => {
-    async function checkExistingOrg() {
-      try {
-        const supabase = createClient();
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        if (!user) {
-          setCheckingExisting(false);
-          return;
-        }
-
-        const { data: existingMemberships } = await supabase
-          .from('organization_members')
-          .select('org_id')
-          .eq('user_id', user.id)
-          .eq('status', 'active')
-          .limit(1);
-
-        if (existingMemberships && existingMemberships.length > 0) {
-          const { data: orgData } = await supabase
-            .from('organizations')
-            .select('slug')
-            .eq('id', existingMemberships[0].org_id)
-            .single();
-
-          if (orgData?.slug) {
-            router.push(`/app/o/${orgData.slug}/home`);
-            return;
-          }
-        }
-      } catch (err) {
-        console.error('Error checking for existing organization:', err);
-      } finally {
-        setCheckingExisting(false);
-      }
-    }
-
-    checkExistingOrg();
-  }, [router]);
+    void checkExistingOrg();
+  }, [checkExistingOrg]);
 
   if (checkingExisting) {
     return (
       <Card className="max-w-2xl mx-auto border-proofound-stone dark:border-border rounded-2xl">
         <CardContent className="py-8 text-center">
-          <div className="animate-pulse text-proofound-charcoal/70 dark:text-muted-foreground">
-            Loading...
+          <div
+            className="animate-pulse text-proofound-charcoal/70 dark:text-muted-foreground"
+            role="status"
+            aria-live="polite"
+          >
+            Checking organization access...
           </div>
         </CardContent>
       </Card>
     );
   }
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     setIsLoading(true);
     setError(null);
 
     try {
+      const formData = new FormData(event.currentTarget);
       const result = await completeOrganizationOnboarding(formData);
 
       if (result.error) {
-        setError(result.error);
+        setError(organizationSetupActionErrorMessage(result.error));
         setIsLoading(false);
         return;
       }
@@ -95,9 +153,16 @@ export function OrganizationSetup() {
         const orgName = formData.get('displayName') as string;
         const portfolioUrl = `${window.location.origin}/portfolio/org/${result.orgSlug}`;
         setSuccess({ orgName, orgSlug: result.orgSlug, portfolioUrl });
+        return;
       }
+
+      setError(
+        'Organization was created, but the public link did not finish. Refresh and try again.'
+      );
+      setIsLoading(false);
     } catch (err) {
-      setError('Something went wrong. Please try again.');
+      dispatchClientErrorDiagnostic('onboarding.organization.submit_failed', err);
+      setError(ORGANIZATION_SETUP_RETRY_MESSAGE);
       setIsLoading(false);
     }
   }
@@ -106,11 +171,21 @@ export function OrganizationSetup() {
   if (success) {
     const handleCopy = async () => {
       try {
+        setCopyFeedback(null);
         await navigator.clipboard.writeText(success.portfolioUrl);
         setCopied(true);
-        setTimeout(() => setCopied(false), 1500);
-      } catch {
+        setCopyFeedback({ kind: 'success', message: 'Organization trust page link copied.' });
+        setTimeout(() => {
+          setCopied(false);
+          setCopyFeedback(null);
+        }, 1500);
+      } catch (err) {
+        dispatchClientErrorDiagnostic('onboarding.organization.copy_portfolio_link_failed', err);
         setCopied(false);
+        setCopyFeedback({
+          kind: 'error',
+          message: ORGANIZATION_TRUST_LINK_COPY_FAILED_MESSAGE,
+        });
       }
     };
 
@@ -124,7 +199,7 @@ export function OrganizationSetup() {
 
             <div className="space-y-2">
               <h2 className="text-2xl font-['Crimson_Pro'] font-semibold text-proofound-forest dark:text-primary">
-                Organization link ready
+                Organization trust page ready
               </h2>
               <p className="text-3xl font-bold text-proofound-charcoal dark:text-foreground">
                 Welcome to {success.orgName}!
@@ -135,26 +210,65 @@ export function OrganizationSetup() {
             </div>
 
             <div className="bg-proofound-stone/30 dark:bg-muted rounded-xl p-6 text-left space-y-3">
-              <p className="font-medium text-proofound-charcoal dark:text-foreground">Live URL</p>
+              <p className="font-medium text-proofound-charcoal dark:text-foreground">
+                Trust page URL
+              </p>
               <p className="text-sm break-all text-proofound-charcoal/70 dark:text-muted-foreground">
                 {success.portfolioUrl}
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center justify-center gap-3">
-              <Button type="button" variant="outline" className="gap-2" onClick={handleCopy}>
-                <Copy className="h-4 w-4" />
-                {copied ? 'Copied' : 'Copy link'}
-              </Button>
-              <Button asChild type="button" variant="outline" className="gap-2">
+            <div className="flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:flex-wrap sm:items-start">
+              <div className="flex w-full flex-col items-stretch gap-1.5 sm:w-auto sm:items-start">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-center gap-2 sm:w-auto"
+                  onClick={handleCopy}
+                >
+                  <Copy className="h-4 w-4" />
+                  {copied ? 'Copied' : 'Copy link'}
+                </Button>
+                {copyFeedback ? (
+                  <div className="max-w-64 space-y-1.5">
+                    <p
+                      className={
+                        copyFeedback.kind === 'error'
+                          ? 'text-xs leading-5 text-[#8A3F21]'
+                          : 'text-xs leading-5 text-proofound-forest'
+                      }
+                      role={copyFeedback.kind === 'error' ? 'alert' : 'status'}
+                      aria-live={copyFeedback.kind === 'error' ? 'assertive' : 'polite'}
+                    >
+                      {copyFeedback.message}
+                    </p>
+                    {copyFeedback.kind === 'error' ? (
+                      <input
+                        aria-label="Organization trust page link for manual copy"
+                        className="min-h-[44px] w-full rounded-md border border-proofound-stone bg-white px-2 text-xs text-proofound-charcoal dark:border-border dark:bg-background dark:text-foreground"
+                        onFocus={(event) => event.currentTarget.select()}
+                        readOnly
+                        value={success.portfolioUrl}
+                      />
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+              <Button
+                asChild
+                type="button"
+                variant="outline"
+                className="w-full justify-center gap-2 sm:w-auto"
+              >
                 <a href={success.portfolioUrl} target="_blank" rel="noreferrer">
                   <ExternalLink className="h-4 w-4" />
-                  Open portfolio
+                  Open trust page
                 </a>
               </Button>
               <Button
                 type="button"
-                onClick={() => router.push(`/app/o/${success.orgSlug}/assignments/new`)}
+                onClick={() => push(`/app/o/${success.orgSlug}/assignments/new`)}
+                className="w-full sm:w-auto"
               >
                 Create first assignment
               </Button>
@@ -172,11 +286,34 @@ export function OrganizationSetup() {
           Create your organization
         </CardTitle>
         <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
-          Add the basics candidates need to trust you, then create one assignment.
+          Add the basics reviewers need to trust the work context, then create one assignment.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form action={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {existingCheckError ? (
+            <div
+              className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950"
+              role="alert"
+            >
+              <div className="flex gap-3">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                <div className="space-y-3">
+                  <p>{existingCheckError}</p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void checkExistingOrg()}
+                    className="min-h-10 bg-white/80"
+                  >
+                    Retry organization check
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
           <div>
             <Label htmlFor="displayName" className="text-proofound-charcoal dark:text-foreground">
               Organization Name *
@@ -190,7 +327,7 @@ export function OrganizationSetup() {
               className="border-proofound-stone dark:border-border focus-visible:ring-proofound-forest"
             />
             <p className="text-xs text-proofound-charcoal/70 dark:text-muted-foreground mt-1">
-              This appears on your public organization profile.
+              This appears on your public organization trust page.
             </p>
           </div>
 
@@ -200,7 +337,7 @@ export function OrganizationSetup() {
             </Label>
             <div className="flex items-center gap-2">
               <span className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
-                proofound.com/o/
+                proofound.io/portfolio/org/
               </span>
               <Input
                 id="slug"
@@ -283,15 +420,19 @@ export function OrganizationSetup() {
               className="border-proofound-stone dark:border-border focus-visible:ring-proofound-forest"
             />
             <p className="text-xs text-proofound-charcoal/70 dark:text-muted-foreground mt-1">
-              Used for trust basics. Search engines stay off by default.
+              Supports your public organization trust page. Search engines stay off by default.
             </p>
           </div>
 
-          {error && (
-            <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-xl text-destructive text-sm">
+          {error ? (
+            <div
+              className="p-4 bg-destructive/10 border border-destructive/30 rounded-xl text-destructive text-sm"
+              role="alert"
+              aria-live="assertive"
+            >
               {error}
             </div>
-          )}
+          ) : null}
 
           <div className="flex justify-end gap-4">
             <Button

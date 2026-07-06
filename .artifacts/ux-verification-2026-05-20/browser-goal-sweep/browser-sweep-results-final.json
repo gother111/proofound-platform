@@ -1,0 +1,2376 @@
+{
+  "generatedAt": "2026-05-20T16:34:41.380Z",
+  "results": [
+    {
+      "route": "individual-home",
+      "requestedUrl": "http://localhost:33124/app/i/home",
+      "viewport": {
+        "height": 1000,
+        "width": 1440
+      },
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/final-desktop-individual-home.png",
+      "navigationError": null,
+      "logs": [],
+      "bodyTextStart": "Skip to main content Overview Profile Communications Matching Settings Proofound Overview U PORTFOLIO READINESS Setup Required Build your proof-first profile Welcome back, there. Start by creating your first proof record. Shaping a single trusted work sample or artifact unlocks your profile. Guided setup Your profile is private by default. Candidates stay hidden until they explicitly authorize discovery or initiate a verification check.",
+      "cookieBannerVisible": false,
+      "finalUrl": "http://localhost:33124/app/i/home",
+      "heading": "Build your proof-first profile",
+      "loadingTextVisible": false,
+      "mobileNavVisible": true,
+      "overflowOffenders": [],
+      "scroll": {
+        "bodyScrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflow": 0,
+        "rootScrollWidth": 1440,
+        "scrollHeight": 1000
+      },
+      "title": "Proofound - Focus on what matters",
+      "visibleActions": [
+        {
+          "height": 48,
+          "label": "Overview",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 12
+        },
+        {
+          "height": 48,
+          "label": "Profile",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 62
+        },
+        {
+          "height": 48,
+          "label": "Communications",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 112
+        },
+        {
+          "height": 48,
+          "label": "Matching",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 162
+        },
+        {
+          "height": 48,
+          "label": "Settings",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 212
+        },
+        {
+          "height": 32,
+          "label": "Collapse sidebar",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 960
+        },
+        {
+          "height": 44,
+          "label": "Open profile menu",
+          "visible": true,
+          "width": 44,
+          "x": 1380,
+          "y": 6
+        },
+        {
+          "height": 44,
+          "label": "Guided setup",
+          "visible": true,
+          "width": 574,
+          "x": 553,
+          "y": 374
+        }
+      ]
+    },
+    {
+      "route": "individual-home",
+      "requestedUrl": "http://localhost:33124/app/i/home",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      },
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/final-mobile-individual-home.png",
+      "navigationError": null,
+      "logs": [],
+      "bodyTextStart": "Skip to main content Overview Profile Inbox Matching Settings U PORTFOLIO READINESS Setup Required Build your proof-first profile Welcome back, there. Start by creating your first proof record. Shaping a single trusted work sample or artifact unlocks your profile. Guided setup Your profile is private by default. Candidates stay hidden until they explicitly authorize discovery or initiate a verification check.",
+      "cookieBannerVisible": false,
+      "finalUrl": "http://localhost:33124/app/i/home",
+      "heading": "Build your proof-first profile",
+      "loadingTextVisible": false,
+      "mobileNavVisible": true,
+      "overflowOffenders": [],
+      "scroll": {
+        "bodyScrollWidth": 390,
+        "clientWidth": 390,
+        "overflow": 0,
+        "rootScrollWidth": 390,
+        "scrollHeight": 844
+      },
+      "title": "Proofound - Focus on what matters",
+      "visibleActions": [
+        {
+          "height": 64,
+          "label": "Overview",
+          "visible": true,
+          "width": 73,
+          "x": 4,
+          "y": 780
+        },
+        {
+          "height": 64,
+          "label": "Profile",
+          "visible": true,
+          "width": 73,
+          "x": 81,
+          "y": 780
+        },
+        {
+          "height": 64,
+          "label": "Communications",
+          "visible": true,
+          "width": 73,
+          "x": 158,
+          "y": 780
+        },
+        {
+          "height": 64,
+          "label": "Matching",
+          "visible": true,
+          "width": 73,
+          "x": 236,
+          "y": 780
+        },
+        {
+          "height": 64,
+          "label": "Settings",
+          "visible": true,
+          "width": 73,
+          "x": 313,
+          "y": 780
+        },
+        {
+          "height": 44,
+          "label": "Open profile menu",
+          "visible": true,
+          "width": 44,
+          "x": 330,
+          "y": 8
+        },
+        {
+          "height": 44,
+          "label": "Guided setup",
+          "visible": true,
+          "width": 265,
+          "x": 57,
+          "y": 361
+        }
+      ]
+    },
+    {
+      "route": "individual-onboarding",
+      "requestedUrl": "http://localhost:33124/onboarding",
+      "viewport": {
+        "height": 1000,
+        "width": 1440
+      },
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/final-desktop-individual-onboarding.png",
+      "navigationError": null,
+      "logs": [],
+      "bodyTextStart": "Skip to main content ← Back to persona choice Start with one Proof Pack Add your name, where you are based, and one artifact that can become your first Proof Pack. Basic details One proof artifact Basic details Name and residence only. The proof comes next. First name * Last name * City or residence * Continue to proof artifact",
+      "cookieBannerVisible": false,
+      "finalUrl": "http://localhost:33124/onboarding",
+      "heading": "Start with one Proof Pack",
+      "loadingTextVisible": false,
+      "mobileNavVisible": false,
+      "overflowOffenders": [],
+      "scroll": {
+        "bodyScrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflow": 0,
+        "rootScrollWidth": 1440,
+        "scrollHeight": 1000
+      },
+      "title": "Proofound - Focus on what matters",
+      "visibleActions": [
+        {
+          "height": 21,
+          "label": "← Back to persona choice",
+          "visible": true,
+          "width": 172,
+          "x": 272,
+          "y": 50
+        },
+        {
+          "height": 48,
+          "label": "Continue to proof artifact",
+          "visible": true,
+          "width": 281,
+          "x": 790,
+          "y": 553
+        }
+      ]
+    },
+    {
+      "route": "individual-onboarding",
+      "requestedUrl": "http://localhost:33124/onboarding",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      },
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/final-mobile-individual-onboarding.png",
+      "navigationError": null,
+      "logs": [],
+      "bodyTextStart": "Skip to main content ← Back to persona choice Start with one Proof Pack Add your name, where you are based, and one artifact that can become your first Proof Pack. Basic details One proof artifact Basic details Name and residence only. The proof comes next. First name * Last name * City or residence * Continue to proof artifact",
+      "cookieBannerVisible": false,
+      "finalUrl": "http://localhost:33124/onboarding",
+      "heading": "Start with one Proof Pack",
+      "loadingTextVisible": false,
+      "mobileNavVisible": false,
+      "overflowOffenders": [],
+      "scroll": {
+        "bodyScrollWidth": 379,
+        "clientWidth": 379,
+        "overflow": 0,
+        "rootScrollWidth": 379,
+        "scrollHeight": 861
+      },
+      "title": "Proofound - Focus on what matters",
+      "visibleActions": [
+        {
+          "height": 21,
+          "label": "← Back to persona choice",
+          "visible": true,
+          "width": 172,
+          "x": 16,
+          "y": 50
+        },
+        {
+          "height": 48,
+          "label": "Continue to proof artifact",
+          "visible": true,
+          "width": 281,
+          "x": 57,
+          "y": 740
+        }
+      ]
+    },
+    {
+      "route": "individual-portfolio-redirect",
+      "requestedUrl": "http://localhost:33124/app/i/portfolio",
+      "viewport": {
+        "height": 1000,
+        "width": 1440
+      },
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/final-desktop-individual-portfolio-redirect.png",
+      "navigationError": null,
+      "logs": [],
+      "bodyTextStart": "Skip to main content Overview Profile Communications Matching Settings Proofound Profile U Loading profile Preparing your proof, visibility, and readiness details.",
+      "cookieBannerVisible": false,
+      "finalUrl": "http://localhost:33124/app/i/profile?profileView=full&tab=proof_packs&portfolioLocked=1&lockReason=safe_shell&proof=first",
+      "heading": "",
+      "loadingTextVisible": true,
+      "mobileNavVisible": true,
+      "overflowOffenders": [],
+      "scroll": {
+        "bodyScrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflow": 0,
+        "rootScrollWidth": 1440,
+        "scrollHeight": 1000
+      },
+      "title": "Proofound - Focus on what matters",
+      "visibleActions": [
+        {
+          "height": 48,
+          "label": "Overview",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 12
+        },
+        {
+          "height": 48,
+          "label": "Profile",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 62
+        },
+        {
+          "height": 48,
+          "label": "Communications",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 112
+        },
+        {
+          "height": 48,
+          "label": "Matching",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 162
+        },
+        {
+          "height": 48,
+          "label": "Settings",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 212
+        },
+        {
+          "height": 32,
+          "label": "Collapse sidebar",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 960
+        },
+        {
+          "height": 44,
+          "label": "Open profile menu",
+          "visible": true,
+          "width": 44,
+          "x": 1380,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "route": "individual-portfolio-redirect",
+      "requestedUrl": "http://localhost:33124/app/i/portfolio",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      },
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/final-mobile-individual-portfolio-redirect.png",
+      "navigationError": null,
+      "logs": [],
+      "bodyTextStart": "Skip to main content Overview Profile Inbox Matching Settings U Keep building proof readiness Keep the first milestone anchored in real work. Add proof context, visibility choices, and optional verification checks before expanding public details. First Proof Pack created Public Page ready Matching preferences saved Non-self verification added Start with one context-backed Proof Pack Public Page is locked until the safe-shell basics are finished. MO Mock Individual Hidden Share Add location Joined February 2026 Add a tagline A brief statement that captures who you are and what you care about 1/5 Public Page readiness Complete one clear proof path before publishing. Next: Complete your safe shell Safe shell basics One real context is anchored One real proof is added and structured One non-self verification is accepted Public Page publication Proof readiness Safe shell Needs basics Context ",
+      "cookieBannerVisible": false,
+      "finalUrl": "http://localhost:33124/app/i/profile?profileView=full&tab=proof_packs&portfolioLocked=1&lockReason=safe_shell&proof=first",
+      "heading": "Mock Individual",
+      "loadingTextVisible": false,
+      "mobileNavVisible": true,
+      "overflowOffenders": [
+        {
+          "bottom": 1775,
+          "className": "inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visib",
+          "height": 45,
+          "left": 277,
+          "right": 394,
+          "role": "tab",
+          "tag": "button",
+          "text": "Verification",
+          "top": 1730,
+          "width": 117
+        },
+        {
+          "bottom": 1775,
+          "className": "inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visib",
+          "height": 45,
+          "left": 418,
+          "right": 583,
+          "role": "tab",
+          "tag": "button",
+          "text": "Visibility / Portfolio",
+          "top": 1730,
+          "width": 166
+        },
+        {
+          "bottom": 1763,
+          "className": "flex items-center gap-2 relative z-10",
+          "height": 21,
+          "left": 426,
+          "right": 575,
+          "role": null,
+          "tag": "div",
+          "text": "Visibility / Portfolio",
+          "top": 1742,
+          "width": 150
+        },
+        {
+          "bottom": 1761,
+          "className": "lucide lucide-globe w-4 h-4",
+          "height": 16,
+          "left": 426,
+          "right": 442,
+          "role": null,
+          "tag": "svg",
+          "text": "",
+          "top": 1745,
+          "width": 16
+        },
+        {
+          "bottom": 1759,
+          "className": "",
+          "height": 13,
+          "left": 427,
+          "right": 440,
+          "role": null,
+          "tag": "circle",
+          "text": "",
+          "top": 1746,
+          "width": 13
+        },
+        {
+          "bottom": 1759,
+          "className": "",
+          "height": 13,
+          "left": 431,
+          "right": 436,
+          "role": null,
+          "tag": "path",
+          "text": "",
+          "top": 1746,
+          "width": 5
+        },
+        {
+          "bottom": 1763,
+          "className": "",
+          "height": 21,
+          "left": 450,
+          "right": 575,
+          "role": null,
+          "tag": "span",
+          "text": "Visibility / Portfolio",
+          "top": 1742,
+          "width": 126
+        }
+      ],
+      "scroll": {
+        "bodyScrollWidth": 390,
+        "clientWidth": 390,
+        "overflow": 0,
+        "rootScrollWidth": 390,
+        "scrollHeight": 844
+      },
+      "title": "Proofound - Focus on what matters",
+      "visibleActions": [
+        {
+          "height": 64,
+          "label": "Overview",
+          "visible": true,
+          "width": 73,
+          "x": 4,
+          "y": 780
+        },
+        {
+          "height": 64,
+          "label": "Profile",
+          "visible": true,
+          "width": 73,
+          "x": 81,
+          "y": 780
+        },
+        {
+          "height": 64,
+          "label": "Communications",
+          "visible": true,
+          "width": 73,
+          "x": 158,
+          "y": 780
+        },
+        {
+          "height": 64,
+          "label": "Matching",
+          "visible": true,
+          "width": 73,
+          "x": 236,
+          "y": 780
+        },
+        {
+          "height": 64,
+          "label": "Settings",
+          "visible": true,
+          "width": 73,
+          "x": 313,
+          "y": 780
+        },
+        {
+          "height": 44,
+          "label": "Open profile menu",
+          "visible": true,
+          "width": 44,
+          "x": 330,
+          "y": 8
+        },
+        {
+          "height": 32,
+          "label": "",
+          "visible": true,
+          "width": 44,
+          "x": 33,
+          "y": 635
+        },
+        {
+          "height": 32,
+          "label": "Hidden",
+          "visible": true,
+          "width": 91,
+          "x": 85,
+          "y": 635
+        },
+        {
+          "height": 32,
+          "label": "Share",
+          "visible": true,
+          "width": 87,
+          "x": 184,
+          "y": 635
+        },
+        {
+          "height": 21,
+          "label": "Add location",
+          "visible": true,
+          "width": 103,
+          "x": 33,
+          "y": 675
+        },
+        {
+          "height": 97,
+          "label": "Add a taglineA brief statement that captures who you are and what you care about",
+          "visible": true,
+          "width": 313,
+          "x": 33,
+          "y": 708
+        },
+        {
+          "height": 16,
+          "label": "Close",
+          "visible": true,
+          "width": 16,
+          "x": 330,
+          "y": 59
+        }
+      ]
+    },
+    {
+      "route": "individual-profile-full",
+      "requestedUrl": "http://localhost:33124/app/i/profile?profileView=full&tab=proof_packs",
+      "viewport": {
+        "height": 1000,
+        "width": 1440
+      },
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/final-desktop-individual-profile-full.png",
+      "navigationError": null,
+      "logs": [],
+      "bodyTextStart": "Skip to main content Overview Profile Communications Matching Settings Proofound Profile U Keep building proof readiness Keep the first milestone anchored in real work. Add proof context, visibility choices, and optional verification checks before expanding public details. First Proof Pack created Public Page ready Matching preferences saved Non-self verification added Start with one context-backed Proof Pack Mock Individual Hidden Share Add location Joined February 2026 Add a tagline A brief statement that captures who you are and what you care about 1/5 Public Page readiness Complete one clear proof path before publishing. Next: Complete your safe shell Safe shell basics One real context is anchored One real proof is added and structured One non-self verification is accepted Public Page publication Proof readiness Safe shell Needs basics Context 1 context item Proof Add your first proo",
+      "cookieBannerVisible": false,
+      "finalUrl": "http://localhost:33124/app/i/profile?profileView=full&tab=proof_packs",
+      "heading": "Mock Individual",
+      "loadingTextVisible": false,
+      "mobileNavVisible": true,
+      "overflowOffenders": [],
+      "scroll": {
+        "bodyScrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflow": 0,
+        "rootScrollWidth": 1440,
+        "scrollHeight": 1000
+      },
+      "title": "Proofound - Focus on what matters",
+      "visibleActions": [
+        {
+          "height": 48,
+          "label": "Overview",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 12
+        },
+        {
+          "height": 48,
+          "label": "Profile",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 62
+        },
+        {
+          "height": 48,
+          "label": "Communications",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 112
+        },
+        {
+          "height": 48,
+          "label": "Matching",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 162
+        },
+        {
+          "height": 48,
+          "label": "Settings",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 212
+        },
+        {
+          "height": 32,
+          "label": "Collapse sidebar",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 960
+        },
+        {
+          "height": 44,
+          "label": "Open profile menu",
+          "visible": true,
+          "width": 44,
+          "x": 1380,
+          "y": 6
+        },
+        {
+          "height": 36,
+          "label": "",
+          "visible": true,
+          "width": 44,
+          "x": 674,
+          "y": 386
+        },
+        {
+          "height": 36,
+          "label": "Hidden",
+          "visible": true,
+          "width": 91,
+          "x": 726,
+          "y": 386
+        },
+        {
+          "height": 36,
+          "label": "Share",
+          "visible": true,
+          "width": 87,
+          "x": 825,
+          "y": 386
+        },
+        {
+          "height": 21,
+          "label": "Add location",
+          "visible": true,
+          "width": 103,
+          "x": 457,
+          "y": 436
+        },
+        {
+          "height": 79,
+          "label": "Add a taglineA brief statement that captures who you are and what you care about",
+          "visible": true,
+          "width": 907,
+          "x": 457,
+          "y": 469
+        },
+        {
+          "height": 32,
+          "label": "Collapse checklist",
+          "visible": true,
+          "width": 32,
+          "x": 1344,
+          "y": 655
+        },
+        {
+          "height": 45,
+          "label": "Context",
+          "visible": true,
+          "width": 93,
+          "x": 658,
+          "y": 850
+        },
+        {
+          "height": 45,
+          "label": "Proof Packs",
+          "visible": true,
+          "width": 120,
+          "x": 774,
+          "y": 850
+        },
+        {
+          "height": 45,
+          "label": "Verification",
+          "visible": true,
+          "width": 117,
+          "x": 919,
+          "y": 850
+        },
+        {
+          "height": 45,
+          "label": "Visibility / Portfolio",
+          "visible": true,
+          "width": 166,
+          "x": 1059,
+          "y": 850
+        }
+      ]
+    },
+    {
+      "route": "individual-profile-full",
+      "requestedUrl": "http://localhost:33124/app/i/profile?profileView=full&tab=proof_packs",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      },
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/final-mobile-individual-profile-full.png",
+      "navigationError": null,
+      "logs": [],
+      "bodyTextStart": "Skip to main content Overview Profile Inbox Matching Settings U Keep building proof readiness Keep the first milestone anchored in real work. Add proof context, visibility choices, and optional verification checks before expanding public details. First Proof Pack created Public Page ready Matching preferences saved Non-self verification added Start with one context-backed Proof Pack MO Mock Individual Hidden Share Add location Joined February 2026 Add a tagline A brief statement that captures who you are and what you care about 1/5 Public Page readiness Complete one clear proof path before publishing. Next: Complete your safe shell Safe shell basics One real context is anchored One real proof is added and structured One non-self verification is accepted Public Page publication Proof readiness Safe shell Needs basics Context 1 context item Proof Add your first proof Verification Request s",
+      "cookieBannerVisible": false,
+      "finalUrl": "http://localhost:33124/app/i/profile?profileView=full&tab=proof_packs",
+      "heading": "Mock Individual",
+      "loadingTextVisible": false,
+      "mobileNavVisible": true,
+      "overflowOffenders": [
+        {
+          "bottom": 1679,
+          "className": "inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visib",
+          "height": 45,
+          "left": 277,
+          "right": 394,
+          "role": "tab",
+          "tag": "button",
+          "text": "Verification",
+          "top": 1634,
+          "width": 117
+        },
+        {
+          "bottom": 1679,
+          "className": "inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visib",
+          "height": 45,
+          "left": 418,
+          "right": 583,
+          "role": "tab",
+          "tag": "button",
+          "text": "Visibility / Portfolio",
+          "top": 1634,
+          "width": 166
+        },
+        {
+          "bottom": 1667,
+          "className": "flex items-center gap-2 relative z-10",
+          "height": 21,
+          "left": 426,
+          "right": 575,
+          "role": null,
+          "tag": "div",
+          "text": "Visibility / Portfolio",
+          "top": 1646,
+          "width": 150
+        },
+        {
+          "bottom": 1665,
+          "className": "lucide lucide-globe w-4 h-4",
+          "height": 16,
+          "left": 426,
+          "right": 442,
+          "role": null,
+          "tag": "svg",
+          "text": "",
+          "top": 1649,
+          "width": 16
+        },
+        {
+          "bottom": 1663,
+          "className": "",
+          "height": 13,
+          "left": 427,
+          "right": 440,
+          "role": null,
+          "tag": "circle",
+          "text": "",
+          "top": 1650,
+          "width": 13
+        },
+        {
+          "bottom": 1663,
+          "className": "",
+          "height": 13,
+          "left": 431,
+          "right": 436,
+          "role": null,
+          "tag": "path",
+          "text": "",
+          "top": 1650,
+          "width": 5
+        },
+        {
+          "bottom": 1667,
+          "className": "",
+          "height": 21,
+          "left": 450,
+          "right": 575,
+          "role": null,
+          "tag": "span",
+          "text": "Visibility / Portfolio",
+          "top": 1646,
+          "width": 126
+        }
+      ],
+      "scroll": {
+        "bodyScrollWidth": 390,
+        "clientWidth": 390,
+        "overflow": 0,
+        "rootScrollWidth": 390,
+        "scrollHeight": 844
+      },
+      "title": "Proofound - Focus on what matters",
+      "visibleActions": [
+        {
+          "height": 64,
+          "label": "Overview",
+          "visible": true,
+          "width": 73,
+          "x": 4,
+          "y": 780
+        },
+        {
+          "height": 64,
+          "label": "Profile",
+          "visible": true,
+          "width": 73,
+          "x": 81,
+          "y": 780
+        },
+        {
+          "height": 64,
+          "label": "Communications",
+          "visible": true,
+          "width": 73,
+          "x": 158,
+          "y": 780
+        },
+        {
+          "height": 64,
+          "label": "Matching",
+          "visible": true,
+          "width": 73,
+          "x": 236,
+          "y": 780
+        },
+        {
+          "height": 64,
+          "label": "Settings",
+          "visible": true,
+          "width": 73,
+          "x": 313,
+          "y": 780
+        },
+        {
+          "height": 44,
+          "label": "Open profile menu",
+          "visible": true,
+          "width": 44,
+          "x": 330,
+          "y": 8
+        },
+        {
+          "height": 32,
+          "label": "",
+          "visible": true,
+          "width": 44,
+          "x": 33,
+          "y": 539
+        },
+        {
+          "height": 32,
+          "label": "Hidden",
+          "visible": true,
+          "width": 91,
+          "x": 85,
+          "y": 539
+        },
+        {
+          "height": 32,
+          "label": "Share",
+          "visible": true,
+          "width": 87,
+          "x": 184,
+          "y": 539
+        },
+        {
+          "height": 21,
+          "label": "Add location",
+          "visible": true,
+          "width": 103,
+          "x": 33,
+          "y": 579
+        },
+        {
+          "height": 97,
+          "label": "Add a taglineA brief statement that captures who you are and what you care about",
+          "visible": true,
+          "width": 313,
+          "x": 33,
+          "y": 612
+        }
+      ]
+    },
+    {
+      "route": "individual-verifications",
+      "requestedUrl": "http://localhost:33124/app/i/verifications",
+      "viewport": {
+        "height": 1000,
+        "width": 1440
+      },
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/final-desktop-individual-verifications.png",
+      "navigationError": null,
+      "logs": [],
+      "bodyTextStart": "Skip to main content Overview Profile Communications Matching Settings Proofound Verifications U Proof verification requests Follow which proof, claim, verifier, and bounded outcome each request is tied to. Incoming 2 Sent 2 2 requests need attention. Start here for failed, disputed, contradicted, or soon-expiring confirmations. 2 Attention 1 Pending 0 Active Show attention All (2) Active Pending (1) Needs attention (2) Declined Expired / stale Revoked / corrected Newest Scope MA Mira Andersson Verification subject: Proof-first hiring corridor readiness review Claim-Confirm that the proof pack clearly connects private source material, review decisions, and a launch-safe candidate story without exposing sensitive details. Pending Decline Confirm SL Sofia Lind Verification subject: Review uncertainty reduction Claim-The reviewer needs a clearer confirmation path before this outcome can be ",
+      "cookieBannerVisible": false,
+      "finalUrl": "http://localhost:33124/app/i/verifications",
+      "heading": "Proof verification requests",
+      "loadingTextVisible": false,
+      "mobileNavVisible": true,
+      "overflowOffenders": [],
+      "scroll": {
+        "bodyScrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflow": 0,
+        "rootScrollWidth": 1440,
+        "scrollHeight": 1000
+      },
+      "title": "Proofound - Focus on what matters",
+      "visibleActions": [
+        {
+          "height": 48,
+          "label": "Overview",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 12
+        },
+        {
+          "height": 48,
+          "label": "Profile",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 62
+        },
+        {
+          "height": 48,
+          "label": "Communications",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 112
+        },
+        {
+          "height": 48,
+          "label": "Matching",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 162
+        },
+        {
+          "height": 48,
+          "label": "Settings",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 212
+        },
+        {
+          "height": 32,
+          "label": "Collapse sidebar",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 960
+        },
+        {
+          "height": 44,
+          "label": "Open profile menu",
+          "visible": true,
+          "width": 44,
+          "x": 1380,
+          "y": 6
+        },
+        {
+          "height": 44,
+          "label": "Incoming2",
+          "visible": true,
+          "width": 109,
+          "x": 394,
+          "y": 164
+        },
+        {
+          "height": 44,
+          "label": "Sent2",
+          "visible": true,
+          "width": 82,
+          "x": 503,
+          "y": 164
+        },
+        {
+          "height": 44,
+          "label": "2Attention",
+          "visible": true,
+          "width": 96,
+          "x": 873,
+          "y": 248
+        },
+        {
+          "height": 44,
+          "label": "1Pending",
+          "visible": true,
+          "width": 88,
+          "x": 977,
+          "y": 248
+        },
+        {
+          "height": 44,
+          "label": "0Active",
+          "visible": true,
+          "width": 80,
+          "x": 1073,
+          "y": 248
+        },
+        {
+          "height": 44,
+          "label": "Show attention",
+          "visible": true,
+          "width": 110,
+          "x": 1161,
+          "y": 248
+        },
+        {
+          "height": 44,
+          "label": "All(2)",
+          "visible": true,
+          "width": 66,
+          "x": 403,
+          "y": 337
+        },
+        {
+          "height": 44,
+          "label": "Active",
+          "visible": true,
+          "width": 60,
+          "x": 475,
+          "y": 337
+        },
+        {
+          "height": 44,
+          "label": "Pending(1)",
+          "visible": true,
+          "width": 97,
+          "x": 541,
+          "y": 337
+        },
+        {
+          "height": 44,
+          "label": "Needs attention(2)",
+          "visible": true,
+          "width": 143,
+          "x": 644,
+          "y": 337
+        },
+        {
+          "height": 44,
+          "label": "Declined",
+          "visible": true,
+          "width": 74,
+          "x": 793,
+          "y": 337
+        }
+      ]
+    },
+    {
+      "route": "individual-verifications",
+      "requestedUrl": "http://localhost:33124/app/i/verifications",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      },
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/final-mobile-individual-verifications.png",
+      "navigationError": null,
+      "logs": [],
+      "bodyTextStart": "Skip to main content Overview Profile Inbox Matching Settings U Proof verification requests Follow which proof, claim, verifier, and bounded outcome each request is tied to. Incoming 2 Sent 2 2 requests need attention. Start here for failed, disputed, contradicted, or soon-expiring confirmations. 2 Attention 1 Pending 0 Active Show attention All (2) Active Pending (1) Needs attention (2) Declined Expired / stale Revoked / corrected Newest Scope MA Mira Andersson Verification subject: Proof-first hiring corridor readiness review Claim-Confirm that the proof pack clearly connects private source material, review decisions, and a launch-safe candidate story without exposing sensitive details. Pending Decline Confirm SL Sofia Lind Verification subject: Review uncertainty reduction Claim-The reviewer needs a clearer confirmation path before this outcome can be treated as proof-backed. Failed",
+      "cookieBannerVisible": false,
+      "finalUrl": "http://localhost:33124/app/i/verifications",
+      "heading": "Proof verification requests",
+      "loadingTextVisible": false,
+      "mobileNavVisible": true,
+      "overflowOffenders": [
+        {
+          "bottom": 993,
+          "className": "max-w-4xl mx-auto space-y-6",
+          "height": 916,
+          "left": 16,
+          "right": 463,
+          "role": null,
+          "tag": "div",
+          "text": "Proof verification requestsFollow which proof, claim, verifier, and bounded outcome each r",
+          "top": 77,
+          "width": 447
+        },
+        {
+          "bottom": 149,
+          "className": "flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between",
+          "height": 72,
+          "left": 16,
+          "right": 463,
+          "role": null,
+          "tag": "div",
+          "text": "Proof verification requestsFollow which proof, claim, verifier, and bounded outcome each r",
+          "top": 77,
+          "width": 447
+        },
+        {
+          "bottom": 149,
+          "className": "",
+          "height": 72,
+          "left": 16,
+          "right": 463,
+          "role": null,
+          "tag": "div",
+          "text": "Proof verification requestsFollow which proof, claim, verifier, and bounded outcome each r",
+          "top": 77,
+          "width": 447
+        },
+        {
+          "bottom": 113,
+          "className": "font-display text-2xl font-semibold text-proofound-charcoal dark:text-foreground",
+          "height": 36,
+          "left": 16,
+          "right": 463,
+          "role": null,
+          "tag": "h1",
+          "text": "Proof verification requests",
+          "top": 77,
+          "width": 447
+        },
+        {
+          "bottom": 149,
+          "className": "text-xs text-muted-foreground max-w-xl",
+          "height": 36,
+          "left": 16,
+          "right": 463,
+          "role": null,
+          "tag": "p",
+          "text": "Follow which proof, claim, verifier, and bounded outcome each request is tied to.",
+          "top": 113,
+          "width": 447
+        },
+        {
+          "bottom": 993,
+          "className": "w-full",
+          "height": 820,
+          "left": 16,
+          "right": 463,
+          "role": null,
+          "tag": "div",
+          "text": "Incoming2Sent22 requests need attention.Start here for failed, disputed, contradicted, or ",
+          "top": 173,
+          "width": 447
+        },
+        {
+          "bottom": 993,
+          "className": "mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 space-y-4 outline-none",
+          "height": 756,
+          "left": 16,
+          "right": 463,
+          "role": "tabpanel",
+          "tag": "div",
+          "text": "2 requests need attention.Start here for failed, disputed, contradicted, or soon-expiring ",
+          "top": 237,
+          "width": 447
+        },
+        {
+          "bottom": 993,
+          "className": "space-y-4",
+          "height": 756,
+          "left": 16,
+          "right": 463,
+          "role": null,
+          "tag": "div",
+          "text": "2 requests need attention.Start here for failed, disputed, contradicted, or soon-expiring ",
+          "top": 237,
+          "width": 447
+        },
+        {
+          "bottom": 392,
+          "className": "rounded-xl border border-proofound-stone/70 bg-white/80 p-4",
+          "height": 155,
+          "left": 16,
+          "right": 463,
+          "role": null,
+          "tag": "section",
+          "text": "2 requests need attention.Start here for failed, disputed, contradicted, or soon-expiring ",
+          "top": 237,
+          "width": 447
+        },
+        {
+          "bottom": 375,
+          "className": "flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between",
+          "height": 121,
+          "left": 33,
+          "right": 446,
+          "role": null,
+          "tag": "div",
+          "text": "2 requests need attention.Start here for failed, disputed, contradicted, or soon-expiring ",
+          "top": 254,
+          "width": 413
+        },
+        {
+          "bottom": 319,
+          "className": "",
+          "height": 65,
+          "left": 33,
+          "right": 446,
+          "role": null,
+          "tag": "div",
+          "text": "2 requests need attention.Start here for failed, disputed, contradicted, or soon-expiring ",
+          "top": 254,
+          "width": 413
+        },
+        {
+          "bottom": 275,
+          "className": "text-sm font-semibold text-proofound-charcoal",
+          "height": 21,
+          "left": 33,
+          "right": 446,
+          "role": null,
+          "tag": "h2",
+          "text": "2 requests need attention.",
+          "top": 254,
+          "width": 413
+        }
+      ],
+      "scroll": {
+        "bodyScrollWidth": 390,
+        "clientWidth": 390,
+        "overflow": 0,
+        "rootScrollWidth": 390,
+        "scrollHeight": 844
+      },
+      "title": "Proofound - Focus on what matters",
+      "visibleActions": [
+        {
+          "height": 64,
+          "label": "Overview",
+          "visible": true,
+          "width": 73,
+          "x": 4,
+          "y": 780
+        },
+        {
+          "height": 64,
+          "label": "Profile",
+          "visible": true,
+          "width": 73,
+          "x": 81,
+          "y": 780
+        },
+        {
+          "height": 64,
+          "label": "Communications",
+          "visible": true,
+          "width": 73,
+          "x": 158,
+          "y": 780
+        },
+        {
+          "height": 64,
+          "label": "Matching",
+          "visible": true,
+          "width": 73,
+          "x": 236,
+          "y": 780
+        },
+        {
+          "height": 64,
+          "label": "Settings",
+          "visible": true,
+          "width": 73,
+          "x": 313,
+          "y": 780
+        },
+        {
+          "height": 44,
+          "label": "Open profile menu",
+          "visible": true,
+          "width": 44,
+          "x": 330,
+          "y": 8
+        },
+        {
+          "height": 44,
+          "label": "Incoming2",
+          "visible": true,
+          "width": 109,
+          "x": 18,
+          "y": 171
+        },
+        {
+          "height": 44,
+          "label": "Sent2",
+          "visible": true,
+          "width": 82,
+          "x": 127,
+          "y": 171
+        },
+        {
+          "height": 44,
+          "label": "2Attention",
+          "visible": true,
+          "width": 96,
+          "x": 33,
+          "y": 331
+        },
+        {
+          "height": 44,
+          "label": "1Pending",
+          "visible": true,
+          "width": 88,
+          "x": 137,
+          "y": 331
+        },
+        {
+          "height": 44,
+          "label": "0Active",
+          "visible": true,
+          "width": 80,
+          "x": 233,
+          "y": 331
+        },
+        {
+          "height": 44,
+          "label": "Show attention",
+          "visible": true,
+          "width": 110,
+          "x": 321,
+          "y": 331
+        },
+        {
+          "height": 44,
+          "label": "All(2)",
+          "visible": true,
+          "width": 66,
+          "x": 27,
+          "y": 419
+        },
+        {
+          "height": 44,
+          "label": "Active",
+          "visible": true,
+          "width": 60,
+          "x": 99,
+          "y": 419
+        },
+        {
+          "height": 44,
+          "label": "Pending(1)",
+          "visible": true,
+          "width": 97,
+          "x": 165,
+          "y": 419
+        },
+        {
+          "height": 44,
+          "label": "Needs attention(2)",
+          "visible": true,
+          "width": 143,
+          "x": 268,
+          "y": 419
+        },
+        {
+          "height": 44,
+          "label": "Declined",
+          "visible": true,
+          "width": 74,
+          "x": 27,
+          "y": 469
+        },
+        {
+          "height": 44,
+          "label": "Expired / stale",
+          "visible": true,
+          "width": 106,
+          "x": 107,
+          "y": 469
+        }
+      ]
+    },
+    {
+      "route": "org-home",
+      "requestedUrl": "http://localhost:33122/app/o/test-org/home",
+      "viewport": {
+        "height": 1000,
+        "width": 1440
+      },
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/final-desktop-org-home.png",
+      "navigationError": null,
+      "logs": [],
+      "bodyTextStart": "Skip to main content Overview Assignments Communications Organization Trust Page Public Preview Proofound Overview NF Nordic Field Systems Active organization corridor console Signed in as Manager CORRIDOR STATUS Ready to Launch Launch Your First Assignment Your organization trust profile is active. Define a proof-led assignment (real-world context, required evidence, and compensation bounds) to open the matching corridor. Create First Assignment Collaborator Circle Members authorized to review matches C Collaborator Manager",
+      "cookieBannerVisible": false,
+      "finalUrl": "http://localhost:33122/app/o/test-org/home",
+      "heading": "Nordic Field Systems",
+      "loadingTextVisible": false,
+      "mobileNavVisible": true,
+      "overflowOffenders": [],
+      "scroll": {
+        "bodyScrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflow": 0,
+        "rootScrollWidth": 1440,
+        "scrollHeight": 1000
+      },
+      "title": "Proofound - Focus on what matters",
+      "visibleActions": [
+        {
+          "height": 48,
+          "label": "Overview",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 12
+        },
+        {
+          "height": 48,
+          "label": "Assignments",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 62
+        },
+        {
+          "height": 48,
+          "label": "Communications",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 112
+        },
+        {
+          "height": 48,
+          "label": "Organization Trust Page",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 162
+        },
+        {
+          "height": 48,
+          "label": "Public Preview",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 212
+        },
+        {
+          "height": 32,
+          "label": "Collapse sidebar",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 960
+        },
+        {
+          "height": 44,
+          "label": "Open profile menu",
+          "visible": true,
+          "width": 44,
+          "x": 1380,
+          "y": 6
+        },
+        {
+          "height": 44,
+          "label": "Create First Assignment",
+          "visible": true,
+          "width": 264,
+          "x": 361,
+          "y": 437
+        }
+      ]
+    },
+    {
+      "route": "org-home",
+      "requestedUrl": "http://localhost:33122/app/o/test-org/home",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      },
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/final-mobile-org-home.png",
+      "navigationError": null,
+      "logs": [],
+      "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF Nordic Field Systems Active organization corridor console Signed in as Manager CORRIDOR STATUS Ready to Launch Launch Your First Assignment Your organization trust profile is active. Define a proof-led assignment (real-world context, required evidence, and compensation bounds) to open the matching corridor. Create First Assignment Collaborator Circle Members authorized to review matches C Collaborator Manager",
+      "cookieBannerVisible": false,
+      "finalUrl": "http://localhost:33122/app/o/test-org/home",
+      "heading": "Nordic Field Systems",
+      "loadingTextVisible": false,
+      "mobileNavVisible": true,
+      "overflowOffenders": [],
+      "scroll": {
+        "bodyScrollWidth": 390,
+        "clientWidth": 390,
+        "overflow": 0,
+        "rootScrollWidth": 390,
+        "scrollHeight": 844
+      },
+      "title": "Proofound - Focus on what matters",
+      "visibleActions": [
+        {
+          "height": 64,
+          "label": "Overview",
+          "visible": true,
+          "width": 73,
+          "x": 4,
+          "y": 780
+        },
+        {
+          "height": 64,
+          "label": "Assignments",
+          "visible": true,
+          "width": 73,
+          "x": 81,
+          "y": 780
+        },
+        {
+          "height": 64,
+          "label": "Communications",
+          "visible": true,
+          "width": 73,
+          "x": 158,
+          "y": 780
+        },
+        {
+          "height": 64,
+          "label": "Organization Trust Page",
+          "visible": true,
+          "width": 73,
+          "x": 236,
+          "y": 780
+        },
+        {
+          "height": 64,
+          "label": "Public Preview",
+          "visible": true,
+          "width": 73,
+          "x": 313,
+          "y": 780
+        },
+        {
+          "height": 44,
+          "label": "Open profile menu",
+          "visible": true,
+          "width": 44,
+          "x": 330,
+          "y": 8
+        },
+        {
+          "height": 44,
+          "label": "Create First Assignment",
+          "visible": true,
+          "width": 297,
+          "x": 41,
+          "y": 513
+        }
+      ]
+    },
+    {
+      "route": "org-assignments",
+      "requestedUrl": "http://localhost:33122/app/o/test-org/assignments",
+      "viewport": {
+        "height": 1000,
+        "width": 1440
+      },
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/final-desktop-org-assignments.png",
+      "navigationError": null,
+      "logs": [],
+      "bodyTextStart": "Skip to main content Overview Assignments Communications Organization Trust Page Public Preview Proofound Assignments NF Assignment corridor Organization / Assignments Assignments Assignment cards own their matching corridor, candidate review, and pipeline context. Create assignment Corridor Queue & Shortlist Evaluate proof-backed candidates, shortlist fits, and open communication corridors. New Assignment ACTIVE ASSIGNMENTS Field operations launch lead for municipal infrastructure handoffs Review updates Open 7 matches Partner readiness analyst Draft 0 matches FOCUSED REVIEW Field operations launch lead for municipal infrastructure handoffs Launched 5/16/2026 Edit Role Context Review Queue (5) Shortlist & Intros (2) Candidate Elena R. Perfect technical and timezone alignment. program-operations stakeholder-updates risk-logs Candidate Mira A. Robust engineering background. systems-engine",
+      "cookieBannerVisible": false,
+      "finalUrl": "http://localhost:33122/app/o/test-org/assignments",
+      "heading": "Assignments",
+      "loadingTextVisible": false,
+      "mobileNavVisible": true,
+      "overflowOffenders": [],
+      "scroll": {
+        "bodyScrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflow": 0,
+        "rootScrollWidth": 1440,
+        "scrollHeight": 1000
+      },
+      "title": "Proofound - Focus on what matters",
+      "visibleActions": [
+        {
+          "height": 48,
+          "label": "Overview",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 12
+        },
+        {
+          "height": 48,
+          "label": "Assignments",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 62
+        },
+        {
+          "height": 48,
+          "label": "Communications",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 112
+        },
+        {
+          "height": 48,
+          "label": "Organization Trust Page",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 162
+        },
+        {
+          "height": 48,
+          "label": "Public Preview",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 212
+        },
+        {
+          "height": 32,
+          "label": "Collapse sidebar",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 960
+        },
+        {
+          "height": 44,
+          "label": "Open profile menu",
+          "visible": true,
+          "width": 44,
+          "x": 1380,
+          "y": 6
+        },
+        {
+          "height": 32,
+          "label": "Organization",
+          "visible": true,
+          "width": 88,
+          "x": 365,
+          "y": 162
+        },
+        {
+          "height": 44,
+          "label": "Create assignment",
+          "visible": true,
+          "width": 192,
+          "x": 1180,
+          "y": 162
+        },
+        {
+          "height": 44,
+          "label": "New Assignment",
+          "visible": true,
+          "width": 202,
+          "x": 1195,
+          "y": 338
+        },
+        {
+          "height": 103,
+          "label": "Field operations launch lead for municipal infrastructure handoffsReview updates",
+          "visible": true,
+          "width": 271,
+          "x": 272,
+          "y": 472
+        },
+        {
+          "height": 81,
+          "label": "Partner readiness analystDraft0 matches",
+          "visible": true,
+          "width": 271,
+          "x": 272,
+          "y": 583
+        },
+        {
+          "height": 36,
+          "label": "Edit Role Context",
+          "visible": true,
+          "width": 150,
+          "x": 1230,
+          "y": 467
+        },
+        {
+          "height": 39,
+          "label": "Review Queue (5)",
+          "visible": true,
+          "width": 151,
+          "x": 576,
+          "y": 544
+        },
+        {
+          "height": 39,
+          "label": "Shortlist & Intros (2)",
+          "visible": true,
+          "width": 167,
+          "x": 727,
+          "y": 544
+        },
+        {
+          "height": 109,
+          "label": "Candidate Elena R.Perfect technical and timezone alignment.program-operationssta",
+          "visible": true,
+          "width": 310,
+          "x": 576,
+          "y": 600
+        },
+        {
+          "height": 109,
+          "label": "Candidate Mira A.Robust engineering background.systems-engineeringcompliance",
+          "visible": true,
+          "width": 310,
+          "x": 576,
+          "y": 721
+        },
+        {
+          "height": 109,
+          "label": "Candidate Carl L.Data-driven Product Manager.product-managementdata-analysis",
+          "visible": true,
+          "width": 310,
+          "x": 576,
+          "y": 841
+        }
+      ]
+    },
+    {
+      "route": "org-assignments",
+      "requestedUrl": "http://localhost:33122/app/o/test-org/assignments",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      },
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/final-mobile-org-assignments.png",
+      "navigationError": null,
+      "logs": [],
+      "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF Assignment corridor Organization / Assignments Assignments Assignment cards own their matching corridor, candidate review, and pipeline context. Create assignment Corridor Queue & Shortlist Evaluate proof-backed candidates, shortlist fits, and open communication corridors. New Assignment ACTIVE ASSIGNMENTS Field operations launch lead for municipal infrastructure handoffs Review updates Open 7 matches Partner readiness analyst Draft 0 matches FOCUSED REVIEW Field operations launch lead for municipal infrastructure handoffs Edit Role Context Review Queue (5) Shortlist & Intros (2) Candidate Elena R. Perfect technical and timezone alignment. program-operations stakeholder-updates risk-logs Candidate Mira A. Robust engineering background. systems-engineering compliance Candidate Carl L. Data-driven Product Manager. product-manageme",
+      "cookieBannerVisible": false,
+      "finalUrl": "http://localhost:33122/app/o/test-org/assignments",
+      "heading": "Assignments",
+      "loadingTextVisible": false,
+      "mobileNavVisible": true,
+      "overflowOffenders": [],
+      "scroll": {
+        "bodyScrollWidth": 390,
+        "clientWidth": 390,
+        "overflow": 0,
+        "rootScrollWidth": 390,
+        "scrollHeight": 844
+      },
+      "title": "Proofound - Focus on what matters",
+      "visibleActions": [
+        {
+          "height": 64,
+          "label": "Overview",
+          "visible": true,
+          "width": 73,
+          "x": 4,
+          "y": 780
+        },
+        {
+          "height": 64,
+          "label": "Assignments",
+          "visible": true,
+          "width": 73,
+          "x": 81,
+          "y": 780
+        },
+        {
+          "height": 64,
+          "label": "Communications",
+          "visible": true,
+          "width": 73,
+          "x": 158,
+          "y": 780
+        },
+        {
+          "height": 64,
+          "label": "Organization Trust Page",
+          "visible": true,
+          "width": 73,
+          "x": 236,
+          "y": 780
+        },
+        {
+          "height": 64,
+          "label": "Public Preview",
+          "visible": true,
+          "width": 73,
+          "x": 313,
+          "y": 780
+        },
+        {
+          "height": 44,
+          "label": "Open profile menu",
+          "visible": true,
+          "width": 44,
+          "x": 330,
+          "y": 8
+        },
+        {
+          "height": 32,
+          "label": "Organization",
+          "visible": true,
+          "width": 88,
+          "x": 93,
+          "y": 151
+        },
+        {
+          "height": 44,
+          "label": "Create assignment",
+          "visible": true,
+          "width": 305,
+          "x": 37,
+          "y": 325
+        },
+        {
+          "height": 44,
+          "label": "New Assignment",
+          "visible": true,
+          "width": 202,
+          "x": 32,
+          "y": 576
+        },
+        {
+          "height": 81,
+          "label": "Field operations launch lead for municipal infrastructure handoffsReview updates",
+          "visible": true,
+          "width": 307,
+          "x": 32,
+          "y": 696
+        },
+        {
+          "height": 81,
+          "label": "Partner readiness analystDraft0 matches",
+          "visible": true,
+          "width": 307,
+          "x": 32,
+          "y": 785
+        }
+      ]
+    },
+    {
+      "route": "org-communications",
+      "requestedUrl": "http://localhost:33122/app/o/test-org/communications",
+      "viewport": {
+        "height": 1000,
+        "width": 1440
+      },
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/final-desktop-org-communications.png",
+      "navigationError": null,
+      "logs": [],
+      "bodyTextStart": "Skip to main content Overview Assignments Communications Organization Trust Page Public Preview Proofound Communications NF HIRING CORRIDOR Communications Messages Threads, intros, and reveal requests. Interviews Scheduling, feedback, and handoff. Secure Corridor Messages, scheduling, and reveal steps stay inside the consent-bound corridor. Messages Assignment conversations stay private and stage-aware. Candidate identity remains protected until a consented reveal opens the next step. Messages Select a conversation Conversations appear after an assignment and introduction are ready. Choose a thread when one opens in the list. Candidate identity remains protected before reveal",
+      "cookieBannerVisible": false,
+      "finalUrl": "http://localhost:33122/app/o/test-org/communications",
+      "heading": "Communications",
+      "loadingTextVisible": false,
+      "mobileNavVisible": true,
+      "overflowOffenders": [],
+      "scroll": {
+        "bodyScrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflow": 0,
+        "rootScrollWidth": 1440,
+        "scrollHeight": 1000
+      },
+      "title": "Proofound - Focus on what matters",
+      "visibleActions": [
+        {
+          "height": 48,
+          "label": "Overview",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 12
+        },
+        {
+          "height": 48,
+          "label": "Assignments",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 62
+        },
+        {
+          "height": 48,
+          "label": "Communications",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 112
+        },
+        {
+          "height": 48,
+          "label": "Organization Trust Page",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 162
+        },
+        {
+          "height": 48,
+          "label": "Public Preview",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 212
+        },
+        {
+          "height": 32,
+          "label": "Collapse sidebar",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 960
+        },
+        {
+          "height": 44,
+          "label": "Open profile menu",
+          "visible": true,
+          "width": 44,
+          "x": 1380,
+          "y": 6
+        },
+        {
+          "height": 55,
+          "label": "MessagesThreads, intros, and reveal requests.",
+          "visible": true,
+          "width": 215,
+          "x": 260,
+          "y": 149
+        },
+        {
+          "height": 55,
+          "label": "InterviewsScheduling, feedback, and handoff.",
+          "visible": true,
+          "width": 215,
+          "x": 260,
+          "y": 212
+        }
+      ]
+    },
+    {
+      "route": "org-communications",
+      "requestedUrl": "http://localhost:33122/app/o/test-org/communications",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      },
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/final-mobile-org-communications.png",
+      "navigationError": null,
+      "logs": [],
+      "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF HIRING CORRIDOR Communications Messages Threads, intros, and reveal requests. Interviews Scheduling, feedback, and handoff. Messages Assignment conversations stay private and stage-aware. Candidate identity remains protected until a consented reveal opens the next step. Messages Review open introductions and keep each thread tied to its proof corridor. O Organization Re: Privacy-safe proof review for a launch corridor with intentionally long assignment title 2 Thanks. I can review the proof pack and keep identity detail... 15 minutes ago Identity protected until reveal approval EP Elena Proof Reviewer Re: Evidence operations lead The public proof summary is clear. I would keep the next ste... about 18 hours ago",
+      "cookieBannerVisible": false,
+      "finalUrl": "http://localhost:33122/app/o/test-org/communications",
+      "heading": "Communications",
+      "loadingTextVisible": false,
+      "mobileNavVisible": true,
+      "overflowOffenders": [],
+      "scroll": {
+        "bodyScrollWidth": 390,
+        "clientWidth": 390,
+        "overflow": 0,
+        "rootScrollWidth": 390,
+        "scrollHeight": 844
+      },
+      "title": "Proofound - Focus on what matters",
+      "visibleActions": [
+        {
+          "height": 64,
+          "label": "Overview",
+          "visible": true,
+          "width": 73,
+          "x": 4,
+          "y": 780
+        },
+        {
+          "height": 64,
+          "label": "Assignments",
+          "visible": true,
+          "width": 73,
+          "x": 81,
+          "y": 780
+        },
+        {
+          "height": 64,
+          "label": "Communications",
+          "visible": true,
+          "width": 73,
+          "x": 158,
+          "y": 780
+        },
+        {
+          "height": 64,
+          "label": "Organization Trust Page",
+          "visible": true,
+          "width": 73,
+          "x": 236,
+          "y": 780
+        },
+        {
+          "height": 64,
+          "label": "Public Preview",
+          "visible": true,
+          "width": 73,
+          "x": 313,
+          "y": 780
+        },
+        {
+          "height": 44,
+          "label": "Open profile menu",
+          "visible": true,
+          "width": 44,
+          "x": 330,
+          "y": 8
+        },
+        {
+          "height": 55,
+          "label": "MessagesThreads, intros, and reveal requests.",
+          "visible": true,
+          "width": 347,
+          "x": 16,
+          "y": 142
+        },
+        {
+          "height": 55,
+          "label": "InterviewsScheduling, feedback, and handoff.",
+          "visible": true,
+          "width": 347,
+          "x": 16,
+          "y": 205
+        },
+        {
+          "height": 174,
+          "label": "OOrganizationRe: Privacy-safe proof review for a launch corridor with intentiona",
+          "visible": true,
+          "width": 378,
+          "x": 0,
+          "y": 588
+        },
+        {
+          "height": 143,
+          "label": "EPElena Proof ReviewerRe: Evidence operations leadThe public proof summary is cl",
+          "visible": true,
+          "width": 378,
+          "x": 0,
+          "y": 762
+        }
+      ]
+    },
+    {
+      "route": "org-shortlist-redirect",
+      "requestedUrl": "http://localhost:33122/app/o/test-org/shortlist",
+      "viewport": {
+        "height": 1000,
+        "width": 1440
+      },
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/final-desktop-org-shortlist-redirect.png",
+      "navigationError": null,
+      "logs": [],
+      "bodyTextStart": "Skip to main content Overview Assignments Communications Organization Trust Page Public Preview Proofound Assignments NF Assignment corridor Organization / Assignments Assignments Assignment cards own their matching corridor, candidate review, and pipeline context. Create assignment Corridor Queue & Shortlist Evaluate proof-backed candidates, shortlist fits, and open communication corridors. New Assignment ACTIVE ASSIGNMENTS Field operations launch lead for municipal infrastructure handoffs Review updates Open 7 matches Partner readiness analyst Draft 0 matches FOCUSED REVIEW Field operations launch lead for municipal infrastructure handoffs Launched 5/16/2026 Edit Role Context Review Queue (5) Shortlist & Intros (2) Candidate Elena R. Perfect technical and timezone alignment. program-operations stakeholder-updates risk-logs Candidate Mira A. Robust engineering background. systems-engine",
+      "cookieBannerVisible": false,
+      "finalUrl": "http://localhost:33122/app/o/test-org/assignments",
+      "heading": "Assignments",
+      "loadingTextVisible": false,
+      "mobileNavVisible": true,
+      "overflowOffenders": [],
+      "scroll": {
+        "bodyScrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflow": 0,
+        "rootScrollWidth": 1440,
+        "scrollHeight": 1000
+      },
+      "title": "Proofound - Focus on what matters",
+      "visibleActions": [
+        {
+          "height": 48,
+          "label": "Overview",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 12
+        },
+        {
+          "height": 48,
+          "label": "Assignments",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 62
+        },
+        {
+          "height": 48,
+          "label": "Communications",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 112
+        },
+        {
+          "height": 48,
+          "label": "Organization Trust Page",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 162
+        },
+        {
+          "height": 48,
+          "label": "Public Preview",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 212
+        },
+        {
+          "height": 32,
+          "label": "Collapse sidebar",
+          "visible": true,
+          "width": 223,
+          "x": 8,
+          "y": 960
+        },
+        {
+          "height": 44,
+          "label": "Open profile menu",
+          "visible": true,
+          "width": 44,
+          "x": 1380,
+          "y": 6
+        },
+        {
+          "height": 32,
+          "label": "Organization",
+          "visible": true,
+          "width": 88,
+          "x": 365,
+          "y": 162
+        },
+        {
+          "height": 44,
+          "label": "Create assignment",
+          "visible": true,
+          "width": 192,
+          "x": 1180,
+          "y": 162
+        },
+        {
+          "height": 44,
+          "label": "New Assignment",
+          "visible": true,
+          "width": 202,
+          "x": 1195,
+          "y": 338
+        },
+        {
+          "height": 103,
+          "label": "Field operations launch lead for municipal infrastructure handoffsReview updates",
+          "visible": true,
+          "width": 271,
+          "x": 272,
+          "y": 472
+        },
+        {
+          "height": 81,
+          "label": "Partner readiness analystDraft0 matches",
+          "visible": true,
+          "width": 271,
+          "x": 272,
+          "y": 583
+        },
+        {
+          "height": 36,
+          "label": "Edit Role Context",
+          "visible": true,
+          "width": 150,
+          "x": 1230,
+          "y": 467
+        },
+        {
+          "height": 39,
+          "label": "Review Queue (5)",
+          "visible": true,
+          "width": 151,
+          "x": 576,
+          "y": 544
+        },
+        {
+          "height": 39,
+          "label": "Shortlist & Intros (2)",
+          "visible": true,
+          "width": 167,
+          "x": 727,
+          "y": 544
+        },
+        {
+          "height": 109,
+          "label": "Candidate Elena R.Perfect technical and timezone alignment.program-operationssta",
+          "visible": true,
+          "width": 310,
+          "x": 576,
+          "y": 600
+        },
+        {
+          "height": 109,
+          "label": "Candidate Mira A.Robust engineering background.systems-engineeringcompliance",
+          "visible": true,
+          "width": 310,
+          "x": 576,
+          "y": 721
+        },
+        {
+          "height": 109,
+          "label": "Candidate Carl L.Data-driven Product Manager.product-managementdata-analysis",
+          "visible": true,
+          "width": 310,
+          "x": 576,
+          "y": 841
+        }
+      ]
+    },
+    {
+      "route": "org-shortlist-redirect",
+      "requestedUrl": "http://localhost:33122/app/o/test-org/shortlist",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      },
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-goal-sweep/final-mobile-org-shortlist-redirect.png",
+      "navigationError": null,
+      "logs": [],
+      "bodyTextStart": "Skip to main content Overview Work Inbox Profile Preview NF Assignment corridor Organization / Assignments Assignments Assignment cards own their matching corridor, candidate review, and pipeline context. Create assignment Corridor Queue & Shortlist Evaluate proof-backed candidates, shortlist fits, and open communication corridors. New Assignment ACTIVE ASSIGNMENTS Field operations launch lead for municipal infrastructure handoffs Review updates Open 7 matches Partner readiness analyst Draft 0 matches FOCUSED REVIEW Field operations launch lead for municipal infrastructure handoffs Edit Role Context Review Queue (5) Shortlist & Intros (2) Candidate Elena R. Perfect technical and timezone alignment. program-operations stakeholder-updates risk-logs Candidate Mira A. Robust engineering background. systems-engineering compliance Candidate Carl L. Data-driven Product Manager. product-manageme",
+      "cookieBannerVisible": false,
+      "finalUrl": "http://localhost:33122/app/o/test-org/assignments",
+      "heading": "Assignments",
+      "loadingTextVisible": false,
+      "mobileNavVisible": true,
+      "overflowOffenders": [],
+      "scroll": {
+        "bodyScrollWidth": 390,
+        "clientWidth": 390,
+        "overflow": 0,
+        "rootScrollWidth": 390,
+        "scrollHeight": 844
+      },
+      "title": "Proofound - Focus on what matters",
+      "visibleActions": [
+        {
+          "height": 64,
+          "label": "Overview",
+          "visible": true,
+          "width": 73,
+          "x": 4,
+          "y": 780
+        },
+        {
+          "height": 64,
+          "label": "Assignments",
+          "visible": true,
+          "width": 73,
+          "x": 81,
+          "y": 780
+        },
+        {
+          "height": 64,
+          "label": "Communications",
+          "visible": true,
+          "width": 73,
+          "x": 158,
+          "y": 780
+        },
+        {
+          "height": 64,
+          "label": "Organization Trust Page",
+          "visible": true,
+          "width": 73,
+          "x": 236,
+          "y": 780
+        },
+        {
+          "height": 64,
+          "label": "Public Preview",
+          "visible": true,
+          "width": 73,
+          "x": 313,
+          "y": 780
+        },
+        {
+          "height": 44,
+          "label": "Open profile menu",
+          "visible": true,
+          "width": 44,
+          "x": 330,
+          "y": 8
+        },
+        {
+          "height": 32,
+          "label": "Organization",
+          "visible": true,
+          "width": 88,
+          "x": 93,
+          "y": 151
+        },
+        {
+          "height": 44,
+          "label": "Create assignment",
+          "visible": true,
+          "width": 305,
+          "x": 37,
+          "y": 325
+        },
+        {
+          "height": 44,
+          "label": "New Assignment",
+          "visible": true,
+          "width": 202,
+          "x": 32,
+          "y": 576
+        },
+        {
+          "height": 81,
+          "label": "Field operations launch lead for municipal infrastructure handoffsReview updates",
+          "visible": true,
+          "width": 307,
+          "x": 32,
+          "y": 696
+        },
+        {
+          "height": 81,
+          "label": "Partner readiness analystDraft0 matches",
+          "visible": true,
+          "width": 307,
+          "x": 32,
+          "y": 785
+        }
+      ]
+    }
+  ]
+}

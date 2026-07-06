@@ -221,7 +221,7 @@ const READINESS_EVENT_ACTIONS: Record<string, ReadinessAction> = {
     id: 'set-browse-preferences',
     title: 'Set focus and work preferences',
     description:
-      'Browse unlocks once your portfolio has a target role or focus plus work and engagement preferences.',
+      'Browse becomes available once your portfolio has a target role or focus plus work and engagement preferences.',
     priority: 'high',
     category: 'matching',
     actionUrl: '/app/i/matching/preferences',
@@ -239,14 +239,14 @@ const READINESS_EVENT_ACTIONS: Record<string, ReadinessAction> = {
     id: 'complete-intro-constraints',
     title: 'Complete intro requirements',
     description:
-      'Add role, availability, location, compensation, and engagement constraints before introductions unlock.',
+      'Add role, availability, location, compensation, and engagement constraints before requesting introductions.',
     priority: 'high',
     category: 'matching',
     actionUrl: '/app/i/matching/preferences',
   },
   add_verified_signal: {
     id: 'add-verified-signal',
-    title: 'Add one non-self trust signal',
+    title: 'Add one non-self verification',
     description:
       'Introductions require at least one active peer, manager, or external confirmation tied to anchored proof.',
     priority: 'medium',
@@ -1040,7 +1040,10 @@ export async function getIndividualReadinessState(
   const matchVisible =
     discoverable &&
     browseReady &&
-    hasTrustedSignal &&
+    // Pre-P0-3 ladder semantics: match visibility gates on an accepted
+    // verification (as the old publish gate did), not the stricter anchored
+    // trust signal, which remains an intro-tier requirement below.
+    completionState.checks.hasRequiredVerification &&
     roleRelevantProofLinkedL4Count >= 3 &&
     anchoredAggregates.length >= 1 &&
     hasBasicAvailability &&
@@ -1104,7 +1107,7 @@ export async function getIndividualReadinessState(
       buildRequirement(
         'work_mode',
         'Work mode preference',
-        'Add remote, hybrid, or on-site preference before browse unlocks.',
+        'Add remote, hybrid, or on-site preference before browse is ready.',
         '/app/i/matching/preferences',
         hasContent(matching?.workMode)
       ),
@@ -1172,14 +1175,14 @@ export async function getIndividualReadinessState(
       buildRequirement(
         'engagement_type',
         'Engagement preference',
-        'Add the engagement type you can accept before introductions unlock.',
+        'Add the engagement type you can accept before requesting introductions.',
         '/app/i/matching/preferences',
         hasEngagementPreference
       ),
       buildRequirement(
         'location',
         'Country or city',
-        'Add a location constraint before qualified introductions unlock.',
+        'Add a location constraint before qualified introductions are ready.',
         '/app/i/matching/preferences',
         hasLocationConstraint
       ),
@@ -1214,7 +1217,7 @@ export async function getIndividualReadinessState(
       buildRequirement(
         'orphan_relevant_packs',
         'No orphan proof records',
-        'Re-anchor legacy or floating proof records before introductions can unlock.',
+        'Re-anchor legacy or floating proof records before introductions can open.',
         '/app/i/profile?profileView=full&tab=proof_packs',
         orphanRelevantPackCount === 0,
         orphanRelevantPackCount,

@@ -1,12 +1,12 @@
 /**
  * Share Profile Dialog
  *
- * Allows users to create shareable profile snippets
+ * Allows users to share the launch Public Page or Organization Trust Page
  */
 
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -36,12 +36,13 @@ import {
   Code,
   ExternalLink,
   Link as LinkIcon,
-  Twitter,
+  MessageSquareText,
+  AlertTriangle,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { generateEmbedCodeFromUrl, generateShareText } from '@/lib/profile/snippet-generator';
-import { apiFetch } from '@/lib/api/fetch';
 import { useResponsiveModalMode } from '@/hooks/use-responsive-modal-mode';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 type ProfileType = 'individual' | 'organization';
 
@@ -53,7 +54,7 @@ const INDIVIDUAL_FIELD_LABELS: Record<string, string> = {
   experience: 'Experience',
   education: 'Education',
   location: 'Location',
-  profileImage: 'Profile Image',
+  profileImage: 'Photo',
 };
 
 const ORGANIZATION_FIELD_LABELS: Record<string, string> = {
@@ -111,6 +112,27 @@ interface ShareProfileDialogProps {
   userHeadline?: string;
   profileType?: ProfileType;
   orgId?: string;
+  publicPagePath?: string | null;
+}
+
+type CopyFeedback = {
+  kind: 'success' | 'error';
+  message: string;
+};
+
+const SHARE_LINK_RETRY_COPY: Record<ProfileType, string> = {
+  individual:
+    'Public Page link could not be created. Your sharing options are still here; please try again.',
+  organization:
+    'Organization Trust Page link could not be created. Your sharing options are still here; please try again.',
+};
+
+function clientErrorName(error: unknown) {
+  if (error instanceof Error && error.name.trim()) {
+    return error.name;
+  }
+
+  return 'UnknownError';
 }
 
 export function ShareProfileDialog({
@@ -119,7 +141,7 @@ export function ShareProfileDialog({
   userName,
   userHeadline,
   profileType = 'individual',
-  orgId,
+  publicPagePath,
 }: ShareProfileDialogProps) {
   const isDesktop = useResponsiveModalMode(isOpen);
   const [fields, setFields] = useState<Record<string, boolean | number>>(
@@ -135,12 +157,23 @@ export function ShareProfileDialog({
     shareToken: string;
   } | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [copyFeedback, setCopyFeedback] = useState<CopyFeedback | null>(null);
+  const [generationError, setGenerationError] = useState<string | null>(null);
+  const copyResetTimerRef = useRef<number | null>(null);
 
   const { toast } = useToast();
   const fieldLabels = useMemo(
     () => (profileType === 'organization' ? ORGANIZATION_FIELD_LABELS : INDIVIDUAL_FIELD_LABELS),
     [profileType]
   );
+
+  useEffect(() => {
+    return () => {
+      if (copyResetTimerRef.current !== null) {
+        window.clearTimeout(copyResetTimerRef.current);
+      }
+    };
+  }, []);
 
   const handleFieldToggle = (field: string) => {
     setFields((prev) => {
@@ -154,54 +187,43 @@ export function ShareProfileDialog({
   const handleGenerate = async () => {
     try {
       setIsGenerating(true);
+      setGenerationError(null);
 
-      if (profileType === 'organization' && !orgId) {
-        throw new Error('Organization context is required to generate a share link');
+      if (!publicPagePath) {
+        toast({
+          title:
+            profileType === 'organization'
+              ? 'Organization Trust Page not ready'
+              : 'Public Page not ready',
+          description: 'Complete the required proof and visibility steps before sharing.',
+          variant: 'destructive',
+        });
+        return;
       }
 
-      const response = await apiFetch('/api/profile/snippet', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fields,
-          theme,
-          format,
-          expiresInDays,
-          profileType,
-          orgId: profileType === 'organization' ? orgId : undefined,
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to create snippet');
-      }
-
-      const data = await response.json();
+      const publicUrl = new URL(publicPagePath, window.location.origin).toString();
 
       setGeneratedSnippet({
-        url: data.snippet.url,
-        shareToken: data.snippet.shareToken,
+        url: publicUrl,
+        shareToken: publicPagePath,
       });
 
       toast({
         title: 'Shareable link created',
-        description: 'Your profile snippet is ready to share',
-      });
-
-      console.log('profile.snippet.generated', {
-        format,
-        theme,
+        description:
+          profileType === 'organization'
+            ? 'Your Organization Trust Page link is ready to share'
+            : 'Your Public Page link is ready to share',
       });
     } catch (error) {
-      console.error('profile.snippet.generate.failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+      dispatchClientDiagnostic('profile.snippet.generate_failed', {
+        errorName: clientErrorName(error),
+        hasError: true,
       });
+      setGenerationError(SHARE_LINK_RETRY_COPY[profileType]);
       toast({
-        title: 'Failed to create snippet',
-        description: error instanceof Error ? error.message : 'Please try again',
+        title: 'Share link not created',
+        description: SHARE_LINK_RETRY_COPY[profileType],
         variant: 'destructive',
       });
     } finally {
@@ -209,14 +231,38 @@ export function ShareProfileDialog({
     }
   };
 
-  const handleCopy = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(label);
-    setTimeout(() => setCopied(null), 2000);
-    toast({
-      title: 'Copied to clipboard',
-      description: `${label} copied`,
-    });
+  const handleCopy = async (text: string, label: string) => {
+    if (copyResetTimerRef.current !== null) {
+      window.clearTimeout(copyResetTimerRef.current);
+    }
+
+    try {
+      setCopyFeedback(null);
+      await navigator.clipboard.writeText(text);
+      setCopied(label);
+      setCopyFeedback({ kind: 'success', message: `${label} copied to clipboard.` });
+      copyResetTimerRef.current = window.setTimeout(() => {
+        setCopied(null);
+        setCopyFeedback(null);
+        copyResetTimerRef.current = null;
+      }, 2000);
+      toast({
+        title: 'Copied to clipboard',
+        description: `${label} copied`,
+      });
+    } catch (error) {
+      dispatchClientErrorDiagnostic('profile.share_dialog.copy_failed', error);
+      setCopied(null);
+      setCopyFeedback({
+        kind: 'error',
+        message: `${label} could not be copied. Select the visible text or try again.`,
+      });
+      toast({
+        title: 'Copy did not work',
+        description: 'The share text stayed visible so you can copy it manually or retry.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const shareTexts = generateShareText({ name: userName, headline: userHeadline });
@@ -258,13 +304,13 @@ export function ShareProfileDialog({
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="card" id="card" />
                 <Label htmlFor="card" className="cursor-pointer">
-                  Card (Standard profile card)
+                  Card (Standard Public Page card)
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="full" id="full" />
                 <Label htmlFor="full" className="cursor-pointer">
-                  Full (Complete profile view)
+                  Full (Complete proof view)
                 </Label>
               </div>
             </RadioGroup>
@@ -273,7 +319,7 @@ export function ShareProfileDialog({
           <div className="rounded-xl border border-border bg-card p-4">
             <Label className="mb-1 block text-base font-semibold">Theme</Label>
             <p className="text-sm text-muted-foreground">
-              Public snippets now use the global Japandi light theme by default.
+              Public Page embeds use the global Japandi light theme by default.
             </p>
           </div>
 
@@ -289,6 +335,17 @@ export function ShareProfileDialog({
               max={365}
             />
           </div>
+
+          {generationError ? (
+            <p
+              className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900"
+              role="alert"
+              aria-live="assertive"
+            >
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <span>{generationError}</span>
+            </p>
+          ) : null}
         </div>
       ) : (
         <Tabs defaultValue="link" className="w-full">
@@ -301,23 +358,27 @@ export function ShareProfileDialog({
               <Code className="h-4 w-4 mr-2" />
               Embed
             </TabsTrigger>
-            <TabsTrigger value="social">
-              <Twitter className="h-4 w-4 mr-2" />
-              Social
+            <TabsTrigger value="outreach">
+              <MessageSquareText className="h-4 w-4 mr-2" />
+              Outreach
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="link" className="space-y-3 mt-4">
             <div>
               <Label>Shareable URL</Label>
-              <div className="flex gap-2 mt-2">
-                <Input value={generatedSnippet.url} readOnly />
+              <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                <Input className="min-h-[44px]" value={generatedSnippet.url} readOnly />
                 <Button
+                  type="button"
                   size="icon"
                   variant="outline"
-                  onClick={() => handleCopy(generatedSnippet.url, 'URL')}
+                  aria-label={
+                    copied === 'Shareable URL' ? 'Shareable URL copied' : 'Copy shareable URL'
+                  }
+                  onClick={() => void handleCopy(generatedSnippet.url, 'Shareable URL')}
                 >
-                  {copied === 'URL' ? (
+                  {copied === 'Shareable URL' ? (
                     <CheckCircle2 className="h-4 w-4 text-green-600" />
                   ) : (
                     <Copy className="h-4 w-4" />
@@ -340,14 +401,15 @@ export function ShareProfileDialog({
               <Label>HTML Embed Code</Label>
               <div className="mt-2 space-y-2">
                 <textarea
-                  className="w-full h-32 p-3 text-xs font-mono rounded border"
+                  className="h-32 min-h-[44px] w-full rounded border p-3 font-mono text-xs"
                   value={embedCode}
                   readOnly
                 />
                 <Button
+                  type="button"
                   variant="outline"
-                  size="sm"
-                  onClick={() => handleCopy(embedCode, 'Embed code')}
+                  size="touch"
+                  onClick={() => void handleCopy(embedCode, 'Embed code')}
                   className="w-full"
                 >
                   {copied === 'Embed code' ? (
@@ -361,36 +423,22 @@ export function ShareProfileDialog({
             </div>
           </TabsContent>
 
-          <TabsContent value="social" className="space-y-3 mt-4">
+          <TabsContent value="outreach" className="space-y-3 mt-4">
             <div className="space-y-3">
               <div>
-                <Label>Twitter</Label>
-                <div className="flex gap-2 mt-2">
-                  <Input value={shareTexts.twitter} readOnly />
+                <Label>Proof-safe outreach copy</Label>
+                <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                  <Input className="min-h-[44px]" value={shareTexts.outreach} readOnly />
                   <Button
+                    type="button"
                     size="icon"
                     variant="outline"
-                    onClick={() => handleCopy(shareTexts.twitter, 'Twitter text')}
+                    aria-label={
+                      copied === 'Outreach copy' ? 'Outreach copy copied' : 'Copy outreach copy'
+                    }
+                    onClick={() => void handleCopy(shareTexts.outreach, 'Outreach copy')}
                   >
-                    {copied === 'Twitter text' ? (
-                      <CheckCircle2 className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-              </div>
-
-              <div>
-                <Label>LinkedIn</Label>
-                <div className="flex gap-2 mt-2">
-                  <Input value={shareTexts.linkedin} readOnly />
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    onClick={() => handleCopy(shareTexts.linkedin, 'LinkedIn text')}
-                  >
-                    {copied === 'LinkedIn text' ? (
+                    {copied === 'Outreach copy' ? (
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
                     ) : (
                       <Copy className="h-4 w-4" />
@@ -400,6 +448,23 @@ export function ShareProfileDialog({
               </div>
             </div>
           </TabsContent>
+
+          {copyFeedback ? (
+            <p
+              className={
+                copyFeedback.kind === 'error'
+                  ? 'mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900'
+                  : 'mt-3 text-xs leading-5 text-proofound-forest'
+              }
+              role={copyFeedback.kind === 'error' ? 'alert' : 'status'}
+              aria-live={copyFeedback.kind === 'error' ? 'assertive' : 'polite'}
+            >
+              {copyFeedback.kind === 'error' ? (
+                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              ) : null}
+              <span>{copyFeedback.message}</span>
+            </p>
+          ) : null}
         </Tabs>
       )}
     </>
@@ -410,12 +475,12 @@ export function ShareProfileDialog({
       <div className="flex items-center gap-2">
         <Share2 className="h-5 w-5" />
         <span className="font-semibold text-lg">
-          Share Your {profileType === 'organization' ? 'Organization' : 'Profile'}
+          Share Your {profileType === 'organization' ? 'Organization Trust Page' : 'Public Page'}
         </span>
       </div>
       <p className="text-sm text-muted-foreground mt-2">
-        Create a shareable link or embed code for your{' '}
-        {profileType === 'organization' ? 'organization profile' : 'profile'}
+        Create a shareable link, embed code, or proof-safe outreach copy for your{' '}
+        {profileType === 'organization' ? 'organization trust page' : 'public page'}
       </p>
     </>
   );
@@ -428,12 +493,13 @@ export function ShareProfileDialog({
             <DialogTitle asChild>
               <div className="flex items-center gap-2">
                 <Share2 className="h-5 w-5" />
-                Share Your {profileType === 'organization' ? 'Organization' : 'Profile'}
+                Share Your{' '}
+                {profileType === 'organization' ? 'Organization Trust Page' : 'Public Page'}
               </div>
             </DialogTitle>
             <DialogDescription>
-              Create a shareable link or embed code for your{' '}
-              {profileType === 'organization' ? 'organization profile' : 'profile'}
+              Create a shareable link, embed code, or proof-safe outreach copy for your{' '}
+              {profileType === 'organization' ? 'organization trust page' : 'public page'}
             </DialogDescription>
           </DialogHeader>
 
@@ -445,8 +511,12 @@ export function ShareProfileDialog({
                 <Button variant="outline" onClick={onClose} disabled={isGenerating}>
                   Cancel
                 </Button>
-                <Button onClick={handleGenerate} disabled={isGenerating}>
-                  {isGenerating ? 'Generating...' : 'Generate Shareable Link'}
+                <Button onClick={handleGenerate} disabled={isGenerating || !publicPagePath}>
+                  {isGenerating
+                    ? 'Generating...'
+                    : publicPagePath
+                      ? 'Generate Shareable Link'
+                      : 'Public Page Not Ready'}
                 </Button>
               </>
             ) : (
@@ -468,8 +538,12 @@ export function ShareProfileDialog({
         <DrawerFooter className="pt-2">
           {!generatedSnippet ? (
             <>
-              <Button onClick={handleGenerate} disabled={isGenerating}>
-                {isGenerating ? 'Generating...' : 'Generate Shareable Link'}
+              <Button onClick={handleGenerate} disabled={isGenerating || !publicPagePath}>
+                {isGenerating
+                  ? 'Generating...'
+                  : publicPagePath
+                    ? 'Generate Shareable Link'
+                    : 'Public Page Not Ready'}
               </Button>
               <Button variant="outline" onClick={onClose} disabled={isGenerating}>
                 Cancel

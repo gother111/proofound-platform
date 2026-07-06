@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "findingId": "fnd_sig-feat-route-0f03247aec-b96920_a885726d84",
+  "featureId": "feat_route_0f03247aec",
+  "title": "Changing the conversation query parameter after initial auto-select is ignored",
+  "category": "bug",
+  "severity": "low",
+  "confidence": "high",
+  "triage": "confirmed-bug",
+  "evidence": [
+    {
+      "path": "app/app/o/[slug]/messages/page.tsx",
+      "startLine": 45,
+      "endLine": 55,
+      "symbol": "OrganizationMessagesPageContent",
+      "quote": "if (conversationParam && conversations.length > 0 && !hasAutoSelected) {\n      // Check if the conversation exists in the list\n      const exists = conversations.some((c) => c.id === conversationParam);\n      if (exists) {\n        setSelectedConversationId(conversationParam);\n        setHasAutoSelected(true);\n      }\n    }"
+    }
+  ],
+  "reasoning": "The route advertises support for ?conversation=<id>, but the hasAutoSelected latch prevents later URL changes from selecting a different valid conversation during the same component lifetime. That can happen through client-side navigation, shared links opened while already on the messages route, or back/forward history. The UI remains on the old thread while the URL points to another thread.",
+  "reproduction": "Load /app/o/acme/messages?conversation=A, wait for auto-selection, then client-navigate to /app/o/acme/messages?conversation=B without remounting. Because hasAutoSelected is true, selectedConversationId stays A even when B exists.",
+  "recommendation": "Derive selection from conversationParam whenever it changes and exists in the loaded list, or track the last applied conversationParam instead of a one-way boolean latch.",
+  "whyTestsDoNotAlreadyCoverThis": "No linked tests were included, and there is no evidence of a test that changes search params after the initial selection.",
+  "suggestedRegressionTest": "Add a test that renders with conversation=A, updates the search param to conversation=B after conversations load, and asserts B is selected.",
+  "minimumFixScope": "Replace hasAutoSelected with query-param-aware synchronization in app/app/o/[slug]/messages/page.tsx and cover URL changes in a focused test.",
+  "status": "fixed",
+  "history": [
+    {
+      "runId": null,
+      "kind": "triage",
+      "status": "fixed",
+      "note": "Fixed manually: selection now tracks conversation query-param changes without one-way auto-select latch; covered by tests/routes/organization-messages-page.test.tsx.",
+      "reasoning": null,
+      "commands": [],
+      "createdAt": "2026-05-16T17:18:10.949Z"
+    }
+  ],
+  "signature": "sig_feat-route-0f03247aec_b96920358e",
+  "linkedPatchAttemptIds": [],
+  "createdByRunId": "20260516T164325-52e1d0",
+  "createdAt": "2026-05-16T16:52:21.934Z",
+  "updatedAt": "2026-05-16T17:18:10.943Z"
+}

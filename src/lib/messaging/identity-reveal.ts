@@ -10,6 +10,7 @@ import { eq } from 'drizzle-orm';
 import { sendIdentityRevealedEmail } from '@/lib/email';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { unlockFullIdentityForMatch } from '@/lib/matching/review-contract';
+import { log } from '@/lib/log';
 
 /**
  * Trigger identity reveal for a conversation
@@ -66,7 +67,11 @@ export async function triggerIdentityReveal(conversationId: string): Promise<voi
             : null;
 
       if (!revealContext || !candidateParticipantId || !organizationParticipantId) {
-        console.error('Failed to resolve role-safe identity reveal email context');
+        log.error('messaging.identity_reveal.email_context_unresolved', {
+          hasRevealContext: Boolean(revealContext),
+          hasCandidateParticipant: Boolean(candidateParticipantId),
+          hasOrganizationParticipant: Boolean(organizationParticipantId),
+        });
         return;
       }
 
@@ -83,7 +88,9 @@ export async function triggerIdentityReveal(conversationId: string): Promise<voi
       ]);
 
       if (!organization?.slug) {
-        console.error('Failed to resolve organization route for identity reveal email');
+        log.error('messaging.identity_reveal.organization_route_unresolved', {
+          hasOrganization: Boolean(organization),
+        });
         return;
       }
 
@@ -121,15 +128,13 @@ export async function triggerIdentityReveal(conversationId: string): Promise<voi
         );
       }
     } catch (emailError) {
-      console.error('Failed to send identity revealed emails:', emailError);
+      log.error('messaging.identity_reveal.email_send_failed', { error: emailError });
       // Don't fail the request if email fails
     }
 
-    // TODO: Emit analytics event for identity_revealed
-
-    console.log(`Identity revealed for conversation ${conversationId}`);
+    // Post-MVP: emit a dedicated identity_revealed analytics event.
   } catch (error) {
-    console.error('Identity reveal error:', error);
+    log.error('messaging.identity_reveal.trigger_failed', { error });
     throw new Error('Failed to trigger identity reveal');
   }
 }
@@ -151,7 +156,7 @@ export async function isIdentityRevealed(conversationId: string): Promise<boolea
 
     return conversation[0].stage === 'revealed';
   } catch (error) {
-    console.error('Check identity reveal error:', error);
+    log.error('messaging.identity_reveal.status_check_failed', { error });
     return false;
   }
 }

@@ -1,0 +1,49 @@
+> proofound@0.1.0 test:privacy:extended
+> PROOFOUND_VITEST_TIMEOUT_MS=180000 node ./scripts/run-vitest-with-timeout.mjs --config vitest.supabase.config.ts tests/privacy/rls-policies-extended.test.ts tests/privacy/rls-mvp-isolation.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (5) from .env.test -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (5) from .env.test -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+
+stdout | tests/privacy/setup.ts:40:11
+✅ Loaded environment from .env.test
+
+stdout | tests/privacy/setup.ts:68:9
+✅ All required environment variables are set
+
+stdout | tests/privacy/setup.ts:69:9
+📍 Test Supabase URL: https://cjpfrgmsxwxhuomnvciq.supabase.co
+
+stdout | tests/privacy/setup.ts:40:11
+✅ Loaded environment from .env.test
+
+stdout | tests/privacy/setup.ts:68:9
+✅ All required environment variables are set
+
+stdout | tests/privacy/setup.ts:69:9
+📍 Test Supabase URL: https://cjpfrgmsxwxhuomnvciq.supabase.co
+
+stdout | tests/privacy/rls-policies-extended.test.ts > Extended RLS Privacy Policies
+🔧 Setting up extended test users...
+
+stdout | tests/privacy/rls-policies-extended.test.ts > Extended RLS Privacy Policies
+✅ Extended test users created
+
+stdout | tests/privacy/rls-policies-extended.test.ts > Extended RLS Privacy Policies
+🧹 Cleaning up extended test data...
+
+ ✓ tests/privacy/rls-mvp-isolation.test.ts  (4 tests) 29747ms
+stdout | tests/privacy/rls-policies-extended.test.ts > Extended RLS Privacy Policies
+✅ Extended cleanup complete
+
+ ✓ tests/privacy/rls-policies-extended.test.ts  (27 tests) 31870ms
+
+ Test Files  2 passed (2)
+      Tests  31 passed (31)
+   Start at  04:47:00
+   Duration  32.43s (transform 164ms, setup 27ms, collect 391ms, tests 61.62s, environment 0ms, prepare 76ms)

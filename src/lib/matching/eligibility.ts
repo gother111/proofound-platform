@@ -104,7 +104,7 @@ function toEligibilityAction(requirement: ReadinessRequirement): EligibilityActi
 
   return {
     id: requirement.id,
-    title: 'Set browse preferences',
+    title: 'Set assignment-review preferences',
     description: requirement.detail,
     actionUrl: '/app/i/matching/preferences',
   };
@@ -144,12 +144,13 @@ export async function evaluateIndividualMatchability(
     },
     matchingProfile: {
       id: 'matchingProfile',
-      label: 'Browse profile',
+      label: 'Assignment review preferences',
       met: flags.hasMatchingProfile,
       status: flags.hasMatchingProfile ? 'met' : 'unmet',
       current: flags.hasMatchingProfile,
-      required: 'matching profile',
-      detail: 'Create your matching profile so preferences have somewhere to live.',
+      required: 'review preferences',
+      detail:
+        'Save assignment review preferences so constraints and availability have a clear home.',
     },
     intentSignal: {
       id: 'intentSignal',
@@ -167,7 +168,7 @@ export async function evaluateIndividualMatchability(
       status: flags.hasLogisticsSignal ? 'met' : 'unmet',
       current: flags.hasLogisticsSignal,
       required: 'work mode OR country OR city',
-      detail: 'Add work mode or a location preference before personalized browse unlocks.',
+      detail: 'Add work mode or a location preference before personalized browse is ready.',
     },
   };
 
@@ -220,8 +221,8 @@ export async function evaluateIndividualMatchability(
     message: readiness.flags.browseReady
       ? readiness.flags.introEligible
         ? readiness.flags.stronglyTrusted
-          ? 'Browse is active. Introductions are unlocked and the profile carries a higher-trust label.'
-          : 'Browse is active and introductions are unlocked.'
+          ? 'Browse is active. Introductions are available and the profile carries a higher-trust label.'
+          : 'Browse is active and introductions are available.'
         : 'Browsing stays open while qualified introductions are protected. Add stronger relevant proof and one trusted proof-backed skill when you are ready.'
       : readiness.flags.discoverable
         ? 'Private browse is active. Add deeper recent proof and availability details to become visible to matching.'

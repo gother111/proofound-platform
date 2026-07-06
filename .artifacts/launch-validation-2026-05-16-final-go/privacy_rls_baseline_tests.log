@@ -1,0 +1,51 @@
+> proofound@0.1.0 test:privacy
+> PROOFOUND_VITEST_TIMEOUT_MS=120000 node ./scripts/run-vitest-with-timeout.mjs --config vitest.supabase.config.ts tests/privacy/rls-policies.test.ts tests/lib/ai-redaction.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (5) from .env.test -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (5) from .env.test -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+stdout | tests/privacy/setup.ts:40:11
+✅ Loaded environment from .env.test
+
+stdout | tests/privacy/setup.ts:40:11
+✅ Loaded environment from .env.test
+
+stdout | tests/privacy/setup.ts:68:9
+✅ All required environment variables are set
+
+stdout | tests/privacy/setup.ts:69:9
+📍 Test Supabase URL: https://cjpfrgmsxwxhuomnvciq.supabase.co
+
+stdout | tests/privacy/setup.ts:68:9
+✅ All required environment variables are set
+
+stdout | tests/privacy/setup.ts:69:9
+📍 Test Supabase URL: https://cjpfrgmsxwxhuomnvciq.supabase.co
+
+(node:95673) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+stdout | tests/privacy/rls-policies.test.ts > RLS Privacy Policies
+🔧 Setting up test users...
+
+ ✓ tests/lib/ai-redaction.test.ts  (2 tests) 3ms
+stdout | tests/privacy/rls-policies.test.ts > RLS Privacy Policies
+✅ Test users created successfully
+
+stdout | tests/privacy/rls-policies.test.ts > RLS Privacy Policies
+🧹 Cleaning up test data...
+
+stdout | tests/privacy/rls-policies.test.ts > RLS Privacy Policies
+✅ Cleanup complete
+
+ ✓ tests/privacy/rls-policies.test.ts  (20 tests) 30595ms
+
+ Test Files  2 passed (2)
+      Tests  22 passed (22)
+   Start at  00:45:32
+   Duration  31.08s (transform 319ms, setup 23ms, collect 689ms, tests 30.60s, environment 0ms, prepare 79ms)

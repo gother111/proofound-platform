@@ -1,0 +1,705 @@
+{
+  "createdAt": "2026-05-20T01:41:51.116Z",
+  "baseUrl": "http://localhost:3000",
+  "note": "Codex Browser in-app browser DOM/viewport sweep. Screenshot capture attempted first and timed out on Page.captureScreenshot; see artifact summary.",
+  "results": [
+    {
+      "family": "public",
+      "route": "/",
+      "expected": ["Proof Packs", "Start"],
+      "viewport": {
+        "label": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "url": "http://localhost:3000/",
+      "title": "Proofound | Proof Behind the Claim",
+      "h1": "Proof behind the claim",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "Proof behind the claim"
+        },
+        {
+          "tag": "h2",
+          "text": "Real outcomes, not bullet points"
+        },
+        {
+          "tag": "h2",
+          "text": "Verification trust layer"
+        },
+        {
+          "tag": "h2",
+          "text": "Assignment-fit context"
+        },
+        {
+          "tag": "h2",
+          "text": "To modern challenges"
+        },
+        {
+          "tag": "h1",
+          "text": "Proof behind the claim"
+        },
+        {
+          "tag": "h2",
+          "text": "Blind by default"
+        },
+        {
+          "tag": "h2",
+          "text": "Build hiring on stronger proof"
+        }
+      ],
+      "expectedFound": [
+        {
+          "term": "Proof Packs",
+          "found": true
+        },
+        {
+          "term": "Start",
+          "found": true
+        }
+      ],
+      "routeFlags": {
+        "bodyOverflowX": false,
+        "hasMain": true,
+        "hasSkipLink": true,
+        "visibleTextLength": 1410
+      },
+      "consoleErrors": [],
+      "primaryActions": [
+        {
+          "disabled": false,
+          "href": "/",
+          "text": "PROOFOUND"
+        },
+        {
+          "disabled": false,
+          "href": "#story",
+          "text": "How it works"
+        },
+        {
+          "disabled": false,
+          "href": "#start-individuals",
+          "text": "For individuals"
+        },
+        {
+          "disabled": false,
+          "href": "#start-organizations",
+          "text": "For organizations"
+        },
+        {
+          "disabled": false,
+          "href": "/login",
+          "text": "Sign in"
+        },
+        {
+          "disabled": false,
+          "href": "/login",
+          "text": "Sign in"
+        },
+        {
+          "disabled": false,
+          "href": "/signup",
+          "text": "Start"
+        },
+        {
+          "disabled": false,
+          "href": "/signup/organization",
+          "text": "Request a pilot"
+        },
+        {
+          "disabled": false,
+          "href": "/signup/organization",
+          "text": "Request a pilot"
+        },
+        {
+          "disabled": false,
+          "href": "/signup/individual",
+          "text": "Create your proof portfolio"
+        },
+        {
+          "disabled": false,
+          "href": "/signup/organization",
+          "text": "Request a pilot"
+        },
+        {
+          "disabled": false,
+          "href": "/signup/individual",
+          "text": "Create your proof portfolio"
+        }
+      ],
+      "mainExcerpt": "Proof behind\nthe claim\n\nProofound turns real work into structured Proof Packs for privacy-safe hiring review before identity takes over.\n\nProof portfolios for individuals. Evidence-based review for teams.\n\nRequest a pilot\nCreate your proof portfolio\nBlind by default\n\nPhoto, name, contact details, prestige markers, and other identity signals are removed first. The goal is not anonymity for its own sake. It is capability before bias.\n\nWeak signal should leave before judgment begins.\n\n01 / 09\nBlind by default\n\nTHE STORY RESOLVES INTO ACTION\n\nBuild hiring on stronger proof\n\nProofound helps individuals present real capability through structured evidence, and helps organizations compare work-to-pr"
+    },
+    {
+      "family": "public",
+      "route": "/",
+      "expected": ["Proof Packs", "Start"],
+      "viewport": {
+        "label": "mobile",
+        "width": 390,
+        "height": 844
+      },
+      "url": "http://localhost:3000/",
+      "title": "Proofound | Proof Behind the Claim",
+      "h1": "Proof behind the claim",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "Proof behind the claim"
+        },
+        {
+          "tag": "h2",
+          "text": "Real outcomes, not bullet points"
+        },
+        {
+          "tag": "h2",
+          "text": "Verification trust layer"
+        },
+        {
+          "tag": "h2",
+          "text": "Assignment-fit context"
+        },
+        {
+          "tag": "h2",
+          "text": "To modern challenges"
+        },
+        {
+          "tag": "h1",
+          "text": "Proof behind the claim"
+        },
+        {
+          "tag": "h2",
+          "text": "Blind by default"
+        },
+        {
+          "tag": "h2",
+          "text": "Build hiring on stronger proof"
+        }
+      ],
+      "expectedFound": [
+        {
+          "term": "Proof Packs",
+          "found": true
+        },
+        {
+          "term": "Start",
+          "found": true
+        }
+      ],
+      "routeFlags": {
+        "bodyOverflowX": false,
+        "hasMain": true,
+        "hasSkipLink": true,
+        "visibleTextLength": 2510
+      },
+      "consoleErrors": [],
+      "primaryActions": [
+        {
+          "disabled": false,
+          "href": "/",
+          "text": "Proofound home"
+        },
+        {
+          "disabled": false,
+          "href": "#story",
+          "text": "How it works"
+        },
+        {
+          "disabled": false,
+          "href": "#start-individuals",
+          "text": "For individuals"
+        },
+        {
+          "disabled": false,
+          "href": "#start-organizations",
+          "text": "For organizations"
+        },
+        {
+          "disabled": false,
+          "href": "/login",
+          "text": "Sign in"
+        },
+        {
+          "disabled": false,
+          "href": "/login",
+          "text": "Sign in"
+        },
+        {
+          "disabled": false,
+          "href": "/signup",
+          "text": "Start"
+        },
+        {
+          "disabled": false,
+          "href": "/signup/organization",
+          "text": "Request a pilot"
+        },
+        {
+          "disabled": false,
+          "href": "/signup/organization",
+          "text": "Request a pilot"
+        },
+        {
+          "disabled": false,
+          "href": "/signup/individual",
+          "text": "Create your proof portfolio"
+        },
+        {
+          "disabled": false,
+          "href": "/signup/organization",
+          "text": "Request a pilot"
+        },
+        {
+          "disabled": false,
+          "href": "/signup/individual",
+          "text": "Create your proof portfolio"
+        }
+      ],
+      "mainExcerpt": "Proof behind the claim\n\nProofound turns real work into structured Proof Packs for privacy-safe hiring review before identity takes over.\n\nRequest a pilot\nCreate your proof portfolio\n02\nReal outcomes, not bullet points\n\nVague summaries and floating skill lists resolve into structured outcomes, work scope, ownership, and context. Skills stop existing as decoration and start living next to real work.\n\nSenior Operations Professional\n\nOUTCOME SIGNAL\n\nPROOF SNAPSHOT\n\nReviewable\n\n12\n\nTeam\n\n200+\n\nScale\n\n31%\n\nOutcome\n\nOutcome record, artifacts, and trust method stay together.\n\nWork scope\nOwnership\nContext\n03\nVerification trust layer\n\nArtifacts alone are not enough. Proofound adds verification states,"
+    },
+    {
+      "family": "public",
+      "route": "/signup",
+      "expected": ["Join Proofound", "Individual", "Organization"],
+      "viewport": {
+        "label": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "url": "http://localhost:3000/signup",
+      "title": "Sign Up | Proofound",
+      "h1": "Join Proofound",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "Join Proofound"
+        },
+        {
+          "tag": "h3",
+          "text": "Individual"
+        },
+        {
+          "tag": "h3",
+          "text": "Organization"
+        }
+      ],
+      "expectedFound": [
+        {
+          "term": "Join Proofound",
+          "found": true
+        },
+        {
+          "term": "Individual",
+          "found": true
+        },
+        {
+          "term": "Organization",
+          "found": true
+        }
+      ],
+      "routeFlags": {
+        "bodyOverflowX": false,
+        "hasMain": false,
+        "hasSkipLink": true,
+        "visibleTextLength": 516
+      },
+      "consoleErrors": [],
+      "primaryActions": [],
+      "mainExcerpt": "Skip to main content\nBack\nJoin Proofound\n\nChoose the account type that fits how you'll use Proofound.\n\nIndividual\n\nFor professionals who want a clean proof-based portfolio link they can share today, plus matching as they grow.\n\nContinue as Individual →\nOrganization\n\nFor organizations that need a credible trust page on day 1, then one assignment and a privacy-safe shortlist.\n\nContinue as Organization →\n\nAlready have an account? Sign in\n\nBy creating an account, you agree to our Terms of Service and Privacy Policy"
+    },
+    {
+      "family": "public",
+      "route": "/signup",
+      "expected": ["Join Proofound", "Individual", "Organization"],
+      "viewport": {
+        "label": "mobile",
+        "width": 390,
+        "height": 844
+      },
+      "url": "http://localhost:3000/signup",
+      "title": "Sign Up | Proofound",
+      "h1": "Join Proofound",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "Join Proofound"
+        },
+        {
+          "tag": "h3",
+          "text": "Individual"
+        },
+        {
+          "tag": "h3",
+          "text": "Organization"
+        }
+      ],
+      "expectedFound": [
+        {
+          "term": "Join Proofound",
+          "found": true
+        },
+        {
+          "term": "Individual",
+          "found": true
+        },
+        {
+          "term": "Organization",
+          "found": true
+        }
+      ],
+      "routeFlags": {
+        "bodyOverflowX": false,
+        "hasMain": false,
+        "hasSkipLink": true,
+        "visibleTextLength": 516
+      },
+      "consoleErrors": [],
+      "primaryActions": [],
+      "mainExcerpt": "Skip to main content\nBack\nJoin Proofound\n\nChoose the account type that fits how you'll use Proofound.\n\nIndividual\n\nFor professionals who want a clean proof-based portfolio link they can share today, plus matching as they grow.\n\nContinue as Individual →\nOrganization\n\nFor organizations that need a credible trust page on day 1, then one assignment and a privacy-safe shortlist.\n\nContinue as Organization →\n\nAlready have an account? Sign in\n\nBy creating an account, you agree to our Terms of Service and Privacy Policy"
+    },
+    {
+      "family": "public",
+      "route": "/login",
+      "expected": ["Welcome back", "Sign in"],
+      "viewport": {
+        "label": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "url": "http://localhost:3000/login",
+      "title": "Sign In | Proofound",
+      "h1": "Welcome back",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "Welcome back"
+        }
+      ],
+      "expectedFound": [
+        {
+          "term": "Welcome back",
+          "found": true
+        },
+        {
+          "term": "Sign in",
+          "found": true
+        }
+      ],
+      "routeFlags": {
+        "bodyOverflowX": false,
+        "hasMain": false,
+        "hasSkipLink": true,
+        "visibleTextLength": 272
+      },
+      "consoleErrors": [],
+      "primaryActions": [],
+      "mainExcerpt": "Skip to main content\nWelcome back\n\nSign in to continue to Proofound\n\nEMAIL ADDRESS\n*\nPASSWORD\n*\nRemember me\nForgot password?\nSign in\nOR CONTINUE WITH\nGoogle\nLinkedIn\nDon't have an account? Create account\n\nBy signing in, you agree to our Terms of Service and Privacy Policy"
+    },
+    {
+      "family": "public",
+      "route": "/login",
+      "expected": ["Welcome back", "Sign in"],
+      "viewport": {
+        "label": "mobile",
+        "width": 390,
+        "height": 844
+      },
+      "url": "http://localhost:3000/login",
+      "title": "Sign In | Proofound",
+      "h1": "Welcome back",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "Welcome back"
+        }
+      ],
+      "expectedFound": [
+        {
+          "term": "Welcome back",
+          "found": true
+        },
+        {
+          "term": "Sign in",
+          "found": true
+        }
+      ],
+      "routeFlags": {
+        "bodyOverflowX": false,
+        "hasMain": false,
+        "hasSkipLink": true,
+        "visibleTextLength": 272
+      },
+      "consoleErrors": [],
+      "primaryActions": [],
+      "mainExcerpt": "Skip to main content\nWelcome back\n\nSign in to continue to Proofound\n\nEMAIL ADDRESS\n*\nPASSWORD\n*\nRemember me\nForgot password?\nSign in\nOR CONTINUE WITH\nGoogle\nLinkedIn\nDon't have an account? Create account\n\nBy signing in, you agree to our Terms of Service and Privacy Policy"
+    },
+    {
+      "family": "public",
+      "route": "/portfolio/demo",
+      "expected": ["Proof", "Portfolio"],
+      "viewport": {
+        "label": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "url": "http://localhost:3000/portfolio/demo",
+      "title": "Public Page Unavailable | Proofound",
+      "h1": "PUBLIC PAGE UNAVAILABLE",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "PUBLIC PAGE UNAVAILABLE"
+        }
+      ],
+      "expectedFound": [
+        {
+          "term": "Proof",
+          "found": true
+        },
+        {
+          "term": "Portfolio",
+          "found": true
+        }
+      ],
+      "routeFlags": {
+        "bodyOverflowX": false,
+        "hasMain": false,
+        "hasSkipLink": true,
+        "visibleTextLength": 201
+      },
+      "consoleErrors": [],
+      "primaryActions": [],
+      "mainExcerpt": "Skip to main content\nPUBLIC PAGE UNAVAILABLE\n\nThis Public Page link is unavailable. It may be hidden, retired, or not ready for launch-safe sharing.\n\nproofound.io/portfolio/demo\nPublic Page unavailable"
+    },
+    {
+      "family": "public",
+      "route": "/portfolio/demo",
+      "expected": ["Proof", "Portfolio"],
+      "viewport": {
+        "label": "mobile",
+        "width": 390,
+        "height": 844
+      },
+      "url": "http://localhost:3000/portfolio/demo",
+      "title": "Public Page Unavailable | Proofound",
+      "h1": "PUBLIC PAGE UNAVAILABLE",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "PUBLIC PAGE UNAVAILABLE"
+        }
+      ],
+      "expectedFound": [
+        {
+          "term": "Proof",
+          "found": true
+        },
+        {
+          "term": "Portfolio",
+          "found": true
+        }
+      ],
+      "routeFlags": {
+        "bodyOverflowX": false,
+        "hasMain": false,
+        "hasSkipLink": true,
+        "visibleTextLength": 201
+      },
+      "consoleErrors": [],
+      "primaryActions": [],
+      "mainExcerpt": "Skip to main content\nPUBLIC PAGE UNAVAILABLE\n\nThis Public Page link is unavailable. It may be hidden, retired, or not ready for launch-safe sharing.\n\nproofound.io/portfolio/demo\nPublic Page unavailable"
+    },
+    {
+      "family": "public",
+      "route": "/portfolio/org/proofound-labs",
+      "expected": ["trust", "Proofound Labs"],
+      "viewport": {
+        "label": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "url": "http://localhost:3000/portfolio/org/proofound-labs",
+      "title": "Proofound organization portfolio",
+      "h1": "Proofound Labs",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "Proofound Labs"
+        },
+        {
+          "tag": "h2",
+          "text": "MISSION / PURPOSE"
+        },
+        {
+          "tag": "h2",
+          "text": "WHAT WORK IS OFFERED"
+        },
+        {
+          "tag": "h2",
+          "text": "ASSIGNMENT CLARITY"
+        },
+        {
+          "tag": "h2",
+          "text": "SERIOUSNESS OF REVIEW"
+        },
+        {
+          "tag": "h2",
+          "text": "ORGANIZATION BASICS"
+        }
+      ],
+      "expectedFound": [
+        {
+          "term": "trust",
+          "found": true
+        },
+        {
+          "term": "Proofound Labs",
+          "found": true
+        }
+      ],
+      "routeFlags": {
+        "bodyOverflowX": false,
+        "hasMain": false,
+        "hasSkipLink": true,
+        "visibleTextLength": 1349
+      },
+      "consoleErrors": [],
+      "primaryActions": [],
+      "mainExcerpt": "Skip to main content\nProofound Labs\nShareable by direct link\n\nPublic organization profile\n\nBuild proof-first hiring infrastructure that helps organizations review real work without widening privacy or identity risk.\n\nReturn home\nCopy share link\nWebsite\nMISSION / PURPOSE\n\nBuild proof-first hiring infrastructure that helps organizations review real work without widening privacy or identity risk.\n\nWHAT WORK IS OFFERED\n\nWORK OFFERED\n\nFounding product engineer\n\nENGAGEMENT\n\nNot published\n\nTurn trustworthy review rules into shipped product behavior without weakening blind review or proof-first evaluation.\n\nASSIGNMENT CLARITY\n\nTurn trustworthy review rules into shipped product behavior without weake"
+    },
+    {
+      "family": "public",
+      "route": "/portfolio/org/proofound-labs",
+      "expected": ["trust", "Proofound Labs"],
+      "viewport": {
+        "label": "mobile",
+        "width": 390,
+        "height": 844
+      },
+      "url": "http://localhost:3000/portfolio/org/proofound-labs",
+      "title": "Proofound organization portfolio",
+      "h1": "Proofound Labs",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "Proofound Labs"
+        },
+        {
+          "tag": "h2",
+          "text": "MISSION / PURPOSE"
+        },
+        {
+          "tag": "h2",
+          "text": "WHAT WORK IS OFFERED"
+        },
+        {
+          "tag": "h2",
+          "text": "ASSIGNMENT CLARITY"
+        },
+        {
+          "tag": "h2",
+          "text": "SERIOUSNESS OF REVIEW"
+        },
+        {
+          "tag": "h2",
+          "text": "ORGANIZATION BASICS"
+        }
+      ],
+      "expectedFound": [
+        {
+          "term": "trust",
+          "found": true
+        },
+        {
+          "term": "Proofound Labs",
+          "found": true
+        }
+      ],
+      "routeFlags": {
+        "bodyOverflowX": false,
+        "hasMain": false,
+        "hasSkipLink": true,
+        "visibleTextLength": 1349
+      },
+      "consoleErrors": [],
+      "primaryActions": [],
+      "mainExcerpt": "Skip to main content\nProofound Labs\nShareable by direct link\n\nPublic organization profile\n\nBuild proof-first hiring infrastructure that helps organizations review real work without widening privacy or identity risk.\n\nReturn home\nCopy share link\nWebsite\nMISSION / PURPOSE\n\nBuild proof-first hiring infrastructure that helps organizations review real work without widening privacy or identity risk.\n\nWHAT WORK IS OFFERED\n\nWORK OFFERED\n\nFounding product engineer\n\nENGAGEMENT\n\nNot published\n\nTurn trustworthy review rules into shipped product behavior without weakening blind review or proof-first evaluation.\n\nASSIGNMENT CLARITY\n\nTurn trustworthy review rules into shipped product behavior without weake"
+    },
+    {
+      "family": "internal-ops",
+      "route": "/admin",
+      "expected": ["Admin"],
+      "viewport": {
+        "label": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "url": "http://localhost:3000/403",
+      "title": "Proofound - Focus on what matters",
+      "h1": "403",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "403"
+        },
+        {
+          "tag": "h2",
+          "text": "You do not have access to this page"
+        }
+      ],
+      "expectedFound": [
+        {
+          "term": "Admin",
+          "found": true
+        }
+      ],
+      "routeFlags": {
+        "bodyOverflowX": false,
+        "hasMain": false,
+        "hasSkipLink": true,
+        "visibleTextLength": 277
+      },
+      "consoleErrors": [],
+      "primaryActions": [],
+      "mainExcerpt": "Skip to main content\n403\nYou do not have access to this page\n\nYou don't have permission to access this page. This area is restricted to authorized personnel only.\n\nGo to Overview\nGo to Home\n\nIf you believe you should have access to this page, please contact your administrator."
+    },
+    {
+      "family": "internal-ops",
+      "route": "/admin",
+      "expected": ["Admin"],
+      "viewport": {
+        "label": "mobile",
+        "width": 390,
+        "height": 844
+      },
+      "url": "http://localhost:3000/403",
+      "title": "Proofound - Focus on what matters",
+      "h1": "403",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "403"
+        },
+        {
+          "tag": "h2",
+          "text": "You do not have access to this page"
+        }
+      ],
+      "expectedFound": [
+        {
+          "term": "Admin",
+          "found": true
+        }
+      ],
+      "routeFlags": {
+        "bodyOverflowX": false,
+        "hasMain": false,
+        "hasSkipLink": true,
+        "visibleTextLength": 277
+      },
+      "consoleErrors": [],
+      "primaryActions": [],
+      "mainExcerpt": "Skip to main content\n403\nYou do not have access to this page\n\nYou don't have permission to access this page. This area is restricted to authorized personnel only.\n\nGo to Overview\nGo to Home\n\nIf you believe you should have access to this page, please contact your administrator."
+    }
+  ]
+}

@@ -14,7 +14,6 @@ export type TransactionalEmailWorkflow =
   | 'candidate_invite'
   | 'organization_invite'
   | 'password_reset'
-  | 'contract'
   | 'feedback'
   | 'match'
   | 'admin_verification'

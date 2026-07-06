@@ -1,350 +1,151 @@
-# Supabase Storage Setup Guide
+> Doc Class: `active`
+> Last Verified: `2026-05-19`
 
-This guide explains how to configure Supabase Storage for file uploads in Proofound.
+# Storage Setup Guide
 
-## Overview
+Use this guide for the active MVP upload corridor: avatar/cover image uploads, proof/document
+uploads, privacy review, and safe attachment into Proof Packs. Treat repository migrations and
+`src/lib/uploads/lifecycle.ts` as the source of truth for behavior.
 
-Proofound uses Supabase Storage for:
+## Current Buckets
 
-- **Avatars**: User profile pictures (5MB max, public)
-- **Cover Images**: Profile/organization banner images (10MB max, public)
-- **Documents**: Skill proofs, certificates, artifacts (10MB max, user-private)
+| Bucket                    | Public | Purpose                                                                                     |
+| ------------------------- | ------ | ------------------------------------------------------------------------------------------- |
+| `user-uploads-quarantine` | No     | First landing zone for every upload before validation and privacy checks                    |
+| `user-uploads-private`    | No     | Durable private storage for attachable proof, certificate, and document uploads             |
+| `user-uploads`            | Legacy | Kept non-public by migrations unless validated avatar/cover promotion intentionally uses it |
 
-## Quick Setup
+Do not make evidence, proof, certificate, or document buckets public. Public portfolio and
+organization trust surfaces must never expose raw private storage paths or signed URLs.
 
-### Option 1: Using Supabase Dashboard (Recommended for First-Time Setup)
+## Setup and Verification
 
-1. **Navigate to Storage in Supabase Dashboard**
-   - Go to https://app.supabase.com
-   - Select your project
-   - Click "Storage" in the left sidebar
+Use the normal migration runbook rather than one-off dashboard setup:
 
-2. **Create the Bucket**
-   - Click "New bucket"
-   - Name: `user-uploads`
-   - Public bucket: **Yes** ✓
-   - File size limit: `10485760` (10MB)
-   - Allowed MIME types:
-     - `image/jpeg`
-     - `image/png`
-     - `image/webp`
-     - `application/pdf`
-     - `application/msword`
-     - `application/vnd.openxmlformats-officedocument.wordprocessingml.document`
-   - Click "Create bucket"
+```bash
+npm run db:drift-check
+npm run db:backup:checkpoint
+npm run db:audit:migrations
+npm run db:migrate
+npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json
+```
 
-3. **Configure Policies**
-   - Click on the `user-uploads` bucket
-   - Go to "Policies" tab
-   - Click "New Policy"
-   - Click "Create policy from scratch"
-   - Add the following policies (see SQL file for exact definitions):
-     - Users can upload their own files
-     - Users can view their own files
-     - Public files are viewable by everyone (for avatars/covers)
-     - Users can update their own files
-     - Users can delete their own files
+Storage bucket and policy setup is represented in migrations, including
+`src/db/migrations/20260308180000_add_block8_security_lifecycle_contracts.sql` and the later upload
+privacy hardening migration. `supabase/storage-setup.sql` is a repo reference/bootstrap script for
+checking the same private/quarantine posture, not a replacement for production migration evidence.
 
-### Option 2: Using SQL Script (Recommended for Production)
+Do not use `npm run db:push` or dashboard paste flows for production launch evidence.
 
-1. **Run the SQL Migration**
+## Upload Lifecycle
 
-   ```bash
-   # Using Supabase CLI
-   supabase db push
+1. The API authenticates the user and rejects missing or oversized files.
+2. `ingestUploadedFile` records an `uploaded_files` row and writes the file to
+   `user-uploads-quarantine`.
+3. Signature/MIME validation, metadata checks, and privacy review decide the outcome:
+   - `rejected`: file is removed or blocked and cannot be attached.
+   - `manual_review`: risky evidence stays quarantined and an internal ops queue item is created.
+   - `ready` / `attachable`: safe evidence can be attached through the owning flow.
+4. Evidence uploads remain private. Avatar and cover image uploads may be promoted to a public URL
+   only after validation and public-safety checks.
+5. Delete flows remove the `uploaded_files` record and owned storage object when allowed.
 
-   # Or execute the SQL file directly
-   psql $DATABASE_URL -f supabase/storage-setup.sql
-   ```
+## Active API Surfaces
 
-2. **Verify Setup**
+### `POST /api/upload/avatar`
 
-   ```sql
-   -- Check bucket
-   SELECT * FROM storage.buckets WHERE id = 'user-uploads';
+- Requires an authenticated individual user.
+- Accepts public-safe JPEG, PNG, or WebP image files up to the avatar limit.
+- Returns `{ success, status, uploadedFileId, url }` when the validated image is ready.
+- Updates `profiles.avatar_url` with the promoted public URL.
 
-   -- Check policies
-   SELECT * FROM pg_policies WHERE schemaname = 'storage' AND tablename = 'objects';
-   ```
+### `DELETE /api/upload/avatar?fileId=<uploaded-file-id>`
+
+- Requires the authenticated owner.
+- Clears `profiles.avatar_url`.
+- Removes the uploaded file when a `fileId` is supplied and ownership matches.
+
+### `POST /api/upload/cover`
+
+- Requires an authenticated user.
+- For organization cover uploads, requires an active organization membership with update
+  permission.
+- Accepts public-safe JPEG, PNG, or WebP image files up to 10 MB.
+- Updates the individual or organization cover image after validation.
+
+### `POST /api/upload/document`
+
+- Requires an authenticated individual user.
+- Accepts proof, certificate, artifact, or document uploads up to 25 MB.
+- Supported MIME types include PDF, JPEG, PNG, WebP, plain text, Markdown, and DOCX.
+- Returns one of:
+  - `400` with `status: "rejected"` for invalid or unsafe uploads.
+  - `202` with `status: "manual_review"` when privacy review is required.
+  - `200` with `status: "attachable"` when the file can be linked to the proof flow.
+- Does not return a public URL for private proof/document uploads.
+
+### `DELETE /api/upload/document?fileId=<uploaded-file-id>`
+
+- Requires the authenticated owner.
+- Deletes only by uploaded file id, not by raw storage path.
+
+### `GET /api/upload/status/<fileId>`
+
+- Use when a UI needs to show whether an uploaded file is rejected, held for review, attachable, or
+  already attached.
+- Do not show raw private bucket paths in public or organization review surfaces.
 
 ## File Organization
 
-Files are organized in the following structure:
+Quarantine paths are generated by the server:
 
-```
-user-uploads/
-├── avatars/
-│   └── {user_id}-{timestamp}.{ext}
-├── covers/
-│   └── {user_id}-{timestamp}.{ext}
-├── proof/
-│   └── {user_id}-{timestamp}-{filename}.{ext}
-├── certificate/
-│   └── {user_id}-{timestamp}-{filename}.{ext}
-├── artifact/
-│   └── {user_id}-{timestamp}-{filename}.{ext}
-└── documents/
-    └── {user_id}-{timestamp}-{filename}.{ext}
+```text
+{ownerType}/{ownerId}/{uploadKind}/{timestamp}-{sanitizedFilename}
 ```
 
-## API Endpoints
+Promoted public avatar/cover paths are generated by the server:
 
-### Upload Avatar
-
-```typescript
-POST /api/upload/avatar
-Content-Type: multipart/form-data
-
-FormData:
-- file: File (required)
-
-Response:
-{
-  success: true,
-  url: "https://...",
-  path: "avatars/..."
-}
+```text
+avatars/{ownerId}/{timestamp}-{sanitizedFilename}
+covers/{ownerId}/{timestamp}-{sanitizedFilename}
 ```
 
-### Upload Cover Image
+Private evidence stays attached by uploaded file id and lifecycle state. Public surfaces should use
+redacted labels, proof metadata, and explicit reveal/verification states rather than storage paths.
 
-```typescript
-POST /api/upload/cover
-Content-Type: multipart/form-data
+## Privacy and Security Requirements
 
-FormData:
-- file: File (required)
-- profileType: 'individual' | 'organization' (optional)
-- orgId: string (required if profileType='organization')
+- Raw `user-uploads-private` and `user-uploads-quarantine` paths must not appear in public portfolio,
+  organization trust, assignment share, matching/review, admin queue summaries, AI prompts, logs, or
+  exported public projections.
+- Service-role storage access is server-only.
+- Signed URLs must be short-lived and created only for authorized private workflows.
+- Original filenames are treated as sensitive owner-export-only metadata.
+- Manual review queue items must use privacy-safe labels and review reasons, not private paths.
+- Public health and monitoring surfaces must not include bucket names, object paths, signed URLs, or
+  user identifiers.
 
-Response:
-{
-  success: true,
-  url: "https://...",
-  path: "covers/..."
-}
+## Verification
+
+Use focused checks when changing upload/storage behavior:
+
+```bash
+npm run test -- tests/privacy/storage-policies.test.ts
+npm run test -- tests/lib/uploads-lifecycle-queue.test.ts
+npm run test -- tests/lib/public-portfolio-projection.test.ts
+npm run test -- tests/api/upload-cover-route.test.ts
+npm run test:privacy
 ```
 
-### Upload Document
-
-```typescript
-POST /api/upload/document
-Content-Type: multipart/form-data
-
-FormData:
-- file: File (required)
-- category: 'proof' | 'certificate' | 'artifact' (optional)
-
-Response:
-{
-  success: true,
-  url: "https://...",
-  path: "proof/...",
-  fileName: "original-name.pdf",
-  fileSize: 123456,
-  fileType: "PDF"
-}
-```
-
-### Delete Avatar
-
-```typescript
-DELETE / api / upload / avatar;
-
-Response: {
-  success: true;
-}
-```
-
-### Delete Document
-
-```typescript
-DELETE /api/upload/document?path=proof/user-123-file.pdf
-
-Response:
-{
-  success: true
-}
-```
-
-## Usage in Components
-
-```typescript
-import { uploadFile, validateFile, formatFileSize } from '@/lib/upload';
-
-// Upload avatar
-const handleAvatarUpload = async (file: File) => {
-  // Validate
-  const validation = validateFile(file, 'avatar');
-  if (!validation.valid) {
-    toast.error(validation.error);
-    return;
-  }
-
-  // Upload with progress
-  const result = await uploadFile({
-    file,
-    type: 'avatar',
-    onProgress: (progress) => {
-      console.log(`Upload progress: ${progress}%`);
-    },
-  });
-
-  if (result.success) {
-    toast.success('Avatar uploaded successfully');
-    // Update UI with result.url
-  } else {
-    toast.error(result.error || 'Upload failed');
-  }
-};
-
-// Upload document
-const handleDocumentUpload = async (file: File) => {
-  const result = await uploadFile({
-    file,
-    type: 'document',
-    category: 'proof',
-  });
-
-  if (result.success) {
-    // Save to database
-    await saveProof({
-      url: result.url,
-      fileName: result.fileName,
-      fileSize: result.fileSize,
-    });
-  }
-};
-```
-
-## Security
-
-### Row-Level Security (RLS)
-
-Storage policies ensure:
-
-- ✅ Users can only upload files with their user ID in the path
-- ✅ Users can only view/update/delete their own files
-- ✅ Avatars and covers are publicly viewable (for profile display)
-- ✅ Documents (proofs, certificates) are private by default
-
-### File Validation
-
-All uploads are validated for:
-
-- ✅ File type (MIME type whitelist)
-- ✅ File size limits (5-10MB)
-- ✅ User authentication
-- ✅ Proper file naming/sanitization
-
-### CORS
-
-Supabase Storage automatically handles CORS for your domain. No additional configuration needed.
-
-## File Size Limits
-
-| File Type | Max Size | Accepted Formats                |
-| --------- | -------- | ------------------------------- |
-| Avatar    | 5MB      | JPEG, PNG, WebP                 |
-| Cover     | 10MB     | JPEG, PNG, WebP                 |
-| Document  | 10MB     | PDF, JPEG, PNG, WebP, DOC, DOCX |
+For launch signoff, pair those with the normal migration, restore, route, and smoke gates named in
+[`docs/production-readiness-checklist.md`](production-readiness-checklist.md).
 
 ## Troubleshooting
 
-### "Failed to upload file"
-
-1. Check that the `user-uploads` bucket exists
-2. Verify storage policies are configured correctly
-3. Check Supabase logs for detailed error messages
-
-### "Forbidden" errors
-
-1. Ensure user is authenticated
-2. Check that file path includes user ID
-3. Verify RLS policies are active
-
-### "File too large" errors
-
-1. Compress images before upload (see `AvatarUpload` component for compression example)
-2. Check bucket file size limit in Supabase dashboard
-3. Consider increasing limits if needed
-
-### Public URLs not accessible
-
-1. Ensure bucket is set to "Public"
-2. Check storage policies allow SELECT for public
-3. Verify CORS settings in Supabase
-
-## Performance Optimization
-
-### Image Compression
-
-The `AvatarUpload` component uses `browser-image-compression` to compress images before upload:
-
-```typescript
-import imageCompression from 'browser-image-compression';
-
-const compressed = await imageCompression(file, {
-  maxSizeMB: 0.75,
-  maxWidthOrHeight: 1024,
-  useWebWorker: true,
-});
-```
-
-### Caching
-
-Files are served with `Cache-Control: 3600` (1 hour). Adjust in upload routes if needed:
-
-```typescript
-const { data, error } = await supabase.storage.from('user-uploads').upload(filePath, buffer, {
-  contentType: file.type,
-  cacheControl: '3600', // 1 hour
-});
-```
-
-## Monitoring
-
-### Storage Usage
-
-Check storage usage in Supabase Dashboard:
-
-- Navigate to Settings → Billing
-- View "Storage" usage
-
-### File Cleanup
-
-Consider implementing a cron job to clean up:
-
-- Orphaned files (files not referenced in database)
-- Deleted user files (after 30-day grace period)
-- Temporary uploads
-
-Example cleanup query:
-
-```sql
--- Find files not referenced in profiles
-SELECT name FROM storage.objects
-WHERE bucket_id = 'user-uploads'
-  AND name LIKE 'avatars/%'
-  AND name NOT IN (
-    SELECT avatar_url FROM profiles WHERE avatar_url IS NOT NULL
-  );
-```
-
-## Next Steps
-
-After setting up storage:
-
-1. ✅ Update `AvatarUpload` component to use new API
-2. ✅ Update `CoverUpload` component to use new API
-3. ✅ Implement document upload UI for skill proofs
-4. ✅ Add file cleanup cron job
-5. ✅ Monitor storage usage and costs
-
-## Support
-
-For issues with Supabase Storage:
-
-- [Supabase Storage Docs](https://supabase.com/docs/guides/storage)
-- [Supabase Discord](https://discord.supabase.com)
-- Check Supabase Dashboard → Logs for detailed error messages
+- Upload returns `401`: confirm the user is authenticated.
+- Upload returns `400` with `status: "rejected"`: confirm size, MIME type, and file signature match.
+- Upload returns `202` with `status: "manual_review"`: check the internal ops queue before allowing
+  attachment.
+- Avatar or cover image has no URL: confirm validation passed and public promotion was allowed.
+- Private proof/document appears on a public surface: treat as a privacy bug, remove the exposure,
+  and add or update a projection/no-leak test.

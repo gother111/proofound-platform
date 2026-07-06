@@ -30,6 +30,11 @@ type GetDocumentFn = (source: { data: Uint8Array }) => {
   promise: Promise<PdfDocument>;
 };
 
+type PdfTextExtractionOptions = {
+  maxPages?: number;
+  maxTextChars?: number;
+};
+
 let getDocumentPromise: Promise<GetDocumentFn> | null = null;
 
 function resolveGetDocument(module: PdfJsModule): GetDocumentFn | null {
@@ -105,13 +110,23 @@ async function getDocumentLoader(): Promise<GetDocumentFn> {
   return getDocumentPromise;
 }
 
-export async function extractPdfTextFromBytes(bytes: Uint8Array): Promise<string> {
+export async function extractPdfTextFromBytes(
+  bytes: Uint8Array,
+  options: PdfTextExtractionOptions = {}
+): Promise<string> {
   const getDocument = await getDocumentLoader();
   const document = await getDocument({
     data: new Uint8Array(bytes),
   }).promise;
 
+  const maxPages = options.maxPages ?? document.numPages;
+  if (document.numPages > maxPages) {
+    throw new Error(`PDF extraction supports up to ${maxPages} pages per document.`);
+  }
+
+  const maxTextChars = options.maxTextChars ?? Number.POSITIVE_INFINITY;
   const pageTexts: string[] = [];
+  let totalTextLength = 0;
 
   for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
     const page = await document.getPage(pageNumber);
@@ -124,10 +139,14 @@ export async function extractPdfTextFromBytes(bytes: Uint8Array): Promise<string
 
     if (text.length > 0) {
       pageTexts.push(text);
+      totalTextLength += text.length;
+      if (totalTextLength >= maxTextChars) {
+        break;
+      }
     }
   }
 
-  return pageTexts.join('\n').trim();
+  return pageTexts.join('\n').slice(0, maxTextChars).trim();
 }
 
 export async function extractPdfTextFromFile(file: File): Promise<string> {

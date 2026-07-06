@@ -1,0 +1,17 @@
+{
+  "route": "http://127.0.0.1:33180/verify-skill?token=demo",
+  "title": "Not found | Proofound",
+  "signals": {
+    "h1": "Not found",
+    "hasArchivedApiUnavailableText": false,
+    "hasMain": true,
+    "hasOldSkillForm": false,
+    "hasRuntimeErrorText": false,
+    "overflowX": false,
+    "statusText": "Not found\n\nThis page is outside the locked launch MVP corridor.\n\nPublic Pages: This public page is archived outside the locked launch MVP corridor.",
+    "title": "Not found | Proofound",
+    "url": "http://127.0.0.1:33180/verify-skill?token=demo"
+  },
+  "warningsOrErrors": [],
+  "note": "Codex in-app Browser smoke proving /verify-skill fails closed as an archived public page and does not render the old skill verification form."
+}

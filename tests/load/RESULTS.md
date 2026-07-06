@@ -1,23 +1,25 @@
 # Load Test Results & Performance Baselines
 
-**Last Updated**: 2025-11-04
-**Environment**: Development/Local
+> Doc Class: `reference-spec`
+> Last Verified: `2026-05-20`
+> Reference note: historical/non-gating load-test notes. Current launch performance proof comes from `BASE_URL=<production-candidate-url> npm run perf:budgets`, authenticated perf-status evidence, and fresh launch go/no-go output.
+
+**Historical snapshot date**: 2025-11-04
+**Historical environment**: Development/Local
 
 ---
 
-## How to Run Load Tests
+## Historical Load Test Notes
 
-### Prerequisites
-```bash
-npm install -g artillery
-```
+These Artillery scenarios are retained for optional stress exploration only. Do not install global tooling or treat these files as launch gates. If a future run needs Artillery, use a target-approved ephemeral runner and record the tool version, target, date, owner, and whether production data was touched.
 
 ### Running Tests
+
 ```bash
-# Matching API
+# Optional non-gating matching API stress run
 artillery run tests/load/artillery-matching.yml
 
-# Metrics API
+# Optional non-gating metrics API stress run
 artillery run tests/load/artillery-metrics.yml
 
 # Generate HTML report
@@ -29,18 +31,21 @@ artillery report report.json
 
 ## Performance Targets
 
-| Endpoint | P50 | P95 | P99 | Error Rate | Notes |
-|----------|-----|-----|-----|------------|-------|
-| Matching API | <250ms | <500ms | <1000ms | <1% | Most expensive operation |
-| Metrics API (cached) | <100ms | <200ms | <500ms | <1% | Should be cached |
-| Data Export | <1s | <3s | <5s | <1% | Large payload |
-| Contract Update | <200ms | <400ms | <800ms | <1% | Critical path |
+The current launch gate is `BASE_URL=<production-candidate-url> npm run perf:budgets`; the table below is historical baseline context only.
+
+| Endpoint             | P50    | P95    | P99     | Error Rate | Notes                    |
+| -------------------- | ------ | ------ | ------- | ---------- | ------------------------ |
+| Matching API         | <250ms | <500ms | <1000ms | <1%        | Most expensive operation |
+| Metrics API (cached) | <100ms | <200ms | <500ms  | <1%        | Should be cached         |
+| Data Export          | <1s    | <3s    | <5s     | <1%        | Large payload            |
+| Contract Update      | <200ms | <400ms | <800ms  | <1%        | Critical path            |
 
 ---
 
 ## Baseline Results (Development)
 
 ### Test Configuration
+
 - **Date**: 2025-11-04
 - **Environment**: Local development server
 - **Database**: PostgreSQL (local)
@@ -49,7 +54,8 @@ artillery report report.json
 
 ### Matching API Results
 
-**Expected Metrics** (to be filled after running):
+**Historical expected metrics** (not measured launch evidence):
+
 ```
 Scenarios launched:  300
 Scenarios completed: 298
@@ -70,7 +76,8 @@ Slowest requests:
 
 ### Metrics API Results
 
-**Expected Metrics** (to be filled after running):
+**Historical expected metrics** (not measured launch evidence):
+
 ```
 Scenarios launched:  200
 Scenarios completed: 200
@@ -94,60 +101,69 @@ Notes:
 ## Performance Observations
 
 ### Bottlenecks Identified
+
 1. **Database Queries**: Complex joins in matching algorithm
 2. **Cold Starts**: First request after idle period
 3. **Metrics Calculation**: Computing percentiles on large datasets
 4. **Cache Misses**: When cache expires, requests are slow
 
 ### Optimizations Implemented
+
 - ✅ Caching for matching profiles (CACHE_TTL.PROFILE)
 - ✅ Caching for user skills (CACHE_TTL.USER_SKILLS)
 - ✅ Rate limiting to prevent overload
 - ✅ Database query optimization with Drizzle ORM
 
-### Recommended Optimizations
-- 🔄 Add Redis caching for matching results
-- 🔄 Implement background job for metrics calculation
-- 🔄 Database indexes on frequently queried columns
-- 🔄 Consider read replicas for analytics queries
+### Historical Optimization Ideas
+
+- Add cache-backed matching-result reuse only if current production-candidate evidence shows it is needed.
+- Implement background metrics calculation only if current perf-status evidence shows live request paths are overloaded.
+- Add database indexes only from measured query plans on the intended launch database.
+- Consider read replicas only after production-candidate database evidence shows sustained read pressure.
 
 ---
 
 ## Stress Test Results
 
 ### Peak Load (100 req/min)
-**Status**: TBD - Run tests to establish limits
+
+**Status**: Not a current launch gate. Use production-candidate `perf:budgets`, authenticated perf-status, and go/no-go evidence for launch limits.
 
 **Expected Behavior**:
+
 - System should remain responsive
 - Error rate should stay <5%
 - Rate limiting should kick in gracefully
 - No database connection exhaustion
 
 ### Failure Modes Observed
+
 - ⚠️ Database connection pool exhaustion at >200 concurrent requests
 - ⚠️ Memory usage increases during sustained load
 - ⚠️ Rate limit store grows in memory
 
 ---
 
-## Production Recommendations
+## Historical Production Considerations
 
-### Before Launch
-1. **Run load tests against production-like environment**
-2. **Establish actual baselines** (not just estimates)
-3. **Test rate limiting thresholds**
-4. **Verify caching behavior**
-5. **Monitor database connection pool**
+### If These Artillery Notes Are Revived
+
+1. Run only against an approved target and record the exact URL, date, owner, tool version, and data-safety boundary.
+2. Establish actual baselines from the run and keep them separate from launch go/no-go evidence.
+3. Test rate limiting thresholds without touching production user data.
+4. Verify caching behavior through provider or app telemetry.
+5. Monitor database connection pool behavior during the approved run.
 
 ### Monitoring in Production
+
 1. **Track P95/P99 response times**
 2. **Alert on error rate > 1%**
 3. **Monitor database query performance**
-4. **Track cache hit rates**
+4. **Track cache backend health and provider-exposed key-count evidence**
 5. **Watch memory usage trends**
 
 ### Scaling Strategy
+
 1. **Horizontal scaling**: Vercel auto-scales Next.js
 2. **Database scaling**: Consider read replicas
 3. **Cache scaling**: Vercel KV scales automatically
@@ -158,19 +174,23 @@ Notes:
 ## Load Test Scenarios
 
 ### Scenario 1: Typical Usage
+
 - **Pattern**: 20 req/min sustained
 - **Duration**: 30 minutes
 - **Goal**: Verify stability under normal load
 
 ### Scenario 2: Peak Traffic
+
 - **Pattern**: 100 req/min for 10 minutes
 - **Goal**: Test limits and failure modes
 
 ### Scenario 3: Spike Traffic
+
 - **Pattern**: Sudden jump from 10 to 200 req/min
 - **Goal**: Verify rate limiting and graceful degradation
 
 ### Scenario 4: Sustained High Load
+
 - **Pattern**: 50 req/min for 2 hours
 - **Goal**: Check for memory leaks and resource exhaustion
 

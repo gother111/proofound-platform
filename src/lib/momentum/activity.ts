@@ -253,7 +253,7 @@ export async function getOrganizationActivityEvents(
     events.push({
       id: `org-match-${row.id}`,
       type: 'new_match',
-      text: 'New candidate match generated',
+      text: 'New proof-submission match generated',
       timestamp: asEventTimestamp(row.createdAt),
       actionUrl: '/app/o',
       metadata: { assignmentId: row.assignmentId },

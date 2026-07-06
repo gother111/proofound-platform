@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "featureId": "feat_route_0a2d078951",
+  "title": "Route /api/cron/account-deletion-workflow",
+  "summary": "Web route implemented by app/api/cron/account-deletion-workflow/route.ts.",
+  "kind": "route",
+  "source": "next-app-route",
+  "confidence": "high",
+  "entrypoints": [
+    {
+      "path": "app/api/cron/account-deletion-workflow/route.ts",
+      "symbol": null,
+      "route": "/api/cron/account-deletion-workflow",
+      "command": null
+    }
+  ],
+  "ownedFiles": [
+    {
+      "path": "app/api/cron/account-deletion-workflow/route.ts",
+      "reason": "entrypoint"
+    }
+  ],
+  "contextFiles": [],
+  "tests": [],
+  "tags": ["next", "web"],
+  "trustBoundaries": ["user-input", "network", "serialization"],
+  "status": "reviewed",
+  "lock": null,
+  "findingIds": [],
+  "patchAttemptIds": [],
+  "analysisHistory": [
+    {
+      "runId": "20260516T164325-52e1d0",
+      "kind": "review",
+      "summary": "0 finding(s)",
+      "provider": "codex",
+      "model": null,
+      "createdAt": "2026-05-16T16:44:13.266Z"
+    }
+  ],
+  "createdAt": "2026-05-16T16:02:40.128Z",
+  "updatedAt": "2026-05-16T16:44:13.266Z"
+}

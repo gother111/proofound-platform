@@ -12,6 +12,24 @@ Complete guide to all environment variables used in Proofound, including which f
 > Update `NEXT_PUBLIC_SITE_URL` in Vercel environment variables to match your actual domain.
 > Use only the canonical production domain for app URLs and callbacks.
 
+## Launch Provider Posture
+
+Manual meeting links remain the locked MVP default. Manual-link interview scheduling must still work when connected-provider variables are absent.
+
+Google and LinkedIn login buttons are launch-active auth entry points through Supabase auth. Use `https://<supabase-project>.supabase.co/auth/v1/callback` for Supabase provider callbacks. App-side Google integration callbacks use `https://proofound.io/api/integrations/google/callback` in production and `<preview-app-url>/api/integrations/google/callback` for preview targets. Do not configure the archived app-side LinkedIn callback.
+
+**Target-scoped Vars**
+
+- `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false` by default.
+- Required Vars When `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true`: connected-provider credentials for that advisory target only.
+- Connected-provider credentials are not launch-blocking by default.
+
+Archived/non-launch compatibility variable for retired LinkedIn verification manual-review notifications: `LINKEDIN_VERIFICATION_ADMIN_EMAILS`.
+
+Matching handler notes: `/api/match/profile` is the retained near-matches matching handler. It is not CV screening, proof-review participant evaluation, and it must not affect match, review, verification, reveal, trust-state, or workflow-decision state.
+
+Python helper notes: `src/archive/non_launch_python_internal/lib/expertise/python-cv-extract-client.ts` is retained as archived reference. The retired `/api/expertise/cv-import/wizard-*` proxy route family, Python `wizard-suggest`/`internal-job` modes, and TypeScript Python worker helpers remain archived.
+
 ## Quick Reference
 
 ```env
@@ -446,8 +464,8 @@ PYTHON_INTERNAL_SERVICE_SECRET=your_strong_internal_secret_here
 
 **Used By**:
 
-- `src/lib/expertise/python-cv-proxy.ts`
-- `src/lib/python-internal/client.ts`
+- `src/archive/non_launch_python_internal/lib/expertise/python-cv-extract-client.ts`
+- `src/archive/non_launch_python_internal/lib/python-internal/client.ts`
 - `api/python/cv_import.py`
 
 **Behavior**:
@@ -475,8 +493,8 @@ PYTHON_CV_IMPORT_BASE_URL=https://python-internal.proofound.internal
 
 **Used By**:
 
-- `src/lib/expertise/python-cv-proxy.ts`
-- `src/lib/python-internal/client.ts`
+- `src/archive/non_launch_python_internal/lib/expertise/python-cv-extract-client.ts`
+- `src/archive/non_launch_python_internal/lib/python-internal/client.ts`
 
 **Behavior**:
 
@@ -557,7 +575,7 @@ PYTHON_INTERNAL_JOBS_ENABLED=true
 - `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` — Required for Google Meet integration and Google social login through Supabase.
 - `GOOGLE_REDIRECT_URI` — Must match the app integration callback (recommended runtime value: `/api/integrations/google/callback`).
 - `LINKEDIN_CLIENT_ID` and `LINKEDIN_CLIENT_SECRET` — Required for LinkedIn settings integration callback and LinkedIn social login through Supabase.
-- `LINKEDIN_REDIRECT_URI` - Set to your canonical app callback (recommended: `https://yourdomain.com/api/auth/linkedin/callback`).
+- `LINKEDIN_REDIRECT_URI` - Set to your canonical app callback (recommended: `https://<supabase-project>.supabase.co/auth/v1/callback`).
 - `LINKEDIN_API_VERSION` - Optional LinkedIn REST version header for Verified APIs (`/rest/verificationReport`, `/rest/identityMe`). Defaults to `202510`.
 - `NEXT_PUBLIC_SITE_URL` — Canonical app base URL used for OAuth callback construction (`NEXT_PUBLIC_URL` is legacy fallback only).
 - LinkedIn verification tier behavior (no extra env needed):
@@ -567,11 +585,11 @@ PYTHON_INTERNAL_JOBS_ENABLED=true
 
 **Provider callback split (important)**:
 
-- Google integration callback (app route): `https://yourdomain.com/api/integrations/google/callback`
+- Google integration callback (app route): `https://proofound.io/api/integrations/google/callback`
 - Google social auth callback (Supabase): `https://<supabase-project>.supabase.co/auth/v1/callback`
-- LinkedIn integration callback (app route): `https://yourdomain.com/api/auth/linkedin/callback`
+- LinkedIn integration callback (app route): `https://<supabase-project>.supabase.co/auth/v1/callback`
 - LinkedIn social auth callback (Supabase): `https://<supabase-project>.supabase.co/auth/v1/callback`
-- Zoom integration callback (app route): `https://yourdomain.com/api/integrations/zoom/callback`
+- Zoom integration callback (app route): `https://proofound.io/api/integrations/zoom/callback`
 
 **Used By**:
 
@@ -592,15 +610,15 @@ PYTHON_INTERNAL_JOBS_ENABLED=true
 1. Create a Zoom OAuth app and copy the client ID/secret.
 2. Set `ZOOM_REDIRECT_URI` to `/api/integrations/zoom/callback` for multi-domain runtime support and add each fully-qualified callback URL to Zoom app settings.
 3. Configure one Google OAuth client with callback URIs for each app host plus Supabase social auth:
-   - `https://yourdomain.com/api/integrations/google/callback`
+   - `https://proofound.io/api/integrations/google/callback`
    - `http://localhost:3000/api/integrations/google/callback`
-   - `https://preview.yourdomain.com/api/integrations/google/callback`
+   - `<preview-app-url>/api/integrations/google/callback`
    - `https://<supabase-project>.supabase.co/auth/v1/callback`
 4. Configure LinkedIn app callback URIs:
-   - `https://yourdomain.com/api/auth/linkedin/callback`
    - `https://<supabase-project>.supabase.co/auth/v1/callback`
-   - Optional local callback for local OAuth testing: `http://localhost:3000/api/auth/linkedin/callback`
-   - Optional additional live-domain callbacks for each domain that can initiate `/api/auth/linkedin` (for example `https://demo.yourdomain.com/api/auth/linkedin/callback`)
+   - `https://<supabase-project>.supabase.co/auth/v1/callback`
+   - Optional local callback for local OAuth testing: `http://localhost:3000/auth/callback`
+   - Optional additional live-domain callbacks for each domain that can initiate `/api/auth/linkedin` (for example `<preview-app-url>/auth/callback`)
    - For LinkedIn verification, ensure OAuth scopes include `r_profile_basicinfo` and `r_verify` in addition to `openid profile email`.
 5. Set `NEXT_PUBLIC_SITE_URL` to your canonical domain (for example `https://proofound.io`).
 
@@ -608,7 +626,7 @@ PYTHON_INTERNAL_JOBS_ENABLED=true
 
 ### Strict Provider E2E (Deterministic User)
 
-**Purpose**: Make provider flows launch-blocking with real tokens in strict suites.
+**Purpose**: Run connected-provider advisory checks with real tokens in strict suites.
 
 **Required Vars**:
 
@@ -1205,7 +1223,7 @@ GCP_CV_OCR_CLOUD_RUN_PUBLIC_INVOCATION=false
 - The app route also requires `FF_PROOF_ARTIFACT_OCR_BETA` audience eligibility, so global enablement alone is not sufficient.
 - Accepted source MIME types are PDF, PNG, and JPG/JPEG only; browser CV import OCR remains separately disabled.
 - OCR requires explicit user consent per document.
-- OCR output is draft text only. It must not auto-publish, auto-verify, auto-score, auto-rank, shortlist, recommend, or affect match, review, verification, reveal, trust-state, or hiring-decision state.
+- OCR output is draft text only. It must not auto-publish, auto-verify, auto-score, auto-rank, shortlist, recommend, or affect match, review, verification, reveal, trust-state, or workflow-decision state.
 - Use a future `GCP_CV_OCR_EXPIRES_AT` for any temporary smoke window. Default to `2026-08-01T00:00:00Z` so the beta expires before the current credit cutoff window.
 - The disable-or-pay timeline is: review on `2026-07-15`, disabled-mode drill on `2026-07-25`, final disable-or-paid decision on `2026-08-01`, free-credit expiry on `2026-08-03`.
 - Google Cloud budget alerts must be set at 25%, 50%, 75%, 90%, and 100%. Budgets are alerts only, not hard caps.
@@ -1231,7 +1249,7 @@ npm run ocr:production:smoke
 
 ### START_FROM_CV_BETA_ENABLED
 
-**Purpose**: Disabled-by-default Start from CV helper. This is an individual onboarding helper that turns a user-owned CV into private editable drafts. Once `START_FROM_CV_BETA_ENABLED=true` and `START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_ENABLED=true`, it is available to authenticated individual users without the legacy invite allow-list. It is not CV screening, candidate evaluation, employer-side parsing, matching, ranking, shortlisting, verification, trust state, or public portfolio publication.
+**Purpose**: Disabled-by-default Start from CV helper. This is an individual onboarding helper that turns a user-owned CV into private editable drafts. Once `START_FROM_CV_BETA_ENABLED=true` and `START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_ENABLED=true`, it is available to authenticated individual users without the legacy invite allow-list. It is not CV screening, proof-review participant evaluation, employer-side parsing, matching, ranking, shortlisting, verification, trust state, or public portfolio publication.
 
 **Format**:
 
@@ -1275,7 +1293,7 @@ NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED=false
 
 ### MATCHING_TWO_STAGE_ENABLED
 
-**Purpose**: Enables ANN-hybrid assignment retrieval for `/api/core/matching/profile`.
+**Purpose**: Enables ANN-hybrid assignment retrieval for `/api/match/profile`.
 
 **Format**:
 
@@ -1294,7 +1312,7 @@ MATCHING_TWO_STAGE_ENABLED=true
 
 ### MATCHING_NEAR_SCAN_LIMIT
 
-**Purpose**: Caps active-assignment scan size for `/api/core/matching/near-matches`.
+**Purpose**: Caps active-assignment scan size for `/api/match/profile`.
 
 **Format**:
 
@@ -1709,7 +1727,7 @@ Use this checklist when setting up a new environment:
 
 - [ ] `RESEND_API_KEY` - Resend API key
 - [ ] `EMAIL_FROM` - Sender email address
-- [ ] `LINKEDIN_VERIFICATION_ADMIN_EMAILS` or `PLATFORM_ADMIN_EMAILS` - LinkedIn manual-review recipients
+- [ ] `LINKEDIN_VERIFICATION_ADMIN_EMAILS` or `PLATFORM_ADMIN_EMAILS` - retired LinkedIn verification notification recipients
 - [ ] Domain verified in Resend
 - [ ] DNS records configured (SPF, DKIM)
 

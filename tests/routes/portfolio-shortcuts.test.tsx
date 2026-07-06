@@ -87,7 +87,9 @@ describe('portfolio and compatibility shortcut routes', () => {
         params: Promise.resolve({ slug: 'acme?next=../other' }),
       })
     ).rejects.toThrow('NEXT_REDIRECT');
-    expect(redirectMock).toHaveBeenLastCalledWith('/app/o/acme%3Fnext%3D..%2Fother/assignments');
+    expect(redirectMock).toHaveBeenLastCalledWith(
+      '/app/o/acme%3Fnext%3D..%2Fother/assignments?from=shortlist'
+    );
 
     await expect(
       OrgMatchingPage({

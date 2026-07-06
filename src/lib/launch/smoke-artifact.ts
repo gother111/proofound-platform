@@ -100,6 +100,7 @@ export type LaunchSmokeArtifactEvaluationState =
   | 'fresh_passing'
   | 'fresh_failing'
   | 'stale'
+  | 'missing_target'
   | 'wrong_target';
 export type LaunchSmokeArtifactEvaluation = {
   state: LaunchSmokeArtifactEvaluationState;
@@ -277,6 +278,7 @@ export function evaluateLaunchSmokeArtifact(
   options: {
     now?: Date;
     baseUrl?: string;
+    requireTargetBaseUrl?: boolean;
   } = {}
 ): LaunchSmokeArtifactEvaluation {
   const now = options.now ?? new Date();
@@ -289,6 +291,26 @@ export function evaluateLaunchSmokeArtifact(
   const stale = ageMinutes > freshnessThresholdMinutes;
   const targetMismatch =
     requestedBaseUrl != null && !isLaunchSmokeArtifactForBaseUrl(artifact, requestedBaseUrl);
+  const missingRequiredTarget = options.requireTargetBaseUrl === true && !targetBaseUrl;
+
+  if (missingRequiredTarget) {
+    return {
+      state: 'missing_target',
+      passes: false,
+      blocking: true,
+      fresh: false,
+      stale: false,
+      ageMinutes,
+      freshnessThresholdMinutes,
+      targetBaseUrl,
+      requestedBaseUrl,
+      overallStatus: artifact.overallStatus,
+      failingScenarioIds,
+      incompleteScenarioIds,
+      message:
+        'launch smoke artifact is missing targetBaseUrl and cannot prove production-candidate launch readiness',
+    };
+  }
 
   if (targetMismatch) {
     return {

@@ -1,0 +1,20 @@
+{
+  "capturedAt": "2026-05-20T05:20:10.532Z",
+  "url": "http://127.0.0.1:33180/app/i/profile?profileView=full&tab=visibility",
+  "shareNode": null,
+  "containsSharePublicPage": false,
+  "containsPublicPageNotReady": false,
+  "containsArchivedApiError": false,
+  "containsFailedCreateSnippet": false,
+  "containsLinkedIn": false,
+  "containsTwitter": false,
+  "containsSocialTab": false,
+  "containsProfessionalProfile": false,
+  "containsProfileSnippetCopy": false,
+  "containsRuntimeError": false,
+  "mainCount": 1,
+  "noHorizontalOverflow": true,
+  "console": [],
+  "note": "Codex Browser verified the active individual profile Share dialog no longer calls the archived snippet flow in the mock no-handle state; the launch Public Page URL generation path is covered by focused component tests.",
+  "excerpt": "- link \"Skip to main content\":\n  - /url: \"#main-content\"\n- complementary \"Main navigation\":\n  - navigation \"Primary navigation\":\n    - link \"Overview\":\n      - /url: /app/i/home\n      - generic: Overview\n    - link \"Profile\":\n      - /url: /app/i/profile\n      - generic: Profile\n    - link \"Communications\":\n      - /url: /app/i/communications\n      - generic: Communications\n    - link \"Matching\":\n      - /url: /app/i/matching\n      - generic: Matching\n    - link \"Settings\":\n      - /url: /app/i/settings\n      - generic: Settings\n  - button \"Collapse sidebar\":\n- banner:\n  - img \"Proofound Logo\"\n  - generic: Proofound\n  - paragraph: Profile\n  - button \"Open profile menu\":\n    - generic: U\n- main \"Main content\":\n  - paragraph: Loading profile\n  - paragraph: Preparing your proof, visibility, and readiness details.\n- button \"Open Next.js Dev Tools\":\n- alert\n- region \"Notifications alt+T\"\n- region \"Notifications (F8)\":\n  - list\n- heading \"Privacy choices\" [level=3]\n- paragraph: Essential cookies keep Proofound working. Optional analytics help us improve the product. We never sell your data.\n- link \"Privacy Policy\":\n  - /url: /privacy\n- link \"Cookie Policy\":\n  - /url: /cookies\n- link \"Cookie Settings\":\n  - /url: /cookies/settings?returnTo=%2Fapp%2Fi%2Fprofile\n- button \"Accept All\"\n- button \"Essential Only\""
+}

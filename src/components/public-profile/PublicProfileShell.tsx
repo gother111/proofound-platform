@@ -21,7 +21,7 @@ export function PublicProfileShell({
   maxWidthClassName = 'max-w-5xl',
 }: PublicProfileShellProps) {
   return (
-    <div
+    <main
       className={cn(
         compact ? 'bg-japandi-bg p-3' : 'min-h-screen bg-japandi-bg p-4 sm:p-6 md:p-8',
         className
@@ -41,6 +41,6 @@ export function PublicProfileShell({
           ) : null}
         </div>
       </div>
-    </div>
+    </main>
   );
 }

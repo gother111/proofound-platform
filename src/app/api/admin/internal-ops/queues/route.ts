@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { adminListGuard } from '@/app/api/admin/_utils';
 import { listInternalOpsQueueItems } from '@/lib/internal-ops/queue';
+import { log } from '@/lib/log';
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,11 +22,12 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching operations queues:', error);
+    log.error('admin.internal_ops_queues.list_failed', {
+      errorName: error instanceof Error ? error.name : typeof error,
+    });
     return NextResponse.json(
       {
         error: 'Failed to fetch operations queues',
-        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

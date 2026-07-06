@@ -1,10 +1,11 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { NextRequest } from 'next/server';
 import {
   csrfProtection,
   generateCSRFToken,
   generateSignedCSRFToken,
   getOrGenerateCSRFToken,
+  shouldUseSecureCSRFTokenCookie,
   verifyCSRFToken,
 } from '../csrf';
 
@@ -17,6 +18,17 @@ describe('CSRF Protection', () => {
     delete process.env.INTERNAL_API_SECRET;
     delete process.env.CRON_SECRET;
     delete process.env.CRON_SECRET_PREVIEW;
+    delete process.env.VERCEL_ENV;
+    delete process.env.APP_ENV;
+    delete process.env.NEXT_PUBLIC_APP_ENV;
+    delete process.env.PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE;
+  });
+
+  afterEach(() => {
+    delete process.env.VERCEL_ENV;
+    delete process.env.APP_ENV;
+    delete process.env.NEXT_PUBLIC_APP_ENV;
+    delete process.env.PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE;
   });
 
   describe('generateCSRFToken', () => {
@@ -357,6 +369,31 @@ describe('CSRF Protection', () => {
         },
       });
       await expect(csrfProtection(request)).resolves.toBeNull();
+    });
+  });
+
+  describe('shouldUseSecureCSRFTokenCookie', () => {
+    it('keeps CSRF cookies secure in production by default', () => {
+      expect(shouldUseSecureCSRFTokenCookie({ NODE_ENV: 'production' })).toBe(true);
+    });
+
+    it('allows insecure CSRF cookies only for explicit local smoke runs', () => {
+      expect(
+        shouldUseSecureCSRFTokenCookie({
+          NODE_ENV: 'production',
+          PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE: '1',
+        })
+      ).toBe(false);
+    });
+
+    it('ignores the local smoke cookie override in explicit launch environments', () => {
+      expect(
+        shouldUseSecureCSRFTokenCookie({
+          NODE_ENV: 'production',
+          VERCEL_ENV: 'preview',
+          PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE: '1',
+        })
+      ).toBe(true);
     });
   });
 });

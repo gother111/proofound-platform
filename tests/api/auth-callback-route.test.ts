@@ -115,4 +115,20 @@ describe('auth callback route', () => {
     const url = new URL(location!);
     expect(url.pathname).toBe('/app/i/home');
   });
+
+  it('ignores backslash network-path next values after oauth exchange', async () => {
+    const req = new NextRequest(
+      'http://localhost/auth/callback?code=oauth-code&next=%2F%5C%5Cattacker.example%2Fphish'
+    );
+    const res = await GET(req);
+
+    expect(exchangeCodeForSessionMock).toHaveBeenCalledTimes(1);
+    expect(resolveUserHomePathMock).toHaveBeenCalledTimes(1);
+
+    const location = res.headers.get('location');
+    expect(location).toBeTruthy();
+    const url = new URL(location!);
+    expect(url.origin).toBe('http://localhost');
+    expect(url.pathname).toBe('/app/i/home');
+  });
 });

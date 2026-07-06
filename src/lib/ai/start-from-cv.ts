@@ -38,6 +38,8 @@ const DEFAULT_USER_DAILY_LIMIT = 3;
 const DEFAULT_GLOBAL_DAILY_LIMIT = 20;
 const DEFAULT_RETENTION_HOURS = 24;
 const MAX_EXTRACTED_TEXT_CHARS = 30_000;
+const MAX_PDF_STREAMS_TO_DECODE = 16;
+const MAX_PDF_INFLATED_STREAM_BYTES = 200_000;
 export const START_FROM_CV_QUOTA_COUNTED_STATUSES = ['ready_for_review', 'accepted'] as const;
 
 const EMAIL_PATTERN = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi;
@@ -537,7 +539,9 @@ export async function extractStartFromCvSession(input: {
 
   const requestId = `start_cv_${randomUUID().replaceAll('-', '')}`;
   const localText =
-    mimeType === 'application/pdf' ? await extractReadablePdfText(input.file.bytes) : '';
+    mimeType === 'application/pdf'
+      ? await extractReadablePdfText(input.file.bytes, config.maxPages)
+      : '';
   const ocrResult =
     localText.trim().length === 0 && config.useGcpOcr
       ? await runGuardedOcr({
@@ -847,9 +851,13 @@ function detectStartFromCvMimeType(bytes: Uint8Array): string | null {
   return null;
 }
 
-async function extractReadablePdfText(bytes: Uint8Array): Promise<string> {
+async function extractReadablePdfText(bytes: Uint8Array, maxPages: number): Promise<string> {
+
   try {
-    const extracted = await extractPdfTextFromBytes(bytes);
+    const extracted = await extractPdfTextFromBytes(bytes, {
+      maxPages,
+      maxTextChars: MAX_EXTRACTED_TEXT_CHARS,
+    });
     if (extracted.trim().length > 0) {
       return extracted;
     }
@@ -876,7 +884,12 @@ export function extractTextFromPdfStreams(bytes: Uint8Array): string {
   const chunks: string[] = [];
   const streamPattern = /stream\r?\n([\s\S]*?)endstream/g;
 
+  let decodedStreams = 0;
   for (const match of pdf.matchAll(streamPattern)) {
+    if (decodedStreams >= MAX_PDF_STREAMS_TO_DECODE) {
+      break;
+    }
+
     const objectSource = pdf.slice(Math.max(0, match.index - 800), match.index);
     const streamSource = (match[1] ?? '').trim();
     if (!/\/FlateDecode/i.test(objectSource)) {
@@ -887,8 +900,14 @@ export function extractTextFromPdfStreams(bytes: Uint8Array): string {
       const encoded = /\/ASCII85Decode/i.test(objectSource)
         ? decodeAscii85(streamSource)
         : Buffer.from(streamSource, 'latin1');
-      const inflated = inflateSync(encoded).toString('utf8');
+      const inflated = inflateSync(encoded, {
+        maxOutputLength: MAX_PDF_INFLATED_STREAM_BYTES,
+      }).toString('utf8');
       chunks.push(...extractPdfTextLiterals(inflated));
+      decodedStreams += 1;
+      if (chunks.join(' ').length >= MAX_EXTRACTED_TEXT_CHARS) {
+        break;
+      }
     } catch {
       // Ignore malformed streams and continue scanning other PDF objects.
     }
@@ -1176,7 +1195,7 @@ function buildStartFromCvStructuringPrompt(text: string, privacyWarnings: string
   return [
     'You are Proofound Start from CV.',
     'Convert a user-owned CV into private editable drafts only.',
-    'Do not score, rank, shortlist, match, recommend roles, infer candidate quality, infer seniority as fact, verify, or publish.',
+    'Do not score, rank, shortlist, match, recommend roles, infer proof-review participant quality, infer seniority as fact, verify, or publish.',
     'Unsupported skills must be unsupported_draft, require proof, require user confirmation, and give no trust, matching, or verification lift.',
     'Use source snippet references, not full raw text. Keep organization and institution labels private by default.',
     'Return JSON only matching the schema.',

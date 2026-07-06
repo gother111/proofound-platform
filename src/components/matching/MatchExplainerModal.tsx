@@ -2,9 +2,9 @@
  * Match explainer modal for the launch corridor.
  *
  * The explanation stays proof-first and privacy-safe:
- * - strongest proof and fit rationale lead
+ * - strongest proof and review rationale lead
  * - blind-by-default review stays explicit
- * - comparative score detail stays secondary
+ * - proof-signal detail stays secondary
  */
 
 'use client';
@@ -28,35 +28,30 @@ import {
 } from '@/components/ui/drawer';
 import { useResponsiveModalMode } from '@/hooks/use-responsive-modal-mode';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Info, CheckCircle2, TrendingUp, Award, AlertCircle, Zap } from 'lucide-react';
+import { Info, CheckCircle2, ShieldCheck, AlertCircle, Zap } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   buildMatchExplainerContract,
   MATCH_EXPLAINER_TEST_IDS,
 } from '@/lib/matching/explainer-contract';
+import { reasonCodeDisplayLabel } from '@/lib/matching/reason-codes';
 import { motion } from 'framer-motion';
 
 interface MatchExplainerProps {
-  // Overall match data
   matchId: string;
-  compositeScore: number; // 0-1
-  rank?: number; // User's rank in this match pool
-  totalCandidates?: number; // Total candidates in pool
-  rankBand?: string; // e.g., "Top 5", "Top 10"
+  rank?: number;
+  totalCandidates?: number;
+  rankBand?: string;
   rankMode?: 'exact' | 'band';
   exactRankAvailable?: boolean;
-
-  // Subscore breakdown
-  subscores: {
-    skills?: number; // 0-1
-    constraints?: number; // 0-1 (location, salary, hours match)
-    recency?: number; // 0-1 (skill freshness)
-    evidence?: number; // 0-1 (verification strength)
+  proofSignals?: {
+    skills?: string;
+    constraints?: string;
+    recency?: string;
+    evidence?: string;
   };
 
-  // Skills overlap
   skillsMatch?: {
     required: Array<{
       skillName: string;
@@ -72,7 +67,6 @@ interface MatchExplainerProps {
     }>;
   };
 
-  // Constraints match
   constraints?: {
     location: { match: boolean; details?: string };
     salary: { match: boolean; details?: string };
@@ -104,19 +98,40 @@ interface MatchExplainerProps {
     };
   };
 
-  // Custom trigger button (optional)
   trigger?: React.ReactNode;
+  defaultOpen?: boolean;
+}
+
+function fitBandLabel(label?: string | null): string {
+  if (
+    label &&
+    !/^top\s*\d+/i.test(label) &&
+    !/^#\d+/i.test(label) &&
+    !/^(highest-priority|high-priority|priority|strong|clear)\s+proof review$/i.test(label) &&
+    !/^(highest-priority|high-priority|priority|strong|clear)$/i.test(label)
+  ) {
+    return label;
+  }
+  return label ? 'Review-ready proof' : 'Proof review needed';
+}
+
+function privacySafeWarning(message?: string | null): string | null {
+  if (!message) return null;
+  return message
+    .replace(/\bfairness\b/gi, 'policy')
+    .replace(/\bpolicy remediation\b/gi, 'policy review')
+    .replace(/\bremediation\b/gi, 'review')
+    .replace(/\branking\b/gi, 'ordering')
+    .replace(/\brank\b/gi, 'order');
 }
 
 export function MatchExplainerModal({
   matchId,
-  compositeScore,
   rank,
-  totalCandidates,
   rankBand,
   rankMode,
   exactRankAvailable,
-  subscores,
+  proofSignals = {},
   skillsMatch,
   constraints,
   reasonSummary = [],
@@ -124,34 +139,17 @@ export function MatchExplainerModal({
   fairnessWarning,
   reviewCard,
   trigger,
+  defaultOpen = false,
 }: MatchExplainerProps) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const explainerContract = buildMatchExplainerContract();
-
-  // Calculate percentages
-  const overallPercent = Math.round(compositeScore * 100);
-  const skillsPercent = Math.round((subscores.skills ?? 0) * 100);
-  const constraintsPercent = Math.round((subscores.constraints ?? 0) * 100);
-  const recencyPercent = Math.round((subscores.recency ?? 0) * 100);
-  const evidencePercent = Math.round((subscores.evidence ?? 0) * 100);
-
-  // Determine rank display
-  const getRankDisplay = () => {
-    if (rankBand) return rankBand;
-    if (rank && totalCandidates) {
-      if (rank <= 5) return 'Top 5';
-      if (rank <= 10) return 'Top 10';
-      if (rank <= 20) return 'Top 20';
-      return `#${rank} of ${totalCandidates}`;
-    }
-    return 'Competitive';
-  };
-
-  const getRankColor = () => {
-    if (!rank) return '#6B6760';
-    if (rank <= 5) return '#1C4D3A'; // Forest green
-    if (rank <= 10) return '#C76B4A'; // Terracotta
-    return '#6B6760'; // Charcoal
+  const fitBand = fitBandLabel(reviewCard?.fitBand ?? rankBand);
+  const warning = privacySafeWarning(fairnessWarning);
+  const evidenceSignals = {
+    skills: proofSignals.skills,
+    constraints: proofSignals.constraints,
+    recency: proofSignals.recency,
+    evidence: proofSignals.evidence,
   };
 
   // Default trigger
@@ -204,7 +202,7 @@ export function MatchExplainerModal({
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
-                {reviewCard.fitBand ? <Badge variant="outline">{reviewCard.fitBand}</Badge> : null}
+                {reviewCard.fitBand ? <Badge variant="outline">{fitBand}</Badge> : null}
                 {reviewCard.strongestProof.anchorContext ? (
                   <Badge variant="outline">{reviewCard.strongestProof.anchorContext}</Badge>
                 ) : null}
@@ -232,7 +230,7 @@ export function MatchExplainerModal({
             {reviewCard.fitSummary.bullets.length > 0 ? (
               <div className="mt-4 rounded-lg bg-white p-4">
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Reason-coded fit summary
+                  Proof alignment summary
                 </p>
                 <ul className="space-y-2 text-sm text-foreground">
                   {reviewCard.fitSummary.bullets.map((item) => (
@@ -245,8 +243,8 @@ export function MatchExplainerModal({
                 {reviewCard.fitSummary.reasonCodes.length > 0 ? (
                   <div className="mt-3 flex flex-wrap gap-2">
                     {reviewCard.fitSummary.reasonCodes.map((reasonCode) => (
-                      <Badge key={reasonCode} variant="secondary" className="font-mono text-[11px]">
-                        {reasonCode}
+                      <Badge key={reasonCode} variant="secondary" className="text-[11px]">
+                        {reasonCodeDisplayLabel(reasonCode)}
                       </Badge>
                     ))}
                   </div>
@@ -256,11 +254,11 @@ export function MatchExplainerModal({
           </div>
         ) : null}
 
-        {fairnessWarning ? (
+        {warning ? (
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
             <div className="flex items-start gap-2">
               <AlertCircle className="mt-0.5 h-4 w-4 text-amber-700" />
-              <p className="text-sm text-amber-900">{fairnessWarning}</p>
+              <p className="text-sm text-amber-900">{warning}</p>
             </div>
           </div>
         ) : null}
@@ -269,8 +267,8 @@ export function MatchExplainerModal({
           <div className="rounded-xl border border-proofound-stone bg-white p-4">
             <h4 className="mb-3 text-sm font-semibold text-foreground">Privacy-safe explanation</h4>
             <p className="mb-3 text-sm text-muted-foreground">
-              Blind-by-default review keeps identity-bearing details hidden until the candidate
-              consents to reveal.
+              Blind-by-default review keeps identity-bearing details hidden until the proof-review
+              participant consents to reveal.
             </p>
             <ul className="space-y-2 text-sm text-foreground">
               {reasonSummary.map((item, index) => (
@@ -295,128 +293,114 @@ export function MatchExplainerModal({
           </div>
         ) : null}
 
-        {/* Overall Score & Rank */}
-        <div className="bg-gradient-to-br from-[#E8F5E1] to-[#F7F6F1] rounded-xl p-6 border border-proofound-stone">
-          <div className="flex items-start justify-between mb-4">
+        <div className="rounded-xl border border-proofound-stone bg-[#F7F6F1] p-5">
+          <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="text-sm text-muted-foreground mb-1">Comparative score detail</p>
-              <p className="text-4xl font-bold text-proofound-forest">{overallPercent}%</p>
+              <p className="mb-1 text-sm text-muted-foreground">Supporting proof signal</p>
+              <p className="text-lg font-semibold text-proofound-charcoal">{fitBand}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Internal matching values stay secondary to proof, outcome, verification, and privacy
+                context.
+              </p>
             </div>
             {(rank || rankBand) && (
-              <div className="text-right">
-                <p className="text-sm text-muted-foreground mb-1">Ranking signal</p>
+              <div className="rounded-lg border border-proofound-stone bg-white px-3 py-2">
+                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Review band
+                </p>
                 <div className="flex items-center gap-2">
-                  <Award className="w-5 h-5" style={{ color: getRankColor() }} />
-                  <p className="text-xl font-semibold" style={{ color: getRankColor() }}>
-                    {getRankDisplay()}
-                  </p>
+                  <ShieldCheck className="h-4 w-4 text-proofound-forest" />
+                  <p className="text-sm font-medium text-proofound-charcoal">{fitBand}</p>
                 </div>
                 {rankMode === 'band' && exactRankAvailable ? (
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Exact rank is hidden while privacy or fairness limits apply.
+                    Exact ordering is hidden while privacy or policy limits apply.
                   </p>
                 ) : null}
               </div>
             )}
           </div>
-
-          <Progress value={overallPercent} className="h-3" />
-
-          <p className="text-xs text-muted-foreground mt-3">
-            This score stays secondary to proof, outcome, and verification context.
-          </p>
         </div>
 
-        {/* Tabbed Breakdown */}
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="skills">Skills</TabsTrigger>
             <TabsTrigger value="constraints">Constraints</TabsTrigger>
           </TabsList>
 
-          {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-4 pt-4">
-            <h4 className="text-sm font-semibold text-foreground mb-3">
-              Score Breakdown by Category
-            </h4>
+            <h4 className="mb-3 text-sm font-semibold text-foreground">Review signals by area</h4>
 
-            {/* Skills */}
-            {subscores.skills !== undefined && (
-              <div>
-                <div className="flex items-center justify-between mb-2">
+            {proofSignals.skills && (
+              <div className="rounded-lg border border-proofound-stone bg-white p-3">
+                <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-proofound-forest" />
-                    <span className="text-sm font-medium text-foreground">Skills Match</span>
+                    <CheckCircle2 className="h-4 w-4 text-proofound-forest" />
+                    <span className="text-sm font-medium text-foreground">Skills evidence</span>
                   </div>
-                  <span className="text-sm font-semibold text-proofound-forest">
-                    {skillsPercent}%
+                  <span className="rounded-full bg-proofound-parchment px-2 py-0.5 text-xs text-muted-foreground">
+                    {evidenceSignals.skills}
                   </span>
                 </div>
-                <Progress value={skillsPercent} className="h-2" />
               </div>
             )}
 
-            {/* Constraints */}
-            {subscores.constraints !== undefined && (
-              <div>
-                <div className="flex items-center justify-between mb-2">
+            {proofSignals.constraints && (
+              <div className="rounded-lg border border-proofound-stone bg-white p-3">
+                <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-proofound-forest" />
+                    <CheckCircle2 className="h-4 w-4 text-proofound-forest" />
                     <span className="text-sm font-medium text-foreground">
-                      Practical Constraints
+                      Practical constraints
                     </span>
                   </div>
-                  <span className="text-sm font-semibold text-proofound-forest">
-                    {constraintsPercent}%
+                  <span className="rounded-full bg-proofound-parchment px-2 py-0.5 text-xs text-muted-foreground">
+                    {evidenceSignals.constraints}
                   </span>
                 </div>
-                <Progress value={constraintsPercent} className="h-2" />
               </div>
             )}
 
-            {/* Recency */}
-            {subscores.recency !== undefined && (
-              <div>
-                <div className="flex items-center justify-between mb-2">
+            {proofSignals.recency && (
+              <div className="rounded-lg border border-proofound-stone bg-white p-3">
+                <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm font-medium text-foreground">Skill Recency</span>
+                    <AlertCircle className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium text-foreground">Proof freshness</span>
                   </div>
-                  <span className="text-sm font-semibold text-muted-foreground">
-                    {recencyPercent}%
+                  <span className="rounded-full bg-proofound-parchment px-2 py-0.5 text-xs text-muted-foreground">
+                    {evidenceSignals.recency}
                   </span>
                 </div>
-                <Progress value={recencyPercent} className="h-2" />
               </div>
             )}
 
-            {/* Evidence */}
-            {subscores.evidence !== undefined && (
-              <div>
-                <div className="flex items-center justify-between mb-2">
+            {proofSignals.evidence && (
+              <div className="rounded-lg border border-proofound-stone bg-white p-3">
+                <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
-                    <Award className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm font-medium text-foreground">Evidence Strength</span>
+                    <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium text-foreground">
+                      Verification support
+                    </span>
                   </div>
-                  <span className="text-sm font-semibold text-muted-foreground">
-                    {evidencePercent}%
+                  <span className="rounded-full bg-proofound-parchment px-2 py-0.5 text-xs text-muted-foreground">
+                    {evidenceSignals.evidence}
                   </span>
                 </div>
-                <Progress value={evidencePercent} className="h-2" />
               </div>
             )}
 
             <div className="bg-japandi-bg rounded-lg p-4 border border-proofound-stone mt-4">
               <p className="text-xs leading-relaxed text-foreground">
-                <strong className="font-semibold">How it works:</strong> This comparative score
-                summarizes proof strength, fit rationale, and practical constraints after the
+                <strong className="font-semibold">How it works:</strong> This proof signal
+                summarizes proof strength, review rationale, and practical constraints after the
                 privacy-safe review context above.
               </p>
             </div>
           </TabsContent>
 
-          {/* Skills Tab */}
           <TabsContent value="skills" className="space-y-4 pt-4">
             {skillsMatch ? (
               <>
@@ -480,7 +464,6 @@ export function MatchExplainerModal({
             )}
           </TabsContent>
 
-          {/* Constraints Tab */}
           <TabsContent value="constraints" className="space-y-3 pt-4">
             {constraints ? (
               <>
@@ -515,7 +498,7 @@ export function MatchExplainerModal({
       {/* Footer */}
       <div className="flex justify-between items-center py-4 border-t border-proofound-stone px-4 md:px-0 mt-4">
         <p className="text-xs text-muted-foreground">
-          Match calculated on {new Date().toLocaleDateString()}
+          Explanation refreshed on {new Date().toLocaleDateString()}
         </p>
         <Button onClick={() => setOpen(false)} className="bg-proofound-forest text-white">
           Got it

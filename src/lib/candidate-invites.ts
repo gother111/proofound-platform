@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { resolvePublicSnippetBaseUrl } from '@/lib/profile/snippet-generator';
+import { resolvePublicSiteBaseUrl } from '@/lib/profile/snippet-generator';
 export {
   CANDIDATE_INVITE_EXPIRY_DAYS,
   CANDIDATE_INVITE_FLOW_TYPE,
@@ -42,6 +42,6 @@ export function isInviteExpired(expiresAt: Date | string): boolean {
 }
 
 export function buildCandidateInviteUrl(token: string): string {
-  const baseUrl = resolvePublicSnippetBaseUrl();
+  const baseUrl = resolvePublicSiteBaseUrl();
   return `${baseUrl}/candidate-invite/${encodeURIComponent(token)}`;
 }

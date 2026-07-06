@@ -1,8 +1,9 @@
 import React from 'react';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import AssignmentBuilderPage from '@/app/app/o/[slug]/assignments/new/page';
+import AssignmentBuilderClient from '@/app/app/o/[slug]/assignments/new/AssignmentBuilderClient';
 import { __resetCsrfCacheForTests } from '@/lib/api/fetch';
 
 let mockDraftId: string | null = null;
@@ -10,6 +11,8 @@ let mockDraftId: string | null = null;
 const pushMock = vi.fn();
 const toastSuccessMock = vi.fn();
 const toastErrorMock = vi.fn();
+const dispatchClientDiagnosticMock = vi.fn();
+const dispatchClientErrorDiagnosticMock = vi.fn();
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
@@ -26,6 +29,11 @@ vi.mock('sonner', () => ({
     success: (...args: any[]) => toastSuccessMock(...args),
     error: (...args: any[]) => toastErrorMock(...args),
   },
+}));
+
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientDiagnostic: (...args: unknown[]) => dispatchClientDiagnosticMock(...args),
+  dispatchClientErrorDiagnostic: (...args: unknown[]) => dispatchClientErrorDiagnosticMock(...args),
 }));
 
 vi.mock('@/components/matching/assignment-steps', () => ({
@@ -72,11 +80,32 @@ vi.mock('@/components/matching/assignment-steps', () => ({
   ),
 }));
 
+async function renderAssignmentBuilderPage() {
+  return AssignmentBuilderPage({
+    params: Promise.resolve({ slug: 'acme' }),
+  });
+}
+
 type FetchFixture = {
   draftAssignment?: Record<string, unknown> | null;
+  failDraftLoadOnce?: boolean;
+  failDraftSaveOnce?: boolean;
+  failReviewSaveOnce?: boolean;
+  failOutcomesSaveOnce?: boolean;
 };
 
-function setupFetch({ draftAssignment = null }: FetchFixture = {}) {
+function setupFetch({
+  draftAssignment = null,
+  failDraftLoadOnce = false,
+  failDraftSaveOnce = false,
+  failReviewSaveOnce = false,
+  failOutcomesSaveOnce = false,
+}: FetchFixture = {}) {
+  let draftLoadAttempts = 0;
+  let draftSaveAttempts = 0;
+  let reviewSaveAttempts = 0;
+  let outcomesSaveAttempts = 0;
+
   const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input);
     const requestUrl = new URL(url, 'http://localhost');
@@ -95,6 +124,15 @@ function setupFetch({ draftAssignment = null }: FetchFixture = {}) {
       requestPath === `/api/assignments/${mockDraftId}` &&
       (!init || init.method === undefined)
     ) {
+      draftLoadAttempts += 1;
+
+      if (failDraftLoadOnce && draftLoadAttempts === 1) {
+        return {
+          ok: false,
+          json: async () => ({ error: 'Draft temporarily unavailable' }),
+        };
+      }
+
       return {
         ok: true,
         json: async () => ({ assignment: draftAssignment }),
@@ -107,6 +145,28 @@ function setupFetch({ draftAssignment = null }: FetchFixture = {}) {
     ) {
       const requestBody =
         typeof init?.body === 'string' ? JSON.parse(init.body) : (init?.body ?? {});
+      const isReviewSave = requestBody.creationStatus === 'review_ready';
+
+      if (isReviewSave) {
+        reviewSaveAttempts += 1;
+        if (failReviewSaveOnce && reviewSaveAttempts === 1) {
+          return {
+            ok: false,
+            status: 503,
+            json: async () => ({ message: 'Review save temporarily unavailable' }),
+          };
+        }
+      } else {
+        draftSaveAttempts += 1;
+        if (failDraftSaveOnce && draftSaveAttempts === 1) {
+          return {
+            ok: false,
+            status: 503,
+            json: async () => ({ message: 'Draft save temporarily unavailable' }),
+          };
+        }
+      }
+
       return {
         ok: true,
         json: async () => ({
@@ -124,6 +184,17 @@ function setupFetch({ draftAssignment = null }: FetchFixture = {}) {
       (mockDraftId && requestPath === `/api/assignments/${mockDraftId}/outcomes`) ||
       requestPath === '/api/assignments/draft-1/outcomes'
     ) {
+      if (init?.method === 'POST') {
+        outcomesSaveAttempts += 1;
+        if (failOutcomesSaveOnce && outcomesSaveAttempts === 1) {
+          return {
+            ok: false,
+            status: 503,
+            json: async () => ({ message: 'Outcome save temporarily unavailable' }),
+          };
+        }
+      }
+
       return {
         ok: true,
         json: async () => ({ outcomes: [] }),
@@ -166,18 +237,35 @@ describe('Assignment builder lean flow', () => {
   it('renders the lean five-step flow and hides advanced controls', async () => {
     setupFetch();
 
-    render(<AssignmentBuilderPage />);
+    render(await renderAssignmentBuilderPage());
 
     expect(await screen.findByText(/lean assignment flow/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /create from scratch/i })).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /import existing job description/i })
+      screen.getByRole('button', { name: /import existing assignment brief/i })
     ).toBeInTheDocument();
-    expect(screen.getByText('Why this role exists')).toBeInTheDocument();
-    expect(screen.getByText('What work will actually be done')).toBeInTheDocument();
-    expect(screen.getByText('What proof would count')).toBeInTheDocument();
-    expect(screen.getByText('What practical constraints are real')).toBeInTheDocument();
-    expect(screen.getByText('Internal review and publish')).toBeInTheDocument();
+    const demoPath = screen.getByTestId('assignment-demo-path');
+    expect(demoPath).toHaveAttribute(
+      'aria-label',
+      'Assignment path: define value, map proof, review before publish'
+    );
+    expect(demoPath).toHaveTextContent(/value.*proof.*review/i);
+    expect(screen.getByText(/what this assignment path proves/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /The company turns a vague role into measurable outcomes and proof-based requirements/i
+      )
+    ).toBeInTheDocument();
+    expect(screen.getAllByText('Why this role exists').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('What work will actually be done').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('What proof would count').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('What practical constraints are real').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Internal review and publish').length).toBeGreaterThan(0);
+    const mobileProgress = screen.getByTestId('assignment-mobile-progress');
+    expect(within(mobileProgress).getByText('Step 1 of 5')).toBeInTheDocument();
+    expect(within(mobileProgress).getByText('20% drafted')).toBeInTheDocument();
+    expect(within(mobileProgress).queryByText('Step 1 of 4')).not.toBeInTheDocument();
+    expect(within(mobileProgress).queryByText('25% drafted')).not.toBeInTheDocument();
     expect(screen.queryByTestId('advanced-mode-opt-in')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Advanced' })).not.toBeInTheDocument();
     expect(screen.queryByText('Weight Matrix')).not.toBeInTheDocument();
@@ -216,12 +304,12 @@ Compensation: USD 80000 - 110000
 Full-time
 `;
 
-    render(<AssignmentBuilderPage />);
+    render(await renderAssignmentBuilderPage());
 
     fireEvent.click(
-      await screen.findByRole('button', { name: /import existing job description/i })
+      await screen.findByRole('button', { name: /import existing assignment brief/i })
     );
-    fireEvent.change(screen.getByLabelText(/existing job description/i), {
+    fireEvent.change(screen.getByLabelText(/existing assignment brief/i), {
       target: { value: pastedJobDescription },
     });
     fireEvent.click(screen.getByRole('button', { name: /convert to structured draft/i }));
@@ -261,26 +349,37 @@ Full-time
   it('shows useful guidance instead of importing very short pasted text', async () => {
     setupFetch();
 
-    render(<AssignmentBuilderPage />);
+    render(await renderAssignmentBuilderPage());
 
     fireEvent.click(
-      await screen.findByRole('button', { name: /import existing job description/i })
+      await screen.findByRole('button', { name: /import existing assignment brief/i })
     );
-    fireEvent.change(screen.getByLabelText(/existing job description/i), {
+    const importTextarea = screen.getByLabelText(/existing assignment brief/i);
+    fireEvent.change(importTextarea, {
       target: { value: 'Need a strong operator.' },
     });
     fireEvent.click(screen.getByRole('button', { name: /convert to structured draft/i }));
 
-    expect(
-      await screen.findByText(/too short to turn into a useful assignment draft/i)
-    ).toBeInTheDocument();
-    expect(screen.getByText(/Paste the full job description/i)).toBeInTheDocument();
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Import needs a fuller brief');
+    expect(alert).toHaveTextContent(/too short to turn into a useful assignment draft/i);
+    expect(screen.getByText(/Paste the full assignment brief/i)).toBeInTheDocument();
+    expect(screen.getByText(/Best conversion input includes/i)).toBeInTheDocument();
+    expect(screen.getByText(/Role title and why this assignment matters/i)).toBeInTheDocument();
+    expect(screen.getByText('Proof expectations', { selector: 'li' })).toBeInTheDocument();
+    expect(screen.queryByText(/Paste the full job description/i)).not.toBeInTheDocument();
+
+    fireEvent.change(importTextarea, {
+      target: { value: 'Title: Partner launch lead\nOutcomes: Launch three partners.' },
+    });
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   it('advances through the lean flow and ends in internal review routing', async () => {
     setupFetch();
 
-    render(<AssignmentBuilderPage />);
+    render(await renderAssignmentBuilderPage());
 
     fireEvent.click(await screen.findByRole('button', { name: 'next-step-1' }));
     expect(await screen.findByText('Step 2 content')).toBeInTheDocument();
@@ -297,6 +396,145 @@ Full-time
       expect(pushMock).toHaveBeenCalledWith('/app/o/acme/assignments/draft-1/review');
     });
     expect(toastSuccessMock).toHaveBeenCalledWith('Assignment saved for internal review');
+  });
+
+  it('blocks editing and lets the user retry when an existing draft fails to load', async () => {
+    mockDraftId = 'draft-1';
+    setupFetch({
+      failDraftLoadOnce: true,
+      draftAssignment: {
+        id: 'draft-1',
+        orgId: 'org-1',
+        role: 'Founding operator',
+        businessValue: 'Tighten proof quality',
+        description: 'Run the day-to-day assignment and review loop.',
+        expectedImpact: '',
+        outcomes: [],
+        requiredSkills: [],
+      },
+    });
+
+    render(await renderAssignmentBuilderPage());
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Draft did not load');
+    expect(alert).toHaveTextContent('Retry loading before editing');
+    expect(screen.queryByText('Step 1 content')).not.toBeInTheDocument();
+
+    fireEvent.click(within(alert).getByRole('button', { name: 'Retry draft load' }));
+
+    expect(await screen.findByText('Step 2 content')).toBeInTheDocument();
+  });
+
+  it('keeps draft save failures safe, visible, and retryable without losing the current step', async () => {
+    setupFetch({ failDraftSaveOnce: true });
+
+    render(await renderAssignmentBuilderPage());
+
+    fireEvent.click(await screen.findByRole('button', { name: 'next-step-1' }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Draft was not saved');
+    expect(alert).toHaveTextContent(
+      'Your changes are still on this page. Retry the draft save before moving on.'
+    );
+    expect(alert).not.toHaveTextContent('Draft save temporarily unavailable');
+    expect(screen.getByText('Step 1 content')).toBeInTheDocument();
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
+      'assignment_builder.client.draft_save_failed',
+      {
+        status: 503,
+        hasReturnedError: true,
+      }
+    );
+    expect(JSON.stringify(dispatchClientDiagnosticMock.mock.calls)).not.toContain(
+      'Draft save temporarily unavailable'
+    );
+    expect(JSON.stringify(dispatchClientErrorDiagnosticMock.mock.calls)).not.toContain(
+      'Draft save temporarily unavailable'
+    );
+
+    fireEvent.click(within(alert).getByRole('button', { name: 'Retry draft save' }));
+
+    expect(await screen.findByText('Step 2 content')).toBeInTheDocument();
+  });
+
+  it('blocks step advancement when related outcome saves fail after the draft is persisted', async () => {
+    setupFetch({ failOutcomesSaveOnce: true });
+
+    render(await renderAssignmentBuilderPage());
+
+    fireEvent.click(await screen.findByRole('button', { name: 'next-step-1' }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Draft was not saved');
+    expect(alert).toHaveTextContent(
+      'Your changes are still on this page. Retry the draft save before moving on.'
+    );
+    expect(alert).not.toHaveTextContent('Outcome save temporarily unavailable');
+    expect(screen.getByText('Step 1 content')).toBeInTheDocument();
+    expect(screen.queryByText('Step 2 content')).not.toBeInTheDocument();
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
+      'assignment_builder.client.draft_save_failed',
+      {
+        status: 503,
+        hasReturnedError: true,
+      }
+    );
+    expect(JSON.stringify(dispatchClientDiagnosticMock.mock.calls)).not.toContain(
+      'Outcome save temporarily unavailable'
+    );
+    expect(JSON.stringify(dispatchClientErrorDiagnosticMock.mock.calls)).not.toContain(
+      'Outcome save temporarily unavailable'
+    );
+
+    fireEvent.click(within(alert).getByRole('button', { name: 'Retry draft save' }));
+
+    expect(await screen.findByText('Step 2 content')).toBeInTheDocument();
+  });
+
+  it('keeps review-save failures safe, visible, and retryable before routing to review', async () => {
+    setupFetch({ failReviewSaveOnce: true });
+
+    render(await renderAssignmentBuilderPage());
+
+    fireEvent.click(await screen.findByRole('button', { name: 'next-step-1' }));
+    expect(await screen.findByText('Step 2 content')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'next-step-2' }));
+    expect(await screen.findByText('Step 3 content')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'next-step-3' }));
+    expect(await screen.findByText('Step 4 content')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'continue-to-review' }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Assignment was not saved for review');
+    expect(alert).toHaveTextContent(
+      'Your draft is still on this page. Retry before leaving for internal review.'
+    );
+    expect(alert).not.toHaveTextContent('Review save temporarily unavailable');
+    expect(pushMock).not.toHaveBeenCalled();
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
+      'assignment_builder.client.review_save_failed',
+      {
+        status: 503,
+        hasReturnedError: true,
+      }
+    );
+    expect(JSON.stringify(dispatchClientDiagnosticMock.mock.calls)).not.toContain(
+      'Review save temporarily unavailable'
+    );
+    expect(JSON.stringify(dispatchClientErrorDiagnosticMock.mock.calls)).not.toContain(
+      'Review save temporarily unavailable'
+    );
+
+    fireEvent.click(within(alert).getByRole('button', { name: 'Retry review save' }));
+
+    await waitFor(() => {
+      expect(pushMock).toHaveBeenCalledWith('/app/o/acme/assignments/draft-1/review');
+    });
   });
 
   it('ignores duplicate next clicks while a draft save is already in flight', async () => {
@@ -321,7 +559,7 @@ Full-time
     });
     vi.stubGlobal('fetch', fetchMock);
 
-    render(<AssignmentBuilderPage />);
+    render(await renderAssignmentBuilderPage());
 
     const nextButton = await screen.findByRole('button', { name: 'next-step-1' });
     fireEvent.click(nextButton);
@@ -361,7 +599,7 @@ Full-time
       },
     });
 
-    render(<AssignmentBuilderPage />);
+    render(await renderAssignmentBuilderPage());
 
     expect(await screen.findByText(/lean assignment flow/i)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Advanced' })).not.toBeInTheDocument();
@@ -383,7 +621,7 @@ Full-time
       },
     });
 
-    render(<AssignmentBuilderPage />);
+    render(await renderAssignmentBuilderPage());
 
     expect(await screen.findByText('Step 3 content')).toBeInTheDocument();
   });
@@ -405,7 +643,7 @@ Full-time
       },
     });
 
-    render(<AssignmentBuilderPage />);
+    render(await renderAssignmentBuilderPage());
 
     expect(await screen.findByText('Step 2 content')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'next-step-2' }));
@@ -441,7 +679,7 @@ Full-time
       },
     });
 
-    render(<AssignmentBuilderPage />);
+    render(await renderAssignmentBuilderPage());
 
     expect(await screen.findByText('Step 3 content')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'next-step-3' }));
@@ -475,7 +713,7 @@ Full-time
       },
     });
 
-    render(<AssignmentBuilderPage />);
+    render(await renderAssignmentBuilderPage());
 
     expect(await screen.findByText('Step 3 content')).toBeInTheDocument();
   });
@@ -495,11 +733,11 @@ Full-time
       },
     });
 
-    const { rerender } = render(<AssignmentBuilderPage />);
+    const { rerender } = render(await renderAssignmentBuilderPage());
     expect(await screen.findByText('Step 3 content')).toBeInTheDocument();
 
     mockDraftId = null;
-    rerender(<AssignmentBuilderPage />);
+    rerender(await renderAssignmentBuilderPage());
 
     expect(await screen.findByText('Step 1 content')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'next-step-1' }));
@@ -541,7 +779,7 @@ Full-time
     });
     vi.stubGlobal('fetch', fetchMock);
 
-    render(<AssignmentBuilderPage />);
+    render(await renderAssignmentBuilderPage());
 
     await act(async () => {
       await Promise.resolve();
@@ -555,5 +793,65 @@ Full-time
     expect(
       fetchMock.mock.calls.some(([, init]) => init && (init as RequestInit).method === 'PUT')
     ).toBe(false);
+  });
+
+  it('surfaces auto-save failures without blocking the current draft', async () => {
+    vi.useFakeTimers();
+    mockDraftId = 'draft-1';
+
+    setupFetch({
+      failDraftSaveOnce: true,
+      draftAssignment: {
+        id: 'draft-1',
+        orgId: 'org-1',
+        role: 'Founding operator',
+        businessValue: 'Tighten proof quality',
+        description: 'Run the day-to-day assignment and review loop.',
+        expectedImpact: '',
+        outcomes: [],
+        requiredSkills: [],
+      },
+    });
+
+    render(<AssignmentBuilderClient slug="acme" />);
+
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(screen.getByText('Step 2 content')).toBeInTheDocument();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(30000);
+    });
+
+    expect(screen.getByRole('status')).toHaveTextContent('Auto-save did not finish');
+    expect(screen.getByRole('status')).toHaveTextContent('use Next to save before leaving');
+    expect(screen.getByText('Step 2 content')).toBeInTheDocument();
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
+      'assignment_builder.client.auto_save_failed',
+      {
+        status: 503,
+        hasReturnedError: true,
+      }
+    );
+    expect(JSON.stringify(dispatchClientDiagnosticMock.mock.calls)).not.toContain(
+      'Draft save temporarily unavailable'
+    );
+    expect(JSON.stringify(dispatchClientErrorDiagnosticMock.mock.calls)).not.toContain(
+      'Draft save temporarily unavailable'
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'next-step-2' }));
+
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(screen.getByText('Step 3 content')).toBeInTheDocument();
+    expect(screen.queryByText(/Auto-save did not finish/i)).not.toBeInTheDocument();
   });
 });

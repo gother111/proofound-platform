@@ -360,4 +360,31 @@ describe('launch smoke artifact', () => {
       })
     );
   });
+
+  it('blocks production-candidate evaluation when target binding is required but missing', () => {
+    const artifact = validateLaunchSmokeArtifact({
+      schemaVersion: 2,
+      generatedAt: '2026-03-16T10:00:00.000Z',
+      freshnessThresholdMinutes: 60,
+      expiresAt: '2026-03-16T11:00:00.000Z',
+      overallStatus: 'pass',
+      corridors: [],
+      checks: [],
+    });
+
+    expect(
+      evaluateLaunchSmokeArtifact(artifact, {
+        baseUrl: 'https://preview.proofound.example',
+        requireTargetBaseUrl: true,
+      })
+    ).toEqual(
+      expect.objectContaining({
+        state: 'missing_target',
+        passes: false,
+        blocking: true,
+        targetBaseUrl: null,
+        requestedBaseUrl: 'https://preview.proofound.example',
+      })
+    );
+  });
 });

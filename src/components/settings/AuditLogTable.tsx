@@ -3,8 +3,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Download } from 'lucide-react';
+import { AlertTriangle, Loader2, Download, RefreshCcw } from 'lucide-react';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 interface AuditLogTableProps {
   userId: string;
@@ -27,11 +28,23 @@ interface AuditLogResponse {
   hasMore: boolean;
 }
 
+const ACCOUNT_HISTORY_LOAD_RETRY_COPY =
+  'Account history could not load. Your privacy records are still safe; retry this section to refresh recent activity.';
+const ACCOUNT_HISTORY_DOWNLOAD_RETRY_COPY =
+  'Account history download could not start. Your activity list is still visible; retry the download when ready.';
+
+type DownloadFeedback = {
+  kind: 'success' | 'error';
+  title: string;
+  message: string;
+};
+
 export function AuditLogTable({ userId }: AuditLogTableProps) {
   const [data, setData] = useState<AuditLogResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [downloadFeedback, setDownloadFeedback] = useState<DownloadFeedback | null>(null);
   const [offset, setOffset] = useState(0);
   const limit = 50;
 
@@ -42,10 +55,12 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
       } else {
         setLoading(true);
       }
+      setError(null);
+      setDownloadFeedback(null);
 
       const response = await apiFetch(`/api/user/audit-log?limit=${limit}&offset=${newOffset}`);
       if (!response.ok) {
-        throw new Error('Failed to fetch account history');
+        throw new Error('settings_account_history_request_failed');
       }
 
       const auditData: AuditLogResponse = await response.json();
@@ -64,7 +79,8 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
 
       setOffset(newOffset);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load account history');
+      dispatchClientErrorDiagnostic('settings.account_history.load_failed', err);
+      setError(ACCOUNT_HISTORY_LOAD_RETRY_COPY);
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -83,30 +99,47 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
   const handleExportCSV = () => {
     if (!data) return;
 
-    // Convert to CSV
-    const headers = ['Date and time', 'Action', 'Access detail', 'Device'];
-    const rows = data.events.map((event) => [
-      new Date(event.timestamp).toLocaleString(),
-      event.action,
-      event.ipHash ? 'Protected' : 'Not recorded',
-      event.device,
-    ]);
+    try {
+      setDownloadFeedback(null);
 
-    const csvContent = [
-      headers.join(','),
-      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
-    ].join('\n');
+      // Convert to CSV
+      const headers = ['Date and time', 'Action', 'Access detail', 'Device'];
+      const rows = data.events.map((event) => [
+        new Date(event.timestamp).toLocaleString(),
+        event.action,
+        event.ipHash ? 'Protected' : 'Not recorded',
+        event.device,
+      ]);
 
-    // Download
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `proofound-audit-log-${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
+      const csvContent = [
+        headers.join(','),
+        ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
+      ].join('\n');
+
+      // Download
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `proofound-audit-log-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      setDownloadFeedback({
+        kind: 'success',
+        title: 'Account history download started',
+        message: 'Keep this file private because it can include account activity records.',
+      });
+    } catch (err) {
+      dispatchClientErrorDiagnostic('settings.account_history.export_failed', err);
+      setDownloadFeedback({
+        kind: 'error',
+        title: 'Account history download could not start',
+        message: ACCOUNT_HISTORY_DOWNLOAD_RETRY_COPY,
+      });
+    }
   };
 
   const formatTimestamp = (timestamp: string) => {
@@ -120,6 +153,25 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
       hour12: true,
     });
   };
+
+  const renderEventDetails = (event: AuditLogEvent) => (
+    <dl className="grid gap-2 text-xs text-proofound-charcoal/65 dark:text-muted-foreground sm:grid-cols-2">
+      <div>
+        <dt className="font-medium text-proofound-charcoal/80 dark:text-foreground">When</dt>
+        <dd>{formatTimestamp(event.timestamp)}</dd>
+      </div>
+      <div>
+        <dt className="font-medium text-proofound-charcoal/80 dark:text-foreground">
+          Access detail
+        </dt>
+        <dd>{event.ipHash ? 'Protected' : 'Not recorded'}</dd>
+      </div>
+      <div className="sm:col-span-2">
+        <dt className="font-medium text-proofound-charcoal/80 dark:text-foreground">Device</dt>
+        <dd className="break-words">{event.device || 'Unknown device'}</dd>
+      </div>
+    </dl>
+  );
 
   if (loading) {
     return (
@@ -136,14 +188,35 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
     );
   }
 
-  if (error || !data) {
+  const renderLoadError = () => (
+    <div
+      className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-100"
+      role="alert"
+    >
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex gap-2">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <p>{error || ACCOUNT_HISTORY_LOAD_RETRY_COPY}</p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="touch"
+          onClick={() => fetchAuditLog(0)}
+          disabled={loading}
+          className="w-full gap-2 bg-white/70 sm:w-auto"
+        >
+          <RefreshCcw className="h-4 w-4" aria-hidden="true" />
+          Retry account history
+        </Button>
+      </div>
+    </div>
+  );
+
+  if (!data) {
     return (
-      <Card variant="bento" className="border-red-200 dark:border-red-900 rounded-2xl">
-        <CardContent className="pt-6">
-          <p className="text-red-600 dark:text-red-400">
-            {error || 'Failed to load account history. Please try again.'}
-          </p>
-        </CardContent>
+      <Card variant="bento" className="border-amber-200 dark:border-amber-900 rounded-2xl">
+        <CardContent className="pt-6">{renderLoadError()}</CardContent>
       </Card>
     );
   }
@@ -152,8 +225,8 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
     <div className="space-y-4">
       <Card variant="bento" className="border-proofound-stone dark:border-border rounded-2xl">
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
               <CardTitle className="text-2xl font-['Crimson_Pro']">Account history</CardTitle>
               <CardDescription>
                 Last {data.events.length} of {data.total} recent activities
@@ -161,9 +234,10 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
             </div>
             <Button
               variant="outline"
-              size="sm"
+              size="touch"
               onClick={handleExportCSV}
               disabled={data.events.length === 0}
+              className="w-full justify-center sm:w-auto"
             >
               <Download className="h-4 w-4 mr-2" />
               Download activity
@@ -171,6 +245,46 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
           </div>
         </CardHeader>
         <CardContent>
+          {error ? <div className="mb-4">{renderLoadError()}</div> : null}
+
+          {downloadFeedback ? (
+            <div
+              role={downloadFeedback.kind === 'error' ? 'alert' : 'status'}
+              aria-live={downloadFeedback.kind === 'error' ? 'assertive' : 'polite'}
+              className={
+                downloadFeedback.kind === 'error'
+                  ? 'mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-100'
+                  : 'mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/20 dark:text-emerald-100'
+              }
+            >
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex gap-2">
+                  {downloadFeedback.kind === 'error' ? (
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                  ) : (
+                    <Download className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                  )}
+                  <div className="space-y-1">
+                    <p className="font-medium">{downloadFeedback.title}</p>
+                    <p>{downloadFeedback.message}</p>
+                  </div>
+                </div>
+                {downloadFeedback.kind === 'error' ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="touch"
+                    onClick={handleExportCSV}
+                    className="w-full gap-2 bg-white/70 sm:w-auto"
+                  >
+                    <Download className="h-4 w-4" aria-hidden="true" />
+                    Retry download
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+
           {data.events.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-proofound-charcoal/60 dark:text-muted-foreground">
@@ -178,42 +292,71 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
               </p>
             </div>
           ) : (
-            <div className="space-y-2">
-              {/* Table Header */}
-              <div className="grid grid-cols-12 gap-4 px-4 py-2 bg-proofound-parchment dark:bg-muted rounded-lg text-sm font-medium text-proofound-charcoal/70 dark:text-muted-foreground">
-                <div className="col-span-3">Date and time</div>
-                <div className="col-span-4">Action</div>
-                <div className="col-span-3">Access detail</div>
-                <div className="col-span-2">Device</div>
+            <>
+              <div className="space-y-3 md:hidden">
+                {data.events.map((event) => (
+                  <article
+                    key={event.id}
+                    className="rounded-xl border border-proofound-stone bg-white p-4 dark:border-border dark:bg-card"
+                  >
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-sm font-semibold text-proofound-charcoal dark:text-foreground">
+                          {event.action}
+                        </p>
+                        <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground">
+                          Account activity
+                        </p>
+                      </div>
+                      {renderEventDetails(event)}
+                    </div>
+                  </article>
+                ))}
               </div>
 
-              {/* Table Rows */}
-              {data.events.map((event) => (
-                <div
-                  key={event.id}
-                  className="grid grid-cols-12 gap-4 px-4 py-3 border border-proofound-stone dark:border-border rounded-lg hover:bg-muted/50 transition-colors"
-                >
-                  <div className="col-span-3 text-sm text-proofound-charcoal dark:text-foreground">
-                    {formatTimestamp(event.timestamp)}
-                  </div>
-                  <div className="col-span-4 text-sm font-medium text-proofound-charcoal dark:text-foreground">
-                    {event.action}
-                  </div>
-                  <div className="col-span-3 text-xs text-proofound-charcoal/60 dark:text-muted-foreground">
-                    {event.ipHash ? 'Protected' : 'Not recorded'}
-                  </div>
-                  <div className="col-span-2 text-xs text-proofound-charcoal/60 dark:text-muted-foreground truncate">
-                    {event.device}
-                  </div>
+              <div className="hidden space-y-2 md:block">
+                {/* Table Header */}
+                <div className="grid grid-cols-12 gap-4 px-4 py-2 bg-proofound-parchment dark:bg-muted rounded-lg text-sm font-medium text-proofound-charcoal/70 dark:text-muted-foreground">
+                  <div className="col-span-3">Date and time</div>
+                  <div className="col-span-4">Action</div>
+                  <div className="col-span-3">Access detail</div>
+                  <div className="col-span-2">Device</div>
                 </div>
-              ))}
-            </div>
+
+                {/* Table Rows */}
+                {data.events.map((event) => (
+                  <div
+                    key={event.id}
+                    className="grid grid-cols-12 gap-4 px-4 py-3 border border-proofound-stone dark:border-border rounded-lg hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="col-span-3 text-sm text-proofound-charcoal dark:text-foreground">
+                      {formatTimestamp(event.timestamp)}
+                    </div>
+                    <div className="col-span-4 text-sm font-medium text-proofound-charcoal dark:text-foreground">
+                      {event.action}
+                    </div>
+                    <div className="col-span-3 text-xs text-proofound-charcoal/60 dark:text-muted-foreground">
+                      {event.ipHash ? 'Protected' : 'Not recorded'}
+                    </div>
+                    <div className="col-span-2 text-xs text-proofound-charcoal/60 dark:text-muted-foreground truncate">
+                      {event.device}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
 
           {/* Load More Button */}
           {data.hasMore && (
             <div className="mt-6 text-center">
-              <Button variant="outline" onClick={handleLoadMore} disabled={loadingMore}>
+              <Button
+                variant="outline"
+                size="touch"
+                onClick={handleLoadMore}
+                disabled={loadingMore}
+                className="w-full sm:w-auto"
+              >
                 {loadingMore ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />

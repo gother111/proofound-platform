@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "findingId": "fnd_sig-feat-route-09eea7fcfb-d87057_baa4fad72a",
+  "featureId": "feat_route_09eea7fcfb",
+  "title": "Failed exports leave lifecycle operations stuck in processing",
+  "category": "bug",
+  "severity": "medium",
+  "confidence": "high",
+  "triage": "confirmed-bug",
+  "evidence": [
+    {
+      "path": "app/api/user/export/route.ts",
+      "startLine": 134,
+      "endLine": 156,
+      "symbol": "GET",
+      "quote": "const operation = await createLifecycleOperation({\n      operationType: 'export',"
+    },
+    {
+      "path": "app/api/user/export/route.ts",
+      "startLine": 498,
+      "endLine": 515,
+      "symbol": "GET",
+      "quote": "if (exportRecord) {\n      await updateDataPortabilityExportState({\n        exportId: exportRecord.id,\n        toState: 'failed',"
+    }
+  ],
+  "reasoning": "The route creates a lifecycle operation before packaging the export, but the catch path only marks the data-portability export record failed when exportRecord exists. It never finalizes or fails the lifecycle operation, and operation is scoped inside the try block so the catch cannot repair it. Any failure after createLifecycleOperation, including createDataPortabilityExport failing before exportRecord is assigned or any later query/serialization failure, leaves the lifecycle operation and targets in their initial processing state. That corrupts audit/lifecycle state for a privacy export and can make later reconciliation think the export is still in progress.",
+  "reproduction": "Cause any downstream export step to throw after createLifecycleOperation succeeds, for example make createDataPortabilityExport or a later db.select fail. The API returns 500, but the lifecycle operation created at the start remains processing because the catch handler cannot finalize it.",
+  "recommendation": "Hoist the lifecycle operation id outside the try block and, in the catch handler, finalize the operation as failed and mark unresolved targets failed or blocked according to the lifecycle helper contract. Keep the existing exportRecord failure update as the data-portability state transition.",
+  "whyTestsDoNotAlreadyCoverThis": "No linked tests were provided for this route, and the file contains no in-route failure-path assertion or cleanup guard for the lifecycle operation.",
+  "suggestedRegressionTest": "Add a route-level test that mocks createLifecycleOperation to succeed and a later export step to throw, then asserts finalizeLifecycleOperation is called with a failed status and the response is 500.",
+  "minimumFixScope": "app/api/user/export/route.ts failure handling around createLifecycleOperation/exportRecord cleanup",
+  "status": "fixed",
+  "history": [
+    {
+      "runId": "20260516T163944-3cf2f7",
+      "kind": "revalidate",
+      "status": "fixed",
+      "note": null,
+      "reasoning": "The original evidence path still exists at app/api/user/export/route.ts, but the cited implementation has changed. GET now declares both exportRecord and operation outside the try at lines 141-142, assigns operation from createLifecycleOperation at lines 175-197, and passes operation.id into createDataPortabilityExport at lines 198-205. The catch path still marks exportRecord failed when present at lines 582-598, and now also checks operation at lines 600-621, calls failUnresolvedLifecycleTargets, then finalizeLifecycleOperation with status failed_requires_manual_review and visibleStatus failed. lib/lifecycle/reconciliation.ts confirms failUnresolvedLifecycleTargets marks unresolved targets failed and finalizeLifecycleOperation records failed_at for failed statuses. This covers the reported failure case where createLifecycleOperation succeeds but createDataPortabilityExport or later packaging fails before exportRecord exists. No route-specific regression test was present, but npm run typecheck passed against the current implementation.",
+      "commands": [
+        "find .. -name AGENTS.md -print",
+        "sed -n '1,220p' ../AGENTS.md",
+        "nl -ba app/api/user/export/route.ts | sed -n '1,240p'",
+        "nl -ba app/api/user/export/route.ts | sed -n '540,640p'",
+        "rg -n \"failed|failUnresolvedLifecycleTargets|finalizeLifecycleOperation|createLifecycleOperation|createDataPortabilityExport|export_packaging_failed\" app/api/user/export/route.ts",
+        "rg -n \"user/export|export_packaging_failed|failUnresolvedLifecycleTargets|createDataPortabilityExport|privacy.export\" -g '*.{test,spec}.{ts,tsx,js,jsx}' -g '*.test.ts' -g '*.spec.ts' .",
+        "nl -ba lib/lifecycle/reconciliation.ts | sed -n '1,220p'",
+        "npm run typecheck"
+      ],
+      "createdAt": "2026-05-16T16:41:45.665Z"
+    }
+  ],
+  "signature": "sig_feat-route-09eea7fcfb_d87057228b",
+  "linkedPatchAttemptIds": [],
+  "createdByRunId": "20260516T161141-38a836",
+  "createdAt": "2026-05-16T16:17:47.417Z",
+  "updatedAt": "2026-05-16T16:41:45.665Z"
+}

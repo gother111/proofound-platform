@@ -9,6 +9,7 @@
  */
 
 import type { VisibilityLevel } from '@/components/privacy/FieldVisibilityControl';
+import { log } from '@/lib/log';
 
 /**
  * Context for visibility enforcement
@@ -191,7 +192,11 @@ export async function hasMatchedRelationship(
 
     return mutualInterest.length > 0;
   } catch (error) {
-    console.error('Failed to check matched relationship:', error);
+    log.error('privacy.visibility.matched_relationship_check_failed', {
+      userId1,
+      userId2,
+      error,
+    });
     return false;
   }
 }

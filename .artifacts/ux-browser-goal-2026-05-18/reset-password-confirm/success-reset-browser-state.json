@@ -1,0 +1,88 @@
+{
+  "surface": "/reset-password/confirm?token=visual-reset-password-token-000000001",
+  "environment": {
+    "NEXT_PUBLIC_USE_MOCK_SUPABASE": "true",
+    "PROOFOUND_VISUAL_FIXTURES": "true",
+    "browser": "Codex in-app Browser"
+  },
+  "mobile390": {
+    "initial": {
+      "url": "http://localhost:3000/reset-password/confirm?token=visual-reset-password-token-000000001",
+      "innerWidth": 390,
+      "innerHeight": 844,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "hasOverflow": false,
+      "heading": "Set new password",
+      "labels": ["New password", "Confirm password"],
+      "buttons": [
+        {
+          "tag": "BUTTON",
+          "text": "",
+          "type": "button"
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Reset password",
+          "type": "submit"
+        },
+        {
+          "tag": "A",
+          "text": "Back to login",
+          "href": "/login"
+        }
+      ]
+    },
+    "validation": {
+      "innerWidth": 390,
+      "hasOverflow": false,
+      "alertText": "Passwords do not match"
+    },
+    "success": {
+      "innerWidth": 390,
+      "hasOverflow": false,
+      "heading": "Password reset successful",
+      "text": "Password reset successful\n\nYour password has been reset. You can continue to login when ready.\n\nGo to login now",
+      "hasRedirectCopy": false,
+      "links": [
+        {
+          "text": "Go to login now",
+          "href": "/login"
+        }
+      ]
+    }
+  },
+  "desktop1280": {
+    "initial": {
+      "url": "http://localhost:3000/reset-password/confirm?token=visual-reset-password-token-000000001",
+      "innerWidth": 1280,
+      "innerHeight": 900,
+      "scrollWidth": 1280,
+      "clientWidth": 1280,
+      "hasOverflow": false,
+      "heading": "Set new password",
+      "labels": ["New password", "Confirm password"],
+      "buttons": [
+        {
+          "tag": "BUTTON",
+          "text": "",
+          "type": "button"
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Reset password",
+          "type": "submit"
+        },
+        {
+          "tag": "A",
+          "text": "Back to login",
+          "href": "/login"
+        }
+      ]
+    }
+  },
+  "notes": [
+    "Browser DOM keypress was used for password entry because clipboard-backed fill/type is not available in this Browser session.",
+    "The visual reset token intentionally keeps the success state stable instead of auto-redirecting."
+  ]
+}

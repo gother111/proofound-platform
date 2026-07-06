@@ -157,7 +157,7 @@ export async function GET(request: NextRequest) {
       count: transformedInterviews.length,
     });
   } catch (error: any) {
-    console.error('Failed to fetch interviews:', error);
+    log.error('interviews.schedule.list_failed', { error });
     return NextResponse.json({ error: 'Failed to fetch interviews' }, { status: 500 });
   }
 }
@@ -318,7 +318,12 @@ export async function POST(request: NextRequest) {
     }
     scheduleFailureContext.userId = user.id;
 
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
     const data = ScheduleInterviewSchema.parse(body);
     scheduleFailureContext.matchId = data.matchId;
     const normalizedPlatform = normalizeInterviewPlatform(data.platform);
@@ -670,16 +675,6 @@ export async function POST(request: NextRequest) {
 
           const missingColumn = extractMissingColumn(insertResult.error);
           if (!missingColumn) {
-            const isLegacyPlatformEnumError =
-              insertResult.error?.code === '22P02' &&
-              typeof insertResult.error?.message === 'string' &&
-              insertResult.error.message.toLowerCase().includes('platform');
-
-            if (isLegacyPlatformEnumError && insertPayload.platform === 'manual') {
-              insertPayload.platform = 'zoom';
-              continue;
-            }
-
             throw insertResult.error;
           }
 

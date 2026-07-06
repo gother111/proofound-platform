@@ -1,0 +1,486 @@
+[
+  {
+    "viewport": "desktop",
+    "route": {
+      "role": "org",
+      "name": "org-home",
+      "path": "/app/o/test-org/home",
+      "cookie": "org_member"
+    },
+    "ok": true,
+    "state": {
+      "href": "http://localhost:33122/app/o/test-org/home",
+      "title": "Proofound - Focus on what matters",
+      "h1": "Test Organization",
+      "textSample": "Skip to main content\nOverview\nAssignments\nCommunications\nOrganization Trust Page\nPublic Preview\nProofound\n\nOverview\n\nTO\nTest Organization\n\nActive organization corridor console\n\nSigned in as Manager\nCORRIDOR STATUS\nAction Required\nComplete Trust Profile\n\nBefore you can publish assignments and receive proof-backed matches, complete your organization profile. Domain verification, mission statement, and operational context are required to establish corridor safety.\n\nProgress: 0/3 trust elements completed\nComplete Trust Profile\nCollaborator Circle\n\nMembers authorized to review matches\n\nC\nCollaborator\nManager\nPrivacy choices\n\nEssential cookies keep Proofound working. Optional analytics help us improve the product. We never sell your data.\n\nPrivacy Policy\nCookie Policy\nCookie Settings\nAccept All\nEssential Only",
+      "hasHorizontalScroll": false,
+      "scrollWidth": 1365,
+      "clientWidth": 1365,
+      "interactiveCount": 20,
+      "hiddenStreamSegments": 0,
+      "templateCount": 0
+    },
+    "errors": [
+      "Each child in a list should have a unique \"key\" prop.%s%s See https://react.dev/link/warning-keys for more information. \n\nCheck the top-level render call using <div>. "
+    ],
+    "screenshot": ".artifacts/ux-verification-2026-05-20/desktop-org-home.png"
+  },
+  {
+    "viewport": "desktop",
+    "route": {
+      "role": "org",
+      "name": "org-assignments",
+      "path": "/app/o/test-org/assignments",
+      "cookie": "org_member"
+    },
+    "ok": true,
+    "state": {
+      "href": "http://localhost:33122/app/o/test-org/assignments",
+      "title": "Proofound - Focus on what matters",
+      "h1": "Assignments",
+      "textSample": "Skip to main content\nOverview\nAssignments\nCommunications\nOrganization Trust Page\nPublic Preview\nProofound\n\nAssignments\n\nTO\nAssignment corridor\nOrganization\n/ Assignments\nAssignments\n\nAssignment cards own their matching corridor, candidate review, and pipeline context.\n\nCreate assignment\nOpen matching with one clear assignment\n\nStart with the role context reviewers need: skills, constraints, and proof expectations. Candidate identity stays protected until the corridor is ready.\n\nCreate first assignment\n\nMatching stays quiet until trust and role context are ready.\n\nCORRIDOR SEQUENCE\n\nTrust profile\n\nBasics make the review corridor credible\n\nAssignment\n\nDefine one role with clear proof requirements\n\nCandidate signals\n\nReview starts after the corridor is ready\n\nPublish assignment\n\nCreate and publish an assignment to start attracting candidate signals.\n\nAdd skill requirements\n\nDefine required ",
+      "hasHorizontalScroll": false,
+      "scrollWidth": 1365,
+      "clientWidth": 1365,
+      "interactiveCount": 25,
+      "hiddenStreamSegments": 0,
+      "templateCount": 0
+    },
+    "errors": [],
+    "screenshot": ".artifacts/ux-verification-2026-05-20/desktop-org-assignments.png"
+  },
+  {
+    "viewport": "desktop",
+    "route": {
+      "role": "org",
+      "name": "org-communications",
+      "path": "/app/o/test-org/communications",
+      "cookie": "org_member"
+    },
+    "ok": true,
+    "state": {
+      "href": "http://localhost:33122/app/o/test-org/communications",
+      "title": "Proofound - Focus on what matters",
+      "h1": "Communications",
+      "textSample": "Skip to main content\nOverview\nAssignments\nCommunications\nOrganization Trust Page\nPublic Preview\nProofound\n\nCommunications\n\nTO\n\nHIRING CORRIDOR\n\nCommunications\nMessages\nThreads, intros, and reveal requests.\nInterviews\nScheduling, feedback, and handoff.\nSecure Corridor\n\nMessages, scheduling, and reveal steps stay inside the consent-bound corridor.\n\nMessages\n\nAssignment conversations stay private and stage-aware. Candidate identity remains protected until a consented reveal opens the next step.\n\nMessages\n\nConversations appear after a proof-safe introduction.\n\nNo conversations yet\n\nCreate an assignment and approve an introduction before messages open here.\n\nIdentity stays protected until the corridor is ready.\n\nSelect a conversation\n\nConversations appear after an assignment and introduction are ready. Choose a thread when one opens in the list.\n\nCandidate identity remains protected before re",
+      "hasHorizontalScroll": false,
+      "scrollWidth": 1365,
+      "clientWidth": 1365,
+      "interactiveCount": 22,
+      "hiddenStreamSegments": 0,
+      "templateCount": 0
+    },
+    "errors": [],
+    "screenshot": ".artifacts/ux-verification-2026-05-20/desktop-org-communications.png"
+  },
+  {
+    "viewport": "desktop",
+    "route": {
+      "role": "org",
+      "name": "org-profile",
+      "path": "/app/o/test-org/profile",
+      "cookie": "org_member"
+    },
+    "ok": true,
+    "state": {
+      "href": "http://localhost:33122/app/o/test-org/profile",
+      "title": "Proofound - Focus on what matters",
+      "h1": "Organization Trust Page",
+      "textSample": "Skip to main content\nOverview\nAssignments\nCommunications\nOrganization Trust Page\nPublic Preview\nProofound\n\nOrganization Trust Page\n\nTO\nOrganization Trust Page\n\nThis is the launch-facing organization trust page used to support one assignment path and a clean review queue.\n\nEditable\n\nKeep this page limited to the calm organization story that supports one clear assignment corridor. Culture hubs, governance showcases, and other org-suite surfaces stay outside this launch path.\n\nOrganization name\n\nTest Organization\n\nWhy work matters\n\nAdd a short reason this work matters.\n\nMission\n\nAdd the mission this assignment path supports.\n\nDomain path\n\nNeeds verified domain signal.\n\nLaunch corridor\n\nTrust basics ready: 1/4\n\nOrganization trust page\n\nMission, why the work matters, verified domain path, and operating context.\n\nAssignments & matches\n\nOne assignment path and one review queue for published wor",
+      "hasHorizontalScroll": false,
+      "scrollWidth": 1365,
+      "clientWidth": 1365,
+      "interactiveCount": 26,
+      "hiddenStreamSegments": 0,
+      "templateCount": 0
+    },
+    "errors": [],
+    "screenshot": ".artifacts/ux-verification-2026-05-20/desktop-org-profile.png"
+  },
+  {
+    "viewport": "desktop",
+    "route": {
+      "role": "org",
+      "name": "org-portfolio",
+      "path": "/app/o/test-org/portfolio",
+      "cookie": "org_member"
+    },
+    "ok": true,
+    "state": {
+      "href": "http://localhost:33122/portfolio/org/test-org?returnTo=%2Fapp%2Fo%2Ftest-org%2Fhome",
+      "title": "Proofound organization portfolio",
+      "h1": "Test Organization",
+      "textSample": "Skip to main content\nTest Organization\nShareable by direct link\n\nPublic organization trust page\n\nHelp teams review candidates through concrete work evidence instead of polished claims.\n\nReturn to menu\nCopy share link\nWebsite\nMISSION / PURPOSE\n\nHelp teams review candidates through concrete work evidence instead of polished claims.\n\nWHAT WORK IS OFFERED\n\nWORK OFFERED\n\nProof-first product reviewer\n\nENGAGEMENT\n\nFull time\n\nImprove review quality through clearer proof expectations.\n\nASSIGNMENT CLARITY\n\nReview candidate work through structured evidence and launch-safe summaries.\n\nPROOF EXPECTATIONS\n\nShortlists become more explainable, privacy-safe, and grounded in real work.\n\nEXPECTED OUTCOMES\n\n•\nClarify proof expectations\n•\nReduce vague review decisions\nSERIOUSNESS OF REVIEW\n\nVerified domain path: test-org.example\n\nOrganization trust is verified.\n\nA review-ready assignment is active, so proof ",
+      "hasHorizontalScroll": false,
+      "scrollWidth": 1365,
+      "clientWidth": 1365,
+      "interactiveCount": 10,
+      "hiddenStreamSegments": 0,
+      "templateCount": 0
+    },
+    "errors": [],
+    "screenshot": ".artifacts/ux-verification-2026-05-20/desktop-org-portfolio.png"
+  },
+  {
+    "viewport": "desktop",
+    "route": {
+      "role": "individual",
+      "name": "individual-home",
+      "path": "/app/i/home",
+      "cookie": "individual"
+    },
+    "ok": true,
+    "state": {
+      "href": "http://localhost:33122/app/i/home",
+      "title": "Proofound - Focus on what matters",
+      "h1": "Build your proof-first profile",
+      "textSample": "Skip to main content\nOverview\nProfile\nCommunications\nMatching\nSettings\nProofound\n\nOverview\n\nU\nPORTFOLIO READINESS\nSetup Required\nBuild your proof-first profile\n\nWelcome back, there. Start by creating your first proof record. Shaping a single trusted work sample or artifact unlocks your profile.\n\nGuided setup\n\nYour profile is private by default. Candidates stay hidden until they explicitly authorize discovery or initiate a verification check.\n\nPrivacy choices\n\nEssential cookies keep Proofound working. Optional analytics help us improve the product. We never sell your data.\n\nPrivacy Policy\nCookie Policy\nCookie Settings\nAccept All\nEssential Only",
+      "hasHorizontalScroll": false,
+      "scrollWidth": 1365,
+      "clientWidth": 1365,
+      "interactiveCount": 20,
+      "hiddenStreamSegments": 0,
+      "templateCount": 0
+    },
+    "errors": [],
+    "screenshot": ".artifacts/ux-verification-2026-05-20/desktop-individual-home.png"
+  },
+  {
+    "viewport": "desktop",
+    "route": {
+      "role": "individual",
+      "name": "individual-profile",
+      "path": "/app/i/profile",
+      "cookie": "individual"
+    },
+    "ok": true,
+    "state": {
+      "href": "http://localhost:33122/app/i/profile",
+      "title": "Proofound - Focus on what matters",
+      "h1": "Guided Profile Setup",
+      "textSample": "Skip to main content\nOverview\nProfile\nCommunications\nMatching\nSettings\nProofound\n\nProfile\n\nU\n1/5\nPublic Page readiness\n\nComplete one clear proof path before publishing.\n\nNext: Complete your safe shell\nSafe shell basics\nOne real context is anchored\nOne real proof is added and structured\nOne non-self verification is accepted\nPublic Page publication\nGuided Profile Setup\n\nBuild only what makes your first proof credible. Start with a light shell, then choose what to share.\n\nAdd your first proof\nOpen full profile\nSTEP 1 OF 6\n0% COMPLETE\n\nCreate a safe shell\n\nActive Step\n\nKeep the shell light: display name, handle, headline, general location and timezone, target role, and work preferences.\n\nFinish safe shell\nSHOW ALL SETUP STEPS\nPrivacy choices\n\nEssential cookies keep Proofound working. Optional analytics help us improve the product. We never sell your data.\n\nPrivacy Policy\nCookie Policy\nCookie",
+      "hasHorizontalScroll": false,
+      "scrollWidth": 1365,
+      "clientWidth": 1365,
+      "interactiveCount": 24,
+      "hiddenStreamSegments": 0,
+      "templateCount": 0
+    },
+    "errors": [],
+    "screenshot": ".artifacts/ux-verification-2026-05-20/desktop-individual-profile.png"
+  },
+  {
+    "viewport": "desktop",
+    "route": {
+      "role": "individual",
+      "name": "individual-portfolio",
+      "path": "/app/i/portfolio",
+      "cookie": "individual"
+    },
+    "ok": true,
+    "state": {
+      "href": "http://localhost:33122/app/i/profile?profileView=full&tab=proof_packs&portfolioLocked=1&lockReason=safe_shell&proof=first",
+      "title": "Proofound - Focus on what matters",
+      "h1": "Mock Individual",
+      "textSample": "Skip to main content\nOverview\nProfile\nCommunications\nMatching\nSettings\nProofound\n\nProfile\n\nU\nKeep building proof readiness\n\nKeep the first milestone anchored in real work. Add proof context, visibility choices, and optional verification checks before expanding public details.\n\nFirst Proof Pack created\nPublic Page ready\nMatching preferences saved\nNon-self verification added\nStart with one context-backed Proof Pack\n\nPublic Page is locked until the safe-shell basics are finished.\n\nMock Individual\nHidden\nShare\nAdd location\nJoined February 2026\n\nAdd a tagline\n\nA brief statement that captures who you are and what you care about\n\n1/5\nPublic Page readiness\n\nComplete one clear proof path before publishing.\n\nNext: Complete your safe shell\nSafe shell basics\nOne real context is anchored\nOne real proof is added and structured\nOne non-self verification is accepted\nPublic Page publication\nProof readine",
+      "hasHorizontalScroll": false,
+      "scrollWidth": 1365,
+      "clientWidth": 1365,
+      "interactiveCount": 43,
+      "hiddenStreamSegments": 0,
+      "templateCount": 0
+    },
+    "errors": [],
+    "screenshot": ".artifacts/ux-verification-2026-05-20/desktop-individual-portfolio.png"
+  },
+  {
+    "viewport": "desktop",
+    "route": {
+      "role": "individual",
+      "name": "individual-verifications",
+      "path": "/app/i/verifications",
+      "cookie": "individual"
+    },
+    "ok": true,
+    "state": {
+      "href": "http://localhost:33122/app/i/verifications",
+      "title": "Proofound - Focus on what matters",
+      "h1": "Proof verification requests",
+      "textSample": "Skip to main content\nOverview\nProfile\nCommunications\nMatching\nSettings\nProofound\n\nVerifications\n\nU\nProof verification requests\n\nFollow which proof, claim, verifier, and bounded outcome each request is tied to.\n\nIncoming\nSent\n2\nNo one is waiting on you.\n\nNew confirmation requests will appear here with the claim and outcome attached.\n\n0\nAttention\n0\nPending\n0\nActive\nShow all\nAll\nActive\nPending\nNeeds attention\nDeclined\nExpired / stale\nRevoked / corrected\nNewest\nScope\nNo incoming verifications\n\nNo requests match the current selection.\n\nPrivacy choices\n\nEssential cookies keep Proofound working. Optional analytics help us improve the product. We never sell your data.\n\nPrivacy Policy\nCookie Policy\nCookie Settings\nAccept All\nEssential Only",
+      "hasHorizontalScroll": false,
+      "scrollWidth": 1365,
+      "clientWidth": 1365,
+      "interactiveCount": 34,
+      "hiddenStreamSegments": 0,
+      "templateCount": 0
+    },
+    "errors": [],
+    "screenshot": ".artifacts/ux-verification-2026-05-20/desktop-individual-verifications.png"
+  },
+  {
+    "viewport": "desktop",
+    "route": {
+      "role": "individual",
+      "name": "individual-communications",
+      "path": "/app/i/communications",
+      "cookie": "individual"
+    },
+    "ok": true,
+    "state": {
+      "href": "http://localhost:33122/app/i/communications",
+      "title": "Proofound - Focus on what matters",
+      "h1": "Communications",
+      "textSample": "Skip to main content\nOverview\nProfile\nCommunications\nMatching\nSettings\nProofound\n\nCommunications\n\nU\n\nHIRING CORRIDOR\n\nCommunications\nMessages\nThreads, intros, and reveal requests.\nInterviews\nScheduling, feedback, and handoff.\nSecure Corridor\n\nMessages, scheduling, and reveal steps stay inside the consent-bound corridor.\n\nMessages\n\nConversations appear after a proof-safe introduction.\n\nNo conversations yet\n\nSend interest or accept an introduction before messages open here.\n\nYour identity remains private until the reveal step.\n\nSelect a conversation\n\nMessages stay quiet until a proof-safe introduction is open. Choose a thread when one appears in the list.\n\nPrivate by default before reveal\n\nPrivacy choices\n\nEssential cookies keep Proofound working. Optional analytics help us improve the product. We never sell your data.\n\nPrivacy Policy\nCookie Policy\nCookie Settings\nAccept All\nEssential Only",
+      "hasHorizontalScroll": false,
+      "scrollWidth": 1365,
+      "clientWidth": 1365,
+      "interactiveCount": 22,
+      "hiddenStreamSegments": 0,
+      "templateCount": 0
+    },
+    "errors": [],
+    "screenshot": ".artifacts/ux-verification-2026-05-20/desktop-individual-communications.png"
+  },
+  {
+    "viewport": "mobile",
+    "route": {
+      "role": "org",
+      "name": "org-home",
+      "path": "/app/o/test-org/home",
+      "cookie": "org_member"
+    },
+    "ok": true,
+    "state": {
+      "href": "http://localhost:33122/app/o/test-org/home",
+      "title": "Proofound - Focus on what matters",
+      "h1": "Test Organization",
+      "textSample": "Skip to main content\nOverview\nWork\nInbox\nProfile\nPreview\nTO\nTest Organization\n\nActive organization corridor console\n\nSigned in as Manager\nCORRIDOR STATUS\nAction Required\nComplete Trust Profile\n\nBefore you can publish assignments and receive proof-backed matches, complete your organization profile. Domain verification, mission statement, and operational context are required to establish corridor safety.\n\nProgress: 0/3 trust elements completed\nComplete Trust Profile\nCollaborator Circle\n\nMembers authorized to review matches\n\nC\nCollaborator\nManager\nPrivacy choices\n\nEssential cookies keep Proofound working. Optional analytics help us improve the product. We never sell your data.\n\nAccept All\nEssential Only",
+      "hasHorizontalScroll": false,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "interactiveCount": 20,
+      "hiddenStreamSegments": 0,
+      "templateCount": 0
+    },
+    "errors": [
+      "Each child in a list should have a unique \"key\" prop.%s%s See https://react.dev/link/warning-keys for more information. \n\nCheck the top-level render call using <div>. "
+    ],
+    "screenshot": ".artifacts/ux-verification-2026-05-20/mobile-org-home.png"
+  },
+  {
+    "viewport": "mobile",
+    "route": {
+      "role": "org",
+      "name": "org-assignments",
+      "path": "/app/o/test-org/assignments",
+      "cookie": "org_member"
+    },
+    "ok": true,
+    "state": {
+      "href": "http://localhost:33122/app/o/test-org/assignments",
+      "title": "Proofound - Focus on what matters",
+      "h1": "Assignments",
+      "textSample": "Skip to main content\nOverview\nWork\nInbox\nProfile\nPreview\nTO\nAssignment corridor\nOrganization\n/ Assignments\nAssignments\n\nAssignment cards own their matching corridor, candidate review, and pipeline context.\n\nCreate assignment\nOpen matching with one clear assignment\n\nStart with the role context reviewers need: skills, constraints, and proof expectations. Candidate identity stays protected until the corridor is ready.\n\nCreate first assignment\n\nMatching stays quiet until trust and role context are ready.\n\nCORRIDOR SEQUENCE\n\nTrust profile\n\nBasics make the review corridor credible\n\nAssignment\n\nDefine one role with clear proof requirements\n\nCandidate signals\n\nReview starts after the corridor is ready\n\nPublish assignment\n\nCreate and publish an assignment to start attracting candidate signals.\n\nAdd skill requirements\n\nDefine required skills so matching can rank candidates accurately.\n\nTurn on can",
+      "hasHorizontalScroll": false,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "interactiveCount": 25,
+      "hiddenStreamSegments": 0,
+      "templateCount": 0
+    },
+    "errors": [],
+    "screenshot": ".artifacts/ux-verification-2026-05-20/mobile-org-assignments.png"
+  },
+  {
+    "viewport": "mobile",
+    "route": {
+      "role": "org",
+      "name": "org-communications",
+      "path": "/app/o/test-org/communications",
+      "cookie": "org_member"
+    },
+    "ok": true,
+    "state": {
+      "href": "http://localhost:33122/app/o/test-org/communications",
+      "title": "Proofound - Focus on what matters",
+      "h1": "Communications",
+      "textSample": "Skip to main content\nOverview\nWork\nInbox\nProfile\nPreview\nTO\n\nHIRING CORRIDOR\n\nCommunications\nMessages\nThreads, intros, and reveal requests.\nInterviews\nScheduling, feedback, and handoff.\nSecure Corridor\n\nMessages, scheduling, and reveal steps stay inside the consent-bound corridor.\n\nMessages\n\nAssignment conversations stay private and stage-aware. Candidate identity remains protected until a consented reveal opens the next step.\n\nMessages\n\nConversations appear after a proof-safe introduction.\n\nNo conversations yet\n\nCreate an assignment and approve an introduction before messages open here.\n\nIdentity stays protected until the corridor is ready.\n\nPrivacy choices\n\nEssential cookies keep Proofound working. Optional analytics help us improve the product. We never sell your data.\n\nAccept All\nEssential Only",
+      "hasHorizontalScroll": false,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "interactiveCount": 22,
+      "hiddenStreamSegments": 0,
+      "templateCount": 0
+    },
+    "errors": [],
+    "screenshot": ".artifacts/ux-verification-2026-05-20/mobile-org-communications.png"
+  },
+  {
+    "viewport": "mobile",
+    "route": {
+      "role": "org",
+      "name": "org-profile",
+      "path": "/app/o/test-org/profile",
+      "cookie": "org_member"
+    },
+    "ok": true,
+    "state": {
+      "href": "http://localhost:33122/app/o/test-org/profile",
+      "title": "Proofound - Focus on what matters",
+      "h1": "Organization Trust Page",
+      "textSample": "Skip to main content\nOverview\nWork\nInbox\nProfile\nPreview\nTO\nOrganization Trust Page\n\nThis is the launch-facing organization trust page used to support one assignment path and a clean review queue.\n\nEditable\n\nKeep this page limited to the calm organization story that supports one clear assignment corridor. Culture hubs, governance showcases, and other org-suite surfaces stay outside this launch path.\n\nOrganization name\n\nTest Organization\n\nWhy work matters\n\nAdd a short reason this work matters.\n\nMission\n\nAdd the mission this assignment path supports.\n\nDomain path\n\nNeeds verified domain signal.\n\nLaunch corridor\n\nTrust basics ready: 1/4\n\nOrganization trust page\n\nMission, why the work matters, verified domain path, and operating context.\n\nAssignments & matches\n\nOne assignment path and one review queue for published work and candidates.\n\nPublic preview\n\nView the public organization page to con",
+      "hasHorizontalScroll": false,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "interactiveCount": 26,
+      "hiddenStreamSegments": 0,
+      "templateCount": 0
+    },
+    "errors": [],
+    "screenshot": ".artifacts/ux-verification-2026-05-20/mobile-org-profile.png"
+  },
+  {
+    "viewport": "mobile",
+    "route": {
+      "role": "org",
+      "name": "org-portfolio",
+      "path": "/app/o/test-org/portfolio",
+      "cookie": "org_member"
+    },
+    "ok": true,
+    "state": {
+      "href": "http://localhost:33122/portfolio/org/test-org?returnTo=%2Fapp%2Fo%2Ftest-org%2Fhome",
+      "title": "Proofound organization portfolio",
+      "h1": "Test Organization",
+      "textSample": "Skip to main content\nTest Organization\nShareable by direct link\n\nPublic organization trust page\n\nHelp teams review candidates through concrete work evidence instead of polished claims.\n\nReturn to menu\nCopy share link\nWebsite\nMISSION / PURPOSE\n\nHelp teams review candidates through concrete work evidence instead of polished claims.\n\nWHAT WORK IS OFFERED\n\nWORK OFFERED\n\nProof-first product reviewer\n\nENGAGEMENT\n\nFull time\n\nImprove review quality through clearer proof expectations.\n\nASSIGNMENT CLARITY\n\nReview candidate work through structured evidence and launch-safe summaries.\n\nPROOF EXPECTATIONS\n\nShortlists become more explainable, privacy-safe, and grounded in real work.\n\nEXPECTED OUTCOMES\n\n•\nClarify proof expectations\n•\nReduce vague review decisions\nSERIOUSNESS OF REVIEW\n\nVerified domain path: test-org.example\n\nOrganization trust is verified.\n\nA review-ready assignment is active, so proof ",
+      "hasHorizontalScroll": false,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "interactiveCount": 10,
+      "hiddenStreamSegments": 0,
+      "templateCount": 0
+    },
+    "errors": [],
+    "screenshot": ".artifacts/ux-verification-2026-05-20/mobile-org-portfolio.png"
+  },
+  {
+    "viewport": "mobile",
+    "route": {
+      "role": "individual",
+      "name": "individual-home",
+      "path": "/app/i/home",
+      "cookie": "individual"
+    },
+    "ok": true,
+    "state": {
+      "href": "http://localhost:33122/app/i/home",
+      "title": "Proofound - Focus on what matters",
+      "h1": "Build your proof-first profile",
+      "textSample": "Skip to main content\nOverview\nProfile\nInbox\nMatching\nSettings\nU\nPORTFOLIO READINESS\nSetup Required\nBuild your proof-first profile\n\nWelcome back, there. Start by creating your first proof record. Shaping a single trusted work sample or artifact unlocks your profile.\n\nGuided setup\n\nYour profile is private by default. Candidates stay hidden until they explicitly authorize discovery or initiate a verification check.\n\nPrivacy choices\n\nEssential cookies keep Proofound working. Optional analytics help us improve the product. We never sell your data.\n\nAccept All\nEssential Only",
+      "hasHorizontalScroll": false,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "interactiveCount": 20,
+      "hiddenStreamSegments": 0,
+      "templateCount": 0
+    },
+    "errors": [],
+    "screenshot": ".artifacts/ux-verification-2026-05-20/mobile-individual-home.png"
+  },
+  {
+    "viewport": "mobile",
+    "route": {
+      "role": "individual",
+      "name": "individual-profile",
+      "path": "/app/i/profile",
+      "cookie": "individual"
+    },
+    "ok": true,
+    "state": {
+      "href": "http://localhost:33122/app/i/profile",
+      "title": "Proofound - Focus on what matters",
+      "h1": "Guided Profile Setup",
+      "textSample": "Skip to main content\nOverview\nProfile\nInbox\nMatching\nSettings\nU\n1/5\nPublic Page readiness\n\nComplete one clear proof path before publishing.\n\nNext: Complete your safe shell\nSafe shell basics\nOne real context is anchored\nOne real proof is added and structured\nOne non-self verification is accepted\nPublic Page publication\nGuided Profile Setup\n\nBuild only what makes your first proof credible. Start with a light shell, then choose what to share.\n\nAdd your first proof\nOpen full profile\nSTEP 1 OF 6\n0% COMPLETE\n\nCreate a safe shell\n\nActive Step\n\nKeep the shell light: display name, handle, headline, general location and timezone, target role, and work preferences.\n\nFinish safe shell\nSHOW ALL SETUP STEPS\nPrivacy choices\n\nEssential cookies keep Proofound working. Optional analytics help us improve the product. We never sell your data.\n\nAccept All\nEssential Only",
+      "hasHorizontalScroll": false,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "interactiveCount": 24,
+      "hiddenStreamSegments": 0,
+      "templateCount": 0
+    },
+    "errors": [],
+    "screenshot": ".artifacts/ux-verification-2026-05-20/mobile-individual-profile.png"
+  },
+  {
+    "viewport": "mobile",
+    "route": {
+      "role": "individual",
+      "name": "individual-portfolio",
+      "path": "/app/i/portfolio",
+      "cookie": "individual"
+    },
+    "ok": true,
+    "state": {
+      "href": "http://localhost:33122/app/i/profile?profileView=full&tab=proof_packs&portfolioLocked=1&lockReason=safe_shell&proof=first",
+      "title": "Proofound - Focus on what matters",
+      "h1": "Mock Individual",
+      "textSample": "Skip to main content\nOverview\nProfile\nInbox\nMatching\nSettings\nU\nKeep building proof readiness\n\nKeep the first milestone anchored in real work. Add proof context, visibility choices, and optional verification checks before expanding public details.\n\nFirst Proof Pack created\nPublic Page ready\nMatching preferences saved\nNon-self verification added\nStart with one context-backed Proof Pack\n\nPublic Page is locked until the safe-shell basics are finished.\n\nMO\nMock Individual\nHidden\nShare\nAdd location\nJoined February 2026\n\nAdd a tagline\n\nA brief statement that captures who you are and what you care about\n\n1/5\nPublic Page readiness\n\nComplete one clear proof path before publishing.\n\nNext: Complete your safe shell\nSafe shell basics\nOne real context is anchored\nOne real proof is added and structured\nOne non-self verification is accepted\nPublic Page publication\nProof readiness\n\nSafe shell\n\nNeeds basi",
+      "hasHorizontalScroll": false,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "interactiveCount": 43,
+      "hiddenStreamSegments": 0,
+      "templateCount": 0
+    },
+    "errors": [],
+    "screenshot": ".artifacts/ux-verification-2026-05-20/mobile-individual-portfolio.png"
+  },
+  {
+    "viewport": "mobile",
+    "route": {
+      "role": "individual",
+      "name": "individual-verifications",
+      "path": "/app/i/verifications",
+      "cookie": "individual"
+    },
+    "ok": true,
+    "state": {
+      "href": "http://localhost:33122/app/i/verifications",
+      "title": "Proofound - Focus on what matters",
+      "h1": "Proof verification requests",
+      "textSample": "Skip to main content\nOverview\nProfile\nInbox\nMatching\nSettings\nU\nProof verification requests\n\nFollow which proof, claim, verifier, and bounded outcome each request is tied to.\n\nIncoming\nSent\n2\nNo one is waiting on you.\n\nNew confirmation requests will appear here with the claim and outcome attached.\n\n0\nAttention\n0\nPending\n0\nActive\nShow all\nAll\nActive\nPending\nNeeds attention\nDeclined\nExpired / stale\nRevoked / corrected\nNewest\nScope\nNo incoming verifications\n\nNo requests match the current selection.\n\nPrivacy choices\n\nEssential cookies keep Proofound working. Optional analytics help us improve the product. We never sell your data.\n\nAccept All\nEssential Only",
+      "hasHorizontalScroll": false,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "interactiveCount": 34,
+      "hiddenStreamSegments": 0,
+      "templateCount": 0
+    },
+    "errors": [],
+    "screenshot": ".artifacts/ux-verification-2026-05-20/mobile-individual-verifications.png"
+  },
+  {
+    "viewport": "mobile",
+    "route": {
+      "role": "individual",
+      "name": "individual-communications",
+      "path": "/app/i/communications",
+      "cookie": "individual"
+    },
+    "ok": true,
+    "state": {
+      "href": "http://localhost:33122/app/i/communications",
+      "title": "Proofound - Focus on what matters",
+      "h1": "Communications",
+      "textSample": "Skip to main content\nOverview\nProfile\nInbox\nMatching\nSettings\nU\n\nHIRING CORRIDOR\n\nCommunications\nMessages\nThreads, intros, and reveal requests.\nInterviews\nScheduling, feedback, and handoff.\nSecure Corridor\n\nMessages, scheduling, and reveal steps stay inside the consent-bound corridor.\n\nMessages\n\nConversations appear after a proof-safe introduction.\n\nNo conversations yet\n\nSend interest or accept an introduction before messages open here.\n\nYour identity remains private until the reveal step.\n\nPrivacy choices\n\nEssential cookies keep Proofound working. Optional analytics help us improve the product. We never sell your data.\n\nAccept All\nEssential Only",
+      "hasHorizontalScroll": false,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "interactiveCount": 22,
+      "hiddenStreamSegments": 0,
+      "templateCount": 0
+    },
+    "errors": [],
+    "screenshot": ".artifacts/ux-verification-2026-05-20/mobile-individual-communications.png"
+  }
+]

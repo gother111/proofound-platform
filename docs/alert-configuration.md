@@ -1,405 +1,171 @@
-# Production Alert Configuration
+> Doc Class: `active`
+> Last Verified: `2026-05-21`
 
-**Last Updated**: 2025-11-04
-**Status**: Ready for Implementation
+# Launch Alert Configuration
 
----
+This guide defines launch-safe alerting for Proofound. It is scoped to the locked MVP corridor and internal launch operations; it does not make broad analytics dashboards, fairness dashboards, native video-provider checks, or generic marketplace metrics part of launch readiness.
 
-## Overview
+Use this with:
 
-This document outlines the alert configuration for production monitoring of the Proofound platform. Alerts are configured to notify the team of critical issues before they impact users.
-
----
+- [CRON_SETUP.md](./CRON_SETUP.md)
+- [DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)
+- [launch-operations-mvp.md](./launch-operations-mvp.md)
+- [production-readiness-checklist.md](./production-readiness-checklist.md)
+- [structured-logging.md](./structured-logging.md)
 
 ## Alert Channels
 
-### Primary Channels
-
-1. **Email**: team@proofound.io
-2. **Slack**: #proofound-alerts channel
-3. **PagerDuty**: For critical/urgent alerts (optional)
+Minimum launch channels:
 
-### Alert Severity Levels
+- one monitored operator mailbox or incident channel
+- Sentry or equivalent runtime error notifications
+- Vercel deployment and cron failure notifications
+- cron-job.org notifications for externally managed observability jobs
 
-- **Critical** (P0): Immediate action required, system down
-- **High** (P1): Significant impact, needs attention within 1 hour
-- **Medium** (P2): Moderate impact, address within 4 hours
-- **Low** (P3): Minor issue, address within 24 hours
+Do not put secrets, private proof content, hidden identity details before reveal consent, signed URLs, internal queue IDs, raw logs, or diagnostic dumps in alert messages.
 
----
+## Severity Levels
 
-## Sentry Alert Configuration
+- `P1`: user trust or privacy risk, auth/signup/token redemption broken, public portfolio unsafe, export/delete unsafe, reveal without consent, admin/internal data exposed, production app unavailable
+- `P2`: assignment publishing, shortlist/review, intro, verification, interview, decision, engagement verification, or launch monitor degraded
+- `P3`: non-blocking operational drift, noisy alerts, thin-market fallback volume, documentation or evidence freshness issue
 
-### 1. Error Rate Alerts
+## Required Launch Alerts
 
-**Alert Name**: High Error Rate
+### Runtime Errors
 
-- **Condition**: Error rate > 1% over 5 minutes
-- **Severity**: High
-- **Action**: Notify via Email + Slack
-- **Sentry Config**:
-  ```
-  Project Settings > Alerts > New Alert Rule
-  Condition: "Error count is more than 100 in 5 minutes"
-  Filter: event.type:error AND NOT level:info
-  ```
+Configure Sentry or equivalent alerting for:
 
-**Alert Name**: Critical Error Spike
+- new production error issue
+- error spike on active MVP routes
+- recurring error after a resolved release
+- frontend error on public portfolio, signup/login, assignment/review, reveal, export, or delete flows
 
-- **Condition**: 50+ errors in 1 minute
-- **Severity**: Critical
-- **Action**: Notify via Email + Slack + PagerDuty
-- **Sentry Config**:
-  ```
-  Condition: "Error count is more than 50 in 1 minute"
-  Filter: level:error OR level:fatal
-  ```
+Alert payloads should include route, release, request id when available, severity, and a link to the protected error tool. They must not include private payload bodies.
 
-### 2. Performance Alerts
+### Public Availability
 
-**Alert Name**: Slow Response Time
+Monitor:
 
-- **Condition**: P95 latency > 1000ms for 10 minutes
-- **Severity**: Medium
-- **Action**: Notify via Slack
-- **Sentry Config**:
-  ```
-  Condition: "P95 response time is above 1000ms for 10 minutes"
-  Transaction: /api/*
-  ```
+- `/`
+- `/api/health`
 
-**Alert Name**: Very Slow API
+Expected behavior:
 
-- **Condition**: P99 latency > 3000ms
-- **Severity**: High
-- **Action**: Notify via Email + Slack
-- **Sentry Config**:
-  ```
-  Condition: "P99 response time is above 3000ms for 5 minutes"
-  Transaction: /api/*
-  ```
+- public health remains minimal
+- no private diagnostics are exposed
+- failure alerts route to operators
 
-### 3. New Error Type
+### Internal Launch Monitors
 
-**Alert Name**: New Unhandled Error
+Authenticated operator checks must cover:
 
-- **Condition**: New error fingerprint detected
-- **Severity**: Medium
-- **Action**: Notify via Slack
-- **Sentry Config**:
-  ```
-  Condition: "A new issue is created"
-  Filter: is:unresolved
-  ```
+- `/api/monitoring/launch-status`
+- `/api/monitoring/perf-status`
 
----
+Launch-status should report the expected monitor contract, no missing monitors, no P1/P2 failures, and no unsafe raw-prompt or private-data logging state.
 
-## Health Check Alerts
+Perf-status must include fresh `/api/assignments` latency evidence on the intended production-candidate target before final go/no-go.
 
-The `/api/cron/health-check` endpoint runs every 5 minutes and checks:
+### Cron And Scheduled Work
 
-- Database connectivity
-- Database query performance
-- Metrics calculation health (TTSC, TTFQI, PAC)
+Follow [CRON_SETUP.md](./CRON_SETUP.md).
 
-### Alert Integration
+Launch automation:
 
-**Option A: Vercel Cron Monitoring**
+- `/api/cron/decision-reminders` via Vercel Cron
 
-```javascript
-// vercel.json
-{
-  "crons": [{
-    "path": "/api/cron/health-check",
-    "schedule": "*/5 * * * *"
-  }]
-}
-```
+External observability jobs:
 
-Vercel automatically monitors cron job failures and sends alerts.
+- `/api/cron/health-check` via cron-job.org
+- `/api/cron/performance-check` via cron-job.org
 
-**Option B: External Uptime Monitor**
-Use BetterUptime, Pingdom, or UptimeRobot to call health check endpoint:
+Archived standalone deletion cron routes are not active launch alert targets:
 
-- **URL**: `https://your-domain.com/api/cron/health-check`
-- **Interval**: Every 5 minutes
-- **Timeout**: 30 seconds
-- **Alert on**: HTTP status != 200
+- `/api/cron/send-deletion-reminders`
+- `/api/cron/process-deletions`
 
----
+## MVP Workflow Alerts
 
-## Business Metrics Alerts
+Alert or manually review when these active workflows fail or stall:
 
-### TTSC (Time to Signed Contract)
+- signup/login and verification email
+- onboarding and first proof flow
+- proof upload/import/linking
+- Proof Pack verification or trust-state transition
+- public portfolio publish/unpublish/render
+- organization onboarding and trust page/profile
+- assignment create/edit/review/publish
+- shortlist/review queue generation
+- intro request
+- reveal request and proof-review participant consent
+- interview scheduling/reschedule with manual meeting link default
+- decision recording, including engage/close outcomes
+- engagement verification
+- export/delete
+- internal verification, privacy/reveal dispute, risky-upload, assignment-quality, and engagement-verification queues
 
-**Alert Name**: TTSC Exceeds Target
+Alerts should name the primary object and next action: Proof Pack, assignment, proof review, reveal request, interview, decision, engagement verification, or queue item.
 
-- **Condition**: Median TTSC > 35 days for 7 consecutive days
-- **Severity**: Medium
-- **Trigger**: Health check detects metric degradation
-- **Action**: Review matching quality and contractor pipeline
+## What Not To Alert On As Launch-Critical
 
-**Implementation**:
+Do not make these launch-blocking by default:
 
-```typescript
-// In /api/cron/health-check/route.ts (already implemented)
-if (metrics.ttsc && metrics.ttsc.median > 35) {
-  log.warn('health.check.ttsc.exceeds.target', {
-    median: metrics.ttsc.median,
-    target: 30,
-  });
-}
-```
-
-### TTFQI (Time to First Qualified Introduction)
-
-**Alert Name**: TTFQI Exceeds Target
-
-- **Condition**: Median TTFQI > 96 hours for 3 consecutive days
-- **Severity**: Medium
-- **Trigger**: Health check detects metric degradation
-- **Action**: Review matching algorithm and assignment pool
-
-### Proof Fit Lift
-
-**Alert Name**: Low Proof Fit Lift
-
-- **Condition**: Proof-fit acceptance lift < 15% for 7 consecutive days
-- **Severity**: Medium
-- **Trigger**: Health check detects metric degradation
-- **Action**: Review proof-fit scoring and assignment pool quality
-
----
-
-## Infrastructure Alerts
-
-### Database Alerts
-
-**Alert Name**: Database Connection Failure
-
-- **Condition**: Health check fails database connectivity test
-- **Severity**: Critical
-- **Action**: Immediate investigation, notify DevOps
-
-**Alert Name**: Slow Database Queries
-
-- **Condition**: Query duration > 1000ms
-- **Severity**: High
-- **Action**: Investigate slow queries, consider optimization
-
-### Cache Alerts
-
-**Alert Name**: Low Cache Hit Rate
-
-- **Condition**: Cache hit rate < 60% over 1 hour
-- **Severity**: Low
-- **Action**: Review caching strategy
-
-### Rate Limit Alerts
-
-**Alert Name**: High Rate Limit Hits
-
-- **Condition**: >100 rate limit rejections (429 responses) per hour
-- **Severity**: Medium
-- **Action**: Investigate potential abuse or need to adjust limits
-
----
-
-## Alert Notification Examples
-
-### Slack Notification Format
-
-```
-🔴 CRITICAL: High Error Rate Detected
-
-Environment: Production
-Time: 2025-11-04 10:30:00 UTC
-Error Rate: 2.5% (target: <1%)
-Affected Users: ~50
-
-View in Sentry: [Link]
-Runbook: [Link to troubleshooting guide]
-
-Actions:
-1. Check error logs for root cause
-2. Review recent deployments
-3. Consider rollback if issue persists
-```
-
-### Email Alert Format
-
-```
-Subject: [CRITICAL] High Error Rate - Proofound Production
-
-Severity: Critical
-Environment: Production
-Time: 2025-11-04 10:30:00 UTC
-
-Alert Details:
-- Error rate: 2.5% (threshold: 1%)
-- Affected endpoints: /api/core/matching/profile
-- Recent errors: 150 in last 5 minutes
-
-Recommended Actions:
-1. Investigate error logs in Sentry
-2. Check deployment history
-3. Review database performance
-4. Consider rollback if issue persists
-
-Sentry Link: https://sentry.io/...
-Health Check: https://your-domain.com/api/cron/health-check
-```
-
----
-
-## Alert Runbooks
-
-### 1. High Error Rate
-
-**Symptoms**:
-
-- Error rate > 1%
-- Increased 5xx responses
-- User reports of issues
-
-**Investigation Steps**:
-
-1. Check Sentry for recent errors
-2. Review recent deployments (last 2 hours)
-3. Check database connectivity
-4. Verify external service status (Supabase, Resend, etc.)
-5. Review server logs for patterns
-
-**Resolution**:
-
-- If deployment-related: Rollback to previous version
-- If database-related: Check connection pool, optimize queries
-- If external service: Wait for resolution, add fallback
-
-### 2. Slow Response Times
-
-**Symptoms**:
-
-- P95 latency > 1000ms
-- User complaints about slowness
-- Increased server load
-
-**Investigation Steps**:
-
-1. Check Sentry performance metrics
-2. Identify slow endpoints
-3. Review database query performance
-4. Check cache hit rates
-5. Verify external API response times
-
-**Resolution**:
-
-- Add caching for frequently accessed data
-- Optimize database queries
-- Scale resources if needed
-- Add background jobs for expensive operations
-
-### 3. Database Connection Failure
-
-**Symptoms**:
-
-- Health check returns 503
-- "Cannot connect to database" errors
-- All API requests failing
-
-**Investigation Steps**:
-
-1. Check Supabase dashboard status
-2. Verify database connection string
-3. Check connection pool limits
-4. Review database logs
-
-**Resolution**:
-
-- Wait for Supabase to resolve (if service issue)
-- Restart application (if connection pool exhausted)
-- Scale database (if resource constraints)
-
----
+- broad `/api/analytics/*` collection endpoints
+- public directory or marketplace metrics
+- old Expertise Atlas dashboard behavior
+- LinkedIn verification as a public trust signal
+- native video-provider success when manual meeting links still work
+- broad fairness analytics dashboards
+- TTSC/TTFQI/proof-fit business metric targets as hard production availability checks
+
+Business metrics may be reviewed after launch, but they are not substitutes for MVP corridor smoke, privacy, route-surface, backup/restore, and go/no-go evidence.
 
 ## Alert Testing
 
-### Test Procedure
+Before launch, save evidence that:
 
-1. **Trigger Test Alert**:
+1. Sentry or equivalent receives release-tagged runtime errors.
+2. Public `/` and `/api/health` monitors alert on failure without exposing diagnostics.
+3. Vercel Cron monitors `/api/cron/decision-reminders`.
+4. cron-job.org jobs exist for the configured external observability routes.
+5. Authenticated `/api/monitoring/launch-status` and `/api/monitoring/perf-status` can be checked by operators.
+6. Alert recipients and escalation owners are current.
+7. Sample alert messages are privacy-safe.
 
-   ```bash
-   # Simulate error spike
-   curl -X POST https://your-domain.com/api/test/trigger-error
-   ```
+Do not trigger destructive, billing, auth, permission, database, or production-impacting failures just to test alerts. Use controlled test issues, preview targets, or provider test notifications where possible.
 
-2. **Verify Alert Delivery**:
-   - Check email inbox
-   - Check Slack channel
-   - Verify Sentry issue created
+## Response Runbook
 
-3. **Test Resolution**:
-   - Mark issue as resolved in Sentry
-   - Verify resolution notification sent
+For `P1`:
 
-### Monthly Alert Drill
+1. Acknowledge within 15 minutes.
+2. Preserve evidence without secrets or private proof content.
+3. Identify affected route, workflow, and primary object.
+4. Decide whether to pause new intros, hide unsafe public projection, block reveal, or enter safe mode.
+5. Record the incident and follow the security/privacy runbook if data exposure is possible.
 
-Conduct monthly alert testing:
+For `P2`:
 
-- Trigger each alert type
-- Verify notification delivery
-- Test on-call escalation
-- Review and update runbooks
+1. Acknowledge within 4 hours.
+2. Confirm whether fallback state is safe and visible.
+3. Identify the owner: engineering, product/ops, trust/verification, or support.
+4. Restore the workflow or document the launch risk.
 
----
+For `P3`:
 
-## Alert Maintenance
+1. Triage during the next operator review.
+2. Reduce noisy alerts when they do not protect launch behavior.
+3. Keep evidence freshness visible in the sweep or launch artifact.
 
-### Weekly Tasks
+## Launch Evidence To Save
 
-- Review alert noise (false positives)
-- Adjust thresholds if needed
-- Update contact information
+Record:
 
-### Monthly Tasks
-
-- Review alert effectiveness
-- Analyze resolution times
-- Update runbooks based on learnings
-- Test alert channels
-
-### Quarterly Tasks
-
-- Full alert system audit
-- Review and update severity levels
-- Optimize alert rules
-- Conduct tabletop exercises
-
----
-
-## Implementation Checklist
-
-- [ ] Configure Sentry alerts (error rate, performance, new issues)
-- [ ] Set up Vercel cron monitoring
-- [ ] Configure external uptime monitor (BetterUptime/Pingdom)
-- [ ] Add team email to all alert channels
-- [ ] Create Slack #proofound-alerts channel
-- [ ] Test all alert types
-- [ ] Document on-call rotation (if applicable)
-- [ ] Create alert runbooks for common issues
-- [ ] Schedule monthly alert drill
-- [ ] Review and adjust after first month of production
-
----
-
-## Contact Information
-
-**Primary On-Call**: [To be assigned]
-**Backup On-Call**: [To be assigned]
-**Engineering Lead**: [Contact info]
-**DevOps Contact**: [Contact info]
-
----
-
-**Last Review**: 2025-11-04
-**Next Review**: After 1 month of production monitoring
+- alert channels and owners, without personal secrets
+- monitor URLs and classifications
+- latest alert test date and target
+- launch-status and perf-status results
+- `/api/assignments` latency evidence source
+- cron ownership and schedules
+- any disabled, skipped, or unverified alert with the reason

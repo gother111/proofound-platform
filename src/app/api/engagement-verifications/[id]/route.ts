@@ -8,6 +8,11 @@ import {
   confirmEngagementVerification,
   normalizeEngagementType,
 } from '@/lib/engagement-verifications/service';
+import {
+  buildVisualEngagementConfirmationSummary,
+  interviewVisualFixturesEnabled,
+  isVisualInterviewEngagementVerificationId,
+} from '@/lib/interviews/visual-fixtures';
 import { isActiveOrgMember, requireApiAuth } from '@/lib/api/auth';
 import { log } from '@/lib/log';
 import { eq } from 'drizzle-orm';
@@ -68,16 +73,28 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       );
     }
 
-    if (
-      parsed.data.engagementType !== undefined &&
-      normalizeEngagementType(parsed.data.engagementType) === null
-    ) {
+    const normalizedEngagementType =
+      parsed.data.engagementType !== undefined
+        ? normalizeEngagementType(parsed.data.engagementType)
+        : null;
+
+    if (parsed.data.engagementType !== undefined && normalizedEngagementType === null) {
       return NextResponse.json(
         {
           error: 'Unsupported engagement type',
         },
         { status: 400 }
       );
+    }
+
+    if (interviewVisualFixturesEnabled() && isVisualInterviewEngagementVerificationId(id)) {
+      return NextResponse.json({
+        success: true,
+        engagementVerification: buildVisualEngagementConfirmationSummary({
+          id,
+          engagementType: normalizedEngagementType,
+        }),
+      });
     }
 
     const record = await db.query.engagementVerifications.findFirst({

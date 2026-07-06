@@ -1,13 +1,15 @@
 /**
  * Interviews Page - Organization
  *
- * View and manage the hiring corridor for your organization.
+ * View and manage the interview workflow for your organization.
  * Shows reveal approval, interview scheduling, decision, and engagement verification.
  */
 
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import {
   Calendar,
   Clock,
@@ -19,6 +21,8 @@ import {
   Download,
   Pencil,
   XCircle,
+  AlertTriangle,
+  RefreshCcw,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -28,13 +32,17 @@ import { HiringCorridorTimeline } from '@/components/interviews/HiringCorridorTi
 import { ScheduleInterviewButton } from '@/components/interviews/ScheduleInterviewButton';
 import { CardListSkeleton, PageIntroSkeleton } from '@/components/skeletons/CoreLoadingPrimitives';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 import {
   buildGoogleCalendarUrl,
@@ -42,6 +50,7 @@ import {
   type InterviewCalendarPayload,
 } from '@/lib/interviews/calendar';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { internalValueLabel } from '@/lib/copy/labels';
 import type { HiringCorridorSnapshot } from '@/lib/hiring-corridor/snapshot';
 
@@ -82,12 +91,76 @@ interface Interview {
   } | null;
 }
 
+type WorkflowActionFeedback = {
+  kind: 'engagement_confirmation';
+  itemId: string;
+  verificationId: string;
+  title: string;
+  message: string;
+};
+
+type InterviewDialogFeedback = {
+  kind: 'edit' | 'cancel' | 'complete' | 'no_show';
+  interviewId: string;
+  title: string;
+  message: string;
+};
+
+const INTERVIEW_UPDATE_FAILED_MESSAGE =
+  'Interview update could not be saved. The interview workflow is unchanged; review the time and retry before closing.';
+const INTERVIEW_CANCEL_FAILED_MESSAGE =
+  'Interview cancellation could not be recorded. The interview remains scheduled; review the reason and retry.';
+const INTERVIEW_COMPLETE_FAILED_MESSAGE =
+  'Interview completion could not be recorded. The corridor is unchanged; retry before recording a decision.';
+const INTERVIEW_NO_SHOW_FAILED_MESSAGE =
+  'No-show could not be recorded. The interview workflow is unchanged; review the note and retry.';
+const ENGAGEMENT_CONFIRMATION_FAILED_MESSAGE =
+  'Engagement confirmation could not be recorded. The engagement state is unchanged; retry before moving on.';
+
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function hasReturnedError(payload: unknown) {
+  return Boolean(
+    payload &&
+      typeof payload === 'object' &&
+      'error' in payload &&
+      typeof payload.error === 'string' &&
+      payload.error.trim().length > 0
+  );
+}
+
+function dispatchInterviewReturnedError(
+  reason: string,
+  response: Response,
+  payload: unknown,
+  detail: Record<string, unknown>
+) {
+  dispatchClientDiagnostic(reason, {
+    ...detail,
+    status: getResponseStatus(response),
+    hasReturnedError: hasReturnedError(payload),
+  });
+}
+
 export default function OrganizationInterviewsPage() {
+  const params = useParams<{ slug?: string | string[] }>();
   const [interviews, setInterviews] = useState<Interview[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [workflowActionFeedback, setWorkflowActionFeedback] =
+    useState<WorkflowActionFeedback | null>(null);
+  const [interviewDialogFeedback, setInterviewDialogFeedback] =
+    useState<InterviewDialogFeedback | null>(null);
   const [decisionDialogOpen, setDecisionDialogOpen] = useState(false);
   const [selectedInterview, setSelectedInterview] = useState<Interview | null>(null);
   const [editingInterview, setEditingInterview] = useState<Interview | null>(null);
+  const [cancelInterview, setCancelInterview] = useState<Interview | null>(null);
+  const [completeInterview, setCompleteInterview] = useState<Interview | null>(null);
+  const [noShowInterview, setNoShowInterview] = useState<Interview | null>(null);
+  const [cancelReason, setCancelReason] = useState('');
+  const [noShowReason, setNoShowReason] = useState('');
   const [editDate, setEditDate] = useState('');
   const [editTime, setEditTime] = useState('');
   const [editReason, setEditReason] = useState('');
@@ -99,6 +172,10 @@ export default function OrganizationInterviewsPage() {
   const [engagementTypeSelections, setEngagementTypeSelections] = useState<Record<string, string>>(
     {}
   );
+  const rawOrgSlug = Array.isArray(params?.slug) ? params.slug[0] : params?.slug;
+  const assignmentsHref = rawOrgSlug
+    ? `/app/o/${encodeURIComponent(rawOrgSlug)}/assignments`
+    : null;
 
   useEffect(() => {
     void loadInterviews();
@@ -106,13 +183,18 @@ export default function OrganizationInterviewsPage() {
 
   const loadInterviews = async () => {
     setIsLoading(true);
+    setLoadError(null);
+    setWorkflowActionFeedback(null);
 
     try {
       const data = await getInterviewCorridorItems({ perspective: 'organization' });
       setInterviews((data.items as Interview[]) || []);
     } catch (error) {
-      console.error('Failed to load interviews:', error);
+      dispatchClientErrorDiagnostic('interviews.organization.load_failed', error);
       setInterviews([]);
+      setLoadError(
+        'Scheduled interviews, decisions, and engagement records are still safe. Retry this section to refresh the organization workflow.'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -151,12 +233,23 @@ export default function OrganizationInterviewsPage() {
     });
   };
 
+  const meetingPlatformLabel = (platform: string | null | undefined) => {
+    if (platform === 'zoom') return 'Manual link';
+    return internalValueLabel(platform);
+  };
+
+  const meetingDisplayLabel = (interview: Interview['interview']) =>
+    meetingPlatformLabel(interview?.manualMeetingProvider ?? interview?.platform);
+
   const toCalendarPayload = (interview: Interview): InterviewCalendarPayload => ({
     interviewId: interview.interview?.id ?? interview.id,
     scheduledAt: interview.interview?.scheduledAt ?? new Date().toISOString(),
     durationMinutes: interview.interview?.duration ?? 30,
     meetingUrl: interview.interview?.meetingUrl ?? 'pending',
-    platform: interview.interview?.platform ?? 'manual',
+    platform:
+      interview.interview?.platform === 'zoom'
+        ? 'manual'
+        : (interview.interview?.platform ?? 'manual'),
     title:
       interview.candidateDisplayName || interview.corridor.subjectLabel
         ? `Interview with ${interview.candidateDisplayName || interview.corridor.subjectLabel}`
@@ -181,6 +274,7 @@ export default function OrganizationInterviewsPage() {
     setEditDate(localDate);
     setEditTime(localTime);
     setEditReason('');
+    setInterviewDialogFeedback(null);
   };
 
   const closeEditDialog = () => {
@@ -189,22 +283,75 @@ export default function OrganizationInterviewsPage() {
     setEditTime('');
     setEditReason('');
     setIsSavingEdit(false);
+    setInterviewDialogFeedback(null);
+  };
+
+  const openCancelDialog = (interview: Interview) => {
+    setCancelInterview(interview);
+    setCancelReason('');
+    setInterviewDialogFeedback(null);
+  };
+
+  const closeCancelDialog = () => {
+    if (isCancellingInterviewId) return;
+    setCancelInterview(null);
+    setCancelReason('');
+    setInterviewDialogFeedback(null);
+  };
+
+  const openCompleteDialog = (interview: Interview) => {
+    setCompleteInterview(interview);
+    setInterviewDialogFeedback(null);
+  };
+
+  const closeCompleteDialog = () => {
+    if (isCompletingInterviewId) return;
+    setCompleteInterview(null);
+    setInterviewDialogFeedback(null);
+  };
+
+  const openNoShowDialog = (interview: Interview) => {
+    setNoShowInterview(interview);
+    setNoShowReason('');
+    setInterviewDialogFeedback(null);
+  };
+
+  const closeNoShowDialog = () => {
+    if (isMarkingNoShowInterviewId) return;
+    setNoShowInterview(null);
+    setNoShowReason('');
+    setInterviewDialogFeedback(null);
   };
 
   const handleSaveInterviewEdit = async () => {
     if (!editingInterview?.interview) return;
     if (!editDate || !editTime) {
-      toast.error('Select both date and time before saving');
+      const message = 'Select both date and time before saving.';
+      setInterviewDialogFeedback({
+        kind: 'edit',
+        interviewId: editingInterview.interview.id,
+        title: 'Choose a date and time',
+        message,
+      });
+      toast.error(message);
       return;
     }
 
     const editedAt = new Date(`${editDate}T${editTime}:00`);
     if (Number.isNaN(editedAt.getTime())) {
-      toast.error('Invalid date or time');
+      const message = 'Choose a valid interview date and time before saving.';
+      setInterviewDialogFeedback({
+        kind: 'edit',
+        interviewId: editingInterview.interview.id,
+        title: 'Interview time is invalid',
+        message,
+      });
+      toast.error(message);
       return;
     }
 
     setIsSavingEdit(true);
+    setInterviewDialogFeedback(null);
     try {
       const response = await apiFetch('/api/interviews/edit', {
         method: 'POST',
@@ -217,126 +364,182 @@ export default function OrganizationInterviewsPage() {
         }),
       });
 
-      const payload = await response.json();
+      const payload = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(payload.error || 'Failed to update interview');
+        dispatchInterviewReturnedError(
+          'interviews.organization.edit_returned_error',
+          response,
+          payload,
+          {
+            interviewId: editingInterview.interview.id,
+          }
+        );
+        throw new Error('interview_edit_request_failed');
       }
 
       toast.success('Interview updated');
       closeEditDialog();
       await loadInterviews();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to update interview');
+      dispatchClientErrorDiagnostic('interviews.organization.edit_failed', error);
+      const message = INTERVIEW_UPDATE_FAILED_MESSAGE;
+      setInterviewDialogFeedback({
+        kind: 'edit',
+        interviewId: editingInterview.interview.id,
+        title: 'Interview update could not be saved',
+        message,
+      });
+      toast.error(message);
       setIsSavingEdit(false);
     }
   };
 
-  const handleCancelInterview = async (interview: Interview) => {
-    if (!interview.interview) {
+  const handleConfirmCancelInterview = async () => {
+    if (!cancelInterview?.interview) {
       return;
     }
 
-    if (!confirm('Are you sure you want to cancel this interview?')) {
-      return;
-    }
+    const reason = cancelReason.trim();
 
-    const reasonInput = window.prompt('Optional reason for cancellation (shown in conversation):');
-    const reason = typeof reasonInput === 'string' ? reasonInput.trim() : '';
-
-    setIsCancellingInterviewId(interview.interview.id);
+    setIsCancellingInterviewId(cancelInterview.interview.id);
+    setInterviewDialogFeedback(null);
     try {
       const response = await apiFetch('/api/interviews/cancel', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          interviewId: interview.interview.id,
+          interviewId: cancelInterview.interview.id,
           ...(reason ? { reason } : {}),
         }),
       });
 
-      const payload = await response.json();
+      const payload = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(payload.error || 'Failed to cancel interview');
+        dispatchInterviewReturnedError(
+          'interviews.organization.cancel_returned_error',
+          response,
+          payload,
+          {
+            interviewId: cancelInterview.interview.id,
+            hasReason: Boolean(reason),
+          }
+        );
+        throw new Error('interview_cancel_request_failed');
       }
 
       toast.success('Interview cancelled');
+      setCancelInterview(null);
+      setCancelReason('');
       await loadInterviews();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to cancel interview');
+      dispatchClientErrorDiagnostic('interviews.organization.cancel_failed', error);
+      const message = INTERVIEW_CANCEL_FAILED_MESSAGE;
+      setInterviewDialogFeedback({
+        kind: 'cancel',
+        interviewId: cancelInterview.interview.id,
+        title: 'Interview cancellation could not be recorded',
+        message,
+      });
+      toast.error(message);
     } finally {
       setIsCancellingInterviewId(null);
     }
   };
 
-  const handleCompleteInterview = async (interview: Interview) => {
-    if (!interview.interview) {
+  const handleConfirmCompleteInterview = async () => {
+    if (!completeInterview?.interview) {
       return;
     }
 
-    if (!confirm('Mark this interview as completed? This will unlock the decision step.')) {
-      return;
-    }
-
-    setIsCompletingInterviewId(interview.interview.id);
+    setIsCompletingInterviewId(completeInterview.interview.id);
+    setInterviewDialogFeedback(null);
     try {
       const response = await apiFetch('/api/interviews/complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          interviewId: interview.interview.id,
+          interviewId: completeInterview.interview.id,
         }),
       });
 
-      const payload = await response.json();
+      const payload = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(payload.error || 'Failed to mark interview complete');
+        dispatchInterviewReturnedError(
+          'interviews.organization.complete_returned_error',
+          response,
+          payload,
+          {
+            interviewId: completeInterview.interview.id,
+          }
+        );
+        throw new Error('interview_complete_request_failed');
       }
 
       toast.success('Interview marked complete');
+      setCompleteInterview(null);
       await loadInterviews();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to mark interview complete');
+      dispatchClientErrorDiagnostic('interviews.organization.complete_failed', error);
+      const message = INTERVIEW_COMPLETE_FAILED_MESSAGE;
+      setInterviewDialogFeedback({
+        kind: 'complete',
+        interviewId: completeInterview.interview.id,
+        title: 'Interview completion could not be recorded',
+        message,
+      });
+      toast.error(message);
     } finally {
       setIsCompletingInterviewId(null);
     }
   };
 
-  const handleMarkNoShow = async (interview: Interview) => {
-    if (!interview.interview) {
+  const handleConfirmMarkNoShow = async () => {
+    if (!noShowInterview?.interview) {
       return;
     }
 
-    if (
-      !confirm(
-        'Mark this interview as a no-show? The hiring flow will require a replacement interview.'
-      )
-    ) {
-      return;
-    }
+    const reason = noShowReason.trim();
 
-    const reasonInput = window.prompt('Optional no-show reason:');
-    const reason = typeof reasonInput === 'string' ? reasonInput.trim() : '';
-
-    setIsMarkingNoShowInterviewId(interview.interview.id);
+    setIsMarkingNoShowInterviewId(noShowInterview.interview.id);
+    setInterviewDialogFeedback(null);
     try {
       const response = await apiFetch('/api/interviews/no-show', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          interviewId: interview.interview.id,
+          interviewId: noShowInterview.interview.id,
           ...(reason ? { reason } : {}),
         }),
       });
 
-      const payload = await response.json();
+      const payload = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(payload.error || 'Failed to mark no-show');
+        dispatchInterviewReturnedError(
+          'interviews.organization.no_show_returned_error',
+          response,
+          payload,
+          {
+            interviewId: noShowInterview.interview.id,
+            hasReason: Boolean(reason),
+          }
+        );
+        throw new Error('interview_no_show_request_failed');
       }
 
       toast.success('Interview marked no-show');
+      setNoShowInterview(null);
+      setNoShowReason('');
       await loadInterviews();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to mark no-show');
+      dispatchClientErrorDiagnostic('interviews.organization.no_show_failed', error);
+      const message = INTERVIEW_NO_SHOW_FAILED_MESSAGE;
+      setInterviewDialogFeedback({
+        kind: 'no_show',
+        interviewId: noShowInterview.interview.id,
+        title: 'No-show could not be recorded',
+        message,
+      });
+      toast.error(message);
     } finally {
       setIsMarkingNoShowInterviewId(null);
     }
@@ -361,11 +564,20 @@ export default function OrganizationInterviewsPage() {
 
     const engagementType = resolveEngagementTypeValue(interview);
     if (!engagementType) {
+      setWorkflowActionFeedback({
+        kind: 'engagement_confirmation',
+        itemId: interview.id,
+        verificationId: verification.id,
+        title: 'Choose an engagement type',
+        message:
+          'Select how the work will be structured before recording the engagement confirmation.',
+      });
       toast.error('Select an engagement type before confirming');
       return;
     }
 
     setIsConfirmingEngagementId(verification.id);
+    setWorkflowActionFeedback(null);
     try {
       const response = await apiFetch(`/api/engagement-verifications/${verification.id}`, {
         method: 'PATCH',
@@ -376,15 +588,33 @@ export default function OrganizationInterviewsPage() {
         }),
       });
 
-      const payload = await response.json();
+      const payload = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(payload.error || 'Failed to confirm engagement');
+        dispatchInterviewReturnedError(
+          'interviews.organization.engagement_confirm_returned_error',
+          response,
+          payload,
+          {
+            verificationId: verification.id,
+            engagementType,
+          }
+        );
+        throw new Error('engagement_confirmation_request_failed');
       }
 
       toast.success('Engagement confirmation recorded');
       await loadInterviews();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to confirm engagement');
+      dispatchClientErrorDiagnostic('interviews.organization.engagement_confirm_failed', error);
+      const message = ENGAGEMENT_CONFIRMATION_FAILED_MESSAGE;
+      setWorkflowActionFeedback({
+        kind: 'engagement_confirmation',
+        itemId: interview.id,
+        verificationId: verification.id,
+        title: 'Engagement confirmation could not be recorded',
+        message,
+      });
+      toast.error(message);
     } finally {
       setIsConfirmingEngagementId(null);
     }
@@ -397,11 +627,11 @@ export default function OrganizationInterviewsPage() {
 
     return (
       <span
-        className="rounded-full px-2 py-1 text-xs font-medium"
-        style={{
-          backgroundColor: decisionState === 'hire' ? '#E8F5E9' : '#F1F5F9',
-          color: decisionState === 'hire' ? '#2E7D32' : '#334155',
-        }}
+        className={
+          decisionState === 'hire'
+            ? 'rounded-full bg-[#dff0d9] px-2 py-1 text-xs font-medium text-proofound-forest'
+            : 'rounded-full bg-proofound-stone/35 px-2 py-1 text-xs font-medium text-muted-foreground'
+        }
       >
         Decision: {internalValueLabel(decisionState)}
       </span>
@@ -419,11 +649,11 @@ export default function OrganizationInterviewsPage() {
 
     return (
       <span
-        className="rounded-full px-2 py-1 text-xs font-medium"
-        style={{
-          backgroundColor: isVerified ? '#E8F5E9' : '#FEF3C7',
-          color: isVerified ? '#2E7D32' : '#92400E',
-        }}
+        className={
+          isVerified
+            ? 'rounded-full bg-[#dff0d9] px-2 py-1 text-xs font-medium text-proofound-forest'
+            : 'rounded-full bg-[#fff1d6] px-2 py-1 text-xs font-medium text-[#8a5b00]'
+        }
       >
         Engagement: {verification.statusLabel}
       </span>
@@ -455,10 +685,79 @@ export default function OrganizationInterviewsPage() {
       ? new Date()
       : new Date(interview.introAcceptedAt ?? Date.now());
 
+  const getInterviewDialogFeedback = (
+    kind: InterviewDialogFeedback['kind'],
+    interview: Interview | null
+  ) => {
+    if (!interview?.interview?.id) {
+      return null;
+    }
+
+    if (
+      interviewDialogFeedback?.kind === kind &&
+      interviewDialogFeedback.interviewId === interview.interview.id
+    ) {
+      return interviewDialogFeedback;
+    }
+
+    return null;
+  };
+
+  const renderInterviewDialogFeedback = ({
+    feedback,
+    retryLabel,
+    isRetrying,
+    onRetry,
+  }: {
+    feedback: InterviewDialogFeedback | null;
+    retryLabel: string;
+    isRetrying: boolean;
+    onRetry: () => void;
+  }) => {
+    if (!feedback) {
+      return null;
+    }
+
+    return (
+      <div
+        role="alert"
+        className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm leading-5 text-amber-900"
+      >
+        <p className="font-semibold">{feedback.title}</p>
+        <p className="mt-1">{feedback.message}</p>
+        <Button
+          type="button"
+          variant="outline"
+          size="touch"
+          onClick={onRetry}
+          disabled={isRetrying}
+          className="mt-3 rounded-full border-amber-300 bg-white px-3 text-xs font-semibold text-amber-950 hover:bg-amber-100"
+        >
+          {isRetrying ? 'Retrying...' : retryLabel}
+        </Button>
+      </div>
+    );
+  };
+
   if (isLoading) {
     return (
       <AppSurface>
         <div className="mx-auto max-w-4xl space-y-6">
+          <section className="rounded-2xl border border-proofound-stone bg-white/85 p-5 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              Interviews
+            </p>
+            <h1 className="mt-2 font-display text-xl font-semibold text-foreground">
+              Interview workflow is loading
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+              We are preparing scheduling, decision, feedback, and engagement verification steps for
+              this organization workspace.
+            </p>
+            <p className="mt-3 text-sm text-muted-foreground" role="status">
+              Loading proof-review interview workflow...
+            </p>
+          </section>
           <PageIntroSkeleton showAction={false} />
           <CardListSkeleton count={3} />
         </div>
@@ -474,22 +773,46 @@ export default function OrganizationInterviewsPage() {
             Interviews
           </h1>
           <p className="text-sm" style={{ color: '#6B6760' }}>
-            Track the full hiring flow, from shortlist through decision and engagement verification
+            Track the proof-review workflow stage from shortlist through decision and engagement
+            verification
           </p>
         </div>
 
-        {interviews.length === 0 ? (
+        {loadError ? (
+          <div className="flex flex-col items-center justify-center rounded-xl border border-amber-200 bg-amber-50 px-4 py-16 text-center">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white">
+              <AlertTriangle className="h-8 w-8 text-amber-700" aria-hidden="true" />
+            </div>
+            <h2 className="mb-2 text-xl font-medium text-amber-950">
+              Interview workflow could not load
+            </h2>
+            <p className="mb-6 max-w-md text-sm text-amber-900">{loadError}</p>
+            <Button
+              type="button"
+              variant="outline"
+              size="touch"
+              onClick={() => void loadInterviews()}
+            >
+              Retry interviews
+            </Button>
+          </div>
+        ) : interviews.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white px-4 py-16 text-center">
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-japandi-bg">
               <Calendar className="h-8 w-8" style={{ color: '#1C4D3A' }} />
             </div>
             <h2 className="mb-2 text-xl font-medium" style={{ color: '#2D3330' }}>
-              No Active Hiring Flow Yet
+              No active interview workflow yet
             </h2>
             <p className="mb-6 max-w-md text-sm text-muted-foreground">
-              Once you shortlist a candidate, this page will show each hiring stage, the privacy
-              status, and the next legal action.
+              Once you shortlist a proof submission, this page will show each workflow stage, the
+              privacy status, and the next legal action.
             </p>
+            {assignmentsHref ? (
+              <Button asChild variant="outline" size="touch">
+                <Link href={assignmentsHref}>Review assignment queue</Link>
+              </Button>
+            ) : null}
           </div>
         ) : (
           <div className="space-y-4">
@@ -504,27 +827,27 @@ export default function OrganizationInterviewsPage() {
               return (
                 <div
                   key={interview.id}
-                  className="rounded-lg border border-gray-200 bg-white p-6 transition-colors hover:border-gray-300"
+                  className="rounded-lg border border-proofound-stone/70 bg-white p-4 transition-colors hover:border-proofound-stone sm:p-6 shadow-sm"
                 >
-                  <div className="flex items-start justify-between gap-6">
-                    <div className="flex-1 space-y-4">
+                  <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="min-w-0 flex-1 space-y-4">
                       <div className="space-y-2">
                         <div className="flex flex-wrap items-center gap-2">
                           {interview.candidateDisplayName ? (
                             <>
-                              <User className="h-4 w-4" style={{ color: '#1C4D3A' }} />
-                              <p className="text-base font-semibold" style={{ color: '#2D3330' }}>
+                              <User className="h-4 w-4 text-proofound-forest" />
+                              <p className="text-base font-semibold text-proofound-charcoal">
                                 {interview.candidateDisplayName}
                               </p>
                             </>
                           ) : (
-                            <p className="text-base font-semibold" style={{ color: '#2D3330' }}>
+                            <p className="text-base font-semibold text-proofound-charcoal">
                               {interview.corridor.subjectLabel}
                             </p>
                           )}
                         </div>
                         {interview.assignmentTitle ? (
-                          <p className="text-sm" style={{ color: '#6B6760' }}>
+                          <p className="text-sm text-muted-foreground">
                             {interview.assignmentTitle}
                           </p>
                         ) : null}
@@ -535,27 +858,27 @@ export default function OrganizationInterviewsPage() {
                       {interview.interview?.scheduledAt ? (
                         <div className="space-y-3">
                           <div className="flex flex-wrap items-center gap-4">
-                            <div className="flex items-center gap-2">
-                              <Calendar className="h-4 w-4" style={{ color: '#1C4D3A' }} />
-                              <span className="font-medium" style={{ color: '#2D3330' }}>
+                            <div className="flex items-center gap-2 text-proofound-forest">
+                              <Calendar className="h-4 w-4" />
+                              <span className="font-medium text-proofound-charcoal">
                                 {formatDate(interview.interview.scheduledAt)}
                               </span>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Clock className="h-4 w-4" style={{ color: '#6B6760' }} />
-                              <span className="text-sm" style={{ color: '#6B6760' }}>
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Clock className="h-4 w-4" />
+                              <span className="text-sm">
                                 {formatTime(interview.interview.scheduledAt)} (
                                 {interview.interview.duration} min)
                               </span>
                             </div>
                           </div>
 
-                          <div className="flex flex-wrap items-center gap-4">
+                          <div className="flex flex-wrap items-center gap-4 text-muted-foreground">
                             {interview.interview.platform ? (
                               <div className="flex items-center gap-2">
-                                <Video className="h-4 w-4" style={{ color: '#6B6760' }} />
-                                <span className="text-sm capitalize" style={{ color: '#6B6760' }}>
-                                  {interview.interview.platform}
+                                <Video className="h-4 w-4" />
+                                <span className="text-sm capitalize">
+                                  {meetingDisplayLabel(interview.interview)}
                                 </span>
                               </div>
                             ) : null}
@@ -567,8 +890,7 @@ export default function OrganizationInterviewsPage() {
                                   href={interview.interview.meetingUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="flex items-center gap-1 text-sm hover:underline"
-                                  style={{ color: '#1C4D3A' }}
+                                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-proofound-stone/80 bg-white px-3 text-sm font-medium text-proofound-forest hover:bg-proofound-parchment/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
                                 >
                                   Join Meeting
                                   <ExternalLink className="h-3 w-3" />
@@ -577,23 +899,34 @@ export default function OrganizationInterviewsPage() {
                                   href={buildGoogleCalendarUrl(toCalendarPayload(interview))}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="flex items-center gap-1 text-sm hover:underline"
-                                  style={{ color: '#1C4D3A' }}
+                                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-proofound-stone/80 bg-white px-3 text-sm font-medium text-proofound-forest hover:bg-proofound-parchment/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
                                 >
-                                  Add to Google Calendar
+                                  Add to calendar
                                   <CalendarPlus className="h-3 w-3" />
                                 </a>
                                 <Button
                                   variant="outline"
-                                  size="sm"
-                                  className="h-7 px-2 text-xs"
+                                  size="touch"
+                                  className="px-3 text-xs"
                                   onClick={() => downloadInterviewIcs(toCalendarPayload(interview))}
                                 >
                                   <Download className="mr-1 h-3 w-3" />
                                   .ics
                                 </Button>
                               </>
-                            ) : null}
+                            ) : (
+                              <div
+                                role="status"
+                                className="flex min-w-0 items-start gap-2 rounded-md border border-[#E4CF9D] bg-[#FFF8E8] px-3 py-2 text-sm leading-5 text-[#6f4a00]"
+                              >
+                                <Video className="mt-0.5 h-4 w-4 shrink-0" />
+                                <span>
+                                  <span className="font-semibold">Meeting link pending.</span> Join
+                                  and calendar controls appear once a usable meeting link is
+                                  attached.
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       ) : null}
@@ -601,21 +934,13 @@ export default function OrganizationInterviewsPage() {
                       <div className="flex flex-wrap gap-2">
                         {interview.interview?.status ? (
                           <span
-                            className="rounded-full px-2 py-1 text-xs font-medium"
-                            style={{
-                              backgroundColor:
-                                interview.interview.status === 'scheduled'
-                                  ? '#E8F5E9'
-                                  : interview.interview.status === 'completed'
-                                    ? '#E3F2FD'
-                                    : '#FFF3E0',
-                              color:
-                                interview.interview.status === 'scheduled'
-                                  ? '#2E7D32'
-                                  : interview.interview.status === 'completed'
-                                    ? '#1565C0'
-                                    : '#E65100',
-                            }}
+                            className={
+                              interview.interview.status === 'scheduled'
+                                ? 'rounded-full bg-[#dff0d9] px-2 py-1 text-xs font-medium text-proofound-forest'
+                                : interview.interview.status === 'completed'
+                                  ? 'rounded-full bg-[#dcecf8] px-2 py-1 text-xs font-medium text-[#28628a]'
+                                  : 'rounded-full bg-[#fff1df] px-2 py-1 text-xs font-medium text-[#8a4d1f]'
+                            }
                           >
                             {internalValueLabel(interview.interview.status)}
                           </span>
@@ -623,13 +948,7 @@ export default function OrganizationInterviewsPage() {
                         {getDecisionBadge(interview.decisionState)}
                         {getEngagementBadge(interview)}
                         {(interview.interview?.rescheduleCount ?? 0) > 0 ? (
-                          <span
-                            className="rounded-full px-2 py-1 text-xs font-medium"
-                            style={{
-                              backgroundColor: '#FEF3C7',
-                              color: '#92400E',
-                            }}
-                          >
+                          <span className="rounded-full bg-[#fff1d6] px-2 py-1 text-xs font-medium text-[#8a5b00]">
                             Rescheduled {interview.interview?.rescheduleCount} time
                             {(interview.interview?.rescheduleCount ?? 0) === 1 ? '' : 's'}
                           </span>
@@ -637,14 +956,15 @@ export default function OrganizationInterviewsPage() {
                       </div>
                     </div>
 
-                    <div className="flex min-w-[210px] flex-col gap-2">
+                    <div className="flex w-full flex-col gap-2 lg:w-[220px] lg:shrink-0">
                       {canScheduleInterview(interview) && interview.introAcceptedAt ? (
                         <ScheduleInterviewButton
                           matchId={interview.matchId}
                           matchAgreedAt={scheduleAnchorDateFor(interview)}
                           existingInterviewsCount={0}
                           variant="default"
-                          size="sm"
+                          size="touch"
+                          className="w-full"
                           onScheduled={() => {
                             void loadInterviews();
                           }}
@@ -655,10 +975,10 @@ export default function OrganizationInterviewsPage() {
                         <>
                           <Button
                             variant="outline"
-                            size="sm"
+                            size="touch"
                             onClick={() => openEditDialog(interview)}
                             disabled={!canEditInterview(interview)}
-                            className="flex items-center gap-2"
+                            className="flex w-full items-center justify-center gap-2"
                           >
                             <Pencil className="h-4 w-4" />
                             {(interview.interview?.rescheduleCount ?? 0) > 0
@@ -667,10 +987,10 @@ export default function OrganizationInterviewsPage() {
                           </Button>
                           <Button
                             variant="outline"
-                            size="sm"
-                            onClick={() => handleCancelInterview(interview)}
+                            size="touch"
+                            onClick={() => openCancelDialog(interview)}
                             disabled={isCancellingInterviewId === interview.interview?.id}
-                            className="flex items-center gap-2 border-[#E0C9C1] text-[#A03A2A]"
+                            className="flex w-full items-center justify-center gap-2 border-[#E0C9C1] text-[#A03A2A]"
                           >
                             <XCircle className="h-4 w-4" />
                             {isCancellingInterviewId === interview.interview?.id
@@ -684,11 +1004,10 @@ export default function OrganizationInterviewsPage() {
                         <>
                           <Button
                             variant="default"
-                            size="sm"
-                            onClick={() => handleCompleteInterview(interview)}
+                            size="touch"
+                            onClick={() => openCompleteDialog(interview)}
                             disabled={isCompletingInterviewId === interview.interview?.id}
-                            className="flex items-center gap-2"
-                            style={{ backgroundColor: '#1C4D3A' }}
+                            className="flex w-full items-center justify-center gap-2 bg-proofound-forest text-white hover:bg-proofound-forest/90"
                           >
                             <FileCheck className="h-4 w-4" />
                             {isCompletingInterviewId === interview.interview?.id
@@ -697,10 +1016,10 @@ export default function OrganizationInterviewsPage() {
                           </Button>
                           <Button
                             variant="outline"
-                            size="sm"
-                            onClick={() => handleMarkNoShow(interview)}
+                            size="touch"
+                            onClick={() => openNoShowDialog(interview)}
                             disabled={isMarkingNoShowInterviewId === interview.interview?.id}
-                            className="flex items-center gap-2"
+                            className="flex w-full items-center justify-center gap-2"
                           >
                             <XCircle className="h-4 w-4" />
                             {isMarkingNoShowInterviewId === interview.interview?.id
@@ -713,10 +1032,9 @@ export default function OrganizationInterviewsPage() {
                       {canRecordDecision(interview) && interview.interview?.id ? (
                         <Button
                           variant="default"
-                          size="sm"
+                          size="touch"
                           onClick={() => handleOpenDecisionDialog(interview)}
-                          className="flex items-center gap-2"
-                          style={{ backgroundColor: '#1C4D3A' }}
+                          className="flex w-full items-center justify-center gap-2 bg-proofound-forest text-white hover:bg-proofound-forest/90"
                         >
                           <FileCheck className="h-4 w-4" />
                           Record Decision
@@ -728,13 +1046,19 @@ export default function OrganizationInterviewsPage() {
                           <select
                             aria-label="Engagement type"
                             value={resolveEngagementTypeValue(interview)}
-                            onChange={(event) =>
+                            onChange={(event) => {
+                              if (
+                                workflowActionFeedback?.kind === 'engagement_confirmation' &&
+                                workflowActionFeedback.verificationId === verification.id
+                              ) {
+                                setWorkflowActionFeedback(null);
+                              }
                               setEngagementTypeSelections((current) => ({
                                 ...current,
                                 [verification.id]: event.target.value,
-                              }))
-                            }
-                            className="h-9 rounded-md border border-gray-300 px-3 text-sm"
+                              }));
+                            }}
+                            className="min-h-11 w-full rounded-md border border-gray-300 px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
                           >
                             <option value="">Select engagement type</option>
                             <option value="full_time">Full-time</option>
@@ -744,16 +1068,41 @@ export default function OrganizationInterviewsPage() {
                           </select>
                           <Button
                             variant="outline"
-                            size="sm"
+                            size="touch"
                             onClick={() => handleConfirmEngagement(interview)}
                             disabled={isConfirmingEngagementId === verification.id}
-                            className="flex items-center gap-2"
+                            className="flex w-full items-center justify-center gap-2"
                           >
                             <FileCheck className="h-4 w-4" />
                             {isConfirmingEngagementId === verification.id
                               ? 'Confirming...'
                               : 'Confirm Engagement'}
                           </Button>
+                          {workflowActionFeedback?.kind === 'engagement_confirmation' &&
+                          workflowActionFeedback.itemId === interview.id &&
+                          workflowActionFeedback.verificationId === verification.id ? (
+                            <div
+                              role="alert"
+                              className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900"
+                            >
+                              <p className="font-semibold">{workflowActionFeedback.title}</p>
+                              <p>{workflowActionFeedback.message}</p>
+                              {resolveEngagementTypeValue(interview) ? (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="touch"
+                                  onClick={() => {
+                                    void handleConfirmEngagement(interview);
+                                  }}
+                                  disabled={isConfirmingEngagementId === verification.id}
+                                  className="mt-2 rounded-full border-amber-300 bg-white px-3 text-xs font-semibold text-amber-950 hover:bg-amber-100"
+                                >
+                                  Retry confirmation
+                                </Button>
+                              ) : null}
+                            </div>
+                          ) : null}
                         </>
                       ) : null}
                     </div>
@@ -772,7 +1121,7 @@ export default function OrganizationInterviewsPage() {
             <DialogHeader>
               <DialogTitle>Edit Interview</DialogTitle>
               <DialogDescription>
-                Update the interview time. Changes will be sent to the candidate via messaging.
+                Update the interview time. Changes will be sent through workflow messaging.
               </DialogDescription>
             </DialogHeader>
 
@@ -797,8 +1146,13 @@ export default function OrganizationInterviewsPage() {
                   id="edit-interview-date"
                   type="date"
                   value={editDate}
-                  onChange={(event) => setEditDate(event.target.value)}
-                  className="h-10 w-full rounded-md border border-gray-300 px-3 text-sm"
+                  onChange={(event) => {
+                    setEditDate(event.target.value);
+                    if (getInterviewDialogFeedback('edit', editingInterview)) {
+                      setInterviewDialogFeedback(null);
+                    }
+                  }}
+                  className="min-h-11 w-full rounded-md border border-proofound-stone/70 px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
                 />
               </div>
 
@@ -813,8 +1167,13 @@ export default function OrganizationInterviewsPage() {
                   id="edit-interview-time"
                   type="time"
                   value={editTime}
-                  onChange={(event) => setEditTime(event.target.value)}
-                  className="h-10 w-full rounded-md border border-gray-300 px-3 text-sm"
+                  onChange={(event) => {
+                    setEditTime(event.target.value);
+                    if (getInterviewDialogFeedback('edit', editingInterview)) {
+                      setInterviewDialogFeedback(null);
+                    }
+                  }}
+                  className="min-h-11 w-full rounded-md border border-proofound-stone/70 px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
                 />
               </div>
 
@@ -828,12 +1187,26 @@ export default function OrganizationInterviewsPage() {
                 <textarea
                   id="edit-interview-reason"
                   value={editReason}
-                  onChange={(event) => setEditReason(event.target.value)}
+                  onChange={(event) => {
+                    setEditReason(event.target.value);
+                    if (getInterviewDialogFeedback('edit', editingInterview)) {
+                      setInterviewDialogFeedback(null);
+                    }
+                  }}
                   rows={3}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                  className="w-full rounded-md border border-proofound-stone/70 px-3 py-2 text-sm"
                   placeholder="Add context for the update..."
                 />
               </div>
+
+              {renderInterviewDialogFeedback({
+                feedback: getInterviewDialogFeedback('edit', editingInterview),
+                retryLabel: 'Retry update',
+                isRetrying: isSavingEdit,
+                onRetry: () => {
+                  void handleSaveInterviewEdit();
+                },
+              })}
             </div>
 
             <div className="flex items-center justify-end gap-2">
@@ -855,10 +1228,218 @@ export default function OrganizationInterviewsPage() {
             candidateName={
               selectedInterview.candidateDisplayName || selectedInterview.corridor.subjectLabel
             }
-            role={selectedInterview.assignmentTitle || 'Assignment'}
+            assignmentTitle={selectedInterview.assignmentTitle || 'Assignment'}
             onDecisionMade={handleDecisionMade}
           />
         ) : null}
+
+        <Dialog
+          open={Boolean(completeInterview)}
+          onOpenChange={(open) => !open && closeCompleteDialog()}
+        >
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-proofound-forest">
+                <FileCheck className="h-5 w-5" />
+                Mark interview complete
+              </DialogTitle>
+              <DialogDescription>
+                Confirm this only after the interview has finished. The decision step becomes
+                available next.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="rounded-lg border border-[#d8e6d2] bg-[#f5faf1] p-3 text-sm text-proofound-forest">
+              <p className="font-medium">Completion moves the workflow forward.</p>
+              <p className="mt-1">
+                The interview will be recorded as complete and the organization can record the
+                workflow decision for this proof-review participant.
+              </p>
+            </div>
+
+            {renderInterviewDialogFeedback({
+              feedback: getInterviewDialogFeedback('complete', completeInterview),
+              retryLabel: 'Retry completion',
+              isRetrying: Boolean(isCompletingInterviewId),
+              onRetry: () => {
+                void handleConfirmCompleteInterview();
+              },
+            })}
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={closeCompleteDialog}
+                disabled={Boolean(isCompletingInterviewId)}
+              >
+                Keep scheduled
+              </Button>
+              <Button
+                onClick={() => {
+                  void handleConfirmCompleteInterview();
+                }}
+                disabled={Boolean(isCompletingInterviewId)}
+                className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
+              >
+                {isCompletingInterviewId ? 'Marking complete...' : 'Mark interview complete'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog
+          open={Boolean(noShowInterview)}
+          onOpenChange={(open) => !open && closeNoShowDialog()}
+        >
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-[#A03A2A]">
+                <AlertTriangle className="h-5 w-5" />
+                Record no-show
+              </DialogTitle>
+              <DialogDescription>
+                Use this when the scheduled call did not happen. Add context so the replacement
+                interview path is clear.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div className="rounded-lg border border-[#E0C9C1] bg-[#fff8f3] p-3 text-sm text-[#6f2f22]">
+                <p className="font-medium">No-show pauses the decision path.</p>
+                <p className="mt-1">
+                  The workflow will require a replacement interview before a decision can be
+                  recorded.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="no-show-interview-reason">Reason (optional)</Label>
+                <Textarea
+                  id="no-show-interview-reason"
+                  value={noShowReason}
+                  onChange={(event) => {
+                    setNoShowReason(event.target.value);
+                    if (getInterviewDialogFeedback('no_show', noShowInterview)) {
+                      setInterviewDialogFeedback(null);
+                    }
+                  }}
+                  rows={3}
+                  disabled={Boolean(isMarkingNoShowInterviewId)}
+                  aria-describedby="no-show-interview-reason-help"
+                  placeholder="Add what happened and what should happen next..."
+                />
+                <p id="no-show-interview-reason-help" className="text-xs text-muted-foreground">
+                  Keep this factual and suitable for conversation history.
+                </p>
+              </div>
+
+              {renderInterviewDialogFeedback({
+                feedback: getInterviewDialogFeedback('no_show', noShowInterview),
+                retryLabel: 'Retry no-show',
+                isRetrying: Boolean(isMarkingNoShowInterviewId),
+                onRetry: () => {
+                  void handleConfirmMarkNoShow();
+                },
+              })}
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={closeNoShowDialog}
+                disabled={Boolean(isMarkingNoShowInterviewId)}
+              >
+                Keep scheduled
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  void handleConfirmMarkNoShow();
+                }}
+                disabled={Boolean(isMarkingNoShowInterviewId)}
+              >
+                {isMarkingNoShowInterviewId ? 'Recording no-show...' : 'Record no-show'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog
+          open={Boolean(cancelInterview)}
+          onOpenChange={(open) => !open && closeCancelDialog()}
+        >
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-[#A03A2A]">
+                <AlertTriangle className="h-5 w-5" />
+                Cancel interview
+              </DialogTitle>
+              <DialogDescription>
+                Add a brief reason before cancelling so the proof-review participant and workflow
+                record stay clear.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div className="rounded-lg border border-[#E0C9C1] bg-[#fff8f3] p-3 text-sm text-[#6f2f22]">
+                <p className="font-medium">Cancellation changes the active interview workflow.</p>
+                <p className="mt-1">
+                  The interview will be marked cancelled. A replacement interview can be scheduled
+                  only when the corridor next action allows it.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="cancel-interview-reason">Reason (optional)</Label>
+                <Textarea
+                  id="cancel-interview-reason"
+                  value={cancelReason}
+                  onChange={(event) => {
+                    setCancelReason(event.target.value);
+                    if (getInterviewDialogFeedback('cancel', cancelInterview)) {
+                      setInterviewDialogFeedback(null);
+                    }
+                  }}
+                  rows={3}
+                  disabled={Boolean(isCancellingInterviewId)}
+                  aria-describedby="cancel-interview-reason-help"
+                  placeholder="Add context for the proof-review participant and workflow record..."
+                />
+                <p id="cancel-interview-reason-help" className="text-xs text-muted-foreground">
+                  Keep this concise and suitable for conversation history.
+                </p>
+              </div>
+
+              {renderInterviewDialogFeedback({
+                feedback: getInterviewDialogFeedback('cancel', cancelInterview),
+                retryLabel: 'Retry cancellation',
+                isRetrying: Boolean(isCancellingInterviewId),
+                onRetry: () => {
+                  void handleConfirmCancelInterview();
+                },
+              })}
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={closeCancelDialog}
+                disabled={Boolean(isCancellingInterviewId)}
+              >
+                Keep interview
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  void handleConfirmCancelInterview();
+                }}
+                disabled={Boolean(isCancellingInterviewId)}
+              >
+                {isCancellingInterviewId ? 'Cancelling interview...' : 'Cancel interview'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AppSurface>
   );

@@ -39,7 +39,7 @@ describe('PortfolioReadinessChecklist', () => {
     );
 
     expect(screen.getByText('Complete your safe shell')).toBeInTheDocument();
-    expect(screen.getByText('Safe shell is complete')).toBeInTheDocument();
+    expect(screen.getByText('Safe shell basics')).toBeInTheDocument();
   });
 
   it('points users to publish once all proof gates are complete', () => {
@@ -56,6 +56,15 @@ describe('PortfolioReadinessChecklist', () => {
       />
     );
 
-    expect(screen.getByText('Publish one proof-backed signal')).toBeInTheDocument();
+    expect(screen.getByText('Publish one public-safe proof item')).toBeInTheDocument();
+    expect(screen.getByText('3/4')).toBeInTheDocument();
+  });
+
+  it('keeps the checklist toggle easy to tap on small screens', () => {
+    render(<PortfolioReadinessChecklist completionState={buildState({})} />);
+
+    const toggle = screen.getByRole('button', { name: 'Collapse checklist' });
+
+    expect(toggle).toHaveClass('h-11', 'w-11', 'shrink-0');
   });
 });

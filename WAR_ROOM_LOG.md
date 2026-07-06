@@ -23,3 +23,6 @@ P0-3 | PASS | pending-sha | publish gate = structured proof only; badges live; p
   P0-10 | PASS | pending-sha | 161-file copy sweep, TermHint component added, i18n catalogs clean of target terms, 222 focused tests green
 - Pre-existing (verified via stash): e2e/matching-messages-empty-visual.spec.ts 2 failures ("No matches yet"/"No conversations yet" not rendered in mock mode) + profile-trust-profile-visual 1 failure — disposition at P0-11
   P0-11 | PASS | pending-sha | full gates green (1922 tests, build, smoke 6/6, portfolio 66, org 40); privacy env-blocked dispositioned; handoff doc written
+  MERGE | PASS | pending-sha | origin/master (900 commits, 6wk hardening) merged into P0 line; 103 conflicts resolved (4 P0-critical by hand); gates: 2859/2859 vitest, build, landing e2e 10/10, portfolio 87, org-corridor 52, smoke 5/6
+- smoke corridor check under PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE env: fails locally on BOTH merged tree and pure origin/master (pre-existing env condition); corridor spec passes standalone in prod mode on merged tree — dispositioned, not a regression
+- merge seam fix: matchVisible now gates on completion-flow hasRequiredVerification (exact pre-P0 ladder) instead of anchored trust signal; trust anchor stays required at intro tier

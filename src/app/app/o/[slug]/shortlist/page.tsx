@@ -6,5 +6,5 @@ export default async function OrgShortlistPage({ params }: { params: Promise<{ s
   const { slug } = await params;
   const encodedSlug = encodeURIComponent(slug);
 
-  redirect(`/app/o/${encodedSlug}/assignments`);
+  redirect(`/app/o/${encodedSlug}/assignments?from=shortlist`);
 }

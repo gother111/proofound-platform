@@ -118,7 +118,7 @@ test.describe('Comprehensive User Interaction Flow', () => {
     // Check if we can see the assignment (might be hard if matching algo filters it)
     // For verification purposes, we can try to access the assignment directly if we had its ID.
     // Since we don't have the ID easily, we'll check generic visibility of the matching page.
-    await expect(indPage.getByText(/matches|opportunities/i)).toBeVisible();
+    await expect(indPage.getByText(/matching|assignment reviews/i)).toBeVisible();
 
     // Logout both users
     await logoutUser(orgPage);

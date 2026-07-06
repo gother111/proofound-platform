@@ -1,9 +1,16 @@
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 
 import OrganizationInterviewsPage from '@/app/app/o/[slug]/interviews/page';
 import { __resetCsrfCacheForTests } from '@/lib/api/fetch';
+
+const { diagnosticMock } = vi.hoisted(() => ({
+  diagnosticMock: vi.fn(),
+}));
+const { clientDiagnosticMock } = vi.hoisted(() => ({
+  clientDiagnosticMock: vi.fn(),
+}));
 
 const getInterviewCorridorItemsMock = vi.fn();
 
@@ -11,12 +18,34 @@ vi.mock('@/app/actions/interviews', () => ({
   getInterviewCorridorItems: (...args: any[]) => getInterviewCorridorItemsMock(...args),
 }));
 
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientDiagnostic: (...args: unknown[]) => clientDiagnosticMock(...args),
+  dispatchClientErrorDiagnostic: (...args: unknown[]) => diagnosticMock(...args),
+}));
+
 vi.mock('@/components/ui/v2/AppSurface', () => ({
   AppSurface: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
 vi.mock('@/components/ui/button', () => ({
-  Button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+  Button: ({ asChild, children, className, size, ...props }: any) => {
+    const mergedClassName = [size === 'touch' ? 'min-h-[44px]' : '', className]
+      .filter(Boolean)
+      .join(' ');
+
+    if (asChild && React.isValidElement(children)) {
+      return React.cloneElement(children, {
+        ...props,
+        className: [children.props.className, mergedClassName].filter(Boolean).join(' '),
+      });
+    }
+
+    return (
+      <button {...props} className={mergedClassName || undefined}>
+        {children}
+      </button>
+    );
+  },
 }));
 
 vi.mock('@/components/decisions/DecisionDialog', () => ({
@@ -29,10 +58,19 @@ vi.mock('@/components/interviews/HiringCorridorTimeline', () => ({
 
 vi.mock('@/components/ui/dialog', () => ({
   Dialog: ({ open, children }: any) => (open ? <div>{children}</div> : null),
-  DialogContent: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  DialogContent: ({ children, ...props }: any) => (
+    <div role="dialog" aria-label="Dialog" {...props}>
+      {children}
+    </div>
+  ),
   DialogHeader: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  DialogFooter: ({ children, ...props }: any) => <div {...props}>{children}</div>,
   DialogTitle: ({ children, ...props }: any) => <h2 {...props}>{children}</h2>,
   DialogDescription: ({ children, ...props }: any) => <p {...props}>{children}</p>,
+}));
+
+vi.mock('next/navigation', () => ({
+  useParams: () => ({ slug: 'acme' }),
 }));
 
 vi.mock('sonner', () => ({
@@ -65,8 +103,8 @@ describe('organization interviews page actions', () => {
       id: 'interview-1',
       scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       duration: 30,
-      platform: 'zoom',
-      meetingUrl: 'https://zoom.us/j/example',
+      platform: 'manual',
+      meetingUrl: 'https://example.com/manual-room',
       manualMeetingProvider: null,
       rescheduleCount: 0,
       status: 'scheduled',
@@ -86,7 +124,101 @@ describe('organization interviews page actions', () => {
     getInterviewCorridorItemsMock.mockReset();
   });
 
-  it('shows edit/cancel actions and calls edit + cancel APIs with refresh', async () => {
+  const getDiagnosticErrorMessage = (reason: string) => {
+    const error = diagnosticMock.mock.calls.find(
+      ([diagnosticReason]) => diagnosticReason === reason
+    )?.[1];
+    return error instanceof Error ? error.message : String(error);
+  };
+
+  it('explains the loading corridor before interview actions arrive', () => {
+    getInterviewCorridorItemsMock.mockReturnValue(new Promise<never>(() => {}));
+
+    render(<OrganizationInterviewsPage />);
+
+    expect(
+      screen.getByRole('heading', { name: 'Interview workflow is loading' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Loading proof-review interview workflow...'
+    );
+  });
+
+  it('keeps load failures separate from the empty workflow state and retries', async () => {
+    getInterviewCorridorItemsMock
+      .mockRejectedValueOnce(new Error('network down'))
+      .mockResolvedValueOnce({ items: [] });
+
+    render(<OrganizationInterviewsPage />);
+
+    expect(
+      await screen.findByRole('heading', { name: /interview workflow could not load/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /scheduled interviews, decisions, and engagement records are still safe\. retry this section to refresh the organization workflow\./i
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: /no active interview workflow yet/i })
+    ).not.toBeInTheDocument();
+
+    const retryInterviewsButton = screen.getByRole('button', { name: /retry interviews/i });
+    expect(retryInterviewsButton).toHaveClass('min-h-[44px]');
+
+    fireEvent.click(retryInterviewsButton);
+
+    await waitFor(() => {
+      expect(getInterviewCorridorItemsMock).toHaveBeenCalledTimes(2);
+    });
+    expect(
+      await screen.findByRole('heading', { name: /no active interview workflow yet/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/once you shortlist a proof submission/i)
+    ).toBeInTheDocument();
+    const assignmentQueueLink = screen.getByRole('link', { name: /review assignment queue/i });
+    expect(assignmentQueueLink).toHaveAttribute('href', '/app/o/acme/assignments');
+    expect(assignmentQueueLink).toHaveClass('min-h-[44px]');
+  });
+
+  it('makes scheduled interviews with pending meeting links explicit', async () => {
+    getInterviewCorridorItemsMock.mockResolvedValue({
+      items: [
+        buildInterviewItem({
+          interview: {
+            id: 'interview-1',
+            scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            duration: 30,
+            platform: 'manual',
+            meetingUrl: 'pending',
+            manualMeetingProvider: 'teams',
+            rescheduleCount: 0,
+            status: 'scheduled',
+            completedAt: null,
+            cancelledAt: null,
+            noShowAt: null,
+          },
+        }),
+      ],
+    });
+
+    render(<OrganizationInterviewsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Teams')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('Meeting link pending.')).toBeInTheDocument();
+    expect(
+      screen.getByText(/join and calendar controls appear once a usable meeting link is attached/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /join meeting/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /add to calendar/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('pending')).not.toBeInTheDocument();
+  });
+
+  it('uses in-app dialogs for interview outcome actions before refresh', async () => {
     const upcomingInterviewAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
     const fetchCalls: Array<{ url: string; init?: RequestInit }> = [];
 
@@ -97,8 +229,8 @@ describe('organization interviews page actions', () => {
             id: 'interview-1',
             scheduledAt: upcomingInterviewAt,
             duration: 30,
-            platform: 'zoom',
-            meetingUrl: 'https://zoom.us/j/example',
+            platform: 'manual',
+            meetingUrl: 'https://example.com/manual-room',
             manualMeetingProvider: null,
             rescheduleCount: 0,
             status: 'scheduled',
@@ -110,14 +242,10 @@ describe('organization interviews page actions', () => {
       ],
     }));
 
-    vi.stubGlobal(
-      'confirm',
-      vi.fn(() => true)
-    );
-    vi.stubGlobal(
-      'prompt',
-      vi.fn(() => 'Need to move due to conflict')
-    );
+    const confirmSpy = vi.fn();
+    const promptSpy = vi.fn();
+    vi.stubGlobal('confirm', confirmSpy);
+    vi.stubGlobal('prompt', promptSpy);
 
     vi.stubGlobal(
       'fetch',
@@ -150,6 +278,24 @@ describe('organization interviews page actions', () => {
           };
         }
 
+        if (url === '/api/interviews/complete') {
+          return {
+            ok: true,
+            json: async () => ({
+              success: true,
+            }),
+          };
+        }
+
+        if (url === '/api/interviews/no-show') {
+          return {
+            ok: true,
+            json: async () => ({
+              success: true,
+            }),
+          };
+        }
+
         return { ok: false, json: async () => ({ error: 'Unexpected route' }) };
       })
     );
@@ -160,11 +306,23 @@ describe('organization interviews page actions', () => {
       expect(screen.getByRole('button', { name: /edit interview/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /cancel interview/i })).toBeInTheDocument();
     });
+    expect(screen.getByText('Manual')).toBeInTheDocument();
+    expect(screen.queryByText('zoom')).not.toBeInTheDocument();
+
+    expect(screen.getByRole('link', { name: /join meeting/i })).toHaveClass('min-h-11');
+    expect(screen.getByRole('link', { name: /add to calendar/i })).toHaveClass('min-h-11');
+    expect(screen.getByRole('button', { name: /\.ics/i })).toHaveClass('min-h-[44px]');
+    expect(screen.getByRole('button', { name: /edit interview/i })).toHaveClass('min-h-[44px]');
+    expect(screen.getByRole('button', { name: /cancel interview/i })).toHaveClass('min-h-[44px]');
+    expect(screen.getByRole('button', { name: /mark complete/i })).toHaveClass('min-h-[44px]');
+    expect(screen.getByRole('button', { name: /mark no-show/i })).toHaveClass('min-h-[44px]');
 
     fireEvent.click(screen.getByRole('button', { name: /edit interview/i }));
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /save changes/i })).toBeInTheDocument();
     });
+    expect(screen.getByLabelText('Date')).toHaveClass('min-h-11');
+    expect(screen.getByLabelText('Time')).toHaveClass('min-h-11');
     fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
 
     await waitFor(() => {
@@ -173,12 +331,434 @@ describe('organization interviews page actions', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /cancel interview/i }));
 
+    const cancelDialog = await screen.findByRole('dialog');
+    expect(
+      within(cancelDialog).getByText(/proof-review participant and workflow record stay clear/i)
+    ).toBeInTheDocument();
+    expect(
+      within(cancelDialog).getByPlaceholderText(/proof-review participant and workflow record/i)
+    ).toBeInTheDocument();
+    expect(
+      within(cancelDialog).getByText(/Cancellation changes the active interview workflow/i)
+    ).toBeInTheDocument();
+    fireEvent.change(within(cancelDialog).getByLabelText(/reason/i), {
+      target: { value: 'Need to move due to conflict' },
+    });
+    fireEvent.click(within(cancelDialog).getByRole('button', { name: /^cancel interview$/i }));
+
     await waitFor(() => {
       expect(fetchCalls.some((call) => call.url === '/api/interviews/cancel')).toBe(true);
     });
+    const cancelCall = fetchCalls.find((call) => call.url === '/api/interviews/cancel');
+    expect(cancelCall?.init?.body).toBe(
+      JSON.stringify({
+        interviewId: 'interview-1',
+        reason: 'Need to move due to conflict',
+      })
+    );
+    expect(confirmSpy).not.toHaveBeenCalled();
+    expect(promptSpy).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: /mark complete/i }));
+
+    const completeDialog = await screen.findByRole('dialog');
+    expect(
+      within(completeDialog).getByText(/The decision step becomes available next/i)
+    ).toBeInTheDocument();
+    expect(
+      within(completeDialog).getByText(/Completion moves the workflow forward/i)
+    ).toBeInTheDocument();
+    fireEvent.click(
+      within(completeDialog).getByRole('button', { name: /mark interview complete/i })
+    );
 
     await waitFor(() => {
-      expect(getInterviewCorridorItemsMock.mock.calls.length).toBeGreaterThanOrEqual(3);
+      expect(fetchCalls.some((call) => call.url === '/api/interviews/complete')).toBe(true);
+    });
+    const completeCall = fetchCalls.find((call) => call.url === '/api/interviews/complete');
+    expect(completeCall?.init?.body).toBe(
+      JSON.stringify({
+        interviewId: 'interview-1',
+      })
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /mark no-show/i }));
+
+    const noShowDialog = await screen.findByRole('dialog');
+    expect(
+      within(noShowDialog).getByText(/replacement interview path is clear/i)
+    ).toBeInTheDocument();
+    expect(within(noShowDialog).getByText(/No-show pauses the decision path/i)).toBeInTheDocument();
+    fireEvent.change(within(noShowDialog).getByLabelText(/reason/i), {
+      target: { value: 'Candidate missed the scheduled call' },
+    });
+    fireEvent.click(within(noShowDialog).getByRole('button', { name: /record no-show/i }));
+
+    await waitFor(() => {
+      expect(fetchCalls.some((call) => call.url === '/api/interviews/no-show')).toBe(true);
+    });
+    const noShowCall = fetchCalls.find((call) => call.url === '/api/interviews/no-show');
+    expect(noShowCall?.init?.body).toBe(
+      JSON.stringify({
+        interviewId: 'interview-1',
+        reason: 'Candidate missed the scheduled call',
+      })
+    );
+    expect(confirmSpy).not.toHaveBeenCalled();
+    expect(promptSpy).not.toHaveBeenCalled();
+
+    await waitFor(() => {
+      expect(getInterviewCorridorItemsMock.mock.calls.length).toBeGreaterThanOrEqual(5);
+    });
+  });
+
+  it('keeps failed interview edits visible and retryable', async () => {
+    const upcomingInterviewAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    let editAttempts = 0;
+
+    getInterviewCorridorItemsMock.mockResolvedValue({
+      items: [
+        buildInterviewItem({
+          interview: {
+            id: 'interview-1',
+            scheduledAt: upcomingInterviewAt,
+            duration: 30,
+            platform: 'manual',
+            meetingUrl: 'https://example.com/manual-room',
+            manualMeetingProvider: null,
+            rescheduleCount: 0,
+            status: 'scheduled',
+            completedAt: null,
+            cancelledAt: null,
+            noShowAt: null,
+          },
+        }),
+      ],
+    });
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string | URL) => {
+        const url = typeof input === 'string' ? input : input.toString();
+
+        if (url.startsWith('/api/csrf-token')) {
+          return {
+            ok: true,
+            json: async () => ({ token: 'csrf-token' }),
+          };
+        }
+
+        if (url === '/api/interviews/edit') {
+          editAttempts += 1;
+
+          if (editAttempts === 1) {
+            return {
+              ok: false,
+              json: async () => ({
+                error: 'Interview update is temporarily unavailable.',
+              }),
+            };
+          }
+
+          return {
+            ok: true,
+            json: async () => ({ success: true }),
+          };
+        }
+
+        return { ok: false, json: async () => ({ error: 'Unexpected route' }) };
+      })
+    );
+
+    render(<OrganizationInterviewsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /edit interview/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /edit interview/i }));
+
+    const editDialog = await screen.findByRole('dialog');
+    const dateField = within(editDialog).getByLabelText('Date') as HTMLInputElement;
+    const reasonField = within(editDialog).getByLabelText(/reason/i) as HTMLTextAreaElement;
+    const originalDate = dateField.value;
+
+    fireEvent.change(dateField, { target: { value: '' } });
+    fireEvent.click(within(editDialog).getByRole('button', { name: /save changes/i }));
+
+    let alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Choose a date and time');
+    expect(alert).toHaveTextContent('Select both date and time before saving.');
+    expect(editAttempts).toBe(0);
+
+    fireEvent.change(dateField, { target: { value: originalDate } });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+
+    fireEvent.change(reasonField, {
+      target: { value: 'Moving to the reviewer availability window' },
+    });
+    fireEvent.click(within(editDialog).getByRole('button', { name: /save changes/i }));
+
+    alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Interview update could not be saved');
+    expect(alert).toHaveTextContent(
+      'The interview workflow is unchanged; review the time and retry before closing.'
+    );
+    expect(alert).not.toHaveTextContent('Interview update is temporarily unavailable.');
+    expect(diagnosticMock).toHaveBeenCalledWith(
+      'interviews.organization.edit_failed',
+      expect.any(Error)
+    );
+    expect(clientDiagnosticMock).toHaveBeenCalledWith(
+      'interviews.organization.edit_returned_error',
+      expect.objectContaining({
+        interviewId: 'interview-1',
+        hasReturnedError: true,
+      })
+    );
+    expect(getDiagnosticErrorMessage('interviews.organization.edit_failed')).toBe(
+      'interview_edit_request_failed'
+    );
+    expect(
+      diagnosticMock.mock.calls.some((call) =>
+        JSON.stringify(call).includes('Interview update is temporarily unavailable.')
+      )
+    ).toBe(false);
+    expect(
+      clientDiagnosticMock.mock.calls.some((call) =>
+        JSON.stringify(call).includes('Interview update is temporarily unavailable.')
+      )
+    ).toBe(false);
+    expect(reasonField).toHaveValue('Moving to the reviewer availability window');
+
+    const retryUpdateButton = within(alert).getByRole('button', { name: /retry update/i });
+    expect(retryUpdateButton).toHaveClass('min-h-[44px]');
+
+    fireEvent.click(retryUpdateButton);
+
+    await waitFor(() => {
+      expect(editAttempts).toBe(2);
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+  });
+
+  it('keeps failed interview outcome dialogs visible and retryable', async () => {
+    const upcomingInterviewAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    const actionAttempts: Record<string, number> = {};
+
+    getInterviewCorridorItemsMock.mockResolvedValue({
+      items: [
+        buildInterviewItem({
+          interview: {
+            id: 'interview-1',
+            scheduledAt: upcomingInterviewAt,
+            duration: 30,
+            platform: 'manual',
+            meetingUrl: 'https://example.com/manual-room',
+            manualMeetingProvider: null,
+            rescheduleCount: 0,
+            status: 'scheduled',
+            completedAt: null,
+            cancelledAt: null,
+            noShowAt: null,
+          },
+        }),
+      ],
+    });
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string | URL) => {
+        const url = typeof input === 'string' ? input : input.toString();
+
+        if (url.startsWith('/api/csrf-token')) {
+          return {
+            ok: true,
+            json: async () => ({ token: 'csrf-token' }),
+          };
+        }
+
+        if (
+          url === '/api/interviews/cancel' ||
+          url === '/api/interviews/complete' ||
+          url === '/api/interviews/no-show'
+        ) {
+          actionAttempts[url] = (actionAttempts[url] ?? 0) + 1;
+
+          if (actionAttempts[url] === 1) {
+            return {
+              ok: false,
+              json: async () => ({
+                error: `${url} is temporarily unavailable.`,
+              }),
+            };
+          }
+
+          return {
+            ok: true,
+            json: async () => ({ success: true }),
+          };
+        }
+
+        return { ok: false, json: async () => ({ error: 'Unexpected route' }) };
+      })
+    );
+
+    render(<OrganizationInterviewsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /cancel interview/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /cancel interview/i }));
+    const cancelDialog = await screen.findByRole('dialog');
+    const cancelReasonField = within(cancelDialog).getByLabelText(/reason/i);
+    fireEvent.change(cancelReasonField, {
+      target: { value: 'Need to move due to conflict' },
+    });
+    fireEvent.click(within(cancelDialog).getByRole('button', { name: /^cancel interview$/i }));
+
+    let alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Interview cancellation could not be recorded');
+    expect(alert).toHaveTextContent(
+      'The interview remains scheduled; review the reason and retry.'
+    );
+    expect(alert).not.toHaveTextContent('/api/interviews/cancel is temporarily unavailable.');
+    expect(diagnosticMock).toHaveBeenCalledWith(
+      'interviews.organization.cancel_failed',
+      expect.any(Error)
+    );
+    expect(clientDiagnosticMock).toHaveBeenCalledWith(
+      'interviews.organization.cancel_returned_error',
+      expect.objectContaining({
+        interviewId: 'interview-1',
+        hasReason: true,
+        hasReturnedError: true,
+      })
+    );
+    expect(getDiagnosticErrorMessage('interviews.organization.cancel_failed')).toBe(
+      'interview_cancel_request_failed'
+    );
+    expect(
+      diagnosticMock.mock.calls.some((call) =>
+        JSON.stringify(call).includes('/api/interviews/cancel is temporarily unavailable.')
+      )
+    ).toBe(false);
+    expect(
+      clientDiagnosticMock.mock.calls.some((call) =>
+        JSON.stringify(call).includes('/api/interviews/cancel is temporarily unavailable.')
+      )
+    ).toBe(false);
+    expect(cancelReasonField).toHaveValue('Need to move due to conflict');
+
+    const retryCancellationButton = within(alert).getByRole('button', {
+      name: /retry cancellation/i,
+    });
+    expect(retryCancellationButton).toHaveClass('min-h-[44px]');
+
+    fireEvent.click(retryCancellationButton);
+
+    await waitFor(() => {
+      expect(actionAttempts['/api/interviews/cancel']).toBe(2);
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /mark complete/i }));
+    const completeDialog = await screen.findByRole('dialog');
+    fireEvent.click(
+      within(completeDialog).getByRole('button', { name: /mark interview complete/i })
+    );
+
+    alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Interview completion could not be recorded');
+    expect(alert).toHaveTextContent(
+      'The corridor is unchanged; retry before recording a decision.'
+    );
+    expect(alert).not.toHaveTextContent('/api/interviews/complete is temporarily unavailable.');
+    expect(diagnosticMock).toHaveBeenCalledWith(
+      'interviews.organization.complete_failed',
+      expect.any(Error)
+    );
+    expect(clientDiagnosticMock).toHaveBeenCalledWith(
+      'interviews.organization.complete_returned_error',
+      expect.objectContaining({
+        interviewId: 'interview-1',
+        hasReturnedError: true,
+      })
+    );
+    expect(getDiagnosticErrorMessage('interviews.organization.complete_failed')).toBe(
+      'interview_complete_request_failed'
+    );
+    expect(
+      diagnosticMock.mock.calls.some((call) =>
+        JSON.stringify(call).includes('/api/interviews/complete is temporarily unavailable.')
+      )
+    ).toBe(false);
+    expect(
+      clientDiagnosticMock.mock.calls.some((call) =>
+        JSON.stringify(call).includes('/api/interviews/complete is temporarily unavailable.')
+      )
+    ).toBe(false);
+
+    const retryCompletionButton = within(alert).getByRole('button', { name: /retry completion/i });
+    expect(retryCompletionButton).toHaveClass('min-h-[44px]');
+
+    fireEvent.click(retryCompletionButton);
+
+    await waitFor(() => {
+      expect(actionAttempts['/api/interviews/complete']).toBe(2);
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /mark no-show/i }));
+    const noShowDialog = await screen.findByRole('dialog');
+    const noShowReasonField = within(noShowDialog).getByLabelText(/reason/i);
+    fireEvent.change(noShowReasonField, {
+      target: { value: 'Candidate missed the scheduled call' },
+    });
+    fireEvent.click(within(noShowDialog).getByRole('button', { name: /record no-show/i }));
+
+    alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('No-show could not be recorded');
+    expect(alert).toHaveTextContent(
+      'The interview workflow is unchanged; review the note and retry.'
+    );
+    expect(alert).not.toHaveTextContent('/api/interviews/no-show is temporarily unavailable.');
+    expect(diagnosticMock).toHaveBeenCalledWith(
+      'interviews.organization.no_show_failed',
+      expect.any(Error)
+    );
+    expect(clientDiagnosticMock).toHaveBeenCalledWith(
+      'interviews.organization.no_show_returned_error',
+      expect.objectContaining({
+        interviewId: 'interview-1',
+        hasReason: true,
+        hasReturnedError: true,
+      })
+    );
+    expect(getDiagnosticErrorMessage('interviews.organization.no_show_failed')).toBe(
+      'interview_no_show_request_failed'
+    );
+    expect(
+      diagnosticMock.mock.calls.some((call) =>
+        JSON.stringify(call).includes('/api/interviews/no-show is temporarily unavailable.')
+      )
+    ).toBe(false);
+    expect(
+      clientDiagnosticMock.mock.calls.some((call) =>
+        JSON.stringify(call).includes('/api/interviews/no-show is temporarily unavailable.')
+      )
+    ).toBe(false);
+    expect(noShowReasonField).toHaveValue('Candidate missed the scheduled call');
+
+    const retryNoShowButton = within(alert).getByRole('button', { name: /retry no-show/i });
+    expect(retryNoShowButton).toHaveClass('min-h-[44px]');
+
+    fireEvent.click(retryNoShowButton);
+
+    await waitFor(() => {
+      expect(actionAttempts['/api/interviews/no-show']).toBe(2);
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
   });
 
@@ -189,8 +769,8 @@ describe('organization interviews page actions', () => {
         id: 'interview-1',
         scheduledAt: upcomingInterviewAt,
         duration: 30,
-        platform: 'zoom',
-        meetingUrl: 'https://zoom.us/j/example',
+        platform: 'manual',
+        meetingUrl: 'https://example.com/manual-room',
         manualMeetingProvider: null,
         rescheduleCount: 0,
         status: 'completed',
@@ -239,7 +819,7 @@ describe('organization interviews page actions', () => {
         engagementVerification: {
           ...initialInterview.engagementVerification,
           status: 'pending_candidate_confirmation',
-          statusLabel: 'Awaiting candidate confirmation',
+          statusLabel: 'Awaiting proof-review participant confirmation',
           engagementType: 'full_time',
           organizationConfirmedAt: new Date().toISOString(),
         },
@@ -247,7 +827,7 @@ describe('organization interviews page actions', () => {
       engagementVerification: {
         ...initialInterview.engagementVerification,
         status: 'pending_candidate_confirmation',
-        statusLabel: 'Awaiting candidate confirmation',
+        statusLabel: 'Awaiting proof-review participant confirmation',
         engagementType: 'full_time',
         organizationConfirmedAt: new Date().toISOString(),
       },
@@ -297,6 +877,9 @@ describe('organization interviews page actions', () => {
       expect(screen.getByRole('button', { name: /confirm engagement/i })).toBeInTheDocument();
     });
 
+    expect(screen.getByLabelText('Engagement type')).toHaveClass('min-h-11');
+    expect(screen.getByRole('button', { name: /confirm engagement/i })).toHaveClass('min-h-[44px]');
+
     fireEvent.change(screen.getByLabelText('Engagement type'), {
       target: { value: 'full_time' },
     });
@@ -321,8 +904,190 @@ describe('organization interviews page actions', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('Engagement: Awaiting candidate confirmation')).toBeInTheDocument();
+      expect(
+        screen.getByText('Engagement: Awaiting proof-review participant confirmation')
+      ).toBeInTheDocument();
     });
+  });
+
+  it('keeps failed engagement confirmations visible and retryable', async () => {
+    const upcomingInterviewAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    const initialInterview = buildInterviewItem({
+      interview: {
+        id: 'interview-1',
+        scheduledAt: upcomingInterviewAt,
+        duration: 30,
+        platform: 'manual',
+        meetingUrl: 'https://example.com/manual-room',
+        manualMeetingProvider: null,
+        rescheduleCount: 0,
+        status: 'completed',
+        completedAt: new Date().toISOString(),
+        cancelledAt: null,
+        noShowAt: null,
+      },
+      decisionState: 'hire',
+      corridor: buildCorridor({
+        nextAction: {
+          id: 'confirm_engagement',
+          label: 'Confirm engagement',
+        },
+        engagementVerification: {
+          id: 'engagement-1',
+          status: 'pending_both_confirmations',
+          statusLabel: 'Awaiting both confirmations',
+          engagementType: null,
+          candidateConfirmedAt: null,
+          organizationConfirmedAt: null,
+          uploadedEvidencePresent: false,
+          proofHookStatus: 'not_ready',
+          verifiedAt: null,
+        },
+      }),
+      engagementVerification: {
+        id: 'engagement-1',
+        status: 'pending_both_confirmations',
+        statusLabel: 'Awaiting both confirmations',
+        engagementType: null,
+        createdAt: new Date().toISOString(),
+        candidateConfirmedAt: null,
+        organizationConfirmedAt: null,
+        uploadedEvidencePresent: false,
+        proofHookStatus: 'not_ready',
+        verifiedAt: null,
+      },
+    });
+    const confirmedInterview = {
+      ...initialInterview,
+      corridor: buildCorridor({
+        nextAction: {
+          id: 'wait_for_engagement_confirmation',
+          label: 'Wait',
+        },
+        engagementVerification: {
+          ...initialInterview.engagementVerification,
+          status: 'pending_candidate_confirmation',
+          statusLabel: 'Awaiting proof-review participant confirmation',
+          engagementType: 'full_time',
+          organizationConfirmedAt: new Date().toISOString(),
+        },
+      }),
+      engagementVerification: {
+        ...initialInterview.engagementVerification,
+        status: 'pending_candidate_confirmation',
+        statusLabel: 'Awaiting proof-review participant confirmation',
+        engagementType: 'full_time',
+        organizationConfirmedAt: new Date().toISOString(),
+      },
+    };
+    const fetchCalls: Array<{ url: string; init?: RequestInit }> = [];
+    let loadCount = 0;
+    let engagementPatchCount = 0;
+
+    getInterviewCorridorItemsMock.mockImplementation(async () => {
+      loadCount += 1;
+      return {
+        items: [loadCount === 1 ? initialInterview : confirmedInterview],
+      };
+    });
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string | URL, init?: RequestInit) => {
+        const url = typeof input === 'string' ? input : input.toString();
+        fetchCalls.push({ url, init });
+
+        if (url.startsWith('/api/csrf-token')) {
+          return {
+            ok: true,
+            json: async () => ({ token: 'csrf-token' }),
+          };
+        }
+
+        if (url === '/api/engagement-verifications/engagement-1') {
+          engagementPatchCount += 1;
+
+          if (engagementPatchCount === 1) {
+            return {
+              ok: false,
+              json: async () => ({
+                error: 'Engagement confirmation is temporarily unavailable.',
+              }),
+            };
+          }
+
+          return {
+            ok: true,
+            json: async () => ({
+              success: true,
+              engagementVerification: confirmedInterview.engagementVerification,
+            }),
+          };
+        }
+
+        return { ok: false, json: async () => ({ error: 'Unexpected route' }) };
+      })
+    );
+
+    render(<OrganizationInterviewsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Engagement: Awaiting both confirmations')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /confirm engagement/i })).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText('Engagement type'), {
+      target: { value: 'full_time' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /confirm engagement/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Engagement confirmation could not be recorded');
+    expect(alert).toHaveTextContent('The engagement state is unchanged; retry before moving on.');
+    expect(alert).not.toHaveTextContent('Engagement confirmation is temporarily unavailable.');
+    expect(diagnosticMock).toHaveBeenCalledWith(
+      'interviews.organization.engagement_confirm_failed',
+      expect.any(Error)
+    );
+    expect(clientDiagnosticMock).toHaveBeenCalledWith(
+      'interviews.organization.engagement_confirm_returned_error',
+      expect.objectContaining({
+        verificationId: 'engagement-1',
+        engagementType: 'full_time',
+        hasReturnedError: true,
+      })
+    );
+    expect(getDiagnosticErrorMessage('interviews.organization.engagement_confirm_failed')).toBe(
+      'engagement_confirmation_request_failed'
+    );
+    expect(
+      diagnosticMock.mock.calls.some((call) =>
+        JSON.stringify(call).includes('Engagement confirmation is temporarily unavailable.')
+      )
+    ).toBe(false);
+    expect(
+      clientDiagnosticMock.mock.calls.some((call) =>
+        JSON.stringify(call).includes('Engagement confirmation is temporarily unavailable.')
+      )
+    ).toBe(false);
+    expect(screen.getByLabelText('Engagement type')).toHaveValue('full_time');
+
+    const retryConfirmationButton = within(alert).getByRole('button', {
+      name: 'Retry confirmation',
+    });
+    expect(retryConfirmationButton).toHaveClass('min-h-[44px]');
+
+    fireEvent.click(retryConfirmationButton);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('Engagement: Awaiting proof-review participant confirmation')
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      fetchCalls.filter((call) => call.url === '/api/engagement-verifications/engagement-1')
+    ).toHaveLength(2);
   });
 
   it('shows reschedule history and blocks a second reschedule on the interviews surface', async () => {
@@ -335,8 +1100,8 @@ describe('organization interviews page actions', () => {
             id: 'interview-1',
             scheduledAt: upcomingInterviewAt,
             duration: 30,
-            platform: 'zoom',
-            meetingUrl: 'https://zoom.us/j/example',
+            platform: 'manual',
+            meetingUrl: 'https://example.com/manual-room',
             manualMeetingProvider: null,
             rescheduleCount: 1,
             status: 'scheduled',
@@ -354,5 +1119,8 @@ describe('organization interviews page actions', () => {
       expect(screen.getByText('Rescheduled 1 time')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /reschedule limit reached/i })).toBeDisabled();
     });
+    expect(screen.getByRole('button', { name: /reschedule limit reached/i })).toHaveClass(
+      'min-h-[44px]'
+    );
   });
 });

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -31,7 +32,7 @@ interface ErrorBoundaryState {
  * Error Handling:
  * - Catches JavaScript errors in child component tree
  * - Reports to Sentry for monitoring and debugging
- * - Logs to console in development
+ * - Emits local diagnostics in development
  * - Provides reset functionality
  *
  * UX Considerations:
@@ -68,14 +69,12 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
         });
       })
       .catch((reportingError) => {
-        if (process.env.NODE_ENV === 'development') {
-          console.error('Failed to report ErrorBoundary exception:', reportingError);
-        }
+        dispatchClientErrorDiagnostic('error_boundary.sentry_report_failed', reportingError);
       });
 
-    // Log to console in development
+    // Emit local diagnostics in development without writing to the console.
     if (process.env.NODE_ENV === 'development') {
-      console.error('Error caught by ErrorBoundary:', error, errorInfo);
+      dispatchClientErrorDiagnostic('error_boundary.caught', error);
     }
   }
 
@@ -86,6 +85,8 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
   render() {
     if (this.state.hasError) {
+      const canShowErrorDetails = this.props.showDetails && process.env.NODE_ENV === 'development';
+
       // Use custom fallback if provided
       if (this.props.fallback) {
         return this.props.fallback;
@@ -100,16 +101,16 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
         >
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <h2 className="text-base font-semibold">Something went wrong</h2>
+              <h2 className="text-base font-semibold">This view could not finish loading</h2>
               <p className="text-sm text-muted-foreground">
-                An error occurred while rendering this component. The error has been reported to our
-                team.
+                Your work and privacy settings are still protected. Retry the view before making
+                changes from this screen.
               </p>
             </div>
-            {this.props.showDetails && this.state.error && (
+            {canShowErrorDetails && this.state.error && (
               <div className="rounded-md bg-muted p-4">
                 <p className="font-mono text-sm text-muted-foreground">
-                  {this.state.error.message}
+                  {this.state.error.name || 'Error'}
                 </p>
               </div>
             )}
@@ -118,7 +119,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
               onClick={this.handleReset}
               className="inline-flex h-9 items-center rounded-md border border-input bg-background px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              Try again
+              Retry view
             </button>
           </div>
         </div>
@@ -143,8 +144,10 @@ export function InlineErrorBoundary({ children }: { children: React.ReactNode })
       fallback={
         <div className="flex items-center justify-center p-8 text-center">
           <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground">Failed to load this section</p>
-            <p className="text-sm text-muted-foreground">Please refresh and try again.</p>
+            <p className="text-sm font-medium text-foreground">This section is paused</p>
+            <p className="text-sm text-muted-foreground">
+              Refresh the page before relying on this section.
+            </p>
           </div>
         </div>
       }
@@ -164,9 +167,10 @@ export function FormErrorBoundary({ children }: { children: React.ReactNode }) {
       fallback={
         <div className="rounded-md border border-destructive bg-destructive/10 p-4">
           <div className="space-y-1">
-            <p className="text-sm font-medium text-destructive">Something went wrong</p>
+            <p className="text-sm font-medium text-destructive">This form paused before saving</p>
             <p className="text-sm text-destructive">
-              An error occurred. Please refresh the page and try again.
+              No changes were submitted from this broken form state. Refresh the page before trying
+              again.
             </p>
           </div>
         </div>
@@ -194,9 +198,9 @@ export function DataErrorBoundary({
       onReset={onRetry}
       fallback={
         <div className="flex flex-col items-center justify-center p-12 text-center">
-          <h3 className="mb-2 text-lg font-semibold">Failed to load data</h3>
+          <h3 className="mb-2 text-lg font-semibold">This list could not load</h3>
           <p className="mb-4 text-sm text-muted-foreground">
-            An error occurred while loading this data. The error has been reported.
+            The records are still safe. Retry before making decisions from this view.
           </p>
           {onRetry && (
             <button
@@ -204,7 +208,7 @@ export function DataErrorBoundary({
               onClick={onRetry}
               className="inline-flex h-9 items-center rounded-md border border-input bg-background px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              Retry
+              Retry list
             </button>
           )}
         </div>

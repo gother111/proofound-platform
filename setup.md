@@ -1,6 +1,6 @@
 > Doc Class: `governance`
 > Sync Pair: `setup.md`
-> Last Verified: `2026-02-26`
+> Last Verified: `2026-05-19`
 
 # Setup Runbook (Local Dev + CI Parity)
 
@@ -48,37 +48,51 @@ node -v  # expect v24.15.0
   - Sender: `no-reply@proofound.io`
 - `RESEND_API_KEY` in app env is for non-auth transactional emails (invitations, notifications, reports), not Supabase Auth SMTP.
 
-## Vercel Deploy Retry Automation
+## Vercel Production Prebuilt Deployment
 
-Use this when production can lag behind `master` because Vercel deploy quota is temporarily exhausted.
+Use this when production should be deployed from CI-built output instead of a normal Vercel cloud build.
 
 - Workflow:
   - `.github/workflows/retry-vercel-deploy.yml`
 - Behavior:
-  - Runs on push to `master`, every 30 minutes, and manual dispatch.
-  - Reads live SHA from `https://proofound.io/api/health` (`version`).
-  - Triggers Vercel deploy hook only when live SHA differs from repo SHA.
-- Required one-time setup:
-  - In Vercel (`proofound-platform`), create a production deploy hook.
-  - In GitHub repo secrets, add `VERCEL_DEPLOY_HOOK_URL` with that hook URL.
+  - Runs on push to `master` and manual dispatch.
+  - Reads the live production SHA from Vercel deployment metadata.
+  - If production is behind and no matching prebuilt deployment is already running, it:
+    - runs `vercel pull --yes --environment=production`
+    - runs `vercel build --prod`
+    - runs `vercel deploy --prebuilt --prod`
+  - Writes the deployed URL to the GitHub Actions summary.
+- Required GitHub secrets:
+  - `VERCEL_TOKEN`
+  - `VERCEL_ORG_ID`
+  - `VERCEL_PROJECT_ID`
+- Important caveat:
+  - If Vercel Git auto-deploys are still enabled for production, Vercel can still trigger cloud-build deployments for `master` until those settings are intentionally disabled.
+- Local parity path:
+  - `npm run vercel:preflight`
+  - `npm run vercel:pull:production`
+  - `npm run vercel:build:production`
+  - `ls .vercel/output`
+  - `npm run vercel:deploy:prebuilt:production`
 - Operational check:
   - `gh workflow run "Retry Vercel Deploy Until Synced" --ref master`
   - `gh run list --workflow "Retry Vercel Deploy Until Synced" --limit 1`
 
-## Video Providers (Zoom, Google Meet)
+## Interview Providers and Manual Links
 
-The app stores video provider tokens in `user_video_integrations` (Supabase) and uses these routes for OAuth:
+The locked MVP interview posture is manual-link first. Connected-provider checks exist only for
+provider flows intentionally configured for the target; native Zoom/video OAuth is not a launch
+gate.
+
+The current provider setup surface uses these routes:
 
 - Connect:
-  - `GET /api/integrations/zoom/connect`
   - `GET /api/integrations/google/connect`
 - Callback:
-  - `GET /api/integrations/zoom/callback`
   - `GET /api/integrations/google/callback`
 
 Required env vars:
 
-- Zoom: `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET`, `ZOOM_REDIRECT_URI`
 - Google: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`
 - LinkedIn: `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`, optional `LINKEDIN_REDIRECT_URI`
 
@@ -89,9 +103,10 @@ Supabase social auth callback requirements (same Google and LinkedIn client IDs)
 
 Notes:
 
-- `ZOOM_REDIRECT_URI` and `GOOGLE_REDIRECT_URI` must match the redirect URIs configured in the provider consoles.
+- `GOOGLE_REDIRECT_URI` must match the redirect URI configured in the provider console.
 - `GOOGLE_CLIENT_ID` must be the raw OAuth client id (for example `...apps.googleusercontent.com`) and must not include `http://` or `https://`.
-- For app-managed Google Meet integration, prefer `GOOGLE_REDIRECT_URI=https://<site-domain>/api/integrations/google/callback`.
+- For app-managed Google Meet integration, prefer `GOOGLE_REDIRECT_URI=/api/integrations/google/callback`.
+- Add fully-qualified Google callback URLs for each app host in provider dashboards (production, localhost, and stable preview domains).
 - For LinkedIn settings integration, callback must include `https://<site-domain>/api/auth/linkedin/callback`.
 - LinkedIn callback URI behavior:
   - Absolute `LINKEDIN_REDIRECT_URI`: used as-is.
@@ -103,8 +118,8 @@ Strict provider E2E deterministic account:
 
 - `E2E_PROVIDER_USER_ID`, `E2E_PROVIDER_USER_EMAIL`, `E2E_PROVIDER_USER_PASSWORD`
 - `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true`
-- `STRICT_PROVIDER_E2E_REQUIRE_BOTH=true`
-- Deterministic user must have both Zoom and Google connected before strict gates.
+- Connected-provider runs should use only provider flows intentionally in scope for the target.
+- The locked MVP interview posture remains manual-link first; native Zoom/video integration must not be reintroduced as a launch gate.
 
 ## Install Dependencies
 
@@ -115,6 +130,9 @@ Strict provider E2E deterministic account:
 
 - Dev server: `npm run dev` (source: package.json)
 - Build: `npm run build` (source: package.json)
+  - The prebuild cleanup removes stale generated `.next`, `.next-dev-*`, and `tsconfig.tsbuildinfo` state by default to avoid multi-GB artifact buildup.
+  - It keeps only a small latest-run summary at `.artifacts/stale-build-state-cleanup-summary.md`.
+  - Use `PROOFOUND_ARCHIVE_STALE_BUILD_STATE=1 npm run build` only when preserving a generated build snapshot is intentionally needed for debugging.
 - Start (prod-like): `npm run start` (source: package.json)
 - Lint: `npm run lint` (wrapper is `scripts/lint-or-skip.js`) (source: package.json, scripts/lint-or-skip.js)
 - Typecheck: `npm run typecheck` (source: package.json)
@@ -134,6 +152,7 @@ Strict provider E2E deterministic account:
   - `RUN_MIGRATIONS_GUIDE.md`, `APPLY_MIGRATIONS_MANUAL.md` (source: RUN_MIGRATIONS_GUIDE.md, APPLY_MIGRATIONS_MANUAL.md)
 - Safety scripts:
   - `npm run db:backup:checkpoint` creates schema and critical-table checkpoints before production DDL.
+  - `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json` validates a restored database against a saved checkpoint fingerprint and writes final go/no-go evidence.
   - `npm run db:audit:migrations` audits canonical ledger parity for `src/db/migrations/` plus supplemental policy/trigger versions against `public.app_migration_ledger`.
   - Strict legacy baseline audit: `npm run db:audit:migrations -- --mode legacy-supabase-baseline --baseline supabase/ledger-baseline/schema_migrations.current-db.json`.
   - Diagnostics-only legacy file inventory audit: `npm run db:audit:migrations -- --mode legacy-supabase`.
@@ -149,9 +168,12 @@ Strict provider E2E deterministic account:
 ## CI Gates Beyond Tests (Repo Truth)
 
 - CI runs perf budgets and go/no-go after starting the app. (source: .github/workflows/ci.yml)
+- CI now runs launch smoke before the strict browser gates and go/no-go. (source: .github/workflows/ci.yml)
 - Perf budgets: `npm run perf:budgets` implemented in `scripts/perf-budgets.mjs`. (source: package.json, scripts/perf-budgets.mjs)
-- Go/no-go: `npm run go:no-go` implemented in `scripts/go-no-go-check.mjs` and requires evidence files. (source: package.json, scripts/go-no-go-check.mjs)
-  - TODO: Ensure required evidence files exist before relying on `go:no-go`. Do not invent missing evidence. (source: scripts/go-no-go-check.mjs)
+- Launch smoke: `npm run test:launch:smoke` implemented in `scripts/launch-smoke-runner.ts` and writes `.artifacts/launch-smoke-report.json`. (source: package.json, scripts/launch-smoke-runner.ts)
+- Launch synthetic monitors: `npm run monitor:launch` implemented in `scripts/run-launch-synthetic-monitors.ts` and uses the launch smoke artifact plus live endpoints. (source: package.json, scripts/run-launch-synthetic-monitors.ts)
+- Go/no-go: `npm run go:no-go` implemented in `scripts/go-no-go-check.ts` and requires evidence files, a fresh smoke artifact, authenticated perf-status and launch-status, required safe-mode flags, and production-candidate restore-report evidence for non-local targets. (source: package.json, scripts/go-no-go-check.ts)
+- Restore drill runbook: `docs/launch-restore-drill.md`.
 
 ## Hooks (Repo Truth)
 

@@ -108,7 +108,7 @@ describe('temporary GCP CV/OCR Cloud Run service skeleton', () => {
     expect(body.error.code).toBe('unauthorized');
   });
 
-  it('accepts extract requests in OIDC mode after Cloud Run IAM has admitted the call', async () => {
+  it('rejects OIDC extract requests before parsing when the bearer token is missing', async () => {
     const extractSpy = vi.fn(async () => ({
       provider: 'mock' as const,
       text: 'safe text',
@@ -117,20 +117,71 @@ describe('temporary GCP CV/OCR Cloud Run service skeleton', () => {
     const response = await testHandler({
       env: {
         GCP_CV_OCR_AUTH_MODE: 'oidc',
+        GCP_CV_OCR_OIDC_AUDIENCE: 'https://ocr.example.test',
+        GCP_CV_OCR_OIDC_SERVICE_ACCOUNT_EMAIL:
+          'proofound-ocr-invoker@example.iam.gserviceaccount.com',
         GCP_CV_OCR_MAX_FILE_SIZE_MB: '1',
         GCP_CV_OCR_MAX_PAGES: '2',
       },
       provider: {
         extract: extractSpy,
       },
+      oidcVerifier: vi.fn(async () => ({
+        ok: true,
+        email: 'proofound-ocr-invoker@example.iam.gserviceaccount.com',
+      })),
     })(
       new Request('https://ocr.example.test/extract', {
         method: 'POST',
+        body: '{bad json',
+      })
+    );
+    const body = await json(response);
+
+    expect(response.status).toBe(401);
+    expect(body.error.code).toBe('missing_token');
+    expect(extractSpy).not.toHaveBeenCalled();
+  });
+
+  it('accepts extract requests in OIDC mode after validating the caller token', async () => {
+    const extractSpy = vi.fn(async () => ({
+      provider: 'mock' as const,
+      text: 'safe text',
+      confidence: 0.9,
+    }));
+    const oidcVerifier = vi.fn(async () => ({
+      ok: true as const,
+      email: 'proofound-ocr-invoker@example.iam.gserviceaccount.com',
+    }));
+    const response = await testHandler({
+      env: {
+        GCP_CV_OCR_AUTH_MODE: 'oidc',
+        GCP_CV_OCR_OIDC_AUDIENCE: 'https://ocr.example.test',
+        GCP_CV_OCR_OIDC_SERVICE_ACCOUNT_EMAIL:
+          'proofound-ocr-invoker@example.iam.gserviceaccount.com',
+        GCP_CV_OCR_MAX_FILE_SIZE_MB: '1',
+        GCP_CV_OCR_MAX_PAGES: '2',
+      },
+      provider: {
+        extract: extractSpy,
+      },
+      oidcVerifier,
+    })(
+      new Request('https://ocr.example.test/extract', {
+        method: 'POST',
+        headers: {
+          authorization: 'Bearer cloud-run-id-token',
+        },
         body: JSON.stringify(basePayload()),
       })
     );
 
     expect(response.status).toBe(200);
+    expect(oidcVerifier).toHaveBeenCalledWith({
+      token: 'cloud-run-id-token',
+      audience: 'https://ocr.example.test',
+      serviceAccountEmail: 'proofound-ocr-invoker@example.iam.gserviceaccount.com',
+    });
     expect(extractSpy).toHaveBeenCalledTimes(1);
     expect(await json(response)).toMatchObject({
       status: 'completed',

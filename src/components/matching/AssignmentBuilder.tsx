@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
 import { AssignmentSchema, type AssignmentData, createAssignment } from '@/actions/assignment';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import {
   Step1BusinessValue,
   Step2TargetOutcomes,
@@ -28,8 +29,26 @@ const STEPS = [
   'Target Outcomes',
   'Weight Matrix',
   'Practicals',
-  'Expertise Mapping',
+  'Proof Requirements',
 ];
+
+const ASSIGNMENT_CREATE_RETRY_MESSAGE =
+  'Assignment was not published. Your draft is still on this page; review it and try again.';
+
+const ASSIGNMENT_CREATE_SAFE_ERRORS = new Map([
+  ['Invalid assignment data', 'Review the required assignment fields before publishing.'],
+  ['Failed to create assignment', ASSIGNMENT_CREATE_RETRY_MESSAGE],
+  ['An unexpected error occurred', ASSIGNMENT_CREATE_RETRY_MESSAGE],
+]);
+
+function legacyAssignmentCreateError(error?: string | null) {
+  const normalized = error?.trim();
+  if (!normalized) {
+    return ASSIGNMENT_CREATE_RETRY_MESSAGE;
+  }
+
+  return ASSIGNMENT_CREATE_SAFE_ERRORS.get(normalized) ?? ASSIGNMENT_CREATE_RETRY_MESSAGE;
+}
 
 export function AssignmentBuilder({ orgId, orgSlug }: AssignmentBuilderProps) {
   const router = useRouter();
@@ -99,8 +118,11 @@ export function AssignmentBuilder({ orgId, orgSlug }: AssignmentBuilderProps) {
       const result = await createAssignment(orgId, data);
 
       if (result.error) {
-        toast.error(result.error);
-        console.error(result.details);
+        toast.error(legacyAssignmentCreateError(result.error));
+        dispatchClientDiagnostic('assignment_builder.legacy.create_rejected', {
+          hasReturnedError: true,
+          detailType: typeof result.details,
+        });
         return;
       }
 
@@ -108,7 +130,7 @@ export function AssignmentBuilder({ orgId, orgSlug }: AssignmentBuilderProps) {
       router.push(`/app/o/${orgSlug}/assignments`);
     } catch (error) {
       toast.error('Something went wrong. Please try again.');
-      console.error(error);
+      dispatchClientErrorDiagnostic('assignment_builder.legacy.create_failed', error);
     } finally {
       setIsSubmitting(false);
     }

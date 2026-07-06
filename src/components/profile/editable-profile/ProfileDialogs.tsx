@@ -86,6 +86,7 @@ export function ProfileDialogs({
       id: pack.id,
       title: pack.title,
     })) ?? [];
+  const publicProfileHandle = profile.guidedSetup?.handle;
 
   return (
     <>
@@ -159,6 +160,9 @@ export function ProfileDialogs({
         onClose={() => setIsShareDialogOpen(false)}
         userName={profile.basicInfo.name}
         userHeadline={profile.basicInfo.tagline || undefined}
+        publicPagePath={
+          publicProfileHandle ? `/portfolio/${encodeURIComponent(publicProfileHandle)}` : undefined
+        }
       />
     </>
   );

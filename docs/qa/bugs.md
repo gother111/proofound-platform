@@ -1,5 +1,5 @@
 > Doc Class: `active`
-> Last Verified: `2026-02-26`
+> Last Verified: `2026-05-19`
 
 # QA Bug Log
 
@@ -55,8 +55,9 @@ Status values are normalized to: `open`, `fixed`, `monitoring`, `wontfix`.
 ### B-008 Login page debug localhost ingest calls
 
 - Severity: medium
-- Status: open
-- Suspected area: `src/app/(auth)/login/page.tsx`
+- Status: fixed
+- Regression: `tests/scripts/launch-gate-config.test.ts`
+- Evidence: `src/app/login/page.tsx`, `src/lib/debug-ingest.ts`, and `.env.example` now use an optional env-driven debug ingest sink. No hardcoded localhost ingest endpoint is present in the active login path.
 
 ### B-009 Playwright workflow DB fallback without DB service
 
@@ -78,3 +79,5 @@ Status values are normalized to: `open`, `fixed`, `monitoring`, `wontfix`.
   - Repro command or route
   - Suspected owner area
   - Linked test path when available
+- Launch-blocking issues must identify whether the affected surface is active MVP, internal-only launch ops, archived, or post-MVP.
+- Browser/manual visual findings should include route, viewport, role/mode, and whether the finding affects the locked MVP corridor.

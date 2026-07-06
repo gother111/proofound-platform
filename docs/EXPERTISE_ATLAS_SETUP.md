@@ -1,14 +1,23 @@
-# Expertise Atlas Setup Guide
+> Doc Class: `active`
+> Last Verified: `2026-05-19`
+
+# Retained Expertise Taxonomy Setup Guide
+
+> Launch status: retained taxonomy/service context only.
+>
+> `/app/i/expertise` and the broad Expertise Atlas UI are archived outside the locked MVP corridor. Do not use this document as evidence that the old Expertise Atlas page, broad CV import wizard, gap dashboard, LinkedIn import, or legacy skill verification transport is active for launch.
 
 ## Overview
 
-Expertise Atlas is the canonical individual skill system.
+The retained launch surface keeps the underlying taxonomy and narrow user-skill/proof APIs available where proof workflows still depend on them. The user-facing MVP corridor is Proof Packs, proof portfolio, verification requests, matching, reveal/consent, interviews, decisions, and organization assignments.
 
-- Individual skills are authored in Atlas (`skills` + taxonomy tables).
-- Gap analysis is served from `/api/skill-gaps`.
+- Individual proof skills may still be stored in `skills` and taxonomy tables.
 - Assignment requirements are canonical in `assignment_expertise_matrix`, with compatibility JSON fields on `assignments`.
+- Broad skill-gap, dashboard, LinkedIn import, and CV wizard surfaces are archived unless the route-surface policy is explicitly changed.
 
 ## Setup Instructions
+
+This is not a production migration shortcut. For launch targets, follow the current deployment, migration, backup, and isolated-restore runbooks before applying database changes.
 
 ### 1. Apply schema migrations
 
@@ -25,7 +34,7 @@ npm run db:drift-check
 npm run db:seed-taxonomy
 ```
 
-This seeds L2, L3, and L4 taxonomy data used by Atlas search and skill selection.
+This seeds L2, L3, and L4 taxonomy data used by retained taxonomy search and proof-skill selection.
 
 ### 3. Verify core table health
 
@@ -43,7 +52,7 @@ SELECT COUNT(*) FROM skills_l3;
 SELECT COUNT(*) FROM skills_taxonomy;
 ```
 
-### 4. Verify Atlas and gap APIs
+### 4. Verify retained taxonomy and user-skill APIs
 
 ```bash
 # Taxonomy root
@@ -52,8 +61,7 @@ curl -sS http://localhost:3000/api/expertise/taxonomy
 # User skills (requires authenticated session cookie)
 curl -sS http://localhost:3000/api/expertise/user-skills
 
-# Canonical gap analysis
-curl -sS http://localhost:3000/api/skill-gaps
+# Archived gap/dashboard routes should return launch-safe archived responses.
 ```
 
 ## Active API Surface
@@ -63,7 +71,7 @@ curl -sS http://localhost:3000/api/skill-gaps
 - `GET /api/expertise/taxonomy`
   - query: `l1`, `l2`, `l3_id`, `search`
 
-### User skill management
+### Retained user skill and proof management
 
 - `GET /api/expertise/user-skills`
 - `POST /api/expertise/user-skills`
@@ -71,24 +79,27 @@ curl -sS http://localhost:3000/api/skill-gaps
 - `DELETE /api/expertise/user-skills/:id`
 - `POST /api/expertise/user-skills/:id/proofs`
 - `DELETE /api/expertise/user-skills/:id/proofs/:proofId`
-- `POST /api/expertise/user-skills/:id/verification-request`
 
-### Atlas analytics and helpers
+### Retained assignment helper
 
+- `POST /api/expertise/jd-to-l4`
+
+### Archived legacy APIs
+
+- `GET /api/skill-gaps`
+- `GET|POST /api/skill-gaps/goals`
+- `GET /api/expertise/gap-analysis`
 - `GET /api/expertise/stats`
 - `POST /api/expertise/auto-suggest`
-- `POST /api/expertise/jd-to-l4`
+- `POST /api/expertise/user-skills/:id/verification-request`
 - `POST /api/expertise/linkedin-import`
 - `GET /api/expertise/linkedin-status`
 - `POST /api/expertise/linkedin-disconnect`
 - `GET /api/expertise/verifications/incoming`
 - `POST /api/expertise/verification/:requestId/respond`
+- `/api/expertise/cv-import/*`
 
-### Gap analysis
-
-- Canonical: `GET /api/skill-gaps`
-- Goals: `GET|POST /api/skill-gaps/goals`
-- Compatibility wrapper: `GET /api/expertise/gap-analysis` (deprecated, forwards to canonical service shape)
+Do not use archived Expertise Atlas UI files, archived CV wizard routes, or old LinkedIn-import routes as launch evidence. They are retained only as history unless route-surface policy changes.
 
 ### Matching profile integration
 
@@ -101,9 +112,9 @@ curl -sS http://localhost:3000/api/skill-gaps
   - `desired_industries`
   - `org_types`
 - PRD A7 strict gating is enforced at:
-  - `POST /api/core/matching/profile`
-  - `POST /api/core/matching/near-matches`
-  - if unmet, both return `412` with `error: "PROFILE_NOT_MATCHABLE"`, criterion diagnostics, and top actions.
+  - `POST /api/match/profile`
+  - the retained near-matches handler used by internal matching code
+  - if unmet, both paths return `412` with `error: "PROFILE_NOT_MATCHABLE"`, criterion diagnostics, and top actions.
 - Focus areas are soft ranking boosts only:
   - role `+0.04`
   - industry `+0.025`
@@ -121,18 +132,18 @@ curl -sS http://localhost:3000/api/skill-gaps
 
 ## Troubleshooting
 
-### No gap results
+### No proof/assignment skill context
 
 - Confirm user has skills in `skills`.
 - Confirm active assignments exist and have matrix rows in `assignment_expertise_matrix`.
-- Confirm user has interests or matches, or fallback active assignments are available.
 
 ### Taxonomy search is empty
 
 - Confirm `skills_taxonomy` has seeded rows.
 - Check fallback search path in `/api/expertise/taxonomy` by running a direct `search` query.
 
-### Legacy clients still call deprecated endpoints
+### Legacy clients still call archived endpoints
 
-- Keep `/api/expertise/gap-analysis` during transition.
-- Monitor deprecation headers and server logs before removing compatibility routes.
+- Confirm the route is classified in `src/lib/launch/surface-policy.ts`.
+- Confirm archived handlers return `410` before auth, ranking, or private data access.
+- Use `npm run test:launch:routes` to verify route inventory and archived-handler behavior.

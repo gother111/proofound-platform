@@ -6,8 +6,15 @@ vi.mock('@/lib/portfolio/public-projection', () => ({
   resolvePublicIndividualPortfolioAccessByHandle: vi.fn(),
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+  },
+}));
+
 import { GET } from '@/app/api/portfolio/public/[handle]/summary/route';
 import { resolvePublicIndividualPortfolioAccessByHandle } from '@/lib/portfolio/public-projection';
+import { log } from '@/lib/log';
 
 function buildAccessibleAccess() {
   return {
@@ -48,7 +55,6 @@ function buildAccessibleAccess() {
             verificationStatus: 'verified',
             verificationSummary: 'Scoped verification supports this proof record.',
             freshnessState: 'fresh',
-            proofQualityScore: 0.8,
             schemaVersion: 'proof_pack/v2',
             artifactCount: 1,
             contextLabel: 'Product Strategy',
@@ -155,4 +161,20 @@ describe('/api/portfolio/public/[handle]/summary', () => {
       expect(await response.json()).toEqual({ error: 'Profile not found' });
     }
   );
+
+  it('logs public summary failures with structured diagnostics', async () => {
+    const routeError = new Error('projection failed');
+    vi.mocked(resolvePublicIndividualPortfolioAccessByHandle).mockRejectedValue(routeError);
+
+    const response = await GET(new Request('http://localhost/api/portfolio/public/jane/summary'), {
+      params: Promise.resolve({ handle: 'jane' }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Failed to build summary' });
+    expect(log.error).toHaveBeenCalledWith('portfolio.public_summary.failed', {
+      error: routeError,
+    });
+  });
 });

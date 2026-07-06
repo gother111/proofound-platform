@@ -16,8 +16,8 @@ export function TrustStripSection({ shouldReduceMotion }: TrustStripSectionProps
 
   const features = [
     { text: 'Public proof-based portfolio in minutes', icon: Globe },
-    { text: 'Bias-aware, explainable matching', icon: Scale },
-    { text: 'Verification and trust signals', icon: ShieldCheck },
+    { text: 'Bias-aware, explainable review', icon: Scale },
+    { text: 'Verification states and method markers', icon: ShieldCheck },
     { text: 'Built for real assignments and real outcomes', icon: Target },
   ];
 

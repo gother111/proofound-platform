@@ -35,45 +35,53 @@ export async function resolveOrganizationId(orgRef: string): Promise<string | nu
 }
 
 export async function getOrganizationReadiness(orgId: string): Promise<OrganizationReadiness> {
-  const [assignmentRows, matchStatsRow, shortlistStatsRow, matrixRows] = await Promise.all([
-    db
-      .select({
-        id: assignments.id,
-        role: assignments.role,
-        description: assignments.description,
-        businessValue: assignments.businessValue,
-        expectedImpact: assignments.expectedImpact,
-        verificationGates: assignments.verificationGates,
-        status: assignments.status,
-      })
-      .from(assignments)
-      .where(eq(assignments.orgId, orgId)),
+  const [organizationRow, assignmentRows, matchStatsRow, shortlistStatsRow, matrixRows] =
+    await Promise.all([
+      db
+        .select({ slug: organizations.slug })
+        .from(organizations)
+        .where(eq(organizations.id, orgId))
+        .limit(1),
 
-    db
-      .select({
-        totalMatches: sql<number>`count(${matches.id})::int`,
-      })
-      .from(matches)
-      .innerJoin(assignments, eq(matches.assignmentId, assignments.id))
-      .where(eq(assignments.orgId, orgId)),
+      db
+        .select({
+          id: assignments.id,
+          role: assignments.role,
+          description: assignments.description,
+          businessValue: assignments.businessValue,
+          expectedImpact: assignments.expectedImpact,
+          verificationGates: assignments.verificationGates,
+          status: assignments.status,
+        })
+        .from(assignments)
+        .where(eq(assignments.orgId, orgId)),
 
-    db
-      .select({
-        totalShortlists: sql<number>`count(${matchInterest.id})::int`,
-      })
-      .from(matchInterest)
-      .innerJoin(assignments, eq(matchInterest.assignmentId, assignments.id))
-      .where(eq(assignments.orgId, orgId)),
+      db
+        .select({
+          totalMatches: sql<number>`count(${matches.id})::int`,
+        })
+        .from(matches)
+        .innerJoin(assignments, eq(matches.assignmentId, assignments.id))
+        .where(eq(assignments.orgId, orgId)),
 
-    db
-      .select({
-        assignmentId: assignmentExpertiseMatrix.assignmentId,
-        skillCode: assignmentExpertiseMatrix.skillCode,
-      })
-      .from(assignmentExpertiseMatrix)
-      .innerJoin(assignments, eq(assignmentExpertiseMatrix.assignmentId, assignments.id))
-      .where(and(eq(assignments.orgId, orgId), eq(assignments.status, 'active'))),
-  ]);
+      db
+        .select({
+          totalShortlists: sql<number>`count(${matchInterest.id})::int`,
+        })
+        .from(matchInterest)
+        .innerJoin(assignments, eq(matchInterest.assignmentId, assignments.id))
+        .where(eq(assignments.orgId, orgId)),
+
+      db
+        .select({
+          assignmentId: assignmentExpertiseMatrix.assignmentId,
+          skillCode: assignmentExpertiseMatrix.skillCode,
+        })
+        .from(assignmentExpertiseMatrix)
+        .innerJoin(assignments, eq(assignmentExpertiseMatrix.assignmentId, assignments.id))
+        .where(and(eq(assignments.orgId, orgId), eq(assignments.status, 'active'))),
+    ]);
+  const organizationSlug = organizationRow[0]?.slug ?? null;
 
   const activeAssignments = assignmentRows.filter((row) => row.status === 'active');
   const totalActiveAssignments = activeAssignments.length;
@@ -103,7 +111,7 @@ export async function getOrganizationReadiness(orgId: string): Promise<Organizat
       key: 'active_assignments',
       label: 'Active assignments available',
       pass: totalActiveAssignments > 0,
-      notes: 'At least one active assignment is needed for candidate flow.',
+      notes: 'At least one active assignment is needed for the proof-review flow.',
     },
     {
       key: 'requirements_coverage',
@@ -121,7 +129,7 @@ export async function getOrganizationReadiness(orgId: string): Promise<Organizat
         totalActiveAssignments === 0
           ? false
           : assignmentWithVerificationGates / totalActiveAssignments >= 0.5,
-      notes: 'Verification gates reduce low-quality candidate flow.',
+      notes: 'Verification gates reduce unanchored proof-review flow.',
     },
     {
       key: 'scope_quality',
@@ -199,7 +207,7 @@ export async function getOrganizationReadiness(orgId: string): Promise<Organizat
     topActions.push({
       id: 'create-first-assignment',
       title: 'Create your first active assignment',
-      description: 'Publish one assignment to start receiving real candidate signals.',
+      description: 'Publish one assignment to start receiving real proof submissions.',
       priority: 'high',
       category: 'assignment',
       actionUrl: '/app/o',
@@ -210,7 +218,7 @@ export async function getOrganizationReadiness(orgId: string): Promise<Organizat
     topActions.push({
       id: 'complete-requirements-matrix',
       title: 'Complete required skills for active assignments',
-      description: 'Assignments without required skills underperform in matching quality.',
+      description: 'Assignments without required skills make proof review less precise.',
       priority: 'high',
       category: 'assignment',
       actionUrl: '/app/o',
@@ -221,7 +229,8 @@ export async function getOrganizationReadiness(orgId: string): Promise<Organizat
     topActions.push({
       id: 'add-verification-gates',
       title: 'Add verification gates',
-      description: 'Use work email, identity, or proof gates to improve pipeline quality.',
+      description:
+        'Use work email, identity, or proof gates to make assignment review more specific.',
       priority: 'medium',
       category: 'process',
       actionUrl: '/app/o',
@@ -239,14 +248,14 @@ export async function getOrganizationReadiness(orgId: string): Promise<Organizat
     });
   }
 
-  const analyticsActions = await calculateNextActions(orgId);
+  const analyticsActions = await calculateNextActions(orgId, organizationSlug);
   const mappedAnalyticsActions: ReadinessAction[] = analyticsActions.slice(0, 2).map((action) => ({
     id: action.id,
     title: action.title,
     description: action.description,
     priority: action.priority === 'critical' || action.priority === 'high' ? 'high' : 'medium',
     category:
-      action.category === 'candidate'
+      action.category === 'matching'
         ? 'matching'
         : action.category === 'process'
           ? 'process'

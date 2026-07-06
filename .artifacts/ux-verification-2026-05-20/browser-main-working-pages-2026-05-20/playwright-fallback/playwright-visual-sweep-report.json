@@ -1,0 +1,1077 @@
+{
+  "generatedAt": "2026-05-20T21:09:08.781Z",
+  "artifactDir": "<repo>/.artifacts/ux-verification-2026-05-20/browser-main-working-pages-2026-05-20/playwright-fallback",
+  "routeCount": 13,
+  "viewportCount": 2,
+  "resultCount": 26,
+  "failureCount": 0,
+  "failures": [],
+  "results": [
+    {
+      "role": "individual",
+      "label": "individual-home",
+      "url": "http://localhost:33123/app/i/home",
+      "expectedPath": "/app/i/home",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T21:07:04.596Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/home",
+        "title": "Proofound - Focus on what matters",
+        "h1s": ["Build your proof-first profile"],
+        "viewport": {
+          "width": 1280,
+          "height": 900
+        },
+        "scroll": {
+          "scrollWidth": 1280,
+          "clientWidth": 1280,
+          "horizontalOverflowPx": 0,
+          "documentHeight": 900
+        },
+        "flags": {
+          "redirectedToLogin": false,
+          "missingH1": false,
+          "horizontalOverflow": false,
+          "stuckMatches": [],
+          "staleMatches": [],
+          "percentMatchMatches": [],
+          "obviousError": false,
+          "cookieOverlay": []
+        }
+      },
+      "finalUrlMatchesExpectedPath": true,
+      "consoleErrors": [],
+      "screenshot": "<repo>/.artifacts/ux-verification-2026-05-20/browser-main-working-pages-2026-05-20/playwright-fallback/desktop-individual-home.png",
+      "finishedAt": "2026-05-20T21:07:09.368Z"
+    },
+    {
+      "role": "individual",
+      "label": "individual-profile-proof-packs",
+      "url": "http://localhost:33123/app/i/profile?profileView=full&tab=proof_packs",
+      "expectedPath": "/app/i/profile",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T21:07:09.369Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/profile?profileView=full&tab=proof_packs",
+        "title": "Proofound - Focus on what matters",
+        "h1s": ["Mock Individual"],
+        "viewport": {
+          "width": 1280,
+          "height": 900
+        },
+        "scroll": {
+          "scrollWidth": 1280,
+          "clientWidth": 1280,
+          "horizontalOverflowPx": 0,
+          "documentHeight": 900
+        },
+        "flags": {
+          "redirectedToLogin": false,
+          "missingH1": false,
+          "horizontalOverflow": false,
+          "stuckMatches": [],
+          "staleMatches": [],
+          "percentMatchMatches": [],
+          "obviousError": false,
+          "cookieOverlay": []
+        }
+      },
+      "finalUrlMatchesExpectedPath": true,
+      "consoleErrors": [],
+      "screenshot": "<repo>/.artifacts/ux-verification-2026-05-20/browser-main-working-pages-2026-05-20/playwright-fallback/desktop-individual-profile-proof-packs.png",
+      "finishedAt": "2026-05-20T21:07:17.298Z"
+    },
+    {
+      "role": "individual",
+      "label": "individual-verifications",
+      "url": "http://localhost:33123/app/i/verifications",
+      "expectedPath": "/app/i/verifications",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T21:07:17.298Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/verifications",
+        "title": "Proofound - Focus on what matters",
+        "h1s": ["Proof verification requests"],
+        "viewport": {
+          "width": 1280,
+          "height": 900
+        },
+        "scroll": {
+          "scrollWidth": 1280,
+          "clientWidth": 1280,
+          "horizontalOverflowPx": 0,
+          "documentHeight": 900
+        },
+        "flags": {
+          "redirectedToLogin": false,
+          "missingH1": false,
+          "horizontalOverflow": false,
+          "stuckMatches": [],
+          "staleMatches": [],
+          "percentMatchMatches": [],
+          "obviousError": false,
+          "cookieOverlay": []
+        }
+      },
+      "finalUrlMatchesExpectedPath": true,
+      "consoleErrors": [],
+      "screenshot": "<repo>/.artifacts/ux-verification-2026-05-20/browser-main-working-pages-2026-05-20/playwright-fallback/desktop-individual-verifications.png",
+      "finishedAt": "2026-05-20T21:07:21.846Z"
+    },
+    {
+      "role": "individual",
+      "label": "individual-matching",
+      "url": "http://localhost:33123/app/i/matching",
+      "expectedPath": "/app/i/matching",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T21:07:21.846Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/matching",
+        "title": "Proofound - Focus on what matters",
+        "h1s": ["Matching"],
+        "viewport": {
+          "width": 1280,
+          "height": 900
+        },
+        "scroll": {
+          "scrollWidth": 1280,
+          "clientWidth": 1280,
+          "horizontalOverflowPx": 0,
+          "documentHeight": 900
+        },
+        "flags": {
+          "redirectedToLogin": false,
+          "missingH1": false,
+          "horizontalOverflow": false,
+          "stuckMatches": [],
+          "staleMatches": [],
+          "percentMatchMatches": [],
+          "obviousError": false,
+          "cookieOverlay": []
+        }
+      },
+      "finalUrlMatchesExpectedPath": true,
+      "consoleErrors": [],
+      "screenshot": "<repo>/.artifacts/ux-verification-2026-05-20/browser-main-working-pages-2026-05-20/playwright-fallback/desktop-individual-matching.png",
+      "finishedAt": "2026-05-20T21:07:27.009Z"
+    },
+    {
+      "role": "individual",
+      "label": "individual-communications",
+      "url": "http://localhost:33123/app/i/communications",
+      "expectedPath": "/app/i/communications",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T21:07:27.009Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/communications",
+        "title": "Proofound - Focus on what matters",
+        "h1s": ["Communications"],
+        "viewport": {
+          "width": 1280,
+          "height": 900
+        },
+        "scroll": {
+          "scrollWidth": 1280,
+          "clientWidth": 1280,
+          "horizontalOverflowPx": 0,
+          "documentHeight": 900
+        },
+        "flags": {
+          "redirectedToLogin": false,
+          "missingH1": false,
+          "horizontalOverflow": false,
+          "stuckMatches": [],
+          "staleMatches": [],
+          "percentMatchMatches": [],
+          "obviousError": false,
+          "cookieOverlay": []
+        }
+      },
+      "finalUrlMatchesExpectedPath": true,
+      "consoleErrors": [],
+      "screenshot": "<repo>/.artifacts/ux-verification-2026-05-20/browser-main-working-pages-2026-05-20/playwright-fallback/desktop-individual-communications.png",
+      "finishedAt": "2026-05-20T21:07:30.561Z"
+    },
+    {
+      "role": "individual",
+      "label": "individual-settings-privacy",
+      "url": "http://localhost:33123/app/i/settings/privacy",
+      "expectedPath": "/app/i/settings/privacy",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T21:07:30.561Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/settings/privacy",
+        "title": "Proofound - Focus on what matters",
+        "h1s": ["Privacy Settings"],
+        "viewport": {
+          "width": 1280,
+          "height": 900
+        },
+        "scroll": {
+          "scrollWidth": 1280,
+          "clientWidth": 1280,
+          "horizontalOverflowPx": 0,
+          "documentHeight": 900
+        },
+        "flags": {
+          "redirectedToLogin": false,
+          "missingH1": false,
+          "horizontalOverflow": false,
+          "stuckMatches": [],
+          "staleMatches": [],
+          "percentMatchMatches": [],
+          "obviousError": false,
+          "cookieOverlay": []
+        }
+      },
+      "finalUrlMatchesExpectedPath": true,
+      "consoleErrors": [],
+      "screenshot": "<repo>/.artifacts/ux-verification-2026-05-20/browser-main-working-pages-2026-05-20/playwright-fallback/desktop-individual-settings-privacy.png",
+      "finishedAt": "2026-05-20T21:07:36.990Z"
+    },
+    {
+      "role": "individual",
+      "label": "onboarding",
+      "url": "http://localhost:33123/onboarding",
+      "expectedPath": "/onboarding",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T21:07:36.990Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/onboarding",
+        "title": "Proofound - Focus on what matters",
+        "h1s": ["Start with one Proof Pack"],
+        "viewport": {
+          "width": 1280,
+          "height": 900
+        },
+        "scroll": {
+          "scrollWidth": 1280,
+          "clientWidth": 1280,
+          "horizontalOverflowPx": 0,
+          "documentHeight": 900
+        },
+        "flags": {
+          "redirectedToLogin": false,
+          "missingH1": false,
+          "horizontalOverflow": false,
+          "stuckMatches": [],
+          "staleMatches": [],
+          "percentMatchMatches": [],
+          "obviousError": false,
+          "cookieOverlay": []
+        }
+      },
+      "finalUrlMatchesExpectedPath": true,
+      "consoleErrors": [],
+      "screenshot": "<repo>/.artifacts/ux-verification-2026-05-20/browser-main-working-pages-2026-05-20/playwright-fallback/desktop-onboarding.png",
+      "finishedAt": "2026-05-20T21:07:39.967Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-home",
+      "url": "http://localhost:33122/app/o/test-org/home",
+      "expectedPath": "/app/o/test-org/home",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T21:07:39.967Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/home",
+        "title": "Proofound - Focus on what matters",
+        "h1s": ["Nordic Field Systems"],
+        "viewport": {
+          "width": 1280,
+          "height": 900
+        },
+        "scroll": {
+          "scrollWidth": 1280,
+          "clientWidth": 1280,
+          "horizontalOverflowPx": 0,
+          "documentHeight": 900
+        },
+        "flags": {
+          "redirectedToLogin": false,
+          "missingH1": false,
+          "horizontalOverflow": false,
+          "stuckMatches": [],
+          "staleMatches": [],
+          "percentMatchMatches": [],
+          "obviousError": false,
+          "cookieOverlay": []
+        }
+      },
+      "finalUrlMatchesExpectedPath": true,
+      "consoleErrors": [],
+      "screenshot": "<repo>/.artifacts/ux-verification-2026-05-20/browser-main-working-pages-2026-05-20/playwright-fallback/desktop-org-home.png",
+      "finishedAt": "2026-05-20T21:07:44.559Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-assignments",
+      "url": "http://localhost:33122/app/o/test-org/assignments",
+      "expectedPath": "/app/o/test-org/assignments",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T21:07:44.559Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/assignments",
+        "title": "Proofound - Focus on what matters",
+        "h1s": ["Assignments"],
+        "viewport": {
+          "width": 1280,
+          "height": 900
+        },
+        "scroll": {
+          "scrollWidth": 1280,
+          "clientWidth": 1280,
+          "horizontalOverflowPx": 0,
+          "documentHeight": 900
+        },
+        "flags": {
+          "redirectedToLogin": false,
+          "missingH1": false,
+          "horizontalOverflow": false,
+          "stuckMatches": [],
+          "staleMatches": [],
+          "percentMatchMatches": [],
+          "obviousError": false,
+          "cookieOverlay": []
+        }
+      },
+      "finalUrlMatchesExpectedPath": true,
+      "consoleErrors": [],
+      "screenshot": "<repo>/.artifacts/ux-verification-2026-05-20/browser-main-working-pages-2026-05-20/playwright-fallback/desktop-org-assignments.png",
+      "finishedAt": "2026-05-20T21:07:53.698Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-communications",
+      "url": "http://localhost:33122/app/o/test-org/communications",
+      "expectedPath": "/app/o/test-org/communications",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T21:07:53.698Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/communications",
+        "title": "Proofound - Focus on what matters",
+        "h1s": ["Communications", "Messages"],
+        "viewport": {
+          "width": 1280,
+          "height": 900
+        },
+        "scroll": {
+          "scrollWidth": 1280,
+          "clientWidth": 1280,
+          "horizontalOverflowPx": 0,
+          "documentHeight": 900
+        },
+        "flags": {
+          "redirectedToLogin": false,
+          "missingH1": false,
+          "horizontalOverflow": false,
+          "stuckMatches": [],
+          "staleMatches": [],
+          "percentMatchMatches": [],
+          "obviousError": false,
+          "cookieOverlay": []
+        }
+      },
+      "finalUrlMatchesExpectedPath": true,
+      "consoleErrors": [],
+      "screenshot": "<repo>/.artifacts/ux-verification-2026-05-20/browser-main-working-pages-2026-05-20/playwright-fallback/desktop-org-communications.png",
+      "finishedAt": "2026-05-20T21:07:57.630Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-interviews",
+      "url": "http://localhost:33122/app/o/test-org/interviews",
+      "expectedPath": "/app/o/test-org/interviews",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T21:07:57.630Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/interviews",
+        "title": "Proofound - Focus on what matters",
+        "h1s": ["Interviews"],
+        "viewport": {
+          "width": 1280,
+          "height": 900
+        },
+        "scroll": {
+          "scrollWidth": 1280,
+          "clientWidth": 1280,
+          "horizontalOverflowPx": 0,
+          "documentHeight": 900
+        },
+        "flags": {
+          "redirectedToLogin": false,
+          "missingH1": false,
+          "horizontalOverflow": false,
+          "stuckMatches": [],
+          "staleMatches": [],
+          "percentMatchMatches": [],
+          "obviousError": false,
+          "cookieOverlay": []
+        }
+      },
+      "finalUrlMatchesExpectedPath": true,
+      "consoleErrors": [],
+      "screenshot": "<repo>/.artifacts/ux-verification-2026-05-20/browser-main-working-pages-2026-05-20/playwright-fallback/desktop-org-interviews.png",
+      "finishedAt": "2026-05-20T21:08:02.705Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-profile",
+      "url": "http://localhost:33122/app/o/test-org/profile",
+      "expectedPath": "/app/o/test-org/profile",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T21:08:02.705Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/profile",
+        "title": "Proofound - Focus on what matters",
+        "h1s": ["Organization Trust Page"],
+        "viewport": {
+          "width": 1280,
+          "height": 900
+        },
+        "scroll": {
+          "scrollWidth": 1280,
+          "clientWidth": 1280,
+          "horizontalOverflowPx": 0,
+          "documentHeight": 900
+        },
+        "flags": {
+          "redirectedToLogin": false,
+          "missingH1": false,
+          "horizontalOverflow": false,
+          "stuckMatches": [],
+          "staleMatches": [],
+          "percentMatchMatches": [],
+          "obviousError": false,
+          "cookieOverlay": []
+        }
+      },
+      "finalUrlMatchesExpectedPath": true,
+      "consoleErrors": [],
+      "screenshot": "<repo>/.artifacts/ux-verification-2026-05-20/browser-main-working-pages-2026-05-20/playwright-fallback/desktop-org-profile.png",
+      "finishedAt": "2026-05-20T21:08:05.535Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-shortlist",
+      "url": "http://localhost:33122/app/o/test-org/shortlist",
+      "expectedPath": "/app/o/test-org/assignments",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T21:08:05.536Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/assignments",
+        "title": "Proofound - Focus on what matters",
+        "h1s": ["Assignments"],
+        "viewport": {
+          "width": 1280,
+          "height": 900
+        },
+        "scroll": {
+          "scrollWidth": 1280,
+          "clientWidth": 1280,
+          "horizontalOverflowPx": 0,
+          "documentHeight": 900
+        },
+        "flags": {
+          "redirectedToLogin": false,
+          "missingH1": false,
+          "horizontalOverflow": false,
+          "stuckMatches": [],
+          "staleMatches": [],
+          "percentMatchMatches": [],
+          "obviousError": false,
+          "cookieOverlay": []
+        }
+      },
+      "finalUrlMatchesExpectedPath": true,
+      "consoleErrors": [],
+      "screenshot": "<repo>/.artifacts/ux-verification-2026-05-20/browser-main-working-pages-2026-05-20/playwright-fallback/desktop-org-shortlist.png",
+      "finishedAt": "2026-05-20T21:08:09.136Z"
+    },
+    {
+      "role": "individual",
+      "label": "individual-home",
+      "url": "http://localhost:33123/app/i/home",
+      "expectedPath": "/app/i/home",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T21:08:09.240Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/home",
+        "title": "Proofound - Focus on what matters",
+        "h1s": ["Build your proof-first profile"],
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "scroll": {
+          "scrollWidth": 390,
+          "clientWidth": 390,
+          "horizontalOverflowPx": 0,
+          "documentHeight": 844
+        },
+        "flags": {
+          "redirectedToLogin": false,
+          "missingH1": false,
+          "horizontalOverflow": false,
+          "stuckMatches": [],
+          "staleMatches": [],
+          "percentMatchMatches": [],
+          "obviousError": false,
+          "cookieOverlay": []
+        }
+      },
+      "finalUrlMatchesExpectedPath": true,
+      "consoleErrors": [],
+      "screenshot": "<repo>/.artifacts/ux-verification-2026-05-20/browser-main-working-pages-2026-05-20/playwright-fallback/mobile-individual-home.png",
+      "finishedAt": "2026-05-20T21:08:13.356Z"
+    },
+    {
+      "role": "individual",
+      "label": "individual-profile-proof-packs",
+      "url": "http://localhost:33123/app/i/profile?profileView=full&tab=proof_packs",
+      "expectedPath": "/app/i/profile",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T21:08:13.356Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/profile?profileView=full&tab=proof_packs",
+        "title": "Proofound - Focus on what matters",
+        "h1s": ["Mock Individual"],
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "scroll": {
+          "scrollWidth": 390,
+          "clientWidth": 390,
+          "horizontalOverflowPx": 0,
+          "documentHeight": 844
+        },
+        "flags": {
+          "redirectedToLogin": false,
+          "missingH1": false,
+          "horizontalOverflow": false,
+          "stuckMatches": [],
+          "staleMatches": [],
+          "percentMatchMatches": [],
+          "obviousError": false,
+          "cookieOverlay": []
+        }
+      },
+      "finalUrlMatchesExpectedPath": true,
+      "consoleErrors": [],
+      "screenshot": "<repo>/.artifacts/ux-verification-2026-05-20/browser-main-working-pages-2026-05-20/playwright-fallback/mobile-individual-profile-proof-packs.png",
+      "finishedAt": "2026-05-20T21:08:26.947Z"
+    },
+    {
+      "role": "individual",
+      "label": "individual-verifications",
+      "url": "http://localhost:33123/app/i/verifications",
+      "expectedPath": "/app/i/verifications",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T21:08:26.948Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/verifications",
+        "title": "Proofound - Focus on what matters",
+        "h1s": ["Proof verification requests"],
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "scroll": {
+          "scrollWidth": 390,
+          "clientWidth": 390,
+          "horizontalOverflowPx": 0,
+          "documentHeight": 844
+        },
+        "flags": {
+          "redirectedToLogin": false,
+          "missingH1": false,
+          "horizontalOverflow": false,
+          "stuckMatches": [],
+          "staleMatches": [],
+          "percentMatchMatches": [],
+          "obviousError": false,
+          "cookieOverlay": []
+        }
+      },
+      "finalUrlMatchesExpectedPath": true,
+      "consoleErrors": [],
+      "screenshot": "<repo>/.artifacts/ux-verification-2026-05-20/browser-main-working-pages-2026-05-20/playwright-fallback/mobile-individual-verifications.png",
+      "finishedAt": "2026-05-20T21:08:30.821Z"
+    },
+    {
+      "role": "individual",
+      "label": "individual-matching",
+      "url": "http://localhost:33123/app/i/matching",
+      "expectedPath": "/app/i/matching",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T21:08:30.821Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/matching",
+        "title": "Proofound - Focus on what matters",
+        "h1s": ["Matching"],
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "scroll": {
+          "scrollWidth": 390,
+          "clientWidth": 390,
+          "horizontalOverflowPx": 0,
+          "documentHeight": 844
+        },
+        "flags": {
+          "redirectedToLogin": false,
+          "missingH1": false,
+          "horizontalOverflow": false,
+          "stuckMatches": [],
+          "staleMatches": [],
+          "percentMatchMatches": [],
+          "obviousError": false,
+          "cookieOverlay": []
+        }
+      },
+      "finalUrlMatchesExpectedPath": true,
+      "consoleErrors": [],
+      "screenshot": "<repo>/.artifacts/ux-verification-2026-05-20/browser-main-working-pages-2026-05-20/playwright-fallback/mobile-individual-matching.png",
+      "finishedAt": "2026-05-20T21:08:36.026Z"
+    },
+    {
+      "role": "individual",
+      "label": "individual-communications",
+      "url": "http://localhost:33123/app/i/communications",
+      "expectedPath": "/app/i/communications",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T21:08:36.026Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/communications",
+        "title": "Proofound - Focus on what matters",
+        "h1s": ["Communications"],
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "scroll": {
+          "scrollWidth": 390,
+          "clientWidth": 390,
+          "horizontalOverflowPx": 0,
+          "documentHeight": 844
+        },
+        "flags": {
+          "redirectedToLogin": false,
+          "missingH1": false,
+          "horizontalOverflow": false,
+          "stuckMatches": [],
+          "staleMatches": [],
+          "percentMatchMatches": [],
+          "obviousError": false,
+          "cookieOverlay": []
+        }
+      },
+      "finalUrlMatchesExpectedPath": true,
+      "consoleErrors": [],
+      "screenshot": "<repo>/.artifacts/ux-verification-2026-05-20/browser-main-working-pages-2026-05-20/playwright-fallback/mobile-individual-communications.png",
+      "finishedAt": "2026-05-20T21:08:38.838Z"
+    },
+    {
+      "role": "individual",
+      "label": "individual-settings-privacy",
+      "url": "http://localhost:33123/app/i/settings/privacy",
+      "expectedPath": "/app/i/settings/privacy",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T21:08:38.838Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/settings/privacy",
+        "title": "Proofound - Focus on what matters",
+        "h1s": ["Privacy Settings"],
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "scroll": {
+          "scrollWidth": 390,
+          "clientWidth": 390,
+          "horizontalOverflowPx": 0,
+          "documentHeight": 844
+        },
+        "flags": {
+          "redirectedToLogin": false,
+          "missingH1": false,
+          "horizontalOverflow": false,
+          "stuckMatches": [],
+          "staleMatches": [],
+          "percentMatchMatches": [],
+          "obviousError": false,
+          "cookieOverlay": []
+        }
+      },
+      "finalUrlMatchesExpectedPath": true,
+      "consoleErrors": [],
+      "screenshot": "<repo>/.artifacts/ux-verification-2026-05-20/browser-main-working-pages-2026-05-20/playwright-fallback/mobile-individual-settings-privacy.png",
+      "finishedAt": "2026-05-20T21:08:46.467Z"
+    },
+    {
+      "role": "individual",
+      "label": "onboarding",
+      "url": "http://localhost:33123/onboarding",
+      "expectedPath": "/onboarding",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T21:08:46.467Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/onboarding",
+        "title": "Proofound - Focus on what matters",
+        "h1s": ["Start with one Proof Pack"],
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "scroll": {
+          "scrollWidth": 390,
+          "clientWidth": 390,
+          "horizontalOverflowPx": 0,
+          "documentHeight": 861
+        },
+        "flags": {
+          "redirectedToLogin": false,
+          "missingH1": false,
+          "horizontalOverflow": false,
+          "stuckMatches": [],
+          "staleMatches": [],
+          "percentMatchMatches": [],
+          "obviousError": false,
+          "cookieOverlay": []
+        }
+      },
+      "finalUrlMatchesExpectedPath": true,
+      "consoleErrors": [],
+      "screenshot": "<repo>/.artifacts/ux-verification-2026-05-20/browser-main-working-pages-2026-05-20/playwright-fallback/mobile-onboarding.png",
+      "finishedAt": "2026-05-20T21:08:49.585Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-home",
+      "url": "http://localhost:33122/app/o/test-org/home",
+      "expectedPath": "/app/o/test-org/home",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T21:08:49.585Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/home",
+        "title": "Proofound - Focus on what matters",
+        "h1s": ["Nordic Field Systems"],
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "scroll": {
+          "scrollWidth": 390,
+          "clientWidth": 390,
+          "horizontalOverflowPx": 0,
+          "documentHeight": 844
+        },
+        "flags": {
+          "redirectedToLogin": false,
+          "missingH1": false,
+          "horizontalOverflow": false,
+          "stuckMatches": [],
+          "staleMatches": [],
+          "percentMatchMatches": [],
+          "obviousError": false,
+          "cookieOverlay": []
+        }
+      },
+      "finalUrlMatchesExpectedPath": true,
+      "consoleErrors": [],
+      "screenshot": "<repo>/.artifacts/ux-verification-2026-05-20/browser-main-working-pages-2026-05-20/playwright-fallback/mobile-org-home.png",
+      "finishedAt": "2026-05-20T21:08:54.160Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-assignments",
+      "url": "http://localhost:33122/app/o/test-org/assignments",
+      "expectedPath": "/app/o/test-org/assignments",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T21:08:54.160Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/assignments",
+        "title": "Proofound - Focus on what matters",
+        "h1s": ["Assignments"],
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "scroll": {
+          "scrollWidth": 390,
+          "clientWidth": 390,
+          "horizontalOverflowPx": 0,
+          "documentHeight": 844
+        },
+        "flags": {
+          "redirectedToLogin": false,
+          "missingH1": false,
+          "horizontalOverflow": false,
+          "stuckMatches": [],
+          "staleMatches": [],
+          "percentMatchMatches": [],
+          "obviousError": false,
+          "cookieOverlay": []
+        }
+      },
+      "finalUrlMatchesExpectedPath": true,
+      "consoleErrors": [],
+      "screenshot": "<repo>/.artifacts/ux-verification-2026-05-20/browser-main-working-pages-2026-05-20/playwright-fallback/mobile-org-assignments.png",
+      "finishedAt": "2026-05-20T21:08:56.769Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-communications",
+      "url": "http://localhost:33122/app/o/test-org/communications",
+      "expectedPath": "/app/o/test-org/communications",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T21:08:56.769Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/communications",
+        "title": "Proofound - Focus on what matters",
+        "h1s": ["Communications", "Messages"],
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "scroll": {
+          "scrollWidth": 390,
+          "clientWidth": 390,
+          "horizontalOverflowPx": 0,
+          "documentHeight": 844
+        },
+        "flags": {
+          "redirectedToLogin": false,
+          "missingH1": false,
+          "horizontalOverflow": false,
+          "stuckMatches": [],
+          "staleMatches": [],
+          "percentMatchMatches": [],
+          "obviousError": false,
+          "cookieOverlay": []
+        }
+      },
+      "finalUrlMatchesExpectedPath": true,
+      "consoleErrors": [],
+      "screenshot": "<repo>/.artifacts/ux-verification-2026-05-20/browser-main-working-pages-2026-05-20/playwright-fallback/mobile-org-communications.png",
+      "finishedAt": "2026-05-20T21:09:00.072Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-interviews",
+      "url": "http://localhost:33122/app/o/test-org/interviews",
+      "expectedPath": "/app/o/test-org/interviews",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T21:09:00.073Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/interviews",
+        "title": "Proofound - Focus on what matters",
+        "h1s": ["Interviews"],
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "scroll": {
+          "scrollWidth": 390,
+          "clientWidth": 390,
+          "horizontalOverflowPx": 0,
+          "documentHeight": 844
+        },
+        "flags": {
+          "redirectedToLogin": false,
+          "missingH1": false,
+          "horizontalOverflow": false,
+          "stuckMatches": [],
+          "staleMatches": [],
+          "percentMatchMatches": [],
+          "obviousError": false,
+          "cookieOverlay": []
+        }
+      },
+      "finalUrlMatchesExpectedPath": true,
+      "consoleErrors": [],
+      "screenshot": "<repo>/.artifacts/ux-verification-2026-05-20/browser-main-working-pages-2026-05-20/playwright-fallback/mobile-org-interviews.png",
+      "finishedAt": "2026-05-20T21:09:02.818Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-profile",
+      "url": "http://localhost:33122/app/o/test-org/profile",
+      "expectedPath": "/app/o/test-org/profile",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T21:09:02.818Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/profile",
+        "title": "Proofound - Focus on what matters",
+        "h1s": ["Organization Trust Page"],
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "scroll": {
+          "scrollWidth": 390,
+          "clientWidth": 390,
+          "horizontalOverflowPx": 0,
+          "documentHeight": 844
+        },
+        "flags": {
+          "redirectedToLogin": false,
+          "missingH1": false,
+          "horizontalOverflow": false,
+          "stuckMatches": [],
+          "staleMatches": [],
+          "percentMatchMatches": [],
+          "obviousError": false,
+          "cookieOverlay": []
+        }
+      },
+      "finalUrlMatchesExpectedPath": true,
+      "consoleErrors": [],
+      "screenshot": "<repo>/.artifacts/ux-verification-2026-05-20/browser-main-working-pages-2026-05-20/playwright-fallback/mobile-org-profile.png",
+      "finishedAt": "2026-05-20T21:09:05.828Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-shortlist",
+      "url": "http://localhost:33122/app/o/test-org/shortlist",
+      "expectedPath": "/app/o/test-org/assignments",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T21:09:05.828Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/assignments",
+        "title": "Proofound - Focus on what matters",
+        "h1s": ["Assignments"],
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "scroll": {
+          "scrollWidth": 390,
+          "clientWidth": 390,
+          "horizontalOverflowPx": 0,
+          "documentHeight": 844
+        },
+        "flags": {
+          "redirectedToLogin": false,
+          "missingH1": false,
+          "horizontalOverflow": false,
+          "stuckMatches": [],
+          "staleMatches": [],
+          "percentMatchMatches": [],
+          "obviousError": false,
+          "cookieOverlay": []
+        }
+      },
+      "finalUrlMatchesExpectedPath": true,
+      "consoleErrors": [],
+      "screenshot": "<repo>/.artifacts/ux-verification-2026-05-20/browser-main-working-pages-2026-05-20/playwright-fallback/mobile-org-shortlist.png",
+      "finishedAt": "2026-05-20T21:09:08.722Z"
+    }
+  ]
+}

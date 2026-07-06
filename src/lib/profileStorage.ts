@@ -2,6 +2,29 @@ import { ProfileData } from '@/types/profile';
 
 const STORAGE_KEY = 'proofound_profile_data';
 
+function dispatchProfileStorageDiagnostic(reason: string, detail: Record<string, unknown> = {}) {
+  if (typeof window === 'undefined' || typeof window.dispatchEvent !== 'function') {
+    return;
+  }
+
+  try {
+    window.dispatchEvent(
+      new CustomEvent('proofound:client-diagnostic', {
+        detail: {
+          reason,
+          ...detail,
+        },
+      })
+    );
+  } catch {
+    // Diagnostics must never affect profile fallback behavior.
+  }
+}
+
+function getStorageErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : 'unknown';
+}
+
 export function getEmptyProfile(): ProfileData {
   return {
     basicInfo: {
@@ -46,7 +69,7 @@ export function getEmptyProfile(): ProfileData {
 export function loadProfile(): ProfileData {
   // Check if localStorage is available
   if (typeof window === 'undefined' || !window.localStorage) {
-    console.warn('localStorage is not available');
+    dispatchProfileStorageDiagnostic('profile_storage.local_storage_unavailable');
     return getEmptyProfile();
   }
 
@@ -58,7 +81,9 @@ export function loadProfile(): ProfileData {
       return { ...getEmptyProfile(), ...parsed };
     }
   } catch (error) {
-    console.error('Error loading profile from localStorage:', error);
+    dispatchProfileStorageDiagnostic('profile_storage.load_failed', {
+      error: getStorageErrorMessage(error),
+    });
     // Return empty profile if data is corrupted
   }
   return getEmptyProfile();
@@ -67,7 +92,7 @@ export function loadProfile(): ProfileData {
 export function saveProfile(profile: ProfileData): void {
   // Check if localStorage is available
   if (typeof window === 'undefined' || !window.localStorage) {
-    console.warn('localStorage is not available - profile not saved');
+    dispatchProfileStorageDiagnostic('profile_storage.save_unavailable');
     return;
   }
 
@@ -77,12 +102,12 @@ export function saveProfile(profile: ProfileData): void {
   } catch (error) {
     if (error instanceof Error) {
       if (error.name === 'QuotaExceededError') {
-        console.error(
-          'localStorage quota exceeded. Please reduce profile data size (especially images).'
-        );
+        dispatchProfileStorageDiagnostic('profile_storage.quota_exceeded');
         // You might want to show a toast notification to the user here
       } else {
-        console.error('Error saving profile to localStorage:', error);
+        dispatchProfileStorageDiagnostic('profile_storage.save_failed', {
+          error: getStorageErrorMessage(error),
+        });
       }
     }
   }
@@ -92,6 +117,8 @@ export function clearProfile(): void {
   try {
     localStorage.removeItem(STORAGE_KEY);
   } catch (error) {
-    console.error('Error clearing profile from localStorage:', error);
+    dispatchProfileStorageDiagnostic('profile_storage.clear_failed', {
+      error: getStorageErrorMessage(error),
+    });
   }
 }

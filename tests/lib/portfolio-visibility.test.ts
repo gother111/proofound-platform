@@ -20,11 +20,19 @@ describe('portfolio visibility flags', () => {
       bio: false,
       contact: false,
       workEmail: false,
-      header: false,
+      header: true,
       proofBar: false,
       linkedin: false,
       identity: false,
     });
+  });
+
+  it('keeps the public header required even when stored visibility says off', () => {
+    const visibility = mergeVisibilityFlags({
+      header: false,
+    });
+
+    expect(visibility.header).toBe(true);
   });
 
   it('still preserves explicit boolean portfolio choices and defaults absent fields', () => {
@@ -37,7 +45,16 @@ describe('portfolio visibility flags', () => {
     expect(visibility.bio).toBe(true);
     expect(visibility.contact).toBe(true);
     expect(visibility.workEmail).toBe(false);
+    expect(visibility.linkedin).toBe(false);
     expect(visibility.header).toBe(true);
     expect(visibility.skills).toBe(false);
+  });
+
+  it('keeps legacy LinkedIn visibility forced off for public launch surfaces', () => {
+    const visibility = mergeVisibilityFlags({
+      linkedin: true,
+    });
+
+    expect(visibility.linkedin).toBe(false);
   });
 });

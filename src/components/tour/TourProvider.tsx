@@ -11,6 +11,7 @@
 
 import { useEffect, useState, type ComponentType } from 'react';
 import { completeTour, getTourStatus } from '@/actions/tour';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { usePathname } from 'next/navigation';
 
 type Persona = 'individual' | 'organization';
@@ -65,7 +66,7 @@ export function TourProvider() {
     setPersona(nextPersona);
     setLoadedTourComponent(null);
 
-    // Only check tour status on appropriate pages (home/dashboard)
+    // Only check tour status on current launch home pages.
     if (!isTourPage(pathname)) {
       setIsLoading(false);
       setShowTour(false);
@@ -80,10 +81,12 @@ export function TourProvider() {
           setUserId(status.userId);
           setShowTour(true);
         } else if (!status.success) {
-          console.warn('Tour status check failed:', status.error || 'Unknown error');
+          dispatchClientDiagnostic('tour.status_check_failed', {
+            error: status.error || 'Unknown error',
+          });
         }
       } catch (error) {
-        console.error('Failed to check tour status:', error);
+        dispatchClientErrorDiagnostic('tour.status_check_unexpected_failed', error);
         // Don't show tour if there's an error checking status
         setShowTour(false);
       } finally {
@@ -123,12 +126,12 @@ export function TourProvider() {
   const toggleMockMode = (enabled: boolean) => {
     try {
       window.dispatchEvent(
-        new CustomEvent('dashboard-mock-mode', {
+        new CustomEvent('home-mock-mode', {
           detail: { enabled },
         })
       );
     } catch (error) {
-      console.error('Failed to toggle mock mode', error);
+      dispatchClientErrorDiagnostic('tour.mock_mode_toggle_failed', error);
     }
   };
 
@@ -137,7 +140,9 @@ export function TourProvider() {
     toggleMockMode(false);
     const result = await completeTour();
     if (!result.success) {
-      console.error('Failed to mark tour as completed:', result.error);
+      dispatchClientDiagnostic('tour.complete_failed', {
+        error: result.error || 'Unknown error',
+      });
       // Show error to user but don't re-show tour
       setShowTour(false);
     }
@@ -149,7 +154,9 @@ export function TourProvider() {
     // Mark tour as completed in database so it doesn't show again
     const result = await completeTour();
     if (!result.success) {
-      console.error('Failed to mark tour as skipped:', result.error);
+      dispatchClientDiagnostic('tour.skip_persist_failed', {
+        error: result.error || 'Unknown error',
+      });
       // Even if save fails, don't show tour again to avoid annoying the user
       setShowTour(false);
     }

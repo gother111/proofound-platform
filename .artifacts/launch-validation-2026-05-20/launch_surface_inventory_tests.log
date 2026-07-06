@@ -1,0 +1,31 @@
+> proofound@0.1.0 test:launch:routes
+> npm run test -- tests/api/launch-surface-inventory.test.ts tests/api/launch-page-inventory.test.ts tests/api/archived-api-handlers-route.test.ts src/lib/__tests__/middleware-launch-archive.test.ts
+
+
+> proofound@0.1.0 test
+> node ./scripts/run-vitest-with-timeout.mjs tests/api/launch-surface-inventory.test.ts tests/api/launch-page-inventory.test.ts tests/api/archived-api-handlers-route.test.ts src/lib/__tests__/middleware-launch-archive.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+ ✓ tests/api/launch-surface-inventory.test.ts  (4 tests) 70ms
+ ✓ src/lib/__tests__/middleware-launch-archive.test.ts  (6 tests) 55ms
+ ✓ tests/api/launch-page-inventory.test.ts  (6 tests) 151ms
+ ✓ tests/api/archived-api-handlers-route.test.ts  (11 tests) 6ms
+
+ Test Files  4 passed (4)
+      Tests  27 passed (27)
+   Start at  04:46:22
+   Duration  1.50s (transform 252ms, setup 924ms, collect 675ms, tests 282ms, environment 1.72s, prepare 240ms)

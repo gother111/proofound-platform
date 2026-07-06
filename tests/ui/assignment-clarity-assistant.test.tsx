@@ -4,12 +4,29 @@ import { useForm } from 'react-hook-form';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AssignmentClarityAssistant } from '@/components/assignments/AssignmentClarityAssistant';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { toast } from 'sonner';
 
 const apiFetchMock = vi.fn();
 
 vi.mock('@/lib/api/fetch', () => ({
   apiFetch: (...args: unknown[]) => apiFetchMock(...args),
 }));
+
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientDiagnostic: vi.fn(),
+  dispatchClientErrorDiagnostic: vi.fn(),
+}));
+
+vi.mock('sonner', () => ({
+  toast: {
+    error: vi.fn(),
+  },
+}));
+
+const dispatchClientDiagnosticMock = vi.mocked(dispatchClientDiagnostic);
+const dispatchClientErrorDiagnosticMock = vi.mocked(dispatchClientErrorDiagnostic);
+const toastErrorMock = vi.mocked(toast.error);
 
 function mockResponse(body: unknown, status = 200) {
   return {
@@ -182,5 +199,63 @@ describe('Assignment Clarity Assistant UI', () => {
       screen.getByText('AI suggestions are temporarily unavailable; manual editing still works.')
     ).toBeInTheDocument();
     expect(screen.queryByText(/AI assist is disabled/i)).not.toBeInTheDocument();
+  });
+
+  it('keeps returned assistant failures safe while preserving the manual checklist', async () => {
+    const rawFailure = 'Provider timeout for org proofound-org using request req_secret_123.';
+    apiFetchMock.mockResolvedValueOnce(
+      mockResponse(
+        {
+          error: rawFailure,
+          message: 'Trace abc123 was captured.',
+        },
+        502
+      )
+    );
+
+    render(<Harness />);
+
+    fireEvent.click(await screen.findByRole('button', { name: /clarify assignment/i }));
+
+    await screen.findByText('Manual clarity checklist');
+    expect(
+      screen.getByText('Guided suggestions could not load; manual editing still works.')
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/req_secret_123/i)).not.toBeInTheDocument();
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
+      'assignments.clarity_assistant.returned_error',
+      {
+        status: 502,
+        hasReturnedError: true,
+      }
+    );
+    expect(dispatchClientErrorDiagnosticMock).not.toHaveBeenCalled();
+    expect(JSON.stringify(dispatchClientDiagnosticMock.mock.calls)).not.toContain(rawFailure);
+    expect(JSON.stringify(toastErrorMock.mock.calls)).not.toContain(rawFailure);
+    expect(toastErrorMock).toHaveBeenCalledWith(
+      'Guided suggestions could not load. Manual checklist is ready.'
+    );
+  });
+
+  it('keeps unexpected assistant failures on the manual checklist path', async () => {
+    const rawFailure = new Error('provider timeout with token abc123');
+    apiFetchMock.mockRejectedValueOnce(rawFailure);
+
+    render(<Harness />);
+
+    fireEvent.click(await screen.findByRole('button', { name: /clarify assignment/i }));
+
+    await screen.findByText('Manual clarity checklist');
+    expect(
+      screen.getByText('Guided suggestions could not load; manual editing still works.')
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/provider timeout/i)).not.toBeInTheDocument();
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'assignments.clarity_assistant.request_failed',
+      rawFailure
+    );
+    expect(toastErrorMock).toHaveBeenCalledWith(
+      'Guided suggestions could not load. Manual checklist is ready.'
+    );
   });
 });

@@ -67,7 +67,7 @@ curl -i --max-time 25 -sS http://127.0.0.1:33100/api/monitoring/launch-status
 - `e2e/helpers/strict-fixtures.ts`
 - `e2e/landing-page.spec.ts`
 - `e2e/strict/individual.strict.spec.ts`
-- `docs/proofound-hard-verification-rerun-final.md`
+- `docs/archive/status-reports/docs-historical/proofound-hard-verification-rerun-final.md`
 - `docs/block-7-report.md`
 - `project/changes/entries/2026-03-13T23-40-20Z__master__4767ea77.md`
 

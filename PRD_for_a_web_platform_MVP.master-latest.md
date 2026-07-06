@@ -1,7 +1,7 @@
 # SUPERSEDED — historical reference only. Do not use as MVP source of truth. The active MVP authority is Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md plus the aligned PRD, technical requirements, launch runbook, GTM plan, and fresh repo-grounded evidence.
 
 > Doc Class: `historical`
-> Last Verified: `2026-05-14`
+> Last Verified: `2026-05-21`
 
 This file is preserved for historical reference and compatibility only. It is not launch scope, not active product authority, and must not broaden the locked MVP.
 
@@ -16,7 +16,7 @@ Active MVP authority stack:
 5. `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md`
 6. Fresh repo-grounded audits and evidence
 
-# Proofound MVP PRD — Proof-First Hiring Corridor
+# Proofound MVP PRD — Proof-First Assignment Review Corridor
 
 **Status:** Aligned rewrite for current MVP  
 **Date:** 2026-03-11  
@@ -27,7 +27,7 @@ Active MVP authority stack:
 
 ## 0. Purpose of this PRD
 
-This PRD defines the launch-bound product behavior for Proofound MVP.
+This superseded PRD preserves historical product behavior for Proofound MVP.
 
 It exists to:
 
@@ -49,7 +49,7 @@ Proofound MVP is a **proof-first, privacy-first hiring credibility corridor** ce
 It helps:
 
 - individuals prove what they can do through structured proof, not just CV bullets
-- organizations review people through proof-backed, privacy-safe, explainable signal instead of profile theater
+- organizations review proof submissions through proof-backed, privacy-safe, explainable signal instead of profile theater
 
 ### 1.2 Core trust problem
 
@@ -71,7 +71,7 @@ The MVP is **not**:
 
 - generic AI recruiting
 - a full ATS replacement
-- a public candidate directory
+- a public people directory
 - a social network or content feed
 - a generic org operating system
 
@@ -105,8 +105,8 @@ The MVP is **not**:
 
 - publish a clean org trust page
 - create one strong assignment through a structured builder
-- review privacy-safe proof-backed candidates
-- move one candidate through intro, reveal, interview, and decision
+- review privacy-safe proof-backed submissions
+- move one proof-review participant through intro, reveal, interview, and decision
 
 ---
 
@@ -202,7 +202,7 @@ Proofound MVP is built from four layers:
 - organization trust profile
 - team membership
 - assignment
-- candidate review record
+- proof-submission review record
 - intro request
 - reveal request
 - interview record
@@ -408,7 +408,7 @@ Individuals can:
 - accept or decline intro
 - approve or reject reveal
 - coordinate interviews
-- receive decisions and candidate-visible feedback
+- receive decisions and participant-visible feedback
 - see what is missing for stronger trust readiness
 
 ---
@@ -442,7 +442,7 @@ MVP supports three lightweight org roles only:
 MVP mapping guidance:
 
 - HR / recruiter → `org_manager`
-- hiring manager → `org_manager` or `org_reviewer`
+- assignment-review owner → `org_manager` or `org_reviewer`
 - executive sponsor → `org_reviewer` unless true owner rights are required
 - future teammate / peer → `org_reviewer`
 
@@ -482,7 +482,7 @@ Each assignment includes:
 
 ### 6.4 Review queue
 
-Organizations review candidates through privacy-safe proof-backed summaries.
+Organizations review proof submissions through privacy-safe proof-backed summaries.
 
 The review queue should emphasize:
 
@@ -493,7 +493,7 @@ The review queue should emphasize:
 - reason codes
 - clear decision actions
 
-### 6.5 Hiring corridor
+### 6.5 Assignment-review corridor
 
 The canonical organization corridor is:
 
@@ -524,7 +524,7 @@ Supported engagement types in MVP:
 
 ### 6.6 Candidate invite / BYOC corridor
 
-Organizations may invite a candidate into the assignment corridor, but:
+Organizations may invite a proof-review participant into the assignment corridor, but:
 
 - Proofound still owns proof structure and privacy-safe review logic
 - BYOC should not bypass trust, reveal, or audit rules
@@ -559,7 +559,7 @@ Canonical reveal progression:
 - Stage 3: intro-approved reveal
 - Stage 4: interview coordination reveal
 
-Identity-bearing reveal requires candidate consent.
+Identity-bearing reveal requires proof-review participant consent.
 
 ### 7.3 Visibility model
 
@@ -579,7 +579,7 @@ Rules:
 
 ### 7.4 Matching logic
 
-Matching exists to help organizations review better and help candidates surface relevant proof.
+Matching exists to help organizations review better and help proof-review participants surface relevant proof.
 
 Matching inputs in MVP may include:
 
@@ -721,7 +721,7 @@ INTERNAL OPS
 
 - blind-by-default review is mandatory
 - progressive reveal is mandatory
-- candidate consent is required for identity-bearing reveal
+- proof-review participant consent is required for identity-bearing reveal
 - public publication never weakens review-stage privacy
 - field-level visibility and narrowest-wins must be enforced
 - PII must not leak via metadata, logs, filenames, analytics, or rendering
@@ -746,7 +746,7 @@ INTERNAL OPS
 
 - no ATS / HRIS / payroll / contract-signing integration in MVP
 - no enterprise org suite in MVP
-- no public candidate directory in MVP
+- no public people directory in MVP
 - no reviewer marketplace UI in MVP
 - no sponsor marketplace UI in MVP
 - no large analytics or dashboard sprawl in MVP
@@ -789,7 +789,7 @@ This PRD is considered aligned when:
 
 - individual onboarding explicitly includes private scaffolding and proof anchoring
 - Proof Pack is treated as the canonical proof object across all user-facing flows
-- org workflow includes an explicit interview-to-hire corridor
+- org workflow includes an explicit interview-to-engagement corridor
 - engagement types are normalized to one field with four supported values
 - privacy and reveal rules are consistent across all surfaces
 - scoped verification semantics replace loose trust inflation
@@ -799,8 +799,8 @@ This PRD is considered aligned when:
 
 ## 12. Final PRD statement
 
-Proofound MVP is a narrow, proof-first hiring credibility corridor centered on Proof Packs.
+Proofound MVP is a narrow, proof-first assignment review corridor centered on Proof Packs.
 
 It helps individuals turn real work into structured Proof Packs and publish a trustworthy proof portfolio.
-It helps organizations define stronger assignments and review candidates through privacy-safe, explainable proof-backed early review.
-It includes private contextual scaffolding, bounded verification, and an explicit hiring-to-engagement flow.
+It helps organizations define stronger assignments and review proof submissions through privacy-safe, explainable proof-backed early review.
+It includes private contextual scaffolding, bounded verification, and an explicit workflow-to-engagement flow.

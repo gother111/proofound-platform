@@ -8,7 +8,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { getRows } from '@/lib/db/rows';
-import { CAPABILITY_TOKEN_CLASSES, inspectCapabilityToken } from '@/lib/security/capability-tokens';
 import { sql } from 'drizzle-orm';
 import {
   getProfileVisibilitySettings,
@@ -191,40 +190,6 @@ export async function fetchCompleteRedactedProfile(
     individual: individualProfile,
     matching: matchingProfile,
   };
-}
-
-/**
- * Check if a profile link token is valid
- * This would be used when someone accesses a profile via /profile/:handle?token=xxx
- */
-export async function validateProfileLinkToken(profileId: string, token: string): Promise<boolean> {
-  const safeToken = token.trim();
-  if (!safeToken) {
-    return false;
-  }
-
-  const inspected = await inspectCapabilityToken(safeToken, {
-    tokenClass: CAPABILITY_TOKEN_CLASSES.PROFILE_SNIPPET_SHARE,
-    metadata: { surface: 'profile_fetcher.validateProfileLinkToken' },
-  });
-
-  if (!inspected.ok) {
-    return false;
-  }
-
-  const result = await db.execute(sql`
-    SELECT 1
-    FROM profile_snippets
-    WHERE capability_token_id = ${inspected.token.id}::uuid
-      AND user_id = ${profileId}::uuid
-      AND deleted_at IS NULL
-      AND revoked_at IS NULL
-      AND public_surface_disabled_at IS NULL
-      AND (expires_at IS NULL OR expires_at > NOW())
-    LIMIT 1
-  `);
-
-  return getRows(result as any).length > 0;
 }
 
 /**

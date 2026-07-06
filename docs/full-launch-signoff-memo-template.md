@@ -1,6 +1,10 @@
 # Proofound Full Launch Signoff Memo Template
 
-Use this memo only after the fresh full-launch evidence bundle is generated.
+> Doc Class: `active`
+> Last Verified: `2026-05-19`
+
+Use this memo only after the fresh full-launch evidence bundle is generated for the intended target.
+Historical GO memos and historical launch evidence snapshots are not current launch authority.
 
 Primary evidence bundle:
 
@@ -16,8 +20,10 @@ Primary evidence bundle:
 - Product / corridor: `<launch corridor>`
 - Decision: `GO` or `NO-GO`
 - Effective production URL: `<https://proofound.io>`
+- Database target: `<target database/project>`
 - Evidence bundle date: `YYYY-MM-DD`
 - Reviewed commit SHA: `<commit sha>`
+- Deployment URL / SHA evidence: `<workflow/deployment metadata>`
 
 ## Decision Owners
 
@@ -31,9 +37,14 @@ Primary evidence bundle:
 
 - Live `/api/health`: `PASS` / `FAIL`
 - Live `/api/monitoring/launch-status`: `PASS` / `FAIL`
+- Live `/api/monitoring/perf-status`: `PASS` / `FAIL`
+- `/api/assignments` latency present in perf-status: `YES` / `NO`
 - Live full smoke artifact refresh: `PASS` / `FAIL`
 - Repo-ready checklist: `READY` / `NOT_READY`
 - Full-launch checklist: `READY` / `NOT_READY`
+- Route-surface policy and archived-route behavior: `PASS` / `FAIL`
+- Strict MVP, privacy, org-corridor, and provider/manual-link gates: `PASS` / `FAIL`
+- Browser desktop/mobile smoke evidence for representative public, individual, org, and internal surfaces: `PASS` / `FAIL`
 
 Notes:
 `<short engineering summary>`
@@ -44,7 +55,9 @@ Notes:
   - Evidence: `<link or note>`
 - Critical alerts configured and test-fired: `YES` / `NO`
   - Evidence: `<link or note>`
-- Backup / restore drill completed: `YES` / `NO`
+- Production-candidate backup checkpoint completed: `YES` / `NO`
+  - Evidence: `<link or note>`
+- Isolated restore rehearsal completed against the intended target backup: `YES` / `NO`
   - Evidence: `<link or note>`
 - ICP and design-partner list locked: `YES` / `NO`
   - Evidence: `<link or note>`
@@ -52,9 +65,13 @@ Notes:
   - Evidence: `<link or note>`
 - Outbound and homepage wedge aligned: `YES` / `NO`
   - Evidence: `<link or note>`
-- Candidate supply-seeding plan ready: `YES` / `NO`
+- Proof-submission supply-seeding plan ready: `YES` / `NO`
   - Evidence: `<link or note>`
 - Org onboarding playbook ready: `YES` / `NO`
+  - Evidence: `<link or note>`
+- Public health remains minimal and internal diagnostics are protected: `YES` / `NO`
+  - Evidence: `<link or note>`
+- Privacy/no-leak checks passed for public portfolio, org trust, matching, reveal, verification, exports, deletes, and admin/ops paths: `YES` / `NO`
   - Evidence: `<link or note>`
 
 ## Open Risks
@@ -81,4 +98,4 @@ Notes:
 
 Final statement:
 
-`We reviewed the fresh full-launch evidence bundle dated YYYY-MM-DD and make the decision above based on the current production state and the operational evidence listed in this memo.`
+`We reviewed the fresh full-launch evidence bundle dated YYYY-MM-DD for the intended target and make the decision above based on the current deployment, current database target, current route/API/page surface, and the operational evidence listed in this memo.`

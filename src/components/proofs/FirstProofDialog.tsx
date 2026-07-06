@@ -22,6 +22,7 @@ import {
   PROOF_FILE_ACCEPT_ATTRIBUTE,
 } from '@/lib/proofs/constants';
 import { uploadFile, validateFile } from '@/lib/upload';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 export type FirstProofSkillOption = {
   id: string;
@@ -53,6 +54,67 @@ const EMPTY_FORM = {
   uploadedFileId: '',
   fileName: '',
 };
+
+const FIRST_PROOF_SAVE_FAILED_MESSAGE =
+  'Proof was not saved. Your proof details are still here; review them and try again.';
+const FIRST_PROOF_UPLOAD_RETRY_MESSAGE =
+  'Upload could not be saved. Your proof details are still here; try again or choose another file.';
+const FIRST_PROOF_SAFE_UPLOAD_ERRORS = new Map([
+  [
+    'The uploaded file type did not match its file signature.',
+    'The uploaded file type did not match its file signature.',
+  ],
+  [
+    'The uploaded file is not allowed for this proof or document flow.',
+    'The uploaded file is not allowed for this proof or document flow.',
+  ],
+  [
+    'The uploaded file is too large for this upload flow.',
+    'The uploaded file is too large for this upload flow.',
+  ],
+  [
+    'The upload could not be accepted for this flow.',
+    'The upload could not be accepted for this flow.',
+  ],
+  [
+    'Security token could not be initialized. Please refresh and try again.',
+    'Security token could not be initialized. Please refresh and try again.',
+  ],
+  ['Failed to upload file. Please try again.', FIRST_PROOF_UPLOAD_RETRY_MESSAGE],
+]);
+
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function getReturnedError(payload: unknown) {
+  if (!payload || typeof payload !== 'object') {
+    return '';
+  }
+
+  if ('message' in payload && typeof payload.message === 'string') {
+    return payload.message.trim();
+  }
+
+  if ('error' in payload && typeof payload.error === 'string') {
+    return payload.error.trim();
+  }
+
+  return '';
+}
+
+function firstProofUploadErrorMessage(returnedError: string) {
+  const safeMessage = FIRST_PROOF_SAFE_UPLOAD_ERRORS.get(returnedError);
+  if (safeMessage) {
+    return safeMessage;
+  }
+
+  dispatchClientDiagnostic('proofs.first_proof.upload_returned_error', {
+    hasReturnedError: returnedError.length > 0,
+    errorKind: 'first_proof_upload_request_failed',
+  });
+  return FIRST_PROOF_UPLOAD_RETRY_MESSAGE;
+}
 
 function deriveProofTitleFromUrl(rawUrl: string): string {
   try {
@@ -135,7 +197,7 @@ export function FirstProofDialog({
       });
 
       if (!result.success || !result.uploadedFileId) {
-        setUploadError(result.error || result.message || 'Upload failed');
+        setUploadError(firstProofUploadErrorMessage(getReturnedError(result)));
         return;
       }
 
@@ -149,8 +211,8 @@ export function FirstProofDialog({
         fileName: result.artifactDisplayName || result.fileName || file.name,
       }));
     } catch (error) {
-      console.error('First proof upload failed:', error);
-      setUploadError('Upload failed. Please try again.');
+      dispatchClientErrorDiagnostic('proofs.first_proof.upload_failed', error);
+      setUploadError(FIRST_PROOF_UPLOAD_RETRY_MESSAGE);
     } finally {
       setUploading(false);
     }
@@ -183,7 +245,7 @@ export function FirstProofDialog({
       }
     }
 
-    const payload = {
+    const proofPayload = {
       proofType: form.proofType as 'link' | 'document',
       title: form.title.trim() || (form.url.trim() ? deriveProofTitleFromUrl(form.url.trim()) : ''),
       description: form.description.trim(),
@@ -205,7 +267,7 @@ export function FirstProofDialog({
       const response = await apiFetch(`/api/expertise/user-skills/${selectedSkillId}/proofs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(proofPayload),
       });
 
       if (response.ok) {
@@ -219,11 +281,16 @@ export function FirstProofDialog({
         return;
       }
 
-      const error = (await response.json()) as { error?: string; message?: string };
-      setFormError(error.message || error.error || 'Failed to save proof. Please try again.');
+      const responsePayload = await response.json().catch(() => null);
+      const returnedError = getReturnedError(responsePayload);
+      dispatchClientDiagnostic('proofs.first_proof.submit_returned_error', {
+        status: getResponseStatus(response),
+        hasReturnedError: returnedError.length > 0,
+      });
+      throw new Error('first_proof_save_request_failed');
     } catch (error) {
-      console.error('First proof submit failed:', error);
-      setFormError('Failed to save proof. Please try again.');
+      dispatchClientErrorDiagnostic('proofs.first_proof.submit_failed', error);
+      setFormError(FIRST_PROOF_SAVE_FAILED_MESSAGE);
     } finally {
       setSubmitting(false);
     }
@@ -335,7 +402,9 @@ export function FirstProofDialog({
               <p className="mt-2 text-xs text-muted-foreground">Selected: {form.fileName}</p>
             ) : null}
             {uploadError ? (
-              <p className="mt-2 text-xs text-proofound-terracotta">{uploadError}</p>
+              <p role="alert" className="mt-2 text-xs text-proofound-terracotta">
+                {uploadError}
+              </p>
             ) : null}
           </div>
 
@@ -389,7 +458,10 @@ export function FirstProofDialog({
           ) : null}
 
           {formError ? (
-            <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            <p
+              role="alert"
+              className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+            >
               {formError}
             </p>
           ) : null}

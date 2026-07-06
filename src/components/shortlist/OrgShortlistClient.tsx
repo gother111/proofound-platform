@@ -120,12 +120,35 @@ export function OrgShortlistClient({ items }: Props) {
     return next;
   }, [items, assignmentFilter, sortBy, search]);
 
+  const fallbackFitBullets = [
+    'Proof evidence is available for assignment-specific review.',
+    'Practical fit and constraints are shown separately from identity.',
+    'Reveal stays limited until the proof-review participant consents to the next step.',
+  ];
+
   return (
     <div className="space-y-4">
+      <Card className="border-proofound-forest/20 bg-proofound-parchment/35 p-4">
+        <div className="grid gap-3 text-sm md:grid-cols-[0.8fr_1.2fr]">
+          <div>
+            <p className="font-semibold text-proofound-charcoal">Explainable shortlist</p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              Review proof submissions through proof, practical fit, and trust signals before any
+              reveal.
+            </p>
+          </div>
+          <div className="grid gap-2 text-xs leading-5 text-proofound-charcoal/75 sm:grid-cols-3">
+            <span>Strongest relevant proof</span>
+            <span>Reason-coded fit summary</span>
+            <span>Blind-review and fairness status</span>
+          </div>
+        </div>
+      </Card>
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Badge variant="outline">
-            {filtered.length} candidate{filtered.length === 1 ? '' : 's'}
+            {filtered.length} proof submission{filtered.length === 1 ? '' : 's'}
           </Badge>
           <Badge variant="secondary">Progressive reveal</Badge>
         </div>
@@ -161,7 +184,7 @@ export function OrgShortlistClient({ items }: Props) {
               className="h-9 rounded-md border border-neutral-300 bg-white px-2 text-sm"
             >
               <option value="recent">Most recent</option>
-              <option value="rankBand">Rank band</option>
+              <option value="rankBand">Review priority</option>
             </select>
           </div>
 
@@ -173,7 +196,7 @@ export function OrgShortlistClient({ items }: Props) {
               id="shortlist-search"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Name, role focus, value"
+              placeholder="Submission label, role focus, reason"
               className="h-9 w-56"
             />
           </div>
@@ -183,7 +206,7 @@ export function OrgShortlistClient({ items }: Props) {
       {filtered.length === 0 ? (
         <Card className="p-6">
           <p className="text-sm text-muted-foreground">
-            No shortlisted candidates match these filters right now.
+            No shortlisted proof submissions match these filters right now.
           </p>
         </Card>
       ) : (
@@ -193,7 +216,7 @@ export function OrgShortlistClient({ items }: Props) {
               <div className="flex items-start justify-between gap-3">
                 <div className="space-y-1">
                   <div className="text-sm font-medium text-proofound-charcoal">
-                    {item.reviewCard?.candidateLabel || 'Candidate'}
+                    {item.reviewCard?.candidateLabel || 'Proof submission'}
                   </div>
                   <div className="text-xs text-muted-foreground">
                     {item.reviewCard?.fitSummary.headline ||
@@ -251,14 +274,17 @@ export function OrgShortlistClient({ items }: Props) {
                   Reason-coded fit summary
                 </p>
                 <ul className="space-y-2 text-sm text-proofound-charcoal/85">
-                  {(item.reviewCard?.fitSummary.bullets || item.why?.summary || []).map(
-                    (bullet) => (
-                      <li key={bullet} className="flex items-start gap-2">
-                        <span className="mt-1 h-1.5 w-1.5 rounded-full bg-proofound-forest" />
-                        <span>{bullet}</span>
-                      </li>
-                    )
-                  )}
+                  {(item.reviewCard?.fitSummary.bullets?.length
+                    ? item.reviewCard.fitSummary.bullets
+                    : item.why?.summary?.length
+                      ? item.why.summary
+                      : fallbackFitBullets
+                  ).map((bullet) => (
+                    <li key={bullet} className="flex items-start gap-2">
+                      <span className="mt-1 h-1.5 w-1.5 rounded-full bg-proofound-forest" />
+                      <span>{bullet}</span>
+                    </li>
+                  ))}
                 </ul>
                 {(item.reviewCard?.fitSummary.reasonCodes || item.why?.reasonCodes || []).length >
                 0 ? (
@@ -286,7 +312,7 @@ export function OrgShortlistClient({ items }: Props) {
                     : 'Just now'}
                 </span>
                 <span>Reveal scope: {item.revealScope}</span>
-                <span>Fairness: {item.fairness.status}</span>
+                <span>Policy check: {item.fairness.status}</span>
               </div>
             </Card>
           ))}

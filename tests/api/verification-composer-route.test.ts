@@ -44,6 +44,14 @@ function request(body: unknown) {
   });
 }
 
+function rawRequest(body: string) {
+  return new NextRequest('http://localhost/api/ai/verifications/compose', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body,
+  });
+}
+
 describe('Verification Request Composer route', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -98,6 +106,14 @@ describe('Verification Request Composer route', () => {
     expect(mocks.composeVerificationRequestForUser).not.toHaveBeenCalled();
   });
 
+  it('rejects malformed JSON before composer service access', async () => {
+    const response = await POST(rawRequest('{"proofPackId":'));
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
+    expect(mocks.composeVerificationRequestForUser).not.toHaveBeenCalled();
+  });
+
   it('rejects requests without a valid Proof Pack or claim', async () => {
     const response = await POST(
       request({
@@ -134,6 +150,30 @@ describe('Verification Request Composer route', () => {
     );
 
     expect(response.status).toBe(404);
+  });
+
+  it('does not let local mock mode bypass Proof Pack or claim ownership validation', async () => {
+    vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'true');
+    mocks.composeVerificationRequestForUser.mockRejectedValueOnce(
+      new Error('PROOF_PACK_NOT_FOUND')
+    );
+
+    const response = await POST(
+      request({
+        proofPackId: '11111111-1111-4111-8111-111111111111',
+        verifierRelationshipType: 'Peer',
+        verificationScope: 'observed_behavior',
+        selectedPublicSafeProofFields: ['claim_statement'],
+      })
+    );
+
+    expect(response.status).toBe(404);
+    expect(mocks.composeVerificationRequestForUser).toHaveBeenCalledWith(
+      expect.objectContaining({
+        proofPackId: '11111111-1111-4111-8111-111111111111',
+        userId: 'user-1',
+      })
+    );
   });
 
   it('rejects full file payload fields before composer service access', async () => {

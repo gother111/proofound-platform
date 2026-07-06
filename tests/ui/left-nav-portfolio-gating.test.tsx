@@ -52,10 +52,11 @@ describe('LeftNav portfolio gating', () => {
       'href',
       '/app/i/communications'
     );
-    expect(screen.getAllByRole('link', { name: /matching/i })[0]).toHaveAttribute(
+    expect(screen.getAllByRole('link', { name: /assignment review/i })[0]).toHaveAttribute(
       'href',
       '/app/i/matching'
     );
+    expect(screen.queryByRole('link', { name: /^matching$/i })).not.toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: /^settings$/i })[0]).toHaveAttribute(
       'href',
       '/app/i/settings'
@@ -83,12 +84,46 @@ describe('LeftNav portfolio gating', () => {
     expect(toastSuccessMock).not.toHaveBeenCalled();
   });
 
-  it('shows Beta testing marker without archived expertise or zen links', () => {
+  it('shows Early access marker without archived expertise or zen links', () => {
     render(<LeftNav basePath="/app/i" isBetaTesting />);
 
-    expect(screen.getByText(/beta testing/i)).toBeInTheDocument();
+    expect(screen.getByText(/early access/i)).toBeInTheDocument();
+    expect(screen.queryByText(/beta testing/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /private check-ins/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /expertise/i })).not.toBeInTheDocument();
+  });
+
+  it('keeps the desktop sidebar collapse control touch safe', () => {
+    render(<LeftNav basePath="/app/o/acme" />);
+
+    expect(screen.getByRole('button', { name: /collapse sidebar/i })).toHaveClass('min-h-[44px]');
+  });
+
+  it('treats the verification center as profile-owned instead of communications-owned', () => {
+    usePathnameMock.mockReturnValue('/app/i/verifications');
+
+    render(<LeftNav basePath="/app/i" />);
+
+    expect(screen.getAllByRole('link', { name: /^profile$/i })[0]).toHaveAttribute(
+      'aria-current',
+      'page'
+    );
+    expect(screen.getAllByRole('link', { name: /^communications$/i })[0]).not.toHaveAttribute(
+      'aria-current'
+    );
+  });
+
+  it('keeps individual mobile review navigation visibly assignment-review scoped', () => {
+    usePathnameMock.mockReturnValue('/app/i/matching');
+
+    render(<LeftNav basePath="/app/i" />);
+
+    expect(screen.getAllByRole('link', { name: /^assignment review$/i })[0]).toHaveAttribute(
+      'aria-current',
+      'page'
+    );
+    expect(screen.getByText(/^Reviews$/i)).toBeInTheDocument();
+    expect(screen.queryByText(/^Review$/i)).not.toBeInTheDocument();
   });
 
   it('keeps individual settings discoverable from the account menu', () => {
@@ -98,15 +133,19 @@ describe('LeftNav portfolio gating', () => {
       'href',
       '/app/i/settings'
     );
+    expect(screen.getByRole('menuitem', { name: /account settings/i })).toHaveClass('min-h-11');
+    expect(screen.getByRole('menuitem', { name: /account settings/i })).toHaveClass(
+      'focus-visible:ring-2'
+    );
     expect(screen.getByRole('menuitem', { name: /privacy controls/i })).toHaveAttribute(
       'href',
       '/app/i/settings/privacy'
     );
     expect(screen.getByRole('menuitem', { name: /export or delete data/i })).toHaveAttribute(
       'href',
-      '/app/i/settings?tab=privacy'
+      '/app/i/settings/privacy#privacy-delete'
     );
-    expect(screen.getByRole('menuitem', { name: /audit log/i })).toHaveAttribute(
+    expect(screen.getByRole('menuitem', { name: /account history/i })).toHaveAttribute(
       'href',
       '/app/i/settings/audit-log'
     );
@@ -114,12 +153,14 @@ describe('LeftNav portfolio gating', () => {
       'href',
       '/auth/logout'
     );
+    expect(screen.getByRole('menuitem', { name: /log out/i })).toHaveClass('min-h-11');
+    expect(screen.getByRole('menuitem', { name: /log out/i })).toHaveClass('focus-visible:ring-2');
   });
 
-  it('keeps org account menu inside the organization profile corridor', () => {
+  it('keeps org account menu inside the organization trust page corridor', () => {
     render(<TopBarProfileMenu userName="Acme" basePath="/app/o/acme" onClose={vi.fn()} />);
 
-    expect(screen.getByRole('menuitem', { name: /organization profile/i })).toHaveAttribute(
+    expect(screen.getByRole('menuitem', { name: /organization trust page/i })).toHaveAttribute(
       'href',
       '/app/o/acme/profile'
     );
@@ -133,7 +174,7 @@ describe('LeftNav portfolio gating', () => {
   it('shows only the MVP org navigation corridor', () => {
     usePathnameMock.mockReturnValue('/app/o/acme/home');
 
-    render(<LeftNav basePath="/app/o/acme" />);
+    const { container } = render(<LeftNav basePath="/app/o/acme" />);
 
     expect(screen.getAllByRole('link', { name: /overview/i })[0]).toHaveAttribute(
       'href',
@@ -151,7 +192,7 @@ describe('LeftNav portfolio gating', () => {
       'href',
       '/app/o/acme/communications'
     );
-    expect(screen.getAllByRole('link', { name: /organization profile/i })[0]).toHaveAttribute(
+    expect(screen.getAllByRole('link', { name: /organization trust page/i })[0]).toHaveAttribute(
       'href',
       '/app/o/acme/profile'
     );
@@ -162,5 +203,60 @@ describe('LeftNav portfolio gating', () => {
     expect(screen.queryByRole('link', { name: /shortlist/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /team/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /^settings$/i })).not.toBeInTheDocument();
+    expect(container.querySelector('[data-tour="home-link"]')).not.toBeNull();
+    expect(container.querySelector('[data-tour="assignments-link"]')).not.toBeNull();
+    expect(container.querySelector('[data-tour="communications-link"]')).not.toBeNull();
+    expect(container.querySelector('[data-tour="org-profile"]')).not.toBeNull();
+    expect(container.querySelector('[data-tour="portfolio-link"]')).not.toBeNull();
+    expect(container.querySelector('[data-tour="candidates"]')).toBeNull();
+  });
+
+  it('keeps org mobile navigation labels tied to assignment review and trust', () => {
+    usePathnameMock.mockReturnValue('/app/o/acme/assignments');
+
+    render(<LeftNav basePath="/app/o/acme" />);
+
+    expect(screen.getAllByText(/^Assignments$/i)).toHaveLength(2);
+    expect(screen.getByText(/^Trust$/i)).toBeInTheDocument();
+    expect(screen.getByText(/^Preview$/i)).toBeInTheDocument();
+    expect(screen.queryByText(/^Work$/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Profile$/i)).not.toBeInTheDocument();
+  });
+
+  it('keeps abbreviated mobile labels inside the accessible nav names', () => {
+    usePathnameMock.mockReturnValue('/app/o/acme/communications');
+
+    render(<LeftNav basePath="/app/o/acme" />);
+
+    expect(screen.getByRole('link', { name: 'Inbox, Communications' })).toHaveTextContent('Inbox');
+    expect(screen.getByRole('link', { name: 'Trust, Organization Trust Page' })).toHaveTextContent(
+      'Trust'
+    );
+    expect(screen.getByRole('link', { name: 'Preview, Public Preview' })).toHaveTextContent(
+      'Preview'
+    );
+  });
+
+  it('does not mark the trust nav active on the public preview route', () => {
+    usePathnameMock.mockReturnValue('/app/o/acme/portfolio');
+
+    render(<LeftNav basePath="/app/o/acme" />);
+
+    expect(screen.getAllByRole('link', { name: /organization trust page/i })).toSatisfy(
+      (links: HTMLElement[]) => links.every((link) => !link.hasAttribute('aria-current'))
+    );
+    expect(screen.getAllByRole('link', { name: /public preview/i })).toSatisfy(
+      (links: HTMLElement[]) => links.every((link) => link.getAttribute('aria-current') === 'page')
+    );
+  });
+
+  it('keeps assignment subroutes on the assignments nav item', () => {
+    usePathnameMock.mockReturnValue('/app/o/acme/assignments/assignment-1/review');
+
+    render(<LeftNav basePath="/app/o/acme" />);
+
+    expect(screen.getAllByRole('link', { name: /^assignments$/i })).toSatisfy(
+      (links: HTMLElement[]) => links.every((link) => link.getAttribute('aria-current') === 'page')
+    );
   });
 });

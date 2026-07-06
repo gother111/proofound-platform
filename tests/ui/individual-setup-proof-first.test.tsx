@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const {
   completeIndividualOnboardingMock,
+  dispatchClientErrorDiagnosticMock,
   fetchMock,
   pushMock,
   startFromCvStatus,
@@ -10,6 +11,7 @@ const {
   validateFileMock,
 } = vi.hoisted(() => ({
   completeIndividualOnboardingMock: vi.fn(),
+  dispatchClientErrorDiagnosticMock: vi.fn(),
   fetchMock: vi.fn(),
   pushMock: vi.fn(),
   startFromCvStatus: {
@@ -34,6 +36,10 @@ vi.mock('@/actions/onboarding', () => ({
 vi.mock('@/lib/upload', () => ({
   uploadFile: uploadFileMock,
   validateFile: validateFileMock,
+}));
+
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientErrorDiagnostic: dispatchClientErrorDiagnosticMock,
 }));
 
 vi.mock('@/hooks/useStartFromCvBetaStatus', () => ({
@@ -391,6 +397,220 @@ describe('IndividualSetup first-proof flow', () => {
     expect(payload.get('proofContributionMode')).toBe('team');
   });
 
+  it('announces invalid first-proof files as recoverable upload alerts', async () => {
+    validateFileMock.mockReturnValueOnce({
+      valid: false,
+      error: 'Choose a PDF, image, or document under the upload limit.',
+    });
+
+    render(<IndividualSetup />);
+
+    fillBasicDetails();
+    fireEvent.click(screen.getByRole('radio', { name: /file upload/i }));
+
+    const file = new File(['proof'], 'starter-proof.exe', {
+      type: 'application/octet-stream',
+    });
+    fireEvent.change(screen.getByLabelText('Proof file *'), {
+      target: { files: [file] },
+    });
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Choose a PDF, image, or document under the upload limit.'
+    );
+    expect(uploadFileMock).not.toHaveBeenCalled();
+  });
+
+  it('keeps returned first-proof upload failures safe and retryable', async () => {
+    const rawError = 'Storage provider stack: insert failed for bucket proof-uploads';
+    uploadFileMock.mockResolvedValueOnce({
+      success: false,
+      error: rawError,
+    });
+
+    render(<IndividualSetup />);
+
+    fillBasicDetails();
+    fireEvent.click(screen.getByRole('radio', { name: /file upload/i }));
+
+    const file = new File(['proof'], 'starter-proof.pdf', { type: 'application/pdf' });
+    fireEvent.change(screen.getByLabelText('Proof file *'), {
+      target: { files: [file] },
+    });
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Upload could not be saved. Your proof details are still here; try again or choose another file.'
+    );
+    expect(screen.queryByText(rawError)).not.toBeInTheDocument();
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'onboarding.individual.first_proof_upload_returned_error',
+      expect.any(Error)
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(rawError);
+    expect(screen.getByLabelText('Proof file *')).toBeEnabled();
+  });
+
+  it('preserves known first-proof upload rejection copy', async () => {
+    uploadFileMock.mockResolvedValueOnce({
+      success: false,
+      error: 'Invalid file type',
+      message: 'The uploaded file type did not match its file signature.',
+    });
+
+    render(<IndividualSetup />);
+
+    fillBasicDetails();
+    fireEvent.click(screen.getByRole('radio', { name: /file upload/i }));
+
+    const file = new File(['proof'], 'starter-proof.pdf', { type: 'application/pdf' });
+    fireEvent.change(screen.getByLabelText('Proof file *'), {
+      target: { files: [file] },
+    });
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'The uploaded file type did not match its file signature.'
+    );
+    expect(dispatchClientErrorDiagnosticMock).not.toHaveBeenCalledWith(
+      'onboarding.individual.first_proof_upload_returned_error',
+      expect.any(Error)
+    );
+    expect(screen.getByLabelText('Proof file *')).toBeEnabled();
+  });
+
+  it('maps generic returned first-proof upload failures to preserved-details retry copy', async () => {
+    const genericFailure = 'Failed to upload file. Please try again.';
+    uploadFileMock.mockResolvedValueOnce({
+      success: false,
+      error: genericFailure,
+    });
+
+    render(<IndividualSetup />);
+
+    fillBasicDetails();
+    fireEvent.click(screen.getByRole('radio', { name: /file upload/i }));
+
+    const file = new File(['proof'], 'starter-proof.pdf', { type: 'application/pdf' });
+    fireEvent.change(screen.getByLabelText('Proof file *'), {
+      target: { files: [file] },
+    });
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(
+      'Upload could not be saved. Your proof details are still here; try again or choose another file.'
+    );
+    expect(alert).not.toHaveTextContent(genericFailure);
+    expect(dispatchClientErrorDiagnosticMock).not.toHaveBeenCalledWith(
+      'onboarding.individual.first_proof_upload_returned_error',
+      expect.any(Error)
+    );
+    expect(screen.getByLabelText('Proof file *')).toBeEnabled();
+  });
+
+  it('logs unexpected first-proof upload failures while keeping upload retryable', async () => {
+    const uploadError = new Error('network down');
+    uploadFileMock.mockRejectedValueOnce(uploadError);
+
+    render(<IndividualSetup />);
+
+    fillBasicDetails();
+    fireEvent.click(screen.getByRole('radio', { name: /file upload/i }));
+
+    const file = new File(['proof'], 'starter-proof.pdf', { type: 'application/pdf' });
+    fireEvent.change(screen.getByLabelText('Proof file *'), {
+      target: { files: [file] },
+    });
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Upload could not be saved. Your proof details are still here; try again or choose another file.'
+    );
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'onboarding.individual.first_proof_upload_failed',
+      uploadError
+    );
+    expect(screen.getByLabelText('Proof file *')).toBeEnabled();
+  });
+
+  it('announces first-proof save validation errors as recoverable alerts', async () => {
+    render(<IndividualSetup />);
+
+    fillBasicDetails();
+    fireEvent.submit(
+      screen.getByRole('button', { name: /save first proof record/i }).closest('form')!
+    );
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Add one proof link before saving.');
+    expect(screen.getByRole('button', { name: /save first proof record/i })).toBeEnabled();
+  });
+
+  it('logs unexpected first-proof save failures while keeping save retryable', async () => {
+    const submitError = new Error('action failed');
+    completeIndividualOnboardingMock.mockRejectedValueOnce(submitError);
+
+    render(<IndividualSetup />);
+
+    fillBasicDetails();
+    fillLinkProof();
+    fireEvent.submit(
+      screen.getByRole('button', { name: /save first proof record/i }).closest('form')!
+    );
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'First Proof Pack could not be saved. Your details are still here; please try again.'
+    );
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'onboarding.individual.first_proof_submit_failed',
+      submitError
+    );
+    expect(screen.getByRole('button', { name: /save first proof record/i })).toBeEnabled();
+  });
+
+  it('keeps returned first-proof save failures safe, diagnostic, and retryable', async () => {
+    const rawError = 'Database policy failed: proof_pack_items insert stack detail';
+    completeIndividualOnboardingMock.mockResolvedValueOnce({ error: rawError });
+
+    render(<IndividualSetup />);
+
+    fillBasicDetails();
+    fillLinkProof();
+    fireEvent.submit(
+      screen.getByRole('button', { name: /save first proof record/i }).closest('form')!
+    );
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'First Proof Pack could not be saved. Your details are still here; please try again.'
+    );
+    expect(screen.queryByText(rawError)).not.toBeInTheDocument();
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'onboarding.individual.first_proof_returned_error',
+      expect.any(Error)
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(rawError);
+    expect(screen.getByRole('button', { name: /save first proof record/i })).toBeEnabled();
+  });
+
+  it('preserves known first-proof save action copy', async () => {
+    completeIndividualOnboardingMock.mockResolvedValueOnce({
+      error: 'Uploaded file is awaiting privacy review or failed checks.',
+    });
+
+    render(<IndividualSetup />);
+
+    fillBasicDetails();
+    fillLinkProof();
+    fireEvent.submit(
+      screen.getByRole('button', { name: /save first proof record/i }).closest('form')!
+    );
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Uploaded file is awaiting privacy review or failed checks.'
+    );
+    expect(dispatchClientErrorDiagnosticMock).not.toHaveBeenCalledWith(
+      'onboarding.individual.first_proof_returned_error',
+      expect.any(Error)
+    );
+    expect(screen.getByRole('button', { name: /save first proof record/i })).toBeEnabled();
+  });
+
   it('saves an optional scoped verification request preview without sending', async () => {
     render(<IndividualSetup />);
 
@@ -447,8 +667,12 @@ describe('IndividualSetup first-proof flow', () => {
     fillBasicDetails();
     fillLinkProof();
     fireEvent.click(screen.getByLabelText('Send now'));
-    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Program Teacher' } });
-    fireEvent.change(screen.getByLabelText('Relationship'), { target: { value: 'teacher' } });
+    fireEvent.change(screen.getByLabelText('Name'), {
+      target: { value: 'Program Teacher' },
+    });
+    fireEvent.change(screen.getByLabelText('Relationship'), {
+      target: { value: 'teacher' },
+    });
     fireEvent.change(screen.getByLabelText('Email'), {
       target: { value: 'teacher@example.com' },
     });
@@ -469,6 +693,52 @@ describe('IndividualSetup first-proof flow', () => {
     expect(body.artifacts).toEqual([
       { type: 'experience', id: '11111111-1111-4111-8111-111111111111' },
     ]);
-    expect(screen.getByText(/verification request sent to 1 confirmer/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/verification request sent to 1 confirmer/i)
+    ).toBeInTheDocument();
+  });
+
+  it('keeps partial verification request delivery honest after saving first proof', async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ request: { id: 'request-1' }, email_sent: true }),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: 'service unavailable' }),
+      });
+
+    render(<IndividualSetup />);
+
+    fillBasicDetails();
+    fillLinkProof();
+    fireEvent.click(screen.getByLabelText('Send now'));
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Program Teacher' } });
+    fireEvent.change(screen.getByLabelText('Relationship'), { target: { value: 'teacher' } });
+    fireEvent.change(screen.getByLabelText('Email'), {
+      target: { value: 'teacher@example.com' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /add confirmer/i }));
+    fireEvent.change(screen.getAllByLabelText('Name')[1], {
+      target: { value: 'Peer Reviewer' },
+    });
+    fireEvent.change(screen.getAllByLabelText('Relationship')[1], {
+      target: { value: 'peer' },
+    });
+    fireEvent.change(screen.getAllByLabelText('Email')[1], {
+      target: { value: 'peer@example.com' },
+    });
+
+    fireEvent.submit(
+      screen.getByRole('button', { name: /save and send request/i }).closest('form')!
+    );
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    expect(
+      screen.getByText(
+        /First proof record saved\. 1 of 2 verification request emails sent\./i
+      )
+    ).toBeInTheDocument();
   });
 });

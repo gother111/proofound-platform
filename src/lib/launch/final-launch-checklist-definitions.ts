@@ -194,11 +194,9 @@ export function buildFinalLaunchChecklistDefinitions({
       evaluateDirect: (context) => {
         const observations: FinalLaunchChecklistObservation[] = [];
         const smokeGateId =
-          context.scope === 'repo'
-            ? 'public_org_trust_smoke'
-            : 'live_launch_smoke_artifact_refresh';
+          context.scope === 'repo' ? 'public_portfolio_safe' : 'live_launch_smoke_artifact_refresh';
         const smokeGate = context.latestLaunchBundle?.gates.get(smokeGateId);
-        const revealRow = verificationRow(context, 'candidate-consented reveal');
+        const revealRow = verificationRow(context, 'proof-review-participant-consented reveal');
         const blindRow = verificationRow(context, 'blind-by-default review');
 
         if (
@@ -211,12 +209,17 @@ export function buildFinalLaunchChecklistDefinitions({
             sourceLabel: 'Launch bundle plus verification evidence',
             status: 'PASS',
             summary:
-              'Fresh smoke, blind-review coverage, and consented reveal evidence all point to a privacy-safe Public Page that stays separate from reveal.',
+              context.scope === 'repo'
+                ? 'Fresh public portfolio tests, blind-review coverage, and consented reveal evidence all point to a privacy-safe Public Page that stays separate from reveal.'
+                : 'Fresh smoke, blind-review coverage, and consented reveal evidence all point to a privacy-safe Public Page that stays separate from reveal.',
             evidence: [
-              {
-                label: 'Launch smoke gate',
-                path: path.posix.join(context.latestLaunchBundle!.dir, '24_gate_summary.json'),
-              },
+              ...smokeGate.evidence.map((evidencePath) => ({
+                label:
+                  context.scope === 'repo'
+                    ? 'Repo-ready public portfolio gate'
+                    : 'Launch smoke gate',
+                path: evidencePath,
+              })),
               {
                 label: 'Verification checklist: blind review',
                 path: 'docs/verification-checklist.md',
@@ -262,25 +265,7 @@ export function buildFinalLaunchChecklistDefinitions({
         'tests/api/assignments-publish-route.test.ts',
       ],
       evaluateDirect: (context) => {
-        const observations: FinalLaunchChecklistObservation[] = passIfDocs(context, {
-          markdown: context.assignmentQualityChecklist,
-          observedAt: null,
-          sourcePath: 'docs/internal-ops/assignment-quality-checklist.md',
-          sourceLabel: 'Assignment quality checklist',
-          summary:
-            'Assignment-quality SOP explicitly checks business value, real work, proof expectation, and practical constraints before publish.',
-          patterns: [
-            /business value/i,
-            /real outcomes/i,
-            /proof expectation/i,
-            /practical constraints/i,
-          ],
-        }).map((observation) => ({
-          ...observation,
-          status: 'UNVERIFIED' as const,
-          summary:
-            'The operator checklist names the required fields, but docs alone do not prove the builder enforces them.',
-        }));
+        const observations: FinalLaunchChecklistObservation[] = [];
 
         if (
           textContainsAll(context.assignmentPublishRouteTest, [
@@ -308,6 +293,28 @@ export function buildFinalLaunchChecklistDefinitions({
           });
         }
 
+        if (observations.length === 0) {
+          observations.push(
+            ...passIfDocs(context, {
+              markdown: context.assignmentQualityChecklist,
+              observedAt: null,
+              sourcePath: 'docs/internal-ops/assignment-quality-checklist.md',
+              sourceLabel: 'Assignment quality checklist',
+              summary:
+                'Assignment-quality SOP explicitly checks business value, real work, proof expectation, and practical constraints before publish, but no enforcement test was selected.',
+              patterns: [
+                /business value/i,
+                /real outcomes/i,
+                /proof expectation/i,
+                /practical constraints/i,
+              ],
+            }).map((observation) => ({
+              ...observation,
+              status: 'UNVERIFIED' as const,
+            }))
+          );
+        }
+
         return observations;
       },
     },
@@ -323,6 +330,13 @@ export function buildFinalLaunchChecklistDefinitions({
       ],
       evaluateDirect: (context) => {
         const observations: FinalLaunchChecklistObservation[] = [];
+        const strictOrgGate = gateObservation(
+          context.latestLaunchBundle,
+          'strict_org_corridor_e2e',
+          'Latest final validation strict org corridor E2E'
+        );
+        if (strictOrgGate) observations.push(strictOrgGate);
+
         const blindReview = checklistRowObservation(
           verificationRow(context, 'blind-by-default review'),
           'verification_checklist'
@@ -391,11 +405,13 @@ export function buildFinalLaunchChecklistDefinitions({
       section: 'Product',
       label: 'Hire and engagement verification remain distinct',
       authorityRefs: ['Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md'],
-      evidenceSources: [
-        '.artifacts/proofound-current-state-reality-check.md',
-        'docs/proofound-hard-verification-rerun-final.md',
-      ],
+      evidenceSources: ['.artifacts/proofound-current-state-reality-check.md'],
       evaluateDirect: (context) => {
+        const strictOrgGate = gateObservation(
+          context.latestLaunchBundle,
+          'strict_org_corridor_e2e',
+          'Latest final validation strict org corridor E2E'
+        );
         const corridor = checklistRowObservation(
           realityRow(
             context,
@@ -403,10 +419,7 @@ export function buildFinalLaunchChecklistDefinitions({
           ),
           'current_state_reality_check'
         );
-        if (corridor) {
-          return [corridor];
-        }
-        return [];
+        return compactObservations([strictOrgGate, corridor]);
       },
     },
     {
@@ -451,10 +464,7 @@ export function buildFinalLaunchChecklistDefinitions({
       section: 'Engineering',
       label: '`next start` is stable',
       authorityRefs: ['agent/checklists/verification.md'],
-      evidenceSources: [
-        '.artifacts/launch-validation-*/24_gate_summary.json',
-        '.artifacts/proofound-master-audit-2026-03-22.md',
-      ],
+      evidenceSources: ['.artifacts/launch-validation-*/24_gate_summary.json'],
       evaluateDirect: (context) =>
         compactObservations([
           gateObservation(
@@ -519,12 +529,38 @@ export function buildFinalLaunchChecklistDefinitions({
         'src/lib/authz/policy.ts',
       ],
       evaluateDirect: (context) => {
+        const observations: FinalLaunchChecklistObservation[] = [];
+        const baseline = gateObservation(
+          context.latestLaunchBundle,
+          'privacy_rls_baseline_tests',
+          'Latest final validation privacy/RLS baseline gate'
+        );
+        if (baseline) observations.push(baseline);
+
+        const extended = gateObservation(
+          context.latestLaunchBundle,
+          'privacy_rls_extended_tests',
+          'Latest final validation privacy/RLS extended gate'
+        );
+        if (extended) observations.push(extended);
+
+        const liveDb = gateObservation(
+          context.latestLaunchBundle,
+          'privacy_rls_live_db',
+          'Latest launch bundle privacy/RLS live DB gate'
+        );
+        if (liveDb) observations.push(liveDb);
+
         const row = checklistRowObservation(
           realityRow(context, 'canonical role and RLS truth'),
           'current_state_reality_check'
         );
         if (row) {
-          return [row];
+          observations.push(row);
+        }
+
+        if (observations.length > 0) {
+          return observations;
         }
 
         if (
@@ -560,6 +596,13 @@ export function buildFinalLaunchChecklistDefinitions({
       ],
       evaluateDirect: (context) => {
         const observations: FinalLaunchChecklistObservation[] = [];
+        const launchStatusGate = gateObservation(
+          context.latestLaunchBundle,
+          'launch_status_route_logic',
+          'Latest repo-ready launch-status gate'
+        );
+        if (launchStatusGate) observations.push(launchStatusGate);
+
         const verificationObs = checklistRowObservation(
           verificationRow(context, 'bounded verification semantics'),
           'verification_checklist'
@@ -771,6 +814,13 @@ export function buildFinalLaunchChecklistDefinitions({
         );
         if (stateful) observations.push(stateful);
 
+        const commandGate = gateObservation(
+          context.latestLaunchBundle,
+          'strict_org_corridor_e2e',
+          'Latest final validation strict org corridor E2E'
+        );
+        if (commandGate) observations.push(commandGate);
+
         const reality = checklistRowObservation(
           realityRow(
             context,
@@ -817,20 +867,40 @@ export function buildFinalLaunchChecklistDefinitions({
       authorityRefs: ['agent/checklists/verification.md'],
       evidenceSources: [
         '.artifacts/launch-validation-*/24_gate_summary.json',
+        '.artifacts/launch-validation-*/commands.json',
         '.artifacts/proofound-current-state-reality-check.md',
       ],
-      evaluateDirect: (context) =>
-        compactObservations([
-          gateObservation(
-            context.latestLaunchBundle,
-            'privacy_rls_live_db',
-            'Latest launch bundle privacy/RLS gate'
-          ),
-          checklistRowObservation(
-            realityRow(context, 'canonical role and RLS truth'),
-            'current_state_reality_check'
-          ),
-        ]),
+      evaluateDirect: (context) => {
+        const observations: FinalLaunchChecklistObservation[] = [];
+        const baseline = gateObservation(
+          context.latestLaunchBundle,
+          'privacy_rls_baseline_tests',
+          'Latest final validation privacy/RLS baseline gate'
+        );
+        if (baseline) observations.push(baseline);
+
+        const extended = gateObservation(
+          context.latestLaunchBundle,
+          'privacy_rls_extended_tests',
+          'Latest final validation privacy/RLS extended gate'
+        );
+        if (extended) observations.push(extended);
+
+        const liveDb = gateObservation(
+          context.latestLaunchBundle,
+          'privacy_rls_live_db',
+          'Latest launch bundle privacy/RLS gate'
+        );
+        if (liveDb) observations.push(liveDb);
+
+        const reality = checklistRowObservation(
+          realityRow(context, 'canonical role and RLS truth'),
+          'current_state_reality_check'
+        );
+        if (reality) observations.push(reality);
+
+        return observations;
+      },
     },
     {
       id: 'qa_manual_privacy_sweep',
@@ -904,6 +974,11 @@ export function buildFinalLaunchChecklistDefinitions({
       ],
       evaluateDirect: (context) =>
         compactObservations([
+          gateObservation(
+            context.latestLaunchBundle,
+            'strict_org_corridor_e2e',
+            'Latest final validation strict org corridor E2E'
+          ),
           checklistRowObservation(
             verificationRow(context, 'assignment create / edit / publish'),
             'verification_checklist'
@@ -1056,6 +1131,7 @@ export function buildFinalLaunchChecklistDefinitions({
           summary:
             'The dated launch owner roster assigns named humans to founder, incident, technical, product/ops, and support/verification roles.',
           patterns: [
+            /Doc Class: `active`/i,
             /Launch Owner Roster/i,
             /Yurii Bakurov/i,
             /Founder \/ launch owner/i,
@@ -1111,6 +1187,7 @@ export function buildFinalLaunchChecklistDefinitions({
           summary:
             'The dated launch evidence pack records green live launch monitoring for health, status, auth-adjacent, email/privacy, upload/privacy, workflow, and privacy-leak categories.',
           patterns: [
+            /Doc Class: `active`/i,
             /Critical alert drill status: `PASS`/i,
             /Live `\/api\/monitoring\/launch-status`: `PASS`/i,
             /auth/i,
@@ -1160,7 +1237,11 @@ export function buildFinalLaunchChecklistDefinitions({
           sourcePath: 'docs/internal-ops/production-launch-evidence-2026-04-27.md',
           sourceLabel: 'Production launch evidence pack',
           summary: 'The dated launch evidence pack records a successful isolated restore drill.',
-          patterns: [/Restore drill status: `PASS`/i, /isolated recovery target/i],
+          patterns: [
+            /Doc Class: `active`/i,
+            /Restore drill status: `PASS`/i,
+            /isolated recovery target/i,
+          ],
         });
         if (restoreEvidence.length > 0) {
           return restoreEvidence;
@@ -1217,8 +1298,8 @@ export function buildFinalLaunchChecklistDefinitions({
           sourcePath: 'Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md',
           sourceLabel: 'Locked MVP source of truth',
           summary:
-            'The locked MVP explicitly chooses a proof-first hiring corridor centered on Proof Packs.',
-          patterns: [/proof-first/i, /hiring corridor/i, /Proof Packs/i],
+            'The locked MVP explicitly chooses a proof-first assignment review corridor centered on Proof Packs.',
+          patterns: [/proof-first/i, /assignment review corridor/i, /Proof Packs/i],
         }),
       ],
     },
@@ -1296,7 +1377,7 @@ export function buildFinalLaunchChecklistDefinitions({
       id: 'founder_public_story_signal_over_cvs',
       section: 'Founder / GTM',
       blocksVerdictIn: 'full',
-      label: 'Public story sells stronger signal than CVs, not broad platform vision',
+      label: 'Public story sells stronger evidence than CVs, not broad platform vision',
       authorityRefs: ['Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md'],
       evidenceSources: [
         'README.md',
@@ -1305,19 +1386,25 @@ export function buildFinalLaunchChecklistDefinitions({
       ],
       evaluateDirect: (context) => {
         if (
-          textContainsAll(context.lockedMvp, [/proof instead of profile theater/i]) &&
-          textContainsAll(context.launchReadinessSummary, [/public and corridor flows/i])
+          textContainsAll(context.lockedMvp, [
+            /stronger signal than CV filtering/i,
+            /proof(?: submissions)? instead of profile theater/i,
+          ]) &&
+          textContainsAll(context.readme, [
+            /narrow proof-first assignment review corridor/i,
+            /MVP excludes ATS or HRIS replacement, public people directories, open candidate indexes/i,
+          ])
         ) {
           return [
             docObservation({
               status: 'PASS',
               summary:
-                'Current authority docs frame Proofound as stronger signal than CV theater, but founder-outbound proof remains outside repo scope.',
+                'The locked MVP and root README keep the public story on stronger proof signal, not broad platform or public-directory positioning.',
               sourceId: 'docs',
-              sourceLabel: 'Locked MVP source of truth',
-              sourcePath: 'Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md',
+              sourceLabel: 'Locked MVP source of truth and README',
+              sourcePath: 'Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md; README.md',
               observedAt: null,
-              note: 'Product promise: proof instead of profile theater.',
+              note: 'Product promise: stronger signal than CV filtering, proof instead of profile theater, and no broad public-directory launch.',
             }),
           ];
         }
@@ -1328,7 +1415,7 @@ export function buildFinalLaunchChecklistDefinitions({
       id: 'founder_candidate_supply_plan',
       section: 'Founder / GTM',
       blocksVerdictIn: 'full',
-      label: 'Candidate supply-seeding plan exists for the chosen corridor',
+      label: 'Proof-submission supply-seeding plan exists for the chosen corridor',
       authorityRefs: ['Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md'],
       evidenceSources: ['Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md'],
       evaluateDirect: (context) =>
@@ -1338,9 +1425,9 @@ export function buildFinalLaunchChecklistDefinitions({
           sourcePath: 'Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md',
           sourceLabel: 'GTM and initial marketing plan',
           summary:
-            'The GTM plan defines the first-wave candidate supply channels, volume assumptions, readiness criteria, and operating loop.',
+            'The GTM plan defines the first-wave proof-submission supply channels, volume assumptions, readiness criteria, and operating loop.',
           patterns: [
-            /Candidate Supply-Seeding Plan/i,
+            /Proof-Submission Supply-Seeding Plan/i,
             /source channels/i,
             /volume assumptions/i,
             /readiness criteria/i,
@@ -1426,6 +1513,7 @@ export function buildFinalLaunchChecklistDefinitions({
           summary:
             'The dated launch signoff memo records a GO decision after fresh launch evidence turned green.',
           patterns: [
+            /Doc Class: `active`/i,
             /Decision: `GO`/i,
             /Evidence bundle date: `2026-04-27`/i,
             /Founder \/ launch owner: `Yurii Bakurov` `APPROVED`/i,

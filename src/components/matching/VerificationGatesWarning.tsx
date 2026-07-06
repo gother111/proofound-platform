@@ -144,9 +144,9 @@ export function VerificationGatesWarning({
         <AlertCircle className="h-4 w-4" />
         <AlertTitle>Why is this required?</AlertTitle>
         <AlertDescription className="text-sm">
-          Organizations can require specific verifications to ensure candidate authenticity and
-          quality. Once you complete the required verifications, you'll be able to express interest
-          in {assignmentTitle}.
+          Organizations can require specific verifications to keep assignment review evidence
+          trustworthy. Once you complete the required verifications, you'll be able to express
+          interest in {assignmentTitle}.
         </AlertDescription>
       </Alert>
     </div>

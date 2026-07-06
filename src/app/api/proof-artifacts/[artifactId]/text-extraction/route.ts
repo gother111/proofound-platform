@@ -96,11 +96,11 @@ function safeProofArtifactOcrMessage(code: string) {
     case 'CONSENT_REQUIRED':
       return 'Explicit consent is required before OCR can process this artifact.';
     case 'UNSUPPORTED_PROOF_ARTIFACT_MIME':
-      return 'OCR beta supports PDF, PNG, and JPG/JPEG proof artifacts only.';
+      return 'Text extraction supports PDF, PNG, and JPG/JPEG proof artifacts only.';
     case 'PROOF_ARTIFACT_TOO_LARGE':
-      return 'OCR beta supports proof artifacts up to 5 MB.';
+      return 'Text extraction supports proof artifacts up to 5 MB.';
     case 'PROOF_ARTIFACT_TOO_MANY_PAGES':
-      return 'OCR beta supports PDF proof artifacts up to 4 pages.';
+      return 'Text extraction supports PDF proof artifacts up to 4 pages.';
     case 'PROOF_ARTIFACT_NOT_PROCESSABLE':
       return 'This proof artifact is not ready for OCR processing.';
     case 'PROOF_ARTIFACT_OCR_PROVIDER_UNAVAILABLE':

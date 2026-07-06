@@ -14,10 +14,30 @@ vi.mock('@/lib/portfolio/pdf', () => ({
   generateOrganizationProfilePdf: vi.fn(),
 }));
 
+vi.mock('@/lib/launch/trace', () => ({
+  startLaunchTrace: vi.fn(() => ({
+    flow: 'export',
+    requestId: 'trace-1',
+    actorId: null,
+    actorType: 'anonymous',
+    objectRefs: {},
+    startedAtMs: 0,
+  })),
+  emitLaunchTrace: vi.fn(),
+}));
+
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+  },
+}));
+
 import { GET } from '@/app/api/portfolio/org/[slug]/export/route';
 import { createClient } from '@/lib/supabase/server';
 import { fetchOrganizationTrustExportData } from '@/lib/portfolio/export-data';
 import { generateOrganizationProfilePdf } from '@/lib/portfolio/pdf';
+import { emitLaunchTrace } from '@/lib/launch/trace';
+import { log } from '@/lib/log';
 
 function mockSupabase({
   user,
@@ -100,7 +120,7 @@ describe('/api/portfolio/org/[slug]/export', () => {
     });
 
     expect(response.status).toBe(404);
-    expect(await response.json()).toEqual({ error: 'Organization profile unavailable' });
+    expect(await response.json()).toEqual({ error: 'Organization trust page unavailable' });
   });
 
   it('returns a downloadable PDF on success', async () => {
@@ -220,6 +240,102 @@ describe('/api/portfolio/org/[slug]/export', () => {
     expect(response.headers.get('content-type')).toContain('text/plain');
     expect(await response.text()).toContain('Seriousness of review:');
     expect(generateOrganizationProfilePdf).not.toHaveBeenCalled();
+  });
+
+  it('returns a format-neutral error when text export generation fails', async () => {
+    mockSupabase({ user: { id: 'user-1' } });
+    (fetchOrganizationTrustExportData as any).mockResolvedValue({
+      schemaVersion: 'proofound.portfolio-export.v1',
+      surface: 'organization_public',
+      exportedAt: '2026-03-21T10:00:00.000Z',
+      shareUrl: 'https://proofound.io/portfolio/org/acme',
+      organization: {
+        id: 'org-1',
+        slug: 'acme',
+        displayName: 'Acme',
+        verifiedDomainPath: 'acme.org',
+        mission: 'Ship impact',
+        whyWorkMatters: 'Build trust',
+        operatingContext: 'Small distributed team with tight review loops.',
+        website: 'https://acme.org',
+        verified: true,
+      },
+      assignmentSnapshot: {
+        role: 'Proof-first product designer',
+      },
+    });
+
+    const response = await GET(
+      new Request('http://localhost/api/portfolio/org/acme/export?format=text'),
+      {
+        params: Promise.resolve({ slug: 'acme' }),
+      }
+    );
+
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({ error: 'Failed to generate export' });
+    expect(generateOrganizationProfilePdf).not.toHaveBeenCalled();
+    expect(emitLaunchTrace).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        outcome: 'success',
+        state: 'organization_export_ready',
+      })
+    );
+    expect(emitLaunchTrace).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        outcome: 'failure',
+        state: 'org_export_failed',
+      })
+    );
+    expect(log.error).toHaveBeenCalledWith('portfolio.org_export.failed', {
+      error: expect.any(Error),
+    });
+  });
+
+  it('returns a format-neutral error when PDF export generation fails', async () => {
+    mockSupabase({ user: { id: 'user-1' } });
+    (fetchOrganizationTrustExportData as any).mockResolvedValue({
+      schemaVersion: 'proofound.portfolio-export.v1',
+      surface: 'organization_public',
+      exportedAt: '2026-03-21T10:00:00.000Z',
+      shareUrl: 'https://proofound.io/portfolio/org/acme',
+      organization: {
+        id: 'org-1',
+        slug: 'acme',
+        displayName: 'Acme',
+        verifiedDomainPath: 'acme.org',
+        mission: 'Ship impact',
+        whyWorkMatters: 'Build trust',
+        operatingContext: 'Small distributed team with tight review loops.',
+        website: 'https://acme.org',
+        verified: true,
+      },
+      assignmentSnapshot: undefined,
+    });
+    (generateOrganizationProfilePdf as any).mockRejectedValue(new Error('pdf unavailable'));
+
+    const response = await GET(new Request('http://localhost/api/portfolio/org/acme/export'), {
+      params: Promise.resolve({ slug: 'acme' }),
+    });
+
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({ error: 'Failed to generate export' });
+    expect(emitLaunchTrace).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        outcome: 'success',
+        state: 'organization_export_ready',
+      })
+    );
+    expect(emitLaunchTrace).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        outcome: 'failure',
+        state: 'org_export_failed',
+      })
+    );
   });
 
   it('returns 403 for canonical reviewer membership', async () => {

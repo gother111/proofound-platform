@@ -9,29 +9,35 @@
 
 'use client';
 
-import { useState, useEffect, Suspense, useCallback, type ComponentType } from 'react';
+import { useState, useEffect, Suspense, useCallback, useRef, type ComponentType } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ConversationList, type Conversation } from '@/components/messaging/ConversationList';
+import { MessageThreadLoadFailure } from '@/components/messaging/MessageThreadLoadFailure';
 import type { RealtimeMessageThreadProps } from '@/components/messaging/RealtimeMessageThread';
 import { type Message } from '@/components/messaging/MessageThread';
-import { Lock, MessageSquare } from 'lucide-react';
+import { AlertTriangle, Lock, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import LoadingIndividualMessages from './loading';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+import { getConversationParticipantLabel } from '@/lib/messaging/participant-label';
+import { createMessageSendRetryError } from '@/lib/messaging/send-errors';
 
 function MessagesPageContent() {
   const searchParams = useSearchParams();
   const conversationParam = searchParams?.get('conversation');
   const pathname = usePathname();
   const router = useRouter();
+  const appliedConversationParamRef = useRef<string | null>(null);
 
   const { userId: currentUserId, isLoading: isAuthLoading } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversationId, setSelectedConversationId] = useState<string | undefined>();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoadingConversations, setIsLoadingConversations] = useState(true);
+  const [conversationLoadError, setConversationLoadError] = useState<string | null>(null);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
-  const [hasAutoSelected, setHasAutoSelected] = useState(false);
+  const [messageLoadError, setMessageLoadError] = useState<string | null>(null);
   const [RealtimeThread, setRealtimeThread] =
     useState<ComponentType<RealtimeMessageThreadProps> | null>(null);
 
@@ -44,38 +50,61 @@ function MessagesPageContent() {
 
   // Auto-select conversation from URL param after conversations are loaded
   useEffect(() => {
-    if (conversationParam && conversations.length > 0 && !hasAutoSelected) {
-      // Check if the conversation exists in the list
-      const exists = conversations.some((c) => c.id === conversationParam);
-      if (exists) {
+    if (!conversationParam) {
+      appliedConversationParamRef.current = null;
+      return;
+    }
+
+    if (conversations.length === 0 || conversationParam === appliedConversationParamRef.current) {
+      return;
+    }
+
+    // Check if the conversation exists in the list
+    const exists = conversations.some((c) => c.id === conversationParam);
+    if (exists) {
+      appliedConversationParamRef.current = conversationParam;
+      if (selectedConversationId !== conversationParam) {
         setSelectedConversationId(conversationParam);
-        setHasAutoSelected(true);
       }
     }
-  }, [conversationParam, conversations, hasAutoSelected]);
+  }, [conversationParam, conversations, selectedConversationId]);
 
   const loadConversations = async () => {
     setIsLoadingConversations(true);
+    setConversationLoadError(null);
     try {
       const response = await fetch('/api/conversations');
-      if (response.ok) {
-        const data = await response.json();
-        // Transform API response to match ConversationList component interface
-        const transformedConversations = (data.conversations || []).map((conv: any) => ({
+      if (!response.ok) {
+        throw new Error('Conversation list request failed');
+      }
+
+      const data = await response.json();
+      // Transform API response to match ConversationList component interface
+      const transformedConversations = (data.conversations || []).map((conv: any) => {
+        const stage = conv.stage === 'revealed' ? 'revealed' : 'masked';
+
+        return {
           id: conv.id,
-          otherPartyName: conv.otherParty?.displayName || 'Unknown',
+          otherPartyName: getConversationParticipantLabel({
+            stage,
+            displayName: conv.otherParty?.displayName,
+          }),
           otherPartyAvatar: conv.otherParty?.displayAvatar,
           lastMessage: conv.lastMessage?.content || '',
           lastMessageAt: conv.lastMessageAt || conv.createdAt,
           unreadCount: conv.unreadCount || 0,
           matchId: conv.matchId,
           assignmentTitle: conv.assignmentRole,
-          stage: conv.stage === 'revealed' ? 'revealed' : 'masked',
-        }));
-        setConversations(transformedConversations);
-      }
+          stage,
+        };
+      });
+      setConversations(transformedConversations);
     } catch (error) {
-      console.error('Failed to load conversations:', error);
+      dispatchClientErrorDiagnostic('messages.individual.conversations_load_failed', error);
+      setConversations([]);
+      setConversationLoadError(
+        'Your conversation threads are still safe. Retry this section to load messages, reveal requests, and proof-corridor updates.'
+      );
     } finally {
       setIsLoadingConversations(false);
     }
@@ -84,26 +113,34 @@ function MessagesPageContent() {
   const loadMessages = useCallback(
     async (conversationId: string) => {
       setIsLoadingMessages(true);
+      setMessageLoadError(null);
+      setMessages([]);
       try {
         const response = await fetch(`/api/conversations/${conversationId}/messages`);
-        if (response.ok) {
-          const data = await response.json();
-          // Transform messages to have Date objects for RealtimeMessageThread
-          const transformedMessages = (data.messages || []).map((msg: any) => ({
-            id: msg.id,
-            senderId:
-              msg.senderId ||
-              msg.sender_id ||
-              msg.sender?.id ||
-              (msg.isOwnMessage ? currentUserId : 'unknown'),
-            content: msg.content,
-            sentAt: new Date(msg.sentAt || msg.sent_at),
-            readAt: msg.readAt || msg.read_at ? new Date(msg.readAt || msg.read_at) : undefined,
-          }));
-          setMessages(transformedMessages);
+        if (!response.ok) {
+          throw new Error('Thread message request failed');
         }
+
+        const data = await response.json();
+        // Transform messages to have Date objects for RealtimeMessageThread
+        const transformedMessages = (data.messages || []).map((msg: any) => ({
+          id: msg.id,
+          senderId:
+            msg.senderId ||
+            msg.sender_id ||
+            msg.sender?.id ||
+            (msg.isOwnMessage ? currentUserId : 'unknown'),
+          content: msg.content,
+          sentAt: new Date(msg.sentAt || msg.sent_at),
+          readAt: msg.readAt || msg.read_at ? new Date(msg.readAt || msg.read_at) : undefined,
+        }));
+        setMessages(transformedMessages);
       } catch (error) {
-        console.error('Failed to load messages:', error);
+        dispatchClientErrorDiagnostic('messages.individual.thread_load_failed', error);
+        setMessages([]);
+        setMessageLoadError(
+          'This thread did not finish loading. Your messages, reveal requests, and privacy state are still safe; retry before replying.'
+        );
       } finally {
         setIsLoadingMessages(false);
       }
@@ -148,7 +185,11 @@ function MessagesPageContent() {
 
       if (!response.ok) {
         const data = await response.json().catch(() => null);
-        throw new Error(data?.error || 'Failed to send message');
+        throw new Error(
+          typeof data?.message === 'string'
+            ? data.message
+            : data?.error || 'Message send request failed'
+        );
       }
 
       const data = await response.json();
@@ -166,16 +207,45 @@ function MessagesPageContent() {
         setMessages((prev) => [...prev, normalizedMessage]);
       }
     } catch (error) {
-      console.error('Failed to send message:', error);
-      throw error;
+      dispatchClientErrorDiagnostic('messages.individual.send_failed', error);
+      throw createMessageSendRetryError();
     }
   };
 
   const selectedConversation = conversations.find((c) => c.id === selectedConversationId);
+  const hasUnavailableConversationLink = Boolean(
+    conversationParam && !isLoadingConversations && !conversationLoadError && !selectedConversation
+  );
+
+  const conversationRoute = useCallback(
+    (conversationId?: string) => {
+      const params = new URLSearchParams(searchParams?.toString());
+      if (conversationId) {
+        params.set('conversation', conversationId);
+      } else {
+        params.delete('conversation');
+      }
+
+      const query = params.toString();
+      return `${pathname ?? '/app/i/messages'}${query ? `?${query}` : ''}`;
+    },
+    [pathname, searchParams]
+  );
+
+  const handleSelectConversation = (conversationId: string) => {
+    if (conversationId !== selectedConversationId) {
+      setMessages([]);
+      setMessageLoadError(null);
+    }
+    setSelectedConversationId(conversationId);
+    router.replace(conversationRoute(conversationId), { scroll: false });
+  };
 
   const handleBackToConversationList = () => {
     setSelectedConversationId(undefined);
-    router.replace(pathname ?? '/app/i/messages');
+    setMessages([]);
+    setMessageLoadError(null);
+    router.replace(conversationRoute(), { scroll: false });
   };
 
   // Show loading state if auth is not ready
@@ -187,7 +257,7 @@ function MessagesPageContent() {
   const rightPaneBgClass = isV2 ? 'bg-transparent' : 'bg-japandi-bg';
 
   return (
-    <div className="h-full min-h-[calc(100vh-3.5rem)] flex flex-col md:flex-row">
+    <div className="flex h-full min-h-full flex-col md:flex-row">
       {/* Left: Conversation List */}
       <div
         className={`w-full min-h-0 md:w-80 flex-shrink-0 ${
@@ -197,19 +267,67 @@ function MessagesPageContent() {
         <ConversationList
           conversations={conversations}
           selectedId={selectedConversationId}
-          onSelect={setSelectedConversationId}
+          onSelect={handleSelectConversation}
           isLoading={isLoadingConversations}
           mode="individual"
+          loadError={conversationLoadError}
+          onRetry={() => {
+            void loadConversations();
+          }}
         />
       </div>
 
       {/* Right: Message Thread or Empty State */}
       <div
         className={`h-full min-h-0 min-w-0 flex-1 ${rightPaneBgClass} ${
-          !selectedConversationId ? 'hidden md:flex md:items-center md:justify-center' : 'flex'
+          !selectedConversationId && !hasUnavailableConversationLink
+            ? 'hidden md:flex md:items-center md:justify-center'
+            : 'flex'
         }`}
       >
-        {selectedConversation && RealtimeThread ? (
+        {hasUnavailableConversationLink ? (
+          <div
+            role="status"
+            aria-live="polite"
+            className="m-auto mx-6 max-w-md rounded-2xl border border-proofound-stone/70 bg-white/70 p-8 text-center shadow-sm"
+          >
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#fff1d6] text-[#8a5b00]">
+              <AlertTriangle className="h-6 w-6" />
+            </div>
+            <div className="space-y-3">
+              <p className="font-display text-xl font-semibold text-proofound-charcoal">
+                Conversation link unavailable
+              </p>
+              <p className="text-sm leading-6 text-muted-foreground">
+                The thread from this link is no longer available to your account. It may have
+                closed, expired, or require a different role.
+              </p>
+              <p className="inline-flex items-center justify-center gap-2 text-xs font-medium text-proofound-charcoal/70">
+                <Lock className="h-3.5 w-3.5" />
+                Private messages and reveal details remain protected
+              </p>
+              <button
+                type="button"
+                onClick={handleBackToConversationList}
+                className="mt-2 inline-flex min-h-10 items-center justify-center rounded-md border border-proofound-stone/80 bg-white px-4 text-sm font-medium text-proofound-forest transition-colors hover:border-proofound-forest hover:bg-proofound-parchment/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+              >
+                Show available conversations
+              </button>
+            </div>
+          </div>
+        ) : selectedConversation && messageLoadError ? (
+          <MessageThreadLoadFailure
+            description={messageLoadError}
+            title="Conversation messages could not load"
+            isRetrying={isLoadingMessages}
+            onBack={handleBackToConversationList}
+            onRetry={() => {
+              void loadMessages(selectedConversation.id);
+            }}
+          />
+        ) : selectedConversation && (isLoadingMessages || !RealtimeThread) ? (
+          <LoadingIndividualMessages />
+        ) : selectedConversation && RealtimeThread ? (
           <RealtimeThread
             conversationId={selectedConversation.id}
             initialMessages={messages}
@@ -220,8 +338,6 @@ function MessagesPageContent() {
             onSendMessage={handleSendMessage}
             onBack={handleBackToConversationList}
           />
-        ) : selectedConversation ? (
-          <LoadingIndividualMessages />
         ) : (
           <div className="mx-6 max-w-md rounded-2xl border border-proofound-stone/70 bg-white/60 p-8 text-center shadow-sm">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-proofound-parchment text-proofound-forest">

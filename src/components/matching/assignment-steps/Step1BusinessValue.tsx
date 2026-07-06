@@ -41,8 +41,8 @@ export function Step1BusinessValue({ form, onNext, isSubmitting = false }: Step1
   return (
     <div className="space-y-6">
       <div>
-        <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Step 1: Why this role exists</h2>
+        <div className="mb-2 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-2xl font-bold leading-tight">Step 1: Why this role exists</h2>
           <span className="text-sm text-muted-foreground">Step 1 of 5</span>
         </div>
         <p className="text-muted-foreground">
@@ -105,11 +105,13 @@ export function Step1BusinessValue({ form, onNext, isSubmitting = false }: Step1
             required: 'Why this role exists is required',
           })}
         />
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-muted-foreground">
             Keep this specific. Publishing will block vague or generic assignment language.
           </p>
-          <span className="text-xs text-muted-foreground">{businessValue?.length || 0}/600</span>
+          <span className="shrink-0 text-xs text-muted-foreground">
+            {businessValue?.length || 0}/600
+          </span>
         </div>
         {errors.businessValue && (
           <p className="text-sm text-destructive">{errors.businessValue.message as string}</p>
@@ -117,7 +119,7 @@ export function Step1BusinessValue({ form, onNext, isSubmitting = false }: Step1
       </div>
 
       <div className="flex justify-end border-t pt-4">
-        <Button onClick={onNext} disabled={!isValid || isSubmitting}>
+        <Button className="w-full sm:w-auto" onClick={onNext} disabled={!isValid || isSubmitting}>
           Next: What work will actually be done
         </Button>
       </div>

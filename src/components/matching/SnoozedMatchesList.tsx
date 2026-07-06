@@ -1,7 +1,7 @@
 /**
- * Snoozed Matches List Component
+ * Paused assignment reviews list.
  *
- * Displays all currently snoozed matches with unsnooze actions
+ * Displays paused assignment reviews with restore actions.
  */
 
 'use client';
@@ -15,10 +15,11 @@ import { Badge } from '@/components/ui/badge';
 import { Clock, Bell, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 interface SnoozedMatch {
   id: string;
-  matchScore: number;
+  proofFitLabel?: string;
   snoozedUntil: string;
   assignment: {
     id: string;
@@ -42,6 +43,8 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
   const [matches, setMatches] = useState<SnoozedMatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [unsnoozing, setUnsnoozing] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [restoreError, setRestoreError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchSnoozedMatches();
@@ -49,13 +52,26 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
 
   const fetchSnoozedMatches = async () => {
     try {
+      setLoading(true);
+      setError(null);
+      setRestoreError(null);
       const response = await apiFetch('/api/match/snoozed');
       if (response.ok) {
         const data = await response.json();
         setMatches(data.matches || []);
+      } else {
+        const text = await response.text().catch(() => '');
+        setError('Paused assignment reviews could not load');
+        toast.error('Paused assignment reviews could not load', {
+          description: text || 'You can retry without leaving matching.',
+        });
       }
     } catch (error) {
-      console.error('Failed to fetch snoozed matches:', error);
+      dispatchClientErrorDiagnostic('matching.snoozed_matches.load_failed', error);
+      setError('Paused assignment reviews could not load');
+      toast.error('Paused assignment reviews could not load', {
+        description: 'You can retry without leaving matching.',
+      });
     } finally {
       setLoading(false);
     }
@@ -63,13 +79,14 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
 
   const handleUnsnooze = async (matchId: string) => {
     setUnsnoozing(matchId);
+    setRestoreError(null);
 
     // Optimistically remove from local list, keep snapshot for rollback
     const prevMatches = matches;
     setMatches((prev) => prev.filter((m) => m.id !== matchId));
 
     try {
-      const response = await apiFetch(`/api/matches/${matchId}/snooze`, {
+      const response = await apiFetch(`/api/matches/${encodeURIComponent(matchId)}/snooze`, {
         method: 'DELETE',
       });
 
@@ -77,8 +94,8 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
         throw new Error('Failed to unsnooze');
       }
 
-      toast.success('Match unsnoozed', {
-        description: 'This match will now appear in your main feed',
+      toast.success('Assignment review restored', {
+        description: 'This assignment review will reappear in matching.',
       });
 
       // Refresh the main matching list before we exit (best-effort) and also warm API
@@ -86,7 +103,9 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
-      }).catch((err) => console.error('Warm matches fetch failed after unsnooze', err));
+      }).catch((err) =>
+        dispatchClientErrorDiagnostic('matching.snoozed_matches.warm_after_unsnooze_failed', err)
+      );
 
       await Promise.allSettled([
         onRestored?.(),
@@ -94,10 +113,13 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
         Promise.resolve().then(() => router.refresh()),
       ]);
     } catch (error) {
-      console.error('Error unsnoozing match:', error);
+      dispatchClientErrorDiagnostic('matching.snoozed_matches.unsnooze_failed', error);
       // Rollback optimistic removal if API failed
       setMatches(prevMatches);
-      toast.error('Failed to unsnooze match', {
+      setRestoreError(
+        'Assignment review could not be restored. It is still paused, and you can try again.'
+      );
+      toast.error('Assignment review could not be restored', {
         description: 'Please try again',
       });
     } finally {
@@ -133,20 +155,46 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
     );
   }
 
+  if (error) {
+    return (
+      <Card variant="bento" className="border p-4" role="alert" aria-live="assertive">
+        <div className="mb-2 flex items-center gap-2 text-[#DC2626]">
+          <Clock className="h-4 w-4" />
+          <h3 className="text-sm font-medium">Paused</h3>
+        </div>
+        <p className="mb-1 text-sm text-[#DC2626]">{error}</p>
+        <p className="mb-3 text-xs leading-5 text-muted-foreground">
+          Your paused assignment reviews are unchanged. Retry this panel to refresh the list.
+        </p>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={fetchSnoozedMatches}
+          className="min-h-[44px] text-xs"
+        >
+          Retry paused reviews
+        </Button>
+      </Card>
+    );
+  }
+
   if (matches.length === 0) {
     return (
       <Card variant="bento" className="p-12 text-center">
         <Clock className="h-16 w-16 mx-auto mb-4 text-[#A8B69D]" />
-        <h3 className="text-lg font-semibold text-foreground mb-2">No Snoozed Matches</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-2">
+          No paused assignment reviews right now
+        </h3>
         <p className="text-sm text-muted-foreground mb-6">
-          Matches you snooze will appear here until they're unsnoozed or the snooze period ends.
+          Assignment reviews you pause will appear here until you restore them or the pause period
+          ends.
         </p>
         <Button
           variant="outline"
-          onClick={() => (window.location.href = '/app/i/matching')}
-          className="border-proofound-forest text-proofound-forest"
+          onClick={() => router.push('/app/i/matching')}
+          className="min-h-[44px] border-proofound-forest text-proofound-forest"
         >
-          View All Matches
+          Back to matching feed
         </Button>
       </Card>
     );
@@ -154,9 +202,19 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
 
   return (
     <div className="space-y-4">
+      {restoreError && (
+        <p
+          className="rounded border border-[#FCA5A5] bg-[#FEF2F2] px-3 py-2 text-xs leading-5 text-[#B91C1C]"
+          role="alert"
+          aria-live="assertive"
+        >
+          {restoreError}
+        </p>
+      )}
+
       {matches.map((match) => (
         <Card variant="bento" key={match.id} className="p-6">
-          <div className="flex items-start justify-between gap-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
             {/* Match Info */}
             <div className="flex-1">
               <div className="flex items-start gap-4">
@@ -184,13 +242,12 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
                   </h3>
                   <p className="text-sm text-muted-foreground mb-2">{match.organization.name}</p>
 
-                  {/* Match Score */}
-                  <div className="flex items-center gap-3 mb-3">
+                  <div className="mb-3 flex flex-wrap items-center gap-2 sm:gap-3">
                     <Badge
                       variant="secondary"
                       className="bg-proofound-forest/10 text-proofound-forest border-proofound-forest/20"
                     >
-                      {Math.round(match.matchScore * 100)}% Match
+                      {match.proofFitLabel ?? 'Proof review needed'}
                     </Badge>
 
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -210,23 +267,15 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
             </div>
 
             {/* Actions */}
-            <div className="flex flex-col gap-2">
+            <div className="flex w-full flex-col gap-2 sm:w-auto">
               <Button
                 size="sm"
                 onClick={() => handleUnsnooze(match.id)}
                 disabled={unsnoozing === match.id}
-                className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
+                className="min-h-[44px] w-full bg-proofound-forest text-white hover:bg-proofound-forest/90 sm:w-auto"
               >
                 <Bell className="w-3.5 h-3.5 mr-1.5" />
-                {unsnoozing === match.id ? 'Unsnoozing...' : 'Unsnooze'}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => (window.location.href = `/app/i/matching/${match.assignment.id}`)}
-                className="border-border text-muted-foreground"
-              >
-                View Details
+                {unsnoozing === match.id ? 'Restoring...' : 'Restore'}
               </Button>
             </div>
           </div>

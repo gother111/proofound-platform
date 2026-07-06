@@ -10,6 +10,7 @@ import {
 } from '@/lib/candidate-invites';
 import { CAPABILITY_TOKEN_CLASSES, inspectCapabilityToken } from '@/lib/security/capability-tokens';
 import { createClient } from '@/lib/supabase/server';
+import { log } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
 
@@ -148,7 +149,9 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Failed to fetch candidate invite workspace:', error);
-    return NextResponse.json({ error: 'Failed to fetch candidate workspace' }, { status: 500 });
+    log.error('candidate_invite.workspace.fetch_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return NextResponse.json({ error: 'Failed to fetch submission workspace' }, { status: 500 });
   }
 }

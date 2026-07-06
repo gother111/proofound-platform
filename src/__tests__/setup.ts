@@ -17,6 +17,30 @@ dotenv.config({ path: path.join(process.cwd(), '.env.local') });
 // Only load DOM-specific helpers when a DOM exists (jsdom environment)
 const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
 if (isBrowser) {
+  if (!(globalThis as any).IntersectionObserver) {
+    class MockIntersectionObserver implements IntersectionObserver {
+      readonly root: Element | Document | null = null;
+      readonly rootMargin = '0px';
+      readonly thresholds = [0];
+
+      disconnect() {}
+      observe() {}
+      takeRecords(): IntersectionObserverEntry[] {
+        return [];
+      }
+      unobserve() {}
+    }
+
+    Object.defineProperty(globalThis, 'IntersectionObserver', {
+      configurable: true,
+      value: MockIntersectionObserver,
+    });
+    Object.defineProperty(window, 'IntersectionObserver', {
+      configurable: true,
+      value: MockIntersectionObserver,
+    });
+  }
+
   if (typeof window.localStorage?.clear !== 'function') {
     const store = new Map<string, string>();
     const memoryLocalStorage: Storage = {

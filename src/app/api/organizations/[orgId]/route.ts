@@ -6,6 +6,7 @@ import { organizations } from '@/db/schema';
 import { getCanonicalActiveOrgMembership } from '@/lib/api/auth';
 import { requireApiAuthContext } from '@/lib/auth';
 import { ensureOrganizationPrincipal } from '@/lib/authz';
+import { log } from '@/lib/log';
 import { normalizeOrganizationWebsite } from '@/lib/organizations/normalizeWebsite';
 import { resolveOrganizationReadiness } from '@/lib/organizations/trust-profile';
 
@@ -47,7 +48,7 @@ export async function GET(
 
     return NextResponse.json({ organization: org });
   } catch (error) {
-    console.error('Error fetching organization:', error);
+    log.error('organization.detail.get_failed', { error });
     return NextResponse.json({ error: 'Failed to fetch organization' }, { status: 500 });
   }
 }
@@ -64,7 +65,12 @@ export async function PUT(
 
     const { user } = authContext;
     const { orgId } = await params;
-    const body = await request.json();
+    let body: Record<string, unknown>;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
     const principal = ensureOrganizationPrincipal(body.principalContext);
 
     if (!principal.ok || principal.context.orgId !== orgId) {
@@ -81,7 +87,7 @@ export async function PUT(
       return NextResponse.json(
         {
           error:
-            'Only launch organization profile fields can be updated from this endpoint: displayName, whyWorkMatters, mission, operatingContext, and website.',
+            'Only launch organization trust page fields can be updated from this endpoint: displayName, whyWorkMatters, mission, operatingContext, and website.',
           details: { unsupportedFields },
         },
         { status: 400 }
@@ -185,7 +191,7 @@ export async function PUT(
 
     return NextResponse.json({ organization: updatedOrg });
   } catch (error) {
-    console.error('Error updating organization:', error);
+    log.error('organization.detail.update_failed', { error });
     return NextResponse.json({ error: 'Failed to update organization' }, { status: 500 });
   }
 }

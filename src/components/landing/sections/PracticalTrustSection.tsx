@@ -23,7 +23,7 @@ export function PracticalTrustSection({ shouldReduceMotion }: PracticalTrustSect
     {
       icon: ShieldCheck,
       title: 'Verification & credibility',
-      desc: 'Trust signals can be checked against the source or confirmed by people who know the work, creating a higher-signal review.',
+      desc: 'Trust evidence can be checked against the source or confirmed by people who know the work, creating a clearer-evidence review.',
     },
     {
       icon: Fingerprint,
@@ -59,7 +59,7 @@ export function PracticalTrustSection({ shouldReduceMotion }: PracticalTrustSect
             Trust built on reality
           </h2>
           <p className="text-lg md:text-xl text-muted-foreground font-sans leading-relaxed">
-            We replace empty signals with structured evidence. You control your privacy, own your
+            We replace empty claims with structured evidence. You control your privacy, own your
             portable proof, and always know how matches are made.
           </p>
         </motion.div>

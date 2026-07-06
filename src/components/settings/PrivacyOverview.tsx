@@ -1,12 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
   Shield,
   Download,
-  Upload,
   Eye,
   Trash2,
   FileText,
@@ -15,71 +14,163 @@ import {
   MessagesSquare,
   Target,
   Settings,
+  AlertTriangle,
+  RefreshCcw,
 } from 'lucide-react';
-import { DataBreakdown } from './DataBreakdown';
+import { DataBreakdown } from '@/components/privacy/DataBreakdown';
+import { DataExportFeedback } from '@/components/privacy/DataExportFeedback';
 import { AuditLogTable } from './AuditLogTable';
 import { DeleteAccount } from './DeleteAccount';
-import { EnhancedDataImportDialog } from './EnhancedDataImportDialog';
 import { VisibilitySettingsModal } from '../privacy/VisibilitySettingsModal';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { CLIENT_FF_DEFAULTS } from '@/lib/featureFlags';
 import { buildUserExportDownloadFilename } from '@/lib/privacy/export-download';
 
 interface PrivacyOverviewProps {
   userId: string;
+  fullPageNavigation?: boolean;
 }
 
-export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
+type VisibilityCounts = {
+  public: number;
+  network_only: number;
+  match_only: number;
+  private: number;
+};
+
+const EMPTY_VISIBILITY_COUNTS: VisibilityCounts = {
+  public: 0,
+  network_only: 0,
+  match_only: 0,
+  private: 0,
+};
+
+const VISIBILITY_SUMMARY_ITEMS: Array<{
+  key: keyof VisibilityCounts;
+  label: string;
+  description: string;
+}> = [
+  {
+    key: 'public',
+    label: 'Public',
+    description: 'Visible on your Public Page',
+  },
+  {
+    key: 'network_only',
+    label: 'Trusted review context',
+    description: 'Visible only in trusted review contexts',
+  },
+  {
+    key: 'match_only',
+    label: 'Assignment review',
+    description: 'Allowed only when assignment-review access applies',
+  },
+  {
+    key: 'private',
+    label: 'Private',
+    description: 'Only visible to you',
+  },
+];
+
+export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyOverviewProps) {
   const [showDataBreakdown, setShowDataBreakdown] = useState(false);
   const [showAuditLog, setShowAuditLog] = useState(false);
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [showVisibilitySettings, setShowVisibilitySettings] = useState(false);
-  const [showImportDialog, setShowImportDialog] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [exportFeedback, setExportFeedback] = useState<{
+    kind: 'success' | 'error';
+    title: string;
+    message: string;
+  } | null>(null);
   const [privacySummaryEnabled, setPrivacySummaryEnabled] = useState(
     CLIENT_FF_DEFAULTS.privacySummary
   );
-  const [visibilityCounts, setVisibilityCounts] = useState({
-    public: 0,
-    network_only: 0,
-    match_only: 0,
-    private: 0,
-  });
+  const [visibilityCounts, setVisibilityCounts] =
+    useState<VisibilityCounts>(EMPTY_VISIBILITY_COUNTS);
+  const [visibilitySummaryLoading, setVisibilitySummaryLoading] = useState(true);
+  const [visibilitySummaryError, setVisibilitySummaryError] = useState<string | null>(null);
+
+  const focusPageSection = (sectionId: string, block: ScrollLogicalPosition = 'start') => {
+    const section = document.getElementById(sectionId);
+    if (!section) return;
+
+    section.scrollIntoView({ behavior: 'smooth', block });
+    section.focus({ preventScroll: true });
+  };
+
+  const showInlineOrFocus = (
+    sectionId: string,
+    showInlineSection: () => void,
+    block?: ScrollLogicalPosition
+  ) => {
+    if (fullPageNavigation) {
+      focusPageSection(sectionId, block);
+      return;
+    }
+
+    showInlineSection();
+  };
+
+  const reviewFieldVisibility = () =>
+    showInlineOrFocus('privacy-field-visibility', () => setShowVisibilitySettings(true));
+
+  const loadVisibilitySummary = useCallback(async () => {
+    setVisibilitySummaryLoading(true);
+    setVisibilitySummaryError(null);
+
+    try {
+      const flagsResponse = await fetch('/api/feature-flags');
+      let summaryEnabled = CLIENT_FF_DEFAULTS.privacySummary;
+      if (flagsResponse.ok) {
+        const flagsPayload = await flagsResponse.json();
+        summaryEnabled = flagsPayload?.flags?.privacySummary !== false;
+      }
+
+      setPrivacySummaryEnabled(summaryEnabled);
+      if (!summaryEnabled) return;
+
+      const response = await apiFetch('/api/profile/privacy-settings');
+      if (!response.ok) {
+        throw new Error('Visibility summary request failed');
+      }
+
+      const payload = await response.json();
+      const fieldVisibility = (payload?.fieldVisibility || {}) as Record<string, string>;
+      const counts: VisibilityCounts = { ...EMPTY_VISIBILITY_COUNTS };
+      Object.values(fieldVisibility).forEach((level) => {
+        if (level === 'public') counts.public += 1;
+        if (level === 'network_only') counts.network_only += 1;
+        if (level === 'match_only') counts.match_only += 1;
+        if (level === 'private') counts.private += 1;
+      });
+      setVisibilityCounts(counts);
+    } catch (error) {
+      setPrivacySummaryEnabled(CLIENT_FF_DEFAULTS.privacySummary);
+      setVisibilitySummaryError(
+        'We could not refresh this summary. Your saved field controls are still available below.'
+      );
+      dispatchClientErrorDiagnostic('settings.privacy_overview.visibility_summary_failed', error);
+    } finally {
+      setVisibilitySummaryLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    void (async () => {
-      try {
-        const flagsResponse = await fetch('/api/feature-flags');
-        if (flagsResponse.ok) {
-          const flagsPayload = await flagsResponse.json();
-          setPrivacySummaryEnabled(flagsPayload?.flags?.privacySummary !== false);
-        }
+    void loadVisibilitySummary();
+  }, [loadVisibilitySummary]);
 
-        const response = await apiFetch('/api/profile/privacy-settings');
-        if (!response.ok) return;
-        const payload = await response.json();
-        const fieldVisibility = (payload?.fieldVisibility || {}) as Record<string, string>;
-        const counts = {
-          public: 0,
-          network_only: 0,
-          match_only: 0,
-          private: 0,
-        };
-        Object.values(fieldVisibility).forEach((level) => {
-          if (level === 'public') counts.public += 1;
-          if (level === 'network_only') counts.network_only += 1;
-          if (level === 'match_only') counts.match_only += 1;
-          if (level === 'private') counts.private += 1;
-        });
-        setVisibilityCounts(counts);
-      } catch (error) {
-        console.error('Failed to load visibility summary', error);
-      }
-    })();
-  }, []);
+  const getVisibilitySummaryText = (count: number) => {
+    if (visibilitySummaryLoading) return 'Checking visibility';
+    if (visibilitySummaryError) return 'Needs refresh';
+
+    return `${count} ${count === 1 ? 'section' : 'sections'}`;
+  };
 
   const handleExportData = async () => {
     setIsExporting(true);
+    setExportFeedback(null);
     try {
       const response = await fetch('/api/user/export');
       if (!response.ok) {
@@ -96,9 +187,19 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+      setExportFeedback({
+        kind: 'success',
+        title: 'Export started',
+        message:
+          'Your data export is downloading. Keep this file private because it can include personal, proof, and assignment-review records.',
+      });
     } catch (error) {
-      console.error('Failed to export data:', error);
-      alert('Failed to export data. Please try again.');
+      dispatchClientErrorDiagnostic('settings.privacy_overview.export_failed', error);
+      setExportFeedback({
+        kind: 'error',
+        title: 'Export could not start',
+        message: 'We could not prepare your data export. Please try again in a moment.',
+      });
     } finally {
       setIsExporting(false);
     }
@@ -110,7 +211,7 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
         <Button variant="outline" onClick={() => setShowDataBreakdown(false)} className="mb-4">
           ← Back to Privacy Overview
         </Button>
-        <DataBreakdown userId={userId} />
+        <DataBreakdown />
       </div>
     );
   }
@@ -142,42 +243,60 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
       {/* Header */}
       <Card
         variant="bento"
-        className="border-proofound-stone dark:border-border rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-900"
+        className="border-proofound-stone dark:border-border rounded-2xl bg-gradient-to-br from-proofound-parchment to-white dark:from-slate-800 dark:to-slate-900"
       >
-        <CardContent className="pt-6">
-          <div className="flex items-start gap-4">
-            <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
-              <Shield className="h-6 w-6 text-blue-600 dark:text-blue-300" />
+        <CardContent className="py-6 sm:py-8">
+          <div className="grid grid-cols-[2.5rem_minmax(0,1fr)] items-start gap-x-3 gap-y-4 sm:grid-cols-[3rem_minmax(0,1fr)] sm:items-center sm:gap-x-5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-proofound-forest/10 dark:bg-proofound-forest/20 sm:h-12 sm:w-12 sm:self-center">
+              <Shield className="h-6 w-6 text-proofound-forest dark:text-proofound-parchment" />
             </div>
-            <div className="flex-1">
-              <h2 className="text-2xl font-['Crimson_Pro'] font-semibold text-proofound-charcoal dark:text-foreground mb-2">
-                Your Privacy Controls
-              </h2>
-              <p className="text-proofound-charcoal/70 dark:text-muted-foreground mb-4">
-                Proofound is built with privacy at its core. Here&apos;s what data we collect and
-                how you control it.
-              </p>
-              <div className="flex flex-wrap gap-3">
+            <div className="min-w-0 space-y-5">
+              <div className="min-w-0 space-y-2">
+                <h2 className="min-w-0 text-2xl font-['Crimson_Pro'] font-semibold text-proofound-charcoal dark:text-foreground">
+                  Your Privacy Controls
+                </h2>
+                <p className="max-w-3xl break-words text-proofound-charcoal/70 dark:text-muted-foreground">
+                  Review what can appear on your Public Page, what stays private until assignment
+                  review, and where export or deletion controls live.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:flex sm:flex-wrap">
                 <Button
-                  onClick={() => setShowVisibilitySettings(true)}
-                  className="bg-proofound-forest hover:bg-proofound-forest/90"
+                  onClick={reviewFieldVisibility}
+                  className="w-full justify-center bg-proofound-forest hover:bg-proofound-forest/90 sm:w-auto"
                 >
                   <Settings className="h-4 w-4 mr-2" />
-                  Privacy settings
+                  Review field visibility
                 </Button>
-                <Button variant="outline" onClick={handleExportData} disabled={isExporting}>
+                <Button
+                  variant="outline"
+                  onClick={handleExportData}
+                  disabled={isExporting}
+                  className="w-full justify-center sm:w-auto"
+                >
                   <Download className="h-4 w-4 mr-2" />
                   {isExporting ? 'Preparing...' : 'Download my data'}
                 </Button>
-                <Button variant="outline" onClick={() => setShowImportDialog(true)}>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Import data
-                </Button>
-                <Button variant="outline" onClick={() => setShowAuditLog(true)}>
+                <Button
+                  variant="outline"
+                  onClick={() => showInlineOrFocus('privacy-activity', () => setShowAuditLog(true))}
+                  className="w-full justify-center sm:w-auto"
+                >
                   <Eye className="h-4 w-4 mr-2" />
                   View account history
                 </Button>
               </div>
+              {exportFeedback ? (
+                <DataExportFeedback
+                  kind={exportFeedback.kind}
+                  title={exportFeedback.title}
+                  actionLabel={exportFeedback.kind === 'error' ? 'Retry export' : undefined}
+                  actionDisabled={isExporting}
+                  onAction={exportFeedback.kind === 'error' ? handleExportData : undefined}
+                >
+                  {exportFeedback.message}
+                </DataExportFeedback>
+              ) : null}
             </div>
           </div>
         </CardContent>
@@ -187,33 +306,75 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
       {privacySummaryEnabled ? (
         <Card variant="bento" className="border-proofound-stone dark:border-border rounded-xl">
           <CardHeader>
-            <CardTitle className="text-xl font-['Crimson_Pro']">What others can see</CardTitle>
+            <CardTitle className="text-xl font-['Crimson_Pro']">Field visibility choices</CardTitle>
             <CardDescription>
-              Visibility summary across Public, Connections, After match, and Private sections
+              Counts show the visibility level selected for each Public Page section. Assignment
+              review still follows access and reveal rules.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-              <div className="rounded-lg border p-3">
-                <p className="font-medium">Public</p>
-                <p className="text-muted-foreground">{visibilityCounts.public} sections</p>
+            {visibilitySummaryError ? (
+              <div
+                role="alert"
+                aria-live="polite"
+                className="rounded-xl border border-[#FCD34D] bg-[#FFFBEB] p-4 dark:border-yellow-800 dark:bg-yellow-950/20"
+              >
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex min-w-0 gap-3">
+                    <AlertTriangle
+                      className="mt-0.5 h-5 w-5 flex-shrink-0 text-[#D97706]"
+                      aria-hidden="true"
+                    />
+                    <div>
+                      <p className="font-medium text-[#92400E] dark:text-yellow-100">
+                        Visibility summary needs a refresh
+                      </p>
+                      <p className="mt-1 text-sm text-[#92400E] dark:text-yellow-200">
+                        {visibilitySummaryError}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      void loadVisibilitySummary();
+                    }}
+                    className="w-full border-[#D97706] text-[#92400E] hover:bg-[#FEF3C7] sm:w-auto dark:border-yellow-700 dark:text-yellow-100 dark:hover:bg-yellow-950/40"
+                  >
+                    <RefreshCcw className="h-4 w-4" aria-hidden="true" />
+                    Retry summary
+                  </Button>
+                </div>
               </div>
-              <div className="rounded-lg border p-3">
-                <p className="font-medium">Connections</p>
-                <p className="text-muted-foreground">{visibilityCounts.network_only} sections</p>
-              </div>
-              <div className="rounded-lg border p-3">
-                <p className="font-medium">After match</p>
-                <p className="text-muted-foreground">{visibilityCounts.match_only} sections</p>
-              </div>
-              <div className="rounded-lg border p-3">
-                <p className="font-medium">Private</p>
-                <p className="text-muted-foreground">{visibilityCounts.private} sections</p>
-              </div>
+            ) : null}
+            <div
+              className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2 md:grid-cols-4"
+              aria-busy={visibilitySummaryLoading}
+              aria-live="polite"
+            >
+              {VISIBILITY_SUMMARY_ITEMS.map((item) => {
+                const summaryText = getVisibilitySummaryText(visibilityCounts[item.key]);
+
+                return (
+                  <div
+                    key={item.key}
+                    role="group"
+                    aria-label={`${item.label}: ${summaryText}. ${item.description}.`}
+                    className="rounded-lg border p-3"
+                  >
+                    <p className="font-medium">{item.label}</p>
+                    <p className="text-muted-foreground">{summaryText}</p>
+                    <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                      {item.description}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setShowVisibilitySettings(true)}>
-                Preview visibility
+              <Button variant="outline" onClick={reviewFieldVisibility}>
+                Review visibility choices
               </Button>
             </div>
           </CardContent>
@@ -224,21 +385,22 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
         <CardHeader>
           <CardTitle className="text-lg font-['Crimson_Pro']">Quick privacy fixes</CardTitle>
           <CardDescription>
-            Three fast actions to review and correct visibility before sharing your profile.
+            Three fast actions to review Public Page and assignment-review visibility before sharing
+            proof.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-2 md:grid-cols-3">
           <Button
             variant="outline"
             className="h-auto py-3 text-left"
-            onClick={() => setShowVisibilitySettings(true)}
+            onClick={reviewFieldVisibility}
           >
             <span className="font-medium">Review field visibility</span>
           </Button>
           <Button
             variant="outline"
             className="h-auto py-3 text-left"
-            onClick={() => setShowAuditLog(true)}
+            onClick={() => showInlineOrFocus('privacy-activity', () => setShowAuditLog(true))}
           >
             <span className="font-medium">Check privacy audit log</span>
           </Button>
@@ -264,8 +426,8 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
-                  <Database className="h-5 w-5 text-purple-600 dark:text-purple-300" />
+                <div className="rounded-lg bg-proofound-parchment p-2 dark:bg-proofound-parchment/10">
+                  <Database className="h-5 w-5 text-proofound-forest dark:text-proofound-parchment" />
                 </div>
                 <div>
                   <CardTitle className="text-lg font-['Crimson_Pro']">Profile data</CardTitle>
@@ -281,7 +443,8 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
               <strong>Includes:</strong> Name, email, location, bio, avatar
             </p>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground mb-3">
-              <strong>Purpose:</strong> Create your profile and match you with opportunities
+              <strong>Purpose:</strong> Create your profile and support assignment-review
+              preferences
             </p>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
               <strong>Visibility:</strong> Controlled by your profile settings
@@ -289,7 +452,7 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
           </CardContent>
         </Card>
 
-        {/* Skills & Expertise */}
+        {/* Proof skills and evidence */}
         <Card
           variant="bento"
           className="border-proofound-stone dark:border-border rounded-xl hover:shadow-md transition-shadow"
@@ -297,12 +460,12 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
-                  <Target className="h-5 w-5 text-green-600 dark:text-green-300" />
+                <div className="rounded-lg bg-proofound-forest/10 p-2 dark:bg-proofound-forest/20">
+                  <Target className="h-5 w-5 text-proofound-forest dark:text-proofound-parchment" />
                 </div>
                 <div>
                   <CardTitle className="text-lg font-['Crimson_Pro']">
-                    Skills and expertise
+                    Proof skills and work evidence
                   </CardTitle>
                   <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground mt-0.5">
                     Sensitive
@@ -313,13 +476,15 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground mb-3">
-              <strong>Includes:</strong> Skills, experience, education, verifications
+              <strong>Includes:</strong> Skills, experience, education, proof, verifications
             </p>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground mb-3">
-              <strong>Purpose:</strong> Help match you with relevant opportunities
+              <strong>Purpose:</strong> Support proof-led assignment reviews with evidence you
+              control
             </p>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
-              <strong>Visibility:</strong> Visible to matched organizations
+              <strong>Visibility:</strong> Available only inside assignment-review surfaces that
+              match your visibility and reveal state
             </p>
           </CardContent>
         </Card>
@@ -332,8 +497,8 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-amber-100 dark:bg-amber-900 rounded-lg">
-                  <FileText className="h-5 w-5 text-amber-600 dark:text-amber-300" />
+                <div className="rounded-lg bg-[#F8E7D4] p-2 dark:bg-proofound-terracotta/20">
+                  <FileText className="h-5 w-5 text-proofound-terracotta dark:text-proofound-parchment" />
                 </div>
                 <div>
                   <CardTitle className="text-lg font-['Crimson_Pro']">
@@ -351,7 +516,8 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
               <strong>Includes:</strong> Projects, experiences, impact stories
             </p>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground mb-3">
-              <strong>Purpose:</strong> Showcase your work and impact
+              <strong>Purpose:</strong> Provide context for Proof Packs and assignment-specific
+              review
             </p>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
               <strong>Retention:</strong> 90 days after account deletion
@@ -359,7 +525,7 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
           </CardContent>
         </Card>
 
-        {/* Match History */}
+        {/* Assignment review history */}
         <Card
           variant="bento"
           className="border-proofound-stone dark:border-border rounded-xl hover:shadow-md transition-shadow"
@@ -367,11 +533,13 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                  <MessagesSquare className="h-5 w-5 text-blue-600 dark:text-blue-300" />
+                <div className="rounded-lg bg-proofound-stone/40 p-2 dark:bg-proofound-stone/10">
+                  <MessagesSquare className="h-5 w-5 text-proofound-forest dark:text-proofound-parchment" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg font-['Crimson_Pro']">Match history</CardTitle>
+                  <CardTitle className="text-lg font-['Crimson_Pro']">
+                    Assignment review history
+                  </CardTitle>
                   <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground mt-0.5">
                     Operational
                   </p>
@@ -381,10 +549,10 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground mb-3">
-              <strong>Includes:</strong> Matches, applications, conversations
+              <strong>Includes:</strong> Assignment reviews, proof submissions, conversations
             </p>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground mb-3">
-              <strong>Purpose:</strong> Connect you with opportunities
+              <strong>Purpose:</strong> Connect you with assignment-review workflows
             </p>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
               <strong>Retention:</strong> Immediate deletion request handling with required legal
@@ -469,19 +637,19 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
         <Button
           variant="outline"
           className="h-auto py-4 flex-col items-start"
-          onClick={() => setShowDataBreakdown(true)}
+          onClick={() => showInlineOrFocus('privacy-data', () => setShowDataBreakdown(true))}
         >
           <Database className="h-5 w-5 mb-2" />
           <span className="font-medium">View your data</span>
           <span className="text-xs text-muted-foreground mt-1">
-            See exactly what we have on you
+            Review stored data categories and export your data
           </span>
         </Button>
 
         <Button
           variant="outline"
           className="h-auto py-4 flex-col items-start"
-          onClick={() => setShowAuditLog(true)}
+          onClick={() => showInlineOrFocus('privacy-activity', () => setShowAuditLog(true))}
         >
           <Eye className="h-5 w-5 mb-2" />
           <span className="font-medium">View account history</span>
@@ -493,7 +661,9 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
         <Button
           variant="outline"
           className="h-auto py-4 flex-col items-start border-red-200 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-950"
-          onClick={() => setShowDeleteAccount(true)}
+          onClick={() =>
+            showInlineOrFocus('privacy-delete', () => setShowDeleteAccount(true), 'end')
+          }
         >
           <Trash2 className="h-5 w-5 mb-2 text-red-600 dark:text-red-400" />
           <span className="font-medium text-red-600 dark:text-red-400">Delete Account</span>
@@ -503,20 +673,27 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
 
       {/* Learn More */}
       <Card variant="bento" className="border-proofound-stone dark:border-border rounded-xl">
-        <CardContent className="pt-6">
-          <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
-            Learn more about how we protect your privacy in our{' '}
-            <a href="/privacy-policy" className="text-proofound-forest hover:underline">
+        <CardContent className="space-y-4 pt-6">
+          <p className="max-w-2xl text-sm leading-6 text-proofound-charcoal/70 dark:text-muted-foreground">
+            Learn more about how Proofound protects privacy, or contact the privacy team for
+            account-specific questions.
+          </p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <a
+              href="/privacy"
+              className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border-2 border-proofound-forest px-4 py-2 text-sm font-medium text-proofound-forest transition-all duration-300 hover:-translate-y-0.5 hover:bg-proofound-forest/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 sm:w-auto"
+            >
+              <FileText className="h-4 w-4" aria-hidden="true" />
               Privacy Policy
             </a>{' '}
-            or contact us at{' '}
             <a
-              href="mailto:privacy@proofound.com"
-              className="text-proofound-forest hover:underline"
+              href="mailto:privacy@proofound.io"
+              className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border-2 border-proofound-forest px-4 py-2 text-sm font-medium text-proofound-forest transition-all duration-300 hover:-translate-y-0.5 hover:bg-proofound-forest/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 sm:w-auto"
             >
-              privacy@proofound.com
+              <MessagesSquare className="h-4 w-4" aria-hidden="true" />
+              privacy@proofound.io
             </a>
-          </p>
+          </div>
         </CardContent>
       </Card>
 
@@ -525,9 +702,6 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
         open={showVisibilitySettings}
         onOpenChange={setShowVisibilitySettings}
       />
-
-      {/* Enhanced Data Import Dialog */}
-      <EnhancedDataImportDialog open={showImportDialog} onOpenChange={setShowImportDialog} />
     </div>
   );
 }

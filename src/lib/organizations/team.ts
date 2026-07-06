@@ -8,6 +8,7 @@ import {
   type CanonicalOrgMembershipState,
   type OrgRole,
 } from '@/lib/authz';
+import { log } from '@/lib/log';
 
 export type OrgTeamMember = {
   userId: string;
@@ -68,7 +69,7 @@ export async function getCanonicalOrgTeamData(orgId: string): Promise<OrgTeamDat
     const role = normalizeAuthorizedOrgRole(member.role as string | null | undefined);
 
     if (!role) {
-      console.warn('[organizations.team] skipping member with non-canonical role', {
+      log.warn('organization.team.non_canonical_member_role_skipped', {
         orgId,
         userId: member.userId,
         role: member.role,
@@ -102,7 +103,7 @@ export async function getCanonicalOrgTeamData(orgId: string): Promise<OrgTeamDat
     const role = normalizeAuthorizedOrgRole(row.role as string | null | undefined);
 
     if (!role) {
-      console.warn('[organizations.team] skipping team stats row with non-canonical role', {
+      log.warn('organization.team.non_canonical_stats_role_skipped', {
         orgId,
         role: row.role,
       });

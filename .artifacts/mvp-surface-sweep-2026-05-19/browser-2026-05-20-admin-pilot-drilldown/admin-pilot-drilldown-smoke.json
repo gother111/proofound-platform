@@ -1,0 +1,56 @@
+{
+  "capturedAt": "2026-05-20T05:53:00+02:00",
+  "tool": "Codex in-app Browser plugin",
+  "url": "http://127.0.0.1:33186/admin/verification",
+  "surface": "/admin/verification pilot_ops queue",
+  "flowUnderTest": "admin verification page -> Pilot ops tab -> read-only Pilot corridor panel",
+  "visualThesis": "Keep the admin surface calm, operational, and evidence-first, with the pilot workflow state shown as a restrained inline detail panel rather than a new dashboard.",
+  "contentPlan": "Queue header and filters stay primary; each pilot queue card shows minimum necessary context first, then a compact Pilot corridor section with safe workflow fields and operator actions below.",
+  "interactionThesis": "Operators switch queues, scan status/priority/age, inspect read-only corridor state, and then choose an explicit queue action with note/confirmation controls.",
+  "desktop": {
+    "viewport": {
+      "width": 1360,
+      "height": 900
+    },
+    "checks": {
+      "pageIdentity": true,
+      "operationsQueuesHeading": true,
+      "pilotOpsTab": true,
+      "pilotCorridorPanel": true,
+      "decisionRecordFallback": true,
+      "statusAndPriorityFilters": true,
+      "mainLandmarkCount": 1,
+      "horizontalOverflow": false,
+      "runtimeErrorText": false,
+      "consoleWarningsOrErrors": []
+    }
+  },
+  "mobile": {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "checks": {
+      "pageIdentity": true,
+      "operationsQueuesHeading": true,
+      "pilotOpsTab": true,
+      "pilotCorridorPanel": true,
+      "decisionRecordFallback": true,
+      "statusAndPriorityFilters": true,
+      "mainLandmarkCount": 1,
+      "horizontalOverflow": false,
+      "runtimeErrorText": false,
+      "consoleWarningsOrErrors": []
+    }
+  },
+  "privacyLeakChecks": {
+    "candidateEmail": false,
+    "privateInterviewNotes": false,
+    "privateUploadPath": false,
+    "rawFilename": false
+  },
+  "browserLimitations": [
+    "Screenshot capture through the in-app Browser backend timed out with Page.captureScreenshot; DOM, interaction, viewport, overflow, console, and leak-term evidence were captured instead.",
+    "The first mobile viewport change briefly closed the active tab, then Browser recovered the tab and completed the mobile check at 390x844."
+  ]
+}

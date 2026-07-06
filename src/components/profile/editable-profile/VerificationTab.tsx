@@ -30,7 +30,7 @@ export function VerificationTab({ acceptedVerificationCount }: VerificationTabPr
 
             <div className="rounded-lg border border-proofound-stone/60 bg-white p-4">
               <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                Accepted trust signals
+                Accepted verifications
               </p>
               <p className="mt-2 text-2xl font-semibold text-foreground">
                 {acceptedVerificationCount}

@@ -6,26 +6,33 @@ const adminMockEnabled =
     process.env.MOCK_PLATFORM_ROLE === 'platform_admin' ||
     process.env.MOCK_PLATFORM_ROLE === 'super_admin');
 
-test.describe('Admin dashboard smoke', () => {
+test.describe('Admin launch ops smoke', () => {
   test.skip(
     !adminMockEnabled,
     'Set NEXT_PUBLIC_USE_MOCK_SUPABASE=true and MOCK_ADMIN_MODE=true (or MOCK_PLATFORM_ROLE) to run.'
   );
 
-  test('loads core admin pages without blocking route-level errors', async ({ page }) => {
+  test('loads the active admin launch-ops corridor without retired dashboard links', async ({
+    page,
+  }) => {
     await page.goto('/admin');
-    await expect(page.getByRole('heading', { name: /admin dashboard/i })).toBeVisible();
-
-    await page.goto('/admin/users');
-    await expect(page.getByRole('heading', { name: /user management/i })).toBeVisible();
-
-    await page.goto('/admin/organizations');
-    await expect(page.getByRole('heading', { name: /organization management/i })).toBeVisible();
-
-    await page.goto('/admin/fairness/notes');
-    await expect(page.getByRole('heading', { name: /fairness notes/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /launch operations/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /open operations queues/i })).toHaveAttribute(
+      'href',
+      '/admin/verification'
+    );
+    await expect(page.getByRole('link', { name: /open audit log/i })).toHaveAttribute(
+      'href',
+      '/admin/audit'
+    );
+    await expect(page.getByRole('link', { name: /users/i })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: /organizations/i })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: /fairness/i })).toHaveCount(0);
 
     await page.goto('/admin/verification');
-    await expect(page.getByRole('heading', { name: /linkedin verification queue/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /operations queues/i })).toBeVisible();
+
+    await page.goto('/admin/audit');
+    await expect(page.getByRole('heading', { name: /audit logs/i })).toBeVisible();
   });
 });

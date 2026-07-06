@@ -126,8 +126,10 @@ describe('pilot packaging guardrails', () => {
     expect(screen.getAllByText(/request a pilot/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/public page proof snapshot/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/trust page \+ assignment flow/i)).toBeInTheDocument();
-    expect(screen.getByText(/not another talent feed/i)).toBeInTheDocument();
+    expect(screen.getByText(/not another sourcing feed/i)).toBeInTheDocument();
     expect(screen.getByText(/privacy-safe shortlist/i)).toBeInTheDocument();
+    expect(screen.queryByText(/proof-backed candidates/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/talent feed/i)).not.toBeInTheDocument();
 
     expect(screen.queryByText(/marketplace/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/ats/i)).not.toBeInTheDocument();

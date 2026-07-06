@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requirePlatformAdminJson, jsonError } from '@/lib/api/route-helpers';
 import { db } from '@/db';
 import { adminAuditLog, profiles } from '@/db/schema';
-import { ilike, or, desc, asc, sql, eq, and, gte, lte } from 'drizzle-orm';
+import { ilike, or, desc, sql, eq, and, gte, lte } from 'drizzle-orm';
 import { adminListGuard } from '../_utils';
+import { toAdminAuditListEntry } from '@/lib/audit/admin-audit-list';
+import { log } from '@/lib/log';
 
 export async function GET(request: NextRequest) {
   try {
@@ -47,7 +48,15 @@ export async function GET(request: NextRequest) {
 
     const logsQuery = db
       .select({
-        log: adminAuditLog,
+        log: {
+          id: adminAuditLog.id,
+          adminId: adminAuditLog.adminId,
+          action: adminAuditLog.action,
+          targetType: adminAuditLog.targetType,
+          targetId: adminAuditLog.targetId,
+          reason: adminAuditLog.reason,
+          createdAt: adminAuditLog.createdAt,
+        },
         admin: {
           id: profiles.id,
           displayName: profiles.displayName,
@@ -72,10 +81,7 @@ export async function GET(request: NextRequest) {
 
     const total = Number(countResult[0]?.count || 0);
 
-    const flattenedLogs = logs.map(({ log, admin }) => ({
-      ...log,
-      admin,
-    }));
+    const flattenedLogs = logs.map(toAdminAuditListEntry);
 
     return NextResponse.json({
       logs: flattenedLogs,
@@ -87,8 +93,9 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching audit logs:', error);
+    log.error('admin.audit.list_failed', {
+      errorName: error instanceof Error ? error.name : typeof error,
+    });
     return NextResponse.json({ error: 'Failed to fetch audit logs' }, { status: 500 });
   }
 }
-

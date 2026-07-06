@@ -22,7 +22,7 @@ export function ProfileSkillPicker({
   selectedSkills,
   onChange,
   inputId = 'profile-skill-picker-search',
-  searchPlaceholder = 'Search your Expertise Atlas skills',
+  searchPlaceholder = 'Search your proof skills',
   maxSelections,
 }: ProfileSkillPickerProps) {
   const [query, setQuery] = useState('');
@@ -70,11 +70,11 @@ export function ProfileSkillPicker({
       {selectedSkills.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {selectedSkills.map((skill) => (
-            <Badge key={skill} variant="secondary" className="gap-1 px-2 py-1">
+            <Badge key={skill} variant="secondary" className="gap-1.5 px-2 py-1.5">
               <span>{skill}</span>
               <button
                 type="button"
-                className="rounded-sm hover:bg-black/10"
+                className="-my-2 -mr-2 inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-black/10 hover:text-proofound-terracotta focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-1"
                 aria-label={`Remove ${skill}`}
                 onClick={() => toggleSkill(skill)}
               >

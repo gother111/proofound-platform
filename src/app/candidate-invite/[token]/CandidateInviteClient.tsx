@@ -13,7 +13,6 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { apiFetch } from '@/lib/api/fetch';
@@ -28,6 +27,7 @@ import {
   internalValueLabel,
   skillDisplayLabel,
 } from '@/lib/copy/labels';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 type InviteState = {
   id: string;
@@ -112,7 +112,17 @@ type AccountSaveControls = {
 
 interface CandidateInviteClientProps {
   token: string;
+  initialState?: CandidateInviteInitialState;
+  visualMode?: boolean;
 }
+
+export type CandidateInviteInitialState = {
+  invite: InviteState;
+  organization: OrganizationState;
+  assignment: AssignmentState | null;
+  availableProofPacks?: AvailableProofPackState[];
+  currentUser?: CurrentUserState | null;
+};
 
 function hasText(value: string | null | undefined) {
   return Boolean(value?.trim());
@@ -123,7 +133,7 @@ function formatLocation(assignment: AssignmentState) {
   const mode = assignment.locationMode ? internalValueLabel(assignment.locationMode) : null;
 
   if (mode && place) return `${mode} / ${place}`;
-  return mode || place || 'Location to be confirmed in the assignment flow.';
+  return mode || place || 'Location to be confirmed in the assignment review flow.';
 }
 
 function formatHours(assignment: AssignmentState) {
@@ -169,16 +179,15 @@ function skillLabels(skills: AssignmentState['mustHaveSkills']) {
     .slice(0, 6);
 }
 
-function verificationGateLabel(gate: string) {
-  const labels: Record<string, string> = {
-    identity: 'Identity check',
-    work_email: 'Work email check',
-    linkedin: 'LinkedIn profile check',
-    background_check: 'Background check',
-    education: 'Education check',
-  };
+const CANDIDATE_VISIBLE_VERIFICATION_GATE_LABELS: Record<string, string> = {
+  identity: 'Identity check',
+  work_email: 'Work email check',
+  background_check: 'Background check',
+  education: 'Education check',
+};
 
-  return labels[gate] ?? internalValueLabel(gate);
+function candidateVisibleVerificationGateLabel(gate: string) {
+  return CANDIDATE_VISIBLE_VERIFICATION_GATE_LABELS[gate] ?? null;
 }
 
 const DEFAULT_ACCOUNT_SAVE_CONTROLS: AccountSaveControls = {
@@ -189,28 +198,231 @@ const DEFAULT_ACCOUNT_SAVE_CONTROLS: AccountSaveControls = {
   assignmentReviewUrl: '/app/i/matching',
 };
 
-export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
-  const [loading, setLoading] = useState(true);
+type CandidateInviteLoadErrorState = {
+  message: string;
+  detail: string;
+};
+
+function getReturnedError(payload: unknown) {
+  if (!payload || typeof payload !== 'object') {
+    return '';
+  }
+
+  if ('error' in payload && typeof payload.error === 'string') {
+    return payload.error.trim();
+  }
+
+  return '';
+}
+
+function candidateInviteLoadErrorState(
+  status: number,
+  returnedError?: string | null
+): CandidateInviteLoadErrorState {
+  const normalizedReturnedError = returnedError?.trim() ?? '';
+  const unchangedDetail =
+    'No proof was submitted, no visibility changed, and no account action was taken from this page.';
+
+  if (status === 503 || status === 502 || status === 504) {
+    return {
+      message: 'We could not verify this invitation right now.',
+      detail: `${unchangedDetail} Refresh this page, or ask the company to resend the invite if it keeps failing.`,
+    };
+  }
+
+  if (status === 410) {
+    return {
+      message: 'This invitation has expired.',
+      detail: `${unchangedDetail} Ask the company to send a new invite if needed.`,
+    };
+  }
+
+  if (status === 404 || status === 400) {
+    return {
+      message: 'This invitation link is invalid, expired, or no longer available.',
+      detail: `${unchangedDetail} Ask the company to send a fresh assignment invite if needed.`,
+    };
+  }
+
+  if (/expired/i.test(normalizedReturnedError)) {
+    return {
+      message: 'This invitation has expired.',
+      detail: `${unchangedDetail} Ask the company to send a new invite if needed.`,
+    };
+  }
+
+  if (/temporarily|timeout/i.test(normalizedReturnedError)) {
+    return {
+      message: 'We could not verify this invitation right now.',
+      detail: `${unchangedDetail} Refresh this page, or ask the company to resend the invite if it keeps failing.`,
+    };
+  }
+
+  if (/not found|invalid|unavailable/i.test(normalizedReturnedError)) {
+    return {
+      message: 'This invitation link is invalid, expired, or no longer available.',
+      detail: `${unchangedDetail} Ask the company to send a fresh assignment invite if needed.`,
+    };
+  }
+
+  return {
+    message: 'We could not open this invitation right now.',
+    detail: `${unchangedDetail} Refresh this page, or ask the company to resend the invite if it keeps failing.`,
+  };
+}
+
+const CANDIDATE_INVITE_CLAIM_RETRY_MESSAGE =
+  'Invite could not be accepted. Your assignment context is still here; please try again.';
+
+const CANDIDATE_INVITE_CLAIM_RETRY_DETAIL =
+  'No proof was submitted, no visibility changed, and the invitation can be retried from this page.';
+
+const CANDIDATE_INVITE_CLAIM_ERROR_MESSAGES = new Map([
+  [
+    'Unauthorized',
+    'Please sign in again before accepting this invite. Your assignment context is still here.',
+  ],
+  ['Invite not found', 'This invitation link is invalid, expired, or no longer available.'],
+  ['Invite is already completed', 'This invitation has already been completed.'],
+  [
+    'Profile not found',
+    'Your profile could not be confirmed before accepting this invite. Please sign in again.',
+  ],
+  ['Assignment not found.', 'This assignment context is no longer available.'],
+  ['Failed to claim invite', CANDIDATE_INVITE_CLAIM_RETRY_MESSAGE],
+  ['Failed to claim invite.', CANDIDATE_INVITE_CLAIM_RETRY_MESSAGE],
+]);
+
+const CANDIDATE_INVITE_PROOF_SUBMIT_RETRY_MESSAGE = 'Assignment proof could not be submitted.';
+
+const CANDIDATE_INVITE_PROOF_SUBMIT_ERROR_MESSAGES = new Map([
+  [
+    'Unauthorized',
+    'Please sign in again before submitting assignment proof. Your selected proof record and visibility review are still here.',
+  ],
+  [
+    'Invalid JSON body',
+    'Review the selected proof record and visibility confirmation before submitting.',
+  ],
+  [
+    'Invalid proof card payload',
+    'Review the selected proof record and visibility confirmation before submitting.',
+  ],
+  ['Invite not found', 'This invitation link is invalid, expired, or no longer available.'],
+  [
+    'Proof Card submission is not required for this invite.',
+    'This invite does not require an assignment proof submission.',
+  ],
+  ['Invite must be claimed first.', 'Accept this invite before submitting assignment proof.'],
+  [
+    'This invite is missing assignment context.',
+    'This invite is missing assignment context. Ask the organization to send a new assignment-bound invite.',
+  ],
+  ['Assignment not found.', 'This assignment context is no longer available.'],
+  [
+    'This invite is unavailable because the organization is currently restricted.',
+    'This invite is unavailable because the organization is currently restricted.',
+  ],
+  [
+    'This invite is temporarily unavailable pending policy review.',
+    'This invite is temporarily unavailable pending policy review.',
+  ],
+  ['Invite is not in a submittable state.', 'This invite is not ready for proof submission.'],
+  [
+    'proof record not found.',
+    'Choose an owner-only proof record before submitting assignment proof.',
+  ],
+  [
+    'Assignment proof submissions can only submit an owner-only proof record. Public pages and share links are not accepted for this flow.',
+    'Assignment proof submissions can only use an owner-only proof record. Public pages and share links are not accepted for this flow.',
+  ],
+  ['Failed to submit Proof Card', CANDIDATE_INVITE_PROOF_SUBMIT_RETRY_MESSAGE],
+]);
+
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function candidateInviteClaimError(error?: string | null, status: number | 'unknown' = 'unknown') {
+  const normalized = error?.trim();
+  if (!normalized) {
+    return CANDIDATE_INVITE_CLAIM_RETRY_MESSAGE;
+  }
+
+  const safeMessage = CANDIDATE_INVITE_CLAIM_ERROR_MESSAGES.get(normalized);
+  if (safeMessage) {
+    return safeMessage;
+  }
+
+  dispatchClientDiagnostic('candidate_invite.client.claim_returned_error', {
+    status,
+    hasReturnedError: true,
+  });
+  return CANDIDATE_INVITE_CLAIM_RETRY_MESSAGE;
+}
+
+function candidateInviteProofSubmitError(
+  error?: string | null,
+  status: number | 'unknown' = 'unknown'
+) {
+  const normalized = error?.trim();
+  if (!normalized) {
+    return CANDIDATE_INVITE_PROOF_SUBMIT_RETRY_MESSAGE;
+  }
+
+  const safeMessage = CANDIDATE_INVITE_PROOF_SUBMIT_ERROR_MESSAGES.get(normalized);
+  if (safeMessage) {
+    return safeMessage;
+  }
+
+  dispatchClientDiagnostic('candidate_invite.client.proof_submit_returned_error', {
+    status,
+    hasReturnedError: true,
+  });
+  return CANDIDATE_INVITE_PROOF_SUBMIT_RETRY_MESSAGE;
+}
+
+export function CandidateInviteClient({
+  token,
+  initialState,
+  visualMode = false,
+}: CandidateInviteClientProps) {
+  const [loading, setLoading] = useState(!initialState);
   const [submitting, setSubmitting] = useState(false);
-  const [invite, setInvite] = useState<InviteState | null>(null);
-  const [organization, setOrganization] = useState<OrganizationState | null>(null);
-  const [assignment, setAssignment] = useState<AssignmentState | null>(null);
-  const [currentUser, setCurrentUser] = useState<CurrentUserState | null>(null);
+  const [invite, setInvite] = useState<InviteState | null>(initialState?.invite ?? null);
+  const [organization, setOrganization] = useState<OrganizationState | null>(
+    initialState?.organization ?? null
+  );
+  const [assignment, setAssignment] = useState<AssignmentState | null>(
+    initialState?.assignment ?? null
+  );
+  const [currentUser, setCurrentUser] = useState<CurrentUserState | null>(
+    initialState?.currentUser ?? null
+  );
   const [error, setError] = useState<string | null>(null);
-  const [availableProofPacks, setAvailableProofPacks] = useState<AvailableProofPackState[]>([]);
-  const [proofPackId, setProofPackId] = useState('');
+  const [availableProofPacks, setAvailableProofPacks] = useState<AvailableProofPackState[]>(
+    initialState?.availableProofPacks ?? []
+  );
+  const [proofPackId, setProofPackId] = useState(initialState?.availableProofPacks?.[0]?.id ?? '');
   const [reviewProofPackId, setReviewProofPackId] = useState('');
   const [reviewConfirmed, setReviewConfirmed] = useState(false);
   const [accountSaveControls, setAccountSaveControls] = useState<AccountSaveControls>(
     DEFAULT_ACCOUNT_SAVE_CONTROLS
   );
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
 
   const nextParam = useMemo(() => encodeURIComponent(`/candidate-invite/${token}`), [token]);
 
   const loadState = useCallback(async () => {
+    if (initialState) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
+    setErrorDetail(null);
 
     try {
       const [inviteResponse, userResponse] = await Promise.all([
@@ -223,17 +435,17 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
       ]);
 
       if (!inviteResponse.ok) {
-        if (inviteResponse.status === 404) {
-          setError('This invitation could not be found.');
-          return;
-        }
-        if (inviteResponse.status === 410) {
-          setError('This invitation has expired.');
-          return;
-        }
-
         const payload = await inviteResponse.json().catch(() => null);
-        setError(payload?.error ?? 'Unable to load invitation.');
+        const returnedError = getReturnedError(payload);
+        if (returnedError) {
+          dispatchClientDiagnostic('candidate_invite.client.load_returned_error', {
+            status: inviteResponse.status,
+            hasReturnedError: true,
+          });
+        }
+        const loadError = candidateInviteLoadErrorState(inviteResponse.status, returnedError);
+        setError(loadError.message);
+        setErrorDetail(loadError.detail);
         return;
       }
 
@@ -266,12 +478,14 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
         setCurrentUser(null);
       }
     } catch (loadError) {
-      console.error('Failed to load candidate invite state:', loadError);
-      setError('Unable to load invitation.');
+      dispatchClientErrorDiagnostic('candidate_invite.client.load_failed', loadError);
+      const fallbackError = candidateInviteLoadErrorState(0);
+      setError(fallbackError.message);
+      setErrorDetail(fallbackError.detail);
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [initialState, token]);
 
   useEffect(() => {
     void loadState();
@@ -280,6 +494,7 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
   const claimInvite = async () => {
     setSubmitting(true);
     setError(null);
+    setErrorDetail(null);
     setSuccessMessage(null);
 
     try {
@@ -289,7 +504,8 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
 
       const payload = await response.json().catch(() => null);
       if (!response.ok) {
-        setError(payload?.error ?? 'Failed to claim invite.');
+        setError(candidateInviteClaimError(payload?.error, getResponseStatus(response)));
+        setErrorDetail(CANDIDATE_INVITE_CLAIM_RETRY_DETAIL);
         return;
       }
 
@@ -301,8 +517,9 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
 
       await loadState();
     } catch (claimError) {
-      console.error('Failed to claim invite:', claimError);
-      setError('Failed to claim invite.');
+      dispatchClientErrorDiagnostic('candidate_invite.client.claim_failed', claimError);
+      setError(CANDIDATE_INVITE_CLAIM_RETRY_MESSAGE);
+      setErrorDetail(CANDIDATE_INVITE_CLAIM_RETRY_DETAIL);
     } finally {
       setSubmitting(false);
     }
@@ -311,11 +528,13 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
   const openProofPackReview = () => {
     const normalizedProofPackId = proofPackId.trim();
     if (!normalizedProofPackId) {
-      setError('Choose or enter the owner-only proof record ID you want to submit.');
+      setError('Choose an owner-only proof record before submitting assignment proof.');
+      setErrorDetail(null);
       return;
     }
 
     setError(null);
+    setErrorDetail(null);
     setSuccessMessage(null);
     setReviewConfirmed(false);
     setReviewProofPackId(normalizedProofPackId);
@@ -325,19 +544,41 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
     const normalizedProofPackId = reviewProofPackId.trim();
     if (!normalizedProofPackId) {
       setError('Review a proof record before submitting.');
+      setErrorDetail(null);
       return;
     }
 
     if (!reviewConfirmed) {
       setError('Confirm the final visibility review before submitting.');
+      setErrorDetail(null);
       return;
     }
 
     setSubmitting(true);
     setError(null);
+    setErrorDetail(null);
     setSuccessMessage(null);
 
     try {
+      if (visualMode) {
+        setAccountSaveControls(DEFAULT_ACCOUNT_SAVE_CONTROLS);
+        setSuccessMessage(
+          'Assignment proof submitted for blind-first review. No verification requests were sent.'
+        );
+        setInvite((current) =>
+          current
+            ? {
+                ...current,
+                status: CANDIDATE_INVITE_STATUS.PROOF_SUBMITTED,
+                proofSubmittedAt: new Date().toISOString(),
+              }
+            : current
+        );
+        setReviewProofPackId('');
+        setReviewConfirmed(false);
+        return;
+      }
+
       const response = await apiFetch(`/api/candidate-invites/${token}/proof-card`, {
         method: 'POST',
         headers: {
@@ -348,7 +589,10 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
 
       const payload = await response.json().catch(() => null);
       if (!response.ok) {
-        setError(payload?.error ?? 'Failed to submit assignment proof.');
+        setError(candidateInviteProofSubmitError(payload?.error, getResponseStatus(response)));
+        setErrorDetail(
+          'Your selected proof record and visibility review are still here. Check the summary, then try submitting again.'
+        );
         return;
       }
 
@@ -356,14 +600,17 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
         setAccountSaveControls(payload.accountSave.controls);
       }
       setSuccessMessage(
-        'Assignment proof submitted for blind-first review. No verification emails were sent.'
+        'Assignment proof submitted for blind-first review. No verification requests were sent.'
       );
       setReviewProofPackId('');
       setReviewConfirmed(false);
       await loadState();
     } catch (submitError) {
-      console.error('Failed to submit assignment proof:', submitError);
-      setError('Failed to submit assignment proof.');
+      dispatchClientErrorDiagnostic('candidate_invite.client.proof_submit_failed', submitError);
+      setError('Assignment proof could not be submitted.');
+      setErrorDetail(
+        'Your selected proof record and visibility review are still here. Check the summary, then try submitting again.'
+      );
     } finally {
       setSubmitting(false);
     }
@@ -371,24 +618,50 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-japandi-bg flex items-center justify-center p-6">
-        <p className="text-sm text-slate-600">Loading invitation...</p>
+      <div className="flex min-h-screen items-center justify-center bg-japandi-bg p-6">
+        <Card className="w-full max-w-md rounded-[24px] border-proofound-stone bg-white/90 shadow-[0_4px_24px_rgba(29,51,48,0.08)]">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-proofound-forest/10">
+              <Clock3 className="h-5 w-5 text-proofound-forest" />
+            </div>
+            <CardTitle className="font-display text-2xl text-proofound-charcoal">
+              Loading invitation
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-center text-sm leading-6 text-muted-foreground">
+              We&apos;re checking the invite and your current account state.
+            </p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   if (error && !invite) {
     return (
-      <div className="min-h-screen bg-japandi-bg flex items-center justify-center p-6">
-        <Card className="max-w-xl w-full">
-          <CardHeader>
-            <CardTitle>Invitation unavailable</CardTitle>
+      <div className="flex min-h-screen items-center justify-center bg-japandi-bg p-6">
+        <Card className="w-full max-w-xl rounded-[24px] border-proofound-stone bg-white/90 shadow-[0_4px_24px_rgba(29,51,48,0.08)]">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-proofound-forest/10">
+              <ShieldCheck className="h-5 w-5 text-proofound-forest" />
+            </div>
+            <CardTitle className="font-display text-2xl text-proofound-charcoal">
+              Invitation unavailable
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-slate-600">{error}</p>
-            <p className="text-sm text-slate-600">
-              Ask the company to send a new invite if needed.
-            </p>
+            <div
+              role="alert"
+              aria-live="assertive"
+              className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-amber-950"
+            >
+              <p className="font-semibold">{error}</p>
+              {errorDetail ? <p className="mt-2">{errorDetail}</p> : null}
+            </div>
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/">Return home</Link>
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -404,23 +677,29 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
   const isClaimedByCurrentUser = Boolean(
     invite.status === CANDIDATE_INVITE_STATUS.CLAIMED && currentUser && invite.claimedByCurrentUser
   );
+  const canClaimInvite = Boolean(currentUser && !isCompleted && !isClaimedByCurrentUser);
 
   const assignmentTitle = assignment?.role?.trim() || 'Untitled assignment';
   const assignmentSkills = assignment ? skillLabels(assignment.mustHaveSkills) : [];
-  const verificationGates = assignment?.verificationGates ?? [];
+  const verificationGates = (assignment?.verificationGates ?? [])
+    .map((gate) => candidateVisibleVerificationGateLabel(gate))
+    .filter((label): label is string => Boolean(label));
   const selectedProofPack = availableProofPacks.find((pack) => pack.id === proofPackId);
   const reviewProofPack = availableProofPacks.find((pack) => pack.id === reviewProofPackId);
   const headline = isTestFlow
-    ? `Trial match for ${assignmentTitle}`
+    ? `Assignment review for ${assignmentTitle}`
     : assignment
       ? assignmentTitle
-      : 'Candidate invite';
+      : 'Submission invite';
   const inviteDescription = isTestFlow
-    ? `${organization.displayName} invited ${invite.maskedEmail} to start a trial match after reviewing this assignment context.`
+    ? `${organization.displayName} invited ${invite.maskedEmail} to review this assignment context before an intro or reveal step can move forward.`
     : assignment
       ? `${organization.displayName} invited ${invite.maskedEmail} to submit assignment-specific proof grounded in this role.`
       : `${organization.displayName} invited ${invite.maskedEmail} to submit scoped proof.`;
   const proofOnboardingHref = `/onboarding?next=${nextParam}`;
+  const proofPackCreateLabel =
+    availableProofPacks.length > 0 ? 'Create another proof record' : 'Create first proof record';
+  const assignmentUnavailable = !assignment;
 
   return (
     <div className="min-h-screen bg-japandi-bg text-proofound-charcoal">
@@ -492,13 +771,21 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
               </dl>
 
               <Button
-                asChild
+                asChild={!assignmentUnavailable}
+                disabled={assignmentUnavailable}
                 className="w-full bg-proofound-forest text-white hover:bg-proofound-forest/90"
               >
-                <a href="#apply">
-                  Apply
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </a>
+                {assignmentUnavailable ? (
+                  <span>
+                    Assignment context unavailable
+                    <ShieldCheck className="ml-2 h-4 w-4" />
+                  </span>
+                ) : (
+                  <a href="#apply">
+                    Submit proof
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </a>
+                )}
               </Button>
             </div>
           </aside>
@@ -523,7 +810,7 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
                   <p className="font-medium text-proofound-charcoal">Work summary</p>
                   <p>
                     {assignment.description ||
-                      'The detailed work summary will be clarified inside the assignment flow.'}
+                      'The detailed work summary will be clarified inside the assignment review flow.'}
                   </p>
                 </div>
               </div>
@@ -620,7 +907,7 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
                           variant="outline"
                           className="border-proofound-stone bg-proofound-parchment/70"
                         >
-                          {verificationGateLabel(gate)}
+                          {gate}
                         </Badge>
                       ))}
                     </div>
@@ -635,13 +922,18 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
             </div>
           </section>
         ) : (
-          <section className="rounded-lg border border-proofound-stone/75 bg-white/70 p-5">
-            <h2 className="text-base font-semibold text-proofound-charcoal">
+          <section className="rounded-lg border border-amber-200 bg-amber-50/80 p-5">
+            <h2 className="text-base font-semibold text-amber-950">
               Assignment context unavailable
             </h2>
-            <p className="mt-2 text-sm leading-6 text-proofound-charcoal/70">
-              This invite is still private, but the organization did not attach structured
-              assignment details. Continue only if you recognize the invitation.
+            <p className="mt-2 text-sm leading-6 text-amber-900">
+              This invite is missing the structured assignment context required for an
+              assignment-specific proof submission. Ask {organization.displayName} to send a new
+              assignment-bound invite before sharing proof.
+            </p>
+            <p className="mt-2 text-sm leading-6 text-amber-900">
+              Proof submission is paused here so owner-only proof, public portfolio links, and
+              identity-bearing details cannot be routed into an unclear review.
             </p>
           </section>
         )}
@@ -650,307 +942,409 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
           id="apply"
           className="grid gap-5 rounded-lg border border-proofound-forest/30 bg-proofound-parchment/80 p-5 md:grid-cols-[1fr_auto] md:items-center"
         >
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Clock3 className="h-5 w-5 text-proofound-forest" />
-              <h2 className="text-lg font-semibold text-proofound-charcoal">
-                Apply from this assignment
-              </h2>
+          {error ? (
+            <div
+              role="alert"
+              className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-900 md:col-span-2"
+            >
+              <p>{error}</p>
+              {errorDetail ? (
+                <p className="mt-2 text-xs leading-5 text-red-800">{errorDetail}</p>
+              ) : null}
             </div>
-            <p className="max-w-3xl text-sm leading-6 text-proofound-charcoal/70">
-              Continue when the assignment context is clear. The next step keeps the application
-              tied to this role and asks for proof only after this context.
-            </p>
-          </div>
+          ) : null}
 
-          <div className="space-y-4 md:min-w-80">
-            {error ? <p className="text-sm text-red-600">{error}</p> : null}
-            {successMessage ? <p className="text-sm text-emerald-700">{successMessage}</p> : null}
+          {successMessage ? (
+            <div
+              role="status"
+              aria-live="polite"
+              className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-900 md:col-span-2"
+            >
+              {successMessage}
+            </div>
+          ) : null}
 
-            {!currentUser ? (
-              <div className="space-y-3">
-                <p className="text-sm text-slate-700">
-                  Continue with the invited email when you are ready to apply.
+          {assignmentUnavailable ? (
+            <>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="h-5 w-5 text-proofound-forest" />
+                  <h2 className="text-lg font-semibold text-proofound-charcoal">
+                    Proof submission paused
+                  </h2>
+                </div>
+                <p className="max-w-3xl text-sm leading-6 text-proofound-charcoal/70">
+                  Submission invites must be tied to a structured assignment before proof records
+                  can be submitted for review.
                 </p>
-                <p className="text-xs leading-5 text-proofound-charcoal/60">
-                  After account creation, privacy, export, and deletion controls are available from
-                  individual privacy settings.
+              </div>
+              <div className="md:min-w-80">
+                <Button asChild variant="outline" className="w-full sm:w-auto">
+                  <Link href="/">Return home</Link>
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Clock3 className="h-5 w-5 text-proofound-forest" />
+                  <h2 className="text-lg font-semibold text-proofound-charcoal">
+                    Submit proof for this assignment
+                  </h2>
+                </div>
+                <p className="max-w-3xl text-sm leading-6 text-proofound-charcoal/70">
+                  Continue when the assignment context is clear. The next step keeps the proof
+                  submission tied to this role and asks for proof only after this context.
                 </p>
-                <div className="flex flex-wrap gap-2">
+              </div>
+
+              <div
+                className="grid gap-3 rounded-lg border border-proofound-stone bg-white/70 p-4 text-sm sm:grid-cols-3"
+                data-testid="candidate-proof-submission-path"
+              >
+                <div className="space-y-1">
+                  <p className="font-medium text-proofound-charcoal">1. Build proof</p>
+                  <p className="text-xs leading-5 text-proofound-charcoal/60">
+                    Use one claim or outcome tied to this assignment.
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="font-medium text-proofound-charcoal">2. Attach evidence</p>
+                  <p className="text-xs leading-5 text-proofound-charcoal/60">
+                    Attach a real artifact or link that supports the claim.
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="font-medium text-proofound-charcoal">3. Review privacy</p>
+                  <p className="text-xs leading-5 text-proofound-charcoal/60">
+                    Submit only after checking what the organization can see.
+                  </p>
+                </div>
+              </div>
+
+              <Button asChild variant="outline">
+                <Link href={proofOnboardingHref}>
+                  {proofPackCreateLabel}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+
+              {!currentUser ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-slate-700">
+                    Continue with the invited email when you are ready to submit assignment proof.
+                  </p>
+                  <p className="text-xs leading-5 text-proofound-charcoal/60">
+                    After account creation, privacy, export, and deletion controls are available
+                    from individual privacy settings.
+                  </p>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                    <Button
+                      asChild
+                      className="w-full bg-proofound-forest text-white hover:bg-proofound-forest/90 sm:w-auto"
+                    >
+                      <Link href={`/signup/individual?next=${nextParam}`}>
+                        Continue to proof submission
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
+                    <Button asChild variant="outline" className="w-full sm:w-auto">
+                      <Link href={`/login?next=${nextParam}`}>Sign in</Link>
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
+
+              {canClaimInvite ? (
+                <div className="space-y-3 rounded-lg border border-proofound-stone bg-white/75 p-4">
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold text-proofound-charcoal">
+                      {isTestFlow
+                        ? 'Accept this assignment review invite'
+                        : 'Start proof submission'}
+                    </p>
+                    <p className="text-sm leading-6 text-proofound-charcoal/70">
+                      {isTestFlow
+                        ? 'Accepting creates the private message thread for this assignment. Identity reveal still waits for the consented reveal step.'
+                        : 'Accepting this invite unlocks your owner-only proof record selector for this assignment. It does not submit proof or publish a Public Page.'}
+                    </p>
+                  </div>
                   <Button
-                    asChild
-                    className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
+                    type="button"
+                    onClick={claimInvite}
+                    disabled={submitting}
+                    className="w-full bg-proofound-forest text-white hover:bg-proofound-forest/90 sm:w-auto"
                   >
-                    <Link href={`/signup/individual?next=${nextParam}`}>
-                      Apply to this assignment
+                    {submitting
+                      ? isTestFlow
+                        ? 'Accepting assignment review...'
+                        : 'Starting proof submission...'
+                      : isTestFlow
+                        ? 'Accept assignment review'
+                        : 'Start proof submission'}
+                  </Button>
+                </div>
+              ) : null}
+
+              <div className="rounded-lg border border-proofound-stone bg-white/70 p-3 text-xs leading-5 text-proofound-charcoal/60">
+                Minimum submission packet: one claim or outcome, one evidence artifact or link, one
+                trust or verification signal, and one privacy confirmation.
+              </div>
+
+              {!isTestFlow && currentUser && !isCompleted && isClaimedByCurrentUser ? (
+                <div className="space-y-5">
+                  <p className="text-sm text-slate-700">
+                    Create or choose one owner-only proof record for this assignment. The submission
+                    does not publish your Public Page or broaden visibility beyond this assignment.
+                  </p>
+
+                  <Button asChild variant="outline" className="w-full sm:w-auto">
+                    <Link href={proofOnboardingHref}>
+                      {proofPackCreateLabel}
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
-                  <Button asChild variant="outline">
-                    <Link href={`/login?next=${nextParam}`}>Sign in</Link>
-                  </Button>
-                </div>
-              </div>
-            ) : null}
 
-            {currentUser && invite.status === CANDIDATE_INVITE_STATUS.PENDING ? (
-              <div className="space-y-3">
-                <p className="text-sm text-slate-700">
-                  Signed in as <strong>{currentUser.email}</strong>.
-                </p>
-                <p className="text-xs leading-5 text-proofound-charcoal/60">
-                  Starting the application does not submit proof, send verification email, or reveal
-                  additional account fields.
-                </p>
-                <Button onClick={claimInvite} disabled={submitting}>
-                  {isTestFlow ? 'Accept trial invite' : 'Apply to this assignment'}
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
-            ) : null}
-
-            {!isTestFlow && currentUser && !isCompleted && isClaimedByCurrentUser ? (
-              <div className="space-y-5">
-                <p className="text-sm text-slate-700">
-                  Create or choose one owner-only proof record for this assignment. The submission
-                  does not publish a public page or broaden the application beyond this assignment.
-                </p>
-
-                <Button asChild variant="outline">
-                  <Link href={proofOnboardingHref}>
-                    Create first proof record
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-
-                <div className="space-y-3 rounded-lg border border-proofound-stone bg-white/70 p-4">
-                  {availableProofPacks.length > 0 ? (
-                    <div className="space-y-2">
-                      <Label htmlFor="proof-pack-id">Owner-only proof record</Label>
-                      <select
-                        id="proof-pack-id"
-                        value={proofPackId}
-                        onChange={(event) => {
-                          setProofPackId(event.target.value);
-                          setReviewProofPackId('');
-                          setReviewConfirmed(false);
-                        }}
-                        className="flex h-11 w-full rounded-lg border border-proofound-stone bg-white px-4 py-2 text-sm text-proofound-charcoal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest"
-                      >
-                        {availableProofPacks.map((pack) => (
-                          <option key={pack.id} value={pack.id}>
-                            {pack.title}
-                          </option>
-                        ))}
-                      </select>
-                      {selectedProofPack ? (
-                        <p className="text-xs leading-5 text-proofound-charcoal/60">
-                          {selectedProofPack.summary ||
-                            selectedProofPack.evidenceSummary ||
-                            'Selected proof record stays owner-only until you submit it for this assignment.'}
-                        </p>
-                      ) : null}
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <Label htmlFor="proof-pack-id">Owner-only proof record ID</Label>
-                      <Input
-                        id="proof-pack-id"
-                        value={proofPackId}
-                        onChange={(event) => {
-                          setProofPackId(event.target.value);
-                          setReviewProofPackId('');
-                          setReviewConfirmed(false);
-                        }}
-                        placeholder="00000000-0000-0000-0000-000000000000"
-                      />
-                      <p className="text-xs leading-5 text-proofound-charcoal/60">
-                        Public profile snippets and share URLs are not accepted in this assignment
-                        flow.
-                      </p>
-                    </div>
-                  )}
-
-                  <Button variant="outline" onClick={openProofPackReview} disabled={submitting}>
-                    Review assignment proof
-                  </Button>
-                </div>
-
-                {reviewProofPackId ? (
-                  <div className="space-y-4 rounded-lg border border-proofound-forest/50 bg-white p-4">
-                    <div>
-                      <p className="text-sm font-semibold text-proofound-charcoal">
-                        Final review before submission
-                      </p>
-                      <p className="mt-1 text-sm leading-6 text-proofound-charcoal/70">
-                        Confirm what {organization.displayName} can see before this application is
-                        submitted.
-                      </p>
-                    </div>
-
-                    <div className="grid gap-3 text-sm md:grid-cols-2">
-                      <div className="rounded-md border border-proofound-stone bg-proofound-parchment/50 p-3">
-                        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-proofound-charcoal/55">
-                          Submitted for
-                        </p>
-                        <p className="mt-1 font-medium text-proofound-charcoal">
-                          {assignmentTitle} at {organization.displayName}
-                        </p>
-                      </div>
-                      <div className="rounded-md border border-proofound-stone bg-proofound-parchment/50 p-3">
-                        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-proofound-charcoal/55">
-                          Proof/context included
-                        </p>
-                        <p className="mt-1 font-medium text-proofound-charcoal">
-                          {reviewProofPack?.title || `Proof record ${reviewProofPackId}`}
-                        </p>
-                        {reviewProofPack?.evidenceSummary || reviewProofPack?.outcomesSummary ? (
-                          <p className="mt-1 text-xs leading-5 text-proofound-charcoal/60">
-                            {[reviewProofPack?.evidenceSummary, reviewProofPack?.outcomesSummary]
-                              .filter(Boolean)
-                              .join(' ')}
+                  <div className="space-y-3 rounded-lg border border-proofound-stone bg-white/70 p-4">
+                    {availableProofPacks.length > 0 ? (
+                      <div className="space-y-2">
+                        <Label htmlFor="proof-pack-id">Owner-only proof record</Label>
+                        <select
+                          id="proof-pack-id"
+                          value={proofPackId}
+                          onChange={(event) => {
+                            setProofPackId(event.target.value);
+                            setReviewProofPackId('');
+                            setReviewConfirmed(false);
+                          }}
+                          className="flex h-11 w-full rounded-lg border border-proofound-stone bg-white px-4 py-2 text-sm text-proofound-charcoal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest"
+                        >
+                          {availableProofPacks.map((pack) => (
+                            <option key={pack.id} value={pack.id}>
+                              {pack.title}
+                            </option>
+                          ))}
+                        </select>
+                        {selectedProofPack ? (
+                          <p className="text-xs leading-5 text-proofound-charcoal/60">
+                            {selectedProofPack.summary ||
+                              selectedProofPack.evidenceSummary ||
+                              'Selected proof record stays owner-only until you submit it for this assignment.'}
                           </p>
                         ) : null}
                       </div>
-                      <div className="rounded-md border border-proofound-stone bg-proofound-parchment/50 p-3">
-                        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-proofound-charcoal/55">
-                          Employer visibility
+                    ) : (
+                      <div className="space-y-3">
+                        <p className="text-sm font-semibold text-proofound-charcoal">
+                          No owner-only proof record is ready for this assignment yet.
                         </p>
-                        <p className="mt-1 leading-6 text-proofound-charcoal/75">
-                          Owner-only application packet. It does not publish your account, make you
-                          searchable, expose a share URL, or reveal contact details.
-                        </p>
-                      </div>
-                      <div className="rounded-md border border-proofound-stone bg-proofound-parchment/50 p-3">
-                        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-proofound-charcoal/55">
-                          Verification requests
-                        </p>
-                        <p className="mt-1 leading-6 text-proofound-charcoal/75">
-                          None will be sent from this submission. Save-without-sending and send-now
-                          choices stay inside explicit verification flows.
+                        <p className="text-xs leading-5 text-proofound-charcoal/60">
+                          Create one from your proof workspace, then return to this invite to review
+                          and submit it for this assignment. Public Page links and legacy snippet
+                          URLs are not accepted in this assignment flow.
                         </p>
                       </div>
-                    </div>
+                    )}
 
-                    <div className="rounded-md border border-proofound-stone bg-proofound-parchment/40 p-3 text-sm leading-6 text-proofound-charcoal/70">
-                      Intro, reveal, interview, decision, and feedback states continue in
-                      Communications. Identity-bearing reveal still requires the
-                      candidate-controlled reveal step.
-                    </div>
-
-                    <label className="flex items-start gap-3 text-sm leading-6 text-proofound-charcoal/75">
-                      <input
-                        id="candidate-submit-review-confirmed"
-                        type="checkbox"
-                        className="mt-1"
-                        checked={reviewConfirmed}
-                        onChange={(event) => setReviewConfirmed(event.target.checked)}
-                      />
-                      <span>
-                        I reviewed the visibility summary and confirm this owner-only proof record
-                        should be submitted to {organization.displayName}.
-                      </span>
-                    </label>
-
-                    <div className="flex flex-wrap justify-end gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => {
-                          setReviewProofPackId('');
-                          setReviewConfirmed(false);
-                        }}
-                        disabled={submitting}
-                      >
-                        Back
-                      </Button>
-                      <Button
-                        type="button"
-                        onClick={submitReviewedProofPack}
-                        disabled={submitting || !reviewConfirmed}
-                      >
-                        Submit reviewed application
-                      </Button>
-                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={openProofPackReview}
+                      disabled={submitting || availableProofPacks.length === 0}
+                      className="w-full sm:w-auto"
+                    >
+                      Review assignment proof
+                    </Button>
                   </div>
-                ) : null}
 
-                <div className="rounded-lg border border-proofound-stone bg-white/70 p-3 text-xs leading-5 text-proofound-charcoal/60">
-                  Account controls: manage privacy, export, and deletion from{' '}
-                  <Link
-                    href={accountSaveControls.privacyDataControlsUrl}
-                    className="font-medium text-proofound-forest"
-                  >
-                    privacy settings
-                  </Link>
-                  .
-                </div>
-              </div>
-            ) : null}
+                  {reviewProofPackId ? (
+                    <div className="space-y-4 rounded-lg border border-proofound-forest/50 bg-white p-4">
+                      <div>
+                        <p className="text-sm font-semibold text-proofound-charcoal">
+                          Final review before submission
+                        </p>
+                        <p className="mt-1 text-sm leading-6 text-proofound-charcoal/70">
+                          Confirm what {organization.displayName} can see before this proof
+                          submission is sent.
+                        </p>
+                      </div>
 
-            {isTestFlow && isClaimedByCurrentUser ? (
-              <div className="space-y-3">
-                <p className="text-sm text-emerald-700">
-                  Trial match accepted. You can now use messages and matching.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {invite.communicationsUrl ? (
-                    <Link href={invite.communicationsUrl}>
-                      <Button>Open Communications</Button>
-                    </Link>
+                      <div className="grid gap-3 text-sm md:grid-cols-2">
+                        <div className="rounded-md border border-proofound-stone bg-proofound-parchment/50 p-3">
+                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-proofound-charcoal/55">
+                            Submitted for
+                          </p>
+                          <p className="mt-1 font-medium text-proofound-charcoal">
+                            {assignmentTitle} at {organization.displayName}
+                          </p>
+                        </div>
+                        <div className="rounded-md border border-proofound-stone bg-proofound-parchment/50 p-3">
+                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-proofound-charcoal/55">
+                            Proof/context included
+                          </p>
+                          <p className="mt-1 font-medium text-proofound-charcoal">
+                            {reviewProofPack?.title || `proof record ${reviewProofPackId}`}
+                          </p>
+                          {reviewProofPack?.evidenceSummary || reviewProofPack?.outcomesSummary ? (
+                            <p className="mt-1 text-xs leading-5 text-proofound-charcoal/60">
+                              {[reviewProofPack?.evidenceSummary, reviewProofPack?.outcomesSummary]
+                                .filter(Boolean)
+                                .join(' ')}
+                            </p>
+                          ) : null}
+                        </div>
+                        <div className="rounded-md border border-proofound-stone bg-proofound-parchment/50 p-3">
+                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-proofound-charcoal/55">
+                            Employer visibility
+                          </p>
+                          <p className="mt-1 leading-6 text-proofound-charcoal/75">
+                            Owner-only proof-submission packet. It does not publish your Public
+                            Page, broaden visibility, expose a share link, or reveal contact
+                            details.
+                          </p>
+                        </div>
+                        <div className="rounded-md border border-proofound-stone bg-proofound-parchment/50 p-3">
+                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-proofound-charcoal/55">
+                            Verification requests
+                          </p>
+                          <p className="mt-1 leading-6 text-proofound-charcoal/75">
+                            None will be sent from this submission. Save-without-sending and
+                            send-now choices stay inside explicit verification flows.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="rounded-md border border-proofound-stone bg-proofound-parchment/40 p-3 text-sm leading-6 text-proofound-charcoal/70">
+                        Intro, reveal, interview, decision, and feedback states continue in
+                        Communications. Identity-bearing reveal still requires the
+                        participant-controlled reveal step.
+                      </div>
+
+                      <label className="flex items-start gap-3 text-sm leading-6 text-proofound-charcoal/75">
+                        <input
+                          id="candidate-submit-review-confirmed"
+                          type="checkbox"
+                          className="mt-1"
+                          checked={reviewConfirmed}
+                          onChange={(event) => setReviewConfirmed(event.target.checked)}
+                        />
+                        <span>
+                          I reviewed the visibility summary and confirm this owner-only proof record
+                          should be submitted to {organization.displayName}.
+                        </span>
+                      </label>
+
+                      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setReviewProofPackId('');
+                            setReviewConfirmed(false);
+                          }}
+                          disabled={submitting}
+                        >
+                          Back
+                        </Button>
+                        <Button
+                          type="button"
+                          onClick={submitReviewedProofPack}
+                          disabled={submitting || !reviewConfirmed}
+                          className="w-full sm:w-auto"
+                        >
+                          Submit reviewed proof
+                        </Button>
+                      </div>
+                    </div>
                   ) : null}
-                  <Link href="/app/i/matching">
-                    <Button variant="outline">Open Matching</Button>
-                  </Link>
-                </div>
-              </div>
-            ) : null}
 
-            {!isTestFlow && isCompleted ? (
-              <div className="space-y-4">
-                <div className="rounded-lg border border-emerald-200 bg-emerald-50/80 p-4">
-                  <div className="flex items-start gap-3">
-                    <CheckCircle2 className="mt-0.5 h-5 w-5 text-emerald-700" />
-                    <div className="space-y-2">
-                      <p className="text-sm font-semibold text-emerald-900">
-                        Saved privately to your candidate workspace
-                      </p>
-                      <p className="text-sm leading-6 text-emerald-800">
-                        Assignment proof is submitted for blind-first review. Your reusable Proof
-                        Pack, privacy settings, export controls, and deletion controls stay in your
-                        account.
-                      </p>
-                      <div className="grid gap-2 text-xs text-emerald-900 sm:grid-cols-2">
-                        <span className="flex items-center gap-2">
-                          <EyeOff className="h-3.5 w-3.5" />
-                          Public Page not auto-published
-                        </span>
-                        <span className="flex items-center gap-2">
-                          <ShieldCheck className="h-3.5 w-3.5" />
-                          Assignment review state remains separate
-                        </span>
+                  <div className="flex flex-col gap-3 rounded-lg border border-proofound-stone bg-white/70 p-3 text-xs leading-5 text-proofound-charcoal/60 sm:flex-row sm:items-center sm:justify-between">
+                    <p>
+                      Account controls stay available after submission: privacy, export, and
+                      deletion remain in individual settings.
+                    </p>
+                    <Button asChild variant="outline" className="w-full shrink-0 sm:w-auto">
+                      <Link href={accountSaveControls.privacyDataControlsUrl}>
+                        Open privacy settings
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
+
+              {isTestFlow && isClaimedByCurrentUser ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-emerald-700">
+                    Assignment review invite accepted. You can now use messages and assignment
+                    review.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {invite.communicationsUrl ? (
+                      <Link href={invite.communicationsUrl}>
+                        <Button>Open Communications</Button>
+                      </Link>
+                    ) : null}
+                    <Link href="/app/i/matching">
+                      <Button variant="outline">Open assignment review</Button>
+                    </Link>
+                  </div>
+                </div>
+              ) : null}
+
+              {!isTestFlow && isCompleted ? (
+                <div className="space-y-4">
+                  <div className="rounded-lg border border-emerald-200 bg-emerald-50/80 p-4">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle2 className="mt-0.5 h-5 w-5 text-emerald-700" />
+                      <div className="space-y-2">
+                        <p className="text-sm font-semibold text-emerald-900">
+                          Saved privately to your submission workspace
+                        </p>
+                        <p className="text-sm leading-6 text-emerald-800">
+                          Assignment proof is submitted for blind-first review. Your reusable Proof
+                          Pack, privacy settings, export controls, and deletion controls stay in
+                          your account.
+                        </p>
+                        <div className="grid gap-2 text-xs text-emerald-900 sm:grid-cols-2">
+                          <span className="flex items-center gap-2">
+                            <EyeOff className="h-3.5 w-3.5" />
+                            Public Page not auto-published
+                          </span>
+                          <span className="flex items-center gap-2">
+                            <ShieldCheck className="h-3.5 w-3.5" />
+                            Assignment review state remains separate
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex flex-wrap gap-2">
-                  <Button asChild>
-                    <Link href={accountSaveControls.proofWorkspaceUrl}>Open proof records</Link>
-                  </Button>
-                  <Button asChild variant="outline">
-                    <Link href={accountSaveControls.profileVisibilityUrl}>Visibility</Link>
-                  </Button>
-                  <Button asChild variant="outline">
-                    <Link href={accountSaveControls.privacyDataControlsUrl}>Export or delete</Link>
-                  </Button>
-                  <Button asChild variant="outline">
-                    <Link href={accountSaveControls.assignmentReviewUrl}>Assignment review</Link>
-                  </Button>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                    <Button asChild className="w-full sm:w-auto">
+                      <Link href={accountSaveControls.proofWorkspaceUrl}>Open proof records</Link>
+                    </Button>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                      <Button asChild variant="outline" className="w-full sm:w-auto">
+                        <Link href={accountSaveControls.profileVisibilityUrl}>
+                          Open visibility settings
+                        </Link>
+                      </Button>
+                      <Button asChild variant="outline" className="w-full sm:w-auto">
+                        <Link href={accountSaveControls.privacyDataControlsUrl}>
+                          Export or delete data
+                        </Link>
+                      </Button>
+                      <Button asChild variant="outline" className="w-full sm:w-auto">
+                        <Link href={accountSaveControls.assignmentReviewUrl}>
+                          Open assignment review
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ) : null}
-          </div>
+              ) : null}
+            </>
+          )}
         </section>
       </main>
     </div>

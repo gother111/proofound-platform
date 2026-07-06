@@ -21,12 +21,14 @@ import {
   Search,
   Download,
   Shield,
+  AlertTriangle,
   ChevronLeft,
   ChevronRight,
-  Filter,
+  RefreshCcw,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { internalValueLabel, isMachineIdentifier } from '@/lib/copy/labels';
 
 interface AuditEvent {
@@ -45,6 +47,9 @@ interface AuditLogResponse {
   offset: number;
   hasMore: boolean;
 }
+
+const ACCOUNT_HISTORY_LOAD_RETRY_COPY =
+  'Account history could not load. Your privacy records are still safe; retry this section to refresh recent activity.';
 
 function readableMetadataValue(value: unknown): string {
   if (value === null || value === undefined || value === '') return 'Not set';
@@ -66,6 +71,7 @@ export function AuditLogViewer() {
   const [hasMore, setHasMore] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredEvents, setFilteredEvents] = useState<AuditEvent[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const LIMIT = 50;
@@ -94,10 +100,11 @@ export function AuditLogViewer() {
   const loadEvents = async () => {
     try {
       setIsLoading(true);
+      setLoadError(null);
       const response = await apiFetch(`/api/user/audit-log?limit=${LIMIT}&offset=${offset}`);
 
       if (!response.ok) {
-        throw new Error('Failed to load account history');
+        throw new Error('settings_audit_log_request_failed');
       }
 
       const data: AuditLogResponse = await response.json();
@@ -106,12 +113,12 @@ export function AuditLogViewer() {
       setTotal(data.total);
       setHasMore(data.hasMore);
     } catch (error) {
-      console.error('audit_log.load.failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      dispatchClientErrorDiagnostic('settings.audit_log.load_failed', error);
+      setLoadError(ACCOUNT_HISTORY_LOAD_RETRY_COPY);
       toast({
-        title: 'Failed to load account history',
-        description: 'Could not fetch your activity history',
+        title: 'Account history could not load',
+        description:
+          'Your privacy records are still safe. Retry this section to refresh recent activity.',
         variant: 'destructive',
       });
     } finally {
@@ -148,9 +155,7 @@ export function AuditLogViewer() {
         description: 'Your activity history has been downloaded',
       });
     } catch (error) {
-      console.error('audit_log.export.failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      dispatchClientErrorDiagnostic('settings.audit_log.export_failed', error);
       toast({
         title: 'Download failed',
         description: 'Could not download your account history',
@@ -216,15 +221,20 @@ export function AuditLogViewer() {
   return (
     <Card variant="bento">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
               Account history
             </CardTitle>
             <CardDescription>Complete history of your account activity</CardDescription>
           </div>
-          <Button variant="outline" size="sm" onClick={handleExport}>
+          <Button
+            variant="outline"
+            size="touch"
+            onClick={handleExport}
+            className="w-full justify-center sm:w-auto"
+          >
             <Download className="h-4 w-4 mr-2" />
             Download
           </Button>
@@ -232,9 +242,34 @@ export function AuditLogViewer() {
       </CardHeader>
 
       <CardContent className="space-y-4">
+        {loadError ? (
+          <div
+            className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-100"
+            role="alert"
+          >
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex gap-2">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                <p>{loadError}</p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="touch"
+                onClick={() => void loadEvents()}
+                disabled={isLoading}
+                className="w-full gap-2 bg-white/70 sm:w-auto"
+              >
+                <RefreshCcw className="h-4 w-4" aria-hidden="true" />
+                Retry account history
+              </Button>
+            </div>
+          </div>
+        ) : null}
+
         {/* Search and Stats */}
-        <div className="flex items-center justify-between gap-4">
-          <div className="relative flex-1 max-w-sm">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <div className="relative w-full sm:max-w-sm sm:flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               placeholder="Search activity..."
@@ -252,11 +287,11 @@ export function AuditLogViewer() {
         {/* Events List */}
         <ScrollArea className="h-[600px] pr-4">
           <div className="space-y-3">
-            {filteredEvents.length === 0 ? (
+            {filteredEvents.length === 0 && !loadError ? (
               <div className="text-center py-12 text-gray-500">
                 {searchQuery ? 'No events match your search' : 'No activity recorded yet'}
               </div>
-            ) : (
+            ) : filteredEvents.length > 0 ? (
               filteredEvents.map((event) => (
                 <div
                   key={event.id}
@@ -307,25 +342,37 @@ export function AuditLogViewer() {
                   </div>
                 </div>
               ))
-            )}
+            ) : null}
           </div>
         </ScrollArea>
 
         {/* Pagination */}
         {total > LIMIT && (
-          <div className="flex items-center justify-between pt-4 border-t">
+          <div className="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="text-sm text-gray-600 dark:text-gray-400">
               Showing {offset + 1}-{Math.min(offset + LIMIT, total)} of {total}
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={handlePrevPage} disabled={offset === 0}>
+            <div className="grid grid-cols-1 gap-2 sm:flex sm:items-center">
+              <Button
+                variant="outline"
+                size="touch"
+                onClick={handlePrevPage}
+                disabled={offset === 0}
+                className="w-full justify-center sm:w-auto"
+              >
                 <ChevronLeft className="h-4 w-4 mr-1" />
                 Previous
               </Button>
-              <span className="text-sm text-gray-600 dark:text-gray-400">
+              <span className="text-center text-sm text-gray-600 dark:text-gray-400">
                 Page {currentPage} of {totalPages}
               </span>
-              <Button variant="outline" size="sm" onClick={handleNextPage} disabled={!hasMore}>
+              <Button
+                variant="outline"
+                size="touch"
+                onClick={handleNextPage}
+                disabled={!hasMore}
+                className="w-full justify-center sm:w-auto"
+              >
                 Next
                 <ChevronRight className="h-4 w-4 ml-1" />
               </Button>

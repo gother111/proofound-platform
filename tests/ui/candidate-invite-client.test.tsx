@@ -5,8 +5,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CandidateInviteClient } from '@/app/candidate-invite/[token]/CandidateInviteClient';
 import { apiFetch } from '@/lib/api/fetch';
 
+const { dispatchClientDiagnosticMock, dispatchClientErrorDiagnosticMock } = vi.hoisted(() => ({
+  dispatchClientDiagnosticMock: vi.fn(),
+  dispatchClientErrorDiagnosticMock: vi.fn(),
+}));
+
 vi.mock('@/lib/api/fetch', () => ({
   apiFetch: vi.fn(),
+}));
+
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientDiagnostic: dispatchClientDiagnosticMock,
+  dispatchClientErrorDiagnostic: dispatchClientErrorDiagnosticMock,
 }));
 
 const apiFetchMock = vi.mocked(apiFetch);
@@ -18,7 +28,7 @@ const structuredAssignment = {
   status: 'active',
   createdAt: new Date().toISOString(),
   engagementType: 'contract_consulting',
-  businessValue: 'Improve candidate review quality before the first conversation.',
+  businessValue: 'Improve submission review quality before the first conversation.',
   expectedImpact: 'Submit one work artifact that shows ownership, outcomes, and constraints.',
   mustHaveSkills: [{ label: 'Service design', level: 4 }],
   locationMode: 'remote',
@@ -30,6 +40,52 @@ const structuredAssignment = {
   startLatest: '2026-06-15',
   verificationGates: ['identity', 'work_email'],
 };
+
+const availableProofPack = {
+  id: '11111111-1111-4111-8111-111111111111',
+  title: 'Service design proof pack',
+  summary: 'One owner-only proof pack for this assignment.',
+  evidenceSummary: 'Private evidence stays in the assignment packet.',
+  outcomesSummary: null,
+  verificationSummary: null,
+  updatedAt: new Date().toISOString(),
+};
+
+function renderClaimedProofCardInvite() {
+  render(
+    <CandidateInviteClient
+      token="token-value"
+      initialState={{
+        invite: {
+          id: 'invite-1',
+          status: 'claimed',
+          flowType: 'proof_card',
+          assignmentId: 'assignment-1',
+          maskedEmail: 'ca***@example.com',
+          expiresAt: new Date(Date.now() + 3600_000).toISOString(),
+          claimedAt: new Date().toISOString(),
+          claimedByCurrentUser: true,
+          acceptedAt: null,
+          acceptedByCurrentUser: false,
+          communicationsUrl: null,
+          proofSubmittedAt: null,
+        },
+        organization: {
+          id: 'org-1',
+          slug: 'acme',
+          displayName: 'Acme Org',
+          logoUrl: null,
+        },
+        assignment: structuredAssignment,
+        currentUser: {
+          id: 'user-1',
+          email: 'candidate@example.com',
+        },
+        availableProofPacks: [availableProofPack],
+      }}
+    />
+  );
+}
 
 describe('CandidateInviteClient test_match flow', () => {
   beforeEach(() => {
@@ -96,8 +152,9 @@ describe('CandidateInviteClient test_match flow', () => {
     render(<CandidateInviteClient token="token-value" />);
 
     await waitFor(() => {
-      expect(screen.getByText(/trial match accepted/i)).toBeInTheDocument();
+      expect(screen.getByText(/assignment review invite accepted/i)).toBeInTheDocument();
     });
+    expect(screen.queryByText(/trial match/i)).not.toBeInTheDocument();
 
     expect(screen.getByRole('link', { name: /open communications/i })).toHaveAttribute(
       'href',
@@ -132,6 +189,17 @@ describe('CandidateInviteClient test_match flow', () => {
               logoUrl: null,
             },
             assignment: structuredAssignment,
+            availableProofPacks: [
+              {
+                id: '11111111-1111-4111-8111-111111111111',
+                title: 'Service design proof pack',
+                summary: 'One owner-only proof pack for this assignment.',
+                evidenceSummary: null,
+                outcomesSummary: null,
+                verificationSummary: null,
+                updatedAt: new Date().toISOString(),
+              },
+            ],
           }),
         };
       }
@@ -168,36 +236,40 @@ describe('CandidateInviteClient test_match flow', () => {
     });
 
     expect(screen.getByText(/Assignment: Designer/i)).toBeInTheDocument();
-    expect(screen.getByText(/Improve candidate review quality/i)).toBeInTheDocument();
+    expect(screen.getByText(/Improve submission review quality/i)).toBeInTheDocument();
     expect(screen.getByText(/Submit one work artifact/i)).toBeInTheDocument();
     expect(screen.getByText(/Remote \/ Stockholm, Sweden/i)).toBeInTheDocument();
     expect(screen.getByText(/Identity check/i)).toBeInTheDocument();
     expect(screen.getByText(/Work email check/i)).toBeInTheDocument();
     expect(screen.getByText(/Private review first/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/does not publish a public page or broaden the application/i)
+      screen.getByText(/does not publish your Public Page or broaden visibility/i)
     ).toBeInTheDocument();
+    expect(screen.getByTestId('candidate-proof-submission-path')).toHaveTextContent(
+      /Build proof.*Attach evidence.*Review privacy/i
+    );
+    expect(screen.getByText(/Minimum submission packet/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/Public profile snippets and share URLs are not accepted/i)
-    ).toBeInTheDocument();
+      screen.queryByPlaceholderText(/00000000-0000-0000-0000-000000000000/)
+    ).not.toBeInTheDocument();
     const visibleText = document.body.textContent ?? '';
-    expect(visibleText).not.toMatch(/cv import|resume|public directory|people search/i);
+    expect(visibleText).not.toMatch(/cv import|resume|public directory|people search|searchable/i);
     expect(visibleText).not.toMatch(/values|causes|mission-first|purpose-fit/i);
     expect(screen.queryByRole('button', { name: /score|rank|shortlist/i })).not.toBeInTheDocument();
     expect(
       screen.queryByRole('link', { name: /cv import|resume|people search/i })
     ).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /create first proof record/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /open privacy settings/i })).toHaveAttribute(
       'href',
-      '/onboarding?next=%2Fcandidate-invite%2Ftoken-value'
+      '/app/i/settings/privacy'
     );
 
-    fireEvent.change(screen.getByLabelText(/owner-only proof record id/i), {
+    fireEvent.change(screen.getByLabelText(/owner-only proof record/i), {
       target: { value: '11111111-1111-4111-8111-111111111111' },
     });
     fireEvent.click(screen.getByRole('button', { name: /review assignment proof/i }));
     fireEvent.click(screen.getByLabelText(/I reviewed the visibility summary/i));
-    fireEvent.click(screen.getByRole('button', { name: /submit reviewed application/i }));
+    fireEvent.click(screen.getByRole('button', { name: /submit reviewed proof/i }));
 
     await waitFor(() => {
       expect(apiFetchMock).toHaveBeenCalledWith(
@@ -215,10 +287,73 @@ describe('CandidateInviteClient test_match flow', () => {
       proofPackId: '11111111-1111-4111-8111-111111111111',
       reviewConfirmed: true,
     });
+    expect(screen.getByRole('status')).toHaveTextContent(
+      /Assignment proof submitted for blind-first review\. No verification requests were sent\./i
+    );
     expect(apiFetchMock.mock.calls.some(([url]) => url === '/api/profile/snippet')).toBe(false);
   });
 
-  it('shows the structured assignment before asking an unauthenticated guest to apply', async () => {
+  it('does not expose unsupported legacy trust gates to candidates', async () => {
+    const fetchMock = vi.fn().mockImplementation(async (url: string) => {
+      if (url === '/api/candidate-invites/token-value') {
+        return {
+          ok: true,
+          json: async () => ({
+            invite: {
+              id: 'invite-1',
+              status: 'claimed',
+              flowType: 'proof_card',
+              assignmentId: 'assignment-1',
+              maskedEmail: 'ca***@example.com',
+              expiresAt: new Date(Date.now() + 3600_000).toISOString(),
+              claimedAt: new Date().toISOString(),
+              claimedByCurrentUser: true,
+              acceptedAt: null,
+              acceptedByCurrentUser: false,
+              communicationsUrl: null,
+              proofSubmittedAt: null,
+            },
+            organization: {
+              id: 'org-1',
+              slug: 'acme',
+              displayName: 'Acme Org',
+              logoUrl: null,
+            },
+            assignment: {
+              ...structuredAssignment,
+              verificationGates: ['work_email', 'linkedin'],
+            },
+          }),
+        };
+      }
+
+      if (url === '/api/user/me') {
+        return {
+          ok: true,
+          json: async () => ({
+            id: 'user-1',
+            email: 'candidate@example.com',
+          }),
+        };
+      }
+
+      throw new Error(`Unexpected fetch URL: ${url}`);
+    });
+
+    vi.stubGlobal('fetch', fetchMock as any);
+
+    render(<CandidateInviteClient token="token-value" />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/submit assignment-specific proof/i)).toBeInTheDocument();
+    });
+
+    expect(screen.getByText(/Work email check/i)).toBeInTheDocument();
+    const visibleText = document.body.textContent ?? '';
+    expect(visibleText).not.toMatch(/LinkedIn|unsupported trust/i);
+  });
+
+  it('shows the structured assignment before asking an unauthenticated guest to submit proof', async () => {
     const fetchMock = vi.fn().mockImplementation(async (url: string) => {
       if (url === '/api/candidate-invites/token-value') {
         return {
@@ -268,11 +403,11 @@ describe('CandidateInviteClient test_match flow', () => {
     });
 
     const pageText = document.body.textContent ?? '';
-    expect(pageText.indexOf('Improve candidate review quality')).toBeGreaterThanOrEqual(0);
-    expect(pageText.indexOf('Apply to this assignment')).toBeGreaterThan(
-      pageText.indexOf('Improve candidate review quality')
+    expect(pageText.indexOf('Improve submission review quality')).toBeGreaterThanOrEqual(0);
+    expect(pageText.indexOf('Continue to proof submission')).toBeGreaterThan(
+      pageText.indexOf('Improve submission review quality')
     );
-    expect(screen.getByRole('link', { name: /apply to this assignment/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /continue to proof submission/i })).toHaveAttribute(
       'href',
       '/signup/individual?next=%2Fcandidate-invite%2Ftoken-value'
     );
@@ -316,6 +451,17 @@ describe('CandidateInviteClient test_match flow', () => {
               verificationGates: ['work_email'],
               createdAt: new Date().toISOString(),
             },
+            availableProofPacks: [
+              {
+                id: '11111111-1111-4111-8111-111111111111',
+                title: 'Evidence operations proof pack',
+                summary: 'One owner-only proof pack for this assignment.',
+                evidenceSummary: null,
+                outcomesSummary: null,
+                verificationSummary: null,
+                updatedAt: new Date().toISOString(),
+              },
+            ],
           }),
         };
       }
@@ -362,19 +508,18 @@ describe('CandidateInviteClient test_match flow', () => {
     });
 
     expect(screen.getByText(/Create or choose one owner-only proof record/i)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /create first proof record/i })).toHaveAttribute(
-      'href',
-      '/onboarding?next=%2Fcandidate-invite%2Ftoken-value'
-    );
+    expect(
+      screen.getAllByRole('link', { name: /create another proof record/i })[0]
+    ).toHaveAttribute('href', '/onboarding?next=%2Fcandidate-invite%2Ftoken-value');
     expect(screen.queryByText(/generate and submit proof card/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/existing proof card token/i)).not.toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText(/owner-only proof record id/i), {
+    fireEvent.change(screen.getByLabelText(/owner-only proof record/i), {
       target: { value: '11111111-1111-4111-8111-111111111111' },
     });
     fireEvent.click(screen.getByRole('button', { name: /review assignment proof/i }));
     fireEvent.click(screen.getByLabelText(/I reviewed the visibility summary/i));
-    fireEvent.click(screen.getByRole('button', { name: /submit reviewed application/i }));
+    fireEvent.click(screen.getByRole('button', { name: /submit reviewed proof/i }));
 
     await waitFor(() => {
       expect(apiFetchMock).toHaveBeenCalledWith(
@@ -388,6 +533,235 @@ describe('CandidateInviteClient test_match flow', () => {
       );
     });
 
+    expect(screen.getByRole('status')).toHaveTextContent(
+      /Assignment proof submitted for blind-first review\. No verification requests were sent\./i
+    );
     expect(apiFetchMock).not.toHaveBeenCalledWith('/api/profile/snippet', expect.anything());
+  });
+
+  it('keeps reviewed assignment proof recoverable when submission fails', async () => {
+    const fetchMock = vi.fn().mockImplementation(async (url: string) => {
+      if (url === '/api/candidate-invites/token-value') {
+        return {
+          ok: true,
+          json: async () => ({
+            invite: {
+              id: 'invite-1',
+              status: 'claimed',
+              flowType: 'proof_card',
+              assignmentId: 'assignment-1',
+              maskedEmail: 'ca***@example.com',
+              expiresAt: new Date(Date.now() + 3600_000).toISOString(),
+              claimedAt: new Date().toISOString(),
+              claimedByCurrentUser: true,
+              acceptedAt: null,
+              acceptedByCurrentUser: false,
+              communicationsUrl: null,
+              proofSubmittedAt: null,
+            },
+            organization: {
+              id: 'org-1',
+              slug: 'acme',
+              displayName: 'Acme Org',
+              logoUrl: null,
+            },
+            assignment: structuredAssignment,
+            availableProofPacks: [
+              {
+                id: '11111111-1111-4111-8111-111111111111',
+                title: 'Service design proof pack',
+                summary: 'One owner-only proof pack for this assignment.',
+                evidenceSummary: 'Private evidence stays in the assignment packet.',
+                outcomesSummary: null,
+                verificationSummary: null,
+                updatedAt: new Date().toISOString(),
+              },
+            ],
+          }),
+        };
+      }
+
+      if (url === '/api/user/me') {
+        return {
+          ok: true,
+          json: async () => ({
+            id: 'user-1',
+            email: 'candidate@example.com',
+          }),
+        };
+      }
+
+      throw new Error(`Unexpected fetch URL: ${url}`);
+    });
+    apiFetchMock.mockRejectedValueOnce(new Error('submission service unavailable'));
+
+    vi.stubGlobal('fetch', fetchMock as any);
+
+    render(<CandidateInviteClient token="token-value" />);
+
+    await screen.findByRole('heading', { name: /designer/i });
+
+    fireEvent.click(screen.getByRole('button', { name: /review assignment proof/i }));
+    fireEvent.click(screen.getByLabelText(/I reviewed the visibility summary/i));
+    fireEvent.click(screen.getByRole('button', { name: /submit reviewed proof/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Assignment proof could not be submitted.'
+    );
+    expect(
+      screen.getByText(
+        'Your selected proof record and visibility review are still here. Check the summary, then try submitting again.'
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Final review before submission/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Service design proof pack/i).length).toBeGreaterThan(0);
+    expect(screen.getByLabelText(/I reviewed the visibility summary/i)).toBeChecked();
+    expect(screen.getByRole('button', { name: /submit reviewed proof/i })).toBeEnabled();
+  });
+
+  it('maps returned proof-card validation failures to safe candidate copy', async () => {
+    apiFetchMock.mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({ error: 'Invalid proof card payload' }),
+    } as Response);
+
+    renderClaimedProofCardInvite();
+
+    fireEvent.click(screen.getByRole('button', { name: /review assignment proof/i }));
+    fireEvent.click(screen.getByLabelText(/I reviewed the visibility summary/i));
+    fireEvent.click(screen.getByRole('button', { name: /submit reviewed proof/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Review the selected proof record and visibility confirmation before submitting.'
+    );
+    expect(
+      screen.getByText(
+        'Your selected proof record and visibility review are still here. Check the summary, then try submitting again.'
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Final review before submission/i)).toBeInTheDocument();
+    expect(dispatchClientErrorDiagnosticMock).not.toHaveBeenCalledWith(
+      'candidate_invite.client.proof_submit_returned_error',
+      expect.any(Error)
+    );
+  });
+
+  it('keeps unexpected returned proof-card failures safe and diagnostic', async () => {
+    const rawError = 'database insert failed: policy stack detail';
+    apiFetchMock.mockResolvedValueOnce({
+      ok: false,
+      status: 502,
+      json: async () => ({ error: rawError }),
+    } as Response);
+
+    renderClaimedProofCardInvite();
+
+    fireEvent.click(screen.getByRole('button', { name: /review assignment proof/i }));
+    fireEvent.click(screen.getByLabelText(/I reviewed the visibility summary/i));
+    fireEvent.click(screen.getByRole('button', { name: /submit reviewed proof/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Assignment proof could not be submitted.');
+    expect(alert).not.toHaveTextContent(rawError);
+    expect(
+      screen.getByText(
+        'Your selected proof record and visibility review are still here. Check the summary, then try submitting again.'
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Final review before submission/i)).toBeInTheDocument();
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
+      'candidate_invite.client.proof_submit_returned_error',
+      {
+        status: 502,
+        hasReturnedError: true,
+      }
+    );
+    expect(JSON.stringify(dispatchClientDiagnosticMock.mock.calls)).not.toContain(rawError);
+    expect(JSON.stringify(dispatchClientErrorDiagnosticMock.mock.calls)).not.toContain(rawError);
+  });
+
+  it('supports local visual initial state without calling the public token API', async () => {
+    vi.stubGlobal('fetch', vi.fn());
+
+    render(
+      <CandidateInviteClient
+        token="visual-proof-card-claimed"
+        visualMode
+        initialState={{
+          invite: {
+            id: 'visual-candidate-invite-1',
+            status: 'claimed',
+            flowType: 'proof_card',
+            assignmentId: 'assignment-1',
+            maskedEmail: 'ca***@example.com',
+            expiresAt: new Date(Date.now() + 3600_000).toISOString(),
+            claimedAt: new Date().toISOString(),
+            claimedByCurrentUser: true,
+            acceptedAt: null,
+            acceptedByCurrentUser: false,
+            communicationsUrl: null,
+            proofSubmittedAt: null,
+          },
+          organization: {
+            id: 'org-1',
+            slug: 'acme',
+            displayName: 'Acme Org',
+            logoUrl: null,
+          },
+          assignment: structuredAssignment,
+          currentUser: {
+            id: 'user-1',
+            email: 'candidate@example.com',
+          },
+          availableProofPacks: [
+            {
+              id: '11111111-1111-4111-8111-111111111111',
+              title: 'Owner-only pilot proof pack',
+              summary: 'A private proof pack for this assignment.',
+              evidenceSummary: 'Evidence summary.',
+              outcomesSummary: 'Outcome summary.',
+              verificationSummary: 'No new verification request is sent.',
+              updatedAt: new Date().toISOString(),
+            },
+          ],
+        }}
+      />
+    );
+
+    await screen.findByRole('heading', { name: /designer/i });
+
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(apiFetchMock).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: /review assignment proof/i }));
+    expect(screen.getByText(/participant-controlled reveal step/i)).toBeInTheDocument();
+    expect(screen.queryByText(/candidate-controlled corridor step/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /submit reviewed proof/i })).toBeDisabled();
+    fireEvent.click(screen.getByLabelText(/I reviewed the visibility summary/i));
+    fireEvent.click(screen.getByRole('button', { name: /submit reviewed proof/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/saved privately to your submission workspace/i)).toBeInTheDocument();
+    });
+    expect(screen.getByRole('link', { name: /open proof records/i })).toHaveAttribute(
+      'href',
+      '/app/i/profile?profileView=full&tab=proof_packs'
+    );
+    expect(screen.getByRole('link', { name: /open visibility settings/i })).toHaveAttribute(
+      'href',
+      '/app/i/profile?profileView=full&tab=visibility'
+    );
+    expect(screen.getByRole('link', { name: /export or delete data/i })).toHaveAttribute(
+      'href',
+      '/app/i/settings/privacy'
+    );
+    expect(screen.getByRole('link', { name: /open assignment review/i })).toHaveAttribute(
+      'href',
+      '/app/i/matching'
+    );
+    expect(
+      screen.queryByText(/saved privately to your candidate workspace/i)
+    ).not.toBeInTheDocument();
+    expect(apiFetchMock).not.toHaveBeenCalled();
   });
 });

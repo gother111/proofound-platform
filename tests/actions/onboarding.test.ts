@@ -8,6 +8,7 @@ import { syncReadinessMilestones } from '@/lib/readiness/analytics';
 import { getIndividualReadinessState } from '@/lib/readiness/individual-state';
 import { emitIndividualOnboardingCompleted } from '@/lib/analytics/events';
 import { attachUploadedFile } from '@/lib/uploads/lifecycle';
+import { log } from '@/lib/log';
 
 vi.mock('@/lib/auth', () => ({
   requireAuth: vi.fn(),
@@ -39,6 +40,13 @@ vi.mock('@/lib/analytics/events', () => ({
 
 vi.mock('@/lib/uploads/lifecycle', () => ({
   attachUploadedFile: vi.fn(),
+}));
+
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+    warn: vi.fn(),
+  },
 }));
 
 vi.mock('@/lib/launch/trace', () => ({
@@ -195,7 +203,7 @@ describe('onboarding actions', () => {
 
     expect(individualUpsert).toHaveBeenCalledWith(
       expect.objectContaining({
-        visibility: 'public',
+        visibility: 'network',
         field_visibility: expect.objectContaining({
           contact: false,
           workEmail: false,
@@ -434,6 +442,115 @@ describe('onboarding actions', () => {
     expect(revalidatePath).toHaveBeenCalledWith('/portfolio/org/acme-impact');
   });
 
+  it('logs individual onboarding proof-pack insert failures structurally', async () => {
+    const profileEq = vi.fn().mockResolvedValue({ error: null });
+    const profileUpdate = vi.fn().mockReturnValue({ eq: profileEq });
+    const individualUpsert = vi.fn().mockResolvedValue({ error: null });
+    const matchingProfileUpsert = vi.fn().mockResolvedValue({ error: null });
+    const experienceInsert = vi.fn().mockResolvedValue({ error: null });
+    const proofArtifactInsert = vi.fn().mockResolvedValue({ error: null });
+    const proofPackInsert = vi.fn().mockResolvedValue({ error: { message: 'pack insert failed' } });
+
+    (createClient as any).mockResolvedValue(
+      createSupabaseFromMap({
+        profiles: { update: profileUpdate },
+        individual_profiles: { upsert: individualUpsert },
+        matching_profiles: { upsert: matchingProfileUpsert },
+        experiences: { insert: experienceInsert },
+        proof_artifacts: { insert: proofArtifactInsert },
+        proof_packs: { insert: proofPackInsert },
+      })
+    );
+
+    const formData = new FormData();
+    formData.set('firstName', 'Jane');
+    formData.set('lastName', 'Founder');
+    formData.set('displayName', 'Jane Founder');
+    formData.set('handle', 'jane_founder');
+    formData.set('location', 'Stockholm');
+    formData.set('contextType', 'experience');
+    formData.set('contextKind', 'work');
+    formData.set('contextTitle', 'First proof context');
+    formData.set('contextOrganizationName', 'Proofound');
+    formData.set('contextSummary', 'Starter proof context.');
+    formData.set('contextDuration', '2026');
+    formData.set('contextOutcome', 'Built a proof-first onboarding prototype.');
+    formData.set('proofUrl', 'https://example.com/proof');
+    formData.set('proofTitle', 'Launch proof');
+    formData.set('proofSummary', 'Shows one proof artifact.');
+    formData.set('proofPackClaim', 'Launch proof');
+    formData.set('proofPackOwnership', 'Created as solo work. I created the artifact.');
+    formData.set('proofPackOutcome', 'Built a proof-first onboarding prototype.');
+    formData.set('proofPackSkills', 'Product strategy, proof systems, onboarding design');
+    setFirstProofOwnershipFields(formData);
+
+    const result = await completeIndividualOnboarding(formData);
+
+    expect(result).toEqual({
+      error: 'Failed to structure your first proof record. Please try again.',
+    });
+    expect(log.error).toHaveBeenCalledWith(
+      'onboarding.individual.proof_pack_insert_failed',
+      expect.objectContaining({
+        userId: 'user-1',
+        contextType: 'experience',
+        artifactId: expect.any(String),
+        error: { message: 'pack insert failed' },
+      })
+    );
+  });
+
+  it('logs organization onboarding owner insert failures structurally', async () => {
+    const orgInsert = vi.fn().mockResolvedValue({ error: null });
+    const memberInsert = vi.fn().mockResolvedValue({ error: { message: 'owner insert failed' } });
+
+    const organizationMembersTable = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+      insert: memberInsert,
+    };
+
+    const organizationsTable = {
+      insert: orgInsert,
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: null, error: null }),
+    };
+
+    (createClient as any).mockResolvedValue({
+      from: vi.fn((table: string) => {
+        if (table === 'organization_members') {
+          return organizationMembersTable;
+        }
+        if (table === 'organizations') {
+          return organizationsTable;
+        }
+        throw new Error(`Unexpected table: ${table}`);
+      }),
+    });
+
+    const formData = new FormData();
+    formData.set('displayName', 'Acme Impact');
+    formData.set('slug', 'acme-impact');
+    formData.set('type', 'company');
+
+    const result = await completeOrganizationOnboarding(formData);
+
+    expect(result).toEqual({
+      error:
+        'Organization setup could not be saved. Your details are still here; please try again.',
+    });
+    expect(log.error).toHaveBeenCalledWith(
+      'onboarding.organization.owner_insert_failed',
+      expect.objectContaining({
+        orgId: expect.any(String),
+        userId: 'user-1',
+        error: { message: 'owner insert failed' },
+      })
+    );
+  });
+
   it('rejects first-proof submissions without 3 to 5 proof-supported skills', async () => {
     const formData = new FormData();
     formData.set('firstName', 'Jane');
@@ -446,17 +563,44 @@ describe('onboarding actions', () => {
     formData.set('contextOrganizationName', 'Proofound');
     formData.set('contextSummary', 'Starter proof context.');
     formData.set('contextDuration', '2026');
+    formData.set('contextOutcome', 'Built a proof-first onboarding prototype.');
     formData.set('proofUrl', 'https://example.com/proof');
     formData.set('proofTitle', 'Launch proof');
     formData.set('proofSummary', 'Shows one proof artifact.');
     formData.set('proofPackClaim', 'Launch proof');
     formData.set('proofPackOwnership', 'Created as solo work. I created the artifact.');
+    formData.set('proofPackOutcome', 'Built a proof-first onboarding prototype.');
     formData.set('proofPackSkills', 'Documentation, onboarding design');
     setFirstProofOwnershipFields(formData);
 
     const result = await completeIndividualOnboarding(formData);
 
     expect(result).toEqual({ error: 'Add 3 to 5 skills this proof actually supports.' });
+    expect(createClient).not.toHaveBeenCalled();
+  });
+
+  it('rejects tampered first-proof submissions with synthetic context anchors', async () => {
+    const formData = new FormData();
+    formData.set('firstName', 'Jane');
+    formData.set('lastName', 'Founder');
+    formData.set('displayName', 'Jane Founder');
+    formData.set('handle', 'jane_founder');
+    formData.set('location', 'Stockholm');
+    formData.set('contextType', 'experience');
+    formData.set('proofUrl', 'https://example.com/proof');
+    formData.set('proofTitle', 'Launch proof');
+    formData.set('proofSummary', 'Shows one proof artifact.');
+    formData.set('proofPackClaim', 'Launch proof');
+    formData.set('proofPackOwnership', 'Created as solo work. I created the artifact.');
+    formData.set('proofPackOutcome', 'Built a proof-first onboarding prototype.');
+    formData.set('proofPackSkills', 'Product strategy, proof systems, onboarding design');
+    setFirstProofOwnershipFields(formData);
+
+    const result = await completeIndividualOnboarding(formData);
+
+    expect(result).toEqual({
+      error: 'Add one real context with a short anchor before saving your first proof record.',
+    });
     expect(createClient).not.toHaveBeenCalled();
   });
 
@@ -605,6 +749,7 @@ describe('onboarding actions', () => {
     formData.set('contextOrganizationName', 'Stockholm');
     formData.set('contextSummary', 'A first proof onboarding artifact.');
     formData.set('contextDuration', '2026');
+    formData.set('contextOutcome', 'Shows the first proof artifact.');
     formData.set('proofInputType', 'file');
     formData.set('proofArtifactType', 'document');
     formData.set('uploadedFileId', '00000000-0000-4000-8000-000000000001');

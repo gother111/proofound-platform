@@ -18,7 +18,7 @@ interface InterviewScheduledProps {
   candidateName?: string;
   scheduledAt: string;
   duration: number;
-  platform: 'zoom' | 'google-meet';
+  platform: 'manual' | 'google_meet';
   meetingUrl: string;
   timezone?: string;
   viewInterviewUrl: string;
@@ -50,7 +50,7 @@ export default function InterviewScheduled({
     timeZoneName: 'short',
   });
 
-  const platformName = platform === 'zoom' ? 'Zoom' : 'Google Meet';
+  const platformName = platform === 'google_meet' ? 'Google Meet' : 'Manual link';
 
   return (
     <Html>
@@ -71,8 +71,8 @@ export default function InterviewScheduled({
             <Text style={paragraph}>Hi {recipientName},</Text>
 
             <Text style={paragraph}>
-              Your interview has been successfully scheduled. Both parties will now have their
-              identities revealed.
+              Your interview has been scheduled. Open Proofound for the current workflow stage,
+              approved context, and meeting details.
             </Text>
 
             <Section style={interviewBox}>
@@ -116,7 +116,7 @@ export default function InterviewScheduled({
 
               <Section style={buttonContainer}>
                 <Button style={joinButton} href={meetingUrl}>
-                  Join {platformName} Meeting
+                  Open meeting link
                 </Button>
               </Section>
 
@@ -137,21 +137,22 @@ export default function InterviewScheduled({
             <Text style={infoText}>
               • Join 2-3 minutes early to test your audio and video
               <br />
-              • Have your resume and portfolio ready to share
+              • Have relevant Proof Packs and portfolio context ready to discuss
               <br />
               • Prepare questions about the role and organization
               <br />
               • Find a quiet space with good lighting
-              <br />• You can reschedule once if needed (within 7 days of match)
+              <br />• Use Proofound for any workflow updates or rescheduling requests
             </Text>
 
             <Hr style={hr} />
 
             <Text style={footerText}>
-              <strong>Identities Revealed</strong>
+              <strong>Privacy and workflow stage</strong>
               <br />
-              Now that the interview is scheduled, both parties can see each other&apos;s full
-              profiles and communicate directly.
+              This email only includes scheduling details. Proof files, private notes, contact
+              details, and reveal-stage context stay inside the authenticated workflow unless they
+              have been explicitly approved for this stage.
             </Text>
 
             <Section style={buttonContainer}>

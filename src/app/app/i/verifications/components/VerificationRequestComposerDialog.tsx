@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import type { VerificationComposerProofPackOption } from '@/lib/verification/request-feed';
 import {
   CUSTOM_VERIFICATION_SELECTABLE_RELATIONSHIPS,
@@ -45,6 +46,11 @@ type ComposerDraft = {
   tooBroadWarnings: string[];
 };
 
+type ComposerFeedback = {
+  title: string;
+  message: string;
+};
+
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -53,6 +59,10 @@ type Props = {
 };
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const COMPOSER_DRAFT_FAILED_MESSAGE =
+  'Verification request wording could not be drafted. Review the selected public-safe fields and try again.';
+const COMPOSER_SEND_FAILED_MESSAGE =
+  'Verification request could not be sent. The reviewed draft is still here so you can retry.';
 
 const FIELD_OPTIONS: Array<{ value: VerificationComposerField; label: string }> = [
   { value: 'title', label: 'Title' },
@@ -76,7 +86,8 @@ function buildManualComposerDraft(params: {
   relationship: string;
   scope: VerificationScope;
 }): ComposerDraft {
-  const claim = params.proofPack.claimStatement || params.proofPack.title || 'one scoped claim';
+  void params.proofPack;
+  const claim = 'one scoped Proofound claim';
   const relationship = params.relationship || 'someone familiar with the work';
 
   return {
@@ -143,6 +154,7 @@ export function VerificationRequestComposerDialog({
   const [drafting, setDrafting] = useState(false);
   const [sending, setSending] = useState(false);
   const [reviewed, setReviewed] = useState(false);
+  const [feedback, setFeedback] = useState<ComposerFeedback | null>(null);
 
   const selectedProofPack = useMemo(
     () => proofPacks.find((pack) => pack.proofPackId === proofPackId) || proofPacks[0] || null,
@@ -157,6 +169,7 @@ export function VerificationRequestComposerDialog({
     setVerifierEmail('');
     setDraft(null);
     setReviewed(false);
+    setFeedback(null);
   };
 
   const dismissDraft = () => {
@@ -168,6 +181,7 @@ export function VerificationRequestComposerDialog({
   const toggleField = (field: VerificationComposerField) => {
     setDraft(null);
     setReviewed(false);
+    setFeedback(null);
     setSelectedFields((current) => {
       if (current.includes(field)) {
         return current.length === 1 ? current : current.filter((item) => item !== field);
@@ -184,6 +198,7 @@ export function VerificationRequestComposerDialog({
 
     setDrafting(true);
     setReviewed(false);
+    setFeedback(null);
     try {
       const response = await apiFetch('/api/ai/verifications/compose', {
         method: 'POST',
@@ -210,16 +225,34 @@ export function VerificationRequestComposerDialog({
               scope: verificationScope,
             })
           );
+          setFeedback(null);
           return;
         }
-        toast.error(body.error || 'Failed to draft verification request.');
+        if (body?.error) {
+          dispatchClientErrorDiagnostic(
+            'verifications.composer.draft_failed',
+            new Error(body.error)
+          );
+        }
+        const message = COMPOSER_DRAFT_FAILED_MESSAGE;
+        setFeedback({
+          title: 'Draft could not be created',
+          message,
+        });
+        toast.error(message);
         return;
       }
 
       setDraft(body as ComposerDraft);
+      setFeedback(null);
     } catch (error) {
-      console.error('Failed to draft verification request:', error);
-      toast.error('Failed to draft verification request.');
+      dispatchClientErrorDiagnostic('verifications.composer.draft_failed', error);
+      const message = COMPOSER_DRAFT_FAILED_MESSAGE;
+      setFeedback({
+        title: 'Draft could not be created',
+        message,
+      });
+      toast.error(message);
     } finally {
       setDrafting(false);
     }
@@ -230,15 +263,24 @@ export function VerificationRequestComposerDialog({
       return;
     }
     if (!reviewed) {
+      setFeedback({
+        title: 'Review the draft before sending',
+        message: 'Confirm that the request is claim-scoped and safe before sending it.',
+      });
       toast.error('Review the draft before sending.');
       return;
     }
     if (!EMAIL_REGEX.test(verifierEmail.trim())) {
+      setFeedback({
+        title: 'Enter a valid verifier email',
+        message: 'Use the verifier email field below before sending this request.',
+      });
       toast.error('Enter a valid verifier email.');
       return;
     }
 
     setSending(true);
+    setFeedback(null);
     try {
       const response = await apiFetch('/api/verification/requests/skill', {
         method: 'POST',
@@ -255,7 +297,18 @@ export function VerificationRequestComposerDialog({
 
       const body = await response.json();
       if (!response.ok) {
-        toast.error(body.error || 'Failed to send verification request.');
+        if (body?.error) {
+          dispatchClientErrorDiagnostic(
+            'verifications.composer.send_failed',
+            new Error(body.error)
+          );
+        }
+        const message = COMPOSER_SEND_FAILED_MESSAGE;
+        setFeedback({
+          title: 'Request could not be sent',
+          message,
+        });
+        toast.error(message);
         return;
       }
 
@@ -265,8 +318,13 @@ export function VerificationRequestComposerDialog({
       onOpenChange(false);
       onSent?.();
     } catch (error) {
-      console.error('Failed to send drafted verification request:', error);
-      toast.error('Failed to send verification request.');
+      dispatchClientErrorDiagnostic('verifications.composer.send_failed', error);
+      const message = COMPOSER_SEND_FAILED_MESSAGE;
+      setFeedback({
+        title: 'Request could not be sent',
+        message,
+      });
+      toast.error(message);
     } finally {
       setSending(false);
     }
@@ -302,6 +360,7 @@ export function VerificationRequestComposerDialog({
                 setProofPackId(value);
                 setDraft(null);
                 setReviewed(false);
+                setFeedback(null);
               }}
               disabled={noProofPacks}
             >
@@ -336,6 +395,7 @@ export function VerificationRequestComposerDialog({
                   setRelationship(value as SelectableCustomVerificationRelationship);
                   setDraft(null);
                   setReviewed(false);
+                  setFeedback(null);
                 }}
               >
                 <SelectTrigger>
@@ -359,6 +419,7 @@ export function VerificationRequestComposerDialog({
                   setVerificationScope(value as VerificationScope);
                   setDraft(null);
                   setReviewed(false);
+                  setFeedback(null);
                 }}
               >
                 <SelectTrigger>
@@ -396,6 +457,16 @@ export function VerificationRequestComposerDialog({
             </div>
           </div>
 
+          {feedback ? (
+            <div
+              className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900"
+              role="alert"
+            >
+              <p className="font-semibold">{feedback.title}</p>
+              <p>{feedback.message}</p>
+            </div>
+          ) : null}
+
           <Button
             type="button"
             onClick={handleDraft}
@@ -416,8 +487,8 @@ export function VerificationRequestComposerDialog({
                 <div className="rounded-md border border-proofound-stone bg-japandi-bg px-3 py-2 text-sm text-muted-foreground">
                   <p className="font-medium text-foreground">Manual checklist draft</p>
                   <p>
-                    Provider assistance was unavailable, so this deterministic draft uses selected
-                    public-safe fields only. Manual editing still works.
+                    Guided suggestions are unavailable right now, so this draft uses only the
+                    selected public-safe fields. Manual editing still works.
                   </p>
                 </div>
               ) : (
@@ -484,7 +555,10 @@ export function VerificationRequestComposerDialog({
                   id="composer-verifier-email"
                   type="email"
                   value={verifierEmail}
-                  onChange={(event) => setVerifierEmail(event.target.value)}
+                  onChange={(event) => {
+                    setVerifierEmail(event.target.value);
+                    setFeedback(null);
+                  }}
                   placeholder="colleague@example.com"
                   autoComplete="email"
                 />

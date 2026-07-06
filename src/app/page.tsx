@@ -22,18 +22,19 @@ function getSiteUrl(): string {
 }
 
 const siteUrl = getSiteUrl();
+const socialPreviewImageUrl = `${siteUrl}/proofound-social-preview.png?version=20260528-hero-v2`;
 
 export const metadata: Metadata = {
   title: PROOFOUND_HOME_TITLE,
   description: PROOFOUND_HOME_DESCRIPTION,
   keywords: [
     'Proofound',
-    'evidence based hiring',
-    'proof based hiring',
+    'evidence based assignment review',
+    'proof based submission review',
     'verified proof portfolio',
-    'blind-safe hiring',
-    'privacy safe hiring',
-    'structured hiring signal',
+    'blind-safe assignment review',
+    'privacy safe proof review',
+    'structured proof review',
   ],
   alternates: { canonical: '/' },
   openGraph: {
@@ -44,7 +45,7 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: `${siteUrl}/hero-visual.jpg`,
+        url: socialPreviewImageUrl,
         width: 1200,
         height: 630,
         alt: 'Proofound verified proof hiring landing page',
@@ -55,7 +56,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: PROOFOUND_HOME_TITLE,
     description: PROOFOUND_HOME_OG_DESCRIPTION,
-    images: [`${siteUrl}/hero-visual.jpg`],
+    images: [socialPreviewImageUrl],
   },
 };
 

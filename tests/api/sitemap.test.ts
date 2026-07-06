@@ -50,7 +50,7 @@ describe('sitemap launch surfaces', () => {
 
     expect(urls).toContain(`${siteUrl}/`);
     expect(urls).toContain(`${siteUrl}/login`);
-    expect(urls).toContain(`${siteUrl}/auth/login`);
+    expect(urls).not.toContain(`${siteUrl}/auth/login`);
     expect(urls).toContain(`${siteUrl}/signup`);
     expect(urls).toContain(`${siteUrl}/onboarding`);
     expect(urls).toContain(`${siteUrl}/privacy`);

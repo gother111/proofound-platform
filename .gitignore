@@ -22,14 +22,19 @@
 # misc
 .DS_Store
 *.pem
+/.codex/
+/.agent/
 
 # debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 debug_log.txt
+playwright-run.log
+/scratch/
 /.artifacts/stale-build-state/
 /.artifacts/launch-validation-test-*/
+/.artifacts/prod-supabase-backend-readiness-*/
 
 # local env files
 .env*.local

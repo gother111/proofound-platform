@@ -6,8 +6,8 @@ import {
 
 export { dynamic } from '@/app/api/core/matching/matching-profile/handler';
 
-export async function GET() {
-  return getMatchingProfile();
+export async function GET(request: NextRequest) {
+  return getMatchingProfile(request);
 }
 
 export async function PUT(request: NextRequest) {

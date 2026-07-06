@@ -22,9 +22,18 @@ vi.mock('@/lib/workflow/service', () => ({
   syncWorkEmailVerificationRequested: vi.fn().mockResolvedValue(null),
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+    warn: vi.fn(),
+  },
+}));
+
 import { createClient } from '@/lib/supabase/server';
 import { sendWorkEmailVerification } from '@/lib/email';
 import { POST } from '@/app/api/verification/work-email/send/route';
+import { syncWorkEmailVerificationRequested } from '@/lib/workflow/service';
+import { log } from '@/lib/log';
 
 type IndividualProfileRow = {
   user_id: string;
@@ -109,6 +118,16 @@ function makeRequest(body: Record<string, unknown>) {
       'content-type': 'application/json',
     },
     body: JSON.stringify(body),
+  });
+}
+
+function makeRawRequest(body: string) {
+  return new NextRequest('https://proofound.io/api/verification/work-email/send', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+    },
+    body,
   });
 }
 
@@ -204,6 +223,68 @@ describe('POST /api/verification/work-email/send', () => {
     expect(await response.json()).toMatchObject({
       error: 'Failed to send verification email',
     });
+    expect(log.error).toHaveBeenCalledWith('verification.work_email_send.email_send_failed', {
+      userId: 'user-1',
+      orgId: null,
+      recipientDomain: 'acme.org',
+      error: 'Resend unavailable',
+    });
+  });
+
+  it('logs profile update failures structurally while keeping the public response generic', async () => {
+    const { supabase } = createSupabaseMock({
+      existingProfile: null,
+      upsertError: { message: 'profile upsert unavailable' },
+    });
+    (createClient as any).mockResolvedValue(supabase);
+
+    const response = await POST(makeRequest({ workEmail: 'new@acme.org' }), {} as any);
+
+    expect(response.status).toBe(500);
+    expect(await response.json()).toMatchObject({
+      error: 'Failed to save work email',
+    });
+    expect(log.error).toHaveBeenCalledWith('verification.work_email_send.profile_update_failed', {
+      userId: 'user-1',
+      orgId: null,
+      error: 'profile upsert unavailable',
+    });
+    expect(sendWorkEmailVerification).not.toHaveBeenCalled();
+  });
+
+  it('logs workflow sync failures structurally while preserving successful send response', async () => {
+    const { supabase } = createSupabaseMock({
+      existingProfile: null,
+    });
+    (createClient as any).mockResolvedValue(supabase);
+    vi.mocked(sendWorkEmailVerification).mockResolvedValue();
+    vi.mocked(syncWorkEmailVerificationRequested).mockRejectedValueOnce(
+      new Error('workflow unavailable')
+    );
+
+    const response = await POST(makeRequest({ workEmail: 'new@acme.org' }), {} as any);
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.success).toBe(true);
+    expect(payload.workflow).toBeNull();
+    expect(log.warn).toHaveBeenCalledWith('verification.work_email_send.workflow_sync_failed', {
+      userId: 'user-1',
+      orgId: null,
+      error: 'workflow unavailable',
+    });
+  });
+
+  it('logs unexpected route failures structurally while keeping the public response generic', async () => {
+    (createClient as any).mockRejectedValueOnce(new Error('supabase unavailable'));
+
+    const response = await POST(makeRequest({ workEmail: 'new@acme.org' }), {} as any);
+
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({ error: 'Internal server error' });
+    expect(log.error).toHaveBeenCalledWith('verification.work_email_send.failed', {
+      error: 'supabase unavailable',
+    });
   });
 
   it('returns 401 when auth is missing', async () => {
@@ -217,5 +298,19 @@ describe('POST /api/verification/work-email/send', () => {
 
     expect(response.status).toBe(401);
     expect(await response.json()).toMatchObject({ error: 'Unauthorized' });
+  });
+
+  it('returns 400 for malformed JSON before token generation or email delivery', async () => {
+    const { supabase, upsertPayloads } = createSupabaseMock({
+      existingProfile: null,
+    });
+    (createClient as any).mockResolvedValue(supabase);
+
+    const response = await POST(makeRawRequest('{'), {} as any);
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: 'Invalid JSON body' });
+    expect(upsertPayloads).toHaveLength(0);
+    expect(sendWorkEmailVerification).not.toHaveBeenCalled();
   });
 });

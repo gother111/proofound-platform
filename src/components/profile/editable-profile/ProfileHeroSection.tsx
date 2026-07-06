@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { AvatarUpload } from '@/components/profile/AvatarUpload';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import type { ProfileData } from '@/types/profile';
 
 type PendingState = {
@@ -44,7 +45,7 @@ export function ProfileHeroSection({
           setDominantColor(`rgba(${color.value[0]}, ${color.value[1]}, ${color.value[2]}, 0.15)`);
         })
         .catch((e) => {
-          console.warn('Failed to extract average color', e);
+          dispatchClientErrorDiagnostic('profile.hero.average_color_failed', e);
         });
     }
   }, [profile.basicInfo.avatar]);
@@ -58,10 +59,10 @@ export function ProfileHeroSection({
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="relative py-8">
-          <Card className="p-6 md:p-8 border border-white/40 dark:border-stone-800/50 shadow-[0_8px_30px_rgb(0,0,0,0.06)] bg-white/70 dark:bg-stone-900/60 backdrop-blur-md rounded-3xl overflow-hidden relative">
+        <div className="relative py-4 sm:py-8">
+          <Card className="p-4 sm:p-6 md:p-8 border border-white/40 dark:border-stone-800/50 shadow-[0_8px_30px_rgb(0,0,0,0.06)] bg-white/70 dark:bg-stone-900/60 backdrop-blur-md rounded-3xl overflow-hidden relative">
             <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#7A9278] via-[#E0D5C7] to-[#C9A57B]" />
-            <div className="flex flex-col sm:flex-row gap-6 items-start mt-2">
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start mt-2">
               <AvatarUpload
                 avatar={profile.basicInfo.avatar}
                 onUpload={(base64) => onUpdateBasicInfo({ avatar: base64 })}
@@ -74,18 +75,21 @@ export function ProfileHeroSection({
                   </h1>
                   <Button
                     variant="ghost"
-                    size="sm"
+                    size="icon"
+                    aria-label="Edit profile basics"
+                    title="Edit profile basics"
                     onClick={onEditProfile}
-                    className="h-8"
+                    className="text-muted-foreground hover:text-foreground"
                     disabled={pending.updatingBasicInfo || isPending}
                   >
-                    <Edit3 className="w-3 h-3" />
+                    <Edit3 className="h-4 w-4" />
                   </Button>
                   <Button
                     variant={profile.redactMode ? 'default' : 'outline'}
-                    size="sm"
+                    size="touch"
+                    aria-pressed={profile.redactMode}
                     onClick={() => onToggleRedact(!profile.redactMode)}
-                    className={`h-8 gap-1.5 ${
+                    className={`gap-1.5 ${
                       profile.redactMode
                         ? 'bg-amber-500 hover:bg-amber-600 text-white'
                         : 'text-muted-foreground hover:text-foreground'
@@ -99,21 +103,21 @@ export function ProfileHeroSection({
                   >
                     {profile.redactMode ? (
                       <>
-                        <EyeOff className="w-3 h-3" />
+                        <EyeOff className="h-4 w-4" />
                         <span className="text-xs">Hidden</span>
                       </>
                     ) : (
                       <>
-                        <Eye className="w-3 h-3" />
+                        <Eye className="h-4 w-4" />
                         <span className="text-xs">Visible</span>
                       </>
                     )}
                   </Button>
                   <Button
                     variant="outline"
-                    size="sm"
+                    size="touch"
                     onClick={onShare}
-                    className="h-8 gap-1.5 text-muted-foreground hover:text-foreground"
+                    className="gap-1.5 text-muted-foreground hover:text-foreground"
                     title="Share your profile"
                   >
                     <Share2 className="w-3 h-3" />
@@ -155,7 +159,7 @@ export function ProfileHeroSection({
                       <Edit3 className="w-4 h-4 text-muted-foreground/60 mt-1 group-hover/tagline:text-[#7A9278]" />
                       <div>
                         <p className="text-sm text-muted-foreground mb-1">Add a tagline</p>
-                        <p className="text-xs text-muted-foreground/60">
+                        <p className="text-xs text-muted-foreground">
                           A brief statement that captures who you are and what you care about
                         </p>
                       </div>

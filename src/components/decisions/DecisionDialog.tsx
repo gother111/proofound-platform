@@ -1,13 +1,13 @@
 /**
  * Decision Dialog Component
  *
- * UI for organizations to make hiring decisions after interviews
+ * UI for organizations to record workflow decisions after interviews
  * Displays 48-hour SLA countdown and decision options
  */
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useId } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -19,20 +19,24 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { CheckCircle2, ArrowRight, Clock, XCircle, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, ArrowRight, Clock, XCircle, AlertTriangle, RefreshCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientDiagnostic } from '@/lib/client-diagnostics';
 
 interface DecisionDialogProps {
   isOpen: boolean;
   onClose: () => void;
   interviewId: string;
   candidateName: string;
-  role: string;
+  assignmentTitle: string;
   onDecisionMade?: () => void;
 }
 
 type DecisionType = 'hire' | 'advance' | 'hold' | 'reject' | 'withdraw';
+
+const DECISION_SUBMIT_RETRY_MESSAGE =
+  'Decision could not be recorded. Your selected outcome and notes are still here; please try again.';
 
 interface DecisionWindow {
   hoursRemaining: number;
@@ -40,12 +44,32 @@ interface DecisionWindow {
   deadline: string;
 }
 
+function clientErrorName(error: unknown) {
+  if (error instanceof Error && error.name.trim()) {
+    return error.name;
+  }
+
+  return 'UnknownError';
+}
+
+function getReturnedError(payload: unknown) {
+  if (!payload || typeof payload !== 'object') {
+    return '';
+  }
+
+  if ('error' in payload && typeof payload.error === 'string') {
+    return payload.error.trim();
+  }
+
+  return '';
+}
+
 export function DecisionDialog({
   isOpen,
   onClose,
   interviewId,
   candidateName,
-  role,
+  assignmentTitle,
   onDecisionMade,
 }: DecisionDialogProps) {
   const [decision, setDecision] = useState<DecisionType | null>(null);
@@ -53,6 +77,8 @@ export function DecisionDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [decisionWindow, setDecisionWindow] = useState<DecisionWindow | null>(null);
   const [isLoadingWindow, setIsLoadingWindow] = useState(true);
+  const [decisionWindowError, setDecisionWindowError] = useState<string | null>(null);
+  const optionDescriptionIdBase = useId();
   const { toast } = useToast();
 
   // Fetch decision window status
@@ -66,6 +92,8 @@ export function DecisionDialog({
   const fetchDecisionWindow = async () => {
     try {
       setIsLoadingWindow(true);
+      setDecisionWindowError(null);
+      setDecisionWindow(null);
       const response = await fetch(`/api/decisions/window/${interviewId}`);
 
       if (!response.ok) {
@@ -79,15 +107,13 @@ export function DecisionDialog({
         deadline: data.deadline,
       });
     } catch (error) {
-      console.error('decision.window.fetch.failed', {
-        interviewId,
-        error: error instanceof Error ? error.message : 'Unknown error',
+      dispatchClientDiagnostic('decision.window.fetch_failed', {
+        errorName: clientErrorName(error),
+        hasError: true,
       });
-      toast({
-        title: 'Failed to load decision window',
-        description: 'Could not fetch decision deadline information',
-        variant: 'destructive',
-      });
+      setDecisionWindowError(
+        'The decision can still be recorded, but the 48-hour SLA countdown could not load. Retry before confirming if you need the current deadline.'
+      );
     } finally {
       setIsLoadingWindow(false);
     }
@@ -119,23 +145,23 @@ export function DecisionDialog({
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to record decision');
+        const error = await response.json().catch(() => null);
+        const returnedError = getReturnedError(error);
+        dispatchClientDiagnostic('decision.submit_returned_error', {
+          decision,
+          status: response.status,
+          hasReturnedError: returnedError.length > 0,
+        });
+        throw new Error('decision_submit_request_failed');
       }
 
       const data = await response.json();
 
       toast({
         title: 'Decision recorded',
-        description: `Your ${decision} decision has been recorded${
+        description: `Your workflow decision has been recorded${
           data.decision.withinSLA ? ' within the 48-hour SLA' : ' (past SLA)'
         }`,
-      });
-
-      console.log('decision.submitted', {
-        interviewId,
-        decision,
-        withinSLA: data.decision.withinSLA,
       });
 
       // Close dialog and notify parent
@@ -148,14 +174,14 @@ export function DecisionDialog({
       setDecision(null);
       setFeedback('');
     } catch (error) {
-      console.error('decision.submit.failed', {
-        interviewId,
+      dispatchClientDiagnostic('decision.submit_failed', {
         decision,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        errorName: clientErrorName(error),
+        hasError: true,
       });
       toast({
-        title: 'Failed to record decision',
-        description: error instanceof Error ? error.message : 'Please try again',
+        title: 'Decision not recorded',
+        description: DECISION_SUBMIT_RETRY_MESSAGE,
         variant: 'destructive',
       });
     } finally {
@@ -195,7 +221,7 @@ export function DecisionDialog({
     {
       value: 'hire' as DecisionType,
       label: 'Hire',
-      description: 'Extend an offer to this candidate',
+      description: 'Move to engagement confirmation; decision and verification stay distinct',
       icon: CheckCircle2,
       color: 'text-green-600 dark:text-green-400',
       bgColor: 'bg-green-50 dark:bg-green-900/20',
@@ -204,7 +230,7 @@ export function DecisionDialog({
     {
       value: 'advance' as DecisionType,
       label: 'Advance',
-      description: 'Move to next interview round',
+      description: 'Move this workflow to the next approved interview step',
       icon: ArrowRight,
       color: 'text-blue-600 dark:text-blue-400',
       bgColor: 'bg-blue-50 dark:bg-blue-900/20',
@@ -213,7 +239,7 @@ export function DecisionDialog({
     {
       value: 'hold' as DecisionType,
       label: 'Hold',
-      description: 'Keep for future consideration',
+      description: 'Pause this workflow with a reason and follow-up window',
       icon: Clock,
       color: 'text-yellow-600 dark:text-yellow-400',
       bgColor: 'bg-yellow-50 dark:bg-yellow-900/20',
@@ -222,7 +248,7 @@ export function DecisionDialog({
     {
       value: 'reject' as DecisionType,
       label: 'Reject',
-      description: 'Not a fit for this role',
+      description: 'Close this assignment workflow without a broader profile judgment',
       icon: XCircle,
       color: 'text-red-600 dark:text-red-400',
       bgColor: 'bg-red-50 dark:bg-red-900/20',
@@ -231,7 +257,7 @@ export function DecisionDialog({
     {
       value: 'withdraw' as DecisionType,
       label: 'Withdraw',
-      description: 'Close the hiring flow without a hiring outcome',
+      description: 'Close this assignment workflow without an engagement outcome',
       icon: AlertTriangle,
       color: 'text-stone-700 dark:text-stone-300',
       bgColor: 'bg-stone-50 dark:bg-stone-900/20',
@@ -243,13 +269,51 @@ export function DecisionDialog({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Make Hiring Decision</DialogTitle>
+          <DialogTitle>Record Workflow Decision</DialogTitle>
           <DialogDescription>
-            Interview with {candidateName} for {role}
+            Interview workflow for {candidateName} and {assignmentTitle}
           </DialogDescription>
         </DialogHeader>
 
         {/* Decision Window Timer */}
+        {isLoadingWindow ? (
+          <div
+            className="flex items-center gap-2 rounded-lg border border-proofound-stone/70 bg-muted/30 p-4 text-sm text-muted-foreground"
+            role="status"
+            aria-live="polite"
+          >
+            <RefreshCcw className="h-4 w-4 animate-spin" />
+            Loading decision deadline...
+          </div>
+        ) : null}
+
+        {!isLoadingWindow && decisionWindowError ? (
+          <div
+            className="rounded-lg border border-amber-200 bg-amber-50/70 p-4 text-amber-950"
+            role="alert"
+          >
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="space-y-1">
+                <p className="flex items-center gap-2 text-sm font-semibold">
+                  <AlertTriangle className="h-4 w-4" />
+                  Decision deadline unavailable
+                </p>
+                <p className="text-sm leading-5">{decisionWindowError}</p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="shrink-0 bg-white"
+                onClick={fetchDecisionWindow}
+              >
+                <RefreshCcw className="mr-2 h-4 w-4" />
+                Retry deadline
+              </Button>
+            </div>
+          </div>
+        ) : null}
+
         {!isLoadingWindow && decisionWindow && (
           <div
             className={`rounded-lg border p-4 ${
@@ -276,16 +340,24 @@ export function DecisionDialog({
 
         {/* Decision Options */}
         <div className="space-y-2">
-          <Label>Select Decision</Label>
-          <div className="grid grid-cols-2 gap-3">
+          <Label id="decision-options-label">Select Decision</Label>
+          <div
+            role="group"
+            aria-labelledby="decision-options-label"
+            className="grid grid-cols-1 gap-3 sm:grid-cols-2"
+          >
             {decisionOptions.map((option) => {
               const Icon = option.icon;
               const isSelected = decision === option.value;
+              const descriptionId = `${optionDescriptionIdBase}-${option.value}-description`;
 
               return (
                 <button
                   key={option.value}
                   type="button"
+                  aria-label={option.label}
+                  aria-describedby={descriptionId}
+                  aria-pressed={isSelected}
                   onClick={() => setDecision(option.value)}
                   className={`flex flex-col items-start gap-2 rounded-lg border-2 p-4 transition-all ${
                     isSelected
@@ -297,7 +369,10 @@ export function DecisionDialog({
                     <Icon className={`h-5 w-5 ${option.color}`} />
                     <span className="font-semibold">{option.label}</span>
                   </div>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 text-left">
+                  <p
+                    id={descriptionId}
+                    className="text-left text-xs text-gray-600 dark:text-gray-400"
+                  >
                     {option.description}
                   </p>
                 </button>
@@ -320,7 +395,7 @@ export function DecisionDialog({
             className="resize-none"
           />
           <p className="text-xs text-gray-500">
-            These notes stay with your team and will not be shared with the candidate.
+            These notes stay with your team and are not sent through workflow notifications.
           </p>
         </div>
 
@@ -329,7 +404,7 @@ export function DecisionDialog({
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={!decision || isSubmitting} className="min-w-32">
-            {isSubmitting ? 'Recording...' : 'Confirm Decision'}
+            {isSubmitting ? 'Recording...' : 'Confirm Workflow Decision'}
           </Button>
         </DialogFooter>
       </DialogContent>

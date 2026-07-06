@@ -22,6 +22,9 @@ Preserved source locations:
   - `src/archive/non_launch_integrations/preserved/components/**`
   - `src/archive/non_launch_integrations/preserved/app/**`
   - `src/archive/non_launch_integrations/preserved/tests/**`
+- Orphaned provider wrappers:
+  - `src/archive/non_launch_integrations/preserved/lib/integrations/zoom.ts`
+  - `src/archive/non_launch_integrations/preserved/lib/video/**`
 
 Restore guidance:
 

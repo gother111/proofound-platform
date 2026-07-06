@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "featureId": "feat_route_0ed8976d1d",
+  "title": "Route /api/candidate-invites/:token",
+  "summary": "Web route implemented by app/api/candidate-invites/[token]/route.ts.",
+  "kind": "route",
+  "source": "next-app-route",
+  "confidence": "high",
+  "entrypoints": [
+    {
+      "path": "app/api/candidate-invites/[token]/route.ts",
+      "symbol": null,
+      "route": "/api/candidate-invites/:token",
+      "command": null
+    }
+  ],
+  "ownedFiles": [
+    {
+      "path": "app/api/candidate-invites/[token]/route.ts",
+      "reason": "entrypoint"
+    }
+  ],
+  "contextFiles": [],
+  "tests": [],
+  "tags": ["next", "web"],
+  "trustBoundaries": ["user-input", "network", "serialization"],
+  "status": "fixed",
+  "lock": null,
+  "findingIds": [
+    "fnd_sig-feat-route-0ed8976d1d-112f76_b086e04bd8",
+    "fnd_sig-feat-route-0ed8976d1d-d324af_520515af1e",
+    "fnd_sig-feat-route-0ed8976d1d-071c0a_4efae85827"
+  ],
+  "patchAttemptIds": [],
+  "analysisHistory": [
+    {
+      "runId": "20260516T164325-52e1d0",
+      "kind": "review",
+      "summary": "3 finding(s)",
+      "provider": "codex",
+      "model": null,
+      "createdAt": "2026-05-16T16:51:37.047Z"
+    }
+  ],
+  "createdAt": "2026-05-16T16:02:40.128Z",
+  "updatedAt": "2026-05-16T17:18:10.932Z"
+}

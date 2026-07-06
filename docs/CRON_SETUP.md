@@ -1,5 +1,7 @@
 # Cron Setup Guide
 
+> Doc Class: `active`
+> Last Verified: `2026-05-21`
 > Canonical status: use Vercel Cron for daily core business automation and cron-job.org only for observability jobs.
 
 ## Canonical Cron Classification
@@ -11,7 +13,7 @@ The canonical machine-readable registry is `CRON_JOB_CLASSIFICATION_TABLE` in `s
 | `/api/cron/decision-reminders`        | active_launch_automation | Vercel Cron                | 0 10 \* \* \* UTC                | Sends launch-critical decision reminders from the MVP workflow corridor.                     | tests/scripts/cron-scheduling.test.ts verifies the Vercel cron entry.               |
 | `/api/cron/refresh-matches`           | active_launch_automation | Vercel Cron                | 0 3 \* \* \* UTC                 | Enqueues the daily MVP match refresh workload.                                               | tests/scripts/cron-scheduling.test.ts verifies the Vercel cron entry.               |
 | `/api/cron/refresh-matches-worker`    | active_launch_automation | Vercel Cron                | 15 3 \* \* \* UTC                | Drains the MVP match refresh queue after enqueue.                                            | tests/scripts/cron-scheduling.test.ts verifies the Vercel cron entry.               |
-| `/api/cron/sla-enforcement`           | active_launch_automation | Vercel Cron                | 0 8 \* \* \* UTC                 | Maintains launch-critical SLA state for the hiring workflow.                                 | tests/scripts/cron-scheduling.test.ts verifies the Vercel cron entry.               |
+| `/api/cron/sla-enforcement`           | active_launch_automation | Vercel Cron                | 0 8 \* \* \* UTC                 | Maintains launch-critical SLA state for the assignment-review workflow.                      | tests/scripts/cron-scheduling.test.ts verifies the Vercel cron entry.               |
 | `/api/cron/health-check`              | active_observability     | cron-job.org               | Every 3 hours, Europe/Stockholm  | External health signal for launch monitoring.                                                | tests/scripts/cron-scheduling.test.ts verifies the managed cron-job.org job.        |
 | `/api/cron/performance-check`         | active_observability     | cron-job.org               | Daily at 06:00, Europe/Stockholm | External performance signal for launch monitoring.                                           | tests/scripts/cron-scheduling.test.ts verifies the managed cron-job.org job.        |
 | `/api/cron/launch-synthetic-checks`   | manual_launch_ops        | Manual/internal launch ops | Not scheduled                    | Available for explicit launch synthetic checks, not recurring infrastructure.                | tests/api/launch-surface-inventory.test.ts covers internal-only launch surface.     |

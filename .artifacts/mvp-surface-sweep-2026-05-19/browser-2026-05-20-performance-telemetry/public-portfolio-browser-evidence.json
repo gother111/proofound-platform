@@ -1,0 +1,15 @@
+{
+  "route": "http://127.0.0.1:33180/portfolio/demo",
+  "title": "Public Page Unavailable | Proofound",
+  "signals": {
+    "archivedPerfVisible": false,
+    "bodyLength": 417,
+    "h1": "Public page unavailable",
+    "hasMain": true,
+    "overflowX": false,
+    "title": "Public Page Unavailable | Proofound",
+    "url": "http://127.0.0.1:33180/portfolio/demo"
+  },
+  "warningsOrErrors": [],
+  "note": "Codex in-app Browser smoke after removing client calls to archived /api/performance/track."
+}

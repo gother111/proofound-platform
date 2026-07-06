@@ -17,7 +17,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const { user } = authContext;
-    const { jdText } = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+    const jdText =
+      body && typeof body === 'object' ? (body as Record<string, unknown>).jdText : undefined;
 
     if (!jdText || typeof jdText !== 'string') {
       return NextResponse.json({ error: 'Job description text is required' }, { status: 400 });

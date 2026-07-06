@@ -1,0 +1,21 @@
+{
+  "checkedAt": "2026-05-19T13:06:02.499Z",
+  "metrics": {
+    "bodyText": "Skip to main content\nPUBLIC PAGE UNAVAILABLE\n\nThis Public Page link is unavailable. It may be hidden, retired, or not ready for launch-safe sharing.\n\nproofound.io/portfolio/demo\nPublic Page unavailable",
+    "h1": "Public Page unavailable",
+    "hasNextOverlay": false,
+    "headingTags": [
+      {
+        "tag": "H1",
+        "text": "Public Page unavailable"
+      }
+    ],
+    "location": "http://localhost:33180/portfolio/demo",
+    "title": "Public Page Unavailable | Proofound",
+    "viewport": {
+      "height": 1354,
+      "width": 1359
+    }
+  },
+  "consoleIssues": []
+}

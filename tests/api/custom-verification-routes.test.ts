@@ -52,6 +52,13 @@ vi.mock('@/lib/verification/canonical-requests', () => ({
   mapCanonicalSkillVerificationRequestRecord: vi.fn((record: any) => record),
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+    warn: vi.fn(),
+  },
+}));
+
 vi.mock('@/lib/internal-ops/queue', () => ({
   ensureInternalOpsQueueItem: (...args: any[]) => ensureInternalOpsQueueItemMock(...args),
 }));
@@ -77,6 +84,8 @@ vi.mock('@/lib/security/capability-tokens', () => ({
     token: { id: 'cap-custom-token-1', source_id: 'bundle-1' },
   })),
 }));
+
+import { log } from '@/lib/log';
 
 const AUTH_USER_ID = '11111111-1111-4111-8111-111111111111';
 
@@ -197,6 +206,90 @@ describe('canonical custom verification routes', () => {
     });
   });
 
+  it('rejects malformed custom verification request JSON before bundle creation', async () => {
+    vi.mocked(createClient).mockResolvedValue({
+      from: vi.fn(() => {
+        throw new Error('artifact lookup should not run for malformed JSON');
+      }),
+    } as any);
+
+    const response = await postCustomRequest(
+      new NextRequest('http://localhost/api/verification/requests/custom', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: '{"verifierEmail":',
+      })
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
+    expect(createCanonicalVerificationBundle).not.toHaveBeenCalled();
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
+
+  it('logs selected skill validation failures without exposing verifier email', async () => {
+    const taxonomyJoinError = new Error('taxonomy join unavailable');
+    const fallbackSkillError = new Error('fallback skills unavailable');
+    let skillsSelectCount = 0;
+
+    vi.mocked(createClient).mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { email: 'requester@example.com' } },
+          error: null,
+        }),
+      },
+      from: vi.fn((table: string) => {
+        if (table === 'skills') {
+          return {
+            select: vi.fn(() => {
+              skillsSelectCount += 1;
+              return thenableResult(
+                skillsSelectCount === 1
+                  ? { data: null, error: taxonomyJoinError }
+                  : { data: null, error: fallbackSkillError }
+              );
+            }),
+          };
+        }
+
+        return {
+          select: vi.fn(() => thenableResult({ data: [], error: null })),
+        };
+      }),
+    } as any);
+
+    const response = await postCustomRequest(
+      new NextRequest('http://localhost/api/verification/requests/custom', {
+        method: 'POST',
+        body: JSON.stringify({
+          verifierEmail: 'verifier@example.com',
+          relationship: 'peer',
+          artifacts: [{ type: 'skill', id: '22222222-2222-4222-8222-222222222222' }],
+        }),
+      })
+    );
+
+    expect(response.status).toBe(500);
+    expect(log.warn).toHaveBeenCalledWith(
+      'verification.custom_request.selected_skills_taxonomy_join_failed',
+      {
+        error: taxonomyJoinError,
+        profileId: AUTH_USER_ID,
+        selectedSkillCount: 1,
+      }
+    );
+    expect(log.error).toHaveBeenCalledWith(
+      'verification.custom_request.selected_skills_load_failed',
+      {
+        error: fallbackSkillError,
+        userId: AUTH_USER_ID,
+        selectedSkillCount: 1,
+      }
+    );
+    expect(JSON.stringify(vi.mocked(log.error).mock.calls)).not.toContain('verifier@example.com');
+  });
+
   it('creates a canonical verification bundle and sends the public verify/custom link', async () => {
     vi.mocked(createClient).mockResolvedValue({
       auth: {
@@ -296,6 +389,96 @@ describe('canonical custom verification routes', () => {
     expect(sentEmailPayload.html).not.toContain('Requester Name');
     expect(sentEmailPayload.html).not.toContain('TypeScript');
     expect(sentEmailPayload.html).not.toContain('Please verify');
+  });
+
+  it('logs custom verification email delivery failures with bundle context', async () => {
+    vi.mocked(createClient).mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { email: 'requester@example.com' } },
+          error: null,
+        }),
+      },
+      from: vi.fn((table: string) => {
+        if (table === 'skills') {
+          return {
+            select: vi.fn(() =>
+              thenableResult({
+                data: [
+                  {
+                    id: '22222222-2222-4222-8222-222222222222',
+                    skill_id: 'custom-1-2-3-typescript',
+                    skill_code: null,
+                    name_i18n: { en: 'TypeScript' },
+                    taxonomy: null,
+                  },
+                ],
+                error: null,
+              })
+            ),
+          };
+        }
+
+        if (table === 'profiles') {
+          return {
+            select: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                single: vi.fn().mockResolvedValue({
+                  data: { display_name: 'Requester Name' },
+                  error: null,
+                }),
+              })),
+            })),
+          };
+        }
+
+        return {
+          select: vi.fn(() => thenableResult({ data: [], error: null })),
+        };
+      }),
+    } as any);
+
+    vi.mocked(createAdminClient).mockReturnValue({
+      from: vi.fn(() => ({
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+          })),
+        })),
+      })),
+    } as any);
+    vi.mocked(createCanonicalVerificationBundle).mockResolvedValue({
+      bundleId: 'bundle-1',
+      rawToken: 'custom-verify-token',
+      token: { id: 'cap-custom-token-1' },
+      expiresAt: new Date('2099-03-20T10:00:00.000Z'),
+      records: [],
+    } as any);
+    vi.mocked(sendEmail).mockResolvedValue({
+      success: false,
+      error: 'provider_denied',
+    } as any);
+
+    const response = await postCustomRequest(
+      new NextRequest('http://localhost/api/verification/requests/custom', {
+        method: 'POST',
+        body: JSON.stringify({
+          verifierEmail: 'verifier@example.com',
+          relationship: 'peer',
+          artifacts: [{ type: 'skill', id: '22222222-2222-4222-8222-222222222222' }],
+          message: 'Please verify',
+        }),
+      })
+    );
+
+    expect(response.status).toBe(201);
+    expect(log.warn).toHaveBeenCalledWith('verification.custom_request.email_send_failed', {
+      error: 'provider_denied',
+      userId: AUTH_USER_ID,
+      bundleId: 'bundle-1',
+      selectedArtifactCount: 1,
+    });
+    expect(JSON.stringify(vi.mocked(log.warn).mock.calls)).not.toContain('verifier@example.com');
   });
 
   it('returns canonical bundle details for /api/verify/custom/[token]', async () => {
@@ -416,6 +599,23 @@ describe('canonical custom verification routes', () => {
     });
   });
 
+  it('logs email hint route failures with structured diagnostics', async () => {
+    const authError = new Error('auth unavailable');
+    vi.mocked(requireAuth).mockRejectedValueOnce(authError);
+
+    const response = await getEmailHint(
+      new NextRequest(
+        'http://localhost/api/verification/requests/email-hint?email=founder@example.com'
+      )
+    );
+
+    expect(response.status).toBe(500);
+    expect(log.error).toHaveBeenCalledWith('verification.email_hint.get_failed', {
+      error: authError,
+    });
+    expect(JSON.stringify(vi.mocked(log.error).mock.calls)).not.toContain('founder@example.com');
+  });
+
   it('expires canonical bundles when public links are stale', async () => {
     vi.mocked(getCanonicalBundleById).mockResolvedValue(
       makeCanonicalBundle({
@@ -461,6 +661,22 @@ describe('canonical custom verification routes', () => {
     expect(unknown.status).toBe(404);
     await expect(malformed.json()).resolves.toEqual({ error: 'Verification request not found' });
     await expect(unknown.json()).resolves.toEqual({ error: 'Verification request not found' });
+  });
+
+  it('rejects malformed custom verification response JSON before token redemption', async () => {
+    const response = await postVerifyCustom(
+      new NextRequest('http://localhost/api/verify/custom/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', {
+        method: 'POST',
+        body: '{"action":',
+        headers: { 'content-type': 'application/json' },
+      }),
+      { params: Promise.resolve({ token: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' }) }
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
+    expect(respondCanonicalBundle).not.toHaveBeenCalled();
+    expect(getCanonicalBundleById).not.toHaveBeenCalled();
   });
 
   it('records partial custom attestation responses and queues them for manual review', async () => {

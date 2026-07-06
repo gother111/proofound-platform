@@ -5,6 +5,7 @@
  * Tracks API endpoint latency to ensure ≤ 1.5s (P95) per PRD requirement
  */
 import { emitAnalyticsEventAsync } from '@/lib/analytics/events';
+import { log } from '@/lib/log';
 
 interface APILatencyLog {
   path: string;
@@ -37,7 +38,12 @@ export async function logAPILatency(data: APILatencyLog): Promise<void> {
     });
   } catch (error) {
     // Don't throw - latency logging should not break requests
-    console.error('Failed to log API latency:', error);
+    log.error('monitoring.api_latency.log_failed', {
+      path: data.path,
+      method: data.method,
+      requestId: data.requestId,
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 }
 

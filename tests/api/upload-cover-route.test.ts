@@ -68,6 +68,20 @@ describe('POST /api/upload/cover', () => {
     expect(ingestUploadedFile).not.toHaveBeenCalled();
   });
 
+  it('rejects malformed multipart form data before storage ingest', async () => {
+    const response = await POST({
+      headers: new Headers({ 'content-type': 'multipart/form-data' }),
+      formData: vi.fn(async () => {
+        throw new Error('invalid multipart boundary');
+      }),
+    } as unknown as NextRequest);
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload).toEqual({ error: 'Invalid form data' });
+    expect(ingestUploadedFile).not.toHaveBeenCalled();
+  });
+
   it('rejects unauthorized organization uploads before storage ingest', async () => {
     vi.mocked(getCanonicalActiveOrgMembership).mockResolvedValue({
       role: 'org_manager',

@@ -94,7 +94,7 @@ test.describe('Smartphone UI regression', () => {
         assertLoaded: async (routePage) => {
           await expect(
             routePage.getByRole('heading', {
-              name: /Add your first proof record|Verify strongest proof record/,
+              name: 'Readiness corridor',
             })
           ).toBeVisible();
         },
@@ -118,7 +118,7 @@ test.describe('Smartphone UI regression', () => {
         route: '/app/o/test-org/home',
         pathname: '/app/o/test-org/home',
         assertLoaded: async (routePage) => {
-          await expect(routePage.getByText('Trust, assignment, and review order')).toBeVisible();
+          await expect(routePage.getByText('Current review workspace')).toBeVisible();
         },
       },
       {
@@ -126,7 +126,7 @@ test.describe('Smartphone UI regression', () => {
         pathname: '/app/o/test-org/profile',
         assertLoaded: async (routePage) => {
           await expect(
-            routePage.getByRole('heading', { name: 'Organization Profile' })
+            routePage.getByRole('heading', { name: 'Organization Trust Page', exact: true })
           ).toBeVisible();
         },
       },
@@ -201,17 +201,14 @@ test.describe('Smartphone UI regression', () => {
     await gotoStable(page, '/admin');
 
     const navTrigger = page.getByRole('button', { name: 'Open admin navigation' });
-    const notifications = page.getByRole('button', { name: 'Open notifications' });
     const profile = page.getByRole('button', { name: 'Open admin profile menu' });
 
     await expect(navTrigger).toBeVisible();
-    await expect(notifications).toBeVisible();
     await expect(profile).toBeVisible();
 
     const { viewportWidth, rightEdgeMax } = await page.evaluate(() => {
       const actions = [
         document.querySelector('[aria-label="Open admin navigation"]') as HTMLElement | null,
-        document.querySelector('[aria-label="Open notifications"]') as HTMLElement | null,
         document.querySelector('[aria-label="Open admin profile menu"]') as HTMLElement | null,
       ].filter(Boolean) as HTMLElement[];
 
@@ -229,13 +226,31 @@ test.describe('Smartphone UI regression', () => {
   test('organization shell main area reserves space for bottom nav', async ({ page }) => {
     await gotoStable(page, '/app/o/test-org/home');
 
-    const paddingBottom = await page.evaluate(() => {
-      const main = document.querySelector('main');
-      if (!main) return 0;
-      return Number.parseFloat(window.getComputedStyle(main).paddingBottom || '0');
+    const shellSpacing = await page.evaluate(() => {
+      const main = document.querySelector('main') as HTMLElement | null;
+      const mobileNav = document.querySelector(
+        'nav[aria-label="Mobile primary navigation"]'
+      ) as HTMLElement | null;
+
+      if (!main || !mobileNav) {
+        return null;
+      }
+
+      const mainRect = main.getBoundingClientRect();
+      const navRect = mobileNav.getBoundingClientRect();
+      const styles = window.getComputedStyle(main);
+
+      return {
+        mainBottom: mainRect.bottom,
+        navTop: navRect.top,
+        marginBottom: Number.parseFloat(styles.marginBottom || '0'),
+        paddingBottom: Number.parseFloat(styles.paddingBottom || '0'),
+      };
     });
 
-    expect(paddingBottom).toBeGreaterThanOrEqual(80);
+    expect(shellSpacing).not.toBeNull();
+    expect(shellSpacing!.mainBottom).toBeLessThanOrEqual(shellSpacing!.navTop);
+    expect(shellSpacing!.marginBottom + shellSpacing!.paddingBottom).toBeGreaterThanOrEqual(80);
   });
 
   test('mobile profile shells expose their retained bottom navigation destinations', async ({

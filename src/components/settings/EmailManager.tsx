@@ -6,10 +6,58 @@ import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Pencil, Check, X, Mail, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 interface EmailManagerProps {
   currentEmail: string;
   onEmailUpdated?: () => void;
+}
+
+const EMAIL_UPDATE_FAILED_MESSAGE =
+  'Email was not updated. Your current email is still active; review the new address and try again.';
+
+function getSafeEmailUpdateError(error: unknown): string {
+  const message = error instanceof Error ? error.message : '';
+
+  if (message === 'email_invalid_address' || /valid email address/i.test(message)) {
+    return 'Please enter a valid email address.';
+  }
+
+  if (message === 'email_session_unconfirmed' || /unauthorized/i.test(message)) {
+    return 'Your session could not be confirmed. Sign in again, then update your email.';
+  }
+
+  return EMAIL_UPDATE_FAILED_MESSAGE;
+}
+
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function getReturnedError(payload: unknown) {
+  if (
+    payload &&
+    typeof payload === 'object' &&
+    'error' in payload &&
+    typeof payload.error === 'string'
+  ) {
+    return payload.error.trim();
+  }
+
+  return '';
+}
+
+function getEmailUpdateErrorCode(returnedError: string) {
+  if (/valid email address/i.test(returnedError)) {
+    return 'email_invalid_address';
+  }
+
+  if (/unauthorized/i.test(returnedError)) {
+    return 'email_session_unconfirmed';
+  }
+
+  return 'email_update_request_failed';
 }
 
 /**
@@ -52,16 +100,23 @@ export function EmailManager({ currentEmail, onEmailUpdated }: EmailManagerProps
     setError(null);
 
     try {
-      const response = await fetch('/api/user/email', {
+      const response = await apiFetch('/api/user/email', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: newEmail }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => null);
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to update email');
+        const returnedError = getReturnedError(data);
+        const errorCode = getEmailUpdateErrorCode(returnedError);
+        dispatchClientDiagnostic('settings.email.update_returned_error', {
+          status: getResponseStatus(response),
+          hasReturnedError: returnedError.length > 0,
+          errorKind: errorCode,
+        });
+        throw new Error(errorCode);
       }
 
       toast.success('Email updated successfully', {
@@ -71,9 +126,10 @@ export function EmailManager({ currentEmail, onEmailUpdated }: EmailManagerProps
       setIsEditing(false);
       onEmailUpdated?.();
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update email';
-      setError(errorMessage);
-      toast.error(errorMessage);
+      dispatchClientErrorDiagnostic('settings.email.update_failed', err);
+      const safeErrorMessage = getSafeEmailUpdateError(err);
+      setError(safeErrorMessage);
+      toast.error(safeErrorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -135,16 +191,18 @@ export function EmailManager({ currentEmail, onEmailUpdated }: EmailManagerProps
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <p className="text-sm font-medium text-proofound-charcoal dark:text-foreground">Email</p>
-          <p className="text-proofound-charcoal/70 dark:text-muted-foreground">{currentEmail}</p>
+          <p className="break-all text-proofound-charcoal/70 dark:text-muted-foreground">
+            {currentEmail}
+          </p>
         </div>
         <Button
           size="sm"
           variant="outline"
           onClick={handleEdit}
-          className="border-proofound-forest text-proofound-forest hover:bg-proofound-forest/5"
+          className="w-full justify-center border-proofound-forest text-proofound-forest hover:bg-proofound-forest/5 sm:w-auto sm:shrink-0"
         >
           <Pencil className="w-4 h-4 mr-2" />
           Change Email

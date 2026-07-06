@@ -1,27 +1,41 @@
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Building2 } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 
 export default function OrgNotFound() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-secondary-100 px-4">
-      <Card className="max-w-md w-full">
+    <section
+      aria-labelledby="organization-workspace-unavailable-title"
+      className="flex min-h-full items-center justify-center bg-proofound-parchment px-4 py-10"
+    >
+      <Card className="w-full max-w-md rounded-[24px] border-proofound-stone bg-white/95 shadow-[0_4px_24px_rgba(29,51,48,0.08)]">
         <CardHeader className="text-center">
-          <div className="mx-auto w-12 h-12 rounded-full bg-primary-50 flex items-center justify-center mb-4">
-            <Building2 className="w-6 h-6 text-primary-500" />
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-proofound-forest/10">
+            <Building2 className="h-6 w-6 text-proofound-forest" />
           </div>
-          <CardTitle>Organization not found</CardTitle>
-          <CardDescription>
-            This organization doesn&apos;t exist or you don&apos;t have access to it.
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-proofound-forest">
+            Organization workspace
+          </p>
+          <h1
+            id="organization-workspace-unavailable-title"
+            className="font-display text-2xl font-semibold leading-tight tracking-tight text-proofound-charcoal"
+          >
+            Organization workspace unavailable
+          </h1>
+          <CardDescription className="leading-6 text-proofound-charcoal/70">
+            This workspace is not available to your current account. It may be private, retired, or
+            require a different organization role. No proof, assignment, or organization data is
+            exposed from this state.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent>
           <Button asChild className="w-full">
-            <Link href="/app/i/home">Go to your profile</Link>
+            <Link href="/app/i/home">Return to individual home</Link>
           </Button>
         </CardContent>
       </Card>
-    </div>
+    </section>
   );
 }

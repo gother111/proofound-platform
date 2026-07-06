@@ -1,0 +1,17 @@
+{
+  "capturedAt": "2026-05-20T05:08:05.236Z",
+  "url": "http://127.0.0.1:33180/app/i/matching?visualState=filled",
+  "screenshot": null,
+  "screenshotNote": "Browser Page.captureScreenshot timed out; DOM, console, landmark, overflow, and copy checks were captured instead.",
+  "mainCount": 1,
+  "noHorizontalOverflow": true,
+  "noRuntimeErrorText": true,
+  "noFairnessProtectedCopy": true,
+  "noFairnessRemediationCopy": true,
+  "noRankingDetailCopy": true,
+  "noRankBandCopy": true,
+  "noExactPercentBadges": true,
+  "console": [],
+  "note": "Codex Browser inspected the fixture-backed individual matching surface. Org protected-badge rendering is covered by focused component/contract tests because the local mock session redirects org matching to individual mode.",
+  "excerpt": "- link \"Skip to main content\":\n  - /url: \"#main-content\"\n- complementary \"Main navigation\":\n  - navigation \"Primary navigation\":\n    - link \"Overview\":\n      - /url: /app/i/home\n      - generic: Overview\n    - link \"Profile\":\n      - /url: /app/i/profile\n      - generic: Profile\n    - link \"Communications\":\n      - /url: /app/i/communications\n      - generic: Communications\n    - link \"Matching\":\n      - /url: /app/i/matching\n      - generic: Matching\n    - link \"Settings\":\n      - /url: /app/i/settings\n      - generic: Settings\n  - button \"Collapse sidebar\":\n- banner:\n  - img \"Proofound Logo\"\n  - generic: Proofound\n  - paragraph: Matching\n  - button \"Open profile menu\":\n    - generic: U\n- main \"Main content\":\n  - heading \"Matching\" [level=1]\n  - paragraph: 2 opportunities aligned with your skills, proof, and constraints\n  - button \"Filters\":\n    - text: Filters\n  - button \"Edit profile\"\n  - heading \"Proof operations lead for a privacy-safe hiring corridor\" [level=4]\n  - generic: Strong proof alignment\n  - generic: Blind by default\n  - button \"Why This Proof Match?\"\n  - generic: proof-systems L4\n  - generic: privacy-review L4\n  - generic: launch-ops L3\n  - generic: contract • Region hidden\n  - generic: 24-32 hrs/week\n  - generic: Compensation overlap only\n  - generic: Trust signal visible only within this review stage\n  - paragraph: Why it fits\n  - generic: Proof\n  - generic: Primary reason\n  - generic: Skills\n  - generic: Primary reason\n  - generic: Trust\n  - generic: Clear support\n  - button \"I'm interested\"\n  - button \"Hide\"\n  - button \"Snooze\":\n    - text: Snooze\n  - heading \"Evidence systems consultant\" [level=4]\n  - generic: Clear proof alignment\n  - generic: Blind by default\n  - button \"Why This Proof Match?\"\n  - generic: proof-systems L4\n  - generic: stakeholder-enablement L3\n  - generic: privacy-review L3\n  - generic: part-time • Region hidden\n  - generic: 16-24 hrs/week\n  - generic: Compensation overlap only\n  - generic: Trust signal visible only within this review stage\n  - paragraph: Why it fits\n  - generic: Proof\n  - generic: Clear support\n  - generic: Skills\n  - generic: Clear support\n  - generic: Trust\n  - generic: Clear support\n  - button \"I'm in"
+}

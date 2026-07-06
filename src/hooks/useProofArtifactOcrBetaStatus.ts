@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 type ProofArtifactOcrBetaStatus = {
   visible: boolean;
@@ -53,7 +54,7 @@ export function useProofArtifactOcrBetaStatus() {
           },
         });
       } catch (error) {
-        console.error('Failed to load proof artifact OCR beta status', error);
+        dispatchClientErrorDiagnostic('feature_flags.proof_artifact_ocr_status.load_failed', error);
       }
     };
 

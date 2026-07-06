@@ -1,0 +1,75 @@
+{
+  "checkedAt": "2026-05-20T03:18:40.000Z",
+  "tool": "Codex Browser plugin",
+  "server": "http://127.0.0.1:33183",
+  "environment": {
+    "PLAYWRIGHT": "true",
+    "MOCK_ADMIN_MODE": "true",
+    "NEXT_PUBLIC_USE_MOCK_SUPABASE": "true"
+  },
+  "route": "/admin/audit",
+  "desktop": {
+    "url": "http://127.0.0.1:33183/admin/audit",
+    "title": "Proofound - Focus on what matters",
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    },
+    "h1": "Audit Logs",
+    "mainCount": 1,
+    "hasSearch": true,
+    "hasTableVisible": true,
+    "visibleArticleCount": 0,
+    "hasRuntimeErrorText": false,
+    "horizontalOverflow": false,
+    "leakTermsPresent": []
+  },
+  "mobile": {
+    "url": "http://127.0.0.1:33183/admin/audit",
+    "title": "Proofound - Focus on what matters",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "h1": "Audit Logs",
+    "mainCount": 1,
+    "hasSearch": true,
+    "hasTableVisible": false,
+    "visibleArticleCount": 20,
+    "hasRuntimeErrorText": false,
+    "horizontalOverflow": false,
+    "leakTermsPresent": []
+  },
+  "apiProbeFromBrowser": {
+    "url": "/api/admin/audit?page=1&limit=20&search=",
+    "status": 200,
+    "ok": true,
+    "logCount": 20,
+    "firstLogKeys": [
+      "action",
+      "admin",
+      "adminId",
+      "createdAt",
+      "id",
+      "reason",
+      "targetId",
+      "targetType"
+    ],
+    "forbiddenKeysPresent": [],
+    "payloadLeakTermsPresent": [],
+    "pagination": {
+      "page": 1,
+      "limit": 20,
+      "total": 116,
+      "totalPages": 6
+    }
+  },
+  "console": {
+    "errors": 0,
+    "warnings": 0
+  },
+  "notes": [
+    "Browser snapshot and viewport screenshot were attempted through the Browser plugin. Snapshot/screenshot artifacts are held by the plugin output store; this repo artifact records the DOM, layout, leak-term, console, and API payload evidence.",
+    "Visible text showed the admin audit page primary object and action: Audit Logs plus search/list review."
+  ]
+}

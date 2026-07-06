@@ -80,7 +80,7 @@ export function HeroSection({
               className="text-lg md:text-xl text-muted-foreground leading-relaxed font-sans max-w-[540px]"
             >
               Proofound helps people turn real work into clear proof profiles, and helps
-              organizations review candidates through structured evidence, privacy controls, and
+              organizations review assignment submissions through structured evidence, privacy controls, and
               transparent fit signals.
             </motion.p>
           </div>

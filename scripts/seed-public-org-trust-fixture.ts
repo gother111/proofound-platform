@@ -77,7 +77,7 @@ async function verifyLiveFixtureAvailability(url: URL) {
       if (
         response.status === 200 &&
         body.includes(SEEDED_PUBLIC_ORG_TRUST_FIXTURE.organization.displayName) &&
-        /public organization (profile|trust card)/i.test(body) &&
+        /public organization (profile|trust card|trust page)/i.test(body) &&
         !/organization portfolio unavailable/i.test(body)
       ) {
         return {

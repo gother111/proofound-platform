@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { Loader2, PackageMinus } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Loader2, PackageMinus, RefreshCcw } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -43,6 +44,10 @@ type CancelResponse = {
   removedSkillRequestIds?: string[];
   requestExpired?: boolean;
 };
+type CancelFeedback = {
+  title: string;
+  message: string;
+};
 
 type BundleCancelDialogProps = {
   open: boolean;
@@ -50,6 +55,29 @@ type BundleCancelDialogProps = {
   requestId: string | null;
   onCanceled: (removedSkillRequestIds: string[]) => void;
 };
+
+const SELECTED_CANCEL_FAILED_MESSAGE =
+  'Selected artifacts could not be canceled. Your bundle request is unchanged; review the selected items and try again.';
+
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function getReturnedError(payload: unknown) {
+  if (!payload || typeof payload !== 'object') {
+    return '';
+  }
+
+  if ('error' in payload && typeof payload.error === 'string') {
+    return payload.error.trim();
+  }
+
+  if ('message' in payload && typeof payload.message === 'string') {
+    return payload.message.trim();
+  }
+
+  return '';
+}
 
 function artifactLabel(type: BundleItem['artifact_type']) {
   switch (type) {
@@ -79,10 +107,12 @@ export function BundleCancelDialog({
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [cancelFeedback, setCancelFeedback] = useState<CancelFeedback | null>(null);
   const [bundleRequest, setBundleRequest] = useState<BundleRequest | null>(null);
   const [selectedItemIds, setSelectedItemIds] = useState<Record<string, boolean>>({});
+  const loadRequestTokenRef = useRef(0);
 
-  useEffect(() => {
+  const loadBundleRequest = useCallback(async () => {
     if (!open || !requestId) {
       setBundleRequest(null);
       setSelectedItemIds({});
@@ -91,43 +121,51 @@ export function BundleCancelDialog({
       return;
     }
 
-    let active = true;
+    const loadToken = loadRequestTokenRef.current + 1;
+    loadRequestTokenRef.current = loadToken;
     setLoading(true);
     setLoadError(null);
+    setCancelFeedback(null);
 
-    const loadBundleRequest = async () => {
-      try {
-        const response = await apiFetch(`/api/verification/requests/bundles/${requestId}`, {
-          method: 'GET',
+    try {
+      const response = await apiFetch(`/api/verification/requests/bundles/${requestId}`, {
+        method: 'GET',
+      });
+
+      const body = (await response.json().catch(() => null)) as
+        | ({ error?: string; message?: string } & BundleResponse)
+        | null;
+
+      if (!response.ok) {
+        const returnedError = getReturnedError(body);
+        dispatchClientDiagnostic('verifications.bundle_cancel.details_load_returned_error', {
+          status: getResponseStatus(response),
+          hasReturnedError: returnedError.length > 0,
         });
-
-        const body = (await response.json()) as { error?: string } & BundleResponse;
-
-        if (!response.ok) {
-          throw new Error(body.error || 'Failed to load bundle details.');
-        }
-
-        if (!active) return;
-        setBundleRequest(body.request);
-        setSelectedItemIds({});
-      } catch (error) {
-        if (!active) return;
-        console.error('Failed to load bundle cancellation details:', error);
-        setBundleRequest(null);
-        setLoadError(error instanceof Error ? error.message : 'Failed to load bundle details.');
-      } finally {
-        if (active) {
-          setLoading(false);
-        }
+        throw new Error('bundle_cancel_details_load_request_failed');
       }
-    };
 
-    void loadBundleRequest();
-
-    return () => {
-      active = false;
-    };
+      if (loadRequestTokenRef.current !== loadToken) return;
+      setBundleRequest(body?.request ?? null);
+      setSelectedItemIds({});
+    } catch (error) {
+      if (loadRequestTokenRef.current !== loadToken) return;
+      dispatchClientErrorDiagnostic('verifications.bundle_cancel.details_load_failed', error);
+      setBundleRequest(null);
+      setLoadError('Bundle details could not load');
+    } finally {
+      if (loadRequestTokenRef.current === loadToken) {
+        setLoading(false);
+      }
+    }
   }, [open, requestId]);
+
+  useEffect(() => {
+    if (!open || !requestId) {
+      loadRequestTokenRef.current += 1;
+    }
+    void loadBundleRequest();
+  }, [loadBundleRequest, open, requestId]);
 
   const pendingItems = useMemo(
     () => (bundleRequest?.items || []).filter((item) => item.status === 'pending'),
@@ -139,6 +177,7 @@ export function BundleCancelDialog({
     .filter((id) => Boolean(selectedItemIds[id]));
 
   const toggleItem = (itemId: string, checked: boolean | 'indeterminate') => {
+    setCancelFeedback(null);
     setSelectedItemIds((prev) => ({
       ...prev,
       [itemId]: checked === true,
@@ -151,6 +190,7 @@ export function BundleCancelDialog({
     }
 
     setSaving(true);
+    setCancelFeedback(null);
     try {
       const response = await apiFetch(`/api/verification/requests/bundles/${requestId}`, {
         method: 'PATCH',
@@ -163,25 +203,37 @@ export function BundleCancelDialog({
         }),
       });
 
-      const body = (await response.json()) as { error?: string } & CancelResponse;
+      const body = (await response.json().catch(() => null)) as
+        | ({ error?: string; message?: string } & CancelResponse)
+        | null;
 
       if (!response.ok) {
-        toast.error(body.error || 'Failed to cancel selected artifacts.');
-        return;
+        const returnedError = getReturnedError(body);
+        dispatchClientDiagnostic('verifications.bundle_cancel.selected_cancel_returned_error', {
+          status: getResponseStatus(response),
+          hasReturnedError: returnedError.length > 0,
+        });
+        throw new Error('bundle_cancel_selected_cancel_request_failed');
       }
 
-      const removedSkillRequestIds = body.removedSkillRequestIds || [];
+      setCancelFeedback(null);
+      const removedSkillRequestIds = body?.removedSkillRequestIds || [];
       onCanceled(removedSkillRequestIds);
 
       toast.success(
-        body.requestExpired
+        body?.requestExpired
           ? 'Selected artifacts canceled. The bundle has no pending artifacts left.'
           : 'Selected artifacts canceled.'
       );
       onOpenChange(false);
     } catch (error) {
-      console.error('Failed to cancel selected bundle artifacts:', error);
-      toast.error('Failed to cancel selected artifacts.');
+      dispatchClientErrorDiagnostic('verifications.bundle_cancel.selected_cancel_failed', error);
+      const message = SELECTED_CANCEL_FAILED_MESSAGE;
+      setCancelFeedback({
+        title: 'Selected artifacts could not be canceled',
+        message,
+      });
+      toast.error(message);
     } finally {
       setSaving(false);
     }
@@ -208,8 +260,24 @@ export function BundleCancelDialog({
             Loading bundle details...
           </div>
         ) : loadError ? (
-          <div className="rounded-md border border-[#F5D6CD] bg-[#FFF0F0] p-3 text-sm text-[#8B4A36]">
-            {loadError}
+          <div
+            className="rounded-lg border border-[#F5D6CD] bg-[#FFF0F0] p-4 text-sm text-[#8B4A36]"
+            role="alert"
+          >
+            <p className="font-medium">{loadError}</p>
+            <p className="mt-1 text-xs leading-5 text-[#8B4A36]/80">
+              No verification request was canceled. Retry bundle details before choosing artifacts.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => void loadBundleRequest()}
+              className="mt-3 border-[#F5D6CD] bg-white text-[#8B4A36] hover:bg-[#FFF8F5]"
+            >
+              <RefreshCcw className="mr-2 h-3.5 w-3.5" aria-hidden="true" />
+              Retry bundle details
+            </Button>
           </div>
         ) : !bundleRequest ? (
           <div className="rounded-md border p-3 text-sm text-muted-foreground">
@@ -263,6 +331,26 @@ export function BundleCancelDialog({
                 No pending artifacts are available to cancel in this bundle.
               </p>
             )}
+
+            {cancelFeedback ? (
+              <div
+                className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900"
+                role="alert"
+              >
+                <p className="font-semibold">{cancelFeedback.title}</p>
+                <p>{cancelFeedback.message}</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void handleCancelSelected()}
+                  disabled={saving || selectedPendingIds.length === 0}
+                  className="mt-2 h-8 rounded-full border-amber-300 bg-white px-3 text-xs font-semibold text-amber-950 hover:bg-amber-100"
+                >
+                  Retry cancel
+                </Button>
+              </div>
+            ) : null}
           </div>
         )}
 
@@ -278,7 +366,14 @@ export function BundleCancelDialog({
           <Button
             type="button"
             onClick={() => void handleCancelSelected()}
-            disabled={saving || selectedPendingIds.length === 0 || !hasPendingItems}
+            disabled={
+              saving ||
+              loading ||
+              Boolean(loadError) ||
+              !bundleRequest ||
+              selectedPendingIds.length === 0 ||
+              !hasPendingItems
+            }
             className="bg-proofound-terracotta text-white hover:bg-[#8B4A36]"
           >
             {saving ? (

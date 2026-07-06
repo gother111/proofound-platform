@@ -190,19 +190,29 @@ DROP POLICY IF EXISTS "Service role full access to taxonomy" ON skills_taxonomy;
 DROP POLICY IF EXISTS "Service role full access to adjacency" ON skill_adjacency;
 
 CREATE POLICY "Service role full access to categories" ON skills_categories
-    USING (true);
+    FOR ALL TO service_role
+    USING (true)
+    WITH CHECK (true);
 
 CREATE POLICY "Service role full access to subcategories" ON skills_subcategories
-    USING (true);
+    FOR ALL TO service_role
+    USING (true)
+    WITH CHECK (true);
 
 CREATE POLICY "Service role full access to L3" ON skills_l3
-    USING (true);
+    FOR ALL TO service_role
+    USING (true)
+    WITH CHECK (true);
 
 CREATE POLICY "Service role full access to taxonomy" ON skills_taxonomy
-    USING (true);
+    FOR ALL TO service_role
+    USING (true)
+    WITH CHECK (true);
 
 CREATE POLICY "Service role full access to adjacency" ON skill_adjacency
-    USING (true);
+    FOR ALL TO service_role
+    USING (true)
+    WITH CHECK (true);
 
 -- ============================================================================
 -- HELPER FUNCTIONS

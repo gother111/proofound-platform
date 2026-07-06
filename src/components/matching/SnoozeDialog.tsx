@@ -1,8 +1,7 @@
 /**
- * Snooze Dialog Component
+ * Assignment review pause dialog.
  *
- * Allows users to temporarily hide matches for 1, 2, or 4 weeks
- * Implements PRD requirement for match management actions
+ * Allows users to temporarily pause assignment reviews for 1, 2, or 4 weeks.
  */
 
 'use client';
@@ -29,6 +28,7 @@ import { Button } from '@/components/ui/button';
 import { BellOff, Calendar, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 interface SnoozeDialogProps {
   open: boolean;
@@ -67,21 +67,21 @@ export function SnoozeDialog({
       });
 
       if (!response.ok) {
-        throw new Error('Failed to snooze match');
+        throw new Error('assignment_review_pause_failed');
       }
 
       const data = await response.json();
       const snoozeUntil = new Date(data.snoozeUntil);
 
-      toast.success(`Match snoozed until ${snoozeUntil.toLocaleDateString()}`, {
-        description: `"${assignmentTitle}" will reappear in ${selectedWeeks} ${selectedWeeks === 1 ? 'week' : 'weeks'}`,
+      toast.success(`Assignment review paused until ${snoozeUntil.toLocaleDateString()}`, {
+        description: `"${assignmentTitle}" will reappear in ${selectedWeeks} ${selectedWeeks === 1 ? 'week' : 'weeks'}.`,
       });
 
       onOpenChange(false);
       if (onSnoozed) onSnoozed();
     } catch (error) {
-      console.error('Failed to snooze match:', error);
-      toast.error('Failed to snooze match. Please try again.');
+      dispatchClientErrorDiagnostic('matching.snooze_dialog.snooze_failed', error);
+      toast.error('Assignment review could not be paused. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -93,11 +93,11 @@ export function SnoozeDialog({
         <DialogHeader className="md:px-0 text-left">
           <DialogTitle className="flex items-center gap-2">
             <BellOff className="w-5 h-5 text-muted-foreground" />
-            Snooze This Match
+            Pause this assignment review
           </DialogTitle>
           <DialogDescription>
-            Temporarily hide "{assignmentTitle}" from your matches. It will reappear after the
-            selected time.
+            Temporarily pause "{assignmentTitle}" in your assignment reviews. It will reappear after
+            the selected time.
           </DialogDescription>
         </DialogHeader>
       </div>
@@ -154,8 +154,9 @@ export function SnoozeDialog({
       <div className="px-4 md:px-0 pb-4 md:pb-0">
         <div className="bg-japandi-bg rounded-lg p-3 border border-proofound-stone mb-4">
           <p className="text-xs leading-relaxed text-foreground">
-            <strong className="font-semibold">Note:</strong> You can view and manage snoozed matches
-            from your Matching preferences. Snoozed matches won't affect your overall match score.
+            <strong className="font-semibold">Note:</strong> You can view and manage paused
+            assignment reviews from this matching page. Pausing does not change your proof
+            readiness.
           </p>
         </div>
 
@@ -174,8 +175,8 @@ export function SnoozeDialog({
             className="bg-proofound-forest text-white w-full sm:w-auto"
           >
             {isSubmitting
-              ? 'Snoozing...'
-              : `Snooze for ${selectedWeeks} ${selectedWeeks === 1 ? 'week' : 'weeks'}`}
+              ? 'Pausing...'
+              : `Pause for ${selectedWeeks} ${selectedWeeks === 1 ? 'week' : 'weeks'}`}
           </Button>
         </DialogFooter>
       </div>

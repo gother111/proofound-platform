@@ -1,5 +1,5 @@
 /**
- * Assignment Builder - Step 5: Expertise Mapping
+ * Assignment Builder - Step 5: Proof Requirements
  *
  * Pick L4 skills, link to BV/TO, education justification
  */
@@ -173,7 +173,7 @@ export function Step5ExpertiseMapping({
   onBack,
   isSubmitting = false,
   submitLabel = 'Review & Publish',
-  stepTitle = 'Step 5: Expertise Mapping',
+  stepTitle = 'Step 5: Proof Requirements',
   stepNumber = 5,
   progressValue = 100,
   hideProgressHeader = false,

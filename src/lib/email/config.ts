@@ -48,7 +48,6 @@ const enabledEnvValues = new Set(['1', 'true', 'yes', 'on']);
 export const EMAIL_TEMPLATES = {
   ASSIGNMENT_INVITATION: 'assignment-invitation',
   INTERVIEW_SCHEDULED: 'interview-scheduled',
-  CONTRACT_SIGNED: 'contract-signed',
   DECISION_FEEDBACK: 'decision-feedback',
   VERIFICATION_REQUEST: 'verification-request',
   MATCH_NOTIFICATION: 'match-notification',
@@ -80,12 +79,14 @@ export function getEmailStatus() {
 
 export function getEmailProviderDependencyStatus() {
   const missing = EMAIL_PROVIDER_REQUIRED_ENV.filter((envName) => !process.env[envName]?.trim());
+  const deliverySkipped = shouldSkipTransactionalEmailDelivery();
 
   return {
-    ok: missing.length === 0,
+    ok: missing.length === 0 && !deliverySkipped,
     required: true,
-    configured: missing.length === 0,
+    configured: missing.length === 0 && !deliverySkipped,
     missing: [...missing],
+    deliverySkipped,
     provider: 'resend' as const,
   };
 }

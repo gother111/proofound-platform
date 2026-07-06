@@ -38,10 +38,32 @@ import { CopyTextButton } from './CopyTextButton';
 import { DownloadPdfButton } from './DownloadPdfButton';
 import { ShareLinkButton } from './ShareLinkButton';
 
-function renderUnavailablePage(handle: string) {
+function renderUnavailablePage({
+  handle,
+  returnPath = '/',
+  returnLabel = 'Return home',
+}: {
+  handle: string;
+  returnPath?: string;
+  returnLabel?: string;
+}) {
   return (
     <PublicProfileShell
       maxWidthClassName="max-w-4xl"
+      header={
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 text-sm text-foreground">
+            <Logo size="sm" />
+            <span className="font-medium">Proofound</span>
+          </div>
+          <Link
+            href={returnPath}
+            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#D9D5CC] bg-white px-3 py-2 text-sm font-medium text-foreground transition-colors hover:border-proofound-forest/45 hover:text-proofound-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+          >
+            {returnLabel}
+          </Link>
+        </div>
+      }
       footer={
         <div className="flex items-center justify-between gap-2">
           <span>proofound.io/portfolio/{handle}</span>
@@ -50,7 +72,20 @@ function renderUnavailablePage(handle: string) {
       }
     >
       <PublicProfileSection title="Public Page unavailable">
-        <PublicProfileEmptyState message="This Public Page link is unavailable. It may be hidden, retired, or not ready for launch-safe sharing." />
+        <div
+          role="status"
+          className="rounded-xl border border-white/50 bg-white/60 p-4 text-sm text-muted-foreground shadow-sm"
+        >
+          <p>
+            This Public Page link is unavailable. It may be hidden, retired, or not ready for
+            launch-safe sharing.
+          </p>
+          <p className="mt-2">No private profile details were shown from this link.</p>
+          <p className="mt-2">
+            Public Pages only load selected public-safe proof records and fields.
+          </p>
+          <p className="mt-2">Ask the owner for a fresh Public Page link.</p>
+        </div>
       </PublicProfileSection>
     </PublicProfileShell>
   );
@@ -115,13 +150,13 @@ export default async function PortfolioPage({
         permanentRedirect(`/portfolio/${encodeURIComponent(redirectTarget)}`);
       }
 
-      return renderUnavailablePage(handle);
+      return renderUnavailablePage({ handle, returnPath, returnLabel });
     }
-    notFound();
+    return renderUnavailablePage({ handle, returnPath, returnLabel });
   }
 
   if (access.status === 'unavailable') {
-    return renderUnavailablePage(handle);
+    return renderUnavailablePage({ handle, returnPath, returnLabel });
   }
 
   const data = access.projection;
@@ -277,10 +312,13 @@ export default async function PortfolioPage({
 
             {!viewerIsOwner ? (
               <div className="flex w-full flex-col gap-2 lg:w-auto lg:min-w-[220px]">
-                <Button asChild className="bg-proofound-forest text-white hover:bg-[#163d2f]">
+                <Button
+                  asChild
+                  className="min-h-11 bg-proofound-forest text-white hover:bg-[#163d2f]"
+                >
                   <Link href={requestContactHref}>{introCtaLabel}</Link>
                 </Button>
-                <Button variant="outline" asChild>
+                <Button variant="outline" asChild className="min-h-11">
                   <Link href={requestContactHref}>{requestContactLabel}</Link>
                 </Button>
                 <p className="text-xs text-muted-foreground">
@@ -385,9 +423,9 @@ export default async function PortfolioPage({
                                       href={item.href}
                                       target="_blank"
                                       rel="noreferrer"
-                                      className="inline-flex items-center gap-1 text-xs font-semibold text-proofound-forest hover:text-[#143829]"
+                                      className="inline-flex min-h-11 items-center gap-1 rounded-md px-2 text-xs font-semibold text-proofound-forest hover:text-[#143829] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
                                     >
-                                      Open
+                                      Open evidence
                                       <ExternalLink className="h-3.5 w-3.5" />
                                     </a>
                                   ) : null}
@@ -548,7 +586,7 @@ function ContactPill({ href, label, icon }: { href: string; label: string; icon?
   return (
     <a
       href={href}
-      className="flex items-center gap-2 rounded-xl border border-white/40 bg-white/40 px-3 py-2 text-foreground shadow-sm transition-colors hover:border-proofound-forest/30 hover:text-proofound-forest"
+      className="flex min-h-11 items-center gap-2 rounded-xl border border-white/40 bg-white/40 px-3 py-2 text-foreground shadow-sm transition-colors hover:border-proofound-forest/30 hover:text-proofound-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
     >
       {icon}
       <span>{label}</span>
@@ -727,6 +765,8 @@ function SummaryStat({ label, value, icon }: { label: string; value: string; ico
 
 function humanizeFreshness(state: string) {
   switch (state) {
+    case 'current':
+      return 'Current';
     case 'fresh':
       return 'Fresh';
     case 'review_soon':

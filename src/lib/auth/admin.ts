@@ -25,6 +25,10 @@ export interface AdminUser {
   adminLevel: AdminLevel;
 }
 
+function adminErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 function getMockPlatformRoleForTests(): 'super_admin' | 'platform_admin' | null {
   assertMockDatabaseAllowed('Admin authorization mock role');
 
@@ -59,7 +63,10 @@ export async function isPlatformAdmin(userId: string): Promise<boolean> {
 
     return profile?.platformRole === 'platform_admin' || profile?.platformRole === 'super_admin';
   } catch (error) {
-    console.error('Error checking platform admin status:', error);
+    log.error('admin.platform_status.check_failed', {
+      userId,
+      errorMessage: adminErrorMessage(error),
+    });
     return false;
   }
 }
@@ -78,7 +85,10 @@ export async function isSuperAdmin(userId: string): Promise<boolean> {
 
     return profile?.platformRole === 'super_admin';
   } catch (error) {
-    console.error('Error checking super admin status:', error);
+    log.error('admin.super_status.check_failed', {
+      userId,
+      errorMessage: adminErrorMessage(error),
+    });
     return false;
   }
 }
@@ -101,7 +111,11 @@ export async function isOrgAdmin(userId: string, orgId: string): Promise<boolean
       isActiveMembershipState(membership?.state) && (role === 'org_manager' || role === 'org_owner')
     );
   } catch (error) {
-    console.error('Error checking org admin status:', error);
+    log.error('admin.org_status.check_failed', {
+      userId,
+      orgId,
+      errorMessage: adminErrorMessage(error),
+    });
     return false;
   }
 }
@@ -145,7 +159,10 @@ export async function getAdminLevel(userId: string): Promise<AdminLevel> {
 
     return 'none';
   } catch (error) {
-    console.error('Error getting admin level:', error);
+    log.error('admin.level.resolve_failed', {
+      userId,
+      errorMessage: adminErrorMessage(error),
+    });
     return 'none';
   }
 }
@@ -202,7 +219,9 @@ export async function getAdminUser(): Promise<AdminUser | null> {
       adminLevel,
     };
   } catch (error) {
-    console.error('Error getting admin user:', error);
+    log.error('admin.user.resolve_failed', {
+      errorMessage: adminErrorMessage(error),
+    });
     return null;
   }
 }
@@ -278,7 +297,12 @@ export async function canPerformAdminAction(
 
     return false;
   } catch (error) {
-    console.error('Error checking admin action permission:', error);
+    log.error('admin.action_permission.check_failed', {
+      userId,
+      action,
+      ...(targetOrgId ? { targetOrgId } : {}),
+      errorMessage: adminErrorMessage(error),
+    });
     return false;
   }
 }
@@ -302,7 +326,9 @@ export async function getPendingAdminInvitation(email: string) {
       where: and(eq(adminInvitations.email, email), eq(adminInvitations.status, 'pending')),
     });
   } catch (error) {
-    console.error('Error checking admin invitation:', error);
+    log.error('admin.invitation.lookup_failed', {
+      errorMessage: adminErrorMessage(error),
+    });
     return null;
   }
 }
@@ -353,6 +379,9 @@ export async function autoGrantAdminRole(userId: string, email: string): Promise
       });
     }
   } catch (error) {
-    console.error('Error auto-granting admin role:', error);
+    log.error('admin.role.auto_grant_failed', {
+      userId,
+      errorMessage: adminErrorMessage(error),
+    });
   }
 }

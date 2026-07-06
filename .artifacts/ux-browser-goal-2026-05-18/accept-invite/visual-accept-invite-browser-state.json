@@ -1,0 +1,68 @@
+{
+  "url": "http://localhost:3000/accept-invite?token=visual-org-member-invite-000000001",
+  "capturedAt": "2026-05-18T13:47:55.541Z",
+  "mobileViewport": {
+    "clientWidth": 390
+  },
+  "desktopViewport": {
+    "clientWidth": 1280
+  },
+  "states": [
+    {
+      "actionTexts": ["Skip to main content", "Accept invitation"],
+      "bodyScrollWidth": 390,
+      "bodyText": "Skip to main content You're invited Review the organization and role before joining. Northstar Evidence Studio Review proof-first candidate evidence for privacy-sensitive hiring pilots without exposing more than the team needs. Your role Org Reviewer Invited email elena.reviewer@northstar-evidence.example Accept invitation By accepting, you become a member of this organization.",
+      "clientWidth": 390,
+      "horizontalOverflow": false,
+      "innerHeight": 844,
+      "innerWidth": 390,
+      "label": "mobile 390 initial",
+      "overflowEls": [],
+      "scrollWidth": 390,
+      "statusText": null,
+      "url": "http://localhost:3000/accept-invite?token=visual-org-member-invite-000000001"
+    },
+    {
+      "actionTexts": ["Skip to main content", "Open organization workspace"],
+      "bodyScrollWidth": 390,
+      "bodyText": "Skip to main content Invitation accepted You can now continue to Northstar Evidence Studio. Northstar Evidence Studio Review proof-first candidate evidence for privacy-sensitive hiring pilots without exposing more than the team needs. Your role Org Reviewer Invited email elena.reviewer@northstar-evidence.example You have joined this organization. Your workspace is ready. Open organization workspace",
+      "clientWidth": 390,
+      "horizontalOverflow": false,
+      "innerHeight": 844,
+      "innerWidth": 390,
+      "label": "mobile 390 accepted",
+      "overflowEls": [],
+      "scrollWidth": 390,
+      "statusText": "You have joined this organization. Your workspace is ready.",
+      "url": "http://localhost:3000/accept-invite?token=visual-org-member-invite-000000001"
+    },
+    {
+      "actionTexts": ["Skip to main content", "Accept invitation"],
+      "bodyScrollWidth": 1280,
+      "bodyText": "Skip to main content You're invited Review the organization and role before joining. Northstar Evidence Studio Review proof-first candidate evidence for privacy-sensitive hiring pilots without exposing more than the team needs. Your role Org Reviewer Invited email elena.reviewer@northstar-evidence.example Accept invitation By accepting, you become a member of this organization.",
+      "clientWidth": 1280,
+      "horizontalOverflow": false,
+      "innerHeight": 900,
+      "innerWidth": 1280,
+      "label": "desktop 1280 initial",
+      "overflowEls": [],
+      "scrollWidth": 1280,
+      "statusText": null,
+      "url": "http://localhost:3000/accept-invite?token=visual-org-member-invite-000000001"
+    },
+    {
+      "actionTexts": ["Skip to main content", "Open organization workspace"],
+      "bodyScrollWidth": 1280,
+      "bodyText": "Skip to main content Invitation accepted You can now continue to Northstar Evidence Studio. Northstar Evidence Studio Review proof-first candidate evidence for privacy-sensitive hiring pilots without exposing more than the team needs. Your role Org Reviewer Invited email elena.reviewer@northstar-evidence.example You have joined this organization. Your workspace is ready. Open organization workspace",
+      "clientWidth": 1280,
+      "horizontalOverflow": false,
+      "innerHeight": 900,
+      "innerWidth": 1280,
+      "label": "desktop 1280 accepted",
+      "overflowEls": [],
+      "scrollWidth": 1280,
+      "statusText": "You have joined this organization. Your workspace is ready.",
+      "url": "http://localhost:3000/accept-invite?token=visual-org-member-invite-000000001"
+    }
+  ]
+}

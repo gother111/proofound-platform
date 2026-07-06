@@ -2,6 +2,7 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ImpactStoryForm } from '@/components/profile/forms/ImpactStoryForm';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 const IMPACT_STORY_CONFIRMATION_BUTTON_LABEL = /ask to confirm this proof/i;
 
@@ -11,6 +12,10 @@ const validateFileMock = vi.fn();
 vi.mock('@/lib/upload', () => ({
   uploadFile: (...args: any[]) => uploadFileMock(...args),
   validateFile: (...args: any[]) => validateFileMock(...args),
+}));
+
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientErrorDiagnostic: vi.fn(),
 }));
 
 vi.mock('@/components/ui/dialog', () => ({
@@ -56,6 +61,8 @@ vi.mock('@/components/ui/checkbox', () => ({
 vi.mock('@/components/ui/badge', () => ({
   Badge: ({ children }: any) => <span>{children}</span>,
 }));
+
+const dispatchClientErrorDiagnosticMock = vi.mocked(dispatchClientErrorDiagnostic);
 
 function fillRequiredFields() {
   fireEvent.change(screen.getByLabelText(/^Title \*$/i), {
@@ -156,6 +163,123 @@ describe('ImpactStoryForm', () => {
     expect(onSave).not.toHaveBeenCalled();
   });
 
+  it('keeps failed impact story saves safe, diagnostic, and retryable', async () => {
+    const rawFailure = 'duplicate key value violates unique constraint profile_impact_stories';
+    const onSave = vi.fn().mockRejectedValue(new Error(rawFailure));
+    const onOpenChange = vi.fn();
+
+    render(
+      <ImpactStoryForm
+        open={true}
+        onOpenChange={onOpenChange}
+        onSave={onSave}
+        onSendVerificationRequest={vi.fn()}
+      />
+    );
+
+    fillRequiredFields();
+
+    fireEvent.submit(screen.getByRole('button', { name: /add story/i }).closest('form')!);
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(
+      'Impact story could not be saved. Your story details are still here; review them and try again.'
+    );
+    expect(screen.queryByText(rawFailure)).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/^Title \*$/i)).toHaveValue('Community mentorship program');
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'profile.impact_story.save_failed',
+      expect.any(Error)
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
+      rawFailure
+    );
+    await waitFor(() => expect(screen.getByRole('button', { name: /add story/i })).toBeEnabled());
+  });
+
+  it('keeps unexpected artifact upload return errors safe, diagnostic, and retryable', async () => {
+    const rawFailure = 'storage policy denied: artifact bucket detail';
+    uploadFileMock.mockResolvedValueOnce({
+      success: false,
+      error: rawFailure,
+    });
+
+    const { container } = render(
+      <ImpactStoryForm
+        open={true}
+        onOpenChange={vi.fn()}
+        onSave={vi.fn()}
+        onSendVerificationRequest={vi.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /add artifact/i }));
+    fireEvent.change(screen.getByDisplayValue('link'), {
+      target: { value: 'file' },
+    });
+
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+    expect(fileInput).toBeTruthy();
+
+    fireEvent.change(fileInput, {
+      target: {
+        files: [new File(['artifact'], 'impact-report.pdf', { type: 'application/pdf' })],
+      },
+    });
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(
+      'Artifact upload could not be saved. Your story details are still here; try again or choose another file.'
+    );
+    expect(screen.queryByText(rawFailure)).not.toBeInTheDocument();
+    expect(screen.queryByText('Uploading...')).not.toBeInTheDocument();
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'profile.impact_story.artifact_upload_returned_error',
+      expect.any(Error)
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
+      rawFailure
+    );
+  });
+
+  it('clears artifact uploading state when upload throws', async () => {
+    const thrownFailure = new Error('network layer exposed storage endpoint');
+    uploadFileMock.mockRejectedValueOnce(thrownFailure);
+
+    const { container } = render(
+      <ImpactStoryForm
+        open={true}
+        onOpenChange={vi.fn()}
+        onSave={vi.fn()}
+        onSendVerificationRequest={vi.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /add artifact/i }));
+    fireEvent.change(screen.getByDisplayValue('link'), {
+      target: { value: 'file' },
+    });
+
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+    fireEvent.change(fileInput, {
+      target: {
+        files: [new File(['artifact'], 'impact-report.pdf', { type: 'application/pdf' })],
+      },
+    });
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(
+      'Artifact upload could not be saved. Your story details are still here; try again or choose another file.'
+    );
+    expect(screen.queryByText(thrownFailure.message)).not.toBeInTheDocument();
+    expect(screen.queryByText('Uploading...')).not.toBeInTheDocument();
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'profile.impact_story.artifact_upload_failed',
+      thrownFailure
+    );
+  });
+
   it('requires valid verifier email for send request button', async () => {
     const onSendVerificationRequest = vi.fn();
 
@@ -180,6 +304,48 @@ describe('ImpactStoryForm', () => {
       expect(screen.getByText(/Verifier email must be valid/i)).toBeTruthy();
     });
     expect(onSendVerificationRequest).not.toHaveBeenCalled();
+  });
+
+  it('keeps failed proof confirmation sends safe, diagnostic, and retryable', async () => {
+    const rawFailure = 'SMTP provider rejected verifier address with internal code';
+    const onSendVerificationRequest = vi.fn().mockRejectedValue(new Error(rawFailure));
+
+    render(
+      <ImpactStoryForm
+        open={true}
+        onOpenChange={vi.fn()}
+        onSave={vi.fn()}
+        onSendVerificationRequest={onSendVerificationRequest}
+      />
+    );
+
+    fillRequiredFields();
+    fireEvent.change(screen.getByLabelText(/Verifier email/i), {
+      target: { value: 'verifier@example.com' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: IMPACT_STORY_CONFIRMATION_BUTTON_LABEL }));
+
+    await waitFor(() => expect(onSendVerificationRequest).toHaveBeenCalledTimes(1));
+    expect(
+      screen.getByText(
+        'Proof confirmation request could not be sent. Your story details are still here; review the verifier details and try again.'
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText(rawFailure)).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/^Title \*$/i)).toHaveValue('Community mentorship program');
+    expect(dispatchClientErrorDiagnosticMock).toHaveBeenCalledWith(
+      'profile.impact_story.verification_send_failed',
+      expect.any(Error)
+    );
+    expect((dispatchClientErrorDiagnosticMock.mock.calls[0]?.[1] as Error).message).toBe(
+      rawFailure
+    );
+    await waitFor(() =>
+      expect(
+        screen.getByRole('button', { name: IMPACT_STORY_CONFIRMATION_BUTTON_LABEL })
+      ).toBeEnabled()
+    );
   });
 
   it('auto-saves before send for new story and then routes later save to existing story update', async () => {

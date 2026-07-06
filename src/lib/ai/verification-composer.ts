@@ -244,7 +244,7 @@ export function buildSanitizedVerificationComposerContext(params: {
       'Use only the selected fields in this JSON context.',
       'Do not include hidden private context, private files, verifier email, or account metadata.',
       'Ask about one primary claim scope only.',
-      'Do not ask for general praise, candidate evaluation, suitability, trust level, verification approval, interview, or hiring decisions.',
+      'Do not ask for general praise, proof-review participant evaluation, suitability, trust level, verification approval, interview, engagement, or workflow decisions.',
     ],
     redactionSummary,
   };
@@ -257,7 +257,7 @@ function buildPrompt(context: SanitizedComposerContext) {
     'Draft concise, respectful verification request copy for one claim-scoped proof record request.',
     'Use only the selected public-safe proof fields in the JSON context.',
     'Never include verifier email or hidden/private context.',
-    'Do not ask for general praise, endorsement, candidate evaluation, suitability, trust level, verification approval, interview, or hiring decisions.',
+    'Do not ask for general praise, endorsement, proof-review participant evaluation, suitability, trust level, verification approval, interview, engagement, or workflow decisions.',
     'Generate exactly one primary claim scope. If the selected fields are too broad, keep the draft narrow and add warnings.',
     'Return JSON only with keys: subject, message, claimScope, verificationQuestions, privacyNotes, tooBroadWarnings.',
     '',
@@ -293,7 +293,7 @@ function deterministicFallback(
         .map(([key, count]) => `${count} ${key.replace(/_/g, ' ')} redacted before drafting.`),
     ],
     tooBroadWarnings: [
-      'This draft is limited to one claim scope and avoids general praise or candidate quality judgment.',
+      'This draft is limited to one claim scope and avoids general praise or proof-review participant quality judgment.',
       ...(warning ? [warning] : []),
     ],
   };

@@ -1,0 +1,108 @@
+> proofound@0.1.0 test
+> node ./scripts/run-vitest-with-timeout.mjs tests/api/user-export-route.test.ts tests/api/portfolio-export-route.test.ts tests/api/portfolio-org-export-route.test.ts tests/api/public-portfolio-export-route.test.ts tests/api/user-account-lifecycle-routes.test.ts tests/api/expertise-user-skill-proof-delete-route.test.ts tests/api/expertise-verifications-sent-delete-route.test.ts tests/lib/export-download-filename.test.ts tests/lib/portfolio-export-data.test.ts tests/lib/uploads-export.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+(node:5863) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:5863) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:5863) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+(node:5863) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+
+(node:5863) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+(node:5863) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+stderr | tests/api/portfolio-export-route.test.ts > /api/portfolio/export > returns 401 when user is unauthenticated
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-16T14:08:04.911Z","flow":"export","requestId":"pcmEmf32bhsW","actorId":null,"actorType":"anonymous","objectRefs":{},"outcome":"rejected","state":"portfolio_export_unauthorized","latencyMs":1,"failureClass":"unauthorized"}
+
+stderr | tests/api/portfolio-export-route.test.ts > /api/portfolio/export > returns 404 when profile export data is unavailable
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-16T14:08:04.920Z","flow":"export","requestId":"jhfxIeuypGeo","actorId":"user-1","actorType":"user_account","objectRefs":{},"outcome":"rejected","state":"portfolio_export_profile_missing","latencyMs":0,"failureClass":"profile_not_found"}
+
+stdout | tests/api/portfolio-export-route.test.ts > /api/portfolio/export > returns a non-empty PDF response with expected headers
+{"level":"info","event":"launch.trace","timestamp":"2026-05-16T14:08:04.921Z","flow":"export","requestId":"JYSzMi9F0Lw9","actorId":"user-1","actorType":"user_account","objectRefs":{"profileId":"user-1"},"outcome":"success","state":"portfolio_export_ready","latencyMs":0,"failureClass":null,"handle":"jane"}
+
+stdout | tests/api/portfolio-export-route.test.ts > /api/portfolio/export > still returns PDF when analytics emission fails
+{"level":"info","event":"launch.trace","timestamp":"2026-05-16T14:08:04.925Z","flow":"export","requestId":"Zd9pbvQ3s5UZ","actorId":"user-1","actorType":"user_account","objectRefs":{"profileId":"user-1"},"outcome":"success","state":"portfolio_export_ready","latencyMs":0,"failureClass":null,"handle":"jane"}
+
+stdout | tests/api/portfolio-export-route.test.ts > /api/portfolio/export > returns canonical JSON when format=json is requested
+{"level":"info","event":"launch.trace","timestamp":"2026-05-16T14:08:04.926Z","flow":"export","requestId":"AiElsRxOxMfg","actorId":"user-1","actorType":"user_account","objectRefs":{"profileId":"user-1"},"outcome":"success","state":"portfolio_export_ready","latencyMs":0,"failureClass":null,"handle":"jane","format":"json"}
+
+stdout | tests/api/portfolio-export-route.test.ts > /api/portfolio/export > returns text export when format=text is requested
+{"level":"info","event":"launch.trace","timestamp":"2026-05-16T14:08:04.927Z","flow":"export","requestId":"W9TpREuWEs-r","actorId":"user-1","actorType":"user_account","objectRefs":{"profileId":"user-1"},"outcome":"success","state":"portfolio_export_ready","latencyMs":0,"failureClass":null,"handle":"jane","format":"text"}
+
+ ✓ tests/api/portfolio-export-route.test.ts  (6 tests) 32ms
+ ✓ tests/lib/export-download-filename.test.ts  (2 tests) 2ms
+ ✓ tests/lib/uploads-export.test.ts  (1 test) 2ms
+ ✓ tests/api/user-account-lifecycle-routes.test.ts  (8 tests) 22ms
+ ✓ tests/api/user-export-route.test.ts  (3 tests) 38ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+ ✓ tests/api/expertise-verifications-sent-delete-route.test.ts  (9 tests) 17ms
+ ✓ tests/api/public-portfolio-export-route.test.ts  (9 tests) 10ms
+ ✓ tests/lib/portfolio-export-data.test.ts  (1 test) 3ms
+ ✓ tests/api/expertise-user-skill-proof-delete-route.test.ts  (4 tests) 12ms
+stderr | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns 401 when unauthenticated
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-16T14:08:05.441Z","flow":"export","requestId":"FS6tjmZPUVTA","actorId":null,"actorType":"anonymous","objectRefs":{},"outcome":"rejected","state":"org_export_unauthorized","latencyMs":0,"failureClass":"unauthorized"}
+
+stderr | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns 404 when organization is missing
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-16T14:08:05.450Z","flow":"export","requestId":"tUBH1PX6X7cK","actorId":"user-1","actorType":"organization_member","objectRefs":{},"outcome":"rejected","state":"org_export_org_missing","latencyMs":1,"failureClass":"organization_not_found"}
+
+stderr | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns 403 when user is not an active org member
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-16T14:08:05.452Z","flow":"export","requestId":"eZKLNcx5nx4y","actorId":"user-1","actorType":"organization_member","objectRefs":{"orgId":"org-1"},"outcome":"rejected","state":"org_export_forbidden","latencyMs":1,"failureClass":"forbidden"}
+
+stderr | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns 404 when organization export data is unavailable
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-16T14:08:05.452Z","flow":"export","requestId":"QIERsEnLeK0D","actorId":"user-1","actorType":"organization_member","objectRefs":{"orgId":"org-1"},"outcome":"rejected","state":"org_export_profile_unavailable","latencyMs":0,"failureClass":"organization_profile_unavailable"}
+
+stderr | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns 403 for canonical reviewer membership
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-16T14:08:05.456Z","flow":"export","requestId":"105i6BwcAltP","actorId":"user-1","actorType":"organization_member","objectRefs":{"orgId":"org-1"},"outcome":"rejected","state":"org_export_forbidden","latencyMs":1,"failureClass":"forbidden"}
+
+stderr | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns 403 for inactive canonical owner membership
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-16T14:08:05.456Z","flow":"export","requestId":"9-jHFakyBiqp","actorId":"user-1","actorType":"organization_member","objectRefs":{"orgId":"org-1"},"outcome":"rejected","state":"org_export_forbidden","latencyMs":0,"failureClass":"forbidden"}
+
+stdout | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns a downloadable PDF on success
+{"level":"info","event":"launch.trace","timestamp":"2026-05-16T14:08:05.453Z","flow":"export","requestId":"6BxtlhbO11HW","actorId":"user-1","actorType":"organization_member","objectRefs":{"orgId":"org-1"},"outcome":"success","state":"organization_export_ready","latencyMs":0,"failureClass":null,"orgSlug":"acme"}
+
+stdout | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns canonical JSON when format=json is requested
+{"level":"info","event":"launch.trace","timestamp":"2026-05-16T14:08:05.454Z","flow":"export","requestId":"zLyFk6iPoAbe","actorId":"user-1","actorType":"organization_member","objectRefs":{"orgId":"org-1"},"outcome":"success","state":"organization_export_ready","latencyMs":0,"failureClass":null,"orgSlug":"acme","format":"json"}
+
+stdout | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns text export when format=text is requested
+{"level":"info","event":"launch.trace","timestamp":"2026-05-16T14:08:05.455Z","flow":"export","requestId":"JQN52SKKQGSB","actorId":"user-1","actorType":"organization_member","objectRefs":{"orgId":"org-1"},"outcome":"success","state":"organization_export_ready","latencyMs":0,"failureClass":null,"orgSlug":"acme","format":"text"}
+
+ ✓ tests/api/portfolio-org-export-route.test.ts  (9 tests) 17ms
+
+ Test Files  10 passed (10)
+      Tests  52 passed (52)
+   Start at  16:08:03
+   Duration  1.47s (transform 915ms, setup 1.37s, collect 3.38s, tests 155ms, environment 2.08s, prepare 871ms)

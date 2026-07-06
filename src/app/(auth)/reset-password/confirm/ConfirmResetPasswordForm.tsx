@@ -10,6 +10,14 @@ import { Label } from '@/components/ui/label';
 import { confirmPasswordReset } from '@/actions/auth';
 import { Eye, EyeOff, CheckCircle, Loader2, AlertTriangle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import {
+  clientVerificationLinkVisualFixturesEnabled,
+  isVisualResetPasswordToken,
+} from '@/lib/verification/visual-link-fixtures';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+
+const PASSWORD_RESET_CONFIRM_FAILED_MESSAGE =
+  'Password was not reset. Your existing password is unchanged; request a new link or try again.';
 
 export function ConfirmResetPasswordForm() {
   const router = useRouter();
@@ -22,6 +30,8 @@ export function ConfirmResetPasswordForm() {
   const [formError, setFormError] = useState<string | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(true);
+  const [visualResetMode, setVisualResetMode] = useState(false);
+  const [autoRedirectEnabled, setAutoRedirectEnabled] = useState(true);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -63,6 +73,17 @@ export function ConfirmResetPasswordForm() {
   useEffect(() => {
     const codeParam = searchParams?.get('code');
     const tokenHashParam = searchParams?.get('token_hash') ?? searchParams?.get('token');
+
+    if (
+      tokenHashParam &&
+      clientVerificationLinkVisualFixturesEnabled() &&
+      isVisualResetPasswordToken(tokenHashParam)
+    ) {
+      setVisualResetMode(true);
+      setAutoRedirectEnabled(false);
+      setIsAuthenticating(false);
+      return;
+    }
 
     if (!codeParam && !tokenHashParam) {
       if (typeof window !== 'undefined') {
@@ -147,31 +168,51 @@ export function ConfirmResetPasswordForm() {
     const formData = new FormData();
     formData.append('password', password);
 
-    const result = await confirmPasswordReset(formData);
+    const result = visualResetMode ? { success: true } : await confirmPasswordReset(formData);
 
     if (result.error) {
-      setFormError(result.error);
+      const resetError = new Error(result.error);
+      dispatchClientErrorDiagnostic('auth.reset_password.confirm_failed', resetError);
+      setFormError(PASSWORD_RESET_CONFIRM_FAILED_MESSAGE);
       setIsLoading(false);
     } else {
       setIsSuccess(true);
-      // Redirect to login after 2 seconds
-      setTimeout(() => {
-        router.push('/login');
-      }, 2000);
+      setIsLoading(false);
+      if (autoRedirectEnabled) {
+        setTimeout(() => {
+          router.push('/login');
+        }, 2000);
+      }
     }
   }
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-secondary-100 px-4">
-        <Card className="max-w-md w-full">
+      <div className="flex min-h-screen items-center justify-center bg-proofound-parchment px-4 py-10">
+        <Card className="w-full max-w-md rounded-[24px] border-proofound-stone bg-white/95 shadow-[0_4px_24px_rgba(29,51,48,0.08)]">
           <CardHeader className="text-center">
-            <div className="mx-auto w-12 h-12 rounded-full bg-green-50 flex items-center justify-center mb-4">
-              <CheckCircle className="w-6 h-6 text-green-500" />
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-proofound-forest/10">
+              <CheckCircle className="h-6 w-6 text-proofound-forest" />
             </div>
-            <CardTitle>Password reset successful</CardTitle>
-            <CardDescription>Your password has been reset. Redirecting to login...</CardDescription>
+            <CardTitle className="font-display text-2xl text-proofound-charcoal">
+              Password reset successful
+            </CardTitle>
+            <CardDescription className="leading-6 text-proofound-charcoal/70">
+              {autoRedirectEnabled
+                ? 'Your password has been reset. Redirecting to login.'
+                : 'Your password has been reset. You can continue to login when ready.'}
+            </CardDescription>
           </CardHeader>
+          {!autoRedirectEnabled ? (
+            <CardContent>
+              <Button
+                asChild
+                className="w-full bg-proofound-forest text-white hover:bg-proofound-forest/90"
+              >
+                <Link href="/login">Go to login now</Link>
+              </Button>
+            </CardContent>
+          ) : null}
         </Card>
       </div>
     );
@@ -179,14 +220,18 @@ export function ConfirmResetPasswordForm() {
 
   if (isAuthenticating) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-secondary-100 px-4">
-        <Card className="max-w-md w-full">
+      <div className="flex min-h-screen items-center justify-center bg-proofound-parchment px-4 py-10">
+        <Card className="w-full max-w-md rounded-[24px] border-proofound-stone bg-white/95 shadow-[0_4px_24px_rgba(29,51,48,0.08)]">
           <CardHeader className="text-center">
-            <div className="mx-auto w-12 h-12 rounded-full bg-primary-50 flex items-center justify-center mb-4">
-              <Loader2 className="w-6 h-6 text-primary-500 animate-spin" />
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-proofound-forest/10">
+              <Loader2 className="h-6 w-6 animate-spin text-proofound-forest" />
             </div>
-            <CardTitle>Verifying reset link</CardTitle>
-            <CardDescription>Please wait while we verify your reset link...</CardDescription>
+            <CardTitle className="font-display text-2xl text-proofound-charcoal">
+              Verifying reset link
+            </CardTitle>
+            <CardDescription className="leading-6 text-proofound-charcoal/70">
+              Please wait while we verify your reset link.
+            </CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -195,14 +240,18 @@ export function ConfirmResetPasswordForm() {
 
   if (authError) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-secondary-100 px-4">
-        <Card className="max-w-md w-full">
+      <div className="flex min-h-screen items-center justify-center bg-proofound-parchment px-4 py-10">
+        <Card className="w-full max-w-md rounded-[24px] border-proofound-stone bg-white/95 shadow-[0_4px_24px_rgba(29,51,48,0.08)]">
           <CardHeader className="text-center">
-            <div className="mx-auto w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mb-4">
-              <AlertTriangle className="w-6 h-6 text-red-500" />
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+              <AlertTriangle className="h-6 w-6 text-destructive" />
             </div>
-            <CardTitle>Reset link invalid</CardTitle>
-            <CardDescription>{authError}</CardDescription>
+            <CardTitle className="font-display text-2xl text-proofound-charcoal">
+              Reset link invalid
+            </CardTitle>
+            <CardDescription className="leading-6 text-proofound-charcoal/70">
+              {authError}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Button asChild className="w-full">
@@ -218,11 +267,15 @@ export function ConfirmResetPasswordForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-secondary-100 px-4">
-      <Card className="max-w-md w-full">
-        <CardHeader>
-          <CardTitle>Set new password</CardTitle>
-          <CardDescription>Enter your new password below</CardDescription>
+    <div className="flex min-h-screen items-center justify-center bg-proofound-parchment px-4 py-10">
+      <Card className="w-full max-w-md rounded-[24px] border-proofound-stone bg-white/95 shadow-[0_4px_24px_rgba(29,51,48,0.08)]">
+        <CardHeader className="space-y-2">
+          <CardTitle className="font-display text-2xl text-proofound-charcoal">
+            Set new password
+          </CardTitle>
+          <CardDescription className="leading-6 text-proofound-charcoal/70">
+            Choose a new password for your Proofound account.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -242,7 +295,8 @@ export function ConfirmResetPasswordForm() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-dark-500 hover:text-neutral-dark-700"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-proofound-charcoal/55 hover:text-proofound-charcoal"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -264,19 +318,26 @@ export function ConfirmResetPasswordForm() {
             </div>
 
             {formError && (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              <div
+                role="alert"
+                className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive"
+              >
                 {formError}
               </div>
             )}
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button
+              type="submit"
+              className="w-full bg-proofound-forest text-white hover:bg-proofound-forest/90"
+              disabled={isLoading}
+            >
               {isLoading ? 'Resetting password...' : 'Reset password'}
             </Button>
 
             <div className="text-center">
               <Link
                 href="/login"
-                className="text-sm text-neutral-dark-600 hover:text-primary-500 transition-colors"
+                className="inline-flex min-h-[44px] items-center px-2 text-sm text-proofound-charcoal/70 transition-colors hover:text-proofound-forest"
               >
                 ← Back to login
               </Link>

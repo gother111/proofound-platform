@@ -1,0 +1,56 @@
+[
+  {
+    "id": "individual-home",
+    "requestedUrl": "/app/i/home",
+    "persona": "individual",
+    "error": "TypeError: Cannot set property cookie of [object Object] which has only a getter\n    at __playwrightEvaluate (<anonymous>:2477:21)\n    at <anonymous>:2479:14\n    at runUserScript (<anonymous>:2480:10)\n    at <anonymous>:2484:10\n    at <anonymous>:2485:3"
+  },
+  {
+    "id": "individual-onboarding",
+    "requestedUrl": "/onboarding",
+    "persona": "individual",
+    "error": "TypeError: Cannot set property cookie of [object Object] which has only a getter\n    at __playwrightEvaluate (<anonymous>:2477:21)\n    at <anonymous>:2479:14\n    at runUserScript (<anonymous>:2480:10)\n    at <anonymous>:2484:10\n    at <anonymous>:2485:3"
+  },
+  {
+    "id": "individual-portfolio",
+    "requestedUrl": "/app/i/portfolio",
+    "persona": "individual",
+    "error": "TypeError: Cannot set property cookie of [object Object] which has only a getter\n    at __playwrightEvaluate (<anonymous>:2477:21)\n    at <anonymous>:2479:14\n    at runUserScript (<anonymous>:2480:10)\n    at <anonymous>:2484:10\n    at <anonymous>:2485:3"
+  },
+  {
+    "id": "individual-profile",
+    "requestedUrl": "/app/i/profile?profileView=full&tab=proof_packs",
+    "persona": "individual",
+    "error": "TypeError: Cannot set property cookie of [object Object] which has only a getter\n    at __playwrightEvaluate (<anonymous>:2477:21)\n    at <anonymous>:2479:14\n    at runUserScript (<anonymous>:2480:10)\n    at <anonymous>:2484:10\n    at <anonymous>:2485:3"
+  },
+  {
+    "id": "individual-verifications",
+    "requestedUrl": "/app/i/verifications",
+    "persona": "individual",
+    "error": "TypeError: Cannot set property cookie of [object Object] which has only a getter\n    at __playwrightEvaluate (<anonymous>:2477:21)\n    at <anonymous>:2479:14\n    at runUserScript (<anonymous>:2480:10)\n    at <anonymous>:2484:10\n    at <anonymous>:2485:3"
+  },
+  {
+    "id": "org-home",
+    "requestedUrl": "/app/o/test-org/home",
+    "persona": "org_member",
+    "error": "TypeError: Cannot set property cookie of [object Object] which has only a getter\n    at __playwrightEvaluate (<anonymous>:2477:21)\n    at <anonymous>:2479:14\n    at runUserScript (<anonymous>:2480:10)\n    at <anonymous>:2484:10\n    at <anonymous>:2485:3"
+  },
+  {
+    "id": "org-assignments",
+    "requestedUrl": "/app/o/test-org/assignments",
+    "persona": "org_member",
+    "error": "TypeError: Cannot set property cookie of [object Object] which has only a getter\n    at __playwrightEvaluate (<anonymous>:2477:21)\n    at <anonymous>:2479:14\n    at runUserScript (<anonymous>:2480:10)\n    at <anonymous>:2484:10\n    at <anonymous>:2485:3"
+  },
+  {
+    "id": "org-communications",
+    "requestedUrl": "/app/o/test-org/communications",
+    "persona": "org_member",
+    "error": "TypeError: Cannot set property cookie of [object Object] which has only a getter\n    at __playwrightEvaluate (<anonymous>:2477:21)\n    at <anonymous>:2479:14\n    at runUserScript (<anonymous>:2480:10)\n    at <anonymous>:2484:10\n    at <anonymous>:2485:3"
+  },
+  {
+    "id": "org-shortlist",
+    "requestedUrl": "/app/o/test-org/shortlist",
+    "persona": "org_member",
+    "error": "TypeError: Cannot set property cookie of [object Object] which has only a getter\n    at __playwrightEvaluate (<anonymous>:2477:21)\n    at <anonymous>:2479:14\n    at runUserScript (<anonymous>:2480:10)\n    at <anonymous>:2484:10\n    at <anonymous>:2485:3"
+  }
+]

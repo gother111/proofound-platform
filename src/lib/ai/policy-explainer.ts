@@ -43,7 +43,7 @@ function generateFallbackExplanation(question: PolicyQuestion): PolicyExplanatio
   ) {
     return {
       answer:
-        'We collect only the information you provide in your profile (skills, work history, preferences). We use this data exclusively to match you with opportunities. We never sell your data to third parties.',
+        'We collect only the information you provide in your profile (skills, work history, preferences). We use this data exclusively to support proof-led assignment reviews. We never sell your data to third parties.',
       summary: 'We collect profile data for matching, never sell it.',
       keyPoints: [
         'Only collect data you provide',

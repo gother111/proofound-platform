@@ -14,9 +14,15 @@ describe('llms routes', () => {
     expect(response.headers.get('cache-control')).toContain('stale-while-revalidate');
     expect(body).toContain('# Proofound');
     expect(body).toContain('## Core Pages');
+    expect(body).toContain('proof-first hiring flow');
     expect(body).toContain('privacy-safe review');
+    expect(body).toContain('structured assignment flow');
     expect(body).toContain('/privacy');
     expect(body).not.toContain('/about');
+    expect(body).not.toMatch(/searchable/i);
+    expect(body).not.toMatch(/public directory/i);
+    expect(body).not.toMatch(/proof-first hiring corridor/i);
+    expect(body).not.toMatch(/inside the hiring corridor/i);
     expect(body).toContain('hello@proofound.io');
   });
 

@@ -12,6 +12,11 @@ import { mapIndustryListToCanonical } from '@/lib/industry/options';
 import { syncReadinessMilestones } from '@/lib/readiness/analytics';
 import { normalizeEngagementType } from '@/lib/engagement-verifications/service';
 import { MATCHING_ENABLED } from '@/lib/featureFlags';
+import {
+  buildVisualMatchingProfile,
+  getMatchingVisualState,
+  matchingVisualFixturesEnabled,
+} from '@/lib/matching/visual-fixtures';
 
 // Shared handler imported by the kept launch corridor routes.
 export const dynamic = 'force-dynamic';
@@ -160,13 +165,24 @@ function normalizeProfileResponse(
  *
  * Returns the current user's matching profile, or null if not set up.
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const authContext = await requireApiAuthContext();
     if (!authContext) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const { user } = authContext;
+    const visualState = getMatchingVisualState(request?.nextUrl);
+    if (matchingVisualFixturesEnabled() && visualState) {
+      return NextResponse.json({
+        profile: buildVisualMatchingProfile(user.id),
+        eligibility: {
+          eligible: true,
+          tier: 'introductions_ready',
+          nextTierTarget: null,
+        },
+      });
+    }
 
     if (!MATCHING_ENABLED) {
       return NextResponse.json(
@@ -237,7 +253,12 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
 
     // Validate input
     const validatedData = MatchingProfileSchema.parse(body);

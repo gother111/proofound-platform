@@ -56,6 +56,30 @@ interface NavItem {
   lockReason?: string | null;
 }
 
+function isNavItemActive(pathname: string | null, href: string, activeHrefs: string[] = []) {
+  if (!pathname) {
+    return false;
+  }
+
+  return [href, ...activeHrefs].some((candidate) => {
+    if (pathname === candidate) {
+      return true;
+    }
+
+    return pathname.startsWith(`${candidate}/`);
+  });
+}
+
+function getMobileNavAccessibleLabel(item: NavItem) {
+  const mobileLabel = item.mobileLabel ?? item.label;
+
+  if (mobileLabel === item.label) {
+    return item.label;
+  }
+
+  return `${mobileLabel}, ${item.label}`;
+}
+
 export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
@@ -65,19 +89,26 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
 
   const individualNavItems: NavItem[] = [
     { href: `${basePath}/home`, icon: Home, label: 'Overview', dataTour: 'home-link' },
-    { href: `${basePath}/profile`, icon: User, label: 'Profile', dataTour: 'profile-link' },
+    {
+      href: `${basePath}/profile`,
+      icon: User,
+      label: 'Profile',
+      dataTour: 'profile-link',
+      activeHrefs: [`${basePath}/verifications`],
+    },
     {
       href: `${basePath}/communications`,
       icon: MessageCircle,
       label: 'Communications',
       mobileLabel: 'Inbox',
       dataTour: 'communications-link',
-      activeHrefs: [`${basePath}/messages`, `${basePath}/interviews`, `${basePath}/verifications`],
+      activeHrefs: [`${basePath}/messages`, `${basePath}/interviews`],
     },
     {
       href: `${basePath}/matching`,
       icon: Users,
-      label: 'Matching',
+      label: 'Assignment review',
+      mobileLabel: 'Reviews',
       dataTour: 'matching-link',
     },
     {
@@ -101,6 +132,16 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
     href: `${basePath}${item.hrefSuffix}`,
     icon: orgIconMap[item.icon],
     label: item.label,
+    mobileLabel:
+      item.hrefSuffix === '/assignments'
+        ? 'Assignments'
+        : item.hrefSuffix === '/communications'
+          ? 'Inbox'
+          : item.hrefSuffix === '/profile'
+            ? 'Trust'
+            : item.hrefSuffix === '/portfolio'
+              ? 'Preview'
+              : item.label,
     dataTour:
       item.hrefSuffix === '/home'
         ? 'home-link'
@@ -108,14 +149,20 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
           ? 'assignments-link'
           : item.hrefSuffix === '/candidates'
             ? 'candidates-link'
-            : item.hrefSuffix === '/profile'
-              ? 'org-profile'
-              : 'portfolio-link',
+            : item.hrefSuffix === '/communications'
+              ? 'communications-link'
+              : item.hrefSuffix === '/profile'
+                ? 'org-profile'
+                : 'portfolio-link',
   }));
 
   const navItems = isOrg ? orgNavItems : individualNavItems;
   const filteredNavItems = navItems;
-  const mobileNavItems = filteredNavItems.slice(0, 5);
+  // The mobile bottom bar holds five slots. Keep the org "Candidates" review
+  // workspace desktop-first so the public "Preview" surface stays reachable on mobile.
+  const mobileNavItems = filteredNavItems
+    .filter((item) => !item.href.endsWith('/candidates'))
+    .slice(0, 5);
 
   const isV2 = process.env.NEXT_PUBLIC_UI_REFACTOR_V2 === 'true';
 
@@ -140,11 +187,7 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
               const Icon = item.icon;
               const isLocked = Boolean(item.locked);
               const activeHrefs = item.activeHrefs ?? [];
-              const isActive =
-                !isLocked &&
-                (pathname === item.href ||
-                  pathname?.startsWith(item.href) ||
-                  activeHrefs.some((href) => pathname === href || pathname?.startsWith(href)));
+              const isActive = !isLocked && isNavItemActive(pathname, item.href, activeHrefs);
               const tooltipText = !isExpanded
                 ? isLocked
                   ? `${item.label} (Locked)`
@@ -237,19 +280,19 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
                   : 'border-proofound-forest/30 bg-proofound-parchment text-proofound-forest'
               )}
             >
-              {isExpanded ? 'Beta testing' : 'Beta'}
+              {isExpanded ? 'Early access' : 'Early'}
             </div>
           ) : null}
           <button
             type="button"
             onClick={() => setIsExpanded(!isExpanded)}
-            className="flex h-8 w-full items-center justify-center rounded-xl text-sm font-medium transition-all duration-300 hover:bg-proofound-forest/5 hover:text-proofound-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="flex min-h-[44px] w-full items-center justify-center rounded-md text-sm font-medium transition-all duration-300 hover:bg-proofound-forest/5 hover:text-proofound-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             aria-label={isExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
           >
             {isExpanded ? (
-              <ChevronLeft className="w-3.5 h-3.5" />
+              <ChevronLeft className="h-4 w-4" />
             ) : (
-              <ChevronRight className="w-3.5 h-3.5" />
+              <ChevronRight className="h-4 w-4" />
             )}
           </button>
         </div>
@@ -257,22 +300,19 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
 
       {/* Mobile Bottom Tab Bar Navigation */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-neutral-light-50 border-proofound-stone/60 pointer-events-none"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-neutral-light-50 border-proofound-stone/60 pointer-events-auto"
         role="navigation"
         aria-label="Mobile primary navigation"
       >
-        <div className="flex items-center gap-1 px-1 py-2 safe-area-inset-bottom pointer-events-none">
+        <div className="flex items-center gap-1 px-1 py-2 safe-area-inset-bottom">
           {/* Show the retained mobile navigation corridor. */}
           {mobileNavItems.map((item) => {
             const Icon = item.icon;
             const mobileLabel = item.mobileLabel ?? item.label;
+            const mobileAccessibleLabel = getMobileNavAccessibleLabel(item);
             const isLocked = Boolean(item.locked);
             const activeHrefs = item.activeHrefs ?? [];
-            const isActive =
-              !isLocked &&
-              (pathname === item.href ||
-                pathname?.startsWith(item.href) ||
-                activeHrefs.some((href) => pathname === href || pathname?.startsWith(href)));
+            const isActive = !isLocked && isNavItemActive(pathname, item.href, activeHrefs);
 
             if (isLocked) {
               return (
@@ -280,7 +320,7 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
                   key={item.href}
                   type="button"
                   className="relative flex flex-1 min-w-0 flex-col items-center gap-1 px-1 py-2 rounded-lg min-h-[64px] justify-center text-muted-foreground/60 cursor-not-allowed pointer-events-auto"
-                  aria-label={`${item.label} (locked)`}
+                  aria-label={`${mobileAccessibleLabel} (locked)`}
                   aria-disabled="true"
                   title={item.lockReason || ''}
                 >
@@ -296,13 +336,13 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
               <Link
                 key={item.href}
                 href={item.href}
-                className={`relative flex flex-1 min-w-0 flex-col items-center gap-1 px-1 py-2 rounded-lg transition-colors min-h-[64px] justify-center pointer-events-auto ${
+                className={`relative flex flex-1 min-w-0 flex-col items-center gap-1 px-1 py-2 rounded-lg transition-colors min-h-[64px] justify-center pointer-events-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-light-50 ${
                   isActive
                     ? 'text-proofound-forest'
                     : 'text-muted-foreground hover:text-proofound-charcoal'
                 }`}
                 aria-current={isActive ? 'page' : undefined}
-                aria-label={item.label}
+                aria-label={mobileAccessibleLabel}
               >
                 {/* Fluid Active Indicator */}
                 {isActive && (

@@ -14,6 +14,8 @@ import { resolveFeedbackFollowUpState } from '@/lib/feedback/service';
 
 export const dynamic = 'force-dynamic';
 
+const EXPIRED_MATCH_REVIEW_SNOOZE_DAYS = 365;
+
 /**
  * GET /api/cron/sla-enforcement
  *
@@ -69,14 +71,19 @@ export async function GET(request: NextRequest) {
     if (expiredMatches.length > 0) {
       const matchIds = expiredMatches.map((m) => m.id);
 
-      // Soft delete by setting snoozedUntil to far future (or add status field in future)
-      // For now, we'll mark them as "expired" by snoozing them for a year
-      const expiredDate = new Date();
-      expiredDate.setFullYear(expiredDate.getFullYear() + 1);
+      // Matches do not have a terminal `expired` lifecycle state. Mark them stale for
+      // lifecycle/audit consumers and keep the existing long snooze so they do not reappear.
+      const expiredAt = new Date();
+      const expiredDate = new Date(expiredAt);
+      expiredDate.setDate(expiredDate.getDate() + EXPIRED_MATCH_REVIEW_SNOOZE_DAYS);
 
       await db
         .update(matches)
-        .set({ snoozedUntil: expiredDate })
+        .set({
+          lifecycleState: 'stale',
+          staleAt: expiredAt,
+          snoozedUntil: expiredDate,
+        })
         .where(
           sql`${matches.id} IN (${sql.join(
             matchIds.map((id) => sql`${id}`),

@@ -1,13 +1,18 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const apiFetchMock = vi.fn();
+const dispatchClientDiagnosticMock = vi.fn();
 const toastErrorMock = vi.fn();
 const toastSuccessMock = vi.fn();
 
 vi.mock('@/lib/api/fetch', () => ({
   apiFetch: (...args: any[]) => apiFetchMock(...args),
+}));
+
+vi.mock('@/lib/client-diagnostics', () => ({
+  dispatchClientDiagnostic: (...args: any[]) => dispatchClientDiagnosticMock(...args),
 }));
 
 vi.mock('sonner', () => ({
@@ -19,9 +24,10 @@ vi.mock('sonner', () => ({
 
 import { AdminVerificationDashboard } from '@/components/admin/AdminVerificationDashboard';
 
-function buildJsonResponse(payload: unknown, ok = true) {
+function buildJsonResponse(payload: unknown, ok = true, status = ok ? 200 : 500) {
   return {
     ok,
+    status,
     json: vi.fn().mockResolvedValue(payload),
   } as any;
 }
@@ -104,6 +110,47 @@ const actionableQueuePayload = {
   ),
 };
 
+const pilotWorkflowPayload = {
+  queues: [
+    {
+      id: 'pilot_ops',
+      label: 'Pilot ops',
+      description: 'Pilot follow-through.',
+      openCount: 1,
+      items: [
+        {
+          id: '55555555-5555-4555-8555-555555555555',
+          queueType: 'pilot_ops',
+          status: 'open',
+          priority: 'high',
+          linkedEntityType: 'engagement_verification',
+          linkedEntityId: '66666666-6666-4666-8666-666666666666',
+          summary: 'Pilot workflow is stuck after engagement decision.',
+          metadata: {
+            assignmentStatus: 'published',
+            trustTier: 'verified',
+            organizationTrustPageStatus: 'published',
+            revealStage: 'candidate_consented',
+            candidateConsentStatus: 'granted',
+            decisionState: 'hire',
+            workflowStatus: 'pending_both_confirmations',
+            pendingParty: 'candidate',
+            privateCandidateEmail: 'candidate@example.com',
+            rawInterviewNotes: 'Candidate private notes',
+          },
+          createdAt: '2026-03-21T10:00:00.000Z',
+          updatedAt: '2026-03-21T11:00:00.000Z',
+          resolvedAt: null,
+        },
+      ],
+    },
+  ],
+  stats: {
+    total: 1,
+    open: 1,
+  },
+};
+
 describe('AdminVerificationDashboard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -119,9 +166,86 @@ describe('AdminVerificationDashboard', () => {
     expect(apiFetchMock).toHaveBeenCalledWith('/api/admin/internal-ops/queues');
     expect(screen.getByText('Privacy / reveal disputes')).toBeInTheDocument();
     expect(screen.getByText('Pilot ops')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /verification review sop/i })).toHaveAttribute(
+      'href',
+      expect.stringContaining('/docs/internal-ops/verification-review-sop.md')
+    );
+  });
+
+  it('keeps queue load failures safe for operators', async () => {
+    const rawFailure = 'database relation internal_ops_queue leaked detail';
+    apiFetchMock.mockResolvedValue(buildJsonResponse({ error: rawFailure }, false));
+
+    render(<AdminVerificationDashboard />);
+
+    await waitFor(() => {
+      expect(toastErrorMock).toHaveBeenCalledWith(
+        'Operations queues could not be loaded. Refresh the queues before taking review action.'
+      );
+    });
+    expect(toastErrorMock).not.toHaveBeenCalledWith(rawFailure);
+    expect(screen.queryByText(rawFailure)).not.toBeInTheDocument();
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
+      'admin.operations_queues.load_returned_error',
+      expect.objectContaining({
+        status: 500,
+        hasReturnedError: true,
+      })
+    );
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
+      'admin.operations_queues.load_failed',
+      expect.objectContaining({
+        error: 'operations_queues_load_request_failed',
+      })
+    );
+    expect(
+      dispatchClientDiagnosticMock.mock.calls.some((call) =>
+        JSON.stringify(call).includes(rawFailure)
+      )
+    ).toBe(false);
+  });
+
+  it.each([
+    [
+      'privacy_reveal_exception',
+      /reveal privacy dispute sop/i,
+      '/docs/internal-ops/reveal-privacy-dispute-sop.md',
+    ],
+    [
+      'correction_revocation',
+      /redaction and risky upload sop/i,
+      '/docs/internal-ops/redaction-risky-upload-sop.md',
+    ],
+    [
+      'pilot_ops',
+      /pilot assignment quality checklist/i,
+      '/docs/internal-ops/assignment-quality-checklist.md',
+    ],
+  ])('renders the current SOP link for %s queues', async (queueId, linkName, expectedPath) => {
+    const queue = queuePayload.queues.find((entry) => entry.id === queueId);
+    expect(queue).toBeDefined();
+    apiFetchMock.mockResolvedValue(
+      buildJsonResponse({
+        queues: [queue],
+        stats: {
+          total: queue?.items.length ?? 0,
+          open: queue?.openCount ?? 0,
+        },
+      })
+    );
+
+    render(<AdminVerificationDashboard />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('link', { name: linkName })).toHaveAttribute(
+        'href',
+        expect.stringContaining(expectedPath)
+      );
+    });
   });
 
   it('requires a note for resolve actions and patches the generic queue endpoint once provided', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm');
     apiFetchMock
       .mockResolvedValueOnce(buildJsonResponse(actionableQueuePayload))
       .mockResolvedValueOnce(
@@ -174,6 +298,13 @@ describe('AdminVerificationDashboard', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: 'Resolve' }));
 
+    const resolveDialog = await screen.findByRole('alertdialog', { name: 'Resolve queue item?' });
+    expect(resolveDialog).toBeInTheDocument();
+    expect(within(resolveDialog).getByText('Safe after review.')).toBeInTheDocument();
+    expect(apiFetchMock).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(within(resolveDialog).getByRole('button', { name: 'Confirm resolve' }));
+
     await waitFor(() => {
       expect(apiFetchMock).toHaveBeenCalledWith(
         '/api/admin/internal-ops/queues/33333333-3333-4333-8333-333333333333',
@@ -185,10 +316,140 @@ describe('AdminVerificationDashboard', () => {
     await waitFor(() => {
       expect(toastSuccessMock).toHaveBeenCalledWith('Queue item moved to Resolved.');
     });
+    await waitFor(() => {
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    });
+    expect(confirmSpy).not.toHaveBeenCalled();
+
+    confirmSpy.mockRestore();
+  });
+
+  it('keeps queue update failures safe and leaves the confirmation open', async () => {
+    const rawFailure = 'update failed: queue transition policy detail';
+    apiFetchMock
+      .mockResolvedValueOnce(buildJsonResponse(actionableQueuePayload))
+      .mockResolvedValueOnce(buildJsonResponse({ error: rawFailure }, false));
+
+    render(<AdminVerificationDashboard />);
+
+    await screen.findByText('Risky evidence upload held for privacy-safe review.');
+
+    fireEvent.change(screen.getByLabelText(/operator note/i), {
+      target: { value: 'Reviewed minimum necessary context.' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Resolve' }));
+
+    const resolveDialog = await screen.findByRole('alertdialog', { name: 'Resolve queue item?' });
+    fireEvent.click(within(resolveDialog).getByRole('button', { name: 'Confirm resolve' }));
+
+    await waitFor(() => {
+      expect(toastErrorMock).toHaveBeenCalledWith(
+        'Queue item could not be updated. The item stayed in review; check the note and try again.'
+      );
+    });
+    expect(toastErrorMock).not.toHaveBeenCalledWith(rawFailure);
+    expect(screen.queryByText(rawFailure)).not.toBeInTheDocument();
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
+      'admin.operations_queues.update_returned_error',
+      expect.objectContaining({
+        itemId: '33333333-3333-4333-8333-333333333333',
+        action: 'resolve',
+        nextStatus: 'resolved',
+        status: 500,
+        hasReturnedError: true,
+      })
+    );
+    expect(dispatchClientDiagnosticMock).toHaveBeenCalledWith(
+      'admin.operations_queues.update_failed',
+      expect.objectContaining({
+        error: 'operations_queue_update_request_failed',
+      })
+    );
+    expect(
+      dispatchClientDiagnosticMock.mock.calls.some((call) =>
+        JSON.stringify(call).includes(rawFailure)
+      )
+    ).toBe(false);
+    expect(screen.getByRole('alertdialog', { name: 'Resolve queue item?' })).toBeInTheDocument();
+  });
+
+  it('lets operators filter queue items by active status and priority', async () => {
+    apiFetchMock.mockResolvedValue(
+      buildJsonResponse({
+        queues: [
+          {
+            ...actionableQueuePayload.queues[0],
+            items: [
+              actionableQueuePayload.queues[0].items[0],
+              {
+                ...actionableQueuePayload.queues[0].items[0],
+                id: '44444444-4444-4444-8444-444444444444',
+                status: 'resolved',
+                priority: 'low',
+                summary: 'Resolved pilot evidence check.',
+                resolvedAt: '2026-03-21T12:00:00.000Z',
+              },
+            ],
+          },
+        ],
+        stats: {
+          total: 2,
+          open: 1,
+        },
+      })
+    );
+
+    render(<AdminVerificationDashboard />);
+
+    await screen.findByText('Risky evidence upload held for privacy-safe review.');
+
+    expect(screen.getByText(/Age /)).toBeInTheDocument();
+    expect(screen.queryByText('Resolved pilot evidence check.')).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'all' } });
+    expect(await screen.findByText('Resolved pilot evidence check.')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Priority'), { target: { value: 'high_urgent' } });
+    expect(screen.queryByText('Resolved pilot evidence check.')).not.toBeInTheDocument();
+    expect(
+      screen.getByText('Risky evidence upload held for privacy-safe review.')
+    ).toBeInTheDocument();
+  });
+
+  it('renders a narrow pilot corridor drilldown without private workflow notes', async () => {
+    apiFetchMock.mockResolvedValue(buildJsonResponse(pilotWorkflowPayload));
+
+    render(<AdminVerificationDashboard />);
+
+    await screen.findByText('Pilot workflow is stuck after engagement decision.');
+    expect(
+      screen.queryByText('Pilot workflow is stuck after hire decision.')
+    ).not.toBeInTheDocument();
+
+    expect(screen.getByText('Pilot corridor')).toBeInTheDocument();
+    expect(screen.getByText('Assignment:')).toBeInTheDocument();
+    expect(screen.getAllByText('Published')).toHaveLength(2);
+    expect(screen.getByText('Org trust:')).toBeInTheDocument();
+    expect(screen.getByText('Verified')).toBeInTheDocument();
+    expect(screen.getByText('Decision:')).toBeInTheDocument();
+    expect(screen.getByText('Hire')).toBeInTheDocument();
+    expect(screen.getByText('Engagement:')).toBeInTheDocument();
+    expect(screen.getByText('Pending Both Confirmations')).toBeInTheDocument();
+    expect(screen.getByText('Proof-review participant consent:')).toBeInTheDocument();
+    expect(screen.getByText('Proof-review participant consent status:')).toBeInTheDocument();
+    expect(screen.getAllByText('Proof-review participant consented').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Candidate consent:')).not.toBeInTheDocument();
+    expect(screen.queryByText('Candidate Consent Status:')).not.toBeInTheDocument();
+    expect(screen.getByText('Pending party:')).toBeInTheDocument();
+    expect(screen.getAllByText('Proof-review participant').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Candidate')).not.toBeInTheDocument();
+    expect(screen.queryByText('Candidate Consented')).not.toBeInTheDocument();
+    expect(screen.queryByText('candidate@example.com')).not.toBeInTheDocument();
+    expect(screen.queryByText('Candidate private notes')).not.toBeInTheDocument();
   });
 
   it('uses explicit approve and reject actions for uploaded-file queue items', async () => {
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const confirmSpy = vi.spyOn(window, 'confirm');
     const uploadQueuePayload = {
       queues: [queuePayload.queues[2]],
       stats: queuePayload.stats,
@@ -241,6 +502,19 @@ describe('AdminVerificationDashboard', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: /approve private evidence/i }));
 
+    const approveDialog = await screen.findByRole('alertdialog', {
+      name: 'Approve private evidence queue item?',
+    });
+    expect(approveDialog).toBeInTheDocument();
+    expect(
+      within(approveDialog).getByText('Inspected metadata flags; safe for private evidence only.')
+    ).toBeInTheDocument();
+    expect(apiFetchMock).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(
+      within(approveDialog).getByRole('button', { name: /confirm approve private evidence/i })
+    );
+
     await waitFor(() => {
       expect(apiFetchMock).toHaveBeenCalledWith(
         '/api/admin/internal-ops/queues/33333333-3333-4333-8333-333333333333',
@@ -258,9 +532,12 @@ describe('AdminVerificationDashboard', () => {
       uploadReviewAction: 'approve',
       note: 'Inspected metadata flags; safe for private evidence only.',
     });
-    expect(confirmSpy).toHaveBeenCalledWith(expect.stringContaining('Approve this upload'));
+    expect(confirmSpy).not.toHaveBeenCalled();
     await waitFor(() => {
       expect(toastSuccessMock).toHaveBeenCalledWith('Upload approved for private evidence.');
+    });
+    await waitFor(() => {
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
     });
 
     confirmSpy.mockRestore();

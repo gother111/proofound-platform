@@ -1,0 +1,1095 @@
+{
+  "generatedAt": "2026-05-18T14:23:40.559Z",
+  "note": "Codex Browser DOM-backed keyboard/accessibility audit. Native Tab key dispatch in this Browser session stuck on body, and the Browser DOM proxy did not expose HTMLElement.focus(), so this evidence verifies visible tabbable controls, accessible names, focus-visible classes, mobile overflow, and rendered route state rather than claiming a native Tab traversal.",
+  "cookieBannerRenderedInBrowser": false,
+  "cookieBannerNote": "The current in-app Browser session did not render the cookie banner after localStorage/sessionStorage clearing on app or public routes; close-control accessibility is covered by component tests in this checkpoint.",
+  "routes": [
+    {
+      "documentWidth": {
+        "bodyScroll": 390,
+        "client": 390,
+        "scroll": 390
+      },
+      "hasHorizontalOverflow": false,
+      "primaryHeading": "Welcome back",
+      "selectorChecks": [
+        {
+          "ariaLabel": "Remember me",
+          "className": "peer shrink-0 border ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:data-[state=checked]:bg-primary dark:data-[state=checked]:text-primary-foreground h-6 w-6 rounded-md border-proofound-stone bg-white data-[state=checked]:bg-proofound-forest data-[state=checked]:text-white focus-visible:ring-proofound-forest/30",
+          "focusProbe": "not-supported-by-browser-dom-proxy",
+          "found": true,
+          "name": "Remember me",
+          "rect": {
+            "height": 24,
+            "width": 24,
+            "x": 37,
+            "y": 449
+          },
+          "role": "checkbox",
+          "selector": "#remember",
+          "tag": "button"
+        },
+        {
+          "ariaLabel": "Show password",
+          "className": "absolute right-1 top-1/2 -translate-y-1/2 min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground transition-colors hover:text-proofound-charcoal focus:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest rounded",
+          "focusProbe": "not-supported-by-browser-dom-proxy",
+          "found": true,
+          "name": "Show password",
+          "rect": {
+            "height": 44,
+            "width": 44,
+            "x": 305,
+            "y": 360
+          },
+          "role": "",
+          "selector": "button[aria-label=\"Show password\"]",
+          "tag": "button"
+        },
+        {
+          "ariaLabel": "",
+          "className": "-mx-2 inline-flex min-h-[44px] items-center rounded-sm px-2 text-[14px] font-medium text-proofound-forest transition-colors hover:text-[#2D5D4A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2",
+          "focusProbe": "not-supported-by-browser-dom-proxy",
+          "found": true,
+          "name": "Forgot password?",
+          "rect": {
+            "height": 44,
+            "width": 136,
+            "x": 225,
+            "y": 439
+          },
+          "role": "",
+          "selector": "a[href=\"/reset-password\"]",
+          "tag": "a"
+        },
+        {
+          "ariaLabel": "",
+          "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed active:translate-y-0 dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90 h-12 px-8 min-w-[44px] w-full rounded-xl bg-proofound-forest py-[14px] text-[15px] font-semibold tracking-[0.01em] text-white shadow-sm transition-all hover:-translate-y-[1px] hover:bg-[#2D5D4A] hover:shadow-md disabled:bg-proofound-stone disabled:text-foreground/40",
+          "focusProbe": "not-supported-by-browser-dom-proxy",
+          "found": true,
+          "name": "Sign in",
+          "rect": {
+            "height": 48,
+            "width": 316,
+            "x": 37,
+            "y": 507
+          },
+          "role": "",
+          "selector": "[data-testid=\"login-submit\"]",
+          "tag": "button"
+        }
+      ],
+      "tabbableCount": 12,
+      "tabbables": [
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "",
+          "className": "sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-proofound-forest focus:text-white focus:rounded-lg focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-proofound-forest focus:ring-offset-2",
+          "href": "#main-content",
+          "id": "",
+          "name": "Skip to main content",
+          "rect": {
+            "height": 1,
+            "width": 1,
+            "x": -1,
+            "y": -1
+          },
+          "role": "link",
+          "tag": "a",
+          "testId": ""
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "",
+          "className": "flex w-full px-3 py-2 duration-300 hover:border-border/80 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground/70 focus-visible:outline-none focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-proofound-parchment dark:border-border dark:bg-background dark:text-foreground dark:placeholder:text-muted-foreground dark:focus-visible:ring-primary h-11 rounded-xl border border-proofound-stone bg-white pl-12 pr-4 text-[15px] text-foreground transition-all focus-visible:border-2 focus-visible:border-proofound-forest focus-visible:px-[43px] focus-visible:ring-[3px] focus-visible:ring-proofound-forest/10",
+          "href": "",
+          "id": "email",
+          "name": "Email address*",
+          "rect": {
+            "height": 44,
+            "width": 316,
+            "x": 37,
+            "y": 251
+          },
+          "role": "email",
+          "tag": "input",
+          "testId": "login-email"
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "",
+          "className": "flex w-full px-3 py-2 duration-300 hover:border-border/80 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground/70 focus-visible:outline-none focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-proofound-parchment dark:border-border dark:bg-background dark:text-foreground dark:placeholder:text-muted-foreground dark:focus-visible:ring-primary h-11 rounded-xl border border-proofound-stone bg-white pl-12 pr-12 text-[15px] text-foreground transition-all focus-visible:border-2 focus-visible:border-proofound-forest focus-visible:px-[43px] focus-visible:ring-[3px] focus-visible:ring-proofound-forest/10",
+          "href": "",
+          "id": "password",
+          "name": "Password*",
+          "rect": {
+            "height": 44,
+            "width": 316,
+            "x": 37,
+            "y": 357
+          },
+          "role": "password",
+          "tag": "input",
+          "testId": "login-password"
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "Show password",
+          "className": "absolute right-1 top-1/2 -translate-y-1/2 min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground transition-colors hover:text-proofound-charcoal focus:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest rounded",
+          "href": "",
+          "id": "",
+          "name": "Show password",
+          "rect": {
+            "height": 44,
+            "width": 44,
+            "x": 305,
+            "y": 360
+          },
+          "role": "button",
+          "tag": "button",
+          "testId": ""
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "Remember me",
+          "className": "peer shrink-0 border ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:data-[state=checked]:bg-primary dark:data-[state=checked]:text-primary-foreground h-6 w-6 rounded-md border-proofound-stone bg-white data-[state=checked]:bg-proofound-forest data-[state=checked]:text-white focus-visible:ring-proofound-forest/30",
+          "href": "",
+          "id": "remember",
+          "name": "Remember me",
+          "rect": {
+            "height": 24,
+            "width": 24,
+            "x": 37,
+            "y": 449
+          },
+          "role": "checkbox",
+          "tag": "button",
+          "testId": ""
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "",
+          "className": "-mx-2 inline-flex min-h-[44px] items-center rounded-sm px-2 text-[14px] font-medium text-proofound-forest transition-colors hover:text-[#2D5D4A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2",
+          "href": "/reset-password",
+          "id": "",
+          "name": "Forgot password?",
+          "rect": {
+            "height": 44,
+            "width": 136,
+            "x": 225,
+            "y": 439
+          },
+          "role": "link",
+          "tag": "a",
+          "testId": ""
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "",
+          "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed active:translate-y-0 dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90 h-12 px-8 min-w-[44px] w-full rounded-xl bg-proofound-forest py-[14px] text-[15px] font-semibold tracking-[0.01em] text-white shadow-sm transition-all hover:-translate-y-[1px] hover:bg-[#2D5D4A] hover:shadow-md disabled:bg-proofound-stone disabled:text-foreground/40",
+          "href": "",
+          "id": "",
+          "name": "Sign in",
+          "rect": {
+            "height": 48,
+            "width": 316,
+            "x": 37,
+            "y": 507
+          },
+          "role": "button",
+          "tag": "button",
+          "testId": "login-submit"
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "",
+          "className": "justify-center whitespace-nowrap rounded-xl text-base font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed border-2 bg-transparent text-proofound-forest hover:-translate-y-1 active:translate-y-0 dark:text-primary h-11 px-6 py-2 min-w-[44px] w-full flex items-center gap-2 border-proofound-stone dark:border-border hover:bg-proofound-stone/10 dark:hover:bg-muted",
+          "href": "",
+          "id": "",
+          "name": "Google",
+          "rect": {
+            "height": 44,
+            "width": 316,
+            "x": 37,
+            "y": 629
+          },
+          "role": "button",
+          "tag": "button",
+          "testId": "oauth-google-submit"
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "",
+          "className": "justify-center whitespace-nowrap rounded-xl text-base font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed border-2 bg-transparent text-proofound-forest hover:-translate-y-1 active:translate-y-0 dark:text-primary h-11 px-6 py-2 min-w-[44px] w-full flex items-center gap-2 border-proofound-stone dark:border-border hover:bg-proofound-stone/10 dark:hover:bg-muted",
+          "href": "",
+          "id": "",
+          "name": "LinkedIn",
+          "rect": {
+            "height": 44,
+            "width": 316,
+            "x": 37,
+            "y": 685
+          },
+          "role": "button",
+          "tag": "button",
+          "testId": "oauth-linkedin-submit"
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "",
+          "className": "-mx-2 inline-flex min-h-[44px] items-center rounded-sm px-2 font-medium text-proofound-forest transition-colors hover:text-[#2D5D4A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2",
+          "href": "/signup",
+          "id": "",
+          "name": "Create account",
+          "rect": {
+            "height": 44,
+            "width": 118,
+            "x": 216,
+            "y": 757
+          },
+          "role": "link",
+          "tag": "a",
+          "testId": ""
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "",
+          "className": "rounded-sm font-medium text-proofound-forest underline underline-offset-2 hover:text-[#2D5D4A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2",
+          "href": "/terms",
+          "id": "",
+          "name": "Terms of Service",
+          "rect": {
+            "height": 15,
+            "width": 98,
+            "x": 199,
+            "y": 856
+          },
+          "role": "link",
+          "tag": "a",
+          "testId": ""
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "",
+          "className": "rounded-sm font-medium text-proofound-forest underline underline-offset-2 hover:text-[#2D5D4A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2",
+          "href": "/privacy",
+          "id": "",
+          "name": "Privacy Policy",
+          "rect": {
+            "height": 33,
+            "width": 189,
+            "x": 178,
+            "y": 856
+          },
+          "role": "link",
+          "tag": "a",
+          "testId": ""
+        }
+      ],
+      "title": "Sign In | Proofound",
+      "url": "http://localhost:3000/login",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "documentWidth": {
+        "bodyScroll": 390,
+        "client": 390,
+        "scroll": 390
+      },
+      "hasHorizontalOverflow": false,
+      "primaryHeading": "Create your organization account",
+      "selectorChecks": [
+        {
+          "ariaLabel": "I agree to the Privacy Policy and Terms of Service",
+          "className": "peer shrink-0 border ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:data-[state=checked]:bg-primary dark:data-[state=checked]:text-primary-foreground mt-0.5 h-6 w-6 cursor-pointer rounded-md border-proofound-stone bg-white data-[state=checked]:bg-proofound-terracotta data-[state=checked]:text-white focus-visible:ring-proofound-terracotta/20",
+          "focusProbe": "not-supported-by-browser-dom-proxy",
+          "found": true,
+          "name": "I agree to the Privacy Policy and Terms of Service",
+          "rect": {
+            "height": 24,
+            "width": 24,
+            "x": 37,
+            "y": 616
+          },
+          "role": "checkbox",
+          "selector": "#signup-gdpr-consent",
+          "tag": "button"
+        },
+        {
+          "ariaLabel": "Send me updates about new features and matching opportunities",
+          "className": "peer shrink-0 border ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:data-[state=checked]:bg-primary dark:data-[state=checked]:text-primary-foreground mt-0.5 h-6 w-6 cursor-pointer rounded-md border-proofound-stone bg-white data-[state=checked]:bg-proofound-terracotta data-[state=checked]:text-white focus-visible:ring-proofound-terracotta/20",
+          "focusProbe": "not-supported-by-browser-dom-proxy",
+          "found": true,
+          "name": "Send me updates about new features and matching opportunities",
+          "rect": {
+            "height": 24,
+            "width": 24,
+            "x": 37,
+            "y": 728
+          },
+          "role": "checkbox",
+          "selector": "#signup-marketing-opt-in",
+          "tag": "button"
+        },
+        {
+          "ariaLabel": "Show password",
+          "className": "absolute right-1 top-1/2 -translate-y-1/2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-proofound-charcoal focus:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest",
+          "focusProbe": "not-supported-by-browser-dom-proxy",
+          "found": true,
+          "name": "Show password",
+          "rect": {
+            "height": 44,
+            "width": 44,
+            "x": 305,
+            "y": 429
+          },
+          "role": "",
+          "selector": "button[aria-label=\"Show password\"]",
+          "tag": "button"
+        },
+        {
+          "ariaLabel": "",
+          "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed active:translate-y-0 dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90 h-12 px-8 min-w-[44px] w-full rounded-xl bg-proofound-forest py-[14px] text-[15px] font-semibold tracking-[0.01em] text-white shadow-sm transition-all hover:-translate-y-[1px] hover:bg-[#2D5D4A] hover:shadow-md disabled:bg-proofound-stone disabled:text-foreground/40",
+          "focusProbe": "not-supported-by-browser-dom-proxy",
+          "found": true,
+          "name": "Create organization account",
+          "rect": {
+            "height": 48,
+            "width": 316,
+            "x": 37,
+            "y": 794
+          },
+          "role": "",
+          "selector": "[data-testid=\"signup-submit\"]",
+          "tag": "button"
+        }
+      ],
+      "tabbableCount": 15,
+      "tabbables": [
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "",
+          "className": "sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-proofound-forest focus:text-white focus:rounded-lg focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-proofound-forest focus:ring-offset-2",
+          "href": "#main-content",
+          "id": "",
+          "name": "Skip to main content",
+          "rect": {
+            "height": 1,
+            "width": 1,
+            "x": -1,
+            "y": -1
+          },
+          "role": "link",
+          "tag": "a",
+          "testId": ""
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "",
+          "className": "flex w-full px-3 py-2 duration-300 hover:border-border/80 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground/70 focus-visible:outline-none focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-proofound-parchment dark:border-border dark:bg-background dark:text-foreground dark:placeholder:text-muted-foreground dark:focus-visible:ring-primary h-11 rounded-xl border border-proofound-stone bg-white pl-12 pr-4 text-[15px] text-foreground transition-all focus-visible:border-2 focus-visible:px-[43px] focus-visible:ring-[3px] focus-visible:border-proofound-terracotta focus-visible:ring-proofound-terracotta/10",
+          "href": "",
+          "id": "email",
+          "name": "Email address",
+          "rect": {
+            "height": 44,
+            "width": 316,
+            "x": 37,
+            "y": 325
+          },
+          "role": "email",
+          "tag": "input",
+          "testId": "signup-email"
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "",
+          "className": "flex w-full px-3 py-2 duration-300 hover:border-border/80 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground/70 focus-visible:outline-none focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-proofound-parchment dark:border-border dark:bg-background dark:text-foreground dark:placeholder:text-muted-foreground dark:focus-visible:ring-primary h-11 rounded-xl border border-proofound-stone bg-white pl-12 pr-12 text-[15px] text-foreground transition-all focus-visible:border-2 focus-visible:px-[43px] focus-visible:ring-[3px] focus-visible:border-proofound-terracotta focus-visible:ring-proofound-terracotta/10",
+          "href": "",
+          "id": "password",
+          "name": "Password",
+          "rect": {
+            "height": 44,
+            "width": 316,
+            "x": 37,
+            "y": 426
+          },
+          "role": "password",
+          "tag": "input",
+          "testId": "signup-password"
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "Show password",
+          "className": "absolute right-1 top-1/2 -translate-y-1/2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-proofound-charcoal focus:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest",
+          "href": "",
+          "id": "",
+          "name": "Show password",
+          "rect": {
+            "height": 44,
+            "width": 44,
+            "x": 305,
+            "y": 429
+          },
+          "role": "button",
+          "tag": "button",
+          "testId": ""
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "",
+          "className": "flex w-full py-2 duration-300 hover:border-border/80 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground/70 focus-visible:outline-none focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-proofound-parchment dark:border-border dark:bg-background dark:text-foreground dark:placeholder:text-muted-foreground dark:focus-visible:ring-primary h-11 rounded-xl border border-proofound-stone bg-white px-4 text-[15px] text-foreground transition-all focus-visible:border-2 focus-visible:px-[15px] focus-visible:ring-[3px] focus-visible:border-proofound-terracotta focus-visible:ring-proofound-terracotta/10",
+          "href": "",
+          "id": "confirm-password",
+          "name": "Confirm password",
+          "rect": {
+            "height": 44,
+            "width": 316,
+            "x": 37,
+            "y": 528
+          },
+          "role": "password",
+          "tag": "input",
+          "testId": "signup-confirm-password"
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "I agree to the Privacy Policy and Terms of Service",
+          "className": "peer shrink-0 border ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:data-[state=checked]:bg-primary dark:data-[state=checked]:text-primary-foreground mt-0.5 h-6 w-6 cursor-pointer rounded-md border-proofound-stone bg-white data-[state=checked]:bg-proofound-terracotta data-[state=checked]:text-white focus-visible:ring-proofound-terracotta/20",
+          "href": "",
+          "id": "signup-gdpr-consent",
+          "name": "I agree to the Privacy Policy and Terms of Service",
+          "rect": {
+            "height": 24,
+            "width": 24,
+            "x": 37,
+            "y": 616
+          },
+          "role": "checkbox",
+          "tag": "button",
+          "testId": "gdpr-consent"
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "",
+          "className": "inline-flex min-h-[44px] items-center rounded-sm font-medium underline underline-offset-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-offset-2 text-proofound-terracotta hover:text-[#B5673F]",
+          "href": "/privacy",
+          "id": "",
+          "name": "Privacy Policy",
+          "rect": {
+            "height": 44,
+            "width": 94,
+            "x": 164,
+            "y": 614
+          },
+          "role": "link",
+          "tag": "a",
+          "testId": ""
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "",
+          "className": "inline-flex min-h-[44px] items-center rounded-sm font-medium underline underline-offset-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-offset-2 text-proofound-terracotta hover:text-[#B5673F]",
+          "href": "/terms",
+          "id": "",
+          "name": "Terms of Service",
+          "rect": {
+            "height": 44,
+            "width": 114,
+            "x": 73,
+            "y": 658
+          },
+          "role": "link",
+          "tag": "a",
+          "testId": ""
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "Send me updates about new features and matching opportunities",
+          "className": "peer shrink-0 border ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:data-[state=checked]:bg-primary dark:data-[state=checked]:text-primary-foreground mt-0.5 h-6 w-6 cursor-pointer rounded-md border-proofound-stone bg-white data-[state=checked]:bg-proofound-terracotta data-[state=checked]:text-white focus-visible:ring-proofound-terracotta/20",
+          "href": "",
+          "id": "signup-marketing-opt-in",
+          "name": "Send me updates about new features and matching opportunities",
+          "rect": {
+            "height": 24,
+            "width": 24,
+            "x": 37,
+            "y": 728
+          },
+          "role": "checkbox",
+          "tag": "button",
+          "testId": "marketing-opt-in"
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "",
+          "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed active:translate-y-0 dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90 h-12 px-8 min-w-[44px] w-full rounded-xl bg-proofound-forest py-[14px] text-[15px] font-semibold tracking-[0.01em] text-white shadow-sm transition-all hover:-translate-y-[1px] hover:bg-[#2D5D4A] hover:shadow-md disabled:bg-proofound-stone disabled:text-foreground/40",
+          "href": "",
+          "id": "",
+          "name": "Create organization account",
+          "rect": {
+            "height": 48,
+            "width": 316,
+            "x": 37,
+            "y": 794
+          },
+          "role": "button",
+          "tag": "button",
+          "testId": "signup-submit"
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "",
+          "className": "justify-center whitespace-nowrap rounded-xl text-base font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed border-2 bg-transparent text-proofound-forest hover:-translate-y-1 active:translate-y-0 dark:text-primary h-11 px-6 py-2 min-w-[44px] w-full flex items-center gap-2 border-proofound-stone dark:border-border hover:bg-proofound-stone/10 dark:hover:bg-muted",
+          "href": "",
+          "id": "",
+          "name": "Google",
+          "rect": {
+            "height": 44,
+            "width": 316,
+            "x": 37,
+            "y": 908
+          },
+          "role": "button",
+          "tag": "button",
+          "testId": "oauth-google-submit"
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "",
+          "className": "justify-center whitespace-nowrap rounded-xl text-base font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed border-2 bg-transparent text-proofound-forest hover:-translate-y-1 active:translate-y-0 dark:text-primary h-11 px-6 py-2 min-w-[44px] w-full flex items-center gap-2 border-proofound-stone dark:border-border hover:bg-proofound-stone/10 dark:hover:bg-muted",
+          "href": "",
+          "id": "",
+          "name": "LinkedIn",
+          "rect": {
+            "height": 44,
+            "width": 316,
+            "x": 37,
+            "y": 964
+          },
+          "role": "button",
+          "tag": "button",
+          "testId": "oauth-linkedin-submit"
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "",
+          "className": "inline-flex min-h-[44px] items-center rounded-sm px-2 font-medium hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-offset-2 text-proofound-terracotta hover:text-[#B5673F]",
+          "href": "",
+          "id": "",
+          "name": "Sign in",
+          "rect": {
+            "height": 44,
+            "width": 61,
+            "x": 252,
+            "y": 1032
+          },
+          "role": "button",
+          "tag": "button",
+          "testId": ""
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "",
+          "className": "rounded-sm font-medium underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-offset-2 text-proofound-terracotta hover:text-[#B5673F]",
+          "href": "/terms",
+          "id": "",
+          "name": "Terms of Service",
+          "rect": {
+            "height": 15,
+            "width": 98,
+            "x": 251,
+            "y": 1122
+          },
+          "role": "link",
+          "tag": "a",
+          "testId": ""
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "",
+          "className": "rounded-sm font-medium underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-offset-2 text-proofound-terracotta hover:text-[#B5673F]",
+          "href": "/privacy",
+          "id": "",
+          "name": "Privacy Policy",
+          "rect": {
+            "height": 15,
+            "width": 80,
+            "x": 155,
+            "y": 1140
+          },
+          "role": "link",
+          "tag": "a",
+          "testId": ""
+        }
+      ],
+      "title": "Organization Sign Up | Proofound",
+      "url": "http://localhost:3000/signup/organization",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "documentWidth": {
+        "bodyScroll": 390,
+        "client": 390,
+        "scroll": 390
+      },
+      "hasHorizontalOverflow": false,
+      "primaryHeading": "Settings",
+      "selectorChecks": [
+        {
+          "ariaLabel": "Overview",
+          "className": "relative flex flex-1 min-w-0 flex-col items-center gap-1 px-1 py-2 rounded-lg transition-colors min-h-[64px] justify-center pointer-events-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-light-50 text-muted-foreground hover:text-proofound-charcoal",
+          "focusProbe": "not-supported-by-browser-dom-proxy",
+          "found": true,
+          "name": "Overview",
+          "rect": {
+            "height": 64,
+            "width": 73,
+            "x": 4,
+            "y": 780
+          },
+          "role": "",
+          "selector": "nav[aria-label=\"Mobile primary navigation\"] a[aria-label=\"Overview\"]",
+          "tag": "a"
+        },
+        {
+          "ariaLabel": "Settings",
+          "className": "relative flex flex-1 min-w-0 flex-col items-center gap-1 px-1 py-2 rounded-lg transition-colors min-h-[64px] justify-center pointer-events-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-light-50 text-proofound-forest",
+          "focusProbe": "not-supported-by-browser-dom-proxy",
+          "found": true,
+          "name": "Settings",
+          "rect": {
+            "height": 64,
+            "width": 73,
+            "x": 313,
+            "y": 780
+          },
+          "role": "",
+          "selector": "nav[aria-label=\"Mobile primary navigation\"] a[aria-label=\"Settings\"]",
+          "tag": "a"
+        }
+      ],
+      "tabbableCount": 8,
+      "tabbables": [
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "",
+          "className": "sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-proofound-forest focus:text-white focus:rounded-lg focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-proofound-forest focus:ring-offset-2",
+          "href": "#main-content",
+          "id": "",
+          "name": "Skip to main content",
+          "rect": {
+            "height": 1,
+            "width": 1,
+            "x": -1,
+            "y": -1
+          },
+          "role": "link",
+          "tag": "a",
+          "testId": ""
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "Overview",
+          "className": "relative flex flex-1 min-w-0 flex-col items-center gap-1 px-1 py-2 rounded-lg transition-colors min-h-[64px] justify-center pointer-events-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-light-50 text-muted-foreground hover:text-proofound-charcoal",
+          "href": "/app/i/home",
+          "id": "",
+          "name": "Overview",
+          "rect": {
+            "height": 64,
+            "width": 73,
+            "x": 4,
+            "y": 780
+          },
+          "role": "link",
+          "tag": "a",
+          "testId": ""
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "Profile",
+          "className": "relative flex flex-1 min-w-0 flex-col items-center gap-1 px-1 py-2 rounded-lg transition-colors min-h-[64px] justify-center pointer-events-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-light-50 text-muted-foreground hover:text-proofound-charcoal",
+          "href": "/app/i/profile",
+          "id": "",
+          "name": "Profile",
+          "rect": {
+            "height": 64,
+            "width": 73,
+            "x": 81,
+            "y": 780
+          },
+          "role": "link",
+          "tag": "a",
+          "testId": ""
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "Communications",
+          "className": "relative flex flex-1 min-w-0 flex-col items-center gap-1 px-1 py-2 rounded-lg transition-colors min-h-[64px] justify-center pointer-events-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-light-50 text-muted-foreground hover:text-proofound-charcoal",
+          "href": "/app/i/communications",
+          "id": "",
+          "name": "Communications",
+          "rect": {
+            "height": 64,
+            "width": 73,
+            "x": 158,
+            "y": 780
+          },
+          "role": "link",
+          "tag": "a",
+          "testId": ""
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "Matching",
+          "className": "relative flex flex-1 min-w-0 flex-col items-center gap-1 px-1 py-2 rounded-lg transition-colors min-h-[64px] justify-center pointer-events-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-light-50 text-muted-foreground hover:text-proofound-charcoal",
+          "href": "/app/i/matching",
+          "id": "",
+          "name": "Matching",
+          "rect": {
+            "height": 64,
+            "width": 73,
+            "x": 236,
+            "y": 780
+          },
+          "role": "link",
+          "tag": "a",
+          "testId": ""
+        },
+        {
+          "ariaCurrent": "page",
+          "ariaLabel": "Settings",
+          "className": "relative flex flex-1 min-w-0 flex-col items-center gap-1 px-1 py-2 rounded-lg transition-colors min-h-[64px] justify-center pointer-events-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-light-50 text-proofound-forest",
+          "href": "/app/i/settings",
+          "id": "",
+          "name": "Settings",
+          "rect": {
+            "height": 64,
+            "width": 73,
+            "x": 313,
+            "y": 780
+          },
+          "role": "link",
+          "tag": "a",
+          "testId": ""
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "Open profile menu",
+          "className": "flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2",
+          "href": "",
+          "id": "",
+          "name": "Open profile menu",
+          "rect": {
+            "height": 44,
+            "width": 44,
+            "x": 330,
+            "y": 8
+          },
+          "role": "button",
+          "tag": "button",
+          "testId": ""
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "Main content",
+          "className": "relative mb-[4.75rem] flex-1 overflow-y-auto overflow-x-hidden pb-4 md:mb-0 md:pb-0",
+          "href": "",
+          "id": "main-content",
+          "name": "Main content",
+          "rect": {
+            "height": 707,
+            "width": 390,
+            "x": 0,
+            "y": 61
+          },
+          "role": "main",
+          "tag": "main",
+          "testId": ""
+        }
+      ],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:3000/app/i/settings/privacy",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "documentWidth": {
+        "bodyScroll": 1280,
+        "client": 1280,
+        "scroll": 1280
+      },
+      "hasHorizontalOverflow": false,
+      "primaryHeading": "Welcome back",
+      "selectorChecks": [
+        {
+          "ariaLabel": "Remember me",
+          "className": "peer shrink-0 border ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:data-[state=checked]:bg-primary dark:data-[state=checked]:text-primary-foreground h-6 w-6 rounded-md border-proofound-stone bg-white data-[state=checked]:bg-proofound-forest data-[state=checked]:text-white focus-visible:ring-proofound-forest/30",
+          "focusProbe": "not-supported-by-browser-dom-proxy",
+          "found": true,
+          "name": "Remember me",
+          "rect": {
+            "height": 24,
+            "width": 24,
+            "x": 465,
+            "y": 517
+          },
+          "role": "checkbox",
+          "selector": "#remember",
+          "tag": "button"
+        },
+        {
+          "ariaLabel": "Show password",
+          "className": "absolute right-1 top-1/2 -translate-y-1/2 min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground transition-colors hover:text-proofound-charcoal focus:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest rounded",
+          "focusProbe": "not-supported-by-browser-dom-proxy",
+          "found": true,
+          "name": "Show password",
+          "rect": {
+            "height": 44,
+            "width": 44,
+            "x": 767,
+            "y": 428
+          },
+          "role": "",
+          "selector": "button[aria-label=\"Show password\"]",
+          "tag": "button"
+        },
+        {
+          "ariaLabel": "",
+          "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed active:translate-y-0 dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90 h-12 px-8 min-w-[44px] w-full rounded-xl bg-proofound-forest py-[14px] text-[15px] font-semibold tracking-[0.01em] text-white shadow-sm transition-all hover:-translate-y-[1px] hover:bg-[#2D5D4A] hover:shadow-md disabled:bg-proofound-stone disabled:text-foreground/40",
+          "focusProbe": "not-supported-by-browser-dom-proxy",
+          "found": true,
+          "name": "Sign in",
+          "rect": {
+            "height": 48,
+            "width": 350,
+            "x": 465,
+            "y": 575
+          },
+          "role": "",
+          "selector": "[data-testid=\"login-submit\"]",
+          "tag": "button"
+        }
+      ],
+      "tabbableCount": 12,
+      "tabbables": [
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "",
+          "className": "sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-proofound-forest focus:text-white focus:rounded-lg focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-proofound-forest focus:ring-offset-2",
+          "href": "#main-content",
+          "id": "",
+          "name": "Skip to main content",
+          "rect": {
+            "height": 1,
+            "width": 1,
+            "x": -1,
+            "y": -1
+          },
+          "role": "link",
+          "tag": "a",
+          "testId": ""
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "",
+          "className": "flex w-full px-3 py-2 duration-300 hover:border-border/80 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground/70 focus-visible:outline-none focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-proofound-parchment dark:border-border dark:bg-background dark:text-foreground dark:placeholder:text-muted-foreground dark:focus-visible:ring-primary h-11 rounded-xl border border-proofound-stone bg-white pl-12 pr-4 text-[15px] text-foreground transition-all focus-visible:border-2 focus-visible:border-proofound-forest focus-visible:px-[43px] focus-visible:ring-[3px] focus-visible:ring-proofound-forest/10",
+          "href": "",
+          "id": "email",
+          "name": "Email address*",
+          "rect": {
+            "height": 44,
+            "width": 350,
+            "x": 465,
+            "y": 319
+          },
+          "role": "email",
+          "tag": "input",
+          "testId": "login-email"
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "",
+          "className": "flex w-full px-3 py-2 duration-300 hover:border-border/80 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground/70 focus-visible:outline-none focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-proofound-parchment dark:border-border dark:bg-background dark:text-foreground dark:placeholder:text-muted-foreground dark:focus-visible:ring-primary h-11 rounded-xl border border-proofound-stone bg-white pl-12 pr-12 text-[15px] text-foreground transition-all focus-visible:border-2 focus-visible:border-proofound-forest focus-visible:px-[43px] focus-visible:ring-[3px] focus-visible:ring-proofound-forest/10",
+          "href": "",
+          "id": "password",
+          "name": "Password*",
+          "rect": {
+            "height": 44,
+            "width": 350,
+            "x": 465,
+            "y": 425
+          },
+          "role": "password",
+          "tag": "input",
+          "testId": "login-password"
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "Show password",
+          "className": "absolute right-1 top-1/2 -translate-y-1/2 min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground transition-colors hover:text-proofound-charcoal focus:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest rounded",
+          "href": "",
+          "id": "",
+          "name": "Show password",
+          "rect": {
+            "height": 44,
+            "width": 44,
+            "x": 767,
+            "y": 428
+          },
+          "role": "button",
+          "tag": "button",
+          "testId": ""
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "Remember me",
+          "className": "peer shrink-0 border ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:data-[state=checked]:bg-primary dark:data-[state=checked]:text-primary-foreground h-6 w-6 rounded-md border-proofound-stone bg-white data-[state=checked]:bg-proofound-forest data-[state=checked]:text-white focus-visible:ring-proofound-forest/30",
+          "href": "",
+          "id": "remember",
+          "name": "Remember me",
+          "rect": {
+            "height": 24,
+            "width": 24,
+            "x": 465,
+            "y": 517
+          },
+          "role": "checkbox",
+          "tag": "button",
+          "testId": ""
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "",
+          "className": "-mx-2 inline-flex min-h-[44px] items-center rounded-sm px-2 text-[14px] font-medium text-proofound-forest transition-colors hover:text-[#2D5D4A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2",
+          "href": "/reset-password",
+          "id": "",
+          "name": "Forgot password?",
+          "rect": {
+            "height": 44,
+            "width": 136,
+            "x": 687,
+            "y": 507
+          },
+          "role": "link",
+          "tag": "a",
+          "testId": ""
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "",
+          "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed active:translate-y-0 dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90 h-12 px-8 min-w-[44px] w-full rounded-xl bg-proofound-forest py-[14px] text-[15px] font-semibold tracking-[0.01em] text-white shadow-sm transition-all hover:-translate-y-[1px] hover:bg-[#2D5D4A] hover:shadow-md disabled:bg-proofound-stone disabled:text-foreground/40",
+          "href": "",
+          "id": "",
+          "name": "Sign in",
+          "rect": {
+            "height": 48,
+            "width": 350,
+            "x": 465,
+            "y": 575
+          },
+          "role": "button",
+          "tag": "button",
+          "testId": "login-submit"
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "",
+          "className": "justify-center whitespace-nowrap rounded-xl text-base font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed border-2 bg-transparent text-proofound-forest hover:-translate-y-1 active:translate-y-0 dark:text-primary h-11 px-6 py-2 min-w-[44px] w-full flex items-center gap-2 border-proofound-stone dark:border-border hover:bg-proofound-stone/10 dark:hover:bg-muted",
+          "href": "",
+          "id": "",
+          "name": "Google",
+          "rect": {
+            "height": 44,
+            "width": 350,
+            "x": 465,
+            "y": 697
+          },
+          "role": "button",
+          "tag": "button",
+          "testId": "oauth-google-submit"
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "",
+          "className": "justify-center whitespace-nowrap rounded-xl text-base font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed border-2 bg-transparent text-proofound-forest hover:-translate-y-1 active:translate-y-0 dark:text-primary h-11 px-6 py-2 min-w-[44px] w-full flex items-center gap-2 border-proofound-stone dark:border-border hover:bg-proofound-stone/10 dark:hover:bg-muted",
+          "href": "",
+          "id": "",
+          "name": "LinkedIn",
+          "rect": {
+            "height": 44,
+            "width": 350,
+            "x": 465,
+            "y": 753
+          },
+          "role": "button",
+          "tag": "button",
+          "testId": "oauth-linkedin-submit"
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "",
+          "className": "-mx-2 inline-flex min-h-[44px] items-center rounded-sm px-2 font-medium text-proofound-forest transition-colors hover:text-[#2D5D4A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2",
+          "href": "/signup",
+          "id": "",
+          "name": "Create account",
+          "rect": {
+            "height": 44,
+            "width": 118,
+            "x": 661,
+            "y": 825
+          },
+          "role": "link",
+          "tag": "a",
+          "testId": ""
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "",
+          "className": "rounded-sm font-medium text-proofound-forest underline underline-offset-2 hover:text-[#2D5D4A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2",
+          "href": "/terms",
+          "id": "",
+          "name": "Terms of Service",
+          "rect": {
+            "height": 15,
+            "width": 98,
+            "x": 625,
+            "y": 952
+          },
+          "role": "link",
+          "tag": "a",
+          "testId": ""
+        },
+        {
+          "ariaCurrent": "",
+          "ariaLabel": "",
+          "className": "rounded-sm font-medium text-proofound-forest underline underline-offset-2 hover:text-[#2D5D4A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2",
+          "href": "/privacy",
+          "id": "",
+          "name": "Privacy Policy",
+          "rect": {
+            "height": 15,
+            "width": 80,
+            "x": 750,
+            "y": 952
+          },
+          "role": "link",
+          "tag": "a",
+          "testId": ""
+        }
+      ],
+      "title": "Sign In | Proofound",
+      "url": "http://localhost:3000/login",
+      "viewport": {
+        "height": 900,
+        "width": 1280
+      }
+    }
+  ]
+}

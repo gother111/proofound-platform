@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { getActiveOrg, requireAuth } from '@/lib/auth';
 import { getVerifiedOrganizationDomainPath } from '@/lib/organizations/trust-profile';
+import { buildOrgTrustReadiness, countReadyTrustItems } from '@/lib/organizations/trust-readiness';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,29 +33,16 @@ export default async function OrganizationProfilePage({
     trustStatus: org.trustStatus ?? null,
     verified: org.verified,
   });
-  const trustItems = [
-    {
-      label: 'Organization name',
-      detail: org.displayName || 'Missing',
-      ready: Boolean(org.displayName),
-    },
-    {
-      label: 'Why work matters',
-      detail: org.tagline || 'Add a short reason this work matters.',
-      ready: Boolean(org.tagline),
-    },
-    {
-      label: 'Mission',
-      detail: org.mission || 'Add the mission this assignment path supports.',
-      ready: Boolean(org.mission),
-    },
-    {
-      label: 'Domain path',
-      detail: verifiedDomainPath ?? 'Needs verified domain signal.',
-      ready: Boolean(verifiedDomainPath),
-    },
-  ];
-  const readyTrustCount = trustItems.filter((item) => item.ready).length;
+  const operatingContext = org.workingContext ?? null;
+  const trustItems = buildOrgTrustReadiness({
+    displayName: org.displayName,
+    whyWorkMatters: org.tagline,
+    mission: org.mission,
+    operatingContext,
+    domainPathDetail: verifiedDomainPath,
+    domainReady: Boolean(verifiedDomainPath),
+  });
+  const readyTrustCount = countReadyTrustItems(trustItems);
 
   return (
     <AppSurface>
@@ -62,17 +50,22 @@ export default async function OrganizationProfilePage({
         <section className="grid items-start gap-4 md:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
           <Card className="border-black/[0.04] dark:border-white/5">
             <CardHeader>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <CardTitle className="text-2xl">Organization Profile</CardTitle>
-                  <CardDescription className="max-w-2xl leading-6">
-                    This is the launch-facing organization profile used to support one assignment
-                    path and a clean review queue.
-                  </CardDescription>
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
+                  <h1 className="font-display text-2xl font-semibold leading-none tracking-tight text-proofound-charcoal">
+                    Organization Trust Page
+                  </h1>
+                  <Badge
+                    variant={canEdit ? 'default' : 'secondary'}
+                    className="w-fit shrink-0 self-start"
+                  >
+                    {canEdit ? 'Editable' : 'Review only'}
+                  </Badge>
                 </div>
-                <Badge variant={canEdit ? 'default' : 'secondary'}>
-                  {canEdit ? 'Editable' : 'Review only'}
-                </Badge>
+                <CardDescription className="max-w-2xl leading-6">
+                  This is the launch-facing organization trust page used to support one assignment
+                  path and a clean review queue.
+                </CardDescription>
               </div>
             </CardHeader>
             <CardContent className="space-y-5 text-sm text-muted-foreground">
@@ -107,30 +100,34 @@ export default async function OrganizationProfilePage({
           <Card className="border-black/[0.04] dark:border-white/5">
             <CardHeader>
               <CardTitle className="text-lg">Launch flow</CardTitle>
-              <CardDescription>Trust basics ready: {readyTrustCount}/4</CardDescription>
+              <CardDescription>
+                Trust basics ready: {readyTrustCount}/{trustItems.length}
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 text-sm text-muted-foreground">
               <div className="flex items-start gap-3">
-                <ShieldCheck className="mt-0.5 h-4 w-4 text-foreground/70" />
+                <ShieldCheck className="mt-0.5 h-4 w-4 text-foreground/70" aria-hidden="true" />
                 <div>
-                  <p className="font-medium text-foreground">Organization profile</p>
+                  <p className="font-medium text-foreground">Organization trust page</p>
                   <p>Mission, why the work matters, verified domain path, and operating context.</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <Users className="mt-0.5 h-4 w-4 text-foreground/70" />
+                <Users className="mt-0.5 h-4 w-4 text-foreground/70" aria-hidden="true" />
                 <div>
                   <p className="font-medium text-foreground">Assignments & matches</p>
-                  <p>One assignment path and one review queue for published work and candidates.</p>
+                  <p>
+                    One assignment path and one review queue for published work and submissions.
+                  </p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <Globe2 className="mt-0.5 h-4 w-4 text-foreground/70" />
+                <Globe2 className="mt-0.5 h-4 w-4 text-foreground/70" aria-hidden="true" />
                 <div>
                   <p className="font-medium text-foreground">Public preview</p>
                   <p>
                     <Link
-                      className="underline underline-offset-4"
+                      className="-mx-1 inline-flex min-h-8 items-center rounded-md px-1 font-medium text-proofound-forest underline underline-offset-4 transition-colors hover:bg-proofound-forest/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
                       href={`/app/o/${slug}/portfolio`}
                     >
                       View the public organization page

@@ -36,7 +36,20 @@
       "Bash(sed -i '' 's/### \\\\[ \\\\] P0-10 — Plain-language pass on user-facing vocabulary/### [x] P0-10 — Plain-language pass on user-facing vocabulary/' IMPLEMENTATION_PLAN.md)",
       "Bash(git commit --quiet -m 'P0-10: plain-language sweep of user-facing vocabulary; add TermHint tooltips *)",
       "Bash(sed -i '' 's/### \\\\[ \\\\] P0-11 — Full verification pass + founder handoff notes/### [x] P0-11 — Full verification pass + founder handoff notes/' IMPLEMENTATION_PLAN.md)",
-      "Bash(git commit --quiet -m 'P0-11: full verification pass + founder handoff doc *)"
+      "Bash(git commit --quiet -m 'P0-11: full verification pass + founder handoff doc *)",
+      "Bash(python3 -c \"import json,re; s=open\\('tsconfig.json'\\).read\\(\\); json.loads\\(re.sub\\(r'//.*','',s\\)\\); print\\('JSON OK'\\)\")",
+      "Bash(python3 -c \"import json; json.load\\(open\\('tsconfig.json'\\)\\); print\\('JSON OK'\\)\")",
+      "Bash(npx tsc *)",
+      "Bash(pkill -f \"bin/codex exec\")",
+      "Bash(npx vitest *)",
+      "Bash(grep -rniE \">[^<]*corridor|'[^']*corridor|\\\\\"[^\\\\\"]*corridor|\\\\`[^\\\\`]*corridor\" src/components src/app)",
+      "Bash(git show *)",
+      "Bash(perl -0pi -e \"s/Your selected Proof Pack and visibility review are still here/Your selected proof record and visibility review are still here/g; s/Review the selected Proof Pack and visibility confirmation before submitting/Review the selected proof record and visibility confirmation before submitting/g\" tests/ui/candidate-invite-client.test.tsx)",
+      "Bash(perl -0pi -e \"s{owner-only proof record id}{owner-only proof record}g\" tests/ui/candidate-invite-client.test.tsx)",
+      "Bash(perl -0pi -e \"s{save first proof pack}{save first proof record}g\" tests/ui/individual-setup-proof-first.test.tsx)",
+      "Bash(grep -nE \"verificationRequestInvitationCopy|invitation sent to|sent to \\\\$\\\\{|confirmer\" src/components/onboarding/IndividualContextProofSetup.tsx)",
+      "Bash(grep -nE \"Preview|Candidates|mobile|Trust|Assignments\\\\\\\\\\\\$|slice|Organization\")",
+      "Bash(git cat-file *)"
     ]
   }
 }

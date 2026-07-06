@@ -14,7 +14,7 @@ const defaultVisibility: Required<VisibilityFlags> = {
   header: true,
   proofBar: true,
   workEmail: false,
-  linkedin: true,
+  linkedin: false,
   identity: true,
   counts: false,
   skills: false,
@@ -34,10 +34,10 @@ export function mergeVisibilityFlags(
   };
 
   return {
-    header: normalizeFlag(incoming.header, defaultVisibility.header),
+    header: true,
     proofBar: normalizeFlag(incoming.proofBar, defaultVisibility.proofBar),
     workEmail: normalizeFlag(incoming.workEmail, defaultVisibility.workEmail),
-    linkedin: normalizeFlag(incoming.linkedin, defaultVisibility.linkedin),
+    linkedin: false,
     identity: normalizeFlag(incoming.identity, defaultVisibility.identity),
     counts: normalizeFlag(incoming.counts, defaultVisibility.counts),
     skills: normalizeFlag(incoming.skills, defaultVisibility.skills),

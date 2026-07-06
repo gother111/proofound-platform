@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -19,25 +23,50 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": [
+        "./src/*"
+      ]
     }
   },
   "include": [
     ".next-dev*/types/**/*.ts",
     ".next-dev-3000/types/**/*.ts",
     ".next-dev-33100/types/**/*.ts",
+    ".next-dev-33102/types/**/*.ts",
+    ".next-dev-33103/types/**/*.ts",
     ".next-dev-33170/types/**/*.ts",
     ".next-dev-33190/types/**/*.ts",
     ".next-dev-33210/types/**/*.ts",
     ".next-dev-33211/types/**/*.ts",
+    ".next-dev-33220/types/**/*.ts",
+    ".next-dev-33221/types/**/*.ts",
+    ".next-dev-33222/types/**/*.ts",
+    ".next-dev-33223/types/**/*.ts",
+    ".next-dev-33224/types/**/*.ts",
+    ".next-dev-33225/types/**/*.ts",
+    ".next-dev-33226/types/**/*.ts",
+    ".next-dev-33227/types/**/*.ts",
+    ".next-dev-33230/types/**/*.ts",
+    ".next-dev-33231/types/**/*.ts",
+    ".next-dev-33443/types/**/*.ts",
     ".next-dev-34211/types/**/*.ts",
     ".next-dev-34212/types/**/*.ts",
+    ".next-dev-34213/types/**/*.ts",
+    ".next-dev-34215/types/**/*.ts",
+    ".next-dev-34216/types/**/*.ts",
     ".next/types/**/*.ts",
     "next-env.d.ts",
     "services/**/*.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
-    ".next-dev-34213/types/**/*.ts"
+    ".next-dev-34217/types/**/*.ts"
   ],
-  "exclude": ["node_modules", "proofound-mvp", "tests", "e2e", "scripts", "src/archive"]
+  "exclude": [
+    "node_modules",
+    "proofound-mvp",
+    "tests",
+    "e2e",
+    "scripts",
+    "src/archive"
+  ]
 }

@@ -92,7 +92,7 @@ export function ProofObjectSection() {
                     </div>
                     <div className="mt-4 space-y-4 text-sm leading-7 text-[var(--landing-text)]">
                       <div>Operations lead</div>
-                      <div>B2B SaaS</div>
+                      <div>Assignment operations</div>
                       <div>Team of 6</div>
                       <div>12-week delivery window</div>
                       <div className="pt-2 text-[var(--landing-action)]">

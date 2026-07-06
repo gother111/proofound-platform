@@ -1,0 +1,50 @@
+{
+  "checkedAt": "2026-05-19T13:31:22.860Z",
+  "routeEvidence": {
+    "h1": ["Public Page unavailable"],
+    "hasNextPortal": true,
+    "linkSample": [
+      {
+        "href": "#main-content",
+        "text": "Skip to main content"
+      }
+    ],
+    "title": "Public Page Unavailable | Proofound",
+    "url": "http://localhost:33180/portfolio/demo",
+    "visibleTextSample": "Skip to main content PUBLIC PAGE UNAVAILABLE This Public Page link is unavailable. It may be hidden, retired, or not ready for launch-safe sharing. proofound.io/portfolio/demo Public Page unavailable"
+  },
+  "consoleWarningErrorCount": 0,
+  "consoleWarningErrors": [],
+  "visibleTextIncludes": {
+    "publicPageUnavailable": true,
+    "proofoundUrl": true,
+    "skipToMainContent": true
+  },
+  "overlayDetail": [
+    {
+      "count": 0,
+      "selector": "[data-nextjs-dialog-overlay]",
+      "text": [],
+      "visibleCount": 0
+    },
+    {
+      "count": 0,
+      "selector": "[data-nextjs-toast]",
+      "text": [],
+      "visibleCount": 0
+    },
+    {
+      "count": 0,
+      "selector": "[data-nextjs-dialog]",
+      "text": [],
+      "visibleCount": 0
+    },
+    {
+      "count": 1,
+      "selector": "nextjs-portal",
+      "text": [],
+      "visibleCount": 0
+    }
+  ],
+  "hasVisibleFrameworkOverlay": false
+}

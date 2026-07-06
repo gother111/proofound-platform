@@ -4,8 +4,10 @@ import { spawnSync } from 'node:child_process';
 import type { Dirent } from 'node:fs';
 
 import { normalizeLaunchBaseUrl } from '@/lib/launch/contracts';
+import { getLaunchDateSlug } from '@/lib/launch/date-slug';
 import { REPO_READY_VALIDATION_FILE_NAME } from '@/lib/launch/repo-ready-validation';
 import { buildFinalLaunchChecklistDefinitions } from '@/lib/launch/final-launch-checklist-definitions';
+import { shouldSendLaunchInternalAuth } from '@/lib/launch/trusted-internal-auth';
 
 export const FINAL_LAUNCH_CHECKLIST_STATUS_VALUES = [
   'PASS',
@@ -444,10 +446,21 @@ function parseBundleGates(payload: Record<string, unknown>) {
     gates.set(id, {
       id,
       status,
-      summary: typeof gate.summary === 'string' ? gate.summary : id,
-      evidence: Array.isArray(gate.evidence)
-        ? gate.evidence.filter((value): value is string => typeof value === 'string')
-        : [],
+      summary:
+        typeof gate.summary === 'string'
+          ? gate.summary
+          : [
+              typeof gate.label === 'string' ? gate.label : id,
+              typeof gate.reason === 'string' ? gate.reason : null,
+            ]
+              .filter(Boolean)
+              .join(': '),
+      evidence: [
+        ...(Array.isArray(gate.evidence)
+          ? gate.evidence.filter((value): value is string => typeof value === 'string')
+          : []),
+        ...(typeof gate.logPath === 'string' ? [gate.logPath] : []),
+      ],
       raw: gate,
     });
   }
@@ -465,6 +478,14 @@ async function parseLaunchBundleFromDir(
   const bundleResult = await readOptionalJson(bundlePath);
   if (!bundleResult?.payload) {
     return null;
+  }
+
+  const gates = parseBundleGates(bundleResult.payload);
+  const commandResult = await readOptionalJson(path.join(bundleDir, 'commands.json'));
+  if (commandResult?.payload?.kind === 'final_launch_validation') {
+    for (const [id, gate] of parseBundleGates(commandResult.payload)) {
+      gates.set(id, gate);
+    }
   }
 
   const fileEntries = await fs.readdir(bundleDir, 'utf8').catch((): string[] => []);
@@ -494,7 +515,7 @@ async function parseLaunchBundleFromDir(
       typeof bundleResult.payload.recommendation === 'string'
         ? bundleResult.payload.recommendation
         : null,
-    gates: parseBundleGates(bundleResult.payload),
+    gates,
     liveLaunchStatusExtractPath:
       liveLaunchStatusName == null
         ? null
@@ -576,16 +597,28 @@ function extractRetiredStaleClaims(markdown: string | null) {
     if (inExplicitSection && trimmed.startsWith('## ')) {
       inExplicitSection = false;
     }
-    if (inExplicitSection && trimmed.startsWith('- ')) {
-      collected.push(trimmed.slice(2).trim());
+    if (inExplicitSection && line.startsWith('- ')) {
+      collected.push(normalizeRetiredStaleClaim(trimmed.slice(2).trim()));
       continue;
     }
-    if (!inExplicitSection && trimmed.startsWith('- ') && /\bstale\b/i.test(trimmed)) {
-      collected.push(trimmed.slice(2).trim());
+    if (!inExplicitSection && line.startsWith('- ') && /\bstale\b/i.test(trimmed)) {
+      collected.push(normalizeRetiredStaleClaim(trimmed.slice(2).trim()));
     }
   }
 
   return [...new Set(collected)];
+}
+
+function normalizeRetiredStaleClaim(claim: string) {
+  if (
+    /^`?Google, LinkedIn, and video integrations remain live launch compatibility flows\.?`?$/i.test(
+      claim
+    )
+  ) {
+    return '`Non-auth Google/LinkedIn integration routes and native video integrations remain live launch compatibility flows.`';
+  }
+
+  return claim;
 }
 
 function docObservation(params: {
@@ -748,15 +781,25 @@ function statefulObservation(
   } satisfies FinalLaunchChecklistObservation;
 }
 
-async function fetchJsonWithTimeout(fetchImpl: typeof fetch, url: string, timeoutMs: number) {
+async function fetchJsonWithTimeout(
+  fetchImpl: typeof fetch,
+  url: string,
+  timeoutMs: number,
+  options: { includeInternalAuth?: boolean } = {}
+) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
-  const cronSecret = process.env.CRON_SECRET?.trim();
+  const internalSecret = process.env.INTERNAL_API_SECRET?.trim() || process.env.CRON_SECRET?.trim();
+  const includeCronSecret = shouldSendLaunchInternalAuth({
+    url,
+    includeInternalAuth: options.includeInternalAuth,
+    secret: internalSecret,
+  });
   try {
     const response = await fetchImpl(url, {
       headers: {
         accept: 'application/json',
-        ...(cronSecret ? { authorization: `Bearer ${cronSecret}` } : {}),
+        ...(includeCronSecret ? { authorization: `Bearer ${internalSecret}` } : {}),
       },
       signal: controller.signal,
     });
@@ -946,12 +989,7 @@ function buildJsonReport(report: FinalLaunchChecklistReport) {
 }
 
 function getCurrentDate(now: Date) {
-  return new Intl.DateTimeFormat('en-CA', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    timeZone: process.env.TZ || 'UTC',
-  }).format(now);
+  return getLaunchDateSlug(now);
 }
 
 async function resolveGitValue(args: string[], workspaceRoot: string) {
@@ -1080,7 +1118,8 @@ async function buildContext(
       fetchJsonWithTimeout(
         options.fetchImpl,
         `${liveBaseUrl}/api/monitoring/launch-status`,
-        12_000
+        12_000,
+        { includeInternalAuth: true }
       ),
     ]);
 

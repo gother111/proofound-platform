@@ -1,6 +1,5 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 
-import { OrgCandidatesWorkspace } from '@/components/organization/OrgCandidatesWorkspace';
 import { getActiveOrg, requireAuth } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
@@ -14,5 +13,5 @@ export default async function OrgCandidatesPage({ params }: { params: Promise<{ 
     notFound();
   }
 
-  return <OrgCandidatesWorkspace orgId={result.org.id} />;
+  redirect(`/app/o/${encodeURIComponent(slug)}/assignments`);
 }

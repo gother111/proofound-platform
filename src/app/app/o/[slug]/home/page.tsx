@@ -68,10 +68,8 @@ export default async function OrganizationHomePage({
     verified: org.verified,
   });
   const missionReady = Boolean(org.mission?.trim());
-  const domainReady = Boolean(verifiedDomainPath || org.verified);
-  const contextReady = Boolean(
-    org.workingContext?.trim() || org.hiringProcessSummary?.trim() || org.tagline?.trim()
-  );
+  const domainReady = Boolean(verifiedDomainPath);
+  const contextReady = Boolean(org.workingContext?.trim() || org.tagline?.trim());
   const trustReadyCount = [missionReady, domainReady, contextReady].filter(Boolean).length;
   const trustProgress = Math.round((trustReadyCount / 3) * 100);
   const needsTrustWork = trustReadyCount < 3;
@@ -127,7 +125,7 @@ export default async function OrganizationHomePage({
       subject: 'Privacy-safe summaries',
       detail: assignmentReady
         ? 'Review proof before identity reveal or direct outreach'
-        : 'No candidate review starts until the hiring flow is ready.',
+        : 'No proof review starts until the assignment-review flow is ready.',
       priority: 'Guarded',
       value: assignmentReady ? 'Needs assignment' : 'Locked',
       tone: assignmentReady ? 'attention' : 'pending',
@@ -205,7 +203,7 @@ export default async function OrganizationHomePage({
                   variant="outline"
                   className="border-proofound-forest/20 bg-white/70 text-proofound-forest"
                 >
-                  Organization review cockpit
+                  Current review workspace
                 </Badge>
               </div>
               <div className="flex flex-col gap-5 p-5 md:flex-row md:items-center md:justify-between md:p-6">
@@ -218,9 +216,9 @@ export default async function OrganizationHomePage({
                       {org.displayName}
                     </h1>
                     <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-                      A focused launch desk for one clean hiring flow: compose the trust profile,
-                      define one proof-led assignment, and review candidates through privacy-safe
-                      summaries.
+                      A focused launch desk for one clean assignment-review flow: compose the trust
+                      profile, define one proof-led assignment, and review proof submissions through
+                      privacy-safe summaries.
                     </p>
                   </div>
                 </div>
@@ -241,7 +239,7 @@ export default async function OrganizationHomePage({
             <div className="overflow-hidden rounded-lg border border-proofound-stone/70 bg-white shadow-sm">
               <div className="flex flex-col gap-2 border-b border-proofound-stone/70 p-5 sm:flex-row sm:items-center sm:justify-between">
                 <h2 className="font-display text-xl font-medium text-proofound-charcoal">
-                  Hiring Flow Queue
+                  Review queue
                 </h2>
                 <p className="text-sm text-muted-foreground">Trust, assignment, and review order</p>
               </div>

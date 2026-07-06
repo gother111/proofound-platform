@@ -1,0 +1,42 @@
+{
+  "accept": {
+    "bottom": 749,
+    "h": 36,
+    "right": 169,
+    "text": "Accept All",
+    "w": 150,
+    "x": 19,
+    "y": 713
+  },
+  "clientWidth": 390,
+  "close": {
+    "bottom": 749,
+    "h": 36,
+    "right": 371,
+    "text": "Close",
+    "w": 36,
+    "x": 335,
+    "y": 713
+  },
+  "cookieCard": {
+    "bottom": 768,
+    "cls": "pointer-events-none fixed inset-x-0 z-50 p-2 sm:p-4 bottom-[4.75rem] md:bottom-0",
+    "h": 139,
+    "right": 390,
+    "text": "Privacy choicesEssential cookies keep Proofound working. Optional analytics help us improve the product. We never sell y",
+    "w": 390,
+    "x": 0,
+    "y": 629
+  },
+  "docWidth": 390,
+  "essential": {
+    "bottom": 749,
+    "h": 36,
+    "right": 327,
+    "text": "Essential Only",
+    "w": 150,
+    "x": 177,
+    "y": 713
+  },
+  "overflow": false
+}

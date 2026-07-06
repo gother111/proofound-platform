@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "featureId": "feat_route_1769d7f40c",
+  "title": "Route /llms",
+  "summary": "Web route implemented by app/llms.txt/route.ts.",
+  "kind": "route",
+  "source": "next-app-route",
+  "confidence": "high",
+  "entrypoints": [
+    {
+      "path": "app/llms.txt/route.ts",
+      "symbol": null,
+      "route": "/llms",
+      "command": null
+    }
+  ],
+  "ownedFiles": [
+    {
+      "path": "app/llms.txt/route.ts",
+      "reason": "entrypoint"
+    }
+  ],
+  "contextFiles": [],
+  "tests": [],
+  "tags": ["next", "web"],
+  "trustBoundaries": ["user-input", "network", "serialization"],
+  "status": "fixed",
+  "lock": null,
+  "findingIds": ["fnd_sig-feat-route-1769d7f40c-73e9ac_5d18fa828d"],
+  "patchAttemptIds": [],
+  "analysisHistory": [
+    {
+      "runId": "20260516T164325-52e1d0",
+      "kind": "review",
+      "summary": "1 finding(s)",
+      "provider": "codex",
+      "model": null,
+      "createdAt": "2026-05-16T16:55:45.808Z"
+    }
+  ],
+  "createdAt": "2026-05-16T16:02:40.128Z",
+  "updatedAt": "2026-05-16T17:18:25.514Z"
+}

@@ -1,14 +1,25 @@
 'use client';
 
 import { useState } from 'react';
-import { CheckSquare, FileUp, Loader2, ShieldCheck, Trash2, X } from 'lucide-react';
+import { FileUp, Loader2, ShieldCheck, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { apiFetch } from '@/lib/api/fetch';
 import { START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE } from '@/lib/ai/start-from-cv-contract';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import type { StartFromCvDraftOutput } from '@/lib/ai/start-from-cv';
 import type { StartFromCvScaffoldingSurface } from '@/lib/ai/start-from-cv-contract';
 
@@ -24,32 +35,18 @@ type DraftBucket =
   | 'proofPackIdeaDrafts'
   | 'artifactLinkDrafts'
   | 'unsupportedSkillDrafts'
-  | 'skillMappingDrafts'
   | 'outcomeQuestionDrafts'
   | 'futureProjectIdeaDrafts';
 
-const DRAFT_BUCKETS: Array<{
-  key: DraftBucket;
-  label: string;
-  savedAs: 'private_context' | 'session_note';
-}> = [
-  { key: 'workContextDrafts', label: 'Work context drafts', savedAs: 'private_context' },
-  { key: 'educationContextDrafts', label: 'Education context drafts', savedAs: 'private_context' },
-  {
-    key: 'volunteeringContextDrafts',
-    label: 'Volunteering context drafts',
-    savedAs: 'private_context',
-  },
-  { key: 'proofPackIdeaDrafts', label: 'Proof record ideas', savedAs: 'session_note' },
-  { key: 'artifactLinkDrafts', label: 'Artifact and link suggestions', savedAs: 'session_note' },
-  {
-    key: 'unsupportedSkillDrafts',
-    label: 'Unsupported skill suggestions',
-    savedAs: 'session_note',
-  },
-  { key: 'skillMappingDrafts', label: 'Canonical skill mapping drafts', savedAs: 'session_note' },
-  { key: 'outcomeQuestionDrafts', label: 'Outcome questions', savedAs: 'session_note' },
-  { key: 'futureProjectIdeaDrafts', label: 'Future project ideas', savedAs: 'session_note' },
+const DRAFT_BUCKETS: Array<{ key: DraftBucket; label: string }> = [
+  { key: 'workContextDrafts', label: 'Work context drafts' },
+  { key: 'educationContextDrafts', label: 'Education context drafts' },
+  { key: 'volunteeringContextDrafts', label: 'Volunteering context drafts' },
+  { key: 'proofPackIdeaDrafts', label: 'Proof record ideas' },
+  { key: 'artifactLinkDrafts', label: 'Artifact and link suggestions' },
+  { key: 'unsupportedSkillDrafts', label: 'Unsupported skill suggestions' },
+  { key: 'outcomeQuestionDrafts', label: 'Outcome questions' },
+  { key: 'futureProjectIdeaDrafts', label: 'Future project ideas' },
 ];
 
 const DRAFT_TITLE_FIELDS: Record<DraftBucket, string> = {
@@ -59,7 +56,6 @@ const DRAFT_TITLE_FIELDS: Record<DraftBucket, string> = {
   proofPackIdeaDrafts: 'titleSuggestion',
   artifactLinkDrafts: 'label',
   unsupportedSkillDrafts: 'skillLabel',
-  skillMappingDrafts: 'skillLabel',
   outcomeQuestionDrafts: 'question',
   futureProjectIdeaDrafts: 'titleSuggestion',
 };
@@ -71,10 +67,48 @@ const DRAFT_BODY_FIELDS: Record<DraftBucket, { key: string; list?: true }> = {
   proofPackIdeaDrafts: { key: 'possibleClaim' },
   artifactLinkDrafts: { key: 'sourceContext' },
   unsupportedSkillDrafts: { key: 'sourceContext' },
-  skillMappingDrafts: { key: 'canonicalSkillLabel' },
   outcomeQuestionDrafts: { key: 'whyItMatters' },
   futureProjectIdeaDrafts: { key: 'prompt' },
 };
+
+const TECHNICAL_ERROR_TERMS =
+  /\b(api|backend|database|schema|endpoint|supabase|worker|python|typescript|gemini|uuid|tenant|cron|migration|rls|queue|job|extract|extraction|fetch|network|provider|token|service|route|status|json|http)\b|[a-z]+_[a-z_]+/i;
+
+const START_FROM_CV_DRAFTS_FAILED_MESSAGE =
+  'Start from CV could not create private drafts. Your profile is unchanged; try again or continue manually.';
+const START_FROM_CV_ACCEPT_FAILED_MESSAGE =
+  'Selected drafts could not be accepted. Your private drafts are still here; review them and try again.';
+const START_FROM_CV_DELETE_FAILED_MESSAGE =
+  'Import session could not be deleted. Your private drafts are still here; please try again.';
+
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function getReturnedError(payload: unknown) {
+  if (!payload || typeof payload !== 'object') {
+    return '';
+  }
+
+  if ('error' in payload && typeof payload.error === 'string') {
+    return payload.error.trim();
+  }
+
+  if ('message' in payload && typeof payload.message === 'string') {
+    return payload.message.trim();
+  }
+
+  return '';
+}
+
+function userSafeCvError(value: unknown, fallback: string): string {
+  if (typeof value !== 'string') {
+    return fallback;
+  }
+
+  const trimmed = value.trim();
+  return trimmed && !TECHNICAL_ERROR_TERMS.test(trimmed) ? trimmed : fallback;
+}
 
 function getDraftTitle(item: Record<string, unknown>) {
   return (
@@ -93,25 +127,31 @@ function getDraftBody(item: Record<string, unknown>) {
     item.shortContextSummary ||
     item.contributionSummary ||
     item.possibleClaim ||
-    item.prompt ||
-    item.whyItMatters ||
-    item.canonicalSkillLabel ||
     item.sourceContext ||
+    item.whyItMatters ||
+    item.prompt ||
     item.missingEvidenceWarning ||
     'Review before keeping.'
   );
 }
 
+function hasDraftSuggestions(session: StartFromCvDraftOutput) {
+  return DRAFT_BUCKETS.some(({ key }) => {
+    const items = session[key] as Array<Record<string, unknown>> | undefined;
+    return Array.isArray(items) && items.length > 0;
+  });
+}
+
 function getEpistemicLabel(item: Record<string, unknown>) {
-  switch (item.epistemicStatus) {
-    case 'explicit':
-      return 'Found in document';
-    case 'future_idea':
-      return 'Future idea';
-    case 'inferred':
-    default:
-      return 'Inferred - confirm';
+  if (item.epistemicStatus === 'inferred') {
+    return 'Inferred - confirm';
   }
+
+  if (item.epistemicStatus === 'future_idea' || item.notCvFact === true) {
+    return 'Future idea';
+  }
+
+  return null;
 }
 
 function getEditableDraftText(item: Record<string, unknown>, field: { key: string; list?: true }) {
@@ -142,15 +182,11 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
   const [acceptedIds, setAcceptedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const hasDraftSuggestions = session
-    ? DRAFT_BUCKETS.some(
-        ({ key }) => ((session[key] as Array<Record<string, unknown>>) || []).length > 0
-      )
-    : false;
+  const [deleteSessionDialogOpen, setDeleteSessionDialogOpen] = useState(false);
 
   async function startExtraction() {
     if (!file || !consented) {
-      setError('Choose a CV and confirm consent before extraction.');
+      setError('Choose a CV and confirm consent before reading it.');
       return;
     }
 
@@ -167,7 +203,7 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
       });
       const created = await sessionResponse.json();
       if (!sessionResponse.ok) {
-        throw new Error(created.error || 'Start from CV is not available.');
+        throw new Error(userSafeCvError(created.error, 'Start from CV is not available.'));
       }
 
       const formData = new FormData();
@@ -181,12 +217,19 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
       );
       const extracted = await extractResponse.json();
       if (!extractResponse.ok) {
-        throw new Error(extracted.error || 'CV extraction failed.');
+        throw new Error(
+          userSafeCvError(extracted.error, 'We could not read this CV. Please try again.')
+        );
       }
       setSession(extracted);
       setAcceptedIds(new Set());
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Start from CV failed.');
+      dispatchClientErrorDiagnostic('start_from_cv.private_drafts.create_failed', caught);
+      setError(
+        caught instanceof Error
+          ? userSafeCvError(caught.message, START_FROM_CV_DRAFTS_FAILED_MESSAGE)
+          : START_FROM_CV_DRAFTS_FAILED_MESSAGE
+      );
     } finally {
       setLoading(false);
     }
@@ -213,13 +256,23 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
           body: JSON.stringify({ accepted }),
         }
       );
-      const payload = await response.json();
+      const payload = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(payload.error || 'Selected drafts could not be accepted.');
+        const returnedError = getReturnedError(payload);
+        dispatchClientDiagnostic('start_from_cv.private_drafts.accept_returned_error', {
+          status: getResponseStatus(response),
+          hasReturnedError: returnedError.length > 0,
+        });
+        throw new Error('start_from_cv_private_drafts_accept_request_failed');
       }
       onApplyComplete?.();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Selected drafts could not be accepted.');
+      dispatchClientErrorDiagnostic('start_from_cv.private_drafts.accept_failed', caught);
+      setError(
+        caught instanceof Error
+          ? userSafeCvError(caught.message, START_FROM_CV_ACCEPT_FAILED_MESSAGE)
+          : START_FROM_CV_ACCEPT_FAILED_MESSAGE
+      );
     } finally {
       setLoading(false);
     }
@@ -228,15 +281,36 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
   async function deleteSession() {
     if (!session) return;
     setLoading(true);
+    setError(null);
     try {
-      await apiFetch(`/api/ai/start-from-cv/sessions/${session.importSessionId}/discard`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ deleteSession: true }),
-      });
+      const response = await apiFetch(
+        `/api/ai/start-from-cv/sessions/${session.importSessionId}/discard`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ deleteSession: true }),
+        }
+      );
+      let payload: { error?: string } = {};
+      try {
+        payload = (await response.json()) as { error?: string };
+      } catch {
+        payload = {};
+      }
+      if (!response.ok) {
+        throw new Error(userSafeCvError(payload.error, START_FROM_CV_DELETE_FAILED_MESSAGE));
+      }
       setSession(null);
       setAcceptedIds(new Set());
+      setDeleteSessionDialogOpen(false);
       onApplyComplete?.();
+    } catch (caught) {
+      dispatchClientErrorDiagnostic('start_from_cv.private_drafts.delete_failed', caught);
+      setError(
+        caught instanceof Error
+          ? userSafeCvError(caught.message, START_FROM_CV_DELETE_FAILED_MESSAGE)
+          : START_FROM_CV_DELETE_FAILED_MESSAGE
+      );
     } finally {
       setLoading(false);
     }
@@ -252,18 +326,6 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
       }
       return next;
     });
-  }
-
-  function selectAllDrafts() {
-    if (!session) return;
-    const ids = DRAFT_BUCKETS.flatMap(({ key }) =>
-      ((session[key] as Array<Record<string, unknown>>) || []).map((item) => String(item.id))
-    );
-    setAcceptedIds(new Set(ids));
-  }
-
-  function clearSelectedDrafts() {
-    setAcceptedIds(new Set());
   }
 
   function updateDraftField(
@@ -299,23 +361,20 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
         <div className="flex items-start gap-3">
           <ShieldCheck className="mt-0.5 h-5 w-5 text-proofound-forest" aria-hidden="true" />
           <div className="space-y-2 text-sm text-muted-foreground">
-            <p className="font-medium text-foreground">
-              Start from CV - draft your proof foundation
-            </p>
+            <p className="font-medium text-foreground">Start from your CV</p>
             <p>
-              Upload your CV to create private editable drafts for review. Nothing is published,
-              verified, scored, ranked, or shown to organizations unless you choose what to keep
-              later.
+              Upload your CV to create private editable drafts. Nothing is published, verified,
+              scored, ranked, or shown to organizations unless you choose what to keep later.
             </p>
             <ul className="list-disc space-y-1 pl-5">
               <li>CV processing is optional.</li>
-              <li>External OCR or structuring runs only when the approved provider gates pass.</li>
+              <li>The CV may be processed by Google Cloud Document AI and Gemini if enabled.</li>
               <li>Extracted information becomes private draft suggestions only.</li>
               {surface === START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE ? (
                 <li>Use it only as optional scaffolding before creating assignment proof.</li>
               ) : null}
               <li>
-                Nothing is used for scoring, ranking, shortlisting, matching, or hiring decisions.
+                Nothing is used for scoring, ranking, shortlisting, matching, or workflow decisions.
               </li>
             </ul>
           </div>
@@ -349,11 +408,6 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
               {error}
             </p>
           ) : null}
-          {loading ? (
-            <p className="text-sm text-muted-foreground" aria-live="polite">
-              Creating private drafts...
-            </p>
-          ) : null}
           <div className="flex flex-wrap gap-2">
             <Button
               type="button"
@@ -361,11 +415,11 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
               disabled={loading || !file || !consented}
             >
               {loading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
-                <FileUp className="mr-2 h-4 w-4" aria-hidden="true" />
+                <FileUp className="mr-2 h-4 w-4" />
               )}
-              Create private proof drafts
+              Create private drafts
             </Button>
             <Button type="button" variant="outline" onClick={onApplyComplete}>
               Continue manually
@@ -381,28 +435,8 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
               ))}
             </div>
           ) : null}
-          {session.providerPolicyWarnings.length > 0 ? (
-            <div className="rounded-lg border border-proofound-stone/70 bg-white p-3 text-sm text-muted-foreground">
-              {session.providerPolicyWarnings.slice(0, 3).map((warning) => (
-                <p key={warning}>{warning}</p>
-              ))}
-            </div>
-          ) : null}
 
-          {!hasDraftSuggestions ? (
-            <div
-              className="rounded-lg border border-proofound-stone/60 bg-white p-4 text-sm text-muted-foreground"
-              role="status"
-            >
-              <p className="font-medium text-foreground">No private draft suggestions found</p>
-              <p className="mt-1 leading-6">
-                This CV did not produce draft context that is safe to keep here. Continue manually
-                and add the proof you want reviewers to inspect.
-              </p>
-            </div>
-          ) : null}
-
-          {DRAFT_BUCKETS.map(({ key, label, savedAs }) => {
+          {DRAFT_BUCKETS.map(({ key, label }) => {
             const items = (session[key] as Array<Record<string, unknown>>) || [];
             if (items.length === 0) return null;
             const titleField = DRAFT_TITLE_FIELDS[key];
@@ -414,6 +448,9 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
                   {items.map((item) => {
                     const id = String(item.id);
                     const draftTitle = String(getDraftTitle(item));
+                    const sourceSpans = item.sourceSpans as unknown;
+                    const hasSourceSpans = Array.isArray(sourceSpans) && sourceSpans.length > 0;
+                    const epistemicLabel = getEpistemicLabel(item);
                     return (
                       <div
                         key={id}
@@ -425,16 +462,6 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
                           onCheckedChange={(value) => toggleAccepted(id, value === true)}
                         />
                         <div className="min-w-0 flex-1 space-y-2">
-                          <div className="flex flex-wrap gap-2">
-                            <span className="rounded-full border border-proofound-stone/70 px-2 py-0.5 text-xs text-muted-foreground">
-                              {getEpistemicLabel(item)}
-                            </span>
-                            <span className="rounded-full border border-proofound-stone/70 px-2 py-0.5 text-xs text-muted-foreground">
-                              {savedAs === 'private_context'
-                                ? 'Saves as private context'
-                                : 'Saves as review note'}
-                            </span>
-                          </div>
                           <Input
                             aria-label={`${label} title`}
                             value={
@@ -463,10 +490,19 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
                               matching, or verification lift.
                             </span>
                           ) : null}
-                          {key === 'skillMappingDrafts' ? (
-                            <span className="block text-xs text-amber-700">
-                              Canonical skill suggestion only. Confirm evidence before using.
-                            </span>
+                          {hasSourceSpans || epistemicLabel ? (
+                            <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                              {hasSourceSpans ? (
+                                <span className="rounded-full border border-proofound-stone/70 px-2 py-1">
+                                  Found in document
+                                </span>
+                              ) : null}
+                              {epistemicLabel ? (
+                                <span className="rounded-full border border-proofound-stone/70 px-2 py-1">
+                                  {epistemicLabel}
+                                </span>
+                              ) : null}
+                            </div>
                           ) : null}
                         </div>
                       </div>
@@ -477,44 +513,82 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
             );
           })}
 
+          {!hasDraftSuggestions(session) ? (
+            <div className="rounded-lg border border-proofound-stone/60 bg-proofound-parchment/40 p-4 text-sm text-muted-foreground">
+              <p className="font-medium text-foreground">No private draft suggestions found</p>
+              <p className="mt-1">
+                Continue manually and add the proof record when you have evidence ready.
+              </p>
+            </div>
+          ) : null}
+
           {error ? (
             <p className="text-sm text-destructive" role="alert">
               {error}
             </p>
           ) : null}
-          {loading ? (
-            <p className="text-sm text-muted-foreground" aria-live="polite">
-              Saving selected drafts...
-            </p>
-          ) : null}
           <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="outline" onClick={selectAllDrafts} disabled={loading}>
-              <CheckSquare className="mr-2 h-4 w-4" aria-hidden="true" />
-              Select all
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={clearSelectedDrafts}
-              disabled={loading || acceptedIds.size === 0}
-            >
-              <X className="mr-2 h-4 w-4" aria-hidden="true" />
-              Clear selection
-            </Button>
             <Button
               type="button"
               onClick={acceptSelected}
               disabled={loading || acceptedIds.size === 0}
             >
-              Save selected drafts
+              Accept selected drafts
             </Button>
             <Button type="button" variant="outline" onClick={onApplyComplete}>
               Continue manually
             </Button>
-            <Button type="button" variant="outline" onClick={deleteSession} disabled={loading}>
-              <Trash2 className="mr-2 h-4 w-4" aria-hidden="true" />
-              Delete import session
-            </Button>
+            <AlertDialog
+              open={deleteSessionDialogOpen}
+              onOpenChange={(open) => {
+                if (!loading) {
+                  setDeleteSessionDialogOpen(open);
+                }
+              }}
+            >
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setError(null);
+                  setDeleteSessionDialogOpen(true);
+                }}
+                disabled={loading}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete import session
+              </Button>
+              <AlertDialogContent className="max-w-md">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete import session?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This removes the private CV draft session and any unaccepted suggestions. It
+                    will not delete anything you already accepted into your profile.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                {error ? (
+                  <p
+                    className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
+                    role="alert"
+                  >
+                    {error}
+                  </p>
+                ) : null}
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={loading}>Keep drafts</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-destructive text-white hover:bg-destructive/90"
+                    disabled={loading}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      void deleteSession();
+                    }}
+                  >
+                    {loading ? 'Deleting session...' : 'Delete session'}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
       )}

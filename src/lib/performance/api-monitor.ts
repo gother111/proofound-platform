@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { performanceMetrics, performanceAlerts } from '@/db/schema';
 import type { InsertPerformanceMetric, InsertPerformanceAlert } from '@/db/schema';
+import { log } from '@/lib/log';
 
 // SLA thresholds in milliseconds
 const SLA_THRESHOLDS = {
@@ -22,8 +23,21 @@ const SLA_THRESHOLDS = {
 
 function isProductionLikeRuntime() {
   const vercelEnv = process.env.VERCEL_ENV;
+  if (isLocalSmokeRuntime()) return false;
+
   return (
     vercelEnv === 'production' || vercelEnv === 'preview' || process.env.NODE_ENV === 'production'
+  );
+}
+
+function isLocalSmokeRuntime() {
+  if (process.env.VERCEL || process.env.VERCEL_ENV) return false;
+
+  return (
+    process.env.PLAYWRIGHT === 'true' ||
+    process.env.PLAYWRIGHT_SERVER_MODE === 'prod' ||
+    process.env.PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK === '1' ||
+    process.env.PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE === '1'
   );
 }
 
@@ -71,6 +85,8 @@ async function trackApiMetric(
   durationMs: number,
   statusCode: number
 ): Promise<void> {
+  if (isLocalSmokeRuntime()) return;
+
   try {
     const metric: InsertPerformanceMetric = {
       metricType: 'api_latency',
@@ -84,6 +100,7 @@ async function trackApiMetric(
       pageRoute: null,
       deviceType: null,
       userAgent: null,
+      responseStatus: statusCode,
       periodStart: null,
       periodEnd: null,
     };
@@ -93,12 +110,18 @@ async function trackApiMetric(
     // Check for SLA violations (but don't block the response)
     if (isProductionLikeRuntime()) {
       checkSLAViolation(endpoint, durationMs).catch((error) => {
-        console.error('SLA check error:', error);
+        log.error('performance.api_monitor.sla_check_failed', {
+          endpoint,
+          error: error instanceof Error ? error.message : String(error),
+        });
       });
     }
   } catch (error) {
     // Silent fail - don't disrupt API response
-    console.error('Performance tracking error:', error);
+    log.error('performance.api_monitor.track_failed', {
+      endpoint,
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 }
 
@@ -145,10 +168,12 @@ async function checkSLAViolation(endpoint: string, durationMs: number): Promise<
 
     await db.insert(performanceAlerts).values(alert);
 
-    // Log for monitoring
-    console.warn(
-      `[Performance Alert] ${endpoint} P95 ${p95.toFixed(0)}ms exceeds ${SLA_THRESHOLDS.api_p95}ms`
-    );
+    log.warn('performance.api_monitor.sla_violation_alert_created', {
+      endpoint,
+      p95Ms: Math.round(p95),
+      thresholdMs: SLA_THRESHOLDS.api_p95,
+      severity,
+    });
   }
 }
 
@@ -245,11 +270,14 @@ export async function aggregateMetrics(periodHours: number = 1): Promise<void> {
       await db.insert(performanceMetrics).values(aggregated);
     }
 
-    console.log(
-      `[Performance] Aggregated ${metrics.length} metrics into ${grouped.size} rolled-up entries`
-    );
+    log.info('performance.metrics.aggregated', {
+      sourceMetrics: metrics.length,
+      rolledUpEntries: grouped.size,
+    });
   } catch (error) {
-    console.error('[Performance] Aggregation error:', error);
+    log.error('performance.metrics.aggregate_failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
 }
 

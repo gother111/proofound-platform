@@ -1,0 +1,1398 @@
+[
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content PROOFOUND How it works For individuals For organizations Sign in Request a pilot Proof behind the claim Proofound turns real work into structured Proof Packs for privacy-safe hiring review before identity takes over. Proof portfolios for individuals. Evidence-based review for teams. Request a pilot Create your proof portfolio Blind by default Photo, name, contact details, prestige markers, and other identity signals are removed first. The goal is not anonymity for its own sake. It is capability before bias. Weak signal should leave before judgment begins. 01 / 09 Blind by default THE STORY RESOLVES INTO ACTION Build hirin",
+    "clientHeight": 900,
+    "clientWidth": 1429,
+    "headings": [
+      {
+        "size": "48px",
+        "tag": "h1",
+        "text": "Proof behind the claim"
+      },
+      {
+        "size": "32px",
+        "tag": "h2",
+        "text": "Real outcomes, not bullet points"
+      },
+      {
+        "size": "32px",
+        "tag": "h2",
+        "text": "Verification trust layer"
+      },
+      {
+        "size": "32px",
+        "tag": "h2",
+        "text": "Universal compatibility"
+      },
+      {
+        "size": "32px",
+        "tag": "h2",
+        "text": "To modern challenges"
+      },
+      {
+        "size": "149.6px",
+        "tag": "h1",
+        "text": "Proof behind the claim"
+      },
+      {
+        "size": "67.2px",
+        "tag": "h2",
+        "text": "Blind by default"
+      },
+      {
+        "size": "60px",
+        "tag": "h2",
+        "text": "Build hiring on stronger proof"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "landing",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 8187,
+    "scrollWidth": 1429,
+    "tinyTargets": [],
+    "title": "Proofound | Proof Behind the Claim",
+    "url": "http://localhost:33100/",
+    "viewportName": "desktop1440",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Back to Home Privacy Policy Effective date: 2026-02-12 · Version: v1.3.2026-02-12 1. Scope This policy explains how Proofound collects, uses, stores, and protects personal information across account creation, Proof Pack creation, portfolio publication, assignment review, verification, and user rights handling. Processing is performed under applicable privacy laws, including GDPR and ePrivacy rules. 2. Data We Process Account records: email, display name, authentication identifiers. Profile information: expertise, projects, preferences, and verification status. Operational records: moderation reports, consent records, secu",
+    "clientHeight": 900,
+    "clientWidth": 1429,
+    "headings": [
+      {
+        "size": "40px",
+        "tag": "h1",
+        "text": "Privacy Policy"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "1. Scope"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "2. Data We Process"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "3. Legal Bases and Consent"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "4. Data Minimization and Security"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "5. International Transfers"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "6. Retention and Deletion"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "7. Your Rights"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "8. Contact"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "9. Processors and Operational Accountability"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "privacy",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 2195,
+    "scrollWidth": 1429,
+    "tinyTargets": [],
+    "title": "Privacy Policy | Proofound privacy and consent controls",
+    "url": "http://localhost:33100/privacy",
+    "viewportName": "desktop1440",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Back to Home Terms of Service Effective date: 2026-02-12 · Version: v1.1.2026-02-12 1. Acceptance and Eligibility By using Proofound, you agree to these Terms. You must provide accurate account information and keep your login credentials secure. 2. Service Scope Proofound is a proof-first hiring corridor centered on Proof Packs, public proof portfolios, organization trust pages, and privacy-safe review inside structured assignment flows. 3. Acceptable Use No fraud, impersonation, or misleading submissions. No harassment, abusive content, or unlawful activity. No automated abuse, scraping, or interference with platform sec",
+    "clientHeight": 900,
+    "clientWidth": 1429,
+    "headings": [
+      {
+        "size": "40px",
+        "tag": "h1",
+        "text": "Terms of Service"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "1. Acceptance and Eligibility"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "2. Service Scope"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "3. Acceptable Use"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "4. Moderation and Enforcement"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "5. Account Deletion"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "6. Liability and Availability"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "7. Changes"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "8. Contact"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "9. Intellectual Property and Content Rights"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "terms",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 2403,
+    "scrollWidth": 1429,
+    "tinyTargets": [],
+    "title": "Terms of Service | Proofound legal responsibilities",
+    "url": "http://localhost:33100/terms",
+    "viewportName": "desktop1440",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content PROOFOUND Cookie Policy Proofound uses strictly necessary cookies by default and optional analytics cookies only with your consent. Effective date: 2026-02-12 · Version: v1.1.2026-02-12 Necessary cookies support authentication, security, and core platform functionality. These cannot be switched off. Analytics cookies are optional. We only activate non-essential telemetry after explicit consent. You can withdraw or change your preferences at any time. We do not use third-party advertising cookies and we do not sell personal data. Cookie retention and purpose are reviewed regularly to keep processing proportional to platfor",
+    "clientHeight": 900,
+    "clientWidth": 1429,
+    "headings": [
+      {
+        "size": "40px",
+        "tag": "h1",
+        "text": "Cookie Policy"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "cookies",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 1068,
+    "scrollWidth": 1429,
+    "tinyTargets": [],
+    "title": "Cookie Policy | How Proofound handles cookie consent",
+    "url": "http://localhost:33100/cookies",
+    "viewportName": "desktop1440",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Return to previous page Proofound Cookie Settings Manage your cookie preferences to control how we collect and use your data. Your choices help us respect your privacy while improving your experience. Your Privacy Matters: We are committed to protecting your data under GDPR regulations. You can change these settings at any time. Essential cookies are required for the site to function and cannot be disabled. Accept All Reject All (Essential Only) Essential Cookies (Always Active) Required for authentication and core functionality. These cookies are necessary for the website to work and cannot be disabled. Toggle Essential ",
+    "clientHeight": 900,
+    "clientWidth": 1429,
+    "headings": [
+      {
+        "size": "40px",
+        "tag": "h1",
+        "text": "Cookie Settings"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Essential Cookies"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Analytics Cookies"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Marketing Cookies"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Learn More"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Privacy Policy"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Cookie Policy"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "cookie-settings",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 1956,
+    "scrollWidth": 1429,
+    "tinyTargets": [],
+    "title": "Cookie Settings | Manage Proofound consent preferences",
+    "url": "http://localhost:33100/cookies/settings",
+    "viewportName": "desktop1440",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content 403 You do not have access to this page You don't have permission to access this page. This area is restricted to authorized personnel only. Go to OverviewGo to Home If you believe you should have access to this page, please contact your administrator.",
+    "clientHeight": 900,
+    "clientWidth": 1440,
+    "headings": [
+      {
+        "size": "40px",
+        "tag": "h1",
+        "text": "403"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "You do not have access to this page"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "forbidden",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 900,
+    "scrollWidth": 1440,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/403",
+    "viewportName": "desktop1440",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Not found This page is outside the locked launch MVP corridor. Archived Page: /definitely-not-a-real-proofound-route is outside the locked launch MVP corridor and is not reachable in the launch surface.",
+    "clientHeight": 900,
+    "clientWidth": 1440,
+    "headings": [
+      {
+        "size": "36px",
+        "tag": "h1",
+        "text": "Not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "not-found",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 900,
+    "scrollWidth": 1440,
+    "tinyTargets": [],
+    "title": "Not found | Proofound",
+    "url": "http://localhost:33100/definitely-not-a-real-proofound-route",
+    "viewportName": "desktop1440",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content PROOFOUND How it works For individuals For organizations Sign in Request a pilot Proof behind the claim Proofound turns real work into structured Proof Packs for privacy-safe hiring review before identity takes over. Proof portfolios for individuals. Evidence-based review for teams. Request a pilot Create your proof portfolio Blind by default Photo, name, contact details, prestige markers, and other identity signals are removed first. The goal is not anonymity for its own sake. It is capability before bias. Weak signal should leave before judgment begins. 01 / 09 Blind by default THE STORY RESOLVES INTO ACTION Build hirin",
+    "clientHeight": 800,
+    "clientWidth": 1269,
+    "headings": [
+      {
+        "size": "48px",
+        "tag": "h1",
+        "text": "Proof behind the claim"
+      },
+      {
+        "size": "32px",
+        "tag": "h2",
+        "text": "Real outcomes, not bullet points"
+      },
+      {
+        "size": "32px",
+        "tag": "h2",
+        "text": "Verification trust layer"
+      },
+      {
+        "size": "32px",
+        "tag": "h2",
+        "text": "Universal compatibility"
+      },
+      {
+        "size": "32px",
+        "tag": "h2",
+        "text": "To modern challenges"
+      },
+      {
+        "size": "149.6px",
+        "tag": "h1",
+        "text": "Proof behind the claim"
+      },
+      {
+        "size": "67.2px",
+        "tag": "h2",
+        "text": "Blind by default"
+      },
+      {
+        "size": "60px",
+        "tag": "h2",
+        "text": "Build hiring on stronger proof"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "landing",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 7395,
+    "scrollWidth": 1269,
+    "tinyTargets": [],
+    "title": "Proofound | Proof Behind the Claim",
+    "url": "http://localhost:33100/",
+    "viewportName": "desktop1280",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Back to Home Privacy Policy Effective date: 2026-02-12 · Version: v1.3.2026-02-12 1. Scope This policy explains how Proofound collects, uses, stores, and protects personal information across account creation, Proof Pack creation, portfolio publication, assignment review, verification, and user rights handling. Processing is performed under applicable privacy laws, including GDPR and ePrivacy rules. 2. Data We Process Account records: email, display name, authentication identifiers. Profile information: expertise, projects, preferences, and verification status. Operational records: moderation reports, consent records, secu",
+    "clientHeight": 800,
+    "clientWidth": 1269,
+    "headings": [
+      {
+        "size": "40px",
+        "tag": "h1",
+        "text": "Privacy Policy"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "1. Scope"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "2. Data We Process"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "3. Legal Bases and Consent"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "4. Data Minimization and Security"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "5. International Transfers"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "6. Retention and Deletion"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "7. Your Rights"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "8. Contact"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "9. Processors and Operational Accountability"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "privacy",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 2195,
+    "scrollWidth": 1269,
+    "tinyTargets": [],
+    "title": "Privacy Policy | Proofound privacy and consent controls",
+    "url": "http://localhost:33100/privacy",
+    "viewportName": "desktop1280",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Back to Home Terms of Service Effective date: 2026-02-12 · Version: v1.1.2026-02-12 1. Acceptance and Eligibility By using Proofound, you agree to these Terms. You must provide accurate account information and keep your login credentials secure. 2. Service Scope Proofound is a proof-first hiring corridor centered on Proof Packs, public proof portfolios, organization trust pages, and privacy-safe review inside structured assignment flows. 3. Acceptable Use No fraud, impersonation, or misleading submissions. No harassment, abusive content, or unlawful activity. No automated abuse, scraping, or interference with platform sec",
+    "clientHeight": 800,
+    "clientWidth": 1269,
+    "headings": [
+      {
+        "size": "40px",
+        "tag": "h1",
+        "text": "Terms of Service"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "1. Acceptance and Eligibility"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "2. Service Scope"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "3. Acceptable Use"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "4. Moderation and Enforcement"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "5. Account Deletion"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "6. Liability and Availability"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "7. Changes"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "8. Contact"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "9. Intellectual Property and Content Rights"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "terms",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 2403,
+    "scrollWidth": 1269,
+    "tinyTargets": [],
+    "title": "Terms of Service | Proofound legal responsibilities",
+    "url": "http://localhost:33100/terms",
+    "viewportName": "desktop1280",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content PROOFOUND Cookie Policy Proofound uses strictly necessary cookies by default and optional analytics cookies only with your consent. Effective date: 2026-02-12 · Version: v1.1.2026-02-12 Necessary cookies support authentication, security, and core platform functionality. These cannot be switched off. Analytics cookies are optional. We only activate non-essential telemetry after explicit consent. You can withdraw or change your preferences at any time. We do not use third-party advertising cookies and we do not sell personal data. Cookie retention and purpose are reviewed regularly to keep processing proportional to platfor",
+    "clientHeight": 800,
+    "clientWidth": 1269,
+    "headings": [
+      {
+        "size": "40px",
+        "tag": "h1",
+        "text": "Cookie Policy"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "cookies",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 1068,
+    "scrollWidth": 1269,
+    "tinyTargets": [],
+    "title": "Cookie Policy | How Proofound handles cookie consent",
+    "url": "http://localhost:33100/cookies",
+    "viewportName": "desktop1280",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Return to previous page Proofound Cookie Settings Manage your cookie preferences to control how we collect and use your data. Your choices help us respect your privacy while improving your experience. Your Privacy Matters: We are committed to protecting your data under GDPR regulations. You can change these settings at any time. Essential cookies are required for the site to function and cannot be disabled. Accept All Reject All (Essential Only) Essential Cookies (Always Active) Required for authentication and core functionality. These cookies are necessary for the website to work and cannot be disabled. Toggle Essential ",
+    "clientHeight": 800,
+    "clientWidth": 1269,
+    "headings": [
+      {
+        "size": "40px",
+        "tag": "h1",
+        "text": "Cookie Settings"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Essential Cookies"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Analytics Cookies"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Marketing Cookies"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Learn More"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Privacy Policy"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Cookie Policy"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "cookie-settings",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 1956,
+    "scrollWidth": 1269,
+    "tinyTargets": [],
+    "title": "Cookie Settings | Manage Proofound consent preferences",
+    "url": "http://localhost:33100/cookies/settings",
+    "viewportName": "desktop1280",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content 403 You do not have access to this page You don't have permission to access this page. This area is restricted to authorized personnel only. Go to OverviewGo to Home If you believe you should have access to this page, please contact your administrator.",
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "headings": [
+      {
+        "size": "40px",
+        "tag": "h1",
+        "text": "403"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "You do not have access to this page"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "forbidden",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/403",
+    "viewportName": "desktop1280",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Not found This page is outside the locked launch MVP corridor. Archived Page: /definitely-not-a-real-proofound-route is outside the locked launch MVP corridor and is not reachable in the launch surface.",
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "headings": [
+      {
+        "size": "36px",
+        "tag": "h1",
+        "text": "Not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "not-found",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Not found | Proofound",
+    "url": "http://localhost:33100/definitely-not-a-real-proofound-route",
+    "viewportName": "desktop1280",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Sign in Start Proof behind the claim Proofound turns real work into structured Proof Packs for privacy-safe hiring review before identity takes over. Request a pilot Create your proof portfolio 02 Real outcomes, not bullet points Vague summaries and floating skill lists resolve into structured outcomes, work scope, ownership, and context. Skills stop existing as decoration and start living next to real work. Senior Operations Professional OUTCOME SIGNAL PROOF SNAPSHOT Reviewable 12 Team 200+ Scale 31% Outcome Outcome record, artifacts, and trust method stay together. Work scope Ownership Context 03 Verification trust laye",
+    "clientHeight": 844,
+    "clientWidth": 379,
+    "headings": [
+      {
+        "size": "44px",
+        "tag": "h1",
+        "text": "Proof behind the claim"
+      },
+      {
+        "size": "28.8px",
+        "tag": "h2",
+        "text": "Real outcomes, not bullet points"
+      },
+      {
+        "size": "28.8px",
+        "tag": "h2",
+        "text": "Verification trust layer"
+      },
+      {
+        "size": "28.8px",
+        "tag": "h2",
+        "text": "Universal compatibility"
+      },
+      {
+        "size": "28.8px",
+        "tag": "h2",
+        "text": "To modern challenges"
+      },
+      {
+        "size": "118.4px",
+        "tag": "h1",
+        "text": "Proof behindthe claim"
+      },
+      {
+        "size": "48px",
+        "tag": "h2",
+        "text": "Blind by default"
+      },
+      {
+        "size": "37.6px",
+        "tag": "h2",
+        "text": "Build hiring on stronger proof"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "landing",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 4760,
+    "scrollWidth": 379,
+    "tinyTargets": [],
+    "title": "Proofound | Proof Behind the Claim",
+    "url": "http://localhost:33100/",
+    "viewportName": "mobile390",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Back to Home Privacy Policy Effective date: 2026-02-12 · Version: v1.3.2026-02-12 1. Scope This policy explains how Proofound collects, uses, stores, and protects personal information across account creation, Proof Pack creation, portfolio publication, assignment review, verification, and user rights handling. Processing is performed under applicable privacy laws, including GDPR and ePrivacy rules. 2. Data We Process Account records: email, display name, authentication identifiers. Profile information: expertise, projects, preferences, and verification status. Operational records: moderation reports, consent records, secu",
+    "clientHeight": 844,
+    "clientWidth": 379,
+    "headings": [
+      {
+        "size": "40px",
+        "tag": "h1",
+        "text": "Privacy Policy"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "1. Scope"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "2. Data We Process"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "3. Legal Bases and Consent"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "4. Data Minimization and Security"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "5. International Transfers"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "6. Retention and Deletion"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "7. Your Rights"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "8. Contact"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "9. Processors and Operational Accountability"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "privacy",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 3804,
+    "scrollWidth": 379,
+    "tinyTargets": [],
+    "title": "Privacy Policy | Proofound privacy and consent controls",
+    "url": "http://localhost:33100/privacy",
+    "viewportName": "mobile390",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Back to Home Terms of Service Effective date: 2026-02-12 · Version: v1.1.2026-02-12 1. Acceptance and Eligibility By using Proofound, you agree to these Terms. You must provide accurate account information and keep your login credentials secure. 2. Service Scope Proofound is a proof-first hiring corridor centered on Proof Packs, public proof portfolios, organization trust pages, and privacy-safe review inside structured assignment flows. 3. Acceptable Use No fraud, impersonation, or misleading submissions. No harassment, abusive content, or unlawful activity. No automated abuse, scraping, or interference with platform sec",
+    "clientHeight": 844,
+    "clientWidth": 379,
+    "headings": [
+      {
+        "size": "40px",
+        "tag": "h1",
+        "text": "Terms of Service"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "1. Acceptance and Eligibility"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "2. Service Scope"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "3. Acceptable Use"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "4. Moderation and Enforcement"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "5. Account Deletion"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "6. Liability and Availability"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "7. Changes"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "8. Contact"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "9. Intellectual Property and Content Rights"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "terms",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 4204,
+    "scrollWidth": 379,
+    "tinyTargets": [],
+    "title": "Terms of Service | Proofound legal responsibilities",
+    "url": "http://localhost:33100/terms",
+    "viewportName": "mobile390",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content PROOFOUND Cookie Policy Proofound uses strictly necessary cookies by default and optional analytics cookies only with your consent. Effective date: 2026-02-12 · Version: v1.1.2026-02-12 Necessary cookies support authentication, security, and core platform functionality. These cannot be switched off. Analytics cookies are optional. We only activate non-essential telemetry after explicit consent. You can withdraw or change your preferences at any time. We do not use third-party advertising cookies and we do not sell personal data. Cookie retention and purpose are reviewed regularly to keep processing proportional to platfor",
+    "clientHeight": 844,
+    "clientWidth": 379,
+    "headings": [
+      {
+        "size": "32px",
+        "tag": "h1",
+        "text": "Cookie Policy"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "cookies",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 1708,
+    "scrollWidth": 379,
+    "tinyTargets": [],
+    "title": "Cookie Policy | How Proofound handles cookie consent",
+    "url": "http://localhost:33100/cookies",
+    "viewportName": "mobile390",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Return to previous page Proofound Cookie Settings Manage your cookie preferences to control how we collect and use your data. Your choices help us respect your privacy while improving your experience. Your Privacy Matters: We are committed to protecting your data under GDPR regulations. You can change these settings at any time. Essential cookies are required for the site to function and cannot be disabled. Accept All Reject All (Essential Only) Essential Cookies (Always Active) Required for authentication and core functionality. These cookies are necessary for the website to work and cannot be disabled. Toggle Essential ",
+    "clientHeight": 844,
+    "clientWidth": 379,
+    "headings": [
+      {
+        "size": "40px",
+        "tag": "h1",
+        "text": "Cookie Settings"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Essential Cookies"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Analytics Cookies"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Marketing Cookies"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Learn More"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Privacy Policy"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Cookie Policy"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "cookie-settings",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 2692,
+    "scrollWidth": 379,
+    "tinyTargets": [],
+    "title": "Cookie Settings | Manage Proofound consent preferences",
+    "url": "http://localhost:33100/cookies/settings",
+    "viewportName": "mobile390",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content 403 You do not have access to this page You don't have permission to access this page. This area is restricted to authorized personnel only. Go to OverviewGo to Home If you believe you should have access to this page, please contact your administrator.",
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "headings": [
+      {
+        "size": "40px",
+        "tag": "h1",
+        "text": "403"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "You do not have access to this page"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "forbidden",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/403",
+    "viewportName": "mobile390",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Not found This page is outside the locked launch MVP corridor. Archived Page: /definitely-not-a-real-proofound-route is outside the locked launch MVP corridor and is not reachable in the launch surface.",
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "headings": [
+      {
+        "size": "28px",
+        "tag": "h1",
+        "text": "Not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "not-found",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Not found | Proofound",
+    "url": "http://localhost:33100/definitely-not-a-real-proofound-route",
+    "viewportName": "mobile390",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Sign in Start Proof behind the claim Proofound turns real work into structured Proof Packs for privacy-safe hiring review before identity takes over. Request a pilot Create your proof portfolio 02 Real outcomes, not bullet points Vague summaries and floating skill lists resolve into structured outcomes, work scope, ownership, and context. Skills stop existing as decoration and start living next to real work. Senior Operations Professional OUTCOME SIGNAL PROOF SNAPSHOT Reviewable 12 Team 200+ Scale 31% Outcome Outcome record, artifacts, and trust method stay together. Work scope Ownership Context 03 Verification trust laye",
+    "clientHeight": 667,
+    "clientWidth": 364,
+    "headings": [
+      {
+        "size": "38.72px",
+        "tag": "h1",
+        "text": "Proof behind the claim"
+      },
+      {
+        "size": "28.8px",
+        "tag": "h2",
+        "text": "Real outcomes, not bullet points"
+      },
+      {
+        "size": "28.8px",
+        "tag": "h2",
+        "text": "Verification trust layer"
+      },
+      {
+        "size": "28.8px",
+        "tag": "h2",
+        "text": "Universal compatibility"
+      },
+      {
+        "size": "28.8px",
+        "tag": "h2",
+        "text": "To modern challenges"
+      },
+      {
+        "size": "118.4px",
+        "tag": "h1",
+        "text": "Proof behindthe claim"
+      },
+      {
+        "size": "48px",
+        "tag": "h2",
+        "text": "Blind by default"
+      },
+      {
+        "size": "37.6px",
+        "tag": "h2",
+        "text": "Build hiring on stronger proof"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "landing",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 4807,
+    "scrollWidth": 364,
+    "tinyTargets": [],
+    "title": "Proofound | Proof Behind the Claim",
+    "url": "http://localhost:33100/",
+    "viewportName": "mobile375",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Back to Home Privacy Policy Effective date: 2026-02-12 · Version: v1.3.2026-02-12 1. Scope This policy explains how Proofound collects, uses, stores, and protects personal information across account creation, Proof Pack creation, portfolio publication, assignment review, verification, and user rights handling. Processing is performed under applicable privacy laws, including GDPR and ePrivacy rules. 2. Data We Process Account records: email, display name, authentication identifiers. Profile information: expertise, projects, preferences, and verification status. Operational records: moderation reports, consent records, secu",
+    "clientHeight": 667,
+    "clientWidth": 364,
+    "headings": [
+      {
+        "size": "40px",
+        "tag": "h1",
+        "text": "Privacy Policy"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "1. Scope"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "2. Data We Process"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "3. Legal Bases and Consent"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "4. Data Minimization and Security"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "5. International Transfers"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "6. Retention and Deletion"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "7. Your Rights"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "8. Contact"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "9. Processors and Operational Accountability"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "privacy",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 4072,
+    "scrollWidth": 364,
+    "tinyTargets": [],
+    "title": "Privacy Policy | Proofound privacy and consent controls",
+    "url": "http://localhost:33100/privacy",
+    "viewportName": "mobile375",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Back to Home Terms of Service Effective date: 2026-02-12 · Version: v1.1.2026-02-12 1. Acceptance and Eligibility By using Proofound, you agree to these Terms. You must provide accurate account information and keep your login credentials secure. 2. Service Scope Proofound is a proof-first hiring corridor centered on Proof Packs, public proof portfolios, organization trust pages, and privacy-safe review inside structured assignment flows. 3. Acceptable Use No fraud, impersonation, or misleading submissions. No harassment, abusive content, or unlawful activity. No automated abuse, scraping, or interference with platform sec",
+    "clientHeight": 667,
+    "clientWidth": 364,
+    "headings": [
+      {
+        "size": "40px",
+        "tag": "h1",
+        "text": "Terms of Service"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "1. Acceptance and Eligibility"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "2. Service Scope"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "3. Acceptable Use"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "4. Moderation and Enforcement"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "5. Account Deletion"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "6. Liability and Availability"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "7. Changes"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "8. Contact"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "9. Intellectual Property and Content Rights"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "terms",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 4372,
+    "scrollWidth": 364,
+    "tinyTargets": [],
+    "title": "Terms of Service | Proofound legal responsibilities",
+    "url": "http://localhost:33100/terms",
+    "viewportName": "mobile375",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content PROOFOUND Cookie Policy Proofound uses strictly necessary cookies by default and optional analytics cookies only with your consent. Effective date: 2026-02-12 · Version: v1.1.2026-02-12 Necessary cookies support authentication, security, and core platform functionality. These cannot be switched off. Analytics cookies are optional. We only activate non-essential telemetry after explicit consent. You can withdraw or change your preferences at any time. We do not use third-party advertising cookies and we do not sell personal data. Cookie retention and purpose are reviewed regularly to keep processing proportional to platfor",
+    "clientHeight": 667,
+    "clientWidth": 364,
+    "headings": [
+      {
+        "size": "32px",
+        "tag": "h1",
+        "text": "Cookie Policy"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "cookies",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 1760,
+    "scrollWidth": 364,
+    "tinyTargets": [],
+    "title": "Cookie Policy | How Proofound handles cookie consent",
+    "url": "http://localhost:33100/cookies",
+    "viewportName": "mobile375",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Return to previous page Proofound Cookie Settings Manage your cookie preferences to control how we collect and use your data. Your choices help us respect your privacy while improving your experience. Your Privacy Matters: We are committed to protecting your data under GDPR regulations. You can change these settings at any time. Essential cookies are required for the site to function and cannot be disabled. Accept All Reject All (Essential Only) Essential Cookies (Always Active) Required for authentication and core functionality. These cookies are necessary for the website to work and cannot be disabled. Toggle Essential ",
+    "clientHeight": 667,
+    "clientWidth": 364,
+    "headings": [
+      {
+        "size": "40px",
+        "tag": "h1",
+        "text": "Cookie Settings"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Essential Cookies"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Analytics Cookies"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Marketing Cookies"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Learn More"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Privacy Policy"
+      },
+      {
+        "size": "16px",
+        "tag": "h3",
+        "text": "Cookie Policy"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "cookie-settings",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 2779,
+    "scrollWidth": 364,
+    "tinyTargets": [],
+    "title": "Cookie Settings | Manage Proofound consent preferences",
+    "url": "http://localhost:33100/cookies/settings",
+    "viewportName": "mobile375",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content 403 You do not have access to this page You don't have permission to access this page. This area is restricted to authorized personnel only. Go to OverviewGo to Home If you believe you should have access to this page, please contact your administrator.",
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "headings": [
+      {
+        "size": "40px",
+        "tag": "h1",
+        "text": "403"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "You do not have access to this page"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "forbidden",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/403",
+    "viewportName": "mobile375",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Not found This page is outside the locked launch MVP corridor. Archived Page: /definitely-not-a-real-proofound-route is outside the locked launch MVP corridor and is not reachable in the launch surface.",
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "headings": [
+      {
+        "size": "28px",
+        "tag": "h1",
+        "text": "Not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "not-found",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Not found | Proofound",
+    "url": "http://localhost:33100/definitely-not-a-real-proofound-route",
+    "viewportName": "mobile375",
+    "visibleControls": []
+  }
+]

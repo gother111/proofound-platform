@@ -1,3 +1,11 @@
+> Doc Class: `reference-spec`
+> Last Verified: `2026-05-19`
+>
+> Historical/superseded evidence note: this April 29 rerun is retained as dated
+> evidence only. It is not current launch authority. Current production-candidate
+> signoff requires backup checkpoint, isolated restore report, authenticated
+> perf/status evidence, smoke evidence, and `go:no-go` for the intended target.
+
 # Final Post-Fix Backend / Security / Privacy / MVP Readiness Audit Rerun
 
 Generated: 2026-04-29T11:58:00Z
@@ -92,7 +100,9 @@ Artifact: `.artifacts/launch-smoke-report.json`
    - `BASE_URL=https://proofound.io npm run test:launch:smoke`
    - live `/api/health`
    - live `/api/monitoring/launch-status`
-   - `BASE_URL=https://proofound.io SUS_STUDY_COMPLETE=true npm run go:no-go`
+   - `npm run db:backup:checkpoint`
+   - `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json`
+   - `BASE_URL=https://proofound.io SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go`
 
 ## Bottom Line
 

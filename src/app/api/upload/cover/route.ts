@@ -23,7 +23,12 @@ export async function POST(request: NextRequest) {
       return oversizedResponse;
     }
 
-    const formData = await request.formData();
+    let formData: FormData;
+    try {
+      formData = await request.formData();
+    } catch {
+      return NextResponse.json({ error: 'Invalid form data' }, { status: 400 });
+    }
     const file = formData.get('file') as File | null;
     const profileType = formData.get('profileType') as string | null; // 'individual' or 'organization'
     const orgId = formData.get('orgId') as string | null;

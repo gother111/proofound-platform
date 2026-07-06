@@ -6,6 +6,7 @@ import {
   normalizeAuthorizedOrgRole,
   normalizeMembershipState,
 } from '@/lib/authz';
+import { log } from '@/lib/log';
 import { redirect } from 'next/navigation';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import * as React from 'react';
@@ -112,6 +113,22 @@ function cache<TArgs extends unknown[], TResult>(
   return dedupeInFlight(fn);
 }
 
+function requestCache<TArgs extends unknown[], TResult>(
+  fn: (...args: TArgs) => Promise<TResult>
+): (...args: TArgs) => Promise<TResult> {
+  const reactCache = (React as { cache?: unknown }).cache;
+
+  if (typeof reactCache === 'function') {
+    return (
+      reactCache as (
+        inner: (...args: TArgs) => Promise<TResult>
+      ) => (...args: TArgs) => Promise<TResult>
+    )(fn);
+  }
+
+  return fn;
+}
+
 const getRequestScopedClient = async () => createClient();
 
 function mapProfile(row: Partial<ProfileRow> & { id: string }): ProfileRow {
@@ -216,7 +233,7 @@ async function getCurrentUserWithClient(supabase: SupabaseClient): Promise<Profi
     .maybeSingle();
 
   if (error) {
-    console.error('Failed to load profile for current user:', error);
+    log.error('auth.current_user.profile_load_failed', { error });
     return null;
   }
 
@@ -227,10 +244,10 @@ async function getCurrentUserWithClient(supabase: SupabaseClient): Promise<Profi
   return mapProfile(data as ProfileRow);
 }
 
-const getCurrentUserCached = async () => {
+const getCurrentUserCached = requestCache(async () => {
   const supabase = await getRequestScopedClient();
   return getCurrentUserWithClient(supabase);
-};
+});
 
 export async function getCurrentUser() {
   return getCurrentUserCached();
@@ -312,7 +329,7 @@ const getUserOrganizationsCached = cache(async (userId: string) => {
     .eq('state', 'active');
 
   if (error) {
-    console.error('Failed to load organizations for user:', error);
+    log.error('auth.user_organizations.load_failed', { error, userId });
     return [];
   }
 
@@ -412,12 +429,12 @@ const getActiveOrgCached = cache(async (slug: string, userId: string) => {
       `
     )
     .eq('slug', slug)
-    .eq('organization_members.user_id', userId)
-    .eq('organization_members.state', 'active')
+    .eq('membership.user_id', userId)
+    .eq('membership.state', 'active')
     .maybeSingle();
 
   if (error) {
-    console.error('Failed to load active organization:', error);
+    log.error('auth.active_organization.load_failed', { error, slug, userId });
     return null;
   }
 
@@ -529,7 +546,7 @@ export async function assertOrgRole(orgId: string, userId: string, roles: OrgRol
     .maybeSingle();
 
   if (error) {
-    console.error('Failed to verify organization role:', error);
+    log.error('auth.organization_role.verify_failed', { error, orgId, userId });
     throw new Error('Unable to verify permissions');
   }
 
@@ -632,7 +649,7 @@ export async function requirePersona(expected: ProfileRow['persona']) {
 
 export async function checkAdminRole(userId: string): Promise<boolean> {
   // For MVP, hardcode admin emails (Pavlo and Yurii)
-  // TODO: Move to database table in Phase 2
+  // Post-MVP: move this allowlist to a managed role table.
   const adminEmails = ['pavlo@proofound.io', 'yurii@proofound.io'];
 
   const supabase = await createClient();

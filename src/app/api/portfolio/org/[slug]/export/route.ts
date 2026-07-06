@@ -12,6 +12,7 @@ import {
 import { generateOrganizationProfilePdf } from '@/lib/portfolio/pdf';
 import { buildOrganizationTextPack } from '@/lib/portfolio/text-pack';
 import { emitLaunchTrace, startLaunchTrace } from '@/lib/launch/trace';
+import { log } from '@/lib/log';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -78,10 +79,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
     if (!data) {
       emitLaunchTrace(trace, {
         outcome: 'rejected',
-        state: 'org_export_profile_unavailable',
-        failureClass: 'organization_profile_unavailable',
+        state: 'org_export_trust_page_unavailable',
+        failureClass: 'organization_trust_page_unavailable',
       });
-      return NextResponse.json({ error: 'Organization profile unavailable' }, { status: 404 });
+      return NextResponse.json({ error: 'Organization trust page unavailable' }, { status: 404 });
     }
 
     const format = resolvePortfolioExportFormat(request);
@@ -99,6 +100,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
     }
 
     if (format === 'text') {
+      const text = buildOrganizationTextPack(data);
       emitLaunchTrace(trace, {
         outcome: 'success',
         state: 'organization_export_ready',
@@ -107,10 +109,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
           format,
         },
       });
-      return respondWithText(
-        buildOrganizationTextPack(data),
-        `proofound-org-${data.organization.slug}.txt`
-      );
+      return respondWithText(text, `proofound-org-${data.organization.slug}.txt`);
     }
 
     const buffer = await generateOrganizationProfilePdf({
@@ -138,16 +137,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
     });
     return respondWithPdf(bytes, `proofound-org-${exportedSlug}.pdf`);
   } catch (error) {
-    console.error('organization portfolio export failed', {
-      name: error instanceof Error ? error.name : 'UnknownError',
-      message: error instanceof Error ? error.message : 'Unknown error',
-      error,
-    });
+    log.error('portfolio.org_export.failed', { error });
     emitLaunchTrace(trace, {
       outcome: 'failure',
       state: 'org_export_failed',
       failureClass: error instanceof Error ? error.message : 'organization_export_failed',
     });
-    return NextResponse.json({ error: 'Failed to generate PDF' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to generate export' }, { status: 500 });
   }
 }

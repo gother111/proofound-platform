@@ -1,80 +1,43 @@
 import { describe, expect, it } from 'vitest';
 
-import { POST as postAnalyticsEvents } from '@/app/api/analytics/events/route';
-import { POST as postAnalyticsTourEvent } from '@/app/api/analytics/tour-event/route';
-import { POST as postAnalyticsTrack } from '@/app/api/analytics/track/route';
+import { classifyLaunchApiPath, getArchivedApiPolicy } from '@/lib/launch/surface-policy';
 import {
-  GET as getAnalyticsWebVitals,
-  POST as postAnalyticsWebVitals,
-} from '@/app/api/analytics/web-vitals/route';
-import { POST as postCvImportWizardApply } from '@/app/api/expertise/cv-import/wizard-apply/route';
-import { POST as postCvImportWizardExtract } from '@/app/api/expertise/cv-import/wizard-extract/route';
-import { GET as getCvImportWizardExtractStatus } from '@/app/api/expertise/cv-import/wizard-extract/status/route';
-import { POST as postCvImportWizardSuggest } from '@/app/api/expertise/cv-import/wizard-suggest/route';
-import { POST as postPerformanceTrack } from '@/app/api/performance/track/route';
+  GET as getAssignmentPipeline,
+  POST as postAssignmentPipeline,
+} from '@/app/api/assignments/[id]/pipeline/route';
 
-const archivedHandlers = [
-  {
-    route: 'POST /api/analytics/events',
-    handler: postAnalyticsEvents,
-    surface: 'Analytics API',
-  },
-  {
-    route: 'POST /api/analytics/tour-event',
-    handler: postAnalyticsTourEvent,
-    surface: 'Analytics API',
-  },
-  {
-    route: 'POST /api/analytics/track',
-    handler: postAnalyticsTrack,
-    surface: 'Analytics API',
-  },
-  {
-    route: 'GET /api/analytics/web-vitals',
-    handler: getAnalyticsWebVitals,
-    surface: 'Analytics API',
-  },
-  {
-    route: 'POST /api/analytics/web-vitals',
-    handler: postAnalyticsWebVitals,
-    surface: 'Analytics API',
-  },
-  {
-    route: 'POST /api/expertise/cv-import/wizard-apply',
-    handler: postCvImportWizardApply,
-    surface: 'Legacy Expertise API',
-  },
-  {
-    route: 'POST /api/expertise/cv-import/wizard-extract',
-    handler: postCvImportWizardExtract,
-    surface: 'Legacy Expertise API',
-  },
-  {
-    route: 'GET /api/expertise/cv-import/wizard-extract/status',
-    handler: getCvImportWizardExtractStatus,
-    surface: 'Legacy Expertise API',
-  },
-  {
-    route: 'POST /api/expertise/cv-import/wizard-suggest',
-    handler: postCvImportWizardSuggest,
-    surface: 'Legacy Expertise API',
-  },
-  {
-    route: 'POST /api/performance/track',
-    handler: postPerformanceTrack,
-    surface: 'Performance API',
-  },
+const archivedMiddlewareRoutes = [
+  '/api/expertise/cv-import/wizard-apply',
+  '/api/expertise/cv-import/wizard-extract',
+  '/api/expertise/cv-import/wizard-extract/status',
+  '/api/expertise/cv-import/wizard-suggest',
 ] as const;
 
 describe('archived MVP API handlers', () => {
-  it.each(archivedHandlers)('returns 410 directly for $route', async ({ handler, surface }) => {
-    const response = await handler();
-    const body = await response.json();
-
-    expect(response.status).toBe(410);
-    expect(body).toMatchObject({
-      surface,
-      launchState: 'non_launch',
+  it.each(archivedMiddlewareRoutes)('keeps $0 archived at the middleware boundary', (route) => {
+    expect(classifyLaunchApiPath(route)).toBe('archived');
+    expect(getArchivedApiPolicy(route)).toMatchObject({
+      surfaceLabel: 'Legacy Expertise API',
     });
+  });
+
+  it('keeps the generic assignment pipeline API archived at policy and handler boundaries', async () => {
+    const route = '/api/assignments/assignment-1/pipeline';
+
+    expect(classifyLaunchApiPath(route)).toBe('archived');
+    expect(getArchivedApiPolicy(route)).toMatchObject({
+      surfaceLabel: 'Assignment Pipeline API',
+    });
+
+    const getResponse = await getAssignmentPipeline();
+    expect(getResponse.status).toBe(410);
+    await expect(getResponse.json()).resolves.toMatchObject({
+      error: 'Assignment pipeline API is not part of the launch MVP flow.',
+      launchState: 'non_launch',
+      surface: 'Assignment pipeline API',
+    });
+
+    const postResponse = await postAssignmentPipeline();
+    expect(postResponse.status).toBe(410);
   });
 });

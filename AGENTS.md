@@ -38,6 +38,14 @@ For the P0 activation effort and onward, `PROOFOUND_IMPROVEMENT_AUDIT_2026-07-05
   - Plan: brief staged bullets.
   - Assumptions: only material assumptions.
 
+## Autonomy and Communication
+
+- Default to taking the next useful local step when it is reversible, repo-local, and within the user's requested scope.
+- Do not ask permission for ordinary reading, searching, targeted edits, formatting, or local verification.
+- Ask first before deploys, database writes, auth changes, payment changes, external comments, Linear status changes, production-like operations, broad refactors, or user-facing behavior choices.
+- Keep progress updates short and practical. Summarize what was found, what changed, and what remains risky.
+- Keep final answers compact unless the task is a review, deploy, risky change, or the user asks for detail.
+
 ## Read Order
 
 1. `AGENTS.md`

@@ -6,6 +6,7 @@ import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js
 import { isManualReviewOnlyShortToken } from '@/lib/expertise/skill-confidence';
 import { searchAtlasSkillMatches } from '@/lib/expertise/atlas-skill-verifier';
 import { legacySurfaceJsonResponse } from '@/lib/mvp/nonLaunch';
+import { log } from '@/lib/log';
 
 const SEARCH_RESULT_LIMIT = 50;
 const SEARCH_ATLAS_TIMEOUT_MS = 4_000;
@@ -102,6 +103,14 @@ function hashQuery(value: string): string {
   const normalized = normalizeForComparison(value);
   if (!normalized) return 'empty';
   return createHash('sha256').update(normalized).digest('hex').slice(0, 16);
+}
+
+function taxonomyMatchConfidenceLabel(score: unknown): string | null {
+  const normalizedScore = Number(score);
+  if (!Number.isFinite(normalizedScore)) return null;
+  if (normalizedScore >= 0.85) return 'Strong taxonomy match';
+  if (normalizedScore >= 0.65) return 'Clear taxonomy match';
+  return 'Review suggested';
 }
 
 function sortSimpleSearchResults(searchTerm: string, rows: any[]): any[] {
@@ -223,13 +232,13 @@ async function emitSearchTelemetry(input: {
     });
 
     if (error) {
-      console.warn('[Taxonomy API] Failed to emit telemetry event', {
+      log.warn('expertise.taxonomy.telemetry_emit_failed', {
         eventType: input.eventType,
         error: error.message,
       });
     }
   } catch (error) {
-    console.warn('[Taxonomy API] Failed to emit telemetry event', {
+    log.warn('expertise.taxonomy.telemetry_emit_failed', {
       eventType: input.eventType,
       error: error instanceof Error ? error.message : String(error),
     });
@@ -264,7 +273,7 @@ async function enrichSkillsWithParentContext(supabase: any, skills: any[]): Prom
   ]);
 
   if (l1Result.error || l2Result.error || l3Result.error) {
-    console.error('[Taxonomy API] Failed to enrich parent context', {
+    log.error('expertise.taxonomy.parent_context_enrich_failed', {
       l1Error: l1Result.error?.message,
       l2Error: l2Result.error?.message,
       l3Error: l3Result.error?.message,
@@ -309,7 +318,7 @@ export async function GET(request: Request) {
     const supabase = await createClient();
 
     if (!supabase) {
-      console.error('[Taxonomy API] Failed to create Supabase client');
+      log.error('expertise.taxonomy.supabase_client_create_failed');
       return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
     }
 
@@ -340,15 +349,6 @@ export async function GET(request: Request) {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-
-    console.log('[Taxonomy API] Request params:', {
-      l1,
-      l2,
-      l3Id,
-      hasSearch: Boolean(search),
-      searchHash,
-      searchClass,
-    });
 
     // If no filters, return full L1 list (cached)
     if (!l1 && !l2 && !l3Id && !search) {
@@ -425,7 +425,10 @@ export async function GET(request: Request) {
         .order('display_order');
 
       if (error) {
-        console.error('Error fetching L3 items:', error);
+        log.error('expertise.taxonomy.l3_fetch_failed', {
+          l2,
+          error: error.message,
+        });
         return NextResponse.json({ error: 'Failed to fetch L3 items' }, { status: 500 });
       }
 
@@ -512,7 +515,7 @@ export async function GET(request: Request) {
             );
           } catch (atlasError) {
             atlasTimedOut = true;
-            console.warn('[Taxonomy API] Atlas search unavailable; using simple taxonomy search', {
+            log.warn('expertise.taxonomy.atlas_search_unavailable', {
               searchHash,
               searchClass: queryClass,
               error: atlasError instanceof Error ? atlasError.message : String(atlasError),
@@ -547,7 +550,7 @@ export async function GET(request: Request) {
               .in('code', rankedCodes);
 
             if (searchError) {
-              console.error('[Taxonomy API] Failed to load ranked atlas rows', {
+              log.error('expertise.taxonomy.ranked_atlas_rows_load_failed', {
                 searchHash,
                 searchClass: queryClass,
                 error: searchError.message,
@@ -575,7 +578,7 @@ export async function GET(request: Request) {
               return {
                 ...skill,
                 matchMethod: match?.match_method || null,
-                matchScore: match?.score ?? null,
+                matchConfidence: taxonomyMatchConfidenceLabel(match?.score),
                 matchSource: match?.match_source || null,
                 matchedQuery: match?.matched_query || null,
                 matchedLabel: match?.matched_label || null,
@@ -613,16 +616,14 @@ export async function GET(request: Request) {
       }
 
       if (error) {
-        console.error('Error fetching L4 skills:', error);
+        log.error('expertise.taxonomy.l4_fetch_failed', {
+          l3Id,
+          searchHash,
+          searchClass,
+          error: error.message,
+        });
         return NextResponse.json({ error: 'Failed to fetch skills' }, { status: 500 });
       }
-
-      console.log('[Taxonomy API] Skills request completed', {
-        mode: search ? 'search' : 'query',
-        searchHash,
-        searchClass,
-        resultCount: skills?.length || 0,
-      });
 
       // Map skills with parent context
       const mappedSkills =
@@ -631,7 +632,7 @@ export async function GET(request: Request) {
           return {
             ...baseSkill,
             matchMethod: s.matchMethod ?? null,
-            matchScore: s.matchScore ?? null,
+            matchConfidence: s.matchConfidence ?? null,
             matchSource: s.matchSource ?? null,
             matchedQuery: s.matchedQuery ?? null,
             matchedLabel: s.matchedLabel ?? null,
@@ -667,9 +668,9 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ error: 'Invalid query parameters' }, { status: 400 });
   } catch (error: any) {
-    console.error('[Taxonomy API] Caught error:', error);
-    console.error('[Taxonomy API] Error message:', error?.message);
-    console.error('[Taxonomy API] Error stack:', error?.stack);
+    log.error('expertise.taxonomy.unhandled_error', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       {
         error: 'Internal server error',

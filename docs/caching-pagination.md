@@ -1,3 +1,6 @@
+> Doc Class: `active`
+> Last Verified: `2026-05-19`
+
 # Caching and Pagination Implementation
 
 ## Overview
@@ -51,7 +54,7 @@ GET /api/expertise/taxonomy?l1=U
 // Cached separately for each L1
 ```
 
-#### 2. Matching Engine (`/api/core/matching/profile`)
+#### 2. Matching Engine (`/api/match/profile`)
 
 **What's Cached:**
 
@@ -198,29 +201,31 @@ GET /api/conversations?limit=20&offset=20
 - Avoids expensive `COUNT(*)` queries
 - Returns only requested items
 
-#### 2. Messages API (`/api/messages`)
+#### 2. Conversation Messages API (`/api/conversations/[conversationId]/messages`)
 
 **Default Limit:** 50
-**Max Limit:** Not specified (consider adding)
+**Max Limit:** 100
 
 **Usage:**
 
 ```typescript
 // Get messages for a conversation
-GET /api/messages?conversationId={id}&limit=50&offset=0
+GET /api/conversations/{conversationId}/messages?limit=50
 
 // Response
 {
   "messages": [...],
-  "hasMore": true
+  "hasMore": true,
+  "conversationStage": "masked"
 }
 ```
 
 **Features:**
 
-- Ordered by `sentAt` (chronological)
+- Ordered by `sentAt` with newest messages returned first
 - Auto-marks messages as read
 - Supports conversation-specific filtering
+- Supports cursor pagination with `before={messageId}`
 
 #### 3. Assignments API (`/api/assignments`)
 
@@ -277,7 +282,7 @@ For real-time data like messages, cursor-based pagination is more reliable:
 
 ```typescript
 // Instead of offset
-GET /api/messages?conversationId={id}&cursor={lastMessageId}&limit=50
+GET /api/conversations/{conversationId}/messages?before={lastMessageId}&limit=50
 
 // Benefits:
 // - No missed messages with concurrent updates
@@ -339,15 +344,14 @@ KV_REST_API_TOKEN=your-token
 
 ## Monitoring
 
-### Cache Hit Rate
+### Cache Backend Health
 
-Monitor cache effectiveness:
+Monitor cache backend selection and key counts where the runtime can expose them:
 
 ```typescript
-// Add to monitoring dashboard
-const cacheHits = await redis.get('cache:hits');
-const cacheMisses = await redis.get('cache:misses');
-const hitRate = cacheHits / (cacheHits + cacheMisses);
+const stats = await getCacheStats();
+console.log('Cache backend:', stats.type);
+console.log('Known key count:', stats.keys ?? 'managed by provider');
 ```
 
 ### Pagination Usage

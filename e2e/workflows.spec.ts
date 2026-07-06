@@ -8,7 +8,6 @@ import { test, expect } from '@playwright/test';
  * - Assignment creation
  * - Matching system
  * - Interview scheduling
- * - Contract attestation
  */
 
 test.describe('Core Workflows', () => {
@@ -22,7 +21,7 @@ test.describe('Core Workflows', () => {
 
       // If redirected to login, that's ok - test still passes
       if (page.url().includes('/login')) {
-        expect(true).toBeTruthy();
+        expect(page.url()).toContain('/login');
         return;
       }
 
@@ -107,8 +106,10 @@ test.describe('Core Workflows', () => {
         }
       }
 
-      // It's ok if sections aren't visible - profile might be empty
-      expect(true).toBeTruthy();
+      const emptyProfileState = page.getByText(/start building|add proof|complete your profile/i);
+      const hasEmptyState = await emptyProfileState.isVisible();
+
+      expect(foundSection || hasEmptyState).toBeTruthy();
     });
   });
 
@@ -199,11 +200,11 @@ test.describe('Core Workflows', () => {
       }
 
       // Look for match cards or list
-      const matchCards = page.locator('[data-match], .match-card, .opportunity-card');
+      const matchCards = page.locator('[data-testid="match-card"], [data-match], .match-card');
       const hasMatches = (await matchCards.count()) > 0;
 
       // Or look for empty state
-      const emptyState = page.getByText(/no matches|no opportunities|check back/i);
+      const emptyState = page.getByText(/no matches|assignment reviews|check back/i);
       const hasEmptyState = await emptyState.isVisible();
 
       // Either matches or empty state should be present
@@ -220,7 +221,9 @@ test.describe('Core Workflows', () => {
       }
 
       // Find and click first match
-      const firstMatch = page.locator('[data-match], .match-card, .opportunity-card').first();
+      const firstMatch = page
+        .locator('[data-testid="match-card"], [data-match], .match-card')
+        .first();
 
       if (await firstMatch.isVisible()) {
         await firstMatch.click();
@@ -233,7 +236,7 @@ test.describe('Core Workflows', () => {
       }
     });
 
-    test('should show match score', async ({ page }) => {
+    test('keeps matching proof-led and score-free', async ({ page }) => {
       await page.goto('/app/i/matching');
 
       await page.waitForTimeout(1000);
@@ -242,11 +245,9 @@ test.describe('Core Workflows', () => {
         return;
       }
 
-      // Look for match score indicators
-      const scoreIndicator = page.getByText(/\d+%|score|match/i);
+      const rawScoreIndicator = page.getByText(/\b\d{1,3}%\b|match score|fit score/i);
 
-      // It's ok if no score is visible - might be no matches
-      expect(true).toBeTruthy();
+      await expect(rawScoreIndicator).toHaveCount(0);
     });
 
     test('should allow filtering matches', async ({ page }) => {
@@ -266,8 +267,17 @@ test.describe('Core Workflows', () => {
         await page.waitForTimeout(500);
 
         // Should show filter options
-        expect(true).toBeTruthy();
+        const filterSurface = page
+          .getByRole('dialog')
+          .or(page.getByRole('menu'))
+          .or(page.locator('[data-testid*="filter"], [data-filter]'));
+        await expect(filterSurface.first()).toBeVisible();
+        return;
       }
+
+      const matchCards = page.locator('[data-testid="match-card"], [data-match], .match-card');
+      const emptyState = page.getByText(/no matches|assignment reviews|check back/i);
+      expect((await matchCards.count()) > 0 || (await emptyState.isVisible())).toBeTruthy();
     });
   });
 
@@ -315,8 +325,13 @@ test.describe('Core Workflows', () => {
       // Look for schedule button (might only be available for certain matches)
       const scheduleButton = page.getByRole('button', { name: /schedule|book interview/i });
 
-      // It's ok if button doesn't exist - might require a match first
-      expect(true).toBeTruthy();
+      const interviewCards = page.locator('[data-interview], .interview-card');
+      const emptyState = page.getByText(/no interviews|schedule interview/i);
+      expect(
+        (await scheduleButton.isVisible()) ||
+          (await interviewCards.count()) > 0 ||
+          (await emptyState.isVisible())
+      ).toBeTruthy();
     });
 
     test('should show interview details', async ({ page }) => {
@@ -432,36 +447,21 @@ test.describe('Core Workflows', () => {
     });
   });
 
-  test.describe('Contract Attestation', () => {
-    test('should display contracts page', async ({ page }) => {
+  test.describe('Archived Contract Surfaces', () => {
+    test('does not expose contract signing as an active MVP route', async ({ page }) => {
       await page.goto('/app/i/contracts');
 
       await page.waitForTimeout(1000);
 
       if (page.url().includes('/login')) {
+        expect(page.url()).toContain('/login');
         return;
       }
 
-      // Page might not exist yet - that's ok
-      expect(true).toBeTruthy();
-    });
-
-    test('should show contract details', async ({ page }) => {
-      await page.goto('/app/i/contracts');
-
-      await page.waitForTimeout(1000);
-
-      if (page.url().includes('/login') || page.url().includes('/404')) {
-        return;
-      }
-
-      // Look for contract information
-      const hasContractInfo =
-        (await page.getByText(/contract|agreement|attestation/i).isVisible()) ||
-        (await page.getByText(/sign|attest/i).isVisible());
-
-      // It's ok if no contracts exist
-      expect(true).toBeTruthy();
+      await expect(
+        page.getByRole('heading', { name: /contract|agreement|attestation/i })
+      ).toHaveCount(0);
+      await expect(page.getByRole('button', { name: /sign|attest/i })).toHaveCount(0);
     });
   });
 });

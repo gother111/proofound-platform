@@ -81,14 +81,14 @@ const ACTIVE_API_POLICIES = [
   },
   {
     classification: 'active_launch_path',
-    surfaceLabel: 'Start from CV Beta API',
+    surfaceLabel: 'Start from CV API',
     detail:
-      'Start from CV routes remain hard-gated to approved guest first-proof private scaffolding, never profile-first import, employer CV parsing, or candidate evaluation.',
+      'Start from CV routes remain hard-gated to approved guest first-proof private scaffolding, never profile-first import, employer CV parsing, or proof-review participant evaluation.',
     matches: (pathname: string) => matchExactOrPrefix('/api/ai/start-from-cv')(pathname),
   },
   {
     classification: 'active_launch_path',
-    surfaceLabel: 'Proof Artifact OCR Beta API',
+    surfaceLabel: 'Proof Artifact OCR API',
     detail:
       'Invite-only Proof Artifact OCR routes remain active only for draft text extraction on user-owned proof artifacts.',
     matches: (pathname: string) => matchExactOrPrefix('/api/proof-artifacts')(pathname),
@@ -99,12 +99,13 @@ const ACTIVE_API_POLICIES = [
     detail: 'Assignment drafting, publishing, and review remain inside the locked launch flow.',
     matches: (pathname: string) =>
       matchExactOrPrefix('/api/assignments')(pathname) &&
-      !matchExactOrPrefix('/api/assignments/invite')(pathname),
+      !matchExactOrPrefix('/api/assignments/invite')(pathname) &&
+      !/^\/api\/assignments\/[^/]+\/pipeline$/.test(pathname),
   },
   {
     classification: 'active_launch_path',
-    surfaceLabel: 'Candidate Invite API',
-    detail: 'Candidate invite and claim flows remain active in the launch flow.',
+    surfaceLabel: 'Submission Invite API',
+    detail: 'Submission invite and claim flows remain active in the launch flow.',
     matches: matchExactOrPrefix('/api/candidate-invites'),
   },
   {
@@ -170,7 +171,7 @@ const ACTIVE_API_POLICIES = [
     classification: 'active_launch_path',
     surfaceLabel: 'Organization API',
     detail:
-      'Organization profile, assignment, visibility, and team membership routes remain active for launch.',
+      'Organization trust page, assignment, visibility, and team membership routes remain active for launch.',
     matches: (pathname: string) =>
       pathname === '/api/organizations' ||
       /^\/api\/organizations\/[^/]+$/.test(pathname) ||
@@ -207,11 +208,10 @@ const ACTIVE_API_POLICIES = [
     detail: 'Account, privacy, export, and deletion basics remain active for launch.',
     matches: (pathname: string) =>
       pathname === '/api/user/account' ||
-      pathname === '/api/user/account/cancel-deletion' ||
       pathname === '/api/user/audit-log' ||
-      pathname === '/api/user/audit-log/purpose' ||
       pathname === '/api/user/consent' ||
       pathname === '/api/user/consent/check' ||
+      pathname === '/api/user/data-inventory' ||
       pathname === '/api/user/email' ||
       pathname === '/api/user/export' ||
       pathname === '/api/user/me' ||
@@ -294,6 +294,9 @@ const INTERNAL_ONLY_API_POLICIES = [
   },
 ] as const satisfies readonly SurfacePolicy[];
 
+const matchesInternalOnlyApiPath = (pathname: string): boolean =>
+  INTERNAL_ONLY_API_POLICIES.some((policy) => policy.matches(pathname));
+
 const ARCHIVED_API_POLICIES = [
   {
     classification: 'archived',
@@ -370,6 +373,13 @@ const ARCHIVED_API_POLICIES = [
     surfaceLabel: 'Assignments API',
     detail: 'Stakeholder assignment invite flows are archived outside the locked launch MVP.',
     matches: matchExactOrPrefix('/api/assignments/invite'),
+  },
+  {
+    classification: 'archived',
+    surfaceLabel: 'Assignment Pipeline API',
+    detail:
+      'Generic assignment pipeline steps are archived outside the locked launch MVP corridor; launch uses assignment review, intro, reveal, interview, and decision routes instead.',
+    matches: (pathname: string) => /^\/api\/assignments\/[^/]+\/pipeline$/.test(pathname),
   },
   {
     classification: 'archived',
@@ -484,7 +494,9 @@ const ARCHIVED_API_POLICIES = [
     detail:
       'Public profile lookup and snippet surfaces are archived outside the locked launch MVP flow.',
     matches: (pathname: string) =>
-      pathname === '/api/profile/snippet' || pathname.startsWith('/api/profiles'),
+      pathname === '/api/profile/completeness' ||
+      pathname === '/api/profile/snippet' ||
+      pathname.startsWith('/api/profiles'),
   },
   {
     classification: 'archived',
@@ -508,7 +520,10 @@ const ARCHIVED_API_POLICIES = [
     surfaceLabel: 'User API',
     detail: 'Broad user tooling outside privacy/export/delete basics is archived for launch.',
     matches: (pathname: string) =>
-      pathname === '/api/user/import' || pathname === '/api/user/tour-status',
+      pathname === '/api/user/audit-log/purpose' ||
+      pathname === '/api/user/account/cancel-deletion' ||
+      pathname === '/api/user/import' ||
+      pathname === '/api/user/tour-status',
   },
   {
     classification: 'archived',
@@ -552,7 +567,7 @@ const ARCHIVED_API_POLICIES = [
     detail: 'Broad organization-suite surfaces are archived outside the locked launch MVP flow.',
     matches: (pathname: string) =>
       /^\/api\/org\/[^/]+\/(?:dashboard|coverage)(?:\/.*)?$/.test(pathname) ||
-      /^\/api\/organizations\/[^/]+\/(?:audit\/export|causes|goals(?:\/.*)?|ownership(?:\/.*)?|partnerships(?:\/.*)?|projects(?:\/.*)?|structure(?:\/.*)?|culture(?:\/.*)?|impact(?:\/.*)?|test-matches(?:\/.*)?)$/.test(
+      /^\/api\/organizations\/[^/]+\/(?:causes|goals(?:\/.*)?|ownership(?:\/.*)?|partnerships(?:\/.*)?|projects(?:\/.*)?|structure(?:\/.*)?|culture(?:\/.*)?|impact(?:\/.*)?|test-matches(?:\/.*)?)$/.test(
         pathname
       ),
   },
@@ -560,13 +575,16 @@ const ARCHIVED_API_POLICIES = [
     classification: 'archived',
     surfaceLabel: 'Admin API',
     detail: 'This admin surface is archived outside the locked launch MVP.',
-    matches: (pathname: string) => pathname === '/api/admin' || pathname.startsWith('/api/admin/'),
+    matches: (pathname: string) =>
+      (pathname === '/api/admin' || pathname.startsWith('/api/admin/')) &&
+      !matchesInternalOnlyApiPath(pathname),
   },
   {
     classification: 'archived',
     surfaceLabel: 'Launch Ops API',
     detail: 'This cron route is archived outside the locked launch MVP.',
-    matches: matchExactOrPrefix('/api/cron'),
+    matches: (pathname: string) =>
+      matchExactOrPrefix('/api/cron')(pathname) && !matchesInternalOnlyApiPath(pathname),
   },
 ] as const satisfies readonly SurfacePolicy[];
 
@@ -595,6 +613,12 @@ const ACTIVE_PAGE_POLICIES = [
       pathname === '/auth/login' ||
       pathname === '/auth/callback' ||
       pathname === '/auth/logout' ||
+      pathname === '/llms' ||
+      pathname === '/llms.txt' ||
+      pathname === '/llms-full.txt' ||
+      pathname === '/robots.txt' ||
+      pathname === '/security.txt' ||
+      pathname === '/.well-known/security.txt' ||
       matchExactOrPrefix('/signup')(pathname) ||
       matchExactOrPrefix('/reset-password')(pathname) ||
       matchExactOrPrefix('/verify-email')(pathname) ||
@@ -684,9 +708,18 @@ const INTERNAL_ONLY_PAGE_POLICIES = [
 const ARCHIVED_PAGE_POLICIES = [
   {
     classification: 'archived',
+    surfaceLabel: 'Development Route Handler',
+    detail:
+      'Development-only route helpers are archived outside the locked launch MVP and must not be reachable in production.',
+    matches: (pathname: string) => pathname === '/dev/resolve-home',
+  },
+  {
+    classification: 'archived',
     surfaceLabel: 'Internal Ops Pages',
     detail: 'Non-critical admin pages are archived outside the locked launch MVP flow.',
-    matches: (pathname: string) => pathname === '/admin' || pathname.startsWith('/admin/'),
+    matches: (pathname: string) =>
+      (pathname === '/admin' || pathname.startsWith('/admin/')) &&
+      !INTERNAL_OPS_APP_PATHS.includes(pathname as (typeof INTERNAL_OPS_APP_PATHS)[number]),
   },
   {
     classification: 'archived',

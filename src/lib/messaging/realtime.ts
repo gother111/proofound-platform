@@ -1,12 +1,31 @@
 /**
  * Supabase Realtime Subscriptions for Messaging
- * 
+ *
  * Real-time message delivery using Supabase Realtime
  */
 
 import { createClient } from '@/lib/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import type { RealtimePostgresChangesPayload } from '@supabase/realtime-js';
+
+function dispatchRealtimeDiagnostic(reason: string, detail: Record<string, unknown> = {}) {
+  if (typeof window === 'undefined' || typeof window.dispatchEvent !== 'function') {
+    return;
+  }
+
+  try {
+    window.dispatchEvent(
+      new CustomEvent('proofound:client-diagnostic', {
+        detail: {
+          reason,
+          ...detail,
+        },
+      })
+    );
+  } catch {
+    // Diagnostics must never affect realtime messaging behavior.
+  }
+}
 
 export interface MessagePayload {
   id: string;
@@ -19,7 +38,7 @@ export interface MessagePayload {
 
 /**
  * Subscribe to new messages in a conversation
- * 
+ *
  * @param conversationId - The conversation to listen to
  * @param onMessage - Callback when a new message is received
  * @returns Unsubscribe function
@@ -56,7 +75,7 @@ export function subscribeToConversation(
 
 /**
  * Subscribe to conversation updates (stage changes, etc.)
- * 
+ *
  * @param conversationId - The conversation to listen to
  * @param onUpdate - Callback when conversation is updated
  * @returns Unsubscribe function
@@ -90,7 +109,7 @@ export function subscribeToConversationUpdates(
 
 /**
  * Mark message as read
- * 
+ *
  * @param messageId - The message ID to mark as read
  */
 export async function markMessageAsRead(messageId: string): Promise<void> {
@@ -102,6 +121,8 @@ export async function markMessageAsRead(messageId: string): Promise<void> {
     .eq('id', messageId);
 
   if (error) {
-    console.error('Error marking message as read:', error);
+    dispatchRealtimeDiagnostic('messages.realtime.mark_message_read_failed', {
+      error: error.message,
+    });
   }
 }

@@ -156,6 +156,21 @@ const ARCHIVED_PAGE_CASES = [
   },
 ] as const;
 
+const REMOVED_ARCHIVED_PAGE_IMPLEMENTATIONS = [
+  'src/app/verify-skill/VerifySkillContent.tsx',
+  'src/components/notifications/NotificationBell.tsx',
+  'src/components/notifications/NotificationDropdown.tsx',
+  'src/components/settings/DataImportButton.tsx',
+  'src/components/settings/EnhancedDataImportDialog.tsx',
+  'src/components/settings/ConflictResolutionDialog.tsx',
+  'src/components/surveys/SUSDialog.tsx',
+  'src/components/surveys/SUSPromptHost.tsx',
+  'src/components/surveys/SUSQuestionnaire.tsx',
+  'src/hooks/useSUSurvey.ts',
+  'src/lib/surveys/sus-triggers.ts',
+  'src/lib/surveys/sus-calculator.ts',
+] as const;
+
 describe('archived non-MVP routes', () => {
   it('classifies hard-gated routes explicitly and removes their page handlers from src/app', async () => {
     for (const route of HARD_GATED_PAGE_CASES) {
@@ -178,6 +193,14 @@ describe('archived non-MVP routes', () => {
       });
 
       await expect(access(path.join(process.cwd(), route.file))).rejects.toMatchObject({
+        code: 'ENOENT',
+      });
+    }
+  });
+
+  it('keeps archived page implementation islands out of active src/app', async () => {
+    for (const file of REMOVED_ARCHIVED_PAGE_IMPLEMENTATIONS) {
+      await expect(access(path.join(process.cwd(), file))).rejects.toMatchObject({
         code: 'ENOENT',
       });
     }

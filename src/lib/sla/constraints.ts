@@ -4,7 +4,7 @@
  * Enforces all time-based constraints from the PRD:
  * - I-21: Interview scheduling (30 min max, within 7 days)
  * - I-22: Decision window (48 hours after interview)
- * - I-23: Matching window (72 hours to review candidates)
+ * - I-23: Matching window (72 hours to review proof submissions)
  */
 
 /**
@@ -52,7 +52,7 @@ export function validateInterviewSchedule(
   // Check duration (must be ≤ 30 minutes)
   if (duration > INTERVIEW_CONSTRAINTS.MAX_DURATION_MINUTES) {
     errors.push(
-      `Interview duration cannot exceed ${INTERVIEW_CONSTRAINTS.MAX_DURATION_MINUTES} minutes (PRD I-21)`
+      `Interview duration cannot exceed ${INTERVIEW_CONSTRAINTS.MAX_DURATION_MINUTES} minutes`
     );
   }
 
@@ -67,7 +67,7 @@ export function validateInterviewSchedule(
 
   if (daysSinceMatch > INTERVIEW_CONSTRAINTS.MAX_DAYS_FROM_MATCH) {
     errors.push(
-      `Interview must be scheduled within ${INTERVIEW_CONSTRAINTS.MAX_DAYS_FROM_MATCH} days of match agreement (currently ${daysSinceMatch} days) (PRD I-21)`
+      `Interview must be scheduled within ${INTERVIEW_CONSTRAINTS.MAX_DAYS_FROM_MATCH} days of match agreement; this time is ${daysSinceMatch} days after agreement`
     );
   }
 
@@ -77,9 +77,7 @@ export function validateInterviewSchedule(
   }
 
   // Check if interview is too far in future (beyond 30 days)
-  const daysInFuture = Math.floor(
-    (proposedStart.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-  );
+  const daysInFuture = Math.floor((proposedStart.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
 
   if (daysInFuture > 30) {
     warnings.push('Interview is scheduled more than 30 days in advance');
@@ -100,7 +98,7 @@ export function canReschedule(rescheduleCount: number): SLAValidation {
     return {
       valid: false,
       errors: [
-        `Maximum ${INTERVIEW_CONSTRAINTS.ALLOWED_RESCHEDULES} reschedule(s) allowed (PRD I-21)`,
+        `Maximum ${INTERVIEW_CONSTRAINTS.ALLOWED_RESCHEDULES} reschedule allowed. This interview has already used its reschedule.`,
       ],
     };
   }
@@ -115,14 +113,13 @@ export function canReschedule(rescheduleCount: number): SLAValidation {
  * Validates decision timing (PRD I-22)
  */
 export function validateDecisionWindow(interviewCompletedAt: Date): SLAValidation {
-  const hoursSinceInterview =
-    (Date.now() - interviewCompletedAt.getTime()) / (1000 * 60 * 60);
+  const hoursSinceInterview = (Date.now() - interviewCompletedAt.getTime()) / (1000 * 60 * 60);
 
   if (hoursSinceInterview > DECISION_CONSTRAINTS.WINDOW_HOURS) {
     return {
       valid: false,
       errors: [
-        `Decision window expired. Decisions must be made within ${DECISION_CONSTRAINTS.WINDOW_HOURS} hours of interview completion (PRD I-22)`,
+        `Decision window expired. Decisions must be made within ${DECISION_CONSTRAINTS.WINDOW_HOURS} hours of interview completion.`,
       ],
     };
   }
@@ -131,9 +128,7 @@ export function validateDecisionWindow(interviewCompletedAt: Date): SLAValidatio
   const hoursRemaining = DECISION_CONSTRAINTS.WINDOW_HOURS - hoursSinceInterview;
 
   if (hoursRemaining <= 6) {
-    warnings.push(
-      `Decision window expires in ${Math.round(hoursRemaining)} hours`
-    );
+    warnings.push(`Decision window expires in ${Math.round(hoursRemaining)} hours`);
   }
 
   return {
@@ -153,7 +148,7 @@ export function validateMatchReviewWindow(matchCreatedAt: Date): SLAValidation {
     return {
       valid: false,
       errors: [
-        `Match review window expired. Matches should be reviewed within ${MATCHING_CONSTRAINTS.REVIEW_WINDOW_HOURS} hours (PRD I-23)`,
+        `Match review window expired. Matches should be reviewed within ${MATCHING_CONSTRAINTS.REVIEW_WINDOW_HOURS} hours.`,
       ],
     };
   }
@@ -162,9 +157,7 @@ export function validateMatchReviewWindow(matchCreatedAt: Date): SLAValidation {
   const hoursRemaining = MATCHING_CONSTRAINTS.REVIEW_WINDOW_HOURS - hoursSinceMatch;
 
   if (hoursRemaining <= 12) {
-    warnings.push(
-      `Match review window expires in ${Math.round(hoursRemaining)} hours`
-    );
+    warnings.push(`Match review window expires in ${Math.round(hoursRemaining)} hours`);
   }
 
   return {
@@ -266,11 +259,11 @@ export function formatSLAErrors(validation: SLAValidation): string {
   const messages: string[] = [];
 
   if (validation.errors.length > 0) {
-    messages.push('Errors:', ...validation.errors.map(e => `  - ${e}`));
+    messages.push('Errors:', ...validation.errors.map((e) => `  - ${e}`));
   }
 
   if (validation.warnings && validation.warnings.length > 0) {
-    messages.push('Warnings:', ...validation.warnings.map(w => `  - ${w}`));
+    messages.push('Warnings:', ...validation.warnings.map((w) => `  - ${w}`));
   }
 
   return messages.join('\n');

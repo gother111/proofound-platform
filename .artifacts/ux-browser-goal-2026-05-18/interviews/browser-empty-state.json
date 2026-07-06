@@ -1,0 +1,40 @@
+{
+  "mobile": {
+    "bodyText": "Skip to main content\nOverview\nProfile\nInbox\nMatching\nSettings\nU\nInterviews\n\nTrack the corridor from shortlist through interview, decision, and engagement verification.\n\nNo active hiring corridor yet\n\nNothing needs scheduling right now. When an organization shortlists you, this page will show the next step and the full proof-safe timeline.\n\nReview matching",
+    "hasEmptyHeading": true,
+    "hasReviewMatching": true,
+    "overflow": {
+      "bodyScrollWidth": 390,
+      "clientWidth": 390,
+      "innerWidth": 390,
+      "scrollWidth": 390
+    },
+    "reviewHref": "/app/i/matching",
+    "reviewRect": {
+      "h": 40,
+      "w": 150,
+      "x": 120,
+      "y": 492
+    },
+    "wide": []
+  },
+  "desktop": {
+    "bodyText": "Skip to main content\nOverview\nProfile\nCommunications\nMatching\nSettings\nProofound\nInterviews\nU\nInterviews\n\nTrack the corridor from shortlist through interview, decision, and engagement verification.\n\nNo active hiring corridor yet\n\nNothing needs scheduling right now. When an organization shortlists you, this page will show the next step and the full proof-safe timeline.\n\nReview matching",
+    "hasEmptyHeading": true,
+    "hasReviewMatching": true,
+    "overflow": {
+      "bodyScrollWidth": 1280,
+      "clientWidth": 1280,
+      "innerWidth": 1280,
+      "scrollWidth": 1280
+    },
+    "reviewHref": "/app/i/matching",
+    "reviewRect": {
+      "h": 36,
+      "w": 150,
+      "x": 685,
+      "y": 479
+    },
+    "wide": []
+  }
+}

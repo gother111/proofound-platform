@@ -1,18 +1,36 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-05-04`
+> Last Verified: `2026-05-20`
 
 # Admin Dashboard MVP Ops Review
 
 Date: 2026-05-03
 Scope: current active Proofound admin dashboard, admin APIs, internal ops queues, launch-surface policy, authorization helpers, audit logging, and focused runtime/test evidence.
 
+> 2026-05-20 update: the route/test-noise finding and several operator-console
+> findings in this audit are superseded. The active admin E2E smoke and root
+> admin testing guide now match the locked launch-ops corridor (`/admin`,
+> `/admin/verification`, `/admin/audit`) and no longer expect broad users,
+> organizations, fairness, metrics, or LinkedIn queue pages. The operations queue
+> UI now exposes minimum-necessary queue details, explicit risky-upload
+> approve/reject actions, and sanitized queue metadata. The admin home now shows
+> a compact launch-health card backed by the generated launch checklist. The
+> default admin audit API now returns a minimum-necessary list DTO, and unexpected
+> admin queue errors no longer return raw backend messages. `/admin/verification`
+> now includes a narrow read-only pilot corridor drilldown inside pilot queue
+> cards. `/admin/audit` now includes a break-glass organization audit preview
+> that shows minimum-necessary audit fields and risk labels while withholding raw
+> metadata unless `download=true` is explicitly requested after break-glass
+> approval. The repo now includes an explicit internal-ops queue RLS hardening
+> migration; live target application remains unverified until the migration is
+> applied and the migration ledger is clean.
+
 ## A. Executive Verdict
 
-Verdict: partially ready.
+Verdict: repo-ready with remaining live migration follow-up.
 
-The admin dashboard is narrow, protected, and aligned away from broad enterprise/admin-suite sprawl. It is useful for seeing four internal ops queues and moving generic queue status with notes. It is not yet complete enough as the primary MVP pilot operations console.
+The admin dashboard is narrow, protected, and aligned away from broad enterprise/admin-suite sprawl. It is useful for seeing four internal ops queues, reviewing minimum-necessary queue detail, handling risky-upload approve/reject decisions, checking latest repo launch evidence, reviewing audit trails, and opening minimum-necessary break-glass organization audit previews.
 
-The main gap is operational depth: admins can see queue shells, IDs, summary text, and metadata, but cannot inspect the underlying claim-scoped verification record, reveal/consent state, workflow state, organization assignment/trust context, public portfolio state, export/deletion status, or launch health from the dashboard. The backend has some important safe actions, such as explicit upload review and break-glass organization trust changes, but those actions are either not exposed in the UI or not connected to a usable operator detail view.
+The main remaining gap is live-target proof: the admin console is narrow and privacy-projected, and the repo now has an explicit `internal_ops_queue_items` RLS/service-role contract, but the migration has not been applied to the checked Supabase target in this sweep. Richer entity/operator filters remain deferred until pilot volume proves they are needed.
 
 ## B. What Works
 
@@ -21,55 +39,58 @@ The main gap is operational depth: admins can see queue shells, IDs, summary tex
 - Admin APIs use platform-admin guards through `requirePlatformAdminJson()` or break-glass platform-admin guards.
 - Launch-surface policy preserves only the narrow admin allowlist and archives broad admin APIs/pages.
 - The dashboard uses four MVP-relevant queues: `verification`, `privacy_reveal_exception`, `correction_revocation`, and `pilot_ops`.
+- Queue items expose a minimum-necessary operator detail projection derived from sanitized metadata.
 - Queue status changes require notes for resolve/cancel/reopen and create admin audit events.
 - Generic resolution is blocked for `uploaded_file` queue items; backend requires the explicit upload review path.
+- Uploaded-file queue items expose explicit `Approve private evidence` and `Reject upload` controls in the dashboard.
 - The explicit upload review service moves quarantined uploads to private storage or rejects them, records upload events, and writes audit rows.
 - Organization trust-tier changes require break-glass reason and write admin audit plus trust transition rows.
+- Admin home shows latest repo launch-health evidence from the generated launch checklist without exposing raw monitor payloads.
+- Admin audit page shows a break-glass organization audit preview that records reason, requires confirmation, and withholds raw metadata from the dashboard preview.
 - Launch monitoring, alerting, smoke artifact, and launch-status route tests exist and pass.
 
 ## C. What Is Missing
 
-- No admin detail view for a queue item.
-- No claim-scoped verification details, verifier response, freshness, contradiction, dispute, or revocation context in the dashboard.
-- No reveal/consent timeline or privacy exception inspection in the dashboard.
-- No interview, decision, hire, or engagement-verification workflow inspection in the dashboard.
-- No pilot organization overview showing trust page, assignment, shortlist/review, intro, reveal, interview, decision, or engagement state.
-- No public portfolio publication/export/delete status in admin.
-- No launch health or smoke/monitor evidence panel in `/admin`, despite launch-status APIs existing.
-- No UI affordance for `uploadReviewAction: approve|reject`; risky upload queue items cannot be completed safely from the dashboard as implemented.
-- No direct link from queue item to the relevant SOP or safe operator checklist.
-- No minimum-necessary projection for admin queue metadata; the UI renders arbitrary metadata values.
+- Direct queue-header SOP links now point to the current internal-ops runbooks for each active queue.
+- Status, priority, and age controls now exist on the active queue view; entity/operator filtering is still deferred until real pilot volume requires it.
+- Pilot queue cards now expose a narrow read-only corridor drilldown from sanitized queue metadata; richer cross-record org/workflow drilldown is deferred until pilot volume proves it is needed.
+- Default admin audit list projection and break-glass organization audit preview are minimum-necessary. Raw organization audit export remains available only through the explicit break-glass `download=true` path for approved incident review.
 
 ## D. Security And Privacy Risks
 
-- P1: `internal_ops_queue_items` creation migration does not explicitly enable RLS or define direct table policies. The table may rely on server-side route protection and deployment/database defaults rather than an explicit table-level privacy contract. Evidence: `src/db/migrations/20260320195000_add_internal_ops_queue_items.sql`.
-- P1: `GET /api/admin/internal-ops/queues` returns raw queue metadata and summaries; UI renders every metadata key/value. If queue producers ever include private filenames, notes, raw verifier text, or consent details, those are exposed to every platform admin session. Evidence: `src/lib/internal-ops/queue.ts` and `src/components/admin/AdminVerificationDashboard.tsx`.
-- P1: `GET /api/admin/audit` returns full `admin_audit_log` rows, including `changes`, `metadata`, IP, user agent, and reason, even though the UI mostly hides details. Evidence: `src/app/api/admin/audit/route.ts`.
-- P2: Admin route 500s include raw error messages in some JSON details. Evidence: `src/app/api/admin/internal-ops/queues/route.ts` and `src/app/api/admin/internal-ops/queues/[id]/route.ts`.
-- P2: The break-glass organization audit export returns full org audit logs through API after reason check, but there is no dashboard UI showing minimum necessary preview, risk labels, or access confirmation.
+- P1 repo-side resolved 2026-05-20: `internal_ops_queue_items` now has a forward migration that enables and forces RLS, revokes direct `anon`/`authenticated` table grants, grants server/service-role access, and defines service-role-only CRUD policies. Live target application is still unverified; `npm run db:audit:migrations` reports this migration as present locally but not applied. Evidence: `src/db/migrations/20260520065000_harden_internal_ops_queue_rls.sql`, `tests/db/internal-ops-queue-rls.test.ts`.
+- P1 resolved 2026-05-20: `GET /api/admin/audit` now returns an explicit list DTO and omits raw `changes`, `metadata`, IP address, and user agent fields. Evidence: `src/lib/audit/admin-audit-list.ts`, `src/app/api/admin/audit/route.ts`, `tests/lib/admin-audit-list.test.ts`.
+- P2 resolved 2026-05-20: unexpected admin queue 500 responses no longer include raw error message details, and server logs record only a sanitized error class/name for those paths. Evidence: `src/app/api/admin/internal-ops/queues/route.ts`, `src/app/api/admin/internal-ops/queues/[id]/route.ts`, `tests/api/admin-internal-ops-queue-route.test.ts`.
+- P2 resolved 2026-05-20: break-glass organization audit review now has a dashboard preview with minimum-necessary fields, risk labels, reason header, and access confirmation. Raw metadata remains withheld from the preview and is available only through explicit `download=true` break-glass export. Evidence: `src/app/api/admin/organizations/[orgId]/audit/route.ts`, `src/components/admin/audit/AuditLogTable.tsx`, `tests/api/org-audit-export-routes.test.ts`, `tests/ui/admin-audit-log-table.test.tsx`.
 
 ## E. Scope Problems
 
 - Active routes are appropriately narrow.
 - Broad admin users/orgs/fairness/metrics pages and APIs are archived in route policy.
-- Some broad admin components remain in `src/components/admin/**`, and stale tests under `src/app/api/admin/__tests__` still import archived admin APIs. This is not a runtime launch-surface issue, but it creates test and maintenance noise.
-- `e2e/admin-dashboard-smoke.spec.ts` is stale and expects the old broad admin suite (`/admin/users`, `/admin/organizations`, fairness notes, LinkedIn verification queue). When run with mock admin enabled, it fails immediately because the current dashboard correctly says "Launch Operations", not "Admin Dashboard".
+- Broad admin users/orgs/fairness/metrics pages and APIs are archived in route policy.
+- 2026-05-19 follow-up: broad admin analytics/fairness components and stale active
+  tests have been moved to archive paths, and `e2e/admin-dashboard-smoke.spec.ts`
+  now checks only `/admin`, `/admin/verification`, `/admin/audit`, and absence of
+  retired broad admin links.
 
 ## F. UX And Usability Issues
 
-- Queue cards show `Related record: <uuid>` but provide no human-readable record title, owner, org, claim, workflow stage, or safe link.
-- Operators cannot distinguish urgent privacy leaks from ordinary stale/manual-review items beyond priority badges.
-- No filters by priority/status/entity/age/operator, beyond queue tabs.
-- No confirmation for sensitive queue actions like cancel/reopen/resolve.
-- Upload review is unusable from UI because approve/reject actions are not shown.
+- Operators can now distinguish status, priority, and age in the active queue view; entity/operator filtering remains deferred.
+- Sensitive queue actions like cancel, reopen, and resolve now require confirmation prompts in addition to operator notes where required.
 - Empty states are calm but not operationally helpful; they do not explain owner, SLA, or where evidence comes from.
 - Audit page search is basic and lacks filters by target type, admin, time range UI, sensitive action type, or break-glass-only view.
-- Dashboard is calm and uncluttered, but too sparse for a real launch operator.
+- Dashboard is calm and uncluttered, but still sparse for a real launch operator once pilot volume rises.
 
 ## G. Test Evidence
 
 Passing evidence:
 
+- `NEXT_PUBLIC_USE_MOCK_SUPABASE=true MOCK_ADMIN_MODE=true PLAYWRIGHT=true npm run test:e2e -- e2e/admin-dashboard-smoke.spec.ts --project=chromium --reporter=line`: pass, 1 test, after the 2026-05-19 smoke refresh.
+- `npm run test -- tests/scripts/launch-gate-config.test.ts`: pass, 36 tests, including admin guide/smoke/probe drift guardrails.
+- `npm run test -- tests/ui/admin-dashboard-launch-links.test.tsx tests/ui/admin-verification-dashboard.test.tsx tests/ui/admin-audit-log-table.test.tsx tests/api/admin-internal-ops-queue-route.test.ts tests/api/launch-page-inventory.test.ts tests/lib/admin-break-glass.test.ts tests/api/org-audit-export-routes.test.ts`: pass, 25 tests.
+- `npm run docs:freshness`: pass after refreshing `ADMIN_DASHBOARD_TESTING_GUIDE.md` and this audit disposition.
+- `npm run lint`: pass.
+- `npm run typecheck`: pass after removing stale local `.next-dev-33100` generated-type residue.
 - `npm run test -- tests/api/admin-internal-ops-queue-route.test.ts tests/ui/admin-dashboard-launch-links.test.tsx tests/ui/admin-verification-dashboard.test.tsx tests/api/admin-organizations-verify-route.test.ts tests/api/org-audit-export-routes.test.ts src/lib/__tests__/middleware-launch-archive.test.ts src/lib/launch/__tests__/surface-policy.test.ts tests/api/launch-surface-inventory.test.ts`: pass, 33 tests.
 - `npm run test:launch:upload`: pass, 37 tests.
 - `npm run test:launch:workflow`: pass, 84 tests.
@@ -79,30 +100,29 @@ Passing evidence:
 - `npm run typecheck`: pass.
 - `npm run build`: pass.
 - `npm run docs:freshness`: pass.
+- `npm run test -- tests/ui/admin-dashboard-launch-links.test.tsx tests/lib/admin-launch-health-summary.test.ts tests/ui/admin-verification-dashboard.test.tsx tests/lib/internal-ops-queue.test.ts tests/api/admin-internal-ops-queue-route.test.ts`: pass after the 2026-05-20 launch-health card and audit refresh.
+- `npm run test -- tests/lib/admin-audit-list.test.ts tests/ui/admin-audit-log-table.test.tsx tests/api/admin-internal-ops-queue-route.test.ts`: pass, 14 tests, after the 2026-05-20 admin audit DTO and queue error-detail hardening. The suite still prints Vite websocket `EPERM` noise in this sandbox, but tests pass.
+- `npm run test -- tests/api/org-audit-export-routes.test.ts tests/ui/admin-audit-log-table.test.tsx tests/lib/admin-break-glass.test.ts tests/lib/admin-audit-list.test.ts`: pass, 12 tests, after the 2026-05-20 break-glass organization audit preview and raw-download guardrail update. The suite still prints Vite websocket `EPERM` noise in this sandbox, but tests pass.
 
 Failing or unverified evidence:
 
-- `npm test`: failed with 2 unrelated current-checkout failures: `tests/lib/ai-provider-gemini-client.test.ts` expects no `suggestionId`, and `tests/ui/verifications-page.test.tsx` crashes reading `primaryClaim` in `src/lib/verification/request-feed.ts`.
-- `NEXT_PUBLIC_USE_MOCK_SUPABASE=true MOCK_ADMIN_MODE=true PLAYWRIGHT=true node ./scripts/playwright-node20.mjs test e2e/admin-dashboard-smoke.spec.ts --project=chromium --reporter=line --workers=1`: failed because the spec is stale and expects the old broad admin dashboard heading.
-- Full local launch smoke was not run because no explicit live target was requested and the more relevant launch-status/monitoring route tests were run instead.
+- Full repo launch validation is tracked by the generated 2026-05-20 launch bundle instead of this audit note. At the time of this refresh, repo checklist evidence is `READY` with external production-candidate prerequisites still unverified.
 
 ## H. Required Fixes
 
 ### P0: Add Admin Queue Item Detail Projection
 
-Problem: The dashboard cannot support real operations from IDs and summaries alone.
-Evidence: `src/components/admin/AdminVerificationDashboard.tsx` renders summary, linked entity id, and metadata only.
+Disposition: resolved for current MVP queue metadata projection on 2026-05-20.
+Evidence: `src/lib/internal-ops/queue.ts` builds a `detail` object from whitelisted metadata, and `src/components/admin/AdminVerificationDashboard.tsx` renders `Minimum necessary context` with checklist and flags.
 File/route: `/admin/verification`, `GET /api/admin/internal-ops/queues`.
-Recommended fix: Add a backend queue-detail projection that resolves linked entities to minimum-necessary, privacy-safe operational facts by entity type: verification claim/status/freshness/dispute; reveal consent/current stage; interview/decision/engagement state; organization assignment/trust status; upload safety state.
-Success criteria: An operator can open one queue item and decide next action without raw SQL or overexposed private data; tests cover each entity projection and non-admin denial.
+Current guardrail: `tests/lib/internal-ops-queue.test.ts` proves raw filenames, sanitized filenames, storage paths, and candidate emails are not projected in listed queue items.
 
 ### P0: Expose Safe Upload Approve/Reject UI
 
-Problem: Backend supports explicit upload review, but the dashboard only sends generic `status` and never sends `uploadReviewAction`.
-Evidence: `src/app/api/admin/internal-ops/queues/[id]/route.ts` accepts `uploadReviewAction`; `src/components/admin/AdminVerificationDashboard.tsx` only sends `status` and `note`.
+Disposition: resolved on 2026-05-20.
+Evidence: `AdminVerificationDashboard` renders `Approve private evidence` and `Reject upload` for `linkedEntityType === "uploaded_file"` and sends `uploadReviewAction` with the operator note.
 File/route: `/admin/verification`, `PATCH /api/admin/internal-ops/queues/[id]`.
-Recommended fix: For uploaded-file queue items, replace generic resolve with explicit "Approve private evidence" and "Reject upload" actions, both requiring a note and showing privacy warnings.
-Success criteria: UI tests prove uploaded-file queue items call `uploadReviewAction: approve|reject`; backend tests remain green; no original filename/private storage path appears in response.
+Current guardrail: `tests/ui/admin-verification-dashboard.test.tsx` proves uploaded-file queue items do not show generic resolve and do send `uploadReviewAction: approve`; `tests/api/admin-internal-ops-queue-route.test.ts` proves responses avoid original filenames and private storage paths.
 
 ### P1: Make Internal Ops Queue Table Privacy Explicit
 
@@ -114,43 +134,55 @@ Success criteria: Live RLS test confirms ordinary authenticated and anon clients
 
 ### P1: Add Launch Health Panel To Admin Home
 
-Problem: Launch health exists through protected monitoring APIs but is invisible in the dashboard.
-Evidence: `/admin` links only queues and audit; `src/app/api/monitoring/launch-status/route.ts` exists separately.
+Disposition: resolved as a minimal repo-evidence card on 2026-05-20.
+Evidence: `/admin` now renders `Launch health` from `src/lib/launch/admin-health-summary.ts`, backed by the latest generated `final-launch-checklist-status.json`.
 File/route: `/admin`, `/api/monitoring/launch-status`.
-Recommended fix: Add a minimal launch readiness card showing ready/blocked, stale monitor count, failed critical monitors, smoke artifact freshness, and dependency blockers. Use existing internal auth safely; do not expose secrets.
-Success criteria: Admin home shows launch status with loading/error/empty states and a focused route test proves non-admin/unauthorized access remains blocked.
+Current guardrail: `tests/ui/admin-dashboard-launch-links.test.tsx` proves the card renders repo verdict/counts without broad admin links, and `tests/lib/admin-launch-health-summary.test.ts` proves the card helper returns only the compact summary rather than the full checklist payload.
 
 ### P1: Sanitize Admin API Projections And Errors
 
-Problem: Admin audit and queue APIs return full metadata/changes and some raw error details.
-Evidence: `src/app/api/admin/audit/route.ts`, `src/app/api/admin/internal-ops/queues/route.ts`, `src/app/api/admin/internal-ops/queues/[id]/route.ts`.
+Disposition: resolved for default list APIs on 2026-05-20.
+Evidence: `GET /api/admin/audit` selects and maps only the list DTO fields through `toAdminAuditListEntry`: id, admin id, action, target type/id, reason, created date, and safe admin display fields. Internal ops queue GET/PATCH unexpected 500s now return generic JSON errors and log only sanitized error identity.
 File/route: `/api/admin/audit`, `/api/admin/internal-ops/queues`.
-Recommended fix: Return explicit DTOs with whitelisted fields. Keep full detail behind break-glass endpoints if needed. Make production 500s generic and log sanitized detail server-side.
-Success criteria: Tests prove private filenames, storage paths, verifier raw text, break-glass reason details, and error stack/message details are not returned by default list APIs.
+Current guardrail: `tests/lib/admin-audit-list.test.ts`, `tests/ui/admin-audit-log-table.test.tsx`, and `tests/api/admin-internal-ops-queue-route.test.ts` prove raw audit `changes`, `metadata`, IP, user agent, private filenames, storage paths, verifier email, and unexpected backend error messages are not returned by default list/error APIs.
+
+### P2: Add Break-Glass Organization Audit Preview
+
+Disposition: resolved for current MVP admin audit review on 2026-05-20.
+Evidence: `/admin/audit` now renders a `Break-glass org audit preview` panel with organization id, reason, confirmation, preview warning, and risk labels. Default `GET /api/admin/organizations/[orgId]/audit` responses return preview DTOs only; raw metadata remains behind the explicit `download=true` break-glass export.
+File/route: `/admin/audit`, `/api/admin/organizations/[orgId]/audit`.
+Current guardrail: `tests/api/org-audit-export-routes.test.ts` proves preview responses do not contain invited email or raw incident detail while `download=true` does; `tests/ui/admin-audit-log-table.test.tsx` proves the dashboard sends the explicit reason header and does not render raw metadata.
 
 ### P2: Add Operator Usability Controls
 
-Problem: The queue UI lacks filters, confirmations, SLA/age indicators, and SOP links.
-Evidence: `AdminVerificationDashboard` has only tabs and basic action buttons.
+Disposition: resolved for current MVP operator controls on 2026-05-20.
+Remaining problem: Richer entity/operator filters are deferred until pilot volume requires them.
+Evidence: `AdminVerificationDashboard` now has status/priority filters, age badges, confirmation prompts for resolve/cancel/reopen, and direct queue-header SOP links to the current internal-ops runbooks.
 File/route: `/admin/verification`.
-Recommended fix: Add priority/status/entity filters, age/SLA badges, per-queue SOP links, and confirmation dialogs for resolve/cancel/reopen.
-Success criteria: UI tests cover filtering, confirmation before sensitive actions, and empty/error states.
+Recommended next fix: Consider entity/operator filters only if pilot volume proves they are needed; do not add broad admin analytics.
+Current guardrail: `tests/ui/admin-verification-dashboard.test.tsx` covers queue-to-SOP links, status/priority filtering, age visibility, confirmation before resolve, uploaded-file approve/reject actions, and privacy-safe queue rendering.
 
 ### P2: Add Pilot Organization And Workflow Read-Only View
 
-Problem: Admins cannot inspect pilot organizations, assignment state, shortlist/review state, intro/reveal/interview/decision/engagement state, or stuck workflows in one place.
-Evidence: Active admin pages are only home, queues, and audit.
-File/route: new narrow `/admin/pilot-ops` or queue detail drawer only.
-Recommended fix: Prefer adding this as queue detail tabs or a narrow pilot-ops drilldown rather than a broad organization admin suite.
-Success criteria: Operators can support a stuck MVP corridor without seeing broad org analytics, ATS, HRIS, or enterprise fields.
+Disposition: resolved for current MVP pilot queue drilldown on 2026-05-20.
+Remaining problem: A richer cross-record pilot workflow view is deferred until pilot volume proves it is needed.
+Evidence: `/admin/verification` pilot queue cards now render a `Pilot corridor` panel from sanitized metadata, including safe assignment/trust/reveal/decision/engagement fields when present and `Decision record` as the current live-data fallback.
+File/route: `/admin/verification`.
+Recommended next fix: Keep this inside queue cards until repeated pilot support work proves that a separate narrow `/admin/pilot-ops` route is necessary.
+Current guardrail: `tests/ui/admin-verification-dashboard.test.tsx` proves the drilldown renders safe workflow state and does not render private email or raw interview notes when unsafe metadata is accidentally present.
 
 ### P3: Remove Or Quarantine Stale Admin Test/Component Noise
 
-Problem: Stale Playwright and archived admin test files still describe the old broad dashboard.
-Evidence: `e2e/admin-dashboard-smoke.spec.ts` failed when run with mock admin enabled.
+Disposition: resolved for the active Playwright smoke and known broad admin
+component/test noise as of 2026-05-19.
+Problem: Stale Playwright and archived admin test files described the old broad dashboard.
+Evidence: `e2e/admin-dashboard-smoke.spec.ts` previously failed when run with mock admin enabled.
 File/route: `e2e/admin-dashboard-smoke.spec.ts`, archived admin test imports, unused broad admin components.
-Recommended fix: Replace the Playwright smoke with a current launch-ops smoke and move old broad admin component tests into archived/non-launch coverage or delete if no longer useful.
-Success criteria: The only active admin E2E smoke checks `/admin`, `/admin/verification`, `/admin/audit`, non-admin denial, and archived page behavior.
+Completed fix: the Playwright smoke now checks the current launch-ops corridor and
+absence of broad retired admin links; broad admin component/test noise has been
+archived in non-launch paths.
+Success criteria: The only active admin E2E smoke checks `/admin`,
+`/admin/verification`, `/admin/audit`, and absence of retired broad admin links.
 
 ## I. Codex Implementation Prompts
 

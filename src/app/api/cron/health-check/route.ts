@@ -10,8 +10,8 @@ export const dynamic = 'force-dynamic';
 
 const TTSC_TARGET_DAYS = 30;
 const TTFQI_TARGET_HOURS = 72;
-const PAC_ACCEPTANCE_LIFT_TARGET = 20;
-const PAC_CONTRACT_LIFT_TARGET = 15;
+const PROOF_FIT_ACCEPTANCE_LIFT_TARGET = 20;
+const PROOF_FIT_CONTRACT_LIFT_TARGET = 15;
 
 /**
  * GET /api/cron/health-check
@@ -104,23 +104,23 @@ export async function GET(request: Request) {
       }
 
       // Check proof-fit lift.
-      if (metrics.pac) {
-        if (metrics.pac.lift < PAC_ACCEPTANCE_LIFT_TARGET) {
-          checks.pac_acceptance = {
+      if (metrics.proofFitLift) {
+        if (metrics.proofFitLift.lift < PROOF_FIT_ACCEPTANCE_LIFT_TARGET) {
+          checks.proof_fit_acceptance = {
             status: 'warning',
-            message: `Proof-fit acceptance lift ${metrics.pac.lift.toFixed(1)}% below target of ${PAC_ACCEPTANCE_LIFT_TARGET}%`,
+            message: `Proof-fit acceptance lift ${metrics.proofFitLift.lift.toFixed(1)}% below target of ${PROOF_FIT_ACCEPTANCE_LIFT_TARGET}%`,
           };
         } else {
-          checks.pac_acceptance = { status: 'healthy' };
+          checks.proof_fit_acceptance = { status: 'healthy' };
         }
 
-        if (metrics.pac.lift < PAC_CONTRACT_LIFT_TARGET) {
-          checks.pac_contract = {
+        if (metrics.proofFitLift.lift < PROOF_FIT_CONTRACT_LIFT_TARGET) {
+          checks.proof_fit_contract = {
             status: 'warning',
-            message: `Proof-fit contract lift ${metrics.pac.lift.toFixed(1)}% below target of ${PAC_CONTRACT_LIFT_TARGET}%`,
+            message: `Proof-fit contract lift ${metrics.proofFitLift.lift.toFixed(1)}% below target of ${PROOF_FIT_CONTRACT_LIFT_TARGET}%`,
           };
         } else {
-          checks.pac_contract = { status: 'healthy' };
+          checks.proof_fit_contract = { status: 'healthy' };
         }
       }
     } catch (metricsError) {

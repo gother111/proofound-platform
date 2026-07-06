@@ -1,0 +1,18 @@
+{
+  "checkedAt": "2026-05-19T12:45:01.070Z",
+  "url": "http://localhost:33180/portfolio/demo",
+  "title": "Public Page Unavailable | Proofound",
+  "browser": "Codex in-app Browser plugin",
+  "route": "/portfolio/demo",
+  "meaningfulUnavailableState": true,
+  "frameworkOverlayVisible": false,
+  "consoleWarningErrorCount": 0,
+  "consoleWarningsErrors": [],
+  "interaction": {
+    "action": "clicked Skip to main content link",
+    "uniqueLocatorCount": 1,
+    "afterClickUrl": "http://localhost:33180/portfolio/demo",
+    "stillShowsUnavailable": true
+  },
+  "snapshotExcerpt": "- link \"Skip to main content\":\n  - /url: \"#main-content\"\n- banner:\n  - heading \"Public Page unavailable\" [level=2]\n- paragraph: This Public Page link is unavailable. It may be hidden, retired, or not ready for launch-safe sharing.\n- generic: proofound.io/portfolio/demo\n- generic: Public Page unavailable"
+}

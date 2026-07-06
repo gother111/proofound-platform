@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "runId": "20260516T161141-38a836",
+  "command": "review",
+  "args": [
+    "--root",
+    "/Users/yuriibakurov/proofound/src",
+    "--state-dir",
+    "/Users/yuriibakurov/proofound/.artifacts/clawpatch-2026-05-16-src",
+    "review",
+    "--limit",
+    "10",
+    "--jobs",
+    "1",
+    "--no-input"
+  ],
+  "rootPath": "/Users/yuriibakurov/proofound/src",
+  "headSha": "679b5aac441286a0d66cbcf82fc1299769a3a594",
+  "startedAt": "2026-05-16T16:11:41.574Z",
+  "finishedAt": "2026-05-16T16:17:47.419Z",
+  "status": "completed",
+  "claimedFeatureIds": [
+    "feat_route_003ec3dca1",
+    "feat_route_016f70afaf",
+    "feat_route_0205421e1b",
+    "feat_route_03b5019e89",
+    "feat_route_042f20cc90",
+    "feat_route_04c104071b",
+    "feat_route_0678424c73",
+    "feat_route_07f7d8ef8d",
+    "feat_route_09cb0650b7",
+    "feat_route_09eea7fcfb"
+  ],
+  "findingIds": [
+    "fnd_sig-feat-route-003ec3dca1-f91bff_825acea5da",
+    "fnd_sig-feat-route-016f70afaf-5c9115_78f713e171",
+    "fnd_sig-feat-route-016f70afaf-4f9a65_5d27755703",
+    "fnd_sig-feat-route-0678424c73-1423c4_61d05f6d33",
+    "fnd_sig-feat-route-09eea7fcfb-d87057_baa4fad72a"
+  ],
+  "patchAttemptIds": [],
+  "errors": []
+}

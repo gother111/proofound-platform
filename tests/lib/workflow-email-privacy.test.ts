@@ -263,8 +263,8 @@ describe('workflow email privacy helper', () => {
           organizationName: 'Acme Org',
           scheduledAt: '2026-03-18T10:00:00.000Z',
           duration: 45,
-          platform: 'zoom',
-          meetingUrl: 'https://zoom.us/j/123',
+          platform: 'manual',
+          meetingUrl: 'https://example.com/manual-room',
           interviewId: 'interview-1',
         },
         {
@@ -313,6 +313,12 @@ describe('workflow email privacy helper', () => {
         profileId: 'profile-1',
       })
     ).resolves.toBeUndefined();
+    const identityRevealPayload = resendSendMock.mock.calls.at(-1)?.[0];
+    const identityRevealEmail = JSON.stringify(identityRevealPayload?.react);
+    expect(identityRevealEmail).toContain('Proof-review participant now visible');
+    expect(identityRevealEmail).toContain('organization');
+    expect(identityRevealEmail).toContain('conversation to continue');
+    expect(identityRevealEmail).not.toContain('Candidate now visible');
     await expect(
       sendInterviewScheduledEmail(
         'reviewer@example.com',
@@ -323,8 +329,8 @@ describe('workflow email privacy helper', () => {
           organizationName: 'Acme Org',
           scheduledAt: '2026-03-18T10:00:00.000Z',
           duration: 45,
-          platform: 'zoom',
-          meetingUrl: 'https://zoom.us/j/123',
+          platform: 'manual',
+          meetingUrl: 'https://example.com/manual-room',
           interviewId: 'interview-1',
         },
         { stage: 'masked' }
@@ -374,8 +380,8 @@ describe('workflow email privacy helper', () => {
         roleTitle: 'Private role title',
         scheduledAt: '2026-03-18T10:00:00.000Z',
         duration: 45,
-        platform: 'zoom',
-        meetingUrl: 'https://zoom.us/j/123',
+        platform: 'manual',
+        meetingUrl: 'https://example.com/manual-room',
         interviewId: 'interview-1',
       },
       { stage: 'masked' }

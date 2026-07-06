@@ -32,6 +32,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Trash2, AlertTriangle, Shield } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 const DELETION_REASONS = [
   'No longer need the service',
@@ -45,6 +46,22 @@ const DELETION_REASONS = [
 ] as const;
 
 const CONFIRMATION_PHRASE = 'DELETE MY ACCOUNT';
+const ACCOUNT_DELETION_FAILED_MESSAGE =
+  'Account deletion could not finish. Check your password and confirmation phrase, then try again.';
+
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function hasReturnedMessage(payload: unknown) {
+  return Boolean(
+    payload &&
+      typeof payload === 'object' &&
+      'message' in payload &&
+      typeof payload.message === 'string' &&
+      payload.message.trim().length > 0
+  );
+}
 
 export function DeleteAccountSection() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -52,16 +69,39 @@ export function DeleteAccountSection() {
   const [password, setPassword] = useState('');
   const [deletionReason, setDeletionReason] = useState<string>('');
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const router = useRouter();
 
+  const resetDeleteDialog = () => {
+    setPassword('');
+    setConfirmText('');
+    setDeletionReason('');
+    setDeleteError(null);
+  };
+
+  const handleDialogOpenChange = (open: boolean) => {
+    if (deleting) return;
+
+    setShowDeleteDialog(open);
+    if (!open) {
+      resetDeleteDialog();
+    }
+  };
+
+  const openDeleteDialog = () => {
+    handleDialogOpenChange(true);
+  };
+
   const handleDeleteRequest = async () => {
+    setDeleteError(null);
+
     if (confirmText !== CONFIRMATION_PHRASE) {
-      alert(`Please type "${CONFIRMATION_PHRASE}" to confirm`);
+      setDeleteError(`Type "${CONFIRMATION_PHRASE}" to confirm permanent deletion.`);
       return;
     }
 
     if (!password.trim()) {
-      alert('Please enter your password to confirm deletion');
+      setDeleteError('Enter your password to confirm permanent deletion.');
       return;
     }
 
@@ -78,24 +118,26 @@ export function DeleteAccountSection() {
         }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => null);
 
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to delete account');
+        dispatchClientDiagnostic('privacy.delete_account.request_returned_error', {
+          status: getResponseStatus(response),
+          hasReturnedMessage: hasReturnedMessage(data),
+          hasReason: Boolean(deletionReason),
+        });
+        throw new Error('account_deletion_request_failed');
       }
 
-      alert('Your account has been permanently deleted.');
+      resetDeleteDialog();
+      setShowDeleteDialog(false);
       router.push('/');
       router.refresh();
     } catch (error) {
-      console.error('Deletion request failed:', error);
-      alert(error instanceof Error ? error.message : 'Failed to delete account');
+      dispatchClientErrorDiagnostic('privacy.delete_account.request_failed', error);
+      setDeleteError(ACCOUNT_DELETION_FAILED_MESSAGE);
     } finally {
       setDeleting(false);
-      setShowDeleteDialog(false);
-      setPassword('');
-      setConfirmText('');
-      setDeletionReason('');
     }
   };
 
@@ -129,17 +171,13 @@ export function DeleteAccountSection() {
             <ul className="space-y-1 ml-6 text-muted-foreground">
               <li>• Your account is disabled immediately</li>
               <li>• You are signed out and cannot restore the account</li>
-              <li>• Linked profile and match data is deleted or anonymized</li>
+              <li>• Linked profile and assignment-review data is deleted or anonymized</li>
               <li>• You can create a new account later, but deleted data is not recoverable</li>
             </ul>
           </div>
 
           <div className="pt-4">
-            <Button
-              variant="destructive"
-              onClick={() => setShowDeleteDialog(true)}
-              className="w-full"
-            >
+            <Button variant="destructive" onClick={openDeleteDialog} className="w-full">
               <Trash2 className="mr-2 h-4 w-4" />
               Delete Account Now
             </Button>
@@ -147,8 +185,8 @@ export function DeleteAccountSection() {
         </CardContent>
       </Card>
 
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent className="max-w-md">
+      <AlertDialog open={showDeleteDialog} onOpenChange={handleDialogOpenChange}>
+        <AlertDialogContent className="max-h-[min(92vh,720px)] max-w-md overflow-y-auto">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-destructive">
               <AlertTriangle className="h-5 w-5" />
@@ -157,6 +195,10 @@ export function DeleteAccountSection() {
             <AlertDialogDescription asChild>
               <div className="space-y-4">
                 <p>This will permanently delete your account right away.</p>
+                <p>
+                  If deletion cannot finish, this dialog stays open so you can correct the problem
+                  without re-entering everything.
+                </p>
 
                 <div className="space-y-3">
                   <div>
@@ -184,7 +226,11 @@ export function DeleteAccountSection() {
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Enter your password"
                       className="mt-1"
+                      aria-describedby="deletion-password-help"
                     />
+                    <p id="deletion-password-help" className="mt-1 text-xs text-muted-foreground">
+                      Required so account deletion cannot be triggered from an unattended session.
+                    </p>
                   </div>
 
                   <div>
@@ -202,20 +248,42 @@ export function DeleteAccountSection() {
                       onChange={(e) => setConfirmText(e.target.value.toUpperCase())}
                       placeholder={CONFIRMATION_PHRASE}
                       className="mt-1"
+                      aria-describedby="confirm-text-help"
                     />
+                    <p id="confirm-text-help" className="mt-1 text-xs text-muted-foreground">
+                      The delete button stays disabled until the phrase matches exactly.
+                    </p>
                   </div>
                 </div>
+
+                {deleteError && (
+                  <Alert
+                    id="delete-account-error"
+                    role="alert"
+                    variant="destructive"
+                    className="text-left"
+                  >
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>{deleteError}</AlertDescription>
+                  </Alert>
+                )}
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+          <AlertDialogFooter className="gap-2 sm:gap-0">
+            <AlertDialogCancel disabled={deleting} className="w-full sm:w-auto">
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDeleteRequest}
+              onClick={(event) => {
+                event.preventDefault();
+                void handleDeleteRequest();
+              }}
               disabled={deleting || confirmText !== CONFIRMATION_PHRASE || !password}
-              className="bg-destructive hover:bg-destructive/90"
+              aria-describedby={deleteError ? 'delete-account-error' : undefined}
+              className="w-full bg-destructive hover:bg-destructive/90 sm:w-auto"
             >
-              {deleting ? 'Processing...' : 'Delete Account'}
+              {deleting ? 'Deleting account...' : 'Delete Account'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

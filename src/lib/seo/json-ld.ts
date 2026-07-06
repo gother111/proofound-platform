@@ -65,7 +65,7 @@ export function buildProofoundWebsiteJsonLd(description?: string): JsonLd {
     url: siteUrl,
     description:
       description ||
-      'Proof records, privacy-safe candidate review, direct-link Public Pages, and organization trust pages for stronger signal than CVs.',
+      'Proof records, privacy-safe assignment review, direct-link Public Pages, and organization trust pages for stronger evidence than CV claims.',
   };
 }
 

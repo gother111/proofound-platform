@@ -4,6 +4,7 @@ import { Upload, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import imageCompression from 'browser-image-compression';
 import { toast } from 'sonner';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 interface AvatarUploadProps {
   avatar: string | null;
@@ -13,6 +14,10 @@ interface AvatarUploadProps {
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const WARNING_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 const ACCEPTED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+const AVATAR_READER_FAILED_MESSAGE =
+  'Image could not be read. Choose another JPG, PNG, or WebP file.';
+const AVATAR_COMPRESSION_FAILED_MESSAGE =
+  'Image could not be prepared. Choose another file or try a smaller image.';
 
 export function AvatarUpload({ avatar, onUpload }: AvatarUploadProps) {
   const [isHovering, setIsHovering] = useState(false);
@@ -23,6 +28,8 @@ export function AvatarUpload({ avatar, onUpload }: AvatarUploadProps) {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    setError(null);
 
     if (!ACCEPTED_TYPES.includes(file.type)) {
       setError('Please upload a JPG, PNG, or WebP image');
@@ -54,13 +61,17 @@ export function AvatarUpload({ avatar, onUpload }: AvatarUploadProps) {
         setIsUploading(false);
       };
       reader.onerror = () => {
-        setError('Failed to upload image');
+        dispatchClientDiagnostic('profile.avatar.reader_failed', {
+          fileType: file.type || 'unknown',
+          fileSize: file.size,
+        });
+        setError(AVATAR_READER_FAILED_MESSAGE);
         setIsUploading(false);
       };
       reader.readAsDataURL(compressed);
     } catch (compressionError) {
-      console.error('Image compression failed:', compressionError);
-      setError('Could not compress image for upload');
+      dispatchClientErrorDiagnostic('profile.avatar.compression_failed', compressionError);
+      setError(AVATAR_COMPRESSION_FAILED_MESSAGE);
       setIsUploading(false);
     }
   };
@@ -73,18 +84,23 @@ export function AvatarUpload({ avatar, onUpload }: AvatarUploadProps) {
 
   return (
     <div className="relative">
-      <motion.div
+      <motion.button
+        type="button"
+        aria-label={avatar ? 'Change profile picture' : 'Upload profile picture'}
+        disabled={isUploading}
         whileHover={{ scale: 1.02 }}
         onHoverStart={() => setIsHovering(true)}
         onHoverEnd={() => setIsHovering(false)}
-        className={`group/avatar ${isUploading ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'}`}
+        className={`group/avatar relative block rounded-full border-0 bg-transparent p-0 text-left ${
+          isUploading ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'
+        }`}
         onClick={handleClick}
       >
-        <Avatar className="w-32 h-32 border-4 border-card shadow-lg ring-2 ring-[#7A9278]/20 ring-offset-2 bg-[#F5F3EE]">
+        <Avatar className="w-24 h-24 sm:w-32 sm:h-32 border-4 border-card shadow-lg ring-2 ring-[#7A9278]/20 ring-offset-2 bg-[#F5F3EE]">
           {avatar ? <AvatarImage src={avatar} className="object-cover" /> : null}
           <AvatarFallback className="bg-[#F5F3EE]">
             <div className="w-full h-full flex items-center justify-center relative">
-              <svg viewBox="0 0 100 100" className="w-20 h-20">
+              <svg viewBox="0 0 100 100" className="w-16 h-16 sm:w-20 sm:h-20">
                 <circle cx="50" cy="40" r="20" fill="none" stroke="#7A9278" strokeWidth="1.5" />
                 <path d="M 30 70 Q 50 60 70 70" fill="none" stroke="#7A9278" strokeWidth="1.5" />
               </svg>
@@ -105,7 +121,7 @@ export function AvatarUpload({ avatar, onUpload }: AvatarUploadProps) {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="absolute inset-0 bg-background/50 backdrop-blur-sm rounded-full flex items-center justify-center w-32 h-32"
+            className="absolute inset-0 bg-background/50 backdrop-blur-sm rounded-full flex items-center justify-center w-24 h-24 sm:w-32 sm:h-32"
           >
             <Loader2 className="w-8 h-8 text-[#7A9278] animate-spin" />
           </motion.div>
@@ -115,7 +131,7 @@ export function AvatarUpload({ avatar, onUpload }: AvatarUploadProps) {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="absolute inset-0 bg-background/80 rounded-full flex items-center justify-center w-32 h-32"
+            className="absolute inset-0 bg-background/80 rounded-full flex items-center justify-center w-24 h-24 sm:w-32 sm:h-32"
           >
             <div className="text-center">
               <Upload className="w-6 h-6 text-[#7A9278] mx-auto mb-1" />
@@ -123,7 +139,7 @@ export function AvatarUpload({ avatar, onUpload }: AvatarUploadProps) {
             </div>
           </motion.div>
         )}
-      </motion.div>
+      </motion.button>
 
       <input
         ref={fileInputRef}
@@ -132,14 +148,14 @@ export function AvatarUpload({ avatar, onUpload }: AvatarUploadProps) {
         onChange={handleFileChange}
         className="hidden"
         disabled={isUploading}
-        aria-label="Upload profile picture"
+        aria-label="Choose profile picture file"
       />
 
       {error && (
         <motion.p
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="absolute top-full mt-2 text-xs text-red-500 whitespace-nowrap"
+          className="absolute top-full mt-2 max-w-[16rem] text-xs text-red-500"
         >
           {error}
         </motion.p>

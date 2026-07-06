@@ -197,6 +197,10 @@ describe('Verification Request Composer privacy controls', () => {
       'tooBroadWarnings',
     ]);
     expect(responseJsonSchema?.properties?.verificationQuestions?.maxItems).toBe(5);
+    expect(prompt).toContain('proof-review participant evaluation');
+    expect(prompt).toContain('interview, engagement, or workflow decisions');
+    expect(prompt).not.toContain('candidate evaluation');
+    expect(prompt).not.toContain('hiring decisions');
     expect(prompt).not.toContain('verifier@example.com');
     expect(prompt).not.toContain('Hidden-Client-Plan.docx');
     expect(prompt).not.toContain('jane@example.com');
@@ -220,6 +224,8 @@ describe('Verification Request Composer privacy controls', () => {
     expect(mocks.generateJson).not.toHaveBeenCalled();
     expect(serialized).not.toContain('I coordinated the Acme launch');
     expect(serialized).not.toContain('Hidden Acme');
+    expect(serialized).toContain('proof-review participant quality judgment');
+    expect(serialized).not.toContain('candidate quality judgment');
     expect(result.tooBroadWarnings).toEqual(
       expect.arrayContaining([
         'Public-safe proof record context was unavailable, so manual editing is required before AI drafting.',

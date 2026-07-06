@@ -1,5 +1,5 @@
 > Doc Class: `historical`
-> Last Verified: `2026-05-04`
+> Last Verified: `2026-05-19`
 
 # Archived CV Import Feature Documentation
 
@@ -7,57 +7,25 @@
 
 ## Overview
 
-The CV Import feature allows users to extract and add skills to their Expertise Atlas from pasted text and uploaded PDFs. The runtime supports a cost-controlled Gemini extraction path with deterministic fallback, per-key monthly SEK budgets, request-level usage logging, and a Python-only PDF extraction queue for CV uploads.
+This document describes a retired CV Import implementation that historically extracted and added skills to Expertise Atlas from pasted text and uploaded PDFs. It is not a current launch workflow. The locked MVP corridor now routes proof import and review work through the active proof/onboarding surfaces, and any approved Start from CV or proof-artifact extraction work must stay separate from this archived wizard.
 
-## User Flow
+## Launch Status
 
-### Step 1: Navigate to Import Tab
+- `/app/i/expertise` is not a compiled active MVP page.
+- `/api/expertise/cv-import/wizard-*` routes are archived compatibility endpoints and should return `410`.
+- This document must not be used as setup, QA, product, or launch-smoke guidance for the MVP.
+- Keep any future OCR or CV-assisted work behind an explicitly approved route-surface change.
 
-1. Go to **Expertise Atlas** page (`/app/i/expertise`)
-2. Click the **"Import from CV"** tab
+## Historical User Flow
 
-### Step 2: Select Context
+The old flow below is retained only to explain what was removed:
 
-Choose the type of text you're pasting:
-
-- **CV/Resume**: For personal resumes and CVs
-- **Job Description**: For job posting text
-- **General Text**: For any other skill-related text
-
-### Step 3: Paste Text or Upload PDF
-
-Paste your CV, resume, or job description text, or upload PDF documents in the CV Import Wizard flow.
-
-### Step 4: Analyze
-
-Click **"Analyze & Suggest Skills"** to process the text. The system will:
-
-- Extract potential skill keywords
-- Match them against the skills taxonomy
-- Rank results by confidence score
-
-### Step 5: Review Suggestions
-
-Review the suggested skills, which show:
-
-- Skill name
-- Confidence percentage (how well it matched)
-- Alternative names (aliases)
-- Description
-
-### Step 6: Select & Add
-
-1. Click on skills to select/deselect them
-2. Click **"Add X Selected"** to add them to your profile
-3. Skills are saved with default values:
-   - Level: 2 (Competent)
-   - Experience: 0 months
-   - Last Used: Today
-   - Relevance: Current
-
-### Step 7: Verification
-
-After import, the page refreshes to show your newly added skills in the Expertise Atlas.
+1. Open the old Expertise Atlas page.
+2. Use an Import from CV tab.
+3. Paste CV/JD/general text or upload a PDF.
+4. Analyze and rank suggested taxonomy skills.
+5. Select suggested skills and add them to a profile.
+6. Refresh the old Expertise Atlas skill list.
 
 ## Technical Architecture
 
@@ -65,7 +33,7 @@ After import, the page refreshes to show your newly added skills in the Expertis
 
 #### 1. Frontend Component
 
-**File**: `/src/components/expertise/CVJDAutoSuggest.tsx`
+**Historical file**: `/src/archive/non_launch_pages/app/i/expertise/implementation/shared-components/expertise/CVJDAutoSuggest.tsx`
 
 A React component that provides the UI for CV import:
 
@@ -100,9 +68,9 @@ interface Suggestion {
 
 #### 2. Auto-Suggest API
 
-**Endpoint**: `POST /api/expertise/auto-suggest`
+**Historical endpoint**: `POST /api/expertise/auto-suggest` (removed from the active route tree)
 
-**File**: `/src/app/api/expertise/auto-suggest/route.ts`
+**Historical file**: `/src/app/api/expertise/auto-suggest/route.ts` (no active file remains)
 
 Analyzes text and returns skill suggestions.
 
@@ -142,18 +110,20 @@ Analyzes text and returns skill suggestions.
 }
 ```
 
-**Current Runtime Modes**:
+**Historical Runtime Modes**:
+
+These modes describe the retired CV import implementation. They are not approval to make any CV import route launch-active.
 
 - `engine=auto` (default) - deterministic JSON path, Python for multipart.
 - `engine=typescript` - deterministic TypeScript path.
 - `engine=python` - Python path for JSON and multipart.
 - `engine=gemini` - Gemini extraction with deterministic fallback.
 
-**Gemini-enabled Endpoints**:
+**Historical Gemini-enabled Endpoints**:
 
 - `POST /api/expertise/cv-import/suggest`
 - `POST /api/expertise/cv-import/wizard-suggest`
-- `POST /api/expertise/auto-suggest`
+- `POST /api/expertise/auto-suggest` (historical; removed)
 
 **Gemini Request Controls**:
 
@@ -280,47 +250,23 @@ CREATE TABLE skills (
 
 ## Testing
 
-### Integration Tests
+### Active Launch Gate
 
-**File**: `/tests/integration/cv-import.test.ts`
+**File**: `e2e/cv-import-non-launch.spec.ts`
 
-Tests cover:
+The active test is a non-launch hard gate. It proves the archived wizard API returns `410` and `/app/i/expertise` stays unavailable, rather than proving a CV import workflow works.
 
-- Auto-suggest API with various CV texts
-- Skill extraction accuracy
-- Duplicate skill handling
-- Error scenarios (unauthorized, invalid input)
-- Multiple skill import workflow
-- End-to-end CV import flow
-
-**Run Tests**:
+**Run Test**:
 
 ```bash
-npm run test:integration -- cv-import
+npx playwright test e2e/cv-import-non-launch.spec.ts
 ```
 
-### E2E Tests
+### Archived Historical Coverage
 
-**File**: `tests/e2e/cv-import.spec.ts`
+Old integration and UI tests for skill suggestion, confidence scores, import tabs, and CV wizard interactions are historical only. Do not move them back into default launch checks unless the route-surface policy is deliberately changed.
 
-Tests cover:
-
-- Complete user workflow
-- Empty state handling
-- Context switching (CV/JD/General)
-- Confidence score display
-- Skill selection/deselection
-- Loading states
-- Keyboard navigation
-- ARIA labels for accessibility
-
-**Run Tests**:
-
-```bash
-npm run test:e2e -- cv-import
-```
-
-## Performance Considerations
+## Historical Performance Considerations
 
 ### Text Processing
 
@@ -341,7 +287,7 @@ npm run test:e2e -- cv-import
 3. **Score-based ranking**: Most relevant skills appear first
 4. **Client-side caching**: Suggestions are cached in component state
 
-## Known Limitations
+## Historical Known Limitations
 
 1. **Text-based PDFs only**: The CV upload wizard is Python-only and does not fall back to browser OCR or local PDF parsing.
 2. **Upload Guardrails**: Default parser limits are strict (`5MB`, `4` pages) to control latency and spend.
@@ -349,7 +295,7 @@ npm run test:e2e -- cv-import
 4. **Language Quality Variance**: Non-English CVs can still reduce mapping quality depending on taxonomy coverage.
 5. **GCP OCR Provider**: The Cloud Run + Document AI smoke path is internal-only and not connected to the user CV/import review flow until explicitly approved. It uses service account ADC, not browser-created API keys.
 
-## Future Enhancements
+## Future / Post-MVP Ideas
 
 ### Near Term
 
@@ -363,7 +309,7 @@ npm run test:e2e -- cv-import
 - [ ] Expand document support beyond PDF while preserving current privacy guarantees.
 - [ ] Add adaptive per-user throttling based on abuse signals.
 
-## Troubleshooting
+## Historical Troubleshooting
 
 ### No Skills Found
 
@@ -378,7 +324,7 @@ npm run test:e2e -- cv-import
 
 ### Skills Not Saving
 
-**Problem**: User selects skills but they don't appear in Expertise Atlas
+**Historical problem**: User selected skills but they did not appear in the retired Expertise Atlas.
 
 **Check**:
 
@@ -440,7 +386,7 @@ psql $DATABASE_URL -c "SELECT COUNT(*) FROM skills_taxonomy WHERE status = 'acti
 - Consider adding rate limiting for auto-suggest endpoint
 - Prevent abuse via multiple rapid requests
 
-## Monitoring & Analytics
+## Historical Monitoring & Analytics
 
 ### Key Metrics to Track
 
@@ -475,23 +421,23 @@ logger.info('CV import completed', {
 });
 ```
 
-## API Rate Limits
+## Historical API Rate Limits
 
-Current limits (configurable via env):
+Historical limits (configurable via env):
 
 - CV import suggest routes: `CV_IMPORT_USER_RATE_LIMIT_MAX` requests per `CV_IMPORT_USER_RATE_LIMIT_WINDOW_SECONDS` per user and route.
 - Add skill route: global API limiter defaults still apply.
 
-## Support & Contact
+## Historical Support Notes
 
-For issues or questions:
+For archived implementation context:
 
 - File a GitHub issue with label `feature:cv-import`
-- Contact engineering team via Slack #expertise-atlas channel
+- Do not use the old Slack `#expertise-atlas` ownership model as current launch ownership.
 - Check troubleshooting section above
 
 ---
 
-**Last Updated**: March 1, 2026  
-**Version**: 2.0  
-**Maintainers**: Expertise Atlas Team
+**Last Updated**: May 19, 2026
+**Version**: 2.0
+**Maintainers**: Archived reference; current launch ownership follows the locked MVP authority stack.

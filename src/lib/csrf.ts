@@ -15,6 +15,7 @@ const MIN_INTERNAL_SECRET_LENGTH = 16;
 const INVALID_INTERNAL_SECRET_VALUES = new Set(['undefined', 'null']);
 const SUPABASE_SESSION_COOKIE_PATTERN = /^sb-[a-z0-9]+-auth-token(?:\.\d+)?$/i;
 const CSRF_TOKEN_VERSION = 'csrf-v1';
+const LOCAL_SMOKE_INSECURE_CSRF_COOKIE_ENV_KEY = 'PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE';
 const TEXT_ENCODER = new TextEncoder();
 let developmentSigningSecret: string | null = null;
 
@@ -50,6 +51,28 @@ function getConfiguredCsrfSigningSecret(): string | null {
 
     return normalizeInternalSecret(value);
   }, null);
+}
+
+function isExplicitLaunchEnvironment(env: Pick<NodeJS.ProcessEnv, string>): boolean {
+  const vercelEnv = env.VERCEL_ENV?.trim().toLowerCase();
+  const appEnv = (env.NEXT_PUBLIC_APP_ENV || env.APP_ENV)?.trim().toLowerCase();
+
+  return (
+    vercelEnv === 'production' ||
+    vercelEnv === 'preview' ||
+    appEnv === 'production' ||
+    appEnv === 'staging'
+  );
+}
+
+export function shouldUseSecureCSRFTokenCookie(
+  env: Pick<NodeJS.ProcessEnv, string> = process.env
+): boolean {
+  if (env[LOCAL_SMOKE_INSECURE_CSRF_COOKIE_ENV_KEY] === '1' && !isExplicitLaunchEnvironment(env)) {
+    return false;
+  }
+
+  return env.NODE_ENV === 'production';
 }
 
 function getCsrfSigningSecret(): string {
@@ -317,7 +340,7 @@ export async function getOrGenerateCSRFToken(request: NextRequest): Promise<stri
 export function setCSRFTokenCookie(response: NextResponse, token: string): void {
   response.cookies.set(CSRF_TOKEN_COOKIE, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: shouldUseSecureCSRFTokenCookie(),
     sameSite: 'strict',
     path: '/',
     maxAge: 60 * 60 * 24, // 24 hours

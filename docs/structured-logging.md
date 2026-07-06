@@ -1,593 +1,176 @@
+> Doc Class: `active`
+> Last Verified: `2026-05-19`
+
 # Structured Logging Guide
 
-## Overview
+Structured logging supports launch operations, privacy-safe incident response, and debugging. It must stay subordinate to the locked MVP corridor and the current privacy/no-leak contract.
 
-This document describes the structured logging system implemented in the Proofound application, including log levels, context management, request correlation, and migration from console.\* calls.
+Use this with:
 
-Launch note: `PRD_TECHNICAL_REQUIREMENTS.md` Section 7 is the canonical launch contract for logging, PII isolation, and audit-boundary rules. This guide must defer to that appendix where older examples imply broader observability exports.
+- [alert-configuration.md](./alert-configuration.md)
+- [sentry-setup.md](./sentry-setup.md)
+- [ANALYTICS_GDPR_SETUP.md](../ANALYTICS_GDPR_SETUP.md)
+- [SECURITY_INCIDENT_RESPONSE_RUNBOOK.md](./SECURITY_INCIDENT_RESPONSE_RUNBOOK.md)
 
-## Logger Features
+## Launch Contract
 
-### Log Levels
+Logs may help answer:
 
-The logging system supports four log levels:
+- which active route or workflow failed
+- which primary object was involved, such as assignment, Proof Pack, reveal request, interview, decision, engagement verification, or queue item
+- whether fallback/safe mode is working
+- whether launch-status, perf-status, cron, or external provider checks are stale or failing
 
-| Level   | Usage                 | Example                                                |
-| ------- | --------------------- | ------------------------------------------------------ |
-| `debug` | Development debugging | `log.debug('cache.hit', { key })`                      |
-| `info`  | General information   | `log.info('match.computed', { poolSize })`             |
-| `warn`  | Warning conditions    | `log.warn('rate_limit.approaching', { remaining })`    |
-| `error` | Error conditions      | `log.error('db.query.failed', { error: err.message })` |
+Logs must not become a second product database, broad analytics dashboard, public directory, or hidden matching/ranking system.
 
-**Log Level Configuration:**
+## Allowed Log Fields
 
-- **Production**: `LOG_LEVEL=info` (default if not set)
-- **Development**: `LOG_LEVEL=debug` (default in NODE_ENV=development)
-- **Testing**: Set `LOG_LEVEL=error` to reduce noise
+Prefer:
 
-### Basic Usage
+- stable internal ids when needed for debugging
+- route, method, status, duration, and release
+- request id or correlation id
+- coarse persona or role where already authorized
+- workflow state and reason code
+- queue type, not private queue content
+- counts and thresholds
+- sanitized error class and message
 
-```typescript
-import { log } from '@/lib/log';
+Avoid logging direct user identifiers unless they are necessary for incident response. When an actor id is needed, use the internal id and keep it out of public screenshots and support replies.
 
-// Info log
-log.info('user.signup', { userId, persona: 'individual' });
+## Prohibited Log Content
 
-// Warning log
-log.warn('api.slow_response', { duration: 2500, endpoint: '/api/match' });
+Never log:
 
-// Error log
-log.error('payment.failed', {
-  error: err.message,
-  userId,
-  amount,
-});
+- passwords, session cookies, auth headers, API keys, tokens, or signed URLs
+- raw request or response bodies
+- email addresses, names, phone numbers, precise addresses, or raw IP/user-agent strings
+- private proof content, raw evidence, uploaded file contents, filenames, or private storage paths
+- hidden identity details before reveal consent
+- verifier private data, allegation text, admin notes, or internal queue item payloads
+- raw AI prompts, raw model responses, provider keys, or private document text
+- broad match-score/ranking/fairness payloads that imply archived or post-MVP behavior
 
-// Debug log (only in development)
-log.debug('cache.debug', { operation: 'set', key, ttl });
+Use `src/lib/privacy/log-redaction.ts` or route-specific redaction before writing errors from user-controlled input.
+
+## Event Naming
+
+Use dot-separated event names:
+
+```text
+<domain>.<object>.<state>
 ```
 
-## Request Correlation
+Good examples:
 
-Every HTTP request is assigned a unique request ID that flows through all logs during that request.
+- `portfolio.public.render_failed`
+- `assignment.publish.blocked`
+- `proof_pack.verification.state_changed`
+- `reveal.consent.blocked`
+- `decision.recorded`
+- `engagement_verification.confirmation_failed`
+- `launch_status.monitor_missing`
+- `perf_status.assignment_latency_missing`
 
-### Request ID Generation
+Avoid generic names such as `dashboard.loaded`, `match.computed`, or `user.updated` when the workflow and object can be clearer.
 
-Request IDs are generated in the middleware and stored in AsyncLocalStorage:
-
-```typescript
-// middleware.ts
-const requestId = request.headers.get('x-request-id') || nanoid(12);
-```
-
-### Request ID in Logs
-
-All logs automatically include the request ID when available:
-
-```json
-{
-  "level": "info",
-  "event": "match.computed",
-  "timestamp": "2025-01-03T10:30:00.000Z",
-  "requestId": "abc123xyz789",
-  "userId": "user-uuid",
-  "poolSize": 50
-}
-```
-
-### Client-Side Request Tracking
-
-Clients receive the request ID in response headers:
+## Error Logging Pattern
 
 ```typescript
-// Response headers
-x-request-id: abc123xyz789
-
-// Client can send it back in subsequent requests for correlation
-fetch('/api/endpoint', {
-  headers: {
-    'x-request-id': 'abc123xyz789'
-  }
+log.error('assignment.publish.failed', {
+  assignmentId,
+  orgId,
+  reasonCode,
+  status,
+  durationMs,
+  error: error instanceof Error ? error.message : 'Unknown error',
 });
 ```
 
-## Context Management
+Do not include the request body, participant private content, proof text, file paths, or hidden identity details.
 
-### Automatic Context
-
-The middleware automatically adds context to all logs:
-
-- **requestId**: Unique request identifier
-- **userId**: Authenticated user ID (if available)
-- **path**: Request path
-- **method**: HTTP method (GET, POST, etc.)
-
-### Manual Context
-
-You can add additional context using `withContext`:
+## Safe Debugging Pattern
 
 ```typescript
-// Add context for a specific operation
-const contextLogger = log.withContext({
-  assignmentId: '123',
-  orgId: 'org-456',
-});
-
-contextLogger.info('assignment.published', { role: 'Engineer' });
-// Output includes: requestId, userId, assignmentId, orgId
-```
-
-### Nested Context
-
-Context can be nested and merged:
-
-```typescript
-const userLogger = log.withContext({ userId: 'user-123' });
-const orgLogger = userLogger.withContext({ orgId: 'org-456' });
-
-orgLogger.info('event.name', { data: 'value' });
-// Includes both userId and orgId
-```
-
-## PII Protection
-
-The logger automatically removes common PII fields from logs:
-
-**Automatically Removed:**
-
-- `email`
-- `name`
-- `displayName`
-- `userEmail` (in production only)
-
-**Guidelines:**
-
-- Never log full email addresses
-- Never log user names or display names
-- Never log precise locations (use city/country only)
-- Never log photos or avatars
-- Use user IDs instead of identifiable information
-
-**Good Example:**
-
-```typescript
-log.info('user.profile.updated', {
-  userId: 'abc-123',
-  fieldsUpdated: ['tagline', 'location'],
+log.warn('reveal.consent.blocked', {
+  conversationId,
+  assignmentId,
+  reasonCode: 'candidate_consent_missing',
 });
 ```
 
-**Bad Example:**
+The app surface should show the user-facing explanation. The log should preserve only enough context for an operator to find the gated object.
 
-```typescript
-log.info('user.profile.updated', {
-  email: 'john@example.com', // ❌ PII
-  name: 'John Doe', // ❌ PII
-  userId: 'abc-123',
-});
-```
+## Log Levels
 
-## Log Output Format
+- `debug`: local development only, never required for launch evidence
+- `info`: successful state changes and launch monitor summaries
+- `warn`: blocked workflow, fallback, stale evidence, missing monitor, degraded dependency
+- `error`: failed active MVP route or unsafe state
 
-All logs are output as JSON for easy parsing:
+Production default should remain `LOG_LEVEL=info`. Increase verbosity only for a target and time window that is explicitly approved.
 
-```json
-{
-  "level": "info",
-  "event": "match.profile.computed",
-  "timestamp": "2025-01-03T10:30:00.000Z",
-  "requestId": "abc123xyz789",
-  "userId": "user-uuid-123",
-  "path": "/api/core/matching/profile",
-  "method": "POST",
-  "poolSize": 50,
-  "resultCount": 10,
-  "durationMs": 145
-}
-```
+## Migration From Console Calls
 
-## Event Naming Conventions
+When replacing `console.*`:
 
-Use dot-separated namespaces for event names:
+1. Use a specific event name.
+2. Move only safe context into metadata.
+3. Redact before logging user-controlled or provider-controlled values.
+4. Keep stack traces only in protected server logs/Sentry, not public responses.
+5. Add a focused test when the log guards privacy-sensitive behavior.
 
-**Pattern:** `<domain>.<action>.<status>`
+Do not migrate a risky console call by preserving the same raw payload under a structured logger.
 
-**Examples:**
+## Monitoring Integration
 
-```typescript
-// Match domain
-log.info('match.profile.computed', { ... });
-log.error('match.profile.failed', { ... });
-log.warn('match.pool.empty', { ... });
+For launch, use:
 
-// User domain
-log.info('user.signup.success', { ... });
-log.error('user.signup.failed', { ... });
-log.warn('user.verification.pending', { ... });
+- Vercel runtime logs
+- Sentry or equivalent protected error monitoring
+- protected `/api/monitoring/launch-status`
+- protected `/api/monitoring/perf-status`
 
-// Middleware domain
-log.warn('middleware.admin.access_denied', { ... });
-log.warn('middleware.persona.access_denied', { ... });
-
-// Database domain
-log.error('db.query.failed', { ... });
-log.warn('db.connection.slow', { ... });
-```
-
-## Migration from console.\*
-
-### Migration Pattern
-
-**Before:**
-
-```typescript
-console.log('User signed up:', userId);
-console.error('Database error:', err);
-console.warn('Rate limit approaching');
-```
-
-**After:**
-
-```typescript
-log.info('user.signup', { userId });
-log.error('db.query.failed', { error: err.message, stack: err.stack });
-log.warn('rate_limit.approaching', { remaining: 5 });
-```
-
-### Migration Checklist
-
-1. ✅ Import log utility: `import { log } from '@/lib/log';`
-2. ✅ Replace `console.log` → `log.info`
-3. ✅ Replace `console.error` → `log.error`
-4. ✅ Replace `console.warn` → `log.warn`
-5. ✅ Convert string messages to event names (dot-separated)
-6. ✅ Move context to metadata object
-7. ✅ Remove PII from metadata
-8. ✅ Test that logs are output correctly
-
-### Common Patterns
-
-**Pattern 1: Simple log message**
-
-```typescript
-// Before
-console.log('Match computed successfully');
-
-// After
-log.info('match.computed.success');
-```
-
-**Pattern 2: Log with data**
-
-```typescript
-// Before
-console.log('Match computed:', poolSize, 'candidates');
-
-// After
-log.info('match.computed', { poolSize });
-```
-
-**Pattern 3: Error logging**
-
-```typescript
-// Before
-console.error('Failed to compute match:', err);
-
-// After
-log.error('match.compute.failed', {
-  error: err.message,
-  stack: err.stack,
-});
-```
-
-**Pattern 4: Conditional logging**
-
-```typescript
-// Before
-if (duration > 1000) {
-  console.warn('Slow query detected:', duration, 'ms');
-}
-
-// After
-if (duration > 1000) {
-  log.warn('db.query.slow', { duration });
-}
-```
-
-## Environment Variables
-
-```bash
-# Set log level
-LOG_LEVEL=info  # Options: debug, info, warn, error
-
-# Development (default)
-LOG_LEVEL=debug
-
-# Production (default)
-LOG_LEVEL=info
-
-# Testing (recommended)
-LOG_LEVEL=error
-```
-
-## Integration with Monitoring Tools
-
-### Vercel Logs
-
-Structured logs are automatically ingested by Vercel:
-
-1. Go to Vercel dashboard
-2. Select your project
-3. Navigate to "Logs"
-4. Filter by `level`, `event`, `userId`, `requestId`
-
-### Log Aggregation
-
-For launch, use Vercel logs plus the in-app structured logger. Additional log aggregation platforms are post-launch options only and must preserve the same PII restrictions.
-
-**Datadog (post-launch only, non-canonical for MVP launch):**
-
-```typescript
-// Custom integration in log.ts
-if (process.env.DATADOG_API_KEY) {
-  // Send logs to Datadog
-}
-```
-
-**LogDNA/Mezmo (post-launch only, non-canonical for MVP launch):**
-
-```bash
-# Install LogDNA agent
-npm install @logdna/logger
-```
-
-**CloudWatch:**
-
-```typescript
-// AWS CloudWatch integration
-import { CloudWatchLogs } from 'aws-sdk';
-```
+External log aggregation such as Datadog, CloudWatch, or Mezmo is post-launch unless a target, retention policy, access policy, and redaction review are explicitly approved.
 
 ## Querying Logs
 
-### Local Development
+Local development examples:
 
 ```bash
-# View all logs
-npm run dev 2>&1 | grep -v '_next'
-
-# Filter by level
-npm run dev 2>&1 | grep '"level":"error"'
-
-# Filter by event
-npm run dev 2>&1 | grep '"event":"match.computed"'
-
-# Filter by user
-npm run dev 2>&1 | grep '"userId":"abc-123"'
-
-# Filter by request
-npm run dev 2>&1 | grep '"requestId":"xyz-789"'
+npm run dev
 ```
 
-### Production (Vercel)
+Filter locally only when needed, and avoid saving raw log exports that may include private data.
+
+Production log review must happen in protected provider consoles. Do not download broad production logs to local files unless the incident owner approves the target, time range, and redaction plan.
+
+## Verification
+
+Run:
 
 ```bash
-# Using Vercel CLI
-vercel logs --follow
-
-# Filter by function
-vercel logs --follow --filter="api/match"
-
-# Download logs for analysis
-vercel logs > logs.json
-cat logs.json | jq '.[] | select(.level == "error")'
+npm run test -- tests/lib/api-errors.test.ts
+npm run test -- tests/lib/api-latency-log.test.ts
+npm run test -- tests/scripts/launch-gate-config.test.ts
+npm run docs:freshness
 ```
 
-## Performance Considerations
+Manual review for launch:
 
-**Async Logging:**
+- public errors return generic responses
+- protected logs preserve enough route/workflow context for debugging
+- no sampled log includes private proof content, hidden identity details, secrets, signed URLs, filenames, raw prompt/model text, or raw request bodies
+- launch-status/perf-status evidence is checked directly, not inferred from log presence
 
-```typescript
-// Current: Synchronous (blocking)
-log.info('event', { data });
+## Incident Evidence
 
-// Future: Async (non-blocking)
-await log.infoAsync('event', { data });
-```
+When logs support an incident or launch gate, save only:
 
-**Sampling:**
+- target and time window
+- route/workflow
+- redacted event name and reason code
+- operator conclusion
+- link to protected provider evidence when available
 
-```typescript
-// Sample debug logs (10%)
-if (level === 'debug' && Math.random() > 0.1) {
-  return;
-}
-```
-
-**Buffering:**
-
-```typescript
-// Batch logs and flush periodically
-const logBuffer = [];
-setInterval(() => {
-  if (logBuffer.length > 0) {
-    console.log(logBuffer.join('\n'));
-    logBuffer.length = 0;
-  }
-}, 1000);
-```
-
-## Best Practices
-
-### DO
-
-✅ Use dot-separated event names
-✅ Include relevant context in metadata
-✅ Log errors with error messages and stack traces
-✅ Use appropriate log levels
-✅ Log important business events
-✅ Include performance metrics (duration, counts)
-✅ Log authentication and authorization events
-
-### DON'T
-
-❌ Log PII (emails, names, locations, raw IPs, raw user-agent strings)
-❌ Log sensitive data (passwords, tokens)
-❌ Log excessively in hot paths
-❌ Use string concatenation in event names
-❌ Log success for every trivial operation
-❌ Include entire objects (log specific fields)
-❌ Log at debug level in production
-
-## Examples
-
-### API Route Logging
-
-```typescript
-export async function POST(request: NextRequest) {
-  const startTime = Date.now();
-
-  try {
-    const user = await requireAuth();
-    const body = await request.json();
-
-    log.info('api.request.started', {
-      endpoint: '/api/match/profile',
-      userId: user.id,
-    });
-
-    const result = await computeMatches(user.id, body);
-
-    const duration = Date.now() - startTime;
-    log.info('api.request.completed', {
-      endpoint: '/api/match/profile',
-      duration,
-      resultCount: result.length,
-    });
-
-    return NextResponse.json(result);
-  } catch (error) {
-    const duration = Date.now() - startTime;
-    log.error('api.request.failed', {
-      endpoint: '/api/match/profile',
-      duration,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-    });
-
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
-```
-
-### Database Operation Logging
-
-```typescript
-async function queryDatabase(sql: string, params: any[]) {
-  const startTime = Date.now();
-
-  try {
-    const result = await db.query(sql, params);
-    const duration = Date.now() - startTime;
-
-    if (duration > 1000) {
-      log.warn('db.query.slow', {
-        duration,
-        rowCount: result.rows.length,
-      });
-    }
-
-    return result;
-  } catch (error) {
-    log.error('db.query.failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      duration: Date.now() - startTime,
-    });
-    throw error;
-  }
-}
-```
-
-### Background Job Logging
-
-```typescript
-async function processMatchingJob(jobId: string) {
-  log.info('job.started', { jobId, type: 'matching' });
-
-  try {
-    const result = await performMatching();
-
-    log.info('job.completed', {
-      jobId,
-      type: 'matching',
-      processedCount: result.count,
-      duration: result.duration,
-    });
-  } catch (error) {
-    log.error('job.failed', {
-      jobId,
-      type: 'matching',
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
-}
-```
-
-## Troubleshooting
-
-### Logs Not Appearing
-
-1. **Check log level:**
-
-   ```bash
-   echo $LOG_LEVEL
-   ```
-
-2. **Verify logger import:**
-
-   ```typescript
-   import { log } from '@/lib/log'; // Correct
-   import { log } from './log'; // May be wrong
-   ```
-
-3. **Check NODE_ENV:**
-   ```bash
-   echo $NODE_ENV
-   ```
-
-### Missing Context
-
-1. **Ensure middleware is running:**
-   - Check middleware matcher config
-   - Verify route is not excluded
-
-2. **Check AsyncLocalStorage:**
-   ```typescript
-   const context = logContext.getStore();
-   console.log('Current context:', context);
-   ```
-
-### Performance Issues
-
-1. **Reduce log volume:**
-   - Increase log level in production
-   - Add sampling for debug logs
-
-2. **Optimize metadata:**
-   - Only include necessary fields
-   - Avoid logging large objects
-
-## Future Enhancements
-
-1. **Async Logging** - Non-blocking log writes
-2. **Log Sampling** - Reduce volume in high-traffic scenarios
-3. **Custom Transports** - Send logs to multiple destinations
-4. **Log Rotation** - Manage log file size
-5. **Metrics Extraction** - Extract metrics from logs automatically
-6. **Distributed Tracing** - OpenTelemetry integration
-
-## Resources
-
-- [AsyncLocalStorage Documentation](https://nodejs.org/api/async_context.html)
-- [JSON Logging Best Practices](https://github.com/pinojs/pino/blob/master/docs/best-practices.md)
-- [Vercel Logs Documentation](https://vercel.com/docs/observability/runtime-logs)
+Do not paste full log payloads into public docs, support replies, screenshots, or tickets.

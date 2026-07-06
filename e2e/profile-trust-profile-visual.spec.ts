@@ -38,15 +38,14 @@ test.describe('Profile visual contract', () => {
 
     await prepareProfileViewport(page);
     await page.goto('/app/i/home', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByRole('heading', { name: 'Your Proof Wallet' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Readiness corridor' })).toBeVisible();
     await page.getByRole('link', { name: 'Profile', exact: true }).click();
     await expect(page).toHaveURL(/\/app\/i\/profile/);
     await stabilizeProfile(page);
 
     await expect(
-      page.getByRole('heading', { name: 'Start with proof, not profile polish' })
+      page.getByRole('heading', { name: 'Start with proof, then choose what to share' })
     ).toBeVisible();
-    await expect(page.getByText('Next action')).toBeVisible();
     await expect(page.getByTestId('guided-dominant-proof-cta')).toBeVisible();
     await expect(page.locator('body')).not.toContainText('Complete everything');
     await expect(page.locator('body')).not.toContainText('Profile polish checklist');
@@ -73,8 +72,9 @@ test.describe('Profile visual contract', () => {
     await expect(page.getByRole('heading', { name: 'Organization Profile' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Launch flow' })).toBeVisible();
     await expect(
-      page.getByRole('heading', { name: 'Organization profile', exact: true })
+      page.getByRole('heading', { name: 'Organization Trust Page', exact: true })
     ).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Launch corridor' })).toBeVisible();
     await expect(page.getByText('Launch essentials')).toBeVisible();
     await expect(page.locator('body')).not.toContainText('Selected corridor');
     await expect(page.locator('body')).not.toContainText('Policy & Trust');

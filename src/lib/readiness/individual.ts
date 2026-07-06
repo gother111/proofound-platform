@@ -154,7 +154,7 @@ export async function getIndividualReadiness(userId: string): Promise<Individual
     topActions.push({
       id: 'maintain-momentum',
       title: 'Maintain profile momentum',
-      description: 'Keep proofs fresh and refresh matching preferences weekly.',
+      description: 'Keep proofs fresh and revisit assignment-review preferences weekly.',
       priority: 'low',
       category: 'matching',
       actionUrl: '/app/i/home',

@@ -215,18 +215,12 @@ export async function isLoggedIn(page: Page): Promise<boolean> {
 }
 
 /**
- * Wait for email verification (in real tests, you'd use a test email service)
- * For now, this is a placeholder
+ * Wait for email verification through the configured test email inbox.
  */
 export async function waitForEmailVerification(email: string): Promise<string> {
-  // In a real implementation, this would:
-  // 1. Query a test email service (like Mailosaur, Ethereal, etc.)
-  // 2. Extract the verification link
-  // 3. Return the verification token
-
-  // For now, return a placeholder
-  console.warn('Email verification not implemented in tests - using mock token');
-  return 'mock-verification-token';
+  throw new Error(
+    `No connected test email inbox is configured for ${email}. Use the strict auth E2E harness or inject a real verification token before calling this helper.`
+  );
 }
 
 /**

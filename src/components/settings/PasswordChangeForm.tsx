@@ -8,6 +8,53 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Lock, Loader2, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
+
+const PASSWORD_UPDATE_FAILED_MESSAGE =
+  'Password was not updated. Your password has not changed; review the entries and try again.';
+
+function getSafePasswordUpdateError(error: unknown): string {
+  const message = error instanceof Error ? error.message : '';
+
+  if (message === 'password_current_incorrect' || /current password is incorrect/i.test(message)) {
+    return 'Current password is incorrect. Please re-enter it and try again.';
+  }
+
+  if (message === 'password_session_unconfirmed' || /unauthorized/i.test(message)) {
+    return 'Your session could not be confirmed. Sign in again, then update your password.';
+  }
+
+  return PASSWORD_UPDATE_FAILED_MESSAGE;
+}
+
+function getResponseStatus(response: Response) {
+  return typeof response.status === 'number' ? response.status : 'unknown';
+}
+
+function getReturnedError(payload: unknown) {
+  if (
+    payload &&
+    typeof payload === 'object' &&
+    'error' in payload &&
+    typeof payload.error === 'string'
+  ) {
+    return payload.error.trim();
+  }
+
+  return '';
+}
+
+function getPasswordUpdateErrorCode(returnedError: string) {
+  if (/current password is incorrect/i.test(returnedError)) {
+    return 'password_current_incorrect';
+  }
+
+  if (/unauthorized/i.test(returnedError)) {
+    return 'password_session_unconfirmed';
+  }
+
+  return 'password_update_request_failed';
+}
 
 /**
  * PasswordChangeForm Component
@@ -82,10 +129,17 @@ export function PasswordChangeForm() {
         }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => null);
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to update password');
+        const returnedError = getReturnedError(data);
+        const errorCode = getPasswordUpdateErrorCode(returnedError);
+        dispatchClientDiagnostic('settings.password.update_returned_error', {
+          status: getResponseStatus(response),
+          hasReturnedError: returnedError.length > 0,
+          errorKind: errorCode,
+        });
+        throw new Error(errorCode);
       }
 
       toast.success('Password updated successfully');
@@ -96,9 +150,10 @@ export function PasswordChangeForm() {
       setConfirmPassword('');
       setIsChanging(false);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update password';
-      setError(errorMessage);
-      toast.error(errorMessage);
+      dispatchClientErrorDiagnostic('settings.password.update_failed', err);
+      const safeErrorMessage = getSafePasswordUpdateError(err);
+      setError(safeErrorMessage);
+      toast.error(safeErrorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -135,12 +190,13 @@ export function PasswordChangeForm() {
             onChange={(e) => setCurrentPassword(e.target.value)}
             placeholder="Enter current password"
             disabled={isLoading}
-            className="pr-10"
+            className="pr-14"
           />
           <button
             type="button"
             onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-proofound-charcoal/50 hover:text-proofound-charcoal"
+            aria-label={showCurrentPassword ? 'Hide current password' : 'Show current password'}
+            className="absolute right-0 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-lg text-proofound-charcoal/50 transition-colors hover:bg-muted hover:text-proofound-charcoal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest"
           >
             {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
@@ -158,12 +214,13 @@ export function PasswordChangeForm() {
             onChange={(e) => setNewPassword(e.target.value)}
             placeholder="Enter new password (min. 8 characters)"
             disabled={isLoading}
-            className="pr-10"
+            className="pr-14"
           />
           <button
             type="button"
             onClick={() => setShowNewPassword(!showNewPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-proofound-charcoal/50 hover:text-proofound-charcoal"
+            aria-label={showNewPassword ? 'Hide new password' : 'Show new password'}
+            className="absolute right-0 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-lg text-proofound-charcoal/50 transition-colors hover:bg-muted hover:text-proofound-charcoal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest"
           >
             {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
@@ -197,12 +254,13 @@ export function PasswordChangeForm() {
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="Re-enter new password"
             disabled={isLoading}
-            className="pr-10"
+            className="pr-14"
           />
           <button
             type="button"
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-proofound-charcoal/50 hover:text-proofound-charcoal"
+            aria-label={showConfirmPassword ? 'Hide confirmed password' : 'Show confirmed password'}
+            className="absolute right-0 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-lg text-proofound-charcoal/50 transition-colors hover:bg-muted hover:text-proofound-charcoal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest"
           >
             {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
@@ -244,11 +302,11 @@ export function PasswordChangeForm() {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex items-center gap-2 pt-2">
+      <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:items-center">
         <Button
           type="submit"
           disabled={isLoading}
-          className="bg-proofound-forest hover:bg-proofound-forest/90"
+          className="w-full bg-proofound-forest hover:bg-proofound-forest/90 sm:w-auto"
         >
           {isLoading ? (
             <>
@@ -273,6 +331,7 @@ export function PasswordChangeForm() {
             setError(null);
           }}
           disabled={isLoading}
+          className="w-full sm:w-auto"
         >
           Cancel
         </Button>

@@ -40,7 +40,7 @@ export const ORG_MVP_NAV_ITEMS = [
   },
   {
     hrefSuffix: '/profile',
-    label: 'Organization Profile',
+    label: 'Organization Trust Page',
     icon: 'building',
   },
   {

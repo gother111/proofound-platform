@@ -1,5 +1,5 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-03-11`
+> Last Verified: `2026-05-21`
 
 # Proofound MVP PRD Compatibility Mirror
 
@@ -10,10 +10,10 @@ This file is a compatibility mirror for workflows that still open `PRD_for_a_web
 
 ## Product Frame
 
-- Proofound MVP is a proof-first, privacy-first hiring credibility corridor centered on Proof Packs.
+- Proofound MVP is a proof-first, privacy-first assignment review corridor centered on Proof Packs.
 - The launch corridor stays narrow: one individual side and one organization side.
 - The wedge is structured Proof Packs, blind-by-default review, progressive reveal, and a calm public proof portfolio derived from selected Proof Packs.
-- The MVP is not an ATS replacement, HRIS, public candidate directory, social feed, or broad marketplace.
+- The MVP is not an ATS replacement, HRIS, public people directory, social feed, or broad marketplace.
 
 ## Core MVP Objects
 
@@ -25,7 +25,7 @@ This file is a compatibility mirror for workflows that still open `PRD_for_a_web
 - public portfolio
 - organization trust profile
 - assignment
-- candidate review
+- proof submission review
 - intro request
 - reveal request
 - interview
@@ -37,7 +37,7 @@ This file is a compatibility mirror for workflows that still open `PRD_for_a_web
 - Proof Pack is the canonical proof object.
 - Publicly the product is proof-first; privately it keeps contextual scaffolding.
 - Blind-by-default review is mandatory.
-- Identity-bearing reveal requires candidate consent.
+- Identity-bearing reveal requires proof-review participant consent.
 - Public publication is separate from matching reveal.
 - Skills must stay tied to proof or context.
 - Portfolio-ready can be easy; intro-eligible must be meaningfully harder.
@@ -61,7 +61,7 @@ This file is a compatibility mirror for workflows that still open `PRD_for_a_web
 - organization account and trust page
 - lean team-role management
 - one structured assignment corridor
-- privacy-safe candidate review
+- privacy-safe proof-submission review
 - intro and reveal management
 - interview coordination
 - decision recording
@@ -77,4 +77,4 @@ This file is a compatibility mirror for workflows that still open `PRD_for_a_web
 - implementation-complete requirements
 - lifecycle edge cases
 - security, privacy, or operational detail
-- authority decisions when it conflicts with the Project Specification or the stable canonical docs
+- authority decisions when it conflicts with the locked MVP source of truth, aligned PRD, aligned technical requirements, aligned launch runbook, GTM plan, or fresh repo evidence

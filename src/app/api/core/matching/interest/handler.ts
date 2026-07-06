@@ -59,11 +59,11 @@ function buildPendingApprovalCopy(isOrgAction: boolean, mutual: boolean) {
   return isOrgAction
     ? {
         title: 'Interest recorded.',
-        body: 'The candidate will only see the introduction after the review step allows it.',
+        body: 'The other side will only see the introduction after the review step allows it.',
       }
     : {
         title: 'Interest recorded.',
-        body: 'If the organization shortlists you and approves the introduction, the hiring flow will move forward from there.',
+        body: 'If the organization shortlists you and approves the introduction, the assignment-review flow will move forward from there.',
       };
 }
 
@@ -178,21 +178,21 @@ function buildIntroBlockedCopy(
 ): { title: string; body: string } {
   if (reasonCodes.includes('trust_regressed')) {
     return {
-      title: 'Trust changed since this profile last qualified.',
-      body: 'The profile is still visible in matching, but new introductions are paused until proof or trust signals are refreshed.',
+      title: 'Trust changed since this proof set last qualified.',
+      body: 'Assignment-fit review can continue, but new introductions are paused until proof or verification checks are refreshed.',
     };
   }
 
   if (isOrgAction) {
     return {
-      title: 'This candidate is reviewable, but not yet ready for introductions.',
-      body: 'You can save this profile and keep reviewing it, but Proofound is holding introductions until the candidate has stronger relevant proof and at least one active trusted confirmation for this assignment.',
+      title: 'This proof submission is reviewable, but not yet ready for introductions.',
+      body: 'You can save this proof submission and keep reviewing the proof submission, but Proofound is holding introductions until the participant has stronger relevant proof and at least one active trusted confirmation for this assignment.',
     };
   }
 
   return {
-    title: 'You can keep browsing. Introductions unlock after stronger proof.',
-    body: 'Your profile is visible, but it does not yet meet Proofound’s qualified introduction threshold. Add proof to more relevant skills and complete one trusted or confirmed proof to unlock introductions.',
+    title: 'You can keep browsing. Introductions need stronger proof first.',
+    body: 'Your proof set is not yet ready for qualified introductions. Add proof to more relevant skills and complete one trusted or confirmed proof before introductions open.',
   };
 }
 
@@ -230,7 +230,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
     const validated = InterestSchema.parse(body);
     const { assignmentId, targetProfileId } = validated;
     const isOrgAction = !!targetProfileId;

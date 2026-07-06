@@ -1,0 +1,79 @@
+[
+  {
+    "table": "profiles",
+    "exists": true,
+    "rowCount": "3970",
+    "timestampColumn": "created_at",
+    "maxTimestamp": "2026-05-16T12:07:27.834Z"
+  },
+  {
+    "table": "organizations",
+    "exists": true,
+    "rowCount": "24",
+    "timestampColumn": "created_at",
+    "maxTimestamp": "2026-04-24T08:26:23.275Z"
+  },
+  {
+    "table": "assignments",
+    "exists": true,
+    "rowCount": "36",
+    "timestampColumn": "created_at",
+    "maxTimestamp": "2026-04-26T17:35:44.060Z"
+  },
+  {
+    "table": "interviews",
+    "exists": true,
+    "rowCount": "7",
+    "timestampColumn": "created_at",
+    "maxTimestamp": "2026-04-27T07:45:16.973Z"
+  },
+  {
+    "table": "conversations",
+    "exists": true,
+    "rowCount": "9",
+    "timestampColumn": "created_at",
+    "maxTimestamp": "2026-04-27T06:48:21.965Z"
+  },
+  {
+    "table": "messages",
+    "exists": true,
+    "rowCount": "14",
+    "timestampColumn": "sent_at",
+    "maxTimestamp": "2026-04-27T12:10:40.203Z"
+  },
+  {
+    "table": "analytics_events",
+    "exists": true,
+    "rowCount": "6466",
+    "timestampColumn": "created_at",
+    "maxTimestamp": "2026-05-15T23:30:56.584Z"
+  },
+  {
+    "table": "fairness_notes",
+    "exists": true,
+    "rowCount": "119",
+    "timestampColumn": "generated_at",
+    "maxTimestamp": "2026-04-09T22:00:37.140Z"
+  },
+  {
+    "table": "verification_requests",
+    "exists": true,
+    "rowCount": "0",
+    "timestampColumn": "created_at",
+    "maxTimestamp": null
+  },
+  {
+    "table": "user_video_integrations",
+    "exists": true,
+    "rowCount": "3",
+    "timestampColumn": "created_at",
+    "maxTimestamp": "2026-03-01T09:35:07.093Z"
+  },
+  {
+    "table": "decision_reminders",
+    "exists": true,
+    "rowCount": "0",
+    "timestampColumn": "sent_at",
+    "maxTimestamp": null
+  }
+]

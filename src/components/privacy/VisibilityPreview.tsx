@@ -1,7 +1,7 @@
 /**
  * Visibility Preview Component
  *
- * Shows a preview of how profile appears to organizations based on visibility settings
+ * Shows a preview of how Public Page and assignment-review visibility applies
  *
  * PRD References:
  * - Part 5: F4 - Field-level visibility
@@ -28,8 +28,8 @@ interface VisibilityPreviewProps {
 }
 
 function viewModeLabel(viewMode: VisibilityPreviewProps['viewMode']) {
-  if (viewMode === 'network_only') return 'Connections';
-  if (viewMode === 'match_only') return 'After match';
+  if (viewMode === 'network_only') return 'Trusted review context';
+  if (viewMode === 'match_only') return 'Assignment review';
   return 'Public';
 }
 
@@ -55,7 +55,9 @@ export function VisibilityPreview({ fields, viewMode }: VisibilityPreviewProps) 
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base">Preview: how organizations see your profile</CardTitle>
+          <CardTitle className="text-base">
+            Preview: Public Page and assignment-review visibility
+          </CardTitle>
           <Badge variant="outline" className="gap-1">
             <Eye className="h-3 w-3" />
             <span>{viewModeLabel(viewMode)}</span>
@@ -99,11 +101,11 @@ export function VisibilityPreview({ fields, viewMode }: VisibilityPreviewProps) 
                 <div key={field.name} className="text-sm text-muted-foreground">
                   <span className="font-medium">{field.label}</span>
                   {field.visibility === 'network_only' && viewMode === 'public' && (
-                    <span className="text-xs ml-2">(shown to trusted connections)</span>
+                    <span className="text-xs ml-2">(shown in trusted review context)</span>
                   )}
                   {field.visibility === 'match_only' &&
                     (viewMode === 'public' || viewMode === 'network_only') && (
-                      <span className="text-xs ml-2">(shown after a match)</span>
+                      <span className="text-xs ml-2">(shown in assignment review)</span>
                     )}
                   {field.visibility === 'private' && (
                     <span className="text-xs ml-2">(always private)</span>
@@ -119,16 +121,18 @@ export function VisibilityPreview({ fields, viewMode }: VisibilityPreviewProps) 
           <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
           <div className="text-xs text-blue-900">
             <p className="font-medium mb-1">Privacy controls</p>
-            <p>Organizations see different information based on your relationship:</p>
+            <p>Organizations see different information based on review state and reveal rules:</p>
             <ul className="list-disc list-inside mt-1 space-y-0.5">
               <li>
-                <strong>Before match:</strong> Only public sections
+                <strong>Public Page:</strong> Only public sections
               </li>
               <li>
-                <strong>Connections:</strong> Public sections plus sections shared with connections
+                <strong>Trusted review context:</strong> Public sections plus sections explicitly
+                shared for review
               </li>
               <li>
-                <strong>After match:</strong> Public, connections, and after-match sections
+                <strong>Assignment review:</strong> Public, trusted-review, and assignment-review
+                sections only when allowed
               </li>
               <li>
                 <strong>Private sections:</strong> Never shared with organizations

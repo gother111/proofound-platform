@@ -16,6 +16,7 @@ import { EyeOff, Eye } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { toast } from 'sonner';
 
 interface RedactModeToggleProps {
@@ -23,6 +24,10 @@ interface RedactModeToggleProps {
   onChange: (enabled: boolean) => void;
   showLabel?: boolean;
 }
+
+const REDACT_MODE_UPDATE_FAILED_TITLE = 'Redact mode was not changed';
+const REDACT_MODE_UPDATE_FAILED_DESCRIPTION =
+  'Your current privacy view is unchanged. Retry redact mode before sharing your screen.';
 
 export function RedactModeToggle({ enabled, onChange, showLabel = true }: RedactModeToggleProps) {
   const [isLoading, setIsLoading] = useState(false);
@@ -38,8 +43,10 @@ export function RedactModeToggle({ enabled, onChange, showLabel = true }: Redact
         toast.success('Redact mode disabled. All info is visible.');
       }
     } catch (error) {
-      console.error('Failed to toggle redact mode:', error);
-      toast.error('Failed to update redact mode');
+      dispatchClientErrorDiagnostic('privacy.redact_mode.toggle_failed', error);
+      toast.error(REDACT_MODE_UPDATE_FAILED_TITLE, {
+        description: REDACT_MODE_UPDATE_FAILED_DESCRIPTION,
+      });
     } finally {
       setIsLoading(false);
     }

@@ -25,6 +25,12 @@ function StepIcon({ status }: { status: HiringCorridorSnapshot['steps'][number][
 }
 
 export function HiringCorridorTimeline({ corridor }: HiringCorridorTimelineProps) {
+  const currentStepIndex = Math.max(
+    corridor.steps.findIndex((step) => step.status === 'current'),
+    0
+  );
+  const currentStep = corridor.steps[currentStepIndex] ?? corridor.steps[0];
+
   return (
     <div className="space-y-3 rounded-2xl border border-black/5 bg-[#FAF9F5] p-4">
       <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
@@ -38,7 +44,20 @@ export function HiringCorridorTimeline({ corridor }: HiringCorridorTimelineProps
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="rounded-2xl bg-white/80 p-3 md:hidden">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#6B6760]">
+          Corridor step
+        </p>
+        <div className="mt-2 flex items-center gap-2 text-sm font-medium text-foreground">
+          {currentStep ? <StepIcon status={currentStep.status} /> : null}
+          <span>
+            {currentStep?.label ?? 'In progress'} · step {currentStepIndex + 1} of{' '}
+            {corridor.steps.length}
+          </span>
+        </div>
+      </div>
+
+      <div className="hidden flex-wrap gap-2 md:flex">
         {corridor.steps.map((step) => (
           <div
             key={step.id}

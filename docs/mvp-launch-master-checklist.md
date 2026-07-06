@@ -1,5 +1,5 @@
 > Doc Class: `active`
-> Last Verified: `2026-05-14`
+> Last Verified: `2026-05-21`
 
 # Proofound MVP Launch Master Checklist
 
@@ -38,8 +38,8 @@ Use this checklist for the final launch review. Do not treat older partial check
 
 - [ ] The shipped product still matches the locked MVP corridor and has not widened into a broader platform.
 - [ ] Proof Packs remain the product center, with the public portfolio treated as a derived surface rather than the whole product.
-- [ ] The core promise still reads as proof-backed hiring credibility, not generic recruiting, ATS replacement, or social profile theater.
-- [ ] The first corridor is still proof-first hiring for individuals and organizations, not a broadened marketplace or enterprise suite.
+- [ ] The core promise still reads as proof-backed assignment review, not generic recruiting, ATS replacement, or social profile theater.
+- [ ] The first corridor is still proof-first assignment review for individuals and organizations, not a broadened marketplace or enterprise suite.
 - [ ] No excluded ATS, HRIS, payroll, contract-signing, marketplace, public directory, social feed, or enterprise admin scope is active in the launch UI or API surface.
 - [ ] No vanity counters, fake density, or misleading popularity surfaces are active anywhere in the launch-visible experience.
 - [ ] The route surface is reduced to the launch allowlist, with non-MVP routes archived, removed, or hard-gated.
@@ -73,7 +73,7 @@ Use this checklist for the final launch review. Do not treat older partial check
 - [ ] Assignment edit works.
 - [ ] Assignment publish works.
 - [ ] The assignment builder enforces why, work, proof, and constraints before publish.
-- [ ] The organization can review privacy-safe proof-backed candidates.
+- [ ] The organization can review privacy-safe proof-backed submissions.
 - [ ] Blind-by-default review stays active during early review stages.
 - [ ] Intro request works.
 - [ ] Reveal request works.
@@ -94,7 +94,7 @@ Use this checklist for the final launch review. Do not treat older partial check
 ## 3. Privacy, Trust, Verification, And Safety
 
 - [ ] Blind-by-default review is enforced in production.
-- [ ] Reveal requires explicit candidate consent for identity-bearing access.
+- [ ] Reveal requires explicit proof-review participant consent for identity-bearing access.
 - [ ] Reveal stages and state transitions remain canonical and auditable.
 - [ ] Public portfolio rendering does not leak private or review-only information.
 - [ ] File metadata and original filenames do not leak across public, review, queue, or email surfaces.
@@ -125,12 +125,16 @@ Use this checklist for the final launch review. Do not treat older partial check
 - [ ] `npm run test:e2e:individual:strict`
 - [ ] `npm run test:e2e:org:strict`
 - [ ] `npm run test:e2e:privacy:strict`
-- [ ] `npm run test:e2e:providers:strict`
 - [ ] `npm run test:privacy`
 - [ ] `npm run test:privacy:extended`
-- [ ] `BASE_URL=http://localhost:3000 npm run perf:budgets`
-- [ ] `BASE_URL=http://localhost:3000 CRON_SECRET=<secret> npm run monitor:launch`
-- [ ] `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go`
+- [ ] `BASE_URL=<production-candidate-url> npm run perf:budgets`
+- [ ] `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch`
+- [ ] `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run launch:status`
+- [ ] `npm run db:backup:checkpoint`
+- [ ] `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json`
+- [ ] `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go`
+- [ ] Protected launch-status and go/no-go commands use a server-only internal secret; examples may
+      use `CRON_SECRET=<secret>` or `INTERNAL_API_SECRET=<secret>`.
 - [ ] Local `next start` is stable after the build.
 - [ ] Local `/api/health` responds with `status:"ok"` and no diagnostics.
 - [ ] Local `/api/monitoring/launch-status` responds healthy.
@@ -150,7 +154,7 @@ Use this checklist for the final launch review. Do not treat older partial check
 - [ ] A backup checkpoint exists before any high-risk DDL or launch-sensitive schema step.
 - [ ] `npm run db:backup:checkpoint`
 - [ ] A restore rehearsal has been run against an isolated recovery target.
-- [ ] `npm run db:restore:verify -- --checkpoint <dir>`
+- [ ] `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json`
 - [ ] The restore drill outcome is recorded with date and owner.
 - [ ] Live schema and launch-critical policies reflect the intended release.
 - [ ] Launch-critical data safety checks were run against the actual DB target used for launch.
@@ -160,7 +164,9 @@ Use this checklist for the final launch review. Do not treat older partial check
 
 - [ ] Required strict E2E environment variables are set.
 - [ ] `PII_HASH_SALT` is configured for auth and signup test paths.
-- [ ] Provider OAuth credentials and deterministic provider user credentials are valid for strict launch-gate runs.
+- [ ] `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false` unless connected-provider scheduling is intentionally launch-blocking for this target.
+- [ ] Provider OAuth credentials and deterministic provider user credentials are valid only for connected-provider advisory runs.
+- [ ] `npm run test:e2e:providers:advisory` has run only if connected-provider scheduling is intentionally in scope for this target.
 - [ ] `CRON_SECRET` is configured and cron endpoints are protected.
 - [ ] Sentry is configured for runtime and release visibility.
 - [ ] `npm run vercel:preflight`
@@ -211,7 +217,7 @@ Use this checklist for the final launch review. Do not treat older partial check
 - [ ] Pilot terms, pricing, and case-study expectations are documented.
 - [ ] Founder outbound messaging matches the locked product wedge.
 - [ ] Homepage messaging matches the same wedge as outbound messaging.
-- [ ] Candidate supply-seeding plan exists for the chosen corridor.
+- [ ] Proof-submission supply-seeding plan exists for the chosen corridor.
 - [ ] Org onboarding playbook exists for the pilot motion.
 - [ ] Support and escalation expectations are clear for launch partners.
 - [ ] There is no hidden dependency on non-launch integrations to make the MVP appear usable.
@@ -220,13 +226,14 @@ Use this checklist for the final launch review. Do not treat older partial check
 
 ## 9. Launch Evidence Bundle And Signoff
 
-- [ ] `BASE_URL=http://localhost:3000 npm run launch:validate`
+- [ ] `BASE_URL=<production-candidate-url> INTERNAL_API_SECRET=<secret> npm run launch:validate`
 - [ ] `npm run launch:checklist`
 - [ ] A fresh dated launch-validation directory exists for the intended release review.
 - [ ] The fresh bundle includes:
-  - `final-launch-checklist-status.md`
+  - `launch-gate-status.md`
   - `commands.json`
   - redacted per-command logs for every command that ran
+- [ ] `final-launch-checklist-status.md` and `final-launch-checklist-status.json` are generated by `npm run launch:checklist` and match each other.
 - [ ] The fresh bundle shows no unresolved launch-blocking failures.
 - [ ] Any remaining `UNVERIFIED` lines have been converted into dated evidence or explicit `NO-GO`.
 - [ ] The current release SHA is recorded in the evidence bundle or signoff memo.
@@ -266,15 +273,16 @@ npm run test:strict:quality
 npm run test:e2e:individual:strict
 npm run test:e2e:org:strict
 npm run test:e2e:privacy:strict
-npm run test:e2e:providers:strict
 npm run test:privacy
 npm run test:privacy:extended
 npm run db:drift-check
 npm run db:audit:migrations
-BASE_URL=http://localhost:3000 CRON_SECRET=<secret> npm run monitor:launch
-BASE_URL=http://localhost:3000 npm run perf:budgets
-BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go
-BASE_URL=http://localhost:3000 npm run launch:validate
+npm run db:backup:checkpoint
+npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json
+BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch
+BASE_URL=<production-candidate-url> npm run perf:budgets
+BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go
+BASE_URL=<production-candidate-url> INTERNAL_API_SECRET=<secret> npm run launch:validate
 npm run launch:checklist
 ```
 

@@ -5234,7 +5234,8 @@ export const interviews = pgTable(
       .notNull(),
     scheduledAt: timestamp('scheduled_at').notNull(),
     duration: integer('duration').default(30).notNull(), // minutes
-    platform: text('platform', { enum: ['zoom', 'google'] }).notNull(),
+    // Active launch writes `manual` or `google_meet`; `zoom`/`google` are retained for legacy rows only.
+    platform: text('platform', { enum: ['manual', 'google_meet', 'zoom', 'google'] }).notNull(),
     manualMeetingProvider: text('manual_meeting_provider', {
       enum: ['teams', 'zoom', 'google_meet', 'other'],
     }),
@@ -5943,6 +5944,7 @@ export const performanceMetrics = pgTable('performance_metrics', {
   p99: numeric('p99'),
   // Sample metadata
   userAgent: text('user_agent'),
+  responseStatus: integer('response_status'),
   timestamp: timestamp('timestamp').defaultNow().notNull(),
   // Aggregation period (for rolled-up metrics)
   periodStart: timestamp('period_start'),

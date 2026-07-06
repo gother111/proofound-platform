@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm';
 
 import { db } from '@/db';
 import { getRows } from '@/lib/db/rows';
-import { isMockSupabaseEnabled } from '@/lib/env';
+import { isMockSupabaseEnabled, visualFixturesRuntimeAllowed } from '@/lib/env';
 import { normalizeOrganizationWebsite } from '@/lib/organizations/normalizeWebsite';
 import { getVerifiedOrganizationDomainPath } from '@/lib/organizations/trust-profile';
 import {
@@ -153,6 +153,26 @@ export type TraceableProfileSummary = {
 
 const MOCK_ORG_ID = '99999999-9999-4999-9999-999999999999';
 const MOCK_ORG_SLUG = 'test-org';
+const MOCK_LONG_ORG_ID = '99999999-9999-4999-9999-999999999998';
+const MOCK_LONG_ORG_SLUG = 'long-org';
+const MOCK_PROFILE_ID = '77777777-7777-4777-8777-777777777777';
+const MOCK_PROFILE_HANDLE = 'demo-proofound';
+const MOCK_PROFILE_HANDLE_ALIASES = ['mock-individual'] as const;
+
+function isMockPublicIndividualHandle(handle: string) {
+  return (
+    handle === MOCK_PROFILE_HANDLE ||
+    MOCK_PROFILE_HANDLE_ALIASES.includes(handle as (typeof MOCK_PROFILE_HANDLE_ALIASES)[number])
+  );
+}
+
+function visualPublicProjectionFixturesEnabled() {
+  return (
+    isMockSupabaseEnabled() &&
+    process.env.PROOFOUND_VISUAL_FIXTURES === 'true' &&
+    visualFixturesRuntimeAllowed()
+  );
+}
 
 export type PublicIndividualPortfolioProjection = {
   profileId: string;
@@ -1037,7 +1057,6 @@ async function loadIndividualProofOverview(profileId: string): Promise<PublicPro
           hiddenContextTerms
         ) || '',
       freshnessState: aggregate.freshnessState,
-      proofQualityScore: publicSafePack.contract.proofQualityScore,
       schemaVersion: publicSafePack.contract.schemaVersion,
       artifactCount: publicSafePack.items.length,
       contextLabel: publicPackContextLabel,
@@ -1242,9 +1261,271 @@ function buildProofFirstDescription(input: {
   );
 }
 
+function buildMockPublicIndividualPortfolioProjection(): PublicIndividualPortfolioProjection {
+  const handle = MOCK_PROFILE_HANDLE;
+  const shareUrl = `${SITE_URL}/portfolio/${encodeURIComponent(handle)}`;
+  const requestedState = resolveRequestedPublicPortfolioState('public_link_only');
+  const effectiveState = deriveEffectivePublicPortfolioState({
+    requestedState,
+    searchIndexingEnabled: false,
+    minimumContentMet: true,
+  });
+  const publicDisplayName = 'Mika Andersson';
+  const publicHeadline = 'Evidence-led operations and service design lead';
+  const publicBio =
+    'I help teams turn messy operational signals into calmer workflows, clearer proof, and decisions that can be explained without exposing private context.';
+  const publicSkills = [
+    'Service design',
+    'Operations research',
+    'Evidence synthesis',
+    'Stakeholder facilitation',
+    'Privacy-safe reporting',
+    'Product discovery',
+  ];
+  const verificationSummary = summarizeVerificationPolicy({
+    records: [],
+    legacyProfile: {
+      verified: true,
+      verificationMethod: 'veriff',
+      verificationStatus: 'verified',
+      verificationTier: null,
+      verificationTierSource: null,
+      workEmailCurrentlyVerified: true,
+      linkedinVerificationStatus: 'verified',
+      linkedinHasIdentityVerification: true,
+    },
+  });
+  const signals = buildTrustSignals(
+    {
+      id: MOCK_PROFILE_ID,
+      handle,
+      display_name: publicDisplayName,
+      individual_profiles: {
+        headline: publicHeadline,
+        bio: publicBio,
+        verification_status: 'verified',
+        verification_method: 'veriff',
+        verified_at: '2026-03-11T00:00:00.000Z',
+        work_email: 'mika@demo-proofound.example',
+        work_email_verified: true,
+        linkedin_verification_status: 'verified',
+        linkedin_verified_at: '2026-03-11T00:00:00.000Z',
+        linkedin_verification_data: { identity_verified: true },
+        verified: true,
+      },
+    },
+    { proofsCount: 2, acceptedVerificationsCount: 2 },
+    verificationSummary
+  );
+  const proofPacks: PublicTrustExportData['proofPacks'] = [
+    {
+      id: 'visual-public-pack-operations',
+      scope: 'public_safe',
+      status: 'published',
+      title: 'Reduced handoff ambiguity across a partner operations workflow',
+      summary:
+        'Mapped repeated service handoff failures into a concise proof trail that reviewers could inspect without seeing private customer data.',
+      ownershipStatement:
+        'Led discovery, synthesized evidence, and facilitated the operating rhythm with design, support, and delivery partners.',
+      evidenceSummary:
+        'Public-safe artifacts include a decision memo, anonymized journey map, and rollout checklist.',
+      outcomesSummary:
+        'Cut review back-and-forth by 38% and made the next operational decision clear in every weekly review.',
+      verificationStatus: 'verified',
+      verificationSummary: 'Evidence attested by a former manager and a cross-functional peer.',
+      freshnessState: 'current',
+      schemaVersion: PORTFOLIO_EXPORT_SCHEMA_VERSION,
+      artifactCount: 3,
+      contextLabel: 'Operations workflow redesign',
+      selectedEvidence: [
+        {
+          title: 'Public-safe decision memo',
+          artifactDisplayName: 'Decision memo',
+          href: 'https://example.com/proofound/demo/decision-memo',
+          artifactKind: 'link',
+          issuedAt: '2026-02-04T00:00:00.000Z',
+          description:
+            'Summarizes the choices, constraints, and measurable result without exposing internal records.',
+          semanticsNote: 'Supporting evidence only, not a full background check.',
+        },
+        {
+          title: 'Anonymized workflow map',
+          artifactDisplayName: 'Workflow map',
+          href: null,
+          artifactKind: 'document',
+          issuedAt: '2026-02-12T00:00:00.000Z',
+          description:
+            'Shows the before/after handoff structure and the proof points used during review.',
+          semanticsNote: 'Public-safe extract; source workspace remains private.',
+        },
+      ],
+    },
+    {
+      id: 'visual-public-pack-research',
+      scope: 'public_safe',
+      status: 'published',
+      title: 'Built a lightweight research evidence system for assignment reviews',
+      summary:
+        'Created a repeatable way to compare claims, artifacts, and reviewer notes without asking participants to overshare.',
+      ownershipStatement:
+        'Designed the evidence taxonomy, drafted reviewer language, and tested the flow with a small review panel.',
+      evidenceSummary:
+        'Public-safe artifacts include a rubric extract and participant-facing explanation copy.',
+      outcomesSummary:
+        'Reviewers reported clearer tradeoffs and fewer generic participant-fit notes.',
+      verificationStatus: 'partially_verified',
+      verificationSummary: 'Peer-attested with public artifacts available.',
+      freshnessState: 'recent',
+      schemaVersion: PORTFOLIO_EXPORT_SCHEMA_VERSION,
+      artifactCount: 2,
+      contextLabel: 'Proof-first assignment-review research',
+      selectedEvidence: [
+        {
+          title: 'Rubric extract',
+          artifactDisplayName: 'Review rubric',
+          href: 'https://example.com/proofound/demo/rubric',
+          artifactKind: 'link',
+          issuedAt: '2026-01-18T00:00:00.000Z',
+          description: 'A short public extract of the rubric used to separate claims from proof.',
+          semanticsNote: 'Supports the claim; does not reveal private reviewer notes.',
+        },
+      ],
+    },
+  ];
+  const traceableSummary: TraceableProfileSummary = {
+    provenanceLabel: 'Generated from public-safe Proof Packs and context tokens',
+    hasEnoughData: true,
+    segments: [
+      {
+        key: 'scale',
+        label: 'Scale',
+        value: 'Cross-functional workflows with 8-30 reviewers and operators',
+        state: 'ready',
+        sources: [
+          {
+            id: 'visual-public-pack-operations',
+            label: 'Proof Pack: Operations workflow redesign',
+            detail: 'Review rhythm and handoff clarity',
+          },
+        ],
+      },
+      {
+        key: 'focus',
+        label: 'Focus',
+        value: 'Turning ambiguous work evidence into calmer decisions',
+        state: 'ready',
+        sources: [
+          {
+            id: 'visual-public-pack-research',
+            label: 'Proof Pack: Proof-first assignment-review research',
+            detail: 'Evidence taxonomy and reviewer language',
+          },
+        ],
+      },
+      {
+        key: 'context',
+        label: 'Context',
+        value: 'Privacy-aware teams that need trust without oversharing',
+        state: 'ready',
+        sources: [
+          {
+            id: 'visual-public-pack-operations',
+            label: 'Proof Pack: Operations workflow redesign',
+            detail: 'Public-safe decision memo',
+          },
+        ],
+      },
+    ],
+  };
+  const visibility = mergeVisibilityFlags({
+    bio: true,
+    contact: false,
+    workEmail: false,
+    skills: true,
+    counts: true,
+    proofBar: true,
+    header: true,
+    identity: true,
+    linkedin: true,
+  });
+  const exportData: PublicTrustExportData = {
+    schemaVersion: PORTFOLIO_EXPORT_SCHEMA_VERSION,
+    surface: 'individual_public',
+    exportedAt: '2026-03-11T00:00:00.000Z',
+    shareUrl,
+    profile: {
+      id: MOCK_PROFILE_ID,
+      handle,
+      displayName: publicDisplayName,
+      headline: publicHeadline,
+      bio: publicBio,
+    },
+    publication: {
+      requestedState,
+      effectiveState,
+      searchIndexingEnabled: false,
+    },
+    signals,
+    skills: publicSkills.map((skill, index) => ({
+      id: `visual-public-skill-${index + 1}`,
+      name: skill,
+      level: 5,
+    })),
+    proofPacks,
+    visibility,
+  };
+  const proofFirstDescription = buildProofFirstDescription({
+    publicDisplayName,
+    publicHeadline,
+    publicBio,
+    proofPacks,
+  });
+
+  return {
+    profileId: MOCK_PROFILE_ID,
+    handle,
+    requestedState,
+    effectiveState,
+    shareUrl,
+    publicDisplayName,
+    publicHeadline,
+    publicBio,
+    publicSkills,
+    publicProofCount: 2,
+    verifiedPublicProofPackCount: 1,
+    featuredProofs: [],
+    traceableSummary,
+    visibility,
+    individual: {
+      work_email: null,
+    },
+    signals,
+    verificationSummary,
+    exportData,
+    metadata: {
+      path: `/portfolio/${encodeURIComponent(handle)}`,
+      title: `${publicDisplayName} | Proofound`,
+      description: proofFirstDescription,
+      ogTitle: `${publicDisplayName} on Proofound`,
+      ogDescription: proofFirstDescription,
+      useGenericPreview: shouldUseGenericSharePreview(effectiveState),
+    },
+    jsonLd: {
+      description: proofFirstDescription,
+    },
+    minimumContentMet: true,
+    hasLinkOnlyContent: true,
+    hasRevealGatedContent: false,
+  };
+}
+
 export async function getPublicIndividualPortfolioProjectionByHandle(
   handle: string
 ): Promise<PublicIndividualPortfolioProjection | null> {
+  if (visualPublicProjectionFixturesEnabled() && isMockPublicIndividualHandle(handle)) {
+    return buildMockPublicIndividualPortfolioProjection();
+  }
+
   const profile = await loadIndividualProfileByHandle(handle);
   if (!profile) {
     return null;
@@ -1478,9 +1759,9 @@ function buildMockPublicOrganizationPortfolioProjection(): PublicOrganizationPor
     operating_region: 'EU',
     verified: true,
     website: 'https://test-org.example',
-    tagline: 'Proof-first hiring practice for focused launch review.',
+    tagline: 'Proof-first assignment review practice for focused launch review.',
     mission:
-      'Help teams review candidates through concrete work evidence instead of polished claims.',
+      'Help teams review submissions through concrete work evidence instead of polished claims.',
     working_context:
       'A launch-safe mock organization used for local hiring-flow and public trust-page testing.',
     type: 'company',
@@ -1506,7 +1787,7 @@ function buildMockPublicOrganizationPortfolioProjection(): PublicOrganizationPor
     role: 'Proof-first product reviewer',
     engagementType: 'full_time',
     businessValue: 'Improve review quality through clearer proof expectations.',
-    description: 'Review candidate work through structured evidence and launch-safe summaries.',
+    description: 'Review proof submissions through structured evidence and launch-safe summaries.',
     expectedImpact: 'Shortlists become more explainable, privacy-safe, and grounded in real work.',
     outcomes: ['Clarify proof expectations', 'Reduce vague review decisions'],
   };
@@ -1536,13 +1817,13 @@ function buildMockPublicOrganizationPortfolioProjection(): PublicOrganizationPor
         ? 'Proofound organization portfolio'
         : `${organization.display_name} | Proofound`,
       description: shouldUseGenericSharePreview(effectiveState)
-        ? 'Shareable organization profile on Proofound.'
+        ? 'Shareable organization trust page on Proofound.'
         : publicSummary,
       ogTitle: shouldUseGenericSharePreview(effectiveState)
         ? 'Proofound organization portfolio'
         : `${organization.display_name} on Proofound`,
       ogDescription: shouldUseGenericSharePreview(effectiveState)
-        ? 'Shareable organization profile on Proofound.'
+        ? 'Shareable organization trust page on Proofound.'
         : publicSummary,
       useGenericPreview: shouldUseGenericSharePreview(effectiveState),
     },
@@ -1568,6 +1849,89 @@ function buildMockPublicOrganizationPortfolioProjection(): PublicOrganizationPor
       assignmentSnapshot,
     },
     assignmentSnapshot,
+    minimumContentMet: true,
+  };
+}
+
+function buildMockLongPublicOrganizationPortfolioProjection(): PublicOrganizationPortfolioProjection {
+  const organization: OrganizationRow = {
+    id: MOCK_LONG_ORG_ID,
+    slug: MOCK_LONG_ORG_SLUG,
+    display_name:
+      'Nordic Distributed Proof Operations Research Collective For Very Long Public Names',
+    public_portfolio_state: 'public_link_only',
+    search_indexing_enabled_at: null,
+    trust_status: 'domain_verified',
+    trust_status_updated_at: '2026-05-18T00:00:00.000Z',
+    website_verified_at: '2026-05-18T00:00:00.000Z',
+    operating_region: null,
+    verified: true,
+    website:
+      'https://proof-operations-research-collective.example.com/teams/very-long-public-profile-path',
+    tagline: null,
+    mission: null,
+    working_context: null,
+    type: 'company',
+  };
+  const visibility: OrganizationVisibilityRow = {
+    display_name: 'public',
+    mission: 'public',
+  };
+  const verifiedDomainPath =
+    'proof-operations-research-collective.example.com/verified/organization/domain/path';
+  const publicSummary = '';
+  const effectiveState = deriveEffectivePublicPortfolioState({
+    requestedState: resolveRequestedPublicPortfolioState(organization.public_portfolio_state),
+    searchIndexingEnabled: false,
+    minimumContentMet: true,
+  });
+  const shareUrl = `${SITE_URL}/portfolio/org/${encodeURIComponent(organization.slug)}`;
+  const verificationSummary = summarizeVerificationPolicy({
+    records: [],
+    legacyOrganization: {
+      trustStatus: 'domain_verified',
+      verified: true,
+    },
+  });
+
+  return {
+    organizationId: organization.id,
+    slug: organization.slug,
+    requestedState: resolveRequestedPublicPortfolioState(organization.public_portfolio_state),
+    effectiveState,
+    shareUrl,
+    publicDisplayName: organization.display_name,
+    publicSummary,
+    verifiedDomainPath,
+    visibility,
+    organization,
+    verificationSummary,
+    metadata: {
+      path: `/portfolio/org/${encodeURIComponent(organization.slug)}`,
+      title: 'Proofound organization portfolio',
+      description: 'Shareable organization trust page on Proofound.',
+      ogTitle: 'Proofound organization portfolio',
+      ogDescription: 'Shareable organization trust page on Proofound.',
+      useGenericPreview: true,
+    },
+    jsonLd: {
+      description: 'Shareable organization trust page on Proofound.',
+    },
+    exportData: {
+      schemaVersion: PORTFOLIO_EXPORT_SCHEMA_VERSION,
+      surface: 'organization_public',
+      exportedAt: new Date().toISOString(),
+      shareUrl,
+      organization: {
+        id: organization.id,
+        slug: organization.slug,
+        displayName: organization.display_name,
+        verifiedDomainPath,
+        website: normalizeOrganizationWebsite(organization.website).value || undefined,
+        verified: true,
+      },
+    },
+    assignmentSnapshot: null,
     minimumContentMet: true,
   };
 }
@@ -1649,8 +2013,11 @@ async function loadPublicOrganizationAssignmentSnapshot(
 export async function getPublicOrganizationPortfolioProjectionBySlug(
   slug: string
 ): Promise<PublicOrganizationPortfolioProjection | null> {
-  if (isMockSupabaseEnabled() && slug === MOCK_ORG_SLUG) {
+  if (visualPublicProjectionFixturesEnabled() && slug === MOCK_ORG_SLUG) {
     return buildMockPublicOrganizationPortfolioProjection();
+  }
+  if (visualPublicProjectionFixturesEnabled() && slug === MOCK_LONG_ORG_SLUG) {
+    return buildMockLongPublicOrganizationPortfolioProjection();
   }
 
   const organization = await loadOrganizationBySlug(slug);
@@ -1691,22 +2058,24 @@ export async function getPublicOrganizationPortfolioProjectionBySlug(
     trustStatus: organization.trust_status,
     verified: organization.verified,
   });
-  const publicSummary =
+  const explicitPublicSummary =
     (visibility?.mission === 'public'
       ? organization.mission?.trim()
-      : organization.tagline?.trim()) ||
-    organization.tagline?.trim() ||
-    verifiedDomainPath ||
-    'Public organization profile on Proofound.';
+      : organization.tagline?.trim()) || organization.tagline?.trim();
+  const publicSummary =
+    explicitPublicSummary || verifiedDomainPath || 'Public organization trust page on Proofound.';
+  const hasVerifiedTrustSignal = Boolean(
+    organization.verified ||
+      organization.trust_status === 'domain_verified' ||
+      organization.trust_status === 'platform_reviewed' ||
+      organization.website_verified_at ||
+      verificationSummary.publicBadges.length > 0
+  );
 
   const minimumContentMet = Boolean(
     organization.slug &&
       publicDisplayName &&
-      (publicSummary ||
-        organization.verified ||
-        organization.trust_status === 'domain_verified' ||
-        organization.trust_status === 'platform_reviewed' ||
-        organization.website_verified_at)
+      (explicitPublicSummary || verifiedDomainPath || hasVerifiedTrustSignal || assignmentSnapshot)
   );
 
   const effectiveState = deriveEffectivePublicPortfolioState({
@@ -1735,13 +2104,13 @@ export async function getPublicOrganizationPortfolioProjectionBySlug(
         ? 'Proofound organization portfolio'
         : `${publicDisplayName} | Proofound`,
       description: shouldUseGenericSharePreview(effectiveState)
-        ? 'Shareable organization profile on Proofound.'
+        ? 'Shareable organization trust page on Proofound.'
         : publicSummary,
       ogTitle: shouldUseGenericSharePreview(effectiveState)
         ? 'Proofound organization portfolio'
         : `${publicDisplayName} on Proofound`,
       ogDescription: shouldUseGenericSharePreview(effectiveState)
-        ? 'Shareable organization profile on Proofound.'
+        ? 'Shareable organization trust page on Proofound.'
         : publicSummary,
       useGenericPreview: shouldUseGenericSharePreview(effectiveState),
     },

@@ -17,6 +17,11 @@ import {
 } from '@/lib/candidate-invite-policy';
 import { CAPABILITY_TOKEN_CLASSES, inspectCapabilityToken } from '@/lib/security/capability-tokens';
 import { upsertCanonicalProofCardSubmission } from '@/lib/canonical/submissions';
+import {
+  candidateInviteVisualFixturesEnabled,
+  VISUAL_CANDIDATE_INVITE_TOKENS,
+} from '@/lib/candidate-invites/visual-fixtures';
+import { log } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
 
@@ -73,6 +78,57 @@ export async function POST(
     }
 
     const { token } = await params;
+    if (
+      candidateInviteVisualFixturesEnabled() &&
+      token === VISUAL_CANDIDATE_INVITE_TOKENS.proofCardClaimed
+    ) {
+      let body: unknown;
+      try {
+        body = await request.json();
+      } catch {
+        return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+      }
+      const parsed = submitProofCardSchema.safeParse(body);
+
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'Invalid proof card payload', details: parsed.error.flatten() },
+          { status: 400 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        status: CANDIDATE_INVITE_STATUS.PROOF_SUBMITTED,
+        canonicalPackId: parsed.data.proofPackId,
+        canonicalSubmissionId: 'visual-candidate-invite-submission',
+        accountSave: {
+          state: 'saved_private_workspace',
+          accountId: user.id,
+          proofPackId: parsed.data.proofPackId,
+          canonicalSubmissionId: 'visual-candidate-invite-submission',
+          assignmentReviewState: {
+            inviteId: 'visual-candidate-invite-1',
+            assignmentId: 'visual-assignment-candidate-proof',
+            matchId: null,
+            conversationId: null,
+          },
+          controls: {
+            proofWorkspaceUrl: PRIVATE_PROOF_WORKSPACE_URL,
+            profileVisibilityUrl: PROFILE_VISIBILITY_URL,
+            privacyDataControlsUrl: PRIVACY_DATA_CONTROLS_URL,
+            verificationWorkspaceUrl: VERIFICATION_WORKSPACE_URL,
+            assignmentReviewUrl: buildAssignmentReviewUrl(null),
+          },
+          publication: {
+            publicPageChanged: false,
+            publicDirectoryEntryCreated: false,
+            defaultVisibility: 'owner_only',
+          },
+        },
+      });
+    }
+
     const inspectedInviteToken = await inspectCapabilityToken(token, {
       tokenClass: CAPABILITY_TOKEN_CLASSES.CANDIDATE_INVITE_CLAIM,
       actor: {
@@ -88,7 +144,12 @@ export async function POST(
     if (!inspectedInviteToken.ok) {
       return NextResponse.json({ error: 'Invite not found' }, { status: 404 });
     }
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
     const parsed = submitProofCardSchema.safeParse(body);
 
     if (!parsed.success) {
@@ -146,6 +207,13 @@ export async function POST(
       invite.orgId,
       invite.assignmentId
     );
+
+    if (!invite.assignmentId) {
+      return NextResponse.json(
+        { error: 'This invite is missing assignment context.' },
+        { status: 409 }
+      );
+    }
 
     if (invite.assignmentId && !assignment) {
       return NextResponse.json({ error: 'Assignment not found.' }, { status: 404 });
@@ -209,7 +277,7 @@ export async function POST(
         return NextResponse.json(
           {
             error:
-              'Assignment applications can only submit an owner-only proof record. Public pages and share links are not accepted for this flow.',
+              'Assignment proof submissions can only submit an owner-only proof record. Public pages and share links are not accepted for this flow.',
           },
           { status: 409 }
         );
@@ -281,7 +349,9 @@ export async function POST(
       },
     });
   } catch (error) {
-    console.error('Failed to submit proof card for invite:', error);
+    log.error('candidate_invite.proof_card.submit_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json({ error: 'Failed to submit Proof Card' }, { status: 500 });
   }
 }
