@@ -51,7 +51,7 @@ describe('Start from CV guardrails', () => {
     expect(config.globalDailyLimit).toBe(20);
   });
 
-  it('keeps legacy invite access closed for a non-beta individual user when open beta is off', async () => {
+  it('opens access for a non-allow-listed individual when the feature gates are enabled', async () => {
     await expect(
       assertStartFromCvAccess({
         userId: '11111111-1111-4111-8111-111111111111',
@@ -63,7 +63,7 @@ describe('Start from CV guardrails', () => {
           NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED: 'false',
         },
       })
-    ).rejects.toMatchObject({ code: 'START_FROM_CV_NOT_INVITED' });
+    ).resolves.toBeUndefined();
   });
 
   it('keeps open beta closed until the guest first-proof scaffolding gate is approved', async () => {
@@ -81,7 +81,7 @@ describe('Start from CV guardrails', () => {
     ).rejects.toMatchObject({ code: 'START_FROM_CV_APPROVED_SCAFFOLDING_REQUIRED' });
   });
 
-  it('opens beta access only when the approved guest first-proof scaffolding gate is enabled', async () => {
+  it('opens authenticated individual access when the approved guest first-proof scaffolding gate is enabled', async () => {
     await expect(
       assertStartFromCvAccess({
         userId: '11111111-1111-4111-8111-111111111111',
@@ -90,7 +90,6 @@ describe('Start from CV guardrails', () => {
         env: {
           START_FROM_CV_BETA_ENABLED: 'true',
           START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_ENABLED: 'true',
-          START_FROM_CV_OPEN_BETA_ENABLED: 'true',
           NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED: 'false',
         },
       })
@@ -113,7 +112,23 @@ describe('Start from CV guardrails', () => {
     ).rejects.toMatchObject({ code: 'INDIVIDUAL_ONLY' });
   });
 
-  it('reports beta blockers when enabled without open beta or an invite audience', () => {
+  it('does not require a legacy invite audience once approved scaffolding is enabled', () => {
+    const summary = getStartFromCvLaunchSummary({
+      START_FROM_CV_BETA_ENABLED: 'true',
+      START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_ENABLED: 'true',
+      NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED: 'false',
+    });
+
+    expect(summary.enabled).toBe(true);
+    expect(summary.ok).toBe(true);
+    expect(summary.authenticatedUserBeta).toBe(true);
+    expect(summary.inviteOnly).toBe(false);
+    expect(summary.allowedUserCount).toBe(0);
+    expect(summary.allowedOrgCount).toBe(0);
+    expect(summary.blockers).not.toContain('invite_audience_not_configured');
+  });
+
+  it('still reports the approved scaffolding gate as required before authenticated-user access', () => {
     const summary = getStartFromCvLaunchSummary({
       START_FROM_CV_BETA_ENABLED: 'true',
       NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED: 'false',
@@ -121,21 +136,22 @@ describe('Start from CV guardrails', () => {
 
     expect(summary.enabled).toBe(true);
     expect(summary.ok).toBe(false);
+    expect(summary.authenticatedUserBeta).toBe(false);
+    expect(summary.inviteOnly).toBe(false);
     expect(summary.blockers).toContain('guest_first_proof_scaffolding_not_approved');
-    expect(summary.blockers).toContain('invite_audience_not_configured');
+    expect(summary.blockers).not.toContain('invite_audience_not_configured');
   });
 
-  it('reports authenticated-user beta readiness only after the guest scaffolding approval gate', () => {
+  it('reports authenticated-user beta readiness after the guest scaffolding approval gate', () => {
     const summary = getStartFromCvLaunchSummary({
       START_FROM_CV_BETA_ENABLED: 'true',
       START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_ENABLED: 'true',
-      START_FROM_CV_OPEN_BETA_ENABLED: 'true',
       NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED: 'false',
     });
 
     expect(summary.enabled).toBe(true);
     expect(summary.guestFirstProofScaffoldingEnabled).toBe(true);
-    expect(summary.openBetaEnabled).toBe(true);
+    expect(summary.openBetaEnabled).toBe(false);
     expect(summary.authenticatedUserBeta).toBe(true);
     expect(summary.inviteOnly).toBe(false);
     expect(summary.allowedUserCount).toBe(0);

@@ -5,13 +5,7 @@ import { and, count, eq, gte, isNull, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/db';
-import {
-  education,
-  experiences,
-  organizationMembers,
-  startFromCvImportSessions,
-  volunteering,
-} from '@/db/schema';
+import { education, experiences, startFromCvImportSessions, volunteering } from '@/db/schema';
 import {
   generateJson,
   generateJsonWithDeepSeek,
@@ -376,14 +370,6 @@ export function getStartFromCvLaunchSummary(env: EnvReader = process.env) {
   if (config.enabled && !config.guestFirstProofScaffoldingEnabled) {
     blockers.push('guest_first_proof_scaffolding_not_approved');
   }
-  if (
-    config.enabled &&
-    !config.openBetaEnabled &&
-    config.allowedUserIds.length === 0 &&
-    config.allowedOrgIds.length === 0
-  ) {
-    blockers.push('invite_audience_not_configured');
-  }
   if (config.enabled && config.useGcpOcr) {
     const ocr = resolveGcpCvOcrConfig(env);
     if (!ocr.available) {
@@ -424,8 +410,8 @@ export function getStartFromCvLaunchSummary(env: EnvReader = process.env) {
     enabled: config.enabled,
     guestFirstProofScaffoldingEnabled: config.guestFirstProofScaffoldingEnabled,
     openBetaEnabled: config.openBetaEnabled,
-    authenticatedUserBeta: config.openBetaEnabled,
-    inviteOnly: !config.openBetaEnabled,
+    authenticatedUserBeta: config.enabled && config.guestFirstProofScaffoldingEnabled,
+    inviteOnly: false,
     allowedUserCount: config.allowedUserIds.length,
     allowedOrgCount: config.allowedOrgIds.length,
     useGcpOcr: config.useGcpOcr,
@@ -471,17 +457,6 @@ export async function assertStartFromCvAccess(context: StartFromCvEligibilityCon
   }
   if (context.persona && context.persona !== 'individual') {
     throw new StartFromCvError('INDIVIDUAL_ONLY', 403);
-  }
-
-  const orgIds = context.orgIds ?? (await loadActiveOrgIds(context.userId));
-  const eligible =
-    config.openBetaEnabled ||
-    Boolean(context.isBetaTesting) ||
-    config.allowedUserIds.includes(context.userId) ||
-    orgIds.some((orgId) => config.allowedOrgIds.includes(orgId));
-
-  if (!eligible) {
-    throw new StartFromCvError('START_FROM_CV_NOT_INVITED', 403);
   }
 }
 
@@ -806,14 +781,6 @@ function parseCsv(value: string | undefined): string[] {
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean);
-}
-
-async function loadActiveOrgIds(userId: string): Promise<string[]> {
-  const rows = await db
-    .select({ orgId: organizationMembers.orgId })
-    .from(organizationMembers)
-    .where(and(eq(organizationMembers.userId, userId), eq(organizationMembers.state, 'active')));
-  return rows.map((row) => row.orgId);
 }
 
 export async function enforceStartFromCvDailyLimits(userId: string, env?: EnvReader) {

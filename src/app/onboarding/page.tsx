@@ -34,9 +34,7 @@ function isExpectedMissingAuthSession(error: unknown) {
 export default async function OnboardingPage({ searchParams }: OnboardingPageProps) {
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const individualCompletionPath = normalizeInternalNextPath(resolvedSearchParams.next);
-  const startFromCvScaffoldingSurface = individualCompletionPath?.startsWith('/candidate-invite/')
-    ? START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE
-    : undefined;
+  const startFromCvScaffoldingSurface = START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE;
   const supabase = await createClient();
   const {
     data: { user },

@@ -147,12 +147,10 @@ describe('IndividualSetup first-proof flow', () => {
 
     render(<IndividualSetup />);
 
-    fillBasicDetails();
-
-    expect(screen.queryByRole('button', { name: /Start from CV/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Import your CV/i })).not.toBeInTheDocument();
   });
 
-  it('shows optional Start from CV only for the candidate-invite private scaffolding path', async () => {
+  it('shows optional CV import before manual proof setup for the private scaffolding path', async () => {
     startFromCvStatus.visible = true;
     startFromCvStatus.available = true;
 
@@ -163,12 +161,12 @@ describe('IndividualSetup first-proof flow', () => {
       />
     );
 
-    fillBasicDetails();
-
-    expect(screen.getByText(/Start from CV - draft your proof foundation/i)).toBeInTheDocument();
+    expect(screen.getAllByText('Import your CV').length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: /Import your CV/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /or start from scratch/i })).toBeInTheDocument();
     expect(screen.queryByText(/score|rank|shortlist/i)).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /Draft from CV/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Import your CV/i }));
     expect(await screen.findByTestId('start-from-cv-dialog')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /Continue manually/i }));
@@ -176,6 +174,21 @@ describe('IndividualSetup first-proof flow', () => {
     await waitFor(() =>
       expect(screen.queryByTestId('start-from-cv-dialog')).not.toBeInTheDocument()
     );
+  });
+
+  it('hides the CV import entry when provider gates make Start from CV unavailable', () => {
+    startFromCvStatus.visible = false;
+    startFromCvStatus.available = false;
+    startFromCvStatus.blockers = ['ai_provider_policy_api_key_missing'];
+
+    render(
+      <IndividualSetup
+        startFromCvScaffoldingSurface={START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE}
+      />
+    );
+
+    expect(screen.queryByRole('button', { name: /Import your CV/i })).not.toBeInTheDocument();
+    expect(screen.getByLabelText('First name *')).toBeInTheDocument();
   });
 
   it('captures one link artifact before broad profile setup', async () => {

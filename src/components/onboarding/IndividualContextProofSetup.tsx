@@ -643,58 +643,94 @@ export function IndividualSetup({
       </div>
 
       {phase === 'basic_details' ? (
-        <Card className="mx-auto rounded-lg border-proofound-stone dark:border-border">
-          <CardHeader>
-            <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
-              Basic details
-            </CardTitle>
-            <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
-              Name and residence only. The proof comes next.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={submitBasicDetails} className="space-y-5">
-              <div className="grid gap-5 md:grid-cols-2">
-                <div>
-                  <Label htmlFor="firstName">First name *</Label>
-                  <Input
-                    id="firstName"
-                    name="firstName"
-                    required
-                    defaultValue={basicDetails.firstName}
-                  />
+        <div className="space-y-5">
+          {canUseStartFromCv ? (
+            <Card className="mx-auto rounded-lg border-proofound-forest/25 bg-proofound-forest/5 dark:border-proofound-forest/30">
+              <CardHeader>
+                <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
+                  Import your CV
+                </CardTitle>
+                <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
+                  Let Proofound draft private proof context from your CV before you build your first
+                  Proof Pack. You decide what to keep.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <Button
+                    type="button"
+                    className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
+                    onClick={() => setIsCvImportOpen(true)}
+                  >
+                    <FileUp className="mr-2 h-4 w-4" aria-hidden="true" />
+                    Import your CV
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="justify-start text-proofound-charcoal/70 hover:text-proofound-forest dark:text-muted-foreground dark:hover:text-primary"
+                    onClick={() => document.getElementById('firstName')?.focus()}
+                  >
+                    or start from scratch
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
+
+          <Card className="mx-auto rounded-lg border-proofound-stone dark:border-border">
+            <CardHeader>
+              <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
+                Basic details
+              </CardTitle>
+              <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
+                Name and residence only. The proof comes next.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={submitBasicDetails} className="space-y-5">
+                <div className="grid gap-5 md:grid-cols-2">
+                  <div>
+                    <Label htmlFor="firstName">First name *</Label>
+                    <Input
+                      id="firstName"
+                      name="firstName"
+                      required
+                      defaultValue={basicDetails.firstName}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="lastName">Last name *</Label>
+                    <Input
+                      id="lastName"
+                      name="lastName"
+                      required
+                      defaultValue={basicDetails.lastName}
+                    />
+                  </div>
                 </div>
                 <div>
-                  <Label htmlFor="lastName">Last name *</Label>
+                  <Label htmlFor="residence">City or residence *</Label>
                   <Input
-                    id="lastName"
-                    name="lastName"
+                    id="residence"
+                    name="residence"
                     required
-                    defaultValue={basicDetails.lastName}
+                    defaultValue={basicDetails.residence}
                   />
                 </div>
-              </div>
-              <div>
-                <Label htmlFor="residence">City or residence *</Label>
-                <Input
-                  id="residence"
-                  name="residence"
-                  required
-                  defaultValue={basicDetails.residence}
-                />
-              </div>
-              <div className="flex justify-end">
-                <Button
-                  type="submit"
-                  size="lg"
-                  className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
-                >
-                  Continue to proof artifact
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+                <div className="flex justify-end">
+                  <Button
+                    type="submit"
+                    size="lg"
+                    className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
+                  >
+                    Continue to proof artifact
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
       ) : null}
 
       {phase === 'artifact_input' ? (
@@ -716,31 +752,6 @@ export function IndividualSetup({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {canUseStartFromCv ? (
-              <div className="mb-5 rounded-lg border border-proofound-forest/25 bg-proofound-forest/5 p-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="space-y-1">
-                    <p className="text-sm font-semibold text-proofound-charcoal dark:text-foreground">
-                      Start from CV - draft your proof foundation
-                    </p>
-                    <p className="text-sm leading-6 text-proofound-charcoal/70 dark:text-muted-foreground">
-                      Use your CV only to draft private context. Review, skip, discard, or edit
-                      suggestions before you build this assignment proof.
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="shrink-0"
-                    onClick={() => setIsCvImportOpen(true)}
-                  >
-                    <FileUp className="mr-2 h-4 w-4" aria-hidden="true" />
-                    Draft from CV
-                  </Button>
-                </div>
-              </div>
-            ) : null}
-
             <form onSubmit={submitArtifact} className="space-y-5">
               <div>
                 <Label htmlFor="artifactType">Artifact type *</Label>

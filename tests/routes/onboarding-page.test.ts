@@ -94,12 +94,15 @@ describe('OnboardingPage', () => {
 
     expect(result).toMatchObject({
       type: 'first-proof-onboarding',
-      props: { initialPersona: 'individual' },
+      props: {
+        initialPersona: 'individual',
+        startFromCvScaffoldingSurface: START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE,
+      },
     });
     expect(resolveUserHomePathMock).not.toHaveBeenCalled();
   });
 
-  it('passes the approved Start from CV scaffolding surface only for candidate invite onboarding', async () => {
+  it('preserves candidate invite completion path while opening Start from CV scaffolding', async () => {
     getIndividualProfileCompletionStateMock.mockResolvedValue({
       isCoreProfileComplete: false,
       checks: { hasStructuredProofPack: false },
@@ -119,7 +122,7 @@ describe('OnboardingPage', () => {
     });
   });
 
-  it('keeps external next URLs from enabling guest CV scaffolding', async () => {
+  it('keeps external next URLs from becoming completion paths while preserving CV scaffolding', async () => {
     getIndividualProfileCompletionStateMock.mockResolvedValue({
       isCoreProfileComplete: false,
       checks: { hasStructuredProofPack: false },
@@ -134,7 +137,7 @@ describe('OnboardingPage', () => {
       props: {
         initialPersona: 'individual',
         individualCompletionPath: undefined,
-        startFromCvScaffoldingSurface: undefined,
+        startFromCvScaffoldingSurface: START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE,
       },
     });
   });

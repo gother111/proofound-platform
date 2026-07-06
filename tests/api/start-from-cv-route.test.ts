@@ -23,6 +23,7 @@ const mocks = vi.hoisted(() => {
     acceptStartFromCvDrafts: vi.fn(),
     discardStartFromCvSession: vi.fn(),
     assertStartFromCvAccess: vi.fn(),
+    getStartFromCvLaunchSummary: vi.fn(),
     StartFromCvError: MockStartFromCvError,
   };
 });
@@ -50,8 +51,15 @@ vi.mock('@/lib/ai/start-from-cv', () => ({
     })
     .strict(),
   resolveStartFromCvConfig: () => ({
+    enabled: true,
+    maxFileSizeMb: 5,
     maxFileSizeBytes: 5 * 1024 * 1024,
+    maxPages: 4,
+    userDailyLimit: 3,
+    globalDailyLimit: 20,
+    retentionHours: 24,
   }),
+  getStartFromCvLaunchSummary: (...args: unknown[]) => mocks.getStartFromCvLaunchSummary(...args),
   StartFromCvAcceptSchema: z
     .object({
       accepted: z
@@ -78,6 +86,7 @@ vi.mock('@/lib/ai/start-from-cv', () => ({
 }));
 
 import { POST as createSession } from '@/app/api/ai/start-from-cv/sessions/route';
+import { GET as getStatus } from '@/app/api/ai/start-from-cv/status/route';
 import { GET as getSession } from '@/app/api/ai/start-from-cv/sessions/[sessionId]/route';
 import { POST as extractSession } from '@/app/api/ai/start-from-cv/sessions/[sessionId]/extract/route';
 import { POST as acceptSession } from '@/app/api/ai/start-from-cv/sessions/[sessionId]/accept/route';
@@ -117,6 +126,14 @@ describe('Start from CV API routes', () => {
       },
     });
     mocks.assertStartFromCvAccess.mockResolvedValue(undefined);
+    mocks.getStartFromCvLaunchSummary.mockReturnValue({
+      enabled: true,
+      guestFirstProofScaffoldingEnabled: true,
+      inviteOnly: false,
+      authenticatedUserBeta: true,
+      blockers: [],
+      ok: true,
+    });
     mocks.createStartFromCvSession.mockResolvedValue({
       importSessionId: sessionId,
       sourceType: 'cv',
@@ -194,9 +211,9 @@ describe('Start from CV API routes', () => {
     expect(mocks.createStartFromCvSession).not.toHaveBeenCalled();
   });
 
-  it('returns a safe beta denial if access is unavailable for the account', async () => {
+  it('returns a safe unavailable response if the feature is disabled', async () => {
     mocks.createStartFromCvSession.mockRejectedValueOnce(
-      new mocks.StartFromCvError('START_FROM_CV_NOT_INVITED', 403)
+      new mocks.StartFromCvError('START_FROM_CV_DISABLED', 404)
     );
 
     const response = await createSession(
@@ -207,8 +224,29 @@ describe('Start from CV API routes', () => {
     );
     const payload = await response.json();
 
-    expect(response.status).toBe(403);
-    expect(payload.error).toBe('Start from CV beta is not available for this account.');
+    expect(response.status).toBe(404);
+    expect(payload.error).toBe('Start from CV is not available.');
+  });
+
+  it('returns hidden unavailable status instead of a 500 when provider gates are incomplete', async () => {
+    mocks.getStartFromCvLaunchSummary.mockReturnValueOnce({
+      enabled: true,
+      guestFirstProofScaffoldingEnabled: true,
+      inviteOnly: false,
+      authenticatedUserBeta: true,
+      blockers: ['ai_provider_policy_api_key_missing'],
+      ok: false,
+    });
+
+    const response = await getStatus(
+      new NextRequest('http://localhost/api/ai/start-from-cv/status')
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.visible).toBe(false);
+    expect(payload.available).toBe(false);
+    expect(payload.blockers).toContain('ai_provider_policy_api_key_missing');
   });
 
   it('rejects profile-context session creation without the approved private scaffolding surface', async () => {

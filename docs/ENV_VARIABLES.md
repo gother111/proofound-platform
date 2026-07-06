@@ -1231,13 +1231,12 @@ npm run ocr:production:smoke
 
 ### START_FROM_CV_BETA_ENABLED
 
-**Purpose**: Disabled-by-default Start from CV beta. This is an individual onboarding helper that turns a user-owned CV into private editable drafts. It can run as an authenticated-individual open beta when `START_FROM_CV_OPEN_BETA_ENABLED=true`, or as a legacy invite-scoped beta when the open-beta flag is off. It is not CV screening, candidate evaluation, employer-side parsing, matching, ranking, shortlisting, verification, trust state, or public portfolio publication.
+**Purpose**: Disabled-by-default Start from CV helper. This is an individual onboarding helper that turns a user-owned CV into private editable drafts. Once `START_FROM_CV_BETA_ENABLED=true` and `START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_ENABLED=true`, it is available to authenticated individual users without the legacy invite allow-list. It is not CV screening, candidate evaluation, employer-side parsing, matching, ranking, shortlisting, verification, trust state, or public portfolio publication.
 
 **Format**:
 
 ```env
 START_FROM_CV_BETA_ENABLED=false
-START_FROM_CV_OPEN_BETA_ENABLED=false
 START_FROM_CV_ALLOWED_USER_IDS=
 START_FROM_CV_ALLOWED_ORG_IDS=
 START_FROM_CV_USE_GCP_OCR=false
@@ -1260,7 +1259,8 @@ NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED=false
 **Behavior**:
 
 - Keep `START_FROM_CV_BETA_ENABLED=false` by default.
-- Set `START_FROM_CV_OPEN_BETA_ENABLED=true` only when the beta is approved for all authenticated individual users. If it remains `false`, enabling requires an invite audience through `START_FROM_CV_ALLOWED_USER_IDS`, `START_FROM_CV_ALLOWED_ORG_IDS`, or a beta-testing individual profile.
+- Keep `START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_ENABLED=false` until the approved private first-proof scaffolding surface is intentionally enabled.
+- `START_FROM_CV_ALLOWED_USER_IDS`, `START_FROM_CV_ALLOWED_ORG_IDS`, and `START_FROM_CV_OPEN_BETA_ENABLED` are legacy rollout controls retained for compatibility and rollback notes only; they no longer gate access once the feature and approved scaffolding gates are enabled.
 - `NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED` must remain `false`; the archived browser CV OCR path is not part of this beta.
 - Accepted file types are PDF, PNG, and JPG/JPEG only. DOCX is not supported in this beta.
 - Default limits are 5 MB, 4 pages, 3 sessions per user per day, 20 sessions globally per day, and 24-hour retention.

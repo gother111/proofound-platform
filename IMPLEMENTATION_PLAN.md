@@ -95,7 +95,7 @@ This plan and the audit **supersede** `Proofound_MVP_Locked_Source_of_Truth_2026
    **Acceptance:** `/` renders new composition, both CTAs above fold resolve, no "corridor"/"attestation" strings in rendered homepage copy, landing e2e/visual suite updated & passing, `npm run build` succeeds.
    **Verify:** standard gates + `npm run test:e2e:landing` + `npm run build`.
 
-### [ ] P0-6 — Reopen the CV import path
+### [x] P0-6 — Reopen the CV import path
 
 **Objective:** CV import becomes the fast entry to a proof profile, not an invite-only beta.
 **Files:** `src/lib/ai/start-from-cv.ts` (~line 484 throws `START_FROM_CV_NOT_INVITED` 403), its allow-list source, `src/app/api/ai/start-from-cv/*`, individual onboarding entry point. (The older wizard endpoints under `src/app/api/expertise/cv-import/*` are archived stubs — leave archived; `start-from-cv` is the live path.)
