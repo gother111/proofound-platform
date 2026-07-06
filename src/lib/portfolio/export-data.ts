@@ -169,7 +169,8 @@ function buildExportProofPack(
     id: aggregate.pack.id,
     scope,
     status: contract.status,
-    title: projection?.title || aggregate.pack.title || selectedEvidence[0]?.title || 'Proof Pack',
+    title:
+      projection?.title || aggregate.pack.title || selectedEvidence[0]?.title || 'Proof record',
     summary: contract.primaryClaim.statement,
     ownershipStatement: contract.ownershipStatement,
     evidenceSummary: projection?.evidenceSummary ?? aggregate.pack.evidenceSummary ?? null,

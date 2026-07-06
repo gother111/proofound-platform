@@ -31,7 +31,7 @@ export function ProofObjectSection() {
             Every real claim should resolve to evidence.
           </h2>
           <p className="mt-6 text-[1.08rem] leading-8 text-[color:var(--landing-surface)]">
-            Show one large, editorial-scale Proof Pack visual. The point is not volume. It is a
+            Show one large, editorial-scale proof record visual. The point is not volume. It is a
             calmer claim surface that can be inspected.
           </p>
 
@@ -59,7 +59,7 @@ export function ProofObjectSection() {
               <div className="flex flex-col gap-4 border-b border-[var(--landing-border-soft)] pb-6 md:flex-row md:items-start md:justify-between">
                 <div>
                   <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--landing-clay)]">
-                    Proof Pack
+                    Proof record
                   </div>
                   <div className="mt-3 font-display text-[2rem] leading-none">
                     Onboarding redesign

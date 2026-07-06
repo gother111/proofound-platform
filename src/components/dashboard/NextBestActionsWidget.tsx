@@ -16,6 +16,8 @@ import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api/fetch';
 import { DASHBOARD_STATUS_CHIP_CLASS } from '@/components/dashboard/chipStyles';
 import { NextStepsHelper } from '@/components/dashboard/NextStepsHelper';
+import { TermHint } from '@/components/ui/term-hint';
+import { UI_VOCABULARY } from '@/lib/copy/vocabulary';
 import type { ReadinessAction } from '@/lib/momentum/types';
 
 type ProofReadinessState = 'portfolio_ready' | 'browse_ready' | 'qualified_intro_ready';
@@ -60,8 +62,9 @@ export function NextBestActionsWidget({
         topActions: [
           {
             id: 'add-proof',
-            title: 'Structure first Proof Pack',
-            description: 'Turn one real artifact into a clean Proof Pack with context and outcome.',
+            title: 'Structure first proof record',
+            description:
+              'Turn one real artifact into a clean proof record with context and outcome.',
             priority: 'high',
             category: 'verification',
             actionUrl: '/app/i/profile?profileView=full&tab=proof_packs',
@@ -140,10 +143,10 @@ export function NextBestActionsWidget({
 
   const getReadinessStatus = () => {
     if (readiness?.highestState === 'qualified_intro_ready') {
-      return { text: 'Intro eligible', color: 'text-green-700' };
+      return { text: UI_VOCABULARY.readyForIntroductionsLabel, color: 'text-green-700' };
     }
     if (readiness?.highestState === 'browse_ready' || readiness?.flags?.matchVisible) {
-      return { text: 'Match visible', color: 'text-blue-700' };
+      return { text: UI_VOCABULARY.visibleToMatchingLabel, color: 'text-blue-700' };
     }
     if (readiness?.highestState === 'portfolio_ready' || readiness?.flags?.portfolioReady) {
       return { text: 'Portfolio ready', color: 'text-proofound-forest' };
@@ -154,26 +157,30 @@ export function NextBestActionsWidget({
   const status = getReadinessStatus();
   const checklist = [
     {
-      label: 'First Proof Pack created',
+      label: 'First proof record created',
       met: Boolean(
         readiness?.states?.includes('portfolio_ready') || readiness?.flags?.portfolioReady
       ),
+      hint: 'One structured work sample, credential, or case study has been saved.',
     },
     {
       label: 'Public Page ready',
       met: Boolean(
         readiness?.states?.includes('portfolio_ready') || readiness?.flags?.portfolioReady
       ),
+      hint: UI_VOCABULARY.readinessHints.portfolioReady,
     },
     {
       label: 'Matching preferences saved',
       met: Boolean(readiness?.states?.includes('browse_ready') || readiness?.flags?.matchVisible),
+      hint: UI_VOCABULARY.readinessHints.visibleToMatching,
     },
     {
       label: 'Non-self verification added',
       met: Boolean(
         readiness?.states?.includes('qualified_intro_ready') || readiness?.flags?.introEligible
       ),
+      hint: UI_VOCABULARY.readinessHints.readyForIntroductions,
     },
   ];
 
@@ -198,7 +205,11 @@ export function NextBestActionsWidget({
               ) : (
                 <Circle className="h-4 w-4 text-muted-foreground" />
               )}
-              <span>{item.label}</span>
+              <TermHint
+                label={item.label}
+                description={item.hint}
+                ariaLabel={`${item.label} explanation`}
+              />
             </div>
           ))}
         </div>

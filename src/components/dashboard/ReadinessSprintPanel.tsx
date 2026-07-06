@@ -59,7 +59,7 @@ export function ReadinessSprintPanel() {
     primaryAction?.actionUrl === '/app/i/portfolio'
       ? '/app/i/profile?profileView=full&tab=proof_packs'
       : primaryAction?.actionUrl || '/app/i/profile?profileView=full&tab=proof_packs';
-  const fallbackActionTitle = primaryAction?.title || 'Review Proof Packs';
+  const fallbackActionTitle = primaryAction?.title || 'Review proof records';
 
   return (
     <Card className="overflow-hidden border-proofound-stone/70 bg-white/85">
@@ -94,7 +94,7 @@ export function ReadinessSprintPanel() {
               </p>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
                 {primaryAction?.description ||
-                  'Keep your Proof Packs current, public-safe, and easy to share.'}
+                  'Keep your proof records current, public-safe, and easy to share.'}
               </p>
               <div className="mt-5">
                 <Button
@@ -154,7 +154,7 @@ export function ReadinessSprintPanel() {
               href="/app/i/profile?profileView=full&tab=proof_packs"
               className="inline-flex items-center gap-2 text-sm font-medium text-proofound-forest hover:text-proofound-forest/80"
             >
-              Review Proof Packs
+              Review proof records
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>

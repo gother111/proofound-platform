@@ -64,8 +64,8 @@ export function VerificationSection({
       </div>
       <p className="mb-3 text-sm text-muted-foreground">
         {hasProofContext
-          ? 'Optional. Skipping is fine for portfolio-ready, but intro-readiness usually needs a non-self trust anchor attached to proof.'
-          : 'Add proof first. Skill attestations must stay attached to a proof link or uploaded document.'}
+          ? 'Optional. Skipping is fine for portfolio-ready, but introduction readiness usually needs a non-self trusted confirmation attached to proof.'
+          : 'Add proof first. Skill confirmations must stay attached to a proof link or uploaded document.'}
       </p>
 
       {showRequestVerification && (

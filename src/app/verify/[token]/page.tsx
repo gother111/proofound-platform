@@ -430,7 +430,7 @@ export default function VerifySkillPage() {
                   {isImpactVerification(data)
                     ? `You've successfully submitted verification for ${data.requester_name}.`
                     : data.request_kind === 'human_observed_attestation'
-                      ? `You've recorded a bounded observed-in-practice attestation for ${data.requester_name}.`
+                      ? `You've recorded a bounded observed-in-practice confirmation for ${data.requester_name}.`
                       : `You've successfully submitted verification for ${data.requester_name}.`}
                 </p>
               </>
@@ -441,7 +441,7 @@ export default function VerifySkillPage() {
                   Partial Response Recorded
                 </h2>
                 <p className="text-muted-foreground">
-                  You recorded a structured partial attestation. It has been stored for review and
+                  You recorded a structured partial confirmation. It has been stored for review and
                   audit.
                 </p>
               </>

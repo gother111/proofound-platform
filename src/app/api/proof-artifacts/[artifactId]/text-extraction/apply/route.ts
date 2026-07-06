@@ -96,7 +96,7 @@ async function loadUserBetaContext(userId: string) {
 function safeProofArtifactOcrApplyMessage(code: string) {
   switch (code) {
     case 'PROOF_PACK_NOT_DRAFT':
-      return 'OCR text can only be applied to a draft Proof Pack.';
+      return 'OCR text can only be applied to a draft proof record.';
     case 'NO_DRAFT_FIELDS_SELECTED':
       return 'Choose at least one draft field to apply.';
     default:

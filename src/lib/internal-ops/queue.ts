@@ -63,7 +63,7 @@ export const INTERNAL_OPS_QUEUE_META = {
   privacy_reveal_exception: {
     label: 'Privacy / reveal disputes',
     description:
-      'Privacy-safe reveal disputes, exception requests, and reveal corridor issues that need operator review.',
+      'Privacy-safe reveal disputes, exception requests, and reveal-flow issues that need operator review.',
   },
   correction_revocation: {
     label: 'Redaction / risky upload',
@@ -72,7 +72,7 @@ export const INTERNAL_OPS_QUEUE_META = {
   },
   pilot_ops: {
     label: 'Pilot ops',
-    description: 'Pilot coordination tasks that keep the hiring corridor narrow and moving.',
+    description: 'Pilot coordination tasks that keep the hiring flow narrow and moving.',
   },
 } satisfies Record<
   InternalOpsQueueType,

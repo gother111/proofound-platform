@@ -308,7 +308,7 @@ export default function OrganizationInterviewsPage() {
 
     if (
       !confirm(
-        'Mark this interview as a no-show? The corridor will require a replacement interview.'
+        'Mark this interview as a no-show? The hiring flow will require a replacement interview.'
       )
     ) {
       return;
@@ -474,8 +474,7 @@ export default function OrganizationInterviewsPage() {
             Interviews
           </h1>
           <p className="text-sm" style={{ color: '#6B6760' }}>
-            Track the full hiring corridor, from shortlist through decision and engagement
-            verification
+            Track the full hiring flow, from shortlist through decision and engagement verification
           </p>
         </div>
 
@@ -485,10 +484,10 @@ export default function OrganizationInterviewsPage() {
               <Calendar className="h-8 w-8" style={{ color: '#1C4D3A' }} />
             </div>
             <h2 className="mb-2 text-xl font-medium" style={{ color: '#2D3330' }}>
-              No Active Hiring Corridor Yet
+              No Active Hiring Flow Yet
             </h2>
             <p className="mb-6 max-w-md text-sm text-muted-foreground">
-              Once you shortlist a candidate, this page will show each corridor stage, the privacy
+              Once you shortlist a candidate, this page will show each hiring stage, the privacy
               status, and the next legal action.
             </p>
           </div>

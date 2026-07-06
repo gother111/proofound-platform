@@ -215,7 +215,7 @@ export const FALLBACK_COPY: Record<
     individual: {
       title: 'Your profile remains shareable and searchable.',
       detail:
-        'Add proof or trust signals to strengthen intro readiness. Portfolio value comes first even before stronger matching corridors unlock.',
+        'Add proof or trust signals to strengthen introduction readiness. Portfolio value comes first even before stronger matching flows unlock.',
       statusLabel: 'Proof coverage in progress',
       nextActions: [
         'Improve your portfolio or proof',
@@ -287,7 +287,7 @@ export const FALLBACK_COPY: Record<
     individual: {
       title: 'There are not enough qualified introductions yet.',
       detail:
-        'Your portfolio is still doing useful work while we protect quality and keep the introduction corridor honest.',
+        'Your portfolio is still doing useful work while we protect quality and keep the introduction flow honest.',
       statusLabel: 'Intro hold',
       nextActions: [
         'Improve your portfolio or proof',
@@ -298,8 +298,8 @@ export const FALLBACK_COPY: Record<
     organization: {
       title: 'There are not enough qualified introductions yet for this assignment.',
       detail:
-        'The intro corridor is on hold instead of sending weak introductions. Browse-safe review and assignment edits remain available.',
-      statusLabel: 'Intro corridor hold',
+        'The introduction flow is on hold instead of sending weak introductions. Browse-safe review and assignment edits remain available.',
+      statusLabel: 'Introduction flow hold',
       nextActions: [
         'Broaden assignment scope',
         'Request more evidence on strong fits',

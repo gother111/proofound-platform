@@ -14,7 +14,7 @@ describe('buildTextPack', () => {
         handle: 'jane',
         displayName: 'Jane Doe',
         headline: 'Impact builder',
-        bio: 'Legacy bio that should not lead when proof packs exist.',
+        bio: 'Legacy bio that should not lead when proof records exist.',
       },
       publication: {
         requestedState: 'public_link_only',
@@ -39,13 +39,13 @@ describe('buildTextPack', () => {
           id: 'pack-1',
           scope: 'public_safe',
           status: 'published',
-          title: 'Proof Pack: Product Strategy',
+          title: 'Product strategy proof record',
           summary: 'Led a launch-critical product strategy cycle.',
           ownershipStatement: 'Owned the product strategy contribution for this launch.',
           evidenceSummary: 'Cross-checked against a public launch memo.',
           outcomesSummary: 'Shipped the MVP in two weeks.',
           verificationStatus: 'verified',
-          verificationSummary: 'Scoped verification supports this Proof Pack.',
+          verificationSummary: 'Scoped verification supports this proof record.',
           freshnessState: 'fresh',
           proofQualityScore: 0.8,
           schemaVersion: 'proof_pack/v2',
@@ -77,13 +77,13 @@ describe('buildTextPack', () => {
     });
 
     expect(text).toContain('Proof-backed summary:');
-    expect(text).toContain('- Proof Pack: Product Strategy: Shipped the MVP in two weeks.');
-    expect(text).toContain('Selected proof packs:');
+    expect(text).toContain('- Product strategy proof record: Shipped the MVP in two weeks.');
+    expect(text).toContain('Selected proof records:');
     expect(text).toContain('Context: Product Strategy');
     expect(text).toContain('Verification: Verified evidence');
     expect(text).toContain('Freshness: Fresh');
     expect(text).toContain('Ownership: Owned the product strategy contribution for this launch.');
-    expect(text).toContain('Verification summary: Scoped verification supports this Proof Pack.');
+    expect(text).toContain('Verification summary: Scoped verification supports this proof record.');
     expect(text).toContain('Skills evidenced in selected proof:');
     expect(text).toContain('Product Strategy, Delivery');
     expect(text).toContain(
@@ -95,7 +95,7 @@ describe('buildTextPack', () => {
     );
   });
 
-  it('does not fall back to raw top-skill percentages when no proof packs are selected', () => {
+  it('does not fall back to raw top-skill percentages when no proof records are selected', () => {
     const text = buildTextPack({
       schemaVersion: 'proofound.portfolio-export.v1',
       surface: 'individual_public',
@@ -137,8 +137,8 @@ describe('buildTextPack', () => {
       },
     });
 
-    expect(text).toContain('Selected proof packs:');
-    expect(text).toContain('- No public proof packs are selected yet.');
+    expect(text).toContain('Selected proof records:');
+    expect(text).toContain('- No public proof records are selected yet.');
     expect(text).not.toContain('Strategy: 100%');
     expect(text).not.toContain('Skills evidenced in selected proof:');
   });

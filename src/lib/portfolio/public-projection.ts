@@ -728,7 +728,7 @@ function buildTraceableProfileSummary(input: {
         sources = [
           {
             id: 'public-proof-supported-skills',
-            label: 'Public Proof Packs',
+            label: 'Public proof records',
             detail: 'Proof-supported skill links',
           },
         ];
@@ -748,7 +748,7 @@ function buildTraceableProfileSummary(input: {
   );
 
   return {
-    provenanceLabel: 'Generated from public-safe Proof Packs and context tokens',
+    provenanceLabel: 'Generated from public-safe proof records and context tokens',
     segments,
     hasEnoughData: segments.some((segment) => segment.state === 'ready'),
   };
@@ -980,7 +980,7 @@ async function loadIndividualProofOverview(profileId: string): Promise<PublicPro
       sanitizePublicText(publicSafePack.contract.title, hiddenContextTerms) ||
       sanitizePublicText(publicSafePack.title, hiddenContextTerms) ||
       sanitizePublicText(aggregate.pack.title, hiddenContextTerms) ||
-      'Proof Pack';
+      'Proof record';
     const publicPackContextLabel = resolvePublicProofPackContextLabel({
       pack: aggregate.pack,
       hiddenContextTerms,
@@ -1482,7 +1482,7 @@ function buildMockPublicOrganizationPortfolioProjection(): PublicOrganizationPor
     mission:
       'Help teams review candidates through concrete work evidence instead of polished claims.',
     working_context:
-      'A launch-safe mock organization used for local corridor and public trust-page testing.',
+      'A launch-safe mock organization used for local hiring-flow and public trust-page testing.',
     type: 'company',
   };
   const visibility: OrganizationVisibilityRow = {

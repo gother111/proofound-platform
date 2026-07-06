@@ -8,7 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DASHBOARD_STATUS_CHIP_CLASS } from '@/components/dashboard/chipStyles';
+import { TermHint } from '@/components/ui/term-hint';
 import { apiFetch } from '@/lib/api/fetch';
+import { UI_VOCABULARY } from '@/lib/copy/vocabulary';
 import type { IndividualReadiness } from '@/lib/momentum/types';
 import { getLaunchReadinessDisplayLabel } from '@/lib/readiness/launch-display';
 
@@ -134,11 +136,20 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
           </div>
           <div className="space-y-2">
             {[
-              { label: 'Portfolio ready', met: Boolean(data?.flags.portfolioReady) },
-              { label: 'Match visible', met: Boolean(data?.flags.matchVisible) },
               {
-                label: 'Intro eligible',
+                label: 'Portfolio ready',
+                met: Boolean(data?.flags.portfolioReady),
+                hint: UI_VOCABULARY.readinessHints.portfolioReady,
+              },
+              {
+                label: UI_VOCABULARY.visibleToMatchingLabel,
+                met: Boolean(data?.flags.matchVisible),
+                hint: UI_VOCABULARY.readinessHints.visibleToMatching,
+              },
+              {
+                label: UI_VOCABULARY.readyForIntroductionsLabel,
                 met: Boolean(data?.flags.introEligible),
+                hint: UI_VOCABULARY.readinessHints.readyForIntroductions,
               },
             ].map((item) => (
               <div key={item.label} className="flex items-center gap-2 text-sm">
@@ -147,7 +158,12 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
                 ) : (
                   <Circle className="h-4 w-4 text-muted-foreground" />
                 )}
-                <span className="text-foreground">{item.label}</span>
+                <TermHint
+                  label={item.label}
+                  description={item.hint}
+                  ariaLabel={`${item.label} explanation`}
+                  className="text-foreground"
+                />
               </div>
             ))}
           </div>

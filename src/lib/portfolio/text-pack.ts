@@ -70,7 +70,7 @@ export function buildTextPack(data: IndividualPortfolioExportData): string {
 
   if (proofPacks.length > 0) {
     lines.push('');
-    lines.push('Selected proof packs:');
+    lines.push('Selected proof records:');
     proofPacks.slice(0, 5).forEach((pack) => {
       lines.push(`- ${pack.title}`);
       if (pack.contextLabel) {
@@ -106,8 +106,8 @@ export function buildTextPack(data: IndividualPortfolioExportData): string {
     });
   } else {
     lines.push('');
-    lines.push('Selected proof packs:');
-    lines.push('- No public proof packs are selected yet.');
+    lines.push('Selected proof records:');
+    lines.push('- No public proof records are selected yet.');
   }
 
   if (badges.length > 0) {
@@ -123,7 +123,7 @@ export function buildTextPack(data: IndividualPortfolioExportData): string {
 
   lines.push('');
   lines.push('Verification summary:');
-  lines.push(`- Selected Proof Packs: ${proofPacks.length}`);
+  lines.push(`- Selected proof records: ${proofPacks.length}`);
   lines.push(`- Verified checks: ${signals.verifications.count}`);
   lines.push(`- Public proof signals: ${signals.proofs.count}`);
 

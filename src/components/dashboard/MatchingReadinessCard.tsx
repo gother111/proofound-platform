@@ -158,7 +158,7 @@ export function MatchingReadinessCard({ useMockData, onActionClick }: MatchingRe
               {fallbackCopy ? (
                 <NextStepsHelper
                   actions={fallbackCopy.nextActions.map((action) => ({ title: action }))}
-                  description="Open introduction-readiness next steps."
+                  description="Open introduction readiness next steps."
                 />
               ) : null}
             </div>

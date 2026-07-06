@@ -279,7 +279,7 @@ export default function VerifyCustomRequestPage() {
                 <h2 className="text-2xl font-semibold text-foreground mb-2">Thank You!</h2>
                 <p className="text-muted-foreground mb-4">
                   {data?.request_kind === 'human_observed_attestation'
-                    ? `You've recorded a bounded observed-in-practice attestation for ${data?.requester_name}.`
+                    ? `You've recorded a bounded observed-in-practice confirmation for ${data?.requester_name}.`
                     : `You've verified ${data?.requester_name}'s selected profile artifacts.`}
                 </p>
                 <p className="text-sm text-muted-foreground">
@@ -293,7 +293,7 @@ export default function VerifyCustomRequestPage() {
                   Partial Response Recorded
                 </h2>
                 <p className="text-muted-foreground">
-                  You recorded a structured partial attestation. It has been stored for review and
+                  You recorded a structured partial confirmation. It has been stored for review and
                   audit.
                 </p>
               </>
@@ -322,7 +322,7 @@ export default function VerifyCustomRequestPage() {
           </div>
           <p className="text-white/80 text-sm">
             {data?.request_kind === 'human_observed_attestation'
-              ? 'Review a bounded observed-in-practice attestation request.'
+              ? 'Review a bounded observed-in-practice confirmation request.'
               : 'Review one request that covers multiple artifacts'}
           </p>
         </CardHeader>

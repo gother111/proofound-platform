@@ -107,7 +107,7 @@ export function ProfileTabsSection({
       <TabsList className="w-full justify-start bg-transparent border-b border-border/40 rounded-none h-auto p-0 gap-6 relative">
         {[
           { id: 'context', label: 'Context', icon: Briefcase, color: '#C67B5C' },
-          { id: 'proof_packs', label: 'Proof Packs', icon: PackageOpen, color: '#7A9278' },
+          { id: 'proof_packs', label: 'Proof records', icon: PackageOpen, color: '#7A9278' },
           { id: 'verification', label: 'Verification', icon: ShieldCheck, color: '#5C8B89' },
           { id: 'visibility', label: 'Visibility / Portfolio', icon: Globe, color: '#7A9278' },
         ].map((tab) => {

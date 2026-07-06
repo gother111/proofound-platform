@@ -145,8 +145,7 @@ function buildMockAssignment(
     orgId: MOCK_ORG_ID,
     role: 'Partner launch operations lead',
     engagementType: 'full_time',
-    businessValue:
-      'Create one clear proof-led hiring corridor with privacy-safe review checkpoints.',
+    businessValue: 'Create one clear proof-led hiring flow with privacy-safe review checkpoints.',
     description:
       'Define the work outcome, how success will be observed, and which evidence counts.',
     expectedImpact:

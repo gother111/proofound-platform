@@ -78,8 +78,8 @@ export default async function OrganizationProfilePage({
             <CardContent className="space-y-5 text-sm text-muted-foreground">
               <p className="max-w-3xl leading-6">
                 Keep this page limited to the calm organization story that supports one clear
-                assignment corridor. Culture hubs, governance showcases, and other org-suite
-                surfaces stay outside the MVP.
+                assignment flow. Culture hubs, governance showcases, and other org-suite surfaces
+                stay outside the MVP.
               </p>
               <div className="grid gap-3 sm:grid-cols-2">
                 {trustItems.map((item) => (
@@ -106,7 +106,7 @@ export default async function OrganizationProfilePage({
 
           <Card className="border-black/[0.04] dark:border-white/5">
             <CardHeader>
-              <CardTitle className="text-lg">Launch corridor</CardTitle>
+              <CardTitle className="text-lg">Launch flow</CardTitle>
               <CardDescription>Trust basics ready: {readyTrustCount}/4</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 text-sm text-muted-foreground">

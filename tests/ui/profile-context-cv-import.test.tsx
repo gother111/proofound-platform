@@ -207,7 +207,7 @@ describe('profile context CV import', () => {
     expect(screen.getByText('Not independently verified')).toBeInTheDocument();
     expect(screen.getByText('Model evaluation')).toBeInTheDocument();
     expect(screen.getByText('Mentored 12 students')).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: /Proof Packs/i })).toHaveLength(3);
+    expect(screen.getAllByRole('link', { name: /Proof records/i })).toHaveLength(3);
     expect(screen.getByText('Verified')).toBeInTheDocument();
   });
 });

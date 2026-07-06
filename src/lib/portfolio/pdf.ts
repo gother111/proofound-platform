@@ -240,7 +240,7 @@ export async function generateTrustPdf(input: TrustPdfInput): Promise<Buffer> {
       sectionTop + 118,
       leftWidth,
       108,
-      input.proofPacks.length > 0 ? 'Selected Proof Packs' : 'Proof-linked skills'
+      input.proofPacks.length > 0 ? 'Selected proof records' : 'Proof-linked skills'
     );
     if (input.proofPacks.length > 0) {
       let packY = sectionTop + 144;

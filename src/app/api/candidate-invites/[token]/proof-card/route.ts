@@ -41,7 +41,7 @@ const submitProofCardSchema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['proofPackId'],
-        message: 'Owner-only Proof Pack ID is required.',
+        message: 'Owner-only proof record ID is required.',
       });
     }
 
@@ -198,7 +198,7 @@ export async function POST(
         .limit(1);
 
       if (!proofPack) {
-        return NextResponse.json({ error: 'Proof Pack not found.' }, { status: 404 });
+        return NextResponse.json({ error: 'Proof record not found.' }, { status: 404 });
       }
 
       if (
@@ -209,7 +209,7 @@ export async function POST(
         return NextResponse.json(
           {
             error:
-              'Assignment applications can only submit an owner-only Proof Pack. Public pages and share links are not accepted for this flow.',
+              'Assignment applications can only submit an owner-only proof record. Public pages and share links are not accepted for this flow.',
           },
           { status: 409 }
         );

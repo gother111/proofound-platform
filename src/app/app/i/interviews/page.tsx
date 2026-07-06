@@ -206,7 +206,7 @@ export default function InterviewsPage() {
       <AppSurface>
         <div className="max-w-4xl mx-auto space-y-6">
           <p className="text-sm text-muted-foreground" role="status" aria-live="polite">
-            Loading interview corridor...
+            Loading interview flow...
           </p>
           <PageIntroSkeleton showAction={false} />
           <CardListSkeleton count={3} />
@@ -227,7 +227,7 @@ export default function InterviewsPage() {
             Interviews
           </h1>
           <p className="max-w-2xl text-sm leading-6" style={{ color: '#6B6760' }}>
-            Track the corridor from shortlist through interview, decision, and engagement
+            Track the hiring flow from shortlist through interview, decision, and engagement
             verification.
           </p>
         </div>
@@ -239,7 +239,7 @@ export default function InterviewsPage() {
               <Calendar className="w-8 h-8" style={{ color: '#1C4D3A' }} />
             </div>
             <h2 className="mb-2 font-display text-xl font-semibold" style={{ color: '#2D3330' }}>
-              No active hiring corridor yet
+              No active hiring flow yet
             </h2>
             <p className="mb-6 max-w-md text-sm leading-6 text-muted-foreground">
               Nothing needs scheduling right now. When an organization shortlists you, this page

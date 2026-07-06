@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
                 id: 'record_interview_outcome',
                 label: 'Complete the interview first',
                 description:
-                  'The legal next action is to finish the interview corridor before recording a decision.',
+                  'The legal next action is to finish the interview flow before recording a decision.',
               },
             },
             { status: 409 }

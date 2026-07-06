@@ -43,7 +43,7 @@ export const getRouteMeta = (pathname: string): RouteMeta => {
   if (path.includes('/opportunities'))
     return {
       title: 'Launch note',
-      description: 'Opportunity browsing stays inside matching for the MVP corridor',
+      description: 'Opportunity browsing stays inside matching for the MVP flow',
       icon: Briefcase,
     };
   if (path.includes('/app/o/') && path.includes('/profile'))
@@ -69,7 +69,7 @@ export const getRouteMeta = (pathname: string): RouteMeta => {
   if (path.includes('/projects'))
     return {
       title: 'Launch note',
-      description: 'Project libraries remain outside the MVP corridor',
+      description: 'Project libraries remain outside the MVP flow',
       icon: Briefcase,
     };
   if (path.includes('/app/o/') && path.includes('/portfolio'))

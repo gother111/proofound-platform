@@ -601,12 +601,12 @@ function buildVerificationSummary(input: {
 
   const summary =
     input.verificationStatus === 'verified'
-      ? 'Scoped verification supports this Proof Pack.'
+      ? 'Scoped verification supports this proof record.'
       : input.verificationStatus === 'partially_verified'
-        ? 'Some scoped verification supports parts of this Proof Pack.'
+        ? 'Some scoped verification supports parts of this proof record.'
         : input.verificationStatus === 'disputed'
-          ? 'Verification is disputed or contradicted for this Proof Pack.'
-          : 'No scoped verification is recorded for this Proof Pack yet.';
+          ? 'Verification is disputed or contradicted for this proof record.'
+          : 'No scoped verification is recorded for this proof record yet.';
 
   return {
     status: input.verificationStatus,
@@ -1082,7 +1082,7 @@ function resolvePublicSafePackTitle(input: {
   items: CanonicalProofItemAggregate[];
   safeItems: Array<{ title: string }>;
 }) {
-  const replacementTitle = input.safeItems[0]?.title || 'Proof Pack';
+  const replacementTitle = input.safeItems[0]?.title || 'Proof record';
 
   if (
     input.items.some(({ artifact, uploadedFile }) => {
@@ -1299,7 +1299,7 @@ export function buildCanonicalPublicProofPackProjection(input: {
   }
 
   const publicPackTitle = heldUploadArtifactTitles.has(input.pack.title)
-    ? safeItems[0]?.title || 'Proof Pack'
+    ? safeItems[0]?.title || 'Proof record'
     : resolvePublicSafePackTitle({
         packTitle: input.pack.title,
         items: input.items,

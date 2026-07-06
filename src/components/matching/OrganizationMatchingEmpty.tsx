@@ -23,7 +23,7 @@ export function OrganizationMatchingEmpty({
   const launchSteps = [
     {
       label: 'Trust profile',
-      detail: 'Basics make the review corridor credible',
+      detail: 'Basics make the review flow credible',
       icon: ShieldCheck,
     },
     {
@@ -33,7 +33,7 @@ export function OrganizationMatchingEmpty({
     },
     {
       label: 'Candidate signals',
-      detail: 'Review starts after the corridor is ready',
+      detail: 'Review starts after the hiring flow is ready',
       icon: ArrowRight,
     },
   ] as const;
@@ -53,7 +53,7 @@ export function OrganizationMatchingEmpty({
               </h2>
               <p className="max-w-xl text-base leading-relaxed text-muted-foreground">
                 Start with the role context reviewers need: skills, constraints, and proof
-                expectations. Candidate identity stays protected until the corridor is ready.
+                expectations. Candidate identity stays protected until the hiring flow is ready.
               </p>
             </div>
 
@@ -73,7 +73,7 @@ export function OrganizationMatchingEmpty({
 
           <div className="rounded-2xl border border-proofound-stone/70 bg-white/65 p-4">
             <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-proofound-charcoal/60">
-              Corridor sequence
+              Review sequence
             </p>
             <div className="space-y-3">
               {launchSteps.map((step) => {

@@ -216,9 +216,9 @@ function getWidgetContent(widgetId: string): {
       title: 'Portfolio Readiness',
       content: (
         <div className="text-sm text-muted-foreground">
-          <p className="overline mb-3">Keep the launch corridor proof-first</p>
+          <p className="overline mb-3">Keep the launch flow proof-first</p>
           <p>
-            Add strong Proof Packs, tighten visibility, and publish your portfolio before spending
+            Add strong proof records, tighten visibility, and publish your portfolio before spending
             time on broader skill dashboards.
           </p>
         </div>
@@ -250,7 +250,7 @@ function getWidgetContent(widgetId: string): {
         <div className="text-sm text-muted-foreground">
           <p className="overline mb-3">Proof-first launch checklist</p>
           <ul className="space-y-2">
-            <li>First Proof Pack created</li>
+            <li>First proof record created</li>
             <li>Public Page ready</li>
             <li>Matching preferences saved</li>
             <li>One non-self verification planned</li>

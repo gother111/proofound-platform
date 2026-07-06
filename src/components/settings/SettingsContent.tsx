@@ -237,7 +237,7 @@ export function SettingsContent({ userId }: SettingsContentProps) {
                       <p className="text-sm text-muted-foreground">
                         When an interview is scheduled, the host can add a secure meeting URL
                         directly. No Google Meet or third-party calendar connection is required for
-                        the launch corridor.
+                        the launch hiring flow.
                       </p>
                     </div>
                   </div>
@@ -249,8 +249,8 @@ export function SettingsContent({ userId }: SettingsContentProps) {
                       <p className="font-medium text-foreground">Why this changed</p>
                       <p className="text-sm text-muted-foreground">
                         The launch experience keeps interview coordination inside one narrow trust
-                        corridor and avoids launch-time integration sprawl. Manual operations stay
-                        acceptable when they preserve privacy and keep the corridor reliable.
+                        flow and avoids launch-time integration sprawl. Manual operations stay
+                        acceptable when they preserve privacy and keep the flow reliable.
                       </p>
                     </div>
                   </div>

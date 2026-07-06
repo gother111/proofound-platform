@@ -20,3 +20,5 @@ P0-3 | PASS | pending-sha | publish gate = structured proof only; badges live; p
 - P0-7 residual: visually confirm two users OG images differ once seeded users exist (unit-tested only); org OG image follow-up logged by Codex
   P0-8 | PASS | pending-sha | digest default-on env-guarded, day-5+10 reminders via decision-reminders dispatcher, idempotent via last_follow_up_at+metadata, no migration, blind-safe reminder template, 1917 tests green
   P0-9 | PASS | pending-sha | candidates route + nav live, surface-policy allowlisted, org-corridor 40/40, live smoke: 307->login matches siblings
+  P0-10 | PASS | pending-sha | 161-file copy sweep, TermHint component added, i18n catalogs clean of target terms, 222 focused tests green
+- Pre-existing (verified via stash): e2e/matching-messages-empty-visual.spec.ts 2 failures ("No matches yet"/"No conversations yet" not rendered in mock mode) + profile-trust-profile-visual 1 failure — disposition at P0-11

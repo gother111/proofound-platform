@@ -47,7 +47,7 @@ export function ConversationList({
       ? {
           title: 'No conversations yet',
           detail: 'Create an assignment and approve an introduction before messages open here.',
-          helper: 'Identity stays protected until the corridor is ready.',
+          helper: 'Identity stays protected until the hiring flow is ready.',
         }
       : {
           title: 'No conversations yet',

@@ -19,7 +19,7 @@ const BASE_SECTIONS: LlmsSection[] = [
         title: 'Homepage',
         path: '/',
         description:
-          'Overview of the proof-first hiring corridor, including Proof Packs, privacy-safe review, and structured assignment flow.',
+          'Overview of the proof-first hiring flow, including proof records, privacy-safe review, and structured assignment flow.',
       },
     ],
   },
@@ -87,7 +87,7 @@ export function renderLlmsTxt({ detailed = false }: { detailed?: boolean } = {})
   const lines: string[] = [
     '# Proofound',
     '',
-    '> Proofound is a proof-first hiring corridor centered on Proof Packs, privacy-safe review, direct-link Public Pages, and organization trust pages.',
+    '> Proofound is a proof-first hiring flow centered on proof records, privacy-safe review, direct-link Public Pages, and organization trust pages.',
     '',
   ];
 
@@ -112,7 +112,7 @@ export function renderLlmsTxt({ detailed = false }: { detailed?: boolean } = {})
     '- Individual Public Pages stay out of search indexing; organization trust pages require publication requirements.'
   );
   lines.push(
-    '- Review stays blind by default until a reveal step is needed inside the hiring corridor.'
+    '- Review stays blind by default until a reveal step is needed inside the hiring flow.'
   );
   lines.push('');
   lines.push('## Contact');

@@ -30,7 +30,7 @@ export function OnboardingClient({
               Welcome to Proofound
             </h1>
             <p className="text-lg text-proofound-charcoal/70 dark:text-muted-foreground">
-              Let&apos;s create your first Proof Pack
+              Let&apos;s create your first proof record
             </p>
           </div>
           <PersonaChoice onSelect={setSelectedPersona} />

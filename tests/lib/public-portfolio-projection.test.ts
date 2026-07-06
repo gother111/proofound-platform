@@ -168,7 +168,7 @@ function publicReadyAggregate(overrides: Record<string, any> = {}) {
         primaryClaim: { statement: 'Public pack claim' },
         ownershipStatement: 'Owned the public contribution.',
         verificationSummary: {
-          summary: 'Scoped verification supports this Proof Pack.',
+          summary: 'Scoped verification supports this proof record.',
         },
         proofQualityScore: 0.8,
         schemaVersion: 'proof_pack/v2',
@@ -245,7 +245,7 @@ describe('public portfolio projection', () => {
             primaryClaim: { statement: 'Anchored pack claim' },
             ownershipStatement: 'Owned the anchored contribution.',
             verificationSummary: {
-              summary: 'Scoped verification supports this Proof Pack.',
+              summary: 'Scoped verification supports this proof record.',
             },
             proofQualityScore: 0.8,
             schemaVersion: 'proof_pack/v2',
@@ -302,7 +302,7 @@ describe('public portfolio projection', () => {
             primaryClaim: { statement: 'Floating pack claim' },
             ownershipStatement: null,
             verificationSummary: {
-              summary: 'No scoped verification is recorded for this Proof Pack yet.',
+              summary: 'No scoped verification is recorded for this proof record yet.',
             },
             proofQualityScore: 0.4,
             schemaVersion: 'proof_pack/v2',
@@ -386,7 +386,7 @@ describe('public portfolio projection', () => {
 
     expect(projection).not.toBeNull();
     expect(projection?.traceableSummary).toMatchObject({
-      provenanceLabel: 'Generated from public-safe Proof Packs and context tokens',
+      provenanceLabel: 'Generated from public-safe proof records and context tokens',
       hasEnoughData: true,
       segments: [
         expect.objectContaining({
@@ -471,7 +471,7 @@ describe('public portfolio projection', () => {
             primaryClaim: { statement: 'Floating pack claim' },
             ownershipStatement: null,
             verificationSummary: {
-              summary: 'No scoped verification is recorded for this Proof Pack yet.',
+              summary: 'No scoped verification is recorded for this proof record yet.',
             },
             proofQualityScore: 0.4,
             schemaVersion: 'proof_pack/v2',
@@ -547,7 +547,7 @@ describe('public portfolio projection', () => {
             primaryClaim: { statement: 'Unverified anchored pack claim' },
             ownershipStatement: 'Owned the work.',
             verificationSummary: {
-              summary: 'No scoped verification is recorded for this Proof Pack yet.',
+              summary: 'No scoped verification is recorded for this proof record yet.',
             },
             proofQualityScore: 0.5,
             schemaVersion: 'proof_pack/v2',

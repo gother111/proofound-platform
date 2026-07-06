@@ -323,7 +323,7 @@ export async function GET(request: Request) {
     if (searchContext === 'cv_import') {
       return legacySurfaceJsonResponse(
         'Legacy Expertise API',
-        'CV import taxonomy matching is archived outside the locked launch MVP corridor.'
+        'CV import taxonomy matching is archived outside the locked launch MVP flow.'
       );
     }
     const searchCategory = searchParams.get('category');

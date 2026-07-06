@@ -120,7 +120,7 @@ export function RespondDialog({
   const claimSummary = request?.claimSummary || 'Confirm this skill claim from direct observation.';
   const confirmationOutcome =
     request?.confirmationOutcome ||
-    'This request records a bounded attestation linked to the underlying proof.';
+    'This request records a bounded confirmation linked to the underlying proof.';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -130,12 +130,12 @@ export function RespondDialog({
             {action === 'accept' ? (
               <>
                 <CheckCircle2 className="w-5 h-5" style={{ color: '#10B981' }} />
-                Confirm attestation
+                Confirm observation
               </>
             ) : (
               <>
                 <XCircle className="w-5 h-5" style={{ color: '#EF4444' }} />
-                Decline attestation
+                Decline observation
               </>
             )}
           </DialogTitle>
@@ -248,7 +248,7 @@ export function RespondDialog({
             ) : action === 'accept' ? (
               <>
                 <CheckCircle2 className="w-4 h-4 mr-1" />
-                Confirm attestation
+                Confirm observation
               </>
             ) : (
               <>

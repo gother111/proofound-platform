@@ -52,13 +52,13 @@ export async function POST(request: NextRequest) {
     }
 
     if (error instanceof Error && error.message === 'PROOF_PACK_NOT_FOUND') {
-      return NextResponse.json({ error: 'Proof Pack not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Proof record not found' }, { status: 404 });
     }
 
     return safeApiErrorResponse({
       event: 'ai.proof_pack_assistant.failed',
       error,
-      publicMessage: 'Failed to suggest Proof Pack improvements',
+      publicMessage: 'Failed to suggest proof record improvements',
     });
   }
 }

@@ -13,7 +13,7 @@ export function ProfileReadinessBanner({
 }) {
   const checklist = [
     {
-      label: 'First Proof Pack created',
+      label: 'First proof record created',
       met: completionState.checks.hasFirstProof && completionState.checks.hasStructuredProofPack,
     },
     {
@@ -72,7 +72,7 @@ export function ProfileReadinessBanner({
             </div>
             <div className="flex items-center gap-2 text-xs text-proofound-charcoal/70 dark:text-muted-foreground">
               <Compass className="w-3 h-3" />
-              <span>Start with one context-backed Proof Pack</span>
+              <span>Start with one context-backed proof record</span>
             </div>
           </div>
         </div>

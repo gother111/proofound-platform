@@ -3429,7 +3429,7 @@ function MobileSystemVisual({ frame }: { frame: HomepageStoryFrame }) {
         <div className="rounded-[1.1rem] border border-white/62 bg-white/58 p-2">
           <ShieldCheck className="h-4 w-4 text-proofound-forest/76" aria-hidden="true" />
           <p className="mt-2 text-[0.58rem] font-semibold uppercase tracking-[0.16em] text-foreground/52">
-            Proof pack
+            Proof record
           </p>
           <p className="mt-1 text-[0.68rem] leading-4 text-foreground/76">Artifacts and trust.</p>
         </div>

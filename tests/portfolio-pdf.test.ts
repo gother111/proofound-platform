@@ -59,7 +59,7 @@ describe('generateTrustPdf', () => {
       ],
       proofPacks: [
         {
-          title: 'Proof Pack: Product Strategy',
+          title: 'Product strategy proof record',
           verificationStatus: 'verified',
           freshnessState: 'fresh',
           outcomesSummary: 'Shipped a trust-first MVP.',

@@ -58,7 +58,7 @@ describe('MatchResultCard', () => {
             strongestProof: {
               summary: 'Led a privacy-safe launch proof for a complex hiring workflow.',
               outcome: 'Reduced review time while keeping candidate identity masked.',
-              ownership: 'Owned the end-to-end review corridor changes.',
+              ownership: 'Owned the end-to-end review flow changes.',
               anchorContext: 'Anchored in prior project work',
               freshnessLabel: 'Fresh',
             },
@@ -93,7 +93,7 @@ describe('MatchResultCard', () => {
       screen.getByText('Outcome: Reduced review time while keeping candidate identity masked.')
     ).toBeInTheDocument();
     expect(
-      screen.getByText('Ownership: Owned the end-to-end review corridor changes.')
+      screen.getByText('Ownership: Owned the end-to-end review flow changes.')
     ).toBeInTheDocument();
     expect(screen.getByText('Anchored in prior project work')).toBeInTheDocument();
     expect(screen.getByText('Fresh')).toBeInTheDocument();

@@ -743,7 +743,7 @@ export function ExperienceForm({
                     ) : null}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor={`outcomes.${index}.proofPackId`}>Supporting Proof Pack</Label>
+                    <Label htmlFor={`outcomes.${index}.proofPackId`}>Supporting proof record</Label>
                     <select
                       id={`outcomes.${index}.proofPackId`}
                       value={watchedOutcomes?.[index]?.proofPackId || ''}
@@ -760,7 +760,7 @@ export function ExperienceForm({
                       }}
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     >
-                      <option value="">No Proof Pack linked yet</option>
+                      <option value="">No proof record linked yet</option>
                       {proofPackOptions.map((option) => (
                         <option key={option.id} value={option.id}>
                           {option.title}
@@ -768,7 +768,7 @@ export function ExperienceForm({
                       ))}
                     </select>
                     <p className="text-xs text-muted-foreground">
-                      Optional. A Proof Pack link supports the claim but does not verify it by
+                      Optional. A proof record link supports the claim but does not verify it by
                       itself.
                     </p>
                   </div>

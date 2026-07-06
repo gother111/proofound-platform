@@ -38,7 +38,7 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
   const strictLifecycleBusinessValue =
     'Improve hiring quality by turning vague role scoping into a concrete, proof-backed assignment review workflow for the team.';
   const strictLifecycleDescription =
-    'Lead the assignment review corridor, define the real work to be done, and keep internal reviewers aligned on what evidence actually counts.';
+    'Lead the assignment review flow, define the real work to be done, and keep internal reviewers aligned on what evidence actually counts.';
   const strictLifecycleImpact =
     'Convincing proof includes shipped work, clear ownership signals, and thoughtful explanations of delivery tradeoffs from comparable assignments.';
   const strictDraftBusinessValue =
@@ -122,10 +122,8 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
       await expect(page.getByRole('heading', { name: organization.displayName })).toBeVisible();
     });
     await expect(page.getByText('Organization review cockpit')).toBeVisible();
-    await expect(
-      page.getByText('A focused launch desk for one clean hiring corridor')
-    ).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Corridor Queue' })).toBeVisible();
+    await expect(page.getByText('A focused launch desk for one clean hiring flow')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Hiring Flow Queue' })).toBeVisible();
     await expect(page.getByText(/Organization profile · Verified path:/)).toBeVisible();
     await expect(page.getByText(/One assignment path · Purpose, real work/)).toBeVisible();
     await expect(page.getByRole('link', { name: /Create first assignment/i })).toHaveAttribute(
@@ -578,12 +576,10 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
 
     await page.goto(`/app/o/${organization.slug}/settings`);
     await expect(page.getByRole('heading', { name: 'Not found' })).toBeVisible();
-    await expect(
-      page.getByText('This page is outside the locked launch MVP corridor.')
-    ).toBeVisible();
+    await expect(page.getByText('This page is outside the locked launch MVP flow.')).toBeVisible();
     await expect(
       page.getByText(
-        /The org settings hub stays hard-gated for launch so the active corridor remains centered on trust, assignments, and review\./
+        /The org settings hub stays hard-gated for launch so the active flow remains centered on trust, assignments, and review\./
       )
     ).toBeVisible();
 

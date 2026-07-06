@@ -125,7 +125,7 @@ function getQueueActions(item: QueueItem) {
         variant: 'default',
         uploadReviewAction: 'approve',
         confirmationMessage:
-          'Approve this upload for private Proof Pack evidence? Raw filenames and storage paths must stay out of notes.',
+          'Approve this upload for private proof record evidence? Raw filenames and storage paths must stay out of notes.',
         successMessage: 'Upload approved for private evidence.',
       },
       {
@@ -135,8 +135,8 @@ function getQueueActions(item: QueueItem) {
         variant: 'destructive',
         uploadReviewAction: 'reject',
         confirmationMessage:
-          'Reject this upload and keep it out of the Proof Pack corridor? Add the privacy or safety reason in the operator note.',
-        successMessage: 'Upload rejected and held out of the Proof Pack corridor.',
+          'Reject this upload and keep it out of the proof record flow? Add the privacy or safety reason in the operator note.',
+        successMessage: 'Upload rejected and held out of the proof record flow.',
       },
     ];
 
@@ -337,7 +337,7 @@ export function AdminVerificationDashboard() {
             <CardTitle className="text-2xl">{data.stats.open}</CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
-            Active items still inside the launch-critical proof, privacy, and correction corridor.
+            Active items still inside the launch-critical proof, privacy, and correction flow.
           </CardContent>
         </Card>
       </div>

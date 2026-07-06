@@ -231,7 +231,7 @@ export function DecisionDialog({
     {
       value: 'withdraw' as DecisionType,
       label: 'Withdraw',
-      description: 'Close the corridor without a hiring outcome',
+      description: 'Close the hiring flow without a hiring outcome',
       icon: AlertTriangle,
       color: 'text-stone-700 dark:text-stone-300',
       bgColor: 'bg-stone-50 dark:bg-stone-900/20',

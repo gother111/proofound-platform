@@ -661,7 +661,7 @@ export default function AssignmentBuilderPage() {
         <Card className="p-4">
           <div className="flex flex-col gap-4">
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-foreground">Lean assignment corridor</p>
+              <p className="text-sm font-semibold text-foreground">Lean assignment flow</p>
               <p className="text-xs text-muted-foreground">
                 This builder stays narrow on purpose: one structured assignment, then internal
                 review before publish.

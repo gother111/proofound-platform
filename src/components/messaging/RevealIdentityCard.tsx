@@ -112,7 +112,7 @@ export function RevealIdentityCard({
                 'Scheduling links and meeting logistics',
                 'Any identity-bearing details that are still outside the approved reveal scope',
               ]}
-              whyThisRequestExists="Reveal exists to move the hiring corridor from blind review into identity-bearing coordination. Approval is required before that handoff happens."
+              whyThisRequestExists="Reveal exists to move the hiring flow from blind review into identity-bearing coordination. Approval is required before that handoff happens."
             />
 
             <Button onClick={handleRevealClick} className="w-full" disabled={revealing}>
@@ -204,7 +204,7 @@ export function RevealIdentityCard({
                 'Scheduling links and meeting logistics',
                 'Any identity-bearing details that still require interview coordination',
               ]}
-              whyThisRequestExists="The other side wants to continue the hiring corridor beyond blind review. They cannot see identity-bearing details unless you approve this reveal step."
+              whyThisRequestExists="The other side wants to continue the hiring flow beyond blind review. They cannot see identity-bearing details unless you approve this reveal step."
             />
 
             <Button onClick={handleRevealClick} className="w-full" disabled={revealing}>

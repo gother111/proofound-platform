@@ -142,7 +142,7 @@ export function ConsentToShareDialog({
             : ['Only the role-specific proof-backed fields listed below']
         }
         hiddenUntilLater={hiddenUntilInterviewItems}
-        whyThisRequestExists={`This share lets ${organizationName} review your proof-backed profile for the ${assignmentRole} role and decide whether to continue the hiring corridor. It does not auto-reveal contact details or weaken blind review on future requests.`}
+        whyThisRequestExists={`This share lets ${organizationName} review your proof-backed profile for the ${assignmentRole} role and decide whether to continue the hiring flow. It does not auto-reveal contact details or weaken blind review on future requests.`}
         privacyNote={`Only the fields listed in this snapshot are shared with ${organizationName} right now.`}
       />
 

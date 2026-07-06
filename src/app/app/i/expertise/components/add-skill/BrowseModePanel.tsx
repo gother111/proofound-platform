@@ -696,7 +696,7 @@ export function BrowseModePanel({
             </div>
             <p className="mb-3 text-xs text-muted-foreground">
               {hasProofContext
-                ? 'Optional. Skipping is fine for portfolio-ready, but intro-readiness usually needs a non-self trust anchor tied to proof.'
+                ? 'Optional. Skipping is fine for portfolio-ready, but introduction readiness usually needs a non-self trusted confirmation tied to proof.'
                 : 'Add proof first. Verification requests for skills must stay attached to a proof link or uploaded document.'}
             </p>
 

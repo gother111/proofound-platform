@@ -127,7 +127,7 @@ export default async function OrganizationHomePage({
       subject: 'Privacy-safe summaries',
       detail: assignmentReady
         ? 'Review proof before identity reveal or direct outreach'
-        : 'No candidate review starts until the corridor is ready.',
+        : 'No candidate review starts until the hiring flow is ready.',
       priority: 'Guarded',
       value: assignmentReady ? 'Needs assignment' : 'Locked',
       tone: assignmentReady ? 'attention' : 'pending',
@@ -161,7 +161,7 @@ export default async function OrganizationHomePage({
     },
     {
       label: 'Manager',
-      detail: 'Maintains the org profile and assignment corridor.',
+      detail: 'Maintains the org profile and assignment flow.',
       current: roleLabel === 'Manager',
     },
     {
@@ -218,9 +218,9 @@ export default async function OrganizationHomePage({
                       {org.displayName}
                     </h1>
                     <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-                      A focused launch desk for one clean hiring corridor: compose the trust
-                      profile, define one proof-led assignment, and review candidates through
-                      privacy-safe summaries.
+                      A focused launch desk for one clean hiring flow: compose the trust profile,
+                      define one proof-led assignment, and review candidates through privacy-safe
+                      summaries.
                     </p>
                   </div>
                 </div>
@@ -241,7 +241,7 @@ export default async function OrganizationHomePage({
             <div className="overflow-hidden rounded-lg border border-proofound-stone/70 bg-white shadow-sm">
               <div className="flex flex-col gap-2 border-b border-proofound-stone/70 p-5 sm:flex-row sm:items-center sm:justify-between">
                 <h2 className="font-display text-xl font-medium text-proofound-charcoal">
-                  Corridor Queue
+                  Hiring Flow Queue
                 </h2>
                 <p className="text-sm text-muted-foreground">Trust, assignment, and review order</p>
               </div>

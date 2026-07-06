@@ -49,7 +49,7 @@ export function IndividualMatchingEmpty({ onSetup }: IndividualMatchingEmptyProp
     },
     {
       label: 'Introductions',
-      detail: 'Identity opens only after the corridor is ready',
+      detail: 'Identity opens only after the hiring flow is ready',
       icon: ArrowRight,
     },
   ] as const;

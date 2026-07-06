@@ -294,7 +294,7 @@ export default async function PortfolioPage({
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
           <div className="space-y-4">
             <PublicProfileSection
-              title="Selected Proof Packs"
+              title="Selected proof records"
               right={<span className="text-xs text-muted-foreground">Public-safe proof only</span>}
             >
               {selectedProofPacks.length > 0 ? (
@@ -308,7 +308,7 @@ export default async function PortfolioPage({
                         <div>
                           <h3 className="text-base font-semibold text-foreground">{pack.title}</h3>
                           <p className="text-sm text-muted-foreground">
-                            {pack.contextLabel || 'Selected Proof Pack'}
+                            {pack.contextLabel || 'Selected proof record'}
                           </p>
                         </div>
                         <TrustTierBadge
@@ -404,8 +404,8 @@ export default async function PortfolioPage({
                 <PublicProfileEmptyState
                   message={
                     viewerIsOwner
-                      ? 'No selected Proof Packs are published yet.'
-                      : 'No selected Proof Packs are available yet.'
+                      ? 'No selected proof records are published yet.'
+                      : 'No selected proof records are available yet.'
                   }
                   actions={
                     !viewerIsOwner ? [{ label: requestContactLabel, href: requestContactHref }] : []
@@ -418,7 +418,7 @@ export default async function PortfolioPage({
           <div className="space-y-4">
             <PublicProfileSection title="Proof snapshot">
               <div className="space-y-2">
-                <SummaryStat label="Public Proof Packs" value={`${selectedProofPacks.length}`} />
+                <SummaryStat label="Public proof records" value={`${selectedProofPacks.length}`} />
                 <SummaryStat label="Outcomes shown" value={`${selectedOutcomeHighlights.length}`} />
                 <SummaryStat label="Proof-backed skills" value={`${data.publicSkills.length}`} />
                 <SummaryStat
@@ -458,7 +458,7 @@ export default async function PortfolioPage({
               ) : (
                 <PublicProfileEmptyState
                   message="No public outcome summary is published yet."
-                  example="Selected outcomes from Proof Packs will appear here."
+                  example="Selected outcomes from proof records will appear here."
                 />
               )}
             </PublicProfileSection>
@@ -671,10 +671,10 @@ function TraceableSummaryBlock({
       {viewerIsOwner ? (
         <div className="flex flex-wrap gap-2 border-t border-[#EFECE5] pt-3">
           <Button variant="outline" size="sm" asChild>
-            <Link href={sourceEditHref}>Edit source Proof Packs</Link>
+            <Link href={sourceEditHref}>Edit source proof records</Link>
           </Button>
           <Button variant="ghost" size="sm" asChild>
-            <Link href={refreshHref}>Refresh from current Proof Packs</Link>
+            <Link href={refreshHref}>Refresh from current proof records</Link>
           </Button>
         </div>
       ) : null}

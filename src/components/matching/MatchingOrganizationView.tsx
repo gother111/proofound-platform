@@ -281,7 +281,7 @@ export function MatchingOrganizationView({
             <div>
               <h1 className="text-2xl font-semibold mb-1">Assignments</h1>
               <p className="text-sm" style={{ color: '#6B6760' }}>
-                Keep candidate review attached to the assignment corridor it belongs to
+                Keep candidate review attached to the assignment flow it belongs to
               </p>
             </div>
             <div className="flex items-center gap-2">

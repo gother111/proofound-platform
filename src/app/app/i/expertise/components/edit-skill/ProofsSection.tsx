@@ -162,7 +162,7 @@ function ocrUnavailableCopy(reason: string | null) {
   if (reason === 'disabled') {
     return 'OCR is currently disabled. Upload the proof document and add the relevant text manually.';
   }
-  return 'OCR is temporarily unavailable. Upload the proof document and continue with manual Proof Pack editing.';
+  return 'OCR is temporarily unavailable. Upload the proof document and continue with manual proof record editing.';
 }
 
 function recordAssistantEvent(
@@ -426,7 +426,7 @@ export function ProofsSection({
     const current = ocrByArtifactId[artifactId];
     if (!current?.privacyConfirmed) {
       updateOcrState(artifactId, {
-        error: 'Confirm the privacy warning before copying OCR text into a Proof Pack draft.',
+        error: 'Confirm the privacy warning before copying OCR text into a proof record draft.',
       });
       return;
     }
@@ -924,7 +924,7 @@ export function ProofsSection({
                                         className="mt-0.5"
                                       />
                                       I reviewed the privacy warnings and want to copy selected
-                                      draft text into this Proof Pack draft.
+                                      draft text into this proof record draft.
                                     </label>
                                     <div className="mt-3 flex flex-wrap items-center gap-2">
                                       <Button
@@ -945,7 +945,7 @@ export function ProofsSection({
                                         ) : (
                                           <ClipboardCheck className="h-4 w-4 mr-2" />
                                         )}
-                                        Copy to Proof Pack draft
+                                        Copy to proof record draft
                                       </Button>
                                       {ocr.applied && (
                                         <span className="inline-flex items-center gap-1 text-xs text-proofound-forest">

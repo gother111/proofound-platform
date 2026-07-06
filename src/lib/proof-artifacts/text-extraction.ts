@@ -521,7 +521,7 @@ function buildPrivacyRiskWarnings(text: string): string[] {
     warnings.add('Long extracted text should be reviewed carefully before reuse.');
   }
 
-  warnings.add('Review the extracted text manually before copying it into a Proof Pack.');
+  warnings.add('Review the extracted text manually before copying it into a proof record.');
   return Array.from(warnings).slice(0, 8);
 }
 

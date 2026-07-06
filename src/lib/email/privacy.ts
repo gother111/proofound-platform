@@ -280,7 +280,7 @@ export function buildRevealNotificationEmail(input: RevealNotificationEmailInput
             </a>
           </div>
           <p style="font-size: 14px; color: #6B6760; margin-top: 25px;">
-            Proofound keeps reveal details inside the authenticated corridor.
+            Proofound keeps reveal details inside the authenticated hiring flow.
           </p>
         </div>
       </body>
@@ -295,7 +295,7 @@ ${body}${revealedLine}
 
 Open conversation: ${input.conversationUrl}
 
-Proofound keeps reveal details inside the authenticated corridor.
+Proofound keeps reveal details inside the authenticated hiring flow.
     `.trim(),
   };
 }

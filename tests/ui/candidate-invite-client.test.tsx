@@ -14,7 +14,7 @@ const apiFetchMock = vi.mocked(apiFetch);
 const structuredAssignment = {
   id: 'assignment-1',
   role: 'Designer',
-  description: 'Shape a proof-led onboarding corridor for external candidates.',
+  description: 'Shape a proof-led onboarding flow for external candidates.',
   status: 'active',
   createdAt: new Date().toISOString(),
   engagementType: 'contract_consulting',
@@ -70,7 +70,7 @@ describe('CandidateInviteClient test_match flow', () => {
             assignment: {
               id: 'assignment-1',
               role: 'Designer',
-              description: 'Shape a proof-led onboarding corridor for external candidates.',
+              description: 'Shape a proof-led onboarding flow for external candidates.',
               status: 'active',
               createdAt: new Date().toISOString(),
             },
@@ -187,12 +187,12 @@ describe('CandidateInviteClient test_match flow', () => {
     expect(
       screen.queryByRole('link', { name: /cv import|resume|people search/i })
     ).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /create first proof pack/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /create first proof record/i })).toHaveAttribute(
       'href',
       '/onboarding?next=%2Fcandidate-invite%2Ftoken-value'
     );
 
-    fireEvent.change(screen.getByLabelText(/owner-only proof pack id/i), {
+    fireEvent.change(screen.getByLabelText(/owner-only proof record id/i), {
       target: { value: '11111111-1111-4111-8111-111111111111' },
     });
     fireEvent.click(screen.getByRole('button', { name: /review assignment proof/i }));
@@ -278,7 +278,7 @@ describe('CandidateInviteClient test_match flow', () => {
     );
   });
 
-  it('keeps assignment proof applications proof-first and submits owner-only Proof Packs', async () => {
+  it('keeps assignment proof applications proof-first and submits owner-only proof records', async () => {
     const fetchMock = vi.fn().mockImplementation(async (url: string) => {
       if (url === '/api/candidate-invites/token-value') {
         return {
@@ -361,15 +361,15 @@ describe('CandidateInviteClient test_match flow', () => {
       expect(screen.getByRole('heading', { name: 'Evidence Operations Lead' })).toBeInTheDocument();
     });
 
-    expect(screen.getByText(/Create or choose one owner-only Proof Pack/i)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /create first proof pack/i })).toHaveAttribute(
+    expect(screen.getByText(/Create or choose one owner-only proof record/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /create first proof record/i })).toHaveAttribute(
       'href',
       '/onboarding?next=%2Fcandidate-invite%2Ftoken-value'
     );
     expect(screen.queryByText(/generate and submit proof card/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/existing proof card token/i)).not.toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText(/owner-only proof pack id/i), {
+    fireEvent.change(screen.getByLabelText(/owner-only proof record id/i), {
       target: { value: '11111111-1111-4111-8111-111111111111' },
     });
     fireEvent.click(screen.getByRole('button', { name: /review assignment proof/i }));

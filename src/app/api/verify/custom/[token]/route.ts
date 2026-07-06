@@ -379,7 +379,7 @@ export async function POST(
     if (requestKind === 'human_observed_attestation') {
       if (!attestationRequest) {
         return NextResponse.json(
-          { error: 'This attestation request is missing its bounded skill scope.' },
+          { error: 'This confirmation request is missing its bounded skill scope.' },
           { status: 400 }
         );
       }
@@ -408,8 +408,8 @@ export async function POST(
           {
             error:
               parsed.data.action === 'accept'
-                ? 'Structured attestations marked accept must use verdict yes or partly.'
-                : 'Structured attestations marked decline must use verdict no.',
+                ? 'Structured confirmations marked accept must use verdict yes or partly.'
+                : 'Structured confirmations marked decline must use verdict no.',
           },
           { status: 400 }
         );
@@ -491,7 +491,7 @@ export async function POST(
       message:
         resolvedAction === 'accept'
           ? requestKind === 'human_observed_attestation'
-            ? 'Thank you for recording these structured observed-in-practice attestations.'
+            ? 'Thank you for recording these structured observed-in-practice confirmations.'
             : 'Thank you for verifying these artifacts!'
           : 'Your response has been recorded.',
     });

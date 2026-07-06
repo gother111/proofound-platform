@@ -163,15 +163,17 @@ function buildGuidedSteps(
     },
     {
       id: 'proof_pack',
-      label: 'Structure your first Proof Pack',
+      label: 'Structure your first proof record',
       detail:
-        'Turn the first proof into a clean Proof Pack with context, evidence, and outcomes before you publish.',
+        'Turn the first proof into a clean proof record with context, evidence, and outcomes before you publish.',
       state: resolveStepState(3, activeIndex),
       icon: PackageOpen,
       actions: [
         {
           id: 'proof-pack',
-          label: checks.hasStructuredProofPack ? 'Review Proof Pack' : 'Structure first Proof Pack',
+          label: checks.hasStructuredProofPack
+            ? 'Review proof record'
+            : 'Structure first proof record',
           onClick: handlers.onOpenProofs,
           variant: 'secondary',
           disabled: !checks.hasFirstProof,
@@ -257,7 +259,7 @@ export function GuidedProfileSetupView({
       }
     : !completionState.checks.hasStructuredProofPack
       ? {
-          label: 'Structure first Proof Pack',
+          label: 'Structure first proof record',
           onClick: onOpenProofs,
           testId: 'guided-dominant-proof-cta',
         }
@@ -289,7 +291,7 @@ export function GuidedProfileSetupView({
             </h1>
             <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
               Build only the parts that make the first proof credible: safe shell, one real context,
-              one structured Proof Pack, then decide what trust signal comes next.
+              one structured proof record, then decide what trust signal comes next.
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row lg:justify-end">

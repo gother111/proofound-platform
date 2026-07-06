@@ -20,7 +20,7 @@ export const HOMEPAGE_STORY_FRAMES: HomepageStoryFrame[] = [
   {
     id: 'hero',
     title: 'Proof behind the claim',
-    body: 'Proofound turns real work into structured Proof Packs for privacy-safe hiring review before identity takes over.',
+    body: 'Proofound turns real work into structured proof records for privacy-safe hiring review before identity takes over.',
     microcopy: 'Proof portfolios for individuals. Evidence-based review for teams.',
   },
   {
@@ -56,7 +56,7 @@ export const HOMEPAGE_STORY_FRAMES: HomepageStoryFrame[] = [
   {
     id: 'compatibility',
     title: 'Universal compatibility',
-    body: 'The proof-backed profile becomes a Proof Pack inside a wider system. Structured assignments enter from one side, proof enters from the other, and a shared assessment layer makes them comparable.',
+    body: 'The proof-backed profile becomes a proof record inside a wider system. Structured assignments enter from one side, proof enters from the other, and a shared assessment layer makes them comparable.',
     microcopy: 'This is not a prettier CV. It is a compatibility model.',
   },
   {

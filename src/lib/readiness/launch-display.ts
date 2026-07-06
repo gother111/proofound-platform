@@ -4,7 +4,10 @@ import type {
   ReadinessRequirement,
 } from '@/lib/momentum/types';
 
-export type LaunchReadinessDisplayLabel = 'Portfolio ready' | 'Match visible' | 'Intro eligible';
+export type LaunchReadinessDisplayLabel =
+  | 'Portfolio ready'
+  | 'Visible to matching'
+  | 'Ready for introductions';
 
 function dedupeRequirements(requirements: ReadinessRequirement[]) {
   const seen = new Set<string>();
@@ -21,8 +24,8 @@ export function getLaunchReadinessDisplayLabel(flags: {
   matchVisible?: boolean;
   introEligible?: boolean;
 }): LaunchReadinessDisplayLabel {
-  if (flags.introEligible) return 'Intro eligible';
-  if (flags.matchVisible) return 'Match visible';
+  if (flags.introEligible) return 'Ready for introductions';
+  if (flags.matchVisible) return 'Visible to matching';
   return 'Portfolio ready';
 }
 

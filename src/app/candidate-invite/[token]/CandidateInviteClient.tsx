@@ -123,7 +123,7 @@ function formatLocation(assignment: AssignmentState) {
   const mode = assignment.locationMode ? internalValueLabel(assignment.locationMode) : null;
 
   if (mode && place) return `${mode} / ${place}`;
-  return mode || place || 'Location to be confirmed in the assignment corridor.';
+  return mode || place || 'Location to be confirmed in the assignment flow.';
 }
 
 function formatHours(assignment: AssignmentState) {
@@ -311,7 +311,7 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
   const openProofPackReview = () => {
     const normalizedProofPackId = proofPackId.trim();
     if (!normalizedProofPackId) {
-      setError('Choose or enter the owner-only Proof Pack ID you want to submit.');
+      setError('Choose or enter the owner-only proof record ID you want to submit.');
       return;
     }
 
@@ -324,7 +324,7 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
   const submitReviewedProofPack = async () => {
     const normalizedProofPackId = reviewProofPackId.trim();
     if (!normalizedProofPackId) {
-      setError('Review a Proof Pack before submitting.');
+      setError('Review a proof record before submitting.');
       return;
     }
 
@@ -523,7 +523,7 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
                   <p className="font-medium text-proofound-charcoal">Work summary</p>
                   <p>
                     {assignment.description ||
-                      'The detailed work summary will be clarified inside the assignment corridor.'}
+                      'The detailed work summary will be clarified inside the assignment flow.'}
                   </p>
                 </div>
               </div>
@@ -712,13 +712,13 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
             {!isTestFlow && currentUser && !isCompleted && isClaimedByCurrentUser ? (
               <div className="space-y-5">
                 <p className="text-sm text-slate-700">
-                  Create or choose one owner-only Proof Pack for this assignment. The submission
+                  Create or choose one owner-only proof record for this assignment. The submission
                   does not publish a public page or broaden the application beyond this assignment.
                 </p>
 
                 <Button asChild variant="outline">
                   <Link href={proofOnboardingHref}>
-                    Create first Proof Pack
+                    Create first proof record
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
@@ -726,7 +726,7 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
                 <div className="space-y-3 rounded-lg border border-proofound-stone bg-white/70 p-4">
                   {availableProofPacks.length > 0 ? (
                     <div className="space-y-2">
-                      <Label htmlFor="proof-pack-id">Owner-only Proof Pack</Label>
+                      <Label htmlFor="proof-pack-id">Owner-only proof record</Label>
                       <select
                         id="proof-pack-id"
                         value={proofPackId}
@@ -747,13 +747,13 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
                         <p className="text-xs leading-5 text-proofound-charcoal/60">
                           {selectedProofPack.summary ||
                             selectedProofPack.evidenceSummary ||
-                            'Selected Proof Pack stays owner-only until you submit it for this assignment.'}
+                            'Selected proof record stays owner-only until you submit it for this assignment.'}
                         </p>
                       ) : null}
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      <Label htmlFor="proof-pack-id">Owner-only Proof Pack ID</Label>
+                      <Label htmlFor="proof-pack-id">Owner-only proof record ID</Label>
                       <Input
                         id="proof-pack-id"
                         value={proofPackId}
@@ -802,7 +802,7 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
                           Proof/context included
                         </p>
                         <p className="mt-1 font-medium text-proofound-charcoal">
-                          {reviewProofPack?.title || `Proof Pack ${reviewProofPackId}`}
+                          {reviewProofPack?.title || `Proof record ${reviewProofPackId}`}
                         </p>
                         {reviewProofPack?.evidenceSummary || reviewProofPack?.outcomesSummary ? (
                           <p className="mt-1 text-xs leading-5 text-proofound-charcoal/60">
@@ -835,7 +835,7 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
                     <div className="rounded-md border border-proofound-stone bg-proofound-parchment/40 p-3 text-sm leading-6 text-proofound-charcoal/70">
                       Intro, reveal, interview, decision, and feedback states continue in
                       Communications. Identity-bearing reveal still requires the
-                      candidate-controlled corridor step.
+                      candidate-controlled reveal step.
                     </div>
 
                     <label className="flex items-start gap-3 text-sm leading-6 text-proofound-charcoal/75">
@@ -847,7 +847,7 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
                         onChange={(event) => setReviewConfirmed(event.target.checked)}
                       />
                       <span>
-                        I reviewed the visibility summary and confirm this owner-only Proof Pack
+                        I reviewed the visibility summary and confirm this owner-only proof record
                         should be submitted to {organization.displayName}.
                       </span>
                     </label>
@@ -936,7 +936,7 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
 
                 <div className="flex flex-wrap gap-2">
                   <Button asChild>
-                    <Link href={accountSaveControls.proofWorkspaceUrl}>Open Proof Packs</Link>
+                    <Link href={accountSaveControls.proofWorkspaceUrl}>Open proof records</Link>
                   </Button>
                   <Button asChild variant="outline">
                     <Link href={accountSaveControls.profileVisibilityUrl}>Visibility</Link>

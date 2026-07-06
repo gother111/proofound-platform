@@ -359,14 +359,14 @@ describe('VerificationsPage', () => {
       {
         pack: {
           id: 'pack-skill-1',
-          title: 'Proof Pack: Product Strategy',
+          title: 'Product strategy proof record',
           summary: 'Launch evidence for Product Strategy',
           outcomesSummary: 'Shipped the portfolio launch in two weeks.',
           primarySubjectType: 'skill',
           primarySubjectId: 'skill-1',
         },
         ownerFull: {
-          title: 'Proof Pack: Product Strategy',
+          title: 'Product strategy proof record',
           summary: 'Launch evidence for Product Strategy',
           outcomesSummary: 'Shipped the portfolio launch in two weeks.',
           items: [
@@ -397,7 +397,7 @@ describe('VerificationsPage', () => {
           items: [
             {
               artifact: {
-                title: 'Client attestation',
+                title: 'Client confirmation',
               },
             },
           ],
@@ -429,9 +429,9 @@ describe('VerificationsPage', () => {
     }>();
 
     expect(props.incomingRequests[0]).toMatchObject({
-      canonicalPackTitle: 'Proof Pack: Product Strategy',
+      canonicalPackTitle: 'Product strategy proof record',
       canonicalEvidenceTitles: ['Launch memo'],
-      proofLabel: 'Proof Pack: Product Strategy',
+      proofLabel: 'Product strategy proof record',
       claimSummary: 'That this proof demonstrates Product Strategy in real work.',
     });
     expect(props.sentRequests.find((request) => request.id === 'impact-sent-1')).toMatchObject({
@@ -440,7 +440,7 @@ describe('VerificationsPage', () => {
       canonicalOutcomesSummary: 'Reduced planning time by 35%.',
       proofLabel: 'Proof Pack: Climate Adaptation',
       confirmationOutcome:
-        'If confirmed, this Proof Pack gains a scoped impact attestation for the role, outcomes, or artifacts named here.',
+        'If confirmed, this proof record gains a scoped impact confirmation for the role, outcomes, or artifacts named here.',
     });
   });
 
@@ -589,7 +589,8 @@ describe('VerificationsPage', () => {
         message: 'Please confirm this work.',
         proofLabel: 'Proof Pack: Systems Thinking launch',
         claimSummary: 'That this proof demonstrates Systems Thinking in real work.',
-        confirmationOutcome: 'This skill keeps a bounded attestation linked to the attached proof.',
+        confirmationOutcome:
+          'This skill keeps a bounded confirmation linked to the attached proof.',
         profiles: {
           display_name: 'Jordan Sender',
           handle: 'jordan',

@@ -85,7 +85,7 @@ describe('Proof Pack Assistant UI', () => {
         missingContext: ['Add a measurable outcome if you can support it.'],
         suggestedRewrite: {
           title: 'Clearer launch proof',
-          claimStatement: 'I shipped the launch proof pack.',
+          claimStatement: 'I shipped the launch proof record.',
           ownershipStatement: 'I owned the release coordination.',
         },
         privacyFlags: ['1 filename redacted before suggestion.'],
@@ -310,7 +310,7 @@ describe('Proof Pack Assistant UI', () => {
         confidence: 0.92,
         extractedTextPreview: 'Sanitized launch memo text',
         privacyRiskWarnings: [
-          'Review the extracted text manually before copying it into a Proof Pack.',
+          'Review the extracted text manually before copying it into a proof record.',
         ],
         suggestedProofPackFieldsDraft: {
           evidenceSummary: 'Sanitized launch memo text',
@@ -379,7 +379,7 @@ describe('Proof Pack Assistant UI', () => {
           extractedTextPreview: 'Sanitized launch memo text',
           privacyRiskWarnings: [
             'May contain email addresses.',
-            'Review the extracted text manually before copying it into a Proof Pack.',
+            'Review the extracted text manually before copying it into a proof record.',
           ],
           suggestedProofPackFieldsDraft: {
             evidenceSummary: 'Sanitized launch memo text',
@@ -422,7 +422,7 @@ describe('Proof Pack Assistant UI', () => {
     expect(screen.getByText('Sanitized launch memo text')).toBeInTheDocument();
     expect(screen.getByText('May contain email addresses.')).toBeInTheDocument();
 
-    const copyButton = screen.getByRole('button', { name: /copy to proof pack draft/i });
+    const copyButton = screen.getByRole('button', { name: /copy to proof record draft/i });
     expect(copyButton).toBeDisabled();
     expect(apiFetchMock).not.toHaveBeenCalledWith(
       expect.stringContaining('/text-extraction/apply'),
@@ -430,7 +430,7 @@ describe('Proof Pack Assistant UI', () => {
     );
 
     fireEvent.click(screen.getByLabelText(/I reviewed the privacy warnings/i));
-    fireEvent.click(screen.getByRole('button', { name: /copy to proof pack draft/i }));
+    fireEvent.click(screen.getByRole('button', { name: /copy to proof record draft/i }));
 
     await screen.findByText('Copied to draft only');
     expect(apiFetchMock).toHaveBeenCalledWith(

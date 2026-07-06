@@ -74,7 +74,7 @@ function CorridorSurface() {
           Organization trust page
         </div>
         <div className="mt-2 font-display text-[1.65rem] leading-none text-[var(--landing-dark)]">
-          Assignment corridor
+          Assignment flow
         </div>
       </div>
 
@@ -118,7 +118,7 @@ export function DayOneSurfacesSection() {
           </h2>
           <p className="mt-5 max-w-[46rem] text-[1.1rem] leading-8 text-[var(--landing-text)]">
             The MVP starts with a Public Page proof snapshot for individuals and a trust page plus
-            assignment corridor for organizations.
+            assignment flow for organizations.
           </p>
         </div>
 
@@ -154,7 +154,7 @@ export function DayOneSurfacesSection() {
                 For organizations
               </div>
               <h3 className="mt-4 font-display text-[2.2rem] leading-tight text-[var(--landing-dark)]">
-                Trust page + assignment corridor
+                Trust page + assignment flow
               </h3>
               <p className="mt-4 text-[1.04rem] leading-7 text-[var(--landing-text)]">
                 Publish a credible team surface, define the work clearly, and review proof-backed

@@ -65,13 +65,13 @@ test.describe('Profile visual contract', () => {
 
     await prepareProfileViewport(page);
     await page.goto('/app/o/test-org/home', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByRole('heading', { name: 'Corridor Queue' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Hiring Flow Queue' })).toBeVisible();
     await page.getByRole('link', { name: 'Organization Profile', exact: true }).click();
     await expect(page).toHaveURL(/\/app\/o\/test-org\/profile/);
     await stabilizeProfile(page);
 
     await expect(page.getByRole('heading', { name: 'Organization Profile' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Launch corridor' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Launch flow' })).toBeVisible();
     await expect(
       page.getByRole('heading', { name: 'Organization profile', exact: true })
     ).toBeVisible();

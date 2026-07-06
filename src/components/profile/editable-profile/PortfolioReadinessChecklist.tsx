@@ -27,7 +27,7 @@ export function PortfolioReadinessChecklist({ completionState }: PortfolioReadin
       id: 'proof',
       label: 'One real proof is added and structured',
       nextAction: completionState.checks.hasFirstProof
-        ? 'Structure your first Proof Pack'
+        ? 'Structure your first proof record'
         : 'Add your first proof',
       passed: completionState.checks.hasFirstProof && completionState.checks.hasStructuredProofPack,
     },

@@ -139,7 +139,7 @@ function buildMockComposerProofPackOptions(): VerificationComposerProofPackOptio
     {
       proofPackId: MOCK_COMPOSER_PROOF_PACK_ID,
       claimId: MOCK_COMPOSER_SKILL_ID,
-      title: 'Proof-first launch corridor',
+      title: 'Proof-first launch flow',
       claimStatement:
         'I narrowed a launch workflow into one privacy-safe proof path with review checkpoints.',
       ownershipStatement:
@@ -386,7 +386,7 @@ function buildConfirmationOutcome(
   request: Pick<VerificationRequestView, 'subjectType' | 'requestKind'>
 ) {
   if (request.subjectType === 'impact_story') {
-    return 'If confirmed, this Proof Pack gains a scoped impact attestation for the role, outcomes, or artifacts named here.';
+    return 'If confirmed, this proof record gains a scoped impact confirmation for the role, outcomes, or artifacts named here.';
   }
 
   if (request.subjectType === 'custom_bundle') {
@@ -394,10 +394,10 @@ function buildConfirmationOutcome(
   }
 
   if (request.requestKind === 'human_observed_attestation') {
-    return 'If confirmed, this Proof Pack gains a bounded observed-in-practice attestation for the named skill.';
+    return 'If confirmed, this proof record gains a bounded observed-in-practice confirmation for the named skill.';
   }
 
-  return 'If confirmed, this Proof Pack gains a scoped non-self attestation for this skill claim.';
+  return 'If confirmed, this proof record gains a scoped non-self confirmation for this skill claim.';
 }
 
 function mapSkillRequestToView(

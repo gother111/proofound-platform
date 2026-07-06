@@ -179,7 +179,7 @@ export function evaluateIndividualProfileCompletion(
     } else if (!checks.hasFirstProof || !checks.hasStructuredProofPack) {
       portfolioLockCode = 'proof';
       portfolioLockReason =
-        'Add at least one anchored Proof Pack before your portfolio can be ready.';
+        'Add at least one anchored proof record before your portfolio can be ready.';
     } else if (!checks.hasPublishedPortfolio) {
       portfolioLockCode = 'publish';
       portfolioLockReason =

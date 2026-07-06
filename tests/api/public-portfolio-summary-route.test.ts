@@ -40,13 +40,13 @@ function buildAccessibleAccess() {
           {
             id: 'pack-1',
             scope: 'public_safe',
-            title: 'Proof Pack: Product Strategy',
+            title: 'Product strategy proof record',
             summary: 'Launch evidence for Product Strategy',
             ownershipStatement: 'Owned the launch contribution.',
             evidenceSummary: 'Verified against a public launch memo.',
             outcomesSummary: 'Shipped the MVP in two weeks.',
             verificationStatus: 'verified',
-            verificationSummary: 'Scoped verification supports this Proof Pack.',
+            verificationSummary: 'Scoped verification supports this proof record.',
             freshnessState: 'fresh',
             proofQualityScore: 0.8,
             schemaVersion: 'proof_pack/v2',
@@ -115,8 +115,8 @@ describe('/api/portfolio/public/[handle]/summary', () => {
     expect(response.headers.get('content-type')).toContain('text/plain');
     expect(body).toContain('Jane Doe');
     expect(body).toContain('Proof-backed summary:');
-    expect(body).toContain('- Proof Pack: Product Strategy: Shipped the MVP in two weeks.');
-    expect(body).toContain('Selected proof packs:');
+    expect(body).toContain('- Product strategy proof record: Shipped the MVP in two weeks.');
+    expect(body).toContain('Selected proof records:');
     expect(body).toContain('Outcomes: Shipped the MVP in two weeks.');
     expect(body).toContain('Context: Product Strategy');
     expect(body).toContain('Verification: Verified evidence');

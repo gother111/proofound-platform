@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
           title,
           rolePurpose:
             payload.outcomeSummary?.trim() ||
-            'Create one clear proof-led hiring corridor with privacy-safe review checkpoints.',
+            'Create one clear proof-led hiring flow with privacy-safe review checkpoints.',
           outcomeSummary:
             'Define the work outcome, how success will be observed, and which evidence would count.',
           constraints: {

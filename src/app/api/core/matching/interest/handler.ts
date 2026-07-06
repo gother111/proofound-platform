@@ -59,11 +59,11 @@ function buildPendingApprovalCopy(isOrgAction: boolean, mutual: boolean) {
   return isOrgAction
     ? {
         title: 'Interest recorded.',
-        body: 'The candidate will only see the introduction after the review corridor allows it.',
+        body: 'The candidate will only see the introduction after the review step allows it.',
       }
     : {
         title: 'Interest recorded.',
-        body: 'If the organization shortlists you and approves the introduction, the corridor will move forward from there.',
+        body: 'If the organization shortlists you and approves the introduction, the hiring flow will move forward from there.',
       };
 }
 
@@ -185,14 +185,14 @@ function buildIntroBlockedCopy(
 
   if (isOrgAction) {
     return {
-      title: 'This candidate is reviewable, but not yet intro-eligible.',
-      body: 'You can save this profile and keep reviewing it, but Proofound is holding introductions until the candidate has stronger relevant proof and at least one active trust anchor for this assignment.',
+      title: 'This candidate is reviewable, but not yet ready for introductions.',
+      body: 'You can save this profile and keep reviewing it, but Proofound is holding introductions until the candidate has stronger relevant proof and at least one active trusted confirmation for this assignment.',
     };
   }
 
   return {
     title: 'You can keep browsing. Introductions unlock after stronger proof.',
-    body: 'Your profile is visible, but it does not yet meet Proofound’s qualified introduction threshold. Add proof to more relevant skills and complete one trusted or attested proof to unlock introductions.',
+    body: 'Your profile is visible, but it does not yet meet Proofound’s qualified introduction threshold. Add proof to more relevant skills and complete one trusted or confirmed proof to unlock introductions.',
   };
 }
 
@@ -591,7 +591,7 @@ export async function POST(request: NextRequest) {
       }),
       copy: buildPendingApprovalCopy(isOrgAction, true),
       message:
-        'Interest is mutual. The organization still needs to approve the introduction from the shortlist corridor.',
+        'Interest is mutual. The organization still needs to approve the introduction from the shortlist step.',
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

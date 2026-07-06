@@ -72,7 +72,7 @@ describe('Proof Pack Assistant route', () => {
     const payload = await response.json();
 
     expect(response.status).toBe(404);
-    expect(payload.error).toBe('Proof Pack not found');
+    expect(payload.error).toBe('Proof record not found');
   });
 
   it('rejects full file payload fields before assistant service access', async () => {

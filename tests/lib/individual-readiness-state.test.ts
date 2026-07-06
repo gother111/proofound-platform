@@ -153,7 +153,7 @@ describe('getIndividualReadinessState', () => {
     volunteeringFindManyMock.mockResolvedValue([]);
   });
 
-  it('keeps portfolio-ready narrower than intro-eligible once required verification exists', async () => {
+  it('keeps portfolio-ready narrower than introduction readiness once required verification exists', async () => {
     skillsFindManyMock.mockResolvedValue([]);
     listCanonicalProofPackAggregatesForOwnerMock.mockResolvedValue([
       createAnchoredAggregate({ skillIds: ['skill-1'], verification: true }),
@@ -211,13 +211,13 @@ describe('getIndividualReadinessState', () => {
       expect.arrayContaining([
         expect.objectContaining({
           id: 'trusted_signal',
-          label: 'Non-self trust anchor',
+          label: 'Non-self trusted confirmation',
         }),
       ])
     );
   });
 
-  it('unlocks intro eligibility only with strong anchored proof and a non-self trust anchor', async () => {
+  it('unlocks introduction readiness only with strong anchored proof and a non-self trusted confirmation', async () => {
     skillsFindManyMock.mockResolvedValue(
       ['skill-1', 'skill-2', 'skill-3'].map((id) => ({
         id,

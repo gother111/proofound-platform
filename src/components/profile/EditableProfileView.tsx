@@ -37,7 +37,7 @@ function resolvePortfolioGateMessage(lockReason: string | null): string {
     case 'context':
       return 'Public Page is locked until you add one real context.';
     case 'proof':
-      return 'Public Page is locked until you add and structure your first proof from the profile Proof Packs tab.';
+      return 'Public Page is locked until you add and structure your first proof from the profile proof records tab.';
     case 'verification':
       return 'Verification now upgrades the trust badge; publish once one structured proof is ready.';
     case 'publish':

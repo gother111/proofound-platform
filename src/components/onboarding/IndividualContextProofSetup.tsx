@@ -59,7 +59,7 @@ const ARTIFACT_TYPE_OPTIONS: Array<{ value: ArtifactType; label: string }> = [
   { value: 'document', label: 'Document' },
   { value: 'credential', label: 'Credential or certificate' },
   { value: 'media', label: 'Media or presentation' },
-  { value: 'reference', label: 'Reference or attestation' },
+  { value: 'reference', label: 'Reference or confirmation' },
   { value: 'other', label: 'Other proof artifact' },
 ];
 
@@ -290,7 +290,7 @@ export function IndividualSetup({
     `${displayName || 'A Proofound user'} is asking whether you can confirm a scoped part of work you saw directly.`,
     '',
     `Specific claim: ${proof.proofTitle || 'First proof artifact'}`,
-    `Context: First Proof Pack setup${displayName ? ` for ${displayName}` : ''}${
+    `Context: First proof record setup${displayName ? ` for ${displayName}` : ''}${
       basicDetails.residence ? ` in ${basicDetails.residence}` : ''
     }.`,
     `Artifact or evidence: ${ARTIFACT_TYPE_LABELS[proof.artifactType]} - ${proofSource}`,
@@ -553,10 +553,10 @@ export function IndividualSetup({
           verificationMessage =
             sentCount === completeConfirmers.length
               ? `Verification request sent to ${sentCount} confirmer${sentCount === 1 ? '' : 's'}.`
-              : `First Proof Pack saved. ${sentCount} of ${completeConfirmers.length} verification request emails sent.`;
+              : `First proof record saved. ${sentCount} of ${completeConfirmers.length} verification request emails sent.`;
         } else {
           verificationMessage =
-            'First Proof Pack saved. Verification request details were saved so you can send them later.';
+            'First proof record saved. Verification request details were saved so you can send them later.';
         }
       } else if (verificationAction === 'draft' && completeConfirmers.length > 0) {
         verificationMessage =
@@ -619,7 +619,7 @@ export function IndividualSetup({
         onContinue={() => router.push(completionPath || '/app/i/home')}
         continueLabel="Continue to home"
         onDecline={() => router.push('/app/i/home')}
-        previewTitle={proof.proofTitle || 'First Proof Pack'}
+        previewTitle={proof.proofTitle || 'First proof record'}
         previewDescription={
           proof.proofSummary ||
           'Your first structured proof can be shared as a public-safe portfolio link.'
@@ -633,11 +633,11 @@ export function IndividualSetup({
     <div className="mx-auto max-w-3xl space-y-6">
       <div className="space-y-3">
         <h1 className="font-['Crimson_Pro'] text-3xl font-semibold text-proofound-charcoal dark:text-foreground">
-          Start with one Proof Pack
+          Start with one proof record
         </h1>
         <p className="max-w-2xl text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
-          Add your name, where you are based, and one artifact that can become your first Proof
-          Pack.
+          Add your name, where you are based, and one artifact that can become your first proof
+          record.
         </p>
         <StepRail phase={phase} />
       </div>
@@ -652,7 +652,7 @@ export function IndividualSetup({
                 </CardTitle>
                 <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
                   Let Proofound draft private proof context from your CV before you build your first
-                  Proof Pack. You decide what to keep.
+                  proof record. You decide what to keep.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -1103,7 +1103,7 @@ export function IndividualSetup({
                     Who can confirm this work?
                   </h2>
                   <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
-                    Optional for the first Proof Pack. Keep it scoped to what this person saw
+                    Optional for the first proof record. Keep it scoped to what this person saw
                     happen.
                   </p>
                 </div>
@@ -1280,7 +1280,7 @@ export function IndividualSetup({
                       Save and send request
                     </>
                   ) : (
-                    'Save first Proof Pack'
+                    'Save first proof record'
                   )}
                 </Button>
               </div>

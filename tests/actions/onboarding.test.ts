@@ -234,7 +234,7 @@ describe('onboarding actions', () => {
         evidence_summary: 'Launch note showing the first proof-backed onboarding launch.',
         outcomes_summary:
           'Reduced onboarding support tickets · 23% · Q1 pilot; Shortened first proof review · 2 days faster · private beta',
-        verification_summary: 'No scoped verification is recorded for this Proof Pack yet.',
+        verification_summary: 'No scoped verification is recorded for this proof record yet.',
         proof_quality_score: '0.60',
         schema_version: 'proof_pack/v2',
         context_json: expect.objectContaining({

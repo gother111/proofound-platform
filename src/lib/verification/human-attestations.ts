@@ -207,7 +207,7 @@ export function deriveAttestationRequestMode(args: {
       requestKind: 'generic_verification',
       requestPayload: null,
       error:
-        'Human-observed attestation requests can only cover eligible interpersonal skills, not mixed artifacts.',
+        'Human-observed confirmation requests can only cover eligible interpersonal skills, not mixed artifacts.',
     };
   }
 
@@ -216,7 +216,7 @@ export function deriveAttestationRequestMode(args: {
       requestKind: 'generic_verification',
       requestPayload: null,
       error:
-        'Human-observed attestation requests can only cover the supported interpersonal skill set.',
+        'Human-observed confirmation requests can only cover the supported interpersonal skill set.',
     };
   }
 
@@ -224,7 +224,7 @@ export function deriveAttestationRequestMode(args: {
     return {
       requestKind: 'generic_verification',
       requestPayload: null,
-      error: `Human-observed attestation requests are limited to ${MAX_SKILLS_PER_ATTESTATION} skills.`,
+      error: `Human-observed confirmation requests are limited to ${MAX_SKILLS_PER_ATTESTATION} skills.`,
     };
   }
 
@@ -257,7 +257,7 @@ export function parseHumanObservedAttestationResponse(
       error: new z.ZodError([
         {
           code: 'custom',
-          message: `Attestations must cover exactly ${expectedIds.length} requested skill(s).`,
+          message: `Confirmations must cover exactly ${expectedIds.length} requested skill(s).`,
           path: ['skillIds'],
         },
       ]),

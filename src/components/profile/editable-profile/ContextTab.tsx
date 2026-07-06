@@ -164,7 +164,7 @@ function ContextLinks() {
       <Button asChild variant="outline" size="sm" className="h-8">
         <Link href="/app/i/profile?profileView=full&tab=proof_packs">
           <Link2 className="mr-2 h-3.5 w-3.5" />
-          Proof Packs
+          Proof records
         </Link>
       </Button>
       <Button asChild variant="outline" size="sm" className="h-8">
@@ -589,8 +589,8 @@ export function ContextTab({
             <div className="space-y-1">
               <h3 className="text-lg font-semibold text-foreground">Context</h3>
               <p className="text-sm text-muted-foreground">
-                Context stays private by default. Use it as scaffolding for Proof Packs, summaries,
-                matching explanations, and scoped verification.
+                Context stays private by default. Use it as scaffolding for proof records,
+                summaries, matching explanations, and scoped verification.
               </p>
             </div>
           </div>

@@ -53,7 +53,7 @@ function buildProjection(overrides: Partial<any> = {}) {
     publicProofCount: 1,
     verifiedPublicProofPackCount: 1,
     traceableSummary: {
-      provenanceLabel: 'Generated from public-safe Proof Packs and context tokens',
+      provenanceLabel: 'Generated from public-safe proof records and context tokens',
       hasEnoughData: true,
       segments: [
         {
@@ -62,7 +62,7 @@ function buildProjection(overrides: Partial<any> = {}) {
           value: 'Company size: 11-50',
           state: 'ready',
           sources: [
-            { id: 'pack-1', label: 'Proof Pack: Product Strategy', detail: 'Product Strategy' },
+            { id: 'pack-1', label: 'Product strategy proof record', detail: 'Product Strategy' },
           ],
         },
         {
@@ -71,7 +71,7 @@ function buildProjection(overrides: Partial<any> = {}) {
           value: 'Work area: Product strategy',
           state: 'ready',
           sources: [
-            { id: 'pack-1', label: 'Proof Pack: Product Strategy', detail: 'Product Strategy' },
+            { id: 'pack-1', label: 'Product strategy proof record', detail: 'Product Strategy' },
           ],
         },
         {
@@ -80,7 +80,7 @@ function buildProjection(overrides: Partial<any> = {}) {
           value: 'Industry: Proof-first hiring',
           state: 'ready',
           sources: [
-            { id: 'pack-1', label: 'Proof Pack: Product Strategy', detail: 'Product Strategy' },
+            { id: 'pack-1', label: 'Product strategy proof record', detail: 'Product Strategy' },
           ],
         },
       ],
@@ -165,13 +165,13 @@ function buildProjection(overrides: Partial<any> = {}) {
           id: 'pack-1',
           scope: 'public_safe',
           status: 'published',
-          title: 'Proof Pack: Product Strategy',
+          title: 'Product strategy proof record',
           summary: 'Launch evidence for Product Strategy',
           ownershipStatement: 'Owned the product strategy contribution.',
           evidenceSummary: 'Verified against a public launch memo.',
           outcomesSummary: 'Shipped the MVP in two weeks.',
           verificationStatus: 'verified',
-          verificationSummary: 'Scoped verification supports this Proof Pack.',
+          verificationSummary: 'Scoped verification supports this proof record.',
           freshnessState: 'fresh',
           proofQualityScore: 0.8,
           schemaVersion: 'proof_pack/v2',
@@ -270,7 +270,7 @@ describe('Public individual portfolio page', () => {
           proofPacks: baseProjection.exportData.proofPacks.map((pack: any) => ({
             ...pack,
             verificationStatus: 'unverified',
-            verificationSummary: 'No scoped verification is recorded for this Proof Pack yet.',
+            verificationSummary: 'No scoped verification is recorded for this proof record yet.',
             evidenceSummary: 'Public memo shared by the owner.',
           })),
         },
@@ -351,10 +351,10 @@ describe('Public individual portfolio page', () => {
 
     expect(screen.getByRole('heading', { name: 'Jane Doe' })).toBeInTheDocument();
     expect(screen.getByText('Direct-link proof snapshot')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /selected proof packs/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /selected proof records/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /scale \/ focus \/ context/i })).toBeInTheDocument();
     expect(
-      screen.getByText('Generated from public-safe Proof Packs and context tokens')
+      screen.getByText('Generated from public-safe proof records and context tokens')
     ).toBeInTheDocument();
     expect(screen.getByText('Company size: 11-50')).toBeInTheDocument();
     expect(screen.getByText('Work area: Product strategy')).toBeInTheDocument();
@@ -363,7 +363,7 @@ describe('Public individual portfolio page', () => {
     expect(screen.getByRole('heading', { name: /selected outcomes/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /skills snapshot/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /contact & share/i })).toBeInTheDocument();
-    expect(screen.getByText(/no selected proof packs are available yet/i)).toBeInTheDocument();
+    expect(screen.getByText(/no selected proof records are available yet/i)).toBeInTheDocument();
     expect(screen.getByText(/no public outcome summary is published yet/i)).toBeInTheDocument();
     expect(
       screen.getByText(/skills are not shared publicly on this public page/i)
@@ -405,14 +405,13 @@ describe('Public individual portfolio page', () => {
       'href',
       '/app/i/home'
     );
-    expect(screen.getByRole('link', { name: /edit source proof packs/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /edit source proof records/i })).toHaveAttribute(
       'href',
       expect.stringContaining('summarySource=traceable-profile-summary')
     );
-    expect(screen.getByRole('link', { name: /refresh from current proof packs/i })).toHaveAttribute(
-      'href',
-      expect.stringContaining('summaryRefresh=traceable-profile-summary')
-    );
+    expect(
+      screen.getByRole('link', { name: /refresh from current proof records/i })
+    ).toHaveAttribute('href', expect.stringContaining('summaryRefresh=traceable-profile-summary'));
     expect(screen.getByText(/public-safe proof selected by the owner/i)).toBeInTheDocument();
     expect(screen.queryByText(/search engines are off for the MVP/i)).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: /manage visibility/i })).toHaveAttribute(
@@ -453,7 +452,7 @@ describe('Public individual portfolio page', () => {
               id: 'pack-1',
               scope: 'public_safe',
               status: 'published',
-              title: 'Proof Pack: Hidden asset proof',
+              title: 'Hidden asset proof record',
               summary: 'Internal child asset omitted',
               ownershipStatement: 'Owned the contribution.',
               evidenceSummary: null,

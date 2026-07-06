@@ -286,7 +286,7 @@ export function buildHiringCorridorSnapshot(params: {
       nextAction = {
         id: 'request_intro',
         label: 'Request intro',
-        description: 'Open the corridor by asking the candidate to accept an intro.',
+        description: 'Open the hiring flow by asking the candidate to accept an intro.',
       };
       summary = 'The candidate is shortlisted and still in blind review.';
     } else {
@@ -294,7 +294,7 @@ export function buildHiringCorridorSnapshot(params: {
         id: 'wait_for_intro_request',
         label: 'Wait for intro request',
         description:
-          'You are shortlisted. The organization must request an intro before the corridor moves forward.',
+          'You are shortlisted. The organization must request an intro before the hiring flow moves forward.',
       };
       summary = 'You are shortlisted. Blind review is still in place.';
     }
@@ -304,7 +304,7 @@ export function buildHiringCorridorSnapshot(params: {
         nextAction = {
           id: 'respond_to_intro',
           label: 'Respond to intro',
-          description: 'Accept or decline the intro request to keep the corridor moving.',
+          description: 'Accept or decline the intro request to keep the hiring flow moving.',
         };
         summary = 'An intro has been requested and is waiting for your response.';
       } else {
@@ -319,7 +319,7 @@ export function buildHiringCorridorSnapshot(params: {
       nextAction = {
         id: 'respond_to_intro',
         label: 'Confirm intro',
-        description: 'The candidate expressed interest. Confirm the intro to open the corridor.',
+        description: 'The candidate expressed interest. Confirm the intro to open the hiring flow.',
       };
       summary = 'The candidate has signaled interest and the organization still needs to confirm.';
     } else {
@@ -344,7 +344,7 @@ export function buildHiringCorridorSnapshot(params: {
         id: 'wait_for_reveal_response',
         label: 'Wait for reveal request',
         description:
-          'The organization can request reveal when it is ready to continue the corridor.',
+          'The organization can request reveal when it is ready to continue the hiring flow.',
       };
       summary =
         'The intro is accepted and the conversation can continue anonymously until reveal is requested.';
@@ -381,7 +381,7 @@ export function buildHiringCorridorSnapshot(params: {
         label: 'Wait for interview schedule',
         description: 'The organization can now schedule the interview.',
       };
-      summary = 'Reveal is approved. The corridor is ready for interview scheduling.';
+      summary = 'Reveal is approved. The hiring flow is ready for interview scheduling.';
     }
   } else if (currentStep === 'interviews') {
     const interviewFinished =
@@ -399,7 +399,7 @@ export function buildHiringCorridorSnapshot(params: {
             'The last interview did not complete, so the legal next action is to schedule a replacement interview.',
         };
         summary =
-          'The interview did not complete, and the corridor is waiting for a replacement interview.';
+          'The interview did not complete, and the hiring flow is waiting for a replacement interview.';
       } else {
         nextAction = {
           id: 'wait_for_next_interview',
@@ -407,7 +407,7 @@ export function buildHiringCorridorSnapshot(params: {
           description: 'The organization needs to schedule the next interview slot.',
         };
         summary =
-          'The last interview did not complete. The corridor is waiting for a replacement interview.';
+          'The last interview did not complete. The hiring flow is waiting for a replacement interview.';
       }
     } else if (interviewFinished) {
       if (perspective === 'organization') {
@@ -416,7 +416,7 @@ export function buildHiringCorridorSnapshot(params: {
           label: 'Record decision',
           description: 'Complete the decision step now that the interview has finished.',
         };
-        summary = 'The interview round is complete and the corridor is waiting for a decision.';
+        summary = 'The interview round is complete and the hiring flow is waiting for a decision.';
       } else {
         nextAction = {
           id: 'wait_for_decision',
@@ -424,7 +424,7 @@ export function buildHiringCorridorSnapshot(params: {
           description: 'The organization is expected to record the next decision.',
         };
         summary =
-          'The interview round is complete and the corridor is waiting for the organization’s decision.';
+          'The interview round is complete and the hiring flow is waiting for the organization’s decision.';
       }
     } else {
       nextAction = {
@@ -433,7 +433,7 @@ export function buildHiringCorridorSnapshot(params: {
         description:
           'The interview round is scheduled and coordination details are now visible to both sides.',
       };
-      summary = 'The interview stage is active and the corridor is in coordination mode.';
+      summary = 'The interview stage is active and the hiring flow is in coordination mode.';
     }
   } else if (currentStep === 'decision') {
     if (source.decisionState === 'hire') {
@@ -465,47 +465,49 @@ export function buildHiringCorridorSnapshot(params: {
             'The hire decision is recorded. The remaining step is engagement verification.',
         };
         summary =
-          'The hire decision is recorded and the corridor is waiting for engagement verification.';
+          'The hire decision is recorded and the hiring flow is waiting for engagement verification.';
       }
     } else if (source.decisionState === 'advance') {
       if (perspective === 'organization') {
         nextAction = {
           id: 'advance_to_next_interview',
           label: 'Schedule next interview',
-          description: 'Advance keeps the corridor active and requires the next interview step.',
+          description: 'Advance keeps the hiring flow active and requires the next interview step.',
         };
-        summary = 'The candidate advanced and the corridor is waiting for the next interview step.';
+        summary =
+          'The candidate advanced and the hiring flow is waiting for the next interview step.';
       } else {
         nextAction = {
           id: 'wait_for_next_interview',
           label: 'Wait for next interview',
           description:
-            'The organization advanced the corridor and should schedule the next interview step.',
+            'The organization advanced the hiring flow and should schedule the next interview step.',
         };
-        summary = 'You advanced in the corridor and the next interview step should be scheduled.';
+        summary =
+          'You advanced in the hiring flow and the next interview step should be scheduled.';
       }
     } else if (source.decisionState === 'hold') {
       nextAction = {
         id: 'wait_for_decision',
         label: 'Wait for decision update',
-        description: 'The corridor is on hold until the organization records the next decision.',
+        description: 'The hiring flow is on hold until the organization records the next decision.',
       };
       summary = 'The decision is on hold.';
     } else if (source.decisionState === 'reject' || source.decisionState === 'withdraw') {
       nextAction = {
         id: 'corridor_closed',
-        label: 'Corridor closed',
-        description: 'This corridor ended without a hire, so there is no next workflow action.',
+        label: 'Hiring flow closed',
+        description: 'This hiring flow ended without a hire, so there is no next workflow action.',
       };
-      summary = 'The corridor is closed.';
+      summary = 'The hiring flow is closed.';
     } else {
       nextAction = {
         id: 'wait_for_decision',
         label: 'Wait for decision update',
         description:
-          'The current decision keeps the corridor open, but no further action is available yet.',
+          'The current decision keeps the hiring flow open, but no further action is available yet.',
       };
-      summary = 'The corridor is waiting on the next decision update.';
+      summary = 'The hiring flow is waiting on the next decision update.';
     }
   } else if (currentStep === 'engagement_recorded') {
     const organizationConfirmed =
@@ -523,31 +525,31 @@ export function buildHiringCorridorSnapshot(params: {
           'Record the engagement details so the candidate can complete the final verification step.',
       };
       summary =
-        'The hire decision is recorded and the corridor is waiting for the organization to record the engagement.';
+        'The hire decision is recorded and the hiring flow is waiting for the organization to record the engagement.';
     } else if (perspective === 'individual' && !candidateConfirmed) {
       nextAction = {
         id: 'confirm_engagement',
         label: 'Confirm engagement',
         description:
-          'The engagement has been recorded and now needs your confirmation to finish the corridor.',
+          'The engagement has been recorded and now needs your confirmation to finish the hiring flow.',
       };
       summary =
-        'The engagement has been recorded and the corridor is waiting for your confirmation.';
+        'The engagement has been recorded and the hiring flow is waiting for your confirmation.';
     } else {
       nextAction = {
         id: 'wait_for_engagement_confirmation',
         label: 'Wait for engagement confirmation',
         description:
-          'One side has already recorded the engagement. The corridor will complete after the remaining confirmation.',
+          'One side has already recorded the engagement. The hiring flow will complete after the remaining confirmation.',
       };
       summary =
-        'The engagement is recorded and the corridor is waiting for the remaining confirmation.';
+        'The engagement is recorded and the hiring flow is waiting for the remaining confirmation.';
     }
   } else {
     nextAction = {
       id: 'corridor_complete',
-      label: 'Corridor complete',
-      description: 'The engagement is verified and the hiring corridor is complete.',
+      label: 'Hiring flow complete',
+      description: 'The engagement is verified and the hiring flow is complete.',
     };
     summary = 'The engagement has been verified.';
   }

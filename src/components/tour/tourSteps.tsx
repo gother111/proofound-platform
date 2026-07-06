@@ -34,8 +34,8 @@ export const individualTourSteps: Step[] = [
       <div className="space-y-3">
         <h2 className="text-lg font-semibold text-foreground">Welcome to Proofound! 👋</h2>
         <p className="text-sm text-muted-foreground">
-          Your day-1 goal is to create one artifact-backed Proof Pack. This quick tour takes about 2
-          minutes.
+          Your day-1 goal is to create one artifact-backed proof record. This quick tour takes about
+          2 minutes.
         </p>
         <p className="text-xs text-muted-foreground">
           You can skip this tour anytime by pressing ESC, or replay it later from Settings.
@@ -78,11 +78,11 @@ export const individualTourSteps: Step[] = [
       <div className="space-y-2">
         <h3 className="text-base font-semibold text-foreground">Your Profile</h3>
         <p className="text-sm text-muted-foreground">
-          This is where your Proof Packs, real contexts, and visibility choices live. Start with one
-          proof-backed signal before broad profile polish.
+          This is where your proof records, real contexts, and visibility choices live. Start with
+          one proof-backed signal before broad profile polish.
         </p>
         <p className="text-xs text-muted-foreground pt-2 border-t border-proofound-stone">
-          <strong>Tip:</strong> Start with one context-backed Proof Pack.
+          <strong>Tip:</strong> Start with one context-backed proof record.
         </p>
       </div>
     ),
@@ -95,7 +95,7 @@ export const individualTourSteps: Step[] = [
       <div className="space-y-2">
         <h3 className="text-base font-semibold text-foreground">Portfolio Visibility</h3>
         <p className="text-sm text-muted-foreground">
-          Profile owns Proof Packs and the visibility controls for your clean, proof-based link.
+          Profile owns proof records and the visibility controls for your clean, proof-based link.
           Matching remains secondary until proof and privacy are ready.
         </p>
       </div>
@@ -140,8 +140,8 @@ export const individualTourSteps: Step[] = [
       <div className="space-y-3">
         <h2 className="text-lg font-semibold text-foreground">You're all set! 🎉</h2>
         <p className="text-sm text-muted-foreground">
-          Start with your <strong>Proof Packs</strong> in Profile, then publish only the public-safe
-          signals you choose. Matching comes after proof and privacy are ready.
+          Start with your <strong>proof records</strong> in Profile, then publish only the
+          public-safe signals you choose. Matching comes after proof and privacy are ready.
         </p>
         <div className="pt-3 border-t border-proofound-stone">
           <p className="text-xs text-muted-foreground">
@@ -186,7 +186,7 @@ export const organizationTourSteps: Step[] = [
         <h3 className="text-base font-semibold text-foreground">Organization Navigation</h3>
         <p className="text-sm text-muted-foreground">
           Your sidebar helps you manage assignments, review candidates, and track the narrow launch
-          hiring corridor.
+          hiring flow.
         </p>
       </div>
     ),

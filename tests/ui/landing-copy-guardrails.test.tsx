@@ -12,7 +12,7 @@ describe('landing copy guardrails', () => {
     expect(screen.getByText(/public page proof snapshot/i)).toBeInTheDocument();
     expect(screen.getByText(/org trust page/i)).toBeInTheDocument();
     expect(screen.getByText(/privacy-safe proof/i)).toBeInTheDocument();
-    expect(screen.getByText(/assignment corridor/i)).toBeInTheDocument();
+    expect(screen.getByText(/assignment flow/i)).toBeInTheDocument();
 
     expect(screen.queryByText(/pricing/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/manifesto/i)).not.toBeInTheDocument();

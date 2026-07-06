@@ -102,7 +102,7 @@ describe('MatchExplainerModal', () => {
         reviewCard={{
           candidateLabel: 'Candidate A7F2',
           strongestProof: {
-            summary: 'Built a blind review corridor around proof-backed evaluation.',
+            summary: 'Built a blind review flow around proof-backed evaluation.',
             outcome: 'Made fit clearer without exposing identity-bearing fields.',
             ownership: 'Owned the review architecture and delivery.',
             anchorContext: 'Anchored in prior project work',
@@ -149,7 +149,7 @@ describe('MatchExplainerModal', () => {
     expect(screen.getByText('Strongest relevant proof')).toBeInTheDocument();
     expect(screen.getAllByText('Top 10').length).toBeGreaterThan(0);
     expect(
-      screen.getByText('Built a blind review corridor around proof-backed evaluation.')
+      screen.getByText('Built a blind review flow around proof-backed evaluation.')
     ).toBeInTheDocument();
     expect(screen.getByText('Reason-coded fit summary')).toBeInTheDocument();
     expect(screen.getByText('skills_strong')).toBeInTheDocument();

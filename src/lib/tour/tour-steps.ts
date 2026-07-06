@@ -5,14 +5,14 @@ export const individualTourSteps: Step[] = [
   {
     target: 'body',
     content:
-      "Welcome to Proofound! Let's take a quick tour to help you create your first Proof Pack.",
+      "Welcome to Proofound! Let's take a quick tour to help you create your first proof record.",
     placement: 'center',
     disableBeacon: true,
   },
   {
     target: '[data-tour="profile-section"]',
     content:
-      'This is your profile hub. Start with one artifact-backed Proof Pack before broad profile polish.',
+      'This is your profile hub. Start with one artifact-backed proof record before broad profile polish.',
     placement: 'bottom',
   },
   {
@@ -53,7 +53,7 @@ export const individualTourSteps: Step[] = [
   {
     target: '[data-tour="proof-readiness"]',
     content:
-      'Track your proof readiness here. Start with one Proof Pack, then strengthen trust when it matters.',
+      'Track your proof readiness here. Start with one proof record, then strengthen trust when it matters.',
     placement: 'left',
   },
 ];

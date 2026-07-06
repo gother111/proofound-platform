@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
           'Which parts can you confirm from direct knowledge or observation?',
           'Is there anything in this request that you cannot verify?',
         ],
-        privacyNotes: ['Draft uses selected public-safe Proof Pack fields only.'],
+        privacyNotes: ['Draft uses selected public-safe proof record fields only.'],
         tooBroadWarnings: [
           'This draft is limited to one claim scope and avoids general praise or candidate quality judgment.',
         ],
@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
       error instanceof Error &&
       (error.message === 'PROOF_PACK_NOT_FOUND' || error.message === 'PROOF_PACK_OR_CLAIM_REQUIRED')
     ) {
-      return NextResponse.json({ error: 'Proof Pack or claim not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Proof record or claim not found' }, { status: 404 });
     }
 
     return safeApiErrorResponse({

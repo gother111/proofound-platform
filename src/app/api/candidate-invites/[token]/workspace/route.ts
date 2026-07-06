@@ -84,7 +84,7 @@ export async function GET(
 
     if (invite.flowType !== CANDIDATE_INVITE_FLOW_TYPE.PROOF_CARD) {
       return NextResponse.json(
-        { error: 'Private Proof Pack submission is not required for this invite.' },
+        { error: 'Private proof record submission is not required for this invite.' },
         { status: 409 }
       );
     }

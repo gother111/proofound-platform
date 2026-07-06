@@ -466,7 +466,7 @@ export async function completeIndividualOnboarding(formData: FormData) {
       state: 'portfolio_publish_validation_failed',
       failureClass: 'missing_required_fields',
     });
-    return { error: 'Finish the basic identity shell before saving your first Proof Pack.' };
+    return { error: 'Finish the basic identity shell before saving your first proof record.' };
   }
 
   if (!contextTitle || !contextOrganizationName || !contextSummary || !contextDuration) {
@@ -476,7 +476,7 @@ export async function completeIndividualOnboarding(formData: FormData) {
       failureClass: 'missing_context_fields',
     });
     return {
-      error: 'Add one real context with a short anchor before saving your first Proof Pack.',
+      error: 'Add one real context with a short anchor before saving your first proof record.',
     };
   }
 
@@ -487,7 +487,7 @@ export async function completeIndividualOnboarding(formData: FormData) {
       state: 'portfolio_publish_validation_failed',
       failureClass: 'missing_proof_fields',
     });
-    return { error: 'Add your first proof before saving your first Proof Pack.' };
+    return { error: 'Add your first proof before saving your first proof record.' };
   }
 
   if (!proofPackClaim || !proofPackOwnership) {
@@ -496,7 +496,7 @@ export async function completeIndividualOnboarding(formData: FormData) {
       state: 'portfolio_publish_validation_failed',
       failureClass: 'missing_proof_pack_fields',
     });
-    return { error: 'Structure your first Proof Pack before saving it.' };
+    return { error: 'Structure your first proof record before saving it.' };
   }
 
   if (
@@ -855,7 +855,7 @@ export async function completeIndividualOnboarding(formData: FormData) {
       },
       evidence_summary: proofSummary,
       outcomes_summary: effectiveProofPackOutcome || null,
-      verification_summary: 'No scoped verification is recorded for this Proof Pack yet.',
+      verification_summary: 'No scoped verification is recorded for this proof record yet.',
       visibility: 'owner_only',
       reveal_gate: 'none',
       created_by: user.id,
@@ -884,7 +884,7 @@ export async function completeIndividualOnboarding(formData: FormData) {
         state: 'portfolio_publish_proof_pack_failed',
         failureClass: 'proof_pack_failed',
       });
-      return { error: 'Failed to structure your first Proof Pack. Please try again.' };
+      return { error: 'Failed to structure your first proof record. Please try again.' };
     }
 
     const proofPackItemInsert = await supabase.from('proof_pack_items').insert({
@@ -909,7 +909,7 @@ export async function completeIndividualOnboarding(formData: FormData) {
         state: 'portfolio_publish_proof_pack_item_failed',
         failureClass: 'proof_pack_item_failed',
       });
-      return { error: 'Failed to finish your first Proof Pack. Please try again.' };
+      return { error: 'Failed to finish your first proof record. Please try again.' };
     }
 
     revalidatePath('/app/i');

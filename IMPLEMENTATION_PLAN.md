@@ -145,7 +145,7 @@ This plan and the audit **supersede** `Proofound_MVP_Locked_Source_of_Truth_2026
    **Acceptance:** org member can navigate to Candidates, send an invite, and see submissions; non-members get 404/403 consistent with sibling routes; org e2e (or targeted integration tests) pass.
    **Verify:** standard gates + `npm run test:launch:org-corridor` (or closest org suite).
 
-### [ ] P0-10 — Plain-language pass on user-facing vocabulary
+### [x] P0-10 — Plain-language pass on user-facing vocabulary
 
 **Objective:** No unexplained insider vocabulary in any user-facing surface.
 **Files:** app + marketing user-facing strings (573× "corridor", 571× "attestation" across source — most are code-internal; only rendered copy matters), `UI_VOCAB_PLAIN` flag (already defaults true — extend its reach), a small shared `<TermHint>` tooltip component.

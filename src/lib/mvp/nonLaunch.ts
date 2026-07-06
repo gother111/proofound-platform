@@ -16,7 +16,7 @@ export async function isLegacyMvpSurfaceEnabled(
 export function legacySurfaceJsonResponse(surface: string, detail: string, status = 410) {
   return NextResponse.json(
     {
-      error: `${surface} is not part of the launch MVP corridor.`,
+      error: `${surface} is not part of the launch MVP flow.`,
       message: detail,
       surface,
       launchState: 'non_launch',

@@ -62,7 +62,7 @@ describe('GuidedProfileSetupView', () => {
       'Create a safe shell',
       'Add one real context',
       'Add your first proof',
-      'Structure your first Proof Pack',
+      'Structure your first proof record',
       'Publish Public Page',
       'Upgrade trust badge',
     ];

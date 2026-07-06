@@ -230,7 +230,7 @@ export function buildSanitizedVerificationComposerContext(params: {
       hiddenIdentityTerms
     ) ||
     redactedNullableWithHiddenTerms(contract?.title, redactionSummary, hiddenIdentityTerms) ||
-    'One scoped Proof Pack claim';
+    'One scoped proof record claim';
 
   return {
     promptVersion: VERIFICATION_COMPOSER_PROMPT_VERSION,
@@ -254,7 +254,7 @@ function buildPrompt(context: SanitizedComposerContext) {
   return [
     'You are Proofound Verification Request Composer.',
     `Prompt version: ${VERIFICATION_COMPOSER_PROMPT_VERSION}.`,
-    'Draft concise, respectful verification request copy for one claim-scoped Proof Pack request.',
+    'Draft concise, respectful verification request copy for one claim-scoped proof record request.',
     'Use only the selected public-safe proof fields in the JSON context.',
     'Never include verifier email or hidden/private context.',
     'Do not ask for general praise, endorsement, candidate evaluation, suitability, trust level, verification approval, interview, or hiring decisions.',
@@ -287,7 +287,7 @@ function deterministicFallback(
       'Is there anything in this request that you cannot verify?',
     ],
     privacyNotes: [
-      'Draft uses selected public-safe Proof Pack fields only.',
+      'Draft uses selected public-safe proof record fields only.',
       ...Object.entries(context.redactionSummary)
         .filter(([, count]) => count > 0)
         .map(([key, count]) => `${count} ${key.replace(/_/g, ' ')} redacted before drafting.`),
@@ -387,7 +387,7 @@ export async function composeVerificationRequestForUser(
     return {
       ...deterministicFallback(
         context,
-        'Public-safe Proof Pack context was unavailable, so manual editing is required before AI drafting.'
+        'Public-safe proof record context was unavailable, so manual editing is required before AI drafting.'
       ),
       fallback: true,
     };

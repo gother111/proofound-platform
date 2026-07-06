@@ -60,9 +60,9 @@ describe('VerificationStatus', () => {
     render(<VerificationStatus />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Proof verifications \/ attestations/i)).toBeInTheDocument();
+      expect(screen.getByText(/Proof verifications \/ confirmations/i)).toBeInTheDocument();
     });
-    expect(screen.getByText(/Intro-readiness trust anchors/i)).toBeInTheDocument();
+    expect(screen.getByText(/Introduction readiness trusted confirmations/i)).toBeInTheDocument();
     expect(screen.getByText(/Account compatibility signals/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Add work email/i })).toBeInTheDocument();
     expect(
@@ -71,7 +71,7 @@ describe('VerificationStatus', () => {
       )
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/LinkedIn compatibility checks are outside the launch corridor/i)
+      screen.getByText(/LinkedIn compatibility checks are outside the launch flow/i)
     ).toBeInTheDocument();
     expect(screen.queryByText(/Government ID Verification/i)).not.toBeInTheDocument();
   });

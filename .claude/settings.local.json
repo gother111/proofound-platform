@@ -30,7 +30,11 @@
       "Bash(printf 'P0-8 | PASS | pending-sha | digest default-on env-guarded, day-5+10 reminders via decision-reminders dispatcher, idempotent via last_follow_up_at+metadata, no migration, blind-safe reminder template, 1917 tests green\\\\n')",
       "Bash(git commit --quiet -m 'P0-8: enable weekly digest by default; add day-5/10 verification reminders *)",
       "Bash(sed -i '' 's/### \\\\[ \\\\] P0-9 — Surface the org candidate-review workspace/### [x] P0-9 — Surface the org candidate-review workspace/' IMPLEMENTATION_PLAN.md)",
-      "Bash(git commit --quiet -m 'P0-9: surface org candidates workspace with nav entry and route *)"
+      "Bash(git commit --quiet -m 'P0-9: surface org candidates workspace with nav entry and route *)",
+      "Bash(NEXT_PUBLIC_USE_MOCK_SUPABASE=true PLAYWRIGHT=true PLAYWRIGHT_PORT=33210 node ./scripts/playwright-node24.mjs test e2e/dashboard-declutter-visual.spec.ts e2e/matching-messages-empty-visual.spec.ts e2e/profile-trust-profile-visual.spec.ts --project=chromium --reporter=line --workers=1)",
+      "Bash(NEXT_PUBLIC_USE_MOCK_SUPABASE=true PLAYWRIGHT=true PLAYWRIGHT_PORT=33210 node ./scripts/playwright-node24.mjs test e2e/matching-messages-empty-visual.spec.ts --project=chromium --reporter=line --workers=1)",
+      "Bash(sed -i '' 's/### \\\\[ \\\\] P0-10 — Plain-language pass on user-facing vocabulary/### [x] P0-10 — Plain-language pass on user-facing vocabulary/' IMPLEMENTATION_PLAN.md)",
+      "Bash(git commit --quiet -m 'P0-10: plain-language sweep of user-facing vocabulary; add TermHint tooltips *)"
     ]
   }
 }

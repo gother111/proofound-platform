@@ -66,19 +66,19 @@ export default async function IndividualHomePage() {
   const userName = user.displayName || user.handle || 'there';
   const firstName = userName.split(' ')[0];
   const hasProof = metrics.proofStoriesCount > 0;
-  const hasTrustAnchor = metrics.verifiedSkills > 0;
-  const hasPendingTrustAnchor = metrics.pendingVerifications > 0;
-  const primaryProofLabel = hasProof ? 'Review Proof Packs' : 'Start proof record';
+  const hasTrustedConfirmation = metrics.verifiedSkills > 0;
+  const hasPendingTrustedConfirmation = metrics.pendingVerifications > 0;
+  const primaryProofLabel = hasProof ? 'Review proof records' : 'Start proof record';
   const readinessTone = hasProof
-    ? hasTrustAnchor
-      ? 'Proof and trust anchor present'
-      : 'Proof present; trust anchor is next'
+    ? hasTrustedConfirmation
+      ? 'Proof and trusted confirmation present'
+      : 'Proof present; trusted confirmation is next'
     : 'Start with one proof record';
 
   const proofRecords = [
     {
       icon: FileCheck2,
-      title: 'Proof Packs',
+      title: 'Proof records',
       detail: hasProof
         ? `${metrics.proofStoriesCount} proof-backed signal${metrics.proofStoriesCount === 1 ? '' : 's'}`
         : 'No proof yet. Start with one private record.',
@@ -88,13 +88,13 @@ export default async function IndividualHomePage() {
     },
     {
       icon: ShieldCheck,
-      title: 'Trust anchors',
+      title: 'Trusted confirmations',
       detail:
         metrics.verifiedSkills > 0
           ? `${metrics.verifiedSkills} accepted trust signal${metrics.verifiedSkills === 1 ? '' : 's'}`
           : metrics.pendingVerifications > 0
             ? `${metrics.pendingVerifications} verification request${metrics.pendingVerifications === 1 ? '' : 's'} pending`
-            : 'No trust anchor yet. You can add this after the first proof.',
+            : 'No trusted confirmation yet. You can add this after the first proof.',
       status:
         metrics.verifiedSkills > 0
           ? 'Verified'
@@ -124,7 +124,7 @@ export default async function IndividualHomePage() {
   const readinessSteps = [
     {
       icon: FileCheck2,
-      title: hasProof ? 'Proof Pack is present' : 'First proof artifact',
+      title: hasProof ? 'Proof record is present' : 'First proof artifact',
       detail: hasProof
         ? 'Check the context, evidence, and visibility before sharing.'
         : 'Start with one useful artifact. It stays private while you shape it.',
@@ -137,17 +137,17 @@ export default async function IndividualHomePage() {
       icon: ShieldCheck,
       title:
         metrics.verifiedSkills > 0
-          ? 'Trust anchor verified'
+          ? 'Trusted confirmation verified'
           : metrics.pendingVerifications > 0
-            ? 'Trust anchor in review'
+            ? 'Trusted confirmation in review'
             : 'Trust badge self-reported',
       detail:
         metrics.verifiedSkills > 0
           ? `${metrics.verifiedSkills} accepted trust signal${metrics.verifiedSkills === 1 ? '' : 's'} attached to your proof.`
           : metrics.pendingVerifications > 0
             ? `${metrics.pendingVerifications} verification request${metrics.pendingVerifications === 1 ? '' : 's'} pending`
-            : 'Publishing can start with structured proof. Add one trusted source when you want the Verified badge and intro readiness.',
-      action: metrics.pendingVerifications > 0 ? 'View request' : 'Plan anchor',
+            : 'Publishing can start with structured proof. Add one trusted source when you want the Verified badge and introduction readiness.',
+      action: metrics.pendingVerifications > 0 ? 'View request' : 'Plan confirmation',
       href: '/app/i/verifications',
       status:
         metrics.verifiedSkills > 0
@@ -204,11 +204,11 @@ export default async function IndividualHomePage() {
   const scoreItems = [
     {
       label: `${metrics.verifiedSkills} accepted trust signal${metrics.verifiedSkills === 1 ? '' : 's'}`,
-      state: hasTrustAnchor ? 'ok' : 'warn',
+      state: hasTrustedConfirmation ? 'ok' : 'warn',
     },
     {
       label: `${metrics.pendingVerifications} pending verification${metrics.pendingVerifications === 1 ? '' : 's'}`,
-      state: hasPendingTrustAnchor ? 'warn' : 'ok',
+      state: hasPendingTrustedConfirmation ? 'warn' : 'ok',
     },
     {
       label: `${metrics.proofStoriesCount} proof item${metrics.proofStoriesCount === 1 ? '' : 's'} ready`,

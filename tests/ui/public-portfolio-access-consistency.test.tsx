@@ -55,7 +55,7 @@ function buildProjection() {
     publicSkills: ['Strategy'],
     publicProofCount: 1,
     traceableSummary: {
-      provenanceLabel: 'Generated from public-safe Proof Packs and context tokens',
+      provenanceLabel: 'Generated from public-safe proof records and context tokens',
       hasEnoughData: true,
       segments: [
         {
@@ -66,7 +66,7 @@ function buildProjection() {
           sources: [
             {
               id: 'pack-1',
-              label: 'Proof Pack: Strategy delivery',
+              label: 'Strategy delivery proof record',
               detail: 'Strategy',
             },
           ],
@@ -79,7 +79,7 @@ function buildProjection() {
           sources: [
             {
               id: 'public-proof-supported-skills',
-              label: 'Public Proof Packs',
+              label: 'Public proof records',
               detail: 'Proof-supported skill links',
             },
           ],
@@ -92,7 +92,7 @@ function buildProjection() {
           sources: [
             {
               id: 'pack-1',
-              label: 'Proof Pack: Strategy delivery',
+              label: 'Strategy delivery proof record',
               detail: 'Strategy',
             },
           ],
@@ -159,13 +159,13 @@ function buildProjection() {
           id: 'pack-1',
           scope: 'public_safe',
           status: 'published',
-          title: 'Proof Pack: Strategy delivery',
+          title: 'Strategy delivery proof record',
           summary: 'Structured proof for strategy delivery.',
           ownershipStatement: 'Owned the delivery scope.',
           evidenceSummary: 'Public memo reviewed.',
           outcomesSummary: 'Shipped a measurable result.',
           verificationStatus: 'verified',
-          verificationSummary: 'Scoped verification supports this Proof Pack.',
+          verificationSummary: 'Scoped verification supports this proof record.',
           freshnessState: 'fresh',
           proofQualityScore: 0.8,
           schemaVersion: 'proof_pack/v2',

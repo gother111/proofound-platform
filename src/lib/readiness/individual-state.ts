@@ -104,7 +104,10 @@ export type IntroEligibilitySummary = {
 
 export type IndividualReadinessRequirementsByState = Record<ReadinessState, ReadinessRequirement[]>;
 
-export type LaunchReadinessDisplayLabel = 'Portfolio ready' | 'Match visible' | 'Intro eligible';
+export type LaunchReadinessDisplayLabel =
+  | 'Portfolio ready'
+  | 'Visible to matching'
+  | 'Ready for introductions';
 
 export type IndividualReadinessStateSnapshot = {
   states: ReadinessState[];
@@ -181,9 +184,9 @@ const READINESS_EVENT_ACTIONS: Record<string, ReadinessAction> = {
   },
   structure_first_proof_pack: {
     id: 'structure-first-proof-pack',
-    title: 'Structure first Proof Pack',
+    title: 'Structure first proof record',
     description:
-      'Turn the first proof into a clean Proof Pack with context, evidence, and outcomes.',
+      'Turn the first proof into a clean proof record with context, evidence, and outcomes.',
     priority: 'high',
     category: 'profile',
     actionUrl: '/app/i/profile?profileView=full&tab=proof_packs',
@@ -245,7 +248,7 @@ const READINESS_EVENT_ACTIONS: Record<string, ReadinessAction> = {
     id: 'add-verified-signal',
     title: 'Add one non-self trust signal',
     description:
-      'Introductions require at least one active peer, manager, or external attestation tied to anchored proof.',
+      'Introductions require at least one active peer, manager, or external confirmation tied to anchored proof.',
     priority: 'medium',
     category: 'verification',
     actionUrl: '/app/i/verifications',
@@ -499,8 +502,8 @@ export function getLaunchReadinessDisplayLabel(flags: {
   matchVisible?: boolean;
   introEligible?: boolean;
 }): LaunchReadinessDisplayLabel {
-  if (flags.introEligible) return 'Intro eligible';
-  if (flags.matchVisible) return 'Match visible';
+  if (flags.introEligible) return 'Ready for introductions';
+  if (flags.matchVisible) return 'Visible to matching';
   return 'Portfolio ready';
 }
 
@@ -1075,8 +1078,8 @@ export async function getIndividualReadinessState(
       ),
       buildRequirement(
         'anchored_proof_pack',
-        'Anchored Proof Pack',
-        'Add at least one Proof Pack anchored to a real work, education, or volunteering context.',
+        'Anchored proof record',
+        'Add at least one proof record anchored to a real work, education, or volunteering context.',
         '/app/i/profile?profileView=full&tab=proof_packs',
         completionState.checks.hasStructuredProofPack,
         completionState.counts.anchoredProofPacks,
@@ -1117,7 +1120,7 @@ export async function getIndividualReadinessState(
       buildRequirement(
         'proof_coverage',
         'Three proof-backed role signals',
-        'Introductions need at least three role-relevant skills or capabilities that resolve back to anchored Proof Packs.',
+        'Introductions need at least three role-relevant skills or capabilities that resolve back to anchored proof records.',
         '/app/i/profile?profileView=full&tab=proof_packs',
         roleRelevantProofLinkedL4Count >= 3,
         roleRelevantProofLinkedL4Count,
@@ -1126,7 +1129,7 @@ export async function getIndividualReadinessState(
       buildRequirement(
         'role_relevant_proof',
         'One fresh anchored pack',
-        'At least one anchored Proof Pack must be both fresh and relevant to matching.',
+        'At least one anchored proof record must be both fresh and relevant to matching.',
         '/app/i/profile?profileView=full&tab=proof_packs',
         freshRoleRelevantAnchoredPackCount >= 1,
         freshRoleRelevantAnchoredPackCount,
@@ -1134,8 +1137,8 @@ export async function getIndividualReadinessState(
       ),
       buildRequirement(
         'trusted_signal',
-        'Non-self trust anchor',
-        'Add one active peer, manager, or external attestation tied to anchored proof or context.',
+        'Non-self trusted confirmation',
+        'Add one active peer, manager, or external confirmation tied to anchored proof or context.',
         '/app/i/verifications',
         hasTrustedSignal,
         activeTrustAnchorCount,
@@ -1144,7 +1147,7 @@ export async function getIndividualReadinessState(
       buildRequirement(
         'fresh_proof_24',
         'Fresh supporting proof',
-        'Role-relevant anchored Proof Packs should include supporting evidence refreshed within the last 24 months.',
+        'Role-relevant anchored proof records should include supporting evidence refreshed within the last 24 months.',
         '/app/i/profile?profileView=full&tab=proof_packs',
         fresh24RoleRelevantSkillIds.size >= 1,
         fresh24RoleRelevantSkillIds.size,
@@ -1153,7 +1156,7 @@ export async function getIndividualReadinessState(
       buildRequirement(
         'fresh_proof_12',
         'One current proof signal',
-        'At least one role-relevant anchored Proof Pack should show evidence refreshed within the last 12 months.',
+        'At least one role-relevant anchored proof record should show evidence refreshed within the last 12 months.',
         '/app/i/profile?profileView=full&tab=proof_packs',
         fresh12RoleRelevantSkillIds.size >= 1,
         fresh12RoleRelevantSkillIds.size,
@@ -1210,8 +1213,8 @@ export async function getIndividualReadinessState(
       ),
       buildRequirement(
         'orphan_relevant_packs',
-        'No orphan Proof Packs',
-        'Re-anchor legacy or floating Proof Packs before introductions can unlock.',
+        'No orphan proof records',
+        'Re-anchor legacy or floating proof records before introductions can unlock.',
         '/app/i/profile?profileView=full&tab=proof_packs',
         orphanRelevantPackCount === 0,
         orphanRelevantPackCount,

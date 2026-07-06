@@ -1105,8 +1105,8 @@ export function ImpactStoryForm({
                 )}
               </div>
               <p className="text-xs text-muted-foreground">
-                Optional. Skipping is fine while getting portfolio-ready, but intro-readiness may
-                still wait on a non-self trust anchor tied to this proof.
+                Optional. Skipping is fine while getting portfolio-ready, but introduction readiness
+                may still wait on a non-self trusted confirmation tied to this proof.
               </p>
               <div className="rounded-md bg-muted/40 p-3 text-xs text-muted-foreground">
                 <p>
@@ -1118,7 +1118,7 @@ export function ImpactStoryForm({
                 </p>
                 <p className="mt-1">
                   <strong>What changes if confirmed:</strong> This proof gains a non-self
-                  confirmation signal for intro-readiness review.
+                  confirmation signal for introduction readiness review.
                 </p>
               </div>
 

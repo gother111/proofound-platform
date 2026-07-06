@@ -225,7 +225,7 @@ describe('IndividualSetup first-proof flow', () => {
     });
     fillRequiredProofDetails();
     fireEvent.submit(
-      screen.getByRole('button', { name: /save first proof pack/i }).closest('form')!
+      screen.getByRole('button', { name: /save first proof record/i }).closest('form')!
     );
 
     await waitFor(() => expect(completeIndividualOnboardingMock).toHaveBeenCalledTimes(1));
@@ -274,7 +274,7 @@ describe('IndividualSetup first-proof flow', () => {
 
     fillBasicDetails();
     fireEvent.submit(
-      screen.getByRole('button', { name: /save first proof pack/i }).closest('form')!
+      screen.getByRole('button', { name: /save first proof record/i }).closest('form')!
     );
 
     expect(screen.getByRole('alert')).toHaveTextContent('Add one proof link before saving.');
@@ -302,7 +302,7 @@ describe('IndividualSetup first-proof flow', () => {
     });
     fillRequiredProofDetails();
     fireEvent.submit(
-      screen.getByRole('button', { name: /save first proof pack/i }).closest('form')!
+      screen.getByRole('button', { name: /save first proof record/i }).closest('form')!
     );
 
     await waitFor(() => expect(screen.getByText(/your public page is ready/i)).toBeInTheDocument());
@@ -341,7 +341,7 @@ describe('IndividualSetup first-proof flow', () => {
     fillBasicDetails();
     fillLinkProof();
     fireEvent.submit(
-      screen.getByRole('button', { name: /save first proof pack/i }).closest('form')!
+      screen.getByRole('button', { name: /save first proof record/i }).closest('form')!
     );
 
     await waitFor(() => expect(screen.getByText(/your public page is ready/i)).toBeInTheDocument());
@@ -371,7 +371,7 @@ describe('IndividualSetup first-proof flow', () => {
     });
     fillRequiredProofDetails();
     fireEvent.submit(
-      screen.getByRole('button', { name: /save first proof pack/i }).closest('form')!
+      screen.getByRole('button', { name: /save first proof record/i }).closest('form')!
     );
 
     await waitFor(() => expect(completeIndividualOnboardingMock).toHaveBeenCalledTimes(1));
@@ -419,7 +419,7 @@ describe('IndividualSetup first-proof flow', () => {
     expect(screen.getByText(/Optional outcome: Reduced review time/i)).toBeInTheDocument();
 
     fireEvent.submit(
-      screen.getByRole('button', { name: /save first proof pack/i }).closest('form')!
+      screen.getByRole('button', { name: /save first proof record/i }).closest('form')!
     );
 
     await waitFor(() => expect(completeIndividualOnboardingMock).toHaveBeenCalledTimes(1));
@@ -441,7 +441,7 @@ describe('IndividualSetup first-proof flow', () => {
     expect(screen.getByText(/saved without sending/i)).toBeInTheDocument();
   });
 
-  it('sends optional verification requests after the first Proof Pack is created', async () => {
+  it('sends optional verification requests after the first proof record is created', async () => {
     render(<IndividualSetup />);
 
     fillBasicDetails();

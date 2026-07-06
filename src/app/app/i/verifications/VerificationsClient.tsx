@@ -439,23 +439,23 @@ export function VerificationsClient({
     }
 
     if (request.subjectType === 'impact_story') {
-      return 'This proof gains a non-self confirmation signal for intro-readiness review.';
+      return 'This proof gains a non-self confirmation signal for introduction readiness review.';
     }
 
     if (request.subjectType === 'custom_bundle') {
       return 'These legacy bundle items retain a bounded confirmation record.';
     }
 
-    return 'This skill keeps a bounded attestation linked to the attached proof.';
+    return 'This skill keeps a bounded confirmation linked to the attached proof.';
   };
 
   const getScopeLabel = (request: VerificationRequest): string => {
     if (request.subjectType === 'custom_bundle') {
-      return 'Proof Pack bundle';
+      return 'Proof record bundle';
     }
 
     if (request.subjectType === 'impact_story') {
-      return 'Proof Pack outcome';
+      return 'Proof record outcome';
     }
 
     if (request.requestKind === 'human_observed_attestation') {
@@ -484,7 +484,7 @@ export function VerificationsClient({
       <div className="mt-3 ml-6 rounded-md border border-proofound-stone/70 bg-white/70 p-3 dark:border-border dark:bg-background/50">
         {request.canonicalVerificationStatus && (
           <p className="text-xs font-medium text-proofound-forest dark:text-primary">
-            Proof Pack status: {verificationStatusLabel(request.canonicalVerificationStatus)}
+            Proof record status: {verificationStatusLabel(request.canonicalVerificationStatus)}
           </p>
         )}
         {request.canonicalPackSummary && (
@@ -754,7 +754,7 @@ export function VerificationsClient({
                   className="w-full bg-proofound-forest text-white hover:bg-proofound-forest/90 dark:bg-primary dark:text-primary-foreground hover:opacity-90 sm:w-auto"
                 >
                   <CheckCircle2 className="w-4 h-4 mr-1" />
-                  Confirm attestation
+                  Confirm observation
                 </Button>
               </div>
             )}

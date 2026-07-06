@@ -92,7 +92,7 @@ export function CommunicationsHub({ perspective }: CommunicationsHubProps) {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl">
               <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-proofound-forest">
-                Hiring corridor
+                Hiring flow
               </p>
               <h1 className="font-display text-3xl font-semibold tracking-tight text-proofound-charcoal">
                 Communications
@@ -109,7 +109,7 @@ export function CommunicationsHub({ perspective }: CommunicationsHubProps) {
                 Proof-safe process center
               </div>
               <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                Reveal and interview actions stay visible inside their live corridor surfaces.
+                Reveal and interview actions stay visible inside their live flow surfaces.
               </p>
             </div>
           </div>
@@ -176,7 +176,7 @@ export function CommunicationsHub({ perspective }: CommunicationsHubProps) {
                 <p className="text-xs leading-5 text-muted-foreground">
                   {activeConfig.workstream === 'messages'
                     ? `Use the ${surfaceNoun} conversation thread for messages, intros, and reveal requests.`
-                    : `Use the ${surfaceNoun} corridor cards for interview, decision, and feedback steps.`}
+                    : `Use the ${surfaceNoun} flow cards for interview, decision, and feedback steps.`}
                 </p>
               </div>
             </div>

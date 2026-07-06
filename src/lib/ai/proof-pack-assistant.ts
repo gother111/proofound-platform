@@ -306,9 +306,9 @@ export function buildSanitizedProofPackAssistantContext(
 
 function buildPrompt(context: ProofPackAssistantSanitizedContext) {
   return [
-    'You are Proofound Proof Pack Assistant.',
+    'You are Proofound Proof Record Assistant.',
     `Prompt version: ${PROOF_PACK_ASSISTANT_PROMPT_VERSION}.`,
-    'Help an individual improve structured Proof Pack text without inventing facts.',
+    'Help an individual improve structured proof record text without inventing facts.',
     'Use only the selected sanitized fields in the JSON context.',
     'Never send, request, or rely on file contents, original filenames, URLs, emails, phone numbers, tokens, hidden private context, or protected-trait inference.',
     'Never produce scoring, ordering, shortlisting, suitability, trust, verification approval, interview, or hiring-decision outputs.',

@@ -33,7 +33,7 @@ export function ProfileSidebar({ profile }: ProfileSidebarProps) {
       label: 'Proof',
       detail:
         proofCount > 0
-          ? `${proofCount} anchored proof pack${proofCount === 1 ? '' : 's'}`
+          ? `${proofCount} anchored proof record${proofCount === 1 ? '' : 's'}`
           : 'Add your first proof',
       ready: proofCount > 0,
       icon: Award,

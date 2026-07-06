@@ -260,9 +260,9 @@ describe('Organization public portfolio page', () => {
         metadata: {
           path: '/portfolio/org/acme',
           title: 'Acme Labs | Proofound',
-          description: 'Mission-driven proof corridor.',
+          description: 'Mission-driven proof flow.',
           ogTitle: 'Acme Labs on Proofound',
-          ogDescription: 'Mission-driven proof corridor.',
+          ogDescription: 'Mission-driven proof flow.',
           useGenericPreview: false,
         },
       }) as any

@@ -53,7 +53,7 @@ export function getGateDescription(type: VerificationGateType): string {
     case 'linkedin':
       return 'LinkedIn profile connection';
     case 'peer_attestation':
-      return 'Peer or mentor attestation';
+      return 'Peer or mentor confirmation';
     case 'skill_proof':
       return 'Portfolio or skill evidence';
     default:
@@ -73,7 +73,7 @@ export function getGateActionLink(type: VerificationGateType): string {
     case 'linkedin':
       return '/app/i/settings/connections';
     case 'peer_attestation':
-      return '/app/i/profile#attestations';
+      return '/app/i/verifications';
     case 'skill_proof':
       return '/app/i/profile?profileView=full&tab=proof_packs';
     default:

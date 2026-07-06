@@ -92,7 +92,7 @@ export function validateProofPackAnchor(
     return {
       ok: false,
       reason: 'missing_primary_anchor_context',
-      message: 'Every Proof Pack must include a primary anchor.',
+      message: 'Every proof record must include a primary anchor.',
     };
   }
 
@@ -102,7 +102,7 @@ export function validateProofPackAnchor(
         ok: false,
         reason: 'invalid_context_anchor_type',
         message:
-          'Verification-bundle Proof Packs must anchor to experience, education, or volunteering.',
+          'Verification-bundle proof records must anchor to experience, education, or volunteering.',
       };
     }
 
@@ -113,7 +113,7 @@ export function validateProofPackAnchor(
     return {
       ok: false,
       reason: 'invalid_owner_anchor_type',
-      message: 'Export Proof Packs must anchor to the owning profile or organization.',
+      message: 'Export proof records must anchor to the owning profile or organization.',
     };
   }
 
@@ -121,7 +121,7 @@ export function validateProofPackAnchor(
     return {
       ok: false,
       reason: 'owner_anchor_mismatch',
-      message: 'Export Proof Packs must use the owner as their structural anchor.',
+      message: 'Export proof records must use the owner as their structural anchor.',
     };
   }
 

@@ -88,13 +88,13 @@ describe('/api/portfolio/export', () => {
         {
           id: 'pack-1',
           scope: 'owner_full',
-          title: 'Proof Pack: Launch delivery',
+          title: 'Launch delivery proof record',
           summary: 'Delivered a launch-critical workflow.',
           ownershipStatement: 'Owned the launch workflow.',
           evidenceSummary: 'Reviewed against a launch runbook.',
           outcomesSummary: 'Shipped a proof-first MVP launch flow.',
           verificationStatus: 'verified',
-          verificationSummary: 'Scoped verification supports this Proof Pack.',
+          verificationSummary: 'Scoped verification supports this proof record.',
           freshnessState: 'fresh',
           proofQualityScore: 0.8,
           schemaVersion: 'proof_pack/v2',
@@ -161,13 +161,13 @@ describe('/api/portfolio/export', () => {
         {
           id: 'pack-1',
           scope: 'owner_full',
-          title: 'Proof Pack: Launch delivery',
+          title: 'Launch delivery proof record',
           summary: 'Delivered a launch-critical workflow.',
           ownershipStatement: 'Owned the launch workflow.',
           evidenceSummary: 'Reviewed against a launch runbook.',
           outcomesSummary: 'Shipped a proof-first MVP launch flow.',
           verificationStatus: 'verified',
-          verificationSummary: 'Scoped verification supports this Proof Pack.',
+          verificationSummary: 'Scoped verification supports this proof record.',
           freshnessState: 'fresh',
           proofQualityScore: 0.8,
           schemaVersion: 'proof_pack/v2',
@@ -306,7 +306,7 @@ describe('/api/portfolio/export', () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get('content-type')).toContain('text/plain');
-    expect(await response.text()).toContain('Selected proof packs:');
+    expect(await response.text()).toContain('Selected proof records:');
     expect(generateTrustPdf).not.toHaveBeenCalled();
   });
 });

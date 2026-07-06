@@ -30,7 +30,7 @@ export default async function AdminPage() {
             </CardTitle>
             <CardDescription>
               Review the four narrow operations queues that support verification, privacy,
-              corrections, and pilot follow-through inside the launch corridor.
+              corrections, and pilot follow-through inside the launch flow.
             </CardDescription>
           </CardHeader>
           <CardContent>

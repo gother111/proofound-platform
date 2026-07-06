@@ -40,7 +40,7 @@ const DRAFT_BUCKETS: Array<{
     label: 'Volunteering context drafts',
     savedAs: 'private_context',
   },
-  { key: 'proofPackIdeaDrafts', label: 'Proof Pack ideas', savedAs: 'session_note' },
+  { key: 'proofPackIdeaDrafts', label: 'Proof record ideas', savedAs: 'session_note' },
   { key: 'artifactLinkDrafts', label: 'Artifact and link suggestions', savedAs: 'session_note' },
   {
     key: 'unsupportedSkillDrafts',

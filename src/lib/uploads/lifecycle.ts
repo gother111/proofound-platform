@@ -478,11 +478,11 @@ export async function attachUploadedFile(
     const nextAggregateBytes = (usage?.total_size_bytes ?? 0) + (row.size_bytes ?? 0);
 
     if (nextFileCount > MAX_PROOF_PACK_FILES) {
-      throw new Error(`Proof Pack upload limit exceeds ${MAX_PROOF_PACK_FILES} files`);
+      throw new Error(`Proof record upload limit exceeds ${MAX_PROOF_PACK_FILES} files`);
     }
 
     if (nextAggregateBytes > MAX_PROOF_PACK_AGGREGATE_BYTES) {
-      throw new Error('Proof Pack upload aggregate exceeds 100MB limit');
+      throw new Error('Proof record upload aggregate exceeds 100MB limit');
     }
   }
 
@@ -807,7 +807,7 @@ export async function ingestUploadedFile(
       linkedEntityType: 'uploaded_file',
       linkedEntityId: inserted.id,
       summary:
-        'Risky evidence upload held for privacy-safe review before it can enter the Proof Pack corridor.',
+        'Risky evidence upload held for privacy-safe review before it can enter the proof record flow.',
       priority: 'high',
       actorType: queueActor.actorType,
       actorId: queueActor.actorId,

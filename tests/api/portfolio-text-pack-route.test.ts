@@ -46,7 +46,7 @@ describe('/api/portfolio/text-pack', () => {
     expect(await response.json()).toEqual({ error: 'Profile not found' });
   });
 
-  it('returns canonical text export from Proof Pack data', async () => {
+  it('returns canonical text export from proof record data', async () => {
     mockSupabaseUser({ id: 'user-1' });
     (fetchTrustExportData as any).mockResolvedValue({
       schemaVersion: 'proofound.portfolio-export.v1',
@@ -75,13 +75,13 @@ describe('/api/portfolio/text-pack', () => {
         {
           id: 'pack-1',
           scope: 'owner_full',
-          title: 'Proof Pack: Product Strategy',
+          title: 'Product strategy proof record',
           summary: 'Launch evidence for Product Strategy',
           ownershipStatement: 'Owned the strategy contribution.',
           evidenceSummary: 'Verified against a public launch memo.',
           outcomesSummary: 'Shipped the MVP in two weeks.',
           verificationStatus: 'verified',
-          verificationSummary: 'Scoped verification supports this Proof Pack.',
+          verificationSummary: 'Scoped verification supports this proof record.',
           freshnessState: 'fresh',
           proofQualityScore: 0.8,
           schemaVersion: 'proof_pack/v2',
@@ -119,7 +119,7 @@ describe('/api/portfolio/text-pack', () => {
     expect(response.headers.get('content-disposition')).toContain('proofound-jane-summary.txt');
     expect(body).toContain('Portfolio: https://proofound.io/portfolio/jane');
     expect(body).toContain('Proof-backed summary:');
-    expect(body).toContain('Selected proof packs:');
+    expect(body).toContain('Selected proof records:');
     expect(body).toContain('Email: jane@example.com');
   });
 });

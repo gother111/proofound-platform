@@ -150,7 +150,7 @@ function setupFetch({ draftAssignment = null }: FetchFixture = {}) {
   return fetchMock;
 }
 
-describe('Assignment builder lean corridor', () => {
+describe('Assignment builder lean flow', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     __resetCsrfCacheForTests();
@@ -163,12 +163,12 @@ describe('Assignment builder lean corridor', () => {
     vi.useRealTimers();
   });
 
-  it('renders the lean five-step corridor and hides advanced controls', async () => {
+  it('renders the lean five-step flow and hides advanced controls', async () => {
     setupFetch();
 
     render(<AssignmentBuilderPage />);
 
-    expect(await screen.findByText(/lean assignment corridor/i)).toBeInTheDocument();
+    expect(await screen.findByText(/lean assignment flow/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /create from scratch/i })).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /import existing job description/i })
@@ -277,7 +277,7 @@ Full-time
     expect(screen.getByText(/Paste the full job description/i)).toBeInTheDocument();
   });
 
-  it('advances through the lean corridor and ends in internal review routing', async () => {
+  it('advances through the lean flow and ends in internal review routing', async () => {
     setupFetch();
 
     render(<AssignmentBuilderPage />);
@@ -363,7 +363,7 @@ Full-time
 
     render(<AssignmentBuilderPage />);
 
-    expect(await screen.findByText(/lean assignment corridor/i)).toBeInTheDocument();
+    expect(await screen.findByText(/lean assignment flow/i)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Advanced' })).not.toBeInTheDocument();
     expect(screen.queryByText('Weight Matrix')).not.toBeInTheDocument();
   });

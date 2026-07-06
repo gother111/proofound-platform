@@ -23,7 +23,7 @@ import { RootClientEnhancements } from '@/components/root/RootClientEnhancements
 export const metadata: Metadata = {
   title: 'Proofound - Focus on what matters',
   description:
-    'A proof-first hiring corridor centered on Proof Packs, privacy-safe review, and clear assignment-based hiring.',
+    'A proof-first hiring flow centered on proof records, privacy-safe review, and clear assignment-based hiring.',
   icons: {
     icon: [
       { url: '/favicon.svg', type: 'image/svg+xml' },

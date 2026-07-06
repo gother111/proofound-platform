@@ -79,7 +79,7 @@ export default function TermsOfServicePage() {
                   2. Service Scope
                 </h2>
                 <p className="mt-3 leading-7">
-                  Proofound is a proof-first hiring corridor centered on Proof Packs, public proof
+                  Proofound is a proof-first hiring flow centered on proof records, public proof
                   portfolios, organization trust pages, and privacy-safe review inside structured
                   assignment flows.
                 </p>

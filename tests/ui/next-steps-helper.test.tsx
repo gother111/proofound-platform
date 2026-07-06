@@ -7,13 +7,13 @@ import { NextStepsHelper } from '@/components/dashboard/NextStepsHelper';
 const actions = [
   {
     id: 'proof-pack',
-    title: 'Review Proof Pack context',
+    title: 'Review proof record context',
     description: 'Keep the proof private until visibility is checked.',
     actionUrl: '/app/i/profile?profileView=full&tab=proof_packs',
   },
   {
     id: 'trust-anchor',
-    title: 'Plan one trust anchor',
+    title: 'Plan one trusted confirmation',
   },
 ];
 
@@ -29,8 +29,8 @@ describe('NextStepsHelper', () => {
 
     expect(button).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByRole('region', { name: /next steps/i })).toBeInTheDocument();
-    expect(screen.getByText('Review Proof Pack context')).toBeInTheDocument();
-    expect(screen.getByText('Plan one trust anchor')).toBeInTheDocument();
+    expect(screen.getByText('Review proof record context')).toBeInTheDocument();
+    expect(screen.getByText('Plan one trusted confirmation')).toBeInTheDocument();
   });
 
   it('opens on keyboard focus and keeps keyboard activation from closing it', () => {
@@ -54,7 +54,7 @@ describe('NextStepsHelper', () => {
 
     fireEvent.mouseEnter(screen.getByRole('button', { name: /next steps/i }).parentElement!);
 
-    const link = screen.getByRole('link', { name: /review proof pack context/i });
+    const link = screen.getByRole('link', { name: /review proof record context/i });
     expect(link).toHaveAttribute('href', '/app/i/profile?profileView=full&tab=proof_packs');
     link.addEventListener('click', (event) => event.preventDefault());
 

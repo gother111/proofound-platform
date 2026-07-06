@@ -115,7 +115,7 @@ export function toExpertiseStatsPresentation(
           ? {
               tier: 'lite',
               message:
-                'Browsing is available once you connect a few recent skills to anchored proof and add one practical preference so your profile becomes match-visible.',
+                'Browsing is available once you connect a few recent skills to anchored proof and add one practical preference so your profile becomes visible to matching.',
               remaining: {
                 skillsWithRecency: Math.max(0, 3 - readiness.counts.skillsWithRecency),
                 proofCount: 0,
@@ -127,7 +127,7 @@ export function toExpertiseStatsPresentation(
             ? {
                 tier: 'strong',
                 message:
-                  'Your portfolio remains useful now. Introductions stay protected until stronger anchored proof coverage, one non-self trust anchor, and full intro preferences are in place.',
+                  'Your portfolio remains useful now. Introductions stay protected until stronger anchored proof coverage, one non-self trusted confirmation, and full introduction preferences are in place.',
                 remaining: {
                   skillsWithRecency: Math.max(0, 5 - readiness.counts.skillsWithRecency),
                   proofCount: Math.max(0, 4 - readiness.counts.qualifyingProofLinkedL4Count),

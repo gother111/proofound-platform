@@ -45,13 +45,13 @@ function buildAccessibleAccess() {
           {
             id: 'pack-1',
             scope: 'public_safe',
-            title: 'Proof Pack: Product Strategy',
+            title: 'Product strategy proof record',
             summary: 'Launch evidence for Product Strategy',
             ownershipStatement: 'Owned the strategy contribution.',
             evidenceSummary: 'Verified against a public launch memo.',
             outcomesSummary: 'Shipped the MVP in two weeks.',
             verificationStatus: 'verified',
-            verificationSummary: 'Scoped verification supports this Proof Pack.',
+            verificationSummary: 'Scoped verification supports this proof record.',
             freshnessState: 'fresh',
             proofQualityScore: 0.8,
             schemaVersion: 'proof_pack/v2',
@@ -120,7 +120,7 @@ describe('/api/portfolio/public/[handle]/export', () => {
         }),
         proofPacks: [
           expect.objectContaining({
-            title: 'Proof Pack: Product Strategy',
+            title: 'Product strategy proof record',
             verificationStatus: 'verified',
           }),
         ],

@@ -93,7 +93,7 @@ function buildManualComposerDraft(params: {
       'Which parts can you confirm from direct knowledge or observation?',
       'Is there anything in this request that you cannot verify?',
     ],
-    privacyNotes: ['Draft uses selected public-safe Proof Pack fields only.'],
+    privacyNotes: ['Draft uses selected public-safe proof record fields only.'],
     tooBroadWarnings: [
       'AI suggestions are temporarily unavailable; manual editing still works.',
       `Keep this request limited to the ${params.scope.replace(/_/g, ' ')} scope.`,
@@ -178,7 +178,7 @@ export function VerificationRequestComposerDialog({
 
   const handleDraft = async () => {
     if (!selectedProofPack) {
-      toast.error('Choose one Proof Pack before drafting.');
+      toast.error('Choose one proof record before drafting.');
       return;
     }
 
@@ -295,7 +295,7 @@ export function VerificationRequestComposerDialog({
 
         <div className="space-y-5">
           <div className="space-y-2">
-            <Label>Proof Pack</Label>
+            <Label>Proof record</Label>
             <Select
               value={selectedProofPack?.proofPackId || ''}
               onValueChange={(value) => {
@@ -306,7 +306,7 @@ export function VerificationRequestComposerDialog({
               disabled={noProofPacks}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Choose a Proof Pack" />
+                <SelectValue placeholder="Choose a proof record" />
               </SelectTrigger>
               <SelectContent>
                 {proofPacks.map((pack) => (
@@ -322,7 +322,7 @@ export function VerificationRequestComposerDialog({
               </p>
             ) : (
               <p className="text-xs leading-5 text-muted-foreground">
-                Add a skill-linked Proof Pack before drafting a verification request here.
+                Add a skill-linked proof record before drafting a verification request here.
               </p>
             )}
           </div>

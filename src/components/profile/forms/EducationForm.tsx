@@ -465,7 +465,7 @@ export function EducationForm({
                       ) : null}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor={`${outcome.id}-proof-pack`}>Supporting Proof Pack</Label>
+                      <Label htmlFor={`${outcome.id}-proof-pack`}>Supporting proof record</Label>
                       <select
                         id={`${outcome.id}-proof-pack`}
                         value={outcome.proofPackId}
@@ -487,7 +487,7 @@ export function EducationForm({
                         }}
                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                       >
-                        <option value="">No Proof Pack linked yet</option>
+                        <option value="">No proof record linked yet</option>
                         {proofPackOptions.map((option) => (
                           <option key={option.id} value={option.id}>
                             {option.title}
@@ -495,7 +495,7 @@ export function EducationForm({
                         ))}
                       </select>
                       <p className="text-xs text-muted-foreground">
-                        A Proof Pack link supports the claim but does not verify it by itself.
+                        A proof record link supports the claim but does not verify it by itself.
                       </p>
                     </div>
                   </div>

@@ -134,7 +134,7 @@ function getLinkedInStatusText(status: VerificationStatusData) {
     return {
       label: 'Check failed',
       helper:
-        'A legacy LinkedIn check did not complete before this surface was archived from the launch corridor.',
+        'A legacy LinkedIn check did not complete before this surface was archived from the launch flow.',
       tone: 'negative' as SignalTone,
     };
   }
@@ -142,7 +142,7 @@ function getLinkedInStatusText(status: VerificationStatusData) {
   return {
     label: 'Archived for launch',
     helper:
-      'LinkedIn compatibility checks are outside the launch corridor. Any earlier LinkedIn signal remains read-only and never creates proof trust.',
+      'LinkedIn compatibility checks are outside the launch flow. Any earlier LinkedIn signal remains read-only and never creates proof trust.',
     tone: 'neutral' as SignalTone,
   };
 }
@@ -387,9 +387,9 @@ function VerificationOverview({
   return (
     <div className="space-y-6">
       <VerificationGroupCard
-        eyebrow="Proof verifications / attestations"
+        eyebrow="Proof verifications / confirmations"
         title="Attach trust to proof, not to profile hype"
-        body="Proof-backed trust belongs on specific Proof Packs and claim snapshots. Use the verification requests area to see which proof, claim, verifier, and outcome each request is tied to."
+        body="Proof-backed trust belongs on specific proof records and claim snapshots. Use the verification requests area to see which proof, claim, verifier, and outcome each request is tied to."
       >
         <div className="space-y-4">
           <div className="flex flex-wrap gap-3">
@@ -445,16 +445,16 @@ function VerificationOverview({
       </VerificationGroupCard>
 
       <VerificationGroupCard
-        eyebrow="Intro-readiness trust anchors"
+        eyebrow="Introduction readiness trusted confirmations"
         title="Optional for portfolio-ready, harder for intros"
-        body="Skipping verification is fine while getting portfolio-ready. It can still block intro-eligible status and some gated intros until you have at least one non-self trust anchor attached to real proof."
+        body="Skipping verification is fine while getting portfolio-ready. It can still block ready-for-introduction status and some gated introductions until you have at least one non-self trusted confirmation attached to real proof."
       >
         <Alert>
           <CheckCircle2 className="h-4 w-4" />
           <AlertDescription>
             {hasTrustAnchor
-              ? 'You already have at least one trust anchor on the account. Keep future requests scoped to proof and claim.'
-              : 'No non-self trust anchor is active yet. That is okay for portfolio-ready, but it can still hold back intro-readiness.'}
+              ? 'You already have at least one trusted confirmation on the account. Keep future requests scoped to proof and claim.'
+              : 'No non-self trusted confirmation is active yet. That is okay for portfolio-ready, but it can still hold back introduction readiness.'}
           </AlertDescription>
         </Alert>
       </VerificationGroupCard>

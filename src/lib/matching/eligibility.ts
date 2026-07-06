@@ -188,7 +188,7 @@ export async function evaluateIndividualMatchability(
       ? {
           tier: 'lite' as const,
           message:
-            'Keep browsing. Add a few recent skills and one practical preference to become match-visible.',
+            'Keep browsing. Add a few recent skills and one practical preference to become visible to matching.',
           remaining: {
             skillsWithRecency: Math.max(0, 3 - counts.skillsWithRecency),
             proofCount: 0,
@@ -224,7 +224,7 @@ export async function evaluateIndividualMatchability(
           : 'Browse is active and introductions are unlocked.'
         : 'Browsing stays open while qualified introductions are protected. Add stronger relevant proof and one trusted proof-backed skill when you are ready.'
       : readiness.flags.discoverable
-        ? 'Private browse is active. Add deeper recent proof and availability details to become match-visible.'
+        ? 'Private browse is active. Add deeper recent proof and availability details to become visible to matching.'
         : 'Browsing stays open while you add a target role, one proof-linked skill, and one practical preference.',
     counts: {
       skillsWithRecency: counts.skillsWithRecency,

@@ -72,8 +72,8 @@ export function EmptyProfileStateView({
                   <span className="text-sm text-muted-foreground">Proof-first setup</span>
                 </div>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Start with one context-backed Proof Pack, then add privacy and trust signals when
-                  they strengthen the work.
+                  Start with one context-backed proof record, then add privacy and trust signals
+                  when they strengthen the work.
                 </p>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Compass className="w-3 h-3" />
@@ -209,7 +209,7 @@ export function EmptyProfileStateView({
               </div>
               <div className="space-y-3">
                 <p className="text-sm text-muted-foreground/70 leading-relaxed">
-                  Build this profile from one real context, one proof pack, and one scoped
+                  Build this profile from one real context, one proof record, and one scoped
                   verification request.
                 </p>
                 <Button

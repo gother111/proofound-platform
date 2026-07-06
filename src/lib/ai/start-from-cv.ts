@@ -1364,7 +1364,7 @@ export function buildDeterministicDrafts(input: {
       possibleAnchorContext: snippetReference(line),
       possibleOutcome: extractOutcomeHints(line)[0] ?? null,
       missingEvidenceWarning: 'Missing proof: attach real evidence before this gains trust value.',
-      privacyWarning: 'Review private details before turning this into a Proof Pack.',
+      privacyWarning: 'Review private details before turning this into a proof record.',
       sourceSpans: [sourceSpan(line)],
       epistemicStatus: 'inferred',
       status: 'draft_only',
@@ -1387,7 +1387,7 @@ export function buildDeterministicDrafts(input: {
     StartFromCvFutureProjectIdeaDraftSchema.parse({
       id: `future_${randomUUID()}`,
       titleSuggestion: `Future proof idea around ${skill}`,
-      prompt: `If ${skill} is important, create a future Proof Pack only after you add a real artifact, outcome, and verification context.`,
+      prompt: `If ${skill} is important, create a future proof record only after you add a real artifact, outcome, and verification context.`,
       sourceContext: 'Suggested from a CV skill mention. This is not a past achievement.',
       sourceSpans: [],
       epistemicStatus: 'future_idea',

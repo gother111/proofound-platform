@@ -150,7 +150,7 @@ export function PublicPortfolioReadyStep({
                 {previewTitle ||
                   (persona === 'organization'
                     ? 'Organization proof portfolio'
-                    : 'First Proof Pack')}
+                    : 'First proof record')}
               </h2>
             </div>
             <span className="inline-flex items-center gap-1 rounded-full border border-proofound-stone bg-proofound-parchment px-3 py-1 text-xs font-medium text-proofound-charcoal dark:border-border dark:bg-muted dark:text-foreground">

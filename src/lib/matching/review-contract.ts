@@ -2062,7 +2062,7 @@ export function buildProofFirstReviewCard(input: {
       bullets:
         fitBullets.length > 0
           ? fitBullets
-          : ['Review the strongest proof summary and corridor state for this candidate.'],
+          : ['Review the strongest proof summary and hiring-flow state for this candidate.'],
       reasonCodes,
     },
     privacy: {

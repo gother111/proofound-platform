@@ -387,7 +387,7 @@ export function MatchingClient() {
           <p className="mx-auto max-w-lg text-sm leading-6 text-muted-foreground">
             {matches.length === 0
               ? 'Nothing needs your attention right now. Keep your proof and preferences current so new opportunities can land cleanly.'
-              : 'No matches fit the current filters. Loosen one filter to widen the corridor.'}
+              : 'No matches fit the current filters. Loosen one filter to widen the search.'}
           </p>
           {ensureThreeActions(readinessActions).length > 0 ? (
             <div className="mx-auto mt-5 max-w-xl space-y-2 text-left">

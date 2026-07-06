@@ -68,7 +68,7 @@ export default function PrivacyPolicyPage() {
                 <h2 className="font-display text-2xl font-semibold text-foreground">1. Scope</h2>
                 <p className="mt-3 leading-7">
                   This policy explains how Proofound collects, uses, stores, and protects personal
-                  information across account creation, Proof Pack creation, portfolio publication,
+                  information across account creation, proof record creation, portfolio publication,
                   assignment review, verification, and user rights handling. Processing is performed
                   under applicable privacy laws, including GDPR and ePrivacy rules.
                 </p>

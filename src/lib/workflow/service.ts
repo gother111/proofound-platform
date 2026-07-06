@@ -246,7 +246,7 @@ export async function syncRevealRequestTimeoutState(params: {
     queueType: 'privacy_reveal_exception',
     linkedEntityType: 'conversation',
     linkedEntityId: params.conversation.id,
-    summary: 'Reveal request timed out and was reset back into the masked corridor.',
+    summary: 'Reveal request timed out and was reset back into the masked hiring flow.',
     priority: 'normal',
     actorType: 'system',
     metadata: {

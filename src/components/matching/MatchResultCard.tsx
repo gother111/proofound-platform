@@ -429,7 +429,7 @@ export function MatchResultCard({
             </div>
           ) : (
             <div className="mt-4 rounded-lg border border-proofound-stone bg-proofound-parchment/30 px-3 py-2 text-sm text-muted-foreground">
-              Review actions continue in the masked intro corridor.
+              Review actions continue in the masked introduction flow.
             </div>
           )}
         </Card>

@@ -236,7 +236,7 @@ export function FirstProofDialog({
           <DialogTitle>Add your first proof</DialogTitle>
           <DialogDescription>
             Attach one proof link, upload one proof file, or include both when they describe the
-            same work. Keep it tied to a skill and real context so it can become a Proof Pack.
+            same work. Keep it tied to a skill and real context so it can become a proof record.
           </DialogDescription>
         </DialogHeader>
 

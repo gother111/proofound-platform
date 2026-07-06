@@ -144,7 +144,7 @@ describe('Verification Request Composer privacy controls', () => {
     expect(serialized).not.toContain('Secret-Client-Report.pdf');
     expect(serialized).not.toContain('Hidden Acme');
     expect(serialized).not.toContain('Hidden School of Design');
-    expect(context.claimScope).toBe('One scoped Proof Pack claim');
+    expect(context.claimScope).toBe('One scoped proof record claim');
     expect(context.selectedFields).toEqual({
       title: null,
       claim_statement: null,
@@ -222,7 +222,7 @@ describe('Verification Request Composer privacy controls', () => {
     expect(serialized).not.toContain('Hidden Acme');
     expect(result.tooBroadWarnings).toEqual(
       expect.arrayContaining([
-        'Public-safe Proof Pack context was unavailable, so manual editing is required before AI drafting.',
+        'Public-safe proof record context was unavailable, so manual editing is required before AI drafting.',
       ])
     );
   });

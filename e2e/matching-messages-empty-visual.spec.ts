@@ -81,7 +81,7 @@ test.describe('Matching and messages empty-state visual contract', () => {
     });
   });
 
-  test('organization matching empty state shows the corridor sequence', async ({
+  test('organization matching empty state shows the review sequence', async ({
     page,
     browserName,
   }) => {
@@ -95,7 +95,7 @@ test.describe('Matching and messages empty-state visual contract', () => {
     await expect(
       page.getByRole('heading', { name: 'Open matching with one clear assignment' })
     ).toBeVisible();
-    await expect(page.getByText('Corridor sequence')).toBeVisible();
+    await expect(page.getByText('Review sequence')).toBeVisible();
     await expect(page.locator('body')).not.toContainText('Find Perfect-Fit Contributors');
 
     await expect(page.locator('main')).toHaveScreenshot('organization-matching-empty.png', {

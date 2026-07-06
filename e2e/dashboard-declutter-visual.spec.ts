@@ -73,7 +73,7 @@ test.describe('Dashboard declutter visual contract', () => {
     await page.goto('/app/o/test-org/home', { waitUntil: 'domcontentloaded' });
     await stabilizeDashboard(page);
 
-    await expect(page.getByRole('heading', { name: 'Corridor Queue' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Hiring Flow Queue' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Launch Summary' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Minimal Access' })).toBeVisible();
 

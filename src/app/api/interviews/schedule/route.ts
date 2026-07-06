@@ -399,7 +399,7 @@ export async function POST(request: NextRequest) {
         if (!canScheduleFromCorridor) {
           return NextResponse.json(
             {
-              error: 'Interview scheduling is not available from the current corridor stage',
+              error: 'Interview scheduling is not available from the current hiring-flow stage',
               code: 'INTERVIEW_HANDOFF_NOT_READY',
               corridor,
               nextAction:
@@ -408,7 +408,7 @@ export async function POST(request: NextRequest) {
                   id: 'request_intro',
                   label: 'Request intro',
                   description:
-                    'The corridor must reach reveal approval before interview scheduling.',
+                    'The hiring flow must reach reveal approval before interview scheduling.',
                 } as const),
             },
             { status: 409 }

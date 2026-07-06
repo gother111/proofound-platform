@@ -65,7 +65,7 @@ function makeProofPack(overrides: Partial<ProfileProofPack>): ProfileProofPack {
     roleContext: 'Product engineering',
     timeframeLabel: 'Q1 pilot',
     verificationStatus: 'verified',
-    verificationSummary: 'Scoped verification supports this Proof Pack.',
+    verificationSummary: 'Scoped verification supports this proof record.',
     freshnessState: 'fresh',
     visibility: 'public',
     revealGate: 'none',
@@ -135,7 +135,7 @@ describe('profile launch IA', () => {
           isPortfolioReady: false,
           portfolioLockCode: 'proof',
           portfolioLockReason:
-            'Add at least one anchored Proof Pack before your portfolio can be ready.',
+            'Add at least one anchored proof record before your portfolio can be ready.',
         }}
         proofArtifactCount={0}
         acceptedVerificationCount={0}
@@ -159,7 +159,7 @@ describe('profile launch IA', () => {
     );
 
     expect(getTabTrigger('Context')).toBeInTheDocument();
-    expect(getTabTrigger('Proof Packs')).toBeInTheDocument();
+    expect(getTabTrigger('Proof records')).toBeInTheDocument();
     expect(getTabTrigger('Verification')).toBeInTheDocument();
     expect(getTabTrigger('Visibility / Portfolio')).toBeInTheDocument();
 
@@ -170,7 +170,7 @@ describe('profile launch IA', () => {
     expect(queryTabTrigger(/network/i)).toBeUndefined();
   });
 
-  it('shows proof-pack blockers and a direct add-proof path', () => {
+  it('shows proof-record blockers and a direct add-proof path', () => {
     const onAddFirstProof = vi.fn();
 
     render(
@@ -211,7 +211,7 @@ describe('profile launch IA', () => {
           isPortfolioReady: false,
           portfolioLockCode: 'proof',
           portfolioLockReason:
-            'Add at least one anchored Proof Pack before your portfolio can be ready.',
+            'Add at least one anchored proof record before your portfolio can be ready.',
         }}
         proofArtifactCount={0}
         acceptedVerificationCount={0}
@@ -220,14 +220,14 @@ describe('profile launch IA', () => {
       />
     );
 
-    expect(screen.getByRole('heading', { name: /proof packs/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /proof records/i })).toBeInTheDocument();
     expect(screen.getByText(/readiness blockers/i)).toBeInTheDocument();
     expect(screen.getByText(/add your first proof link or artifact/i)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /add your first proof/i }));
     expect(onAddFirstProof).toHaveBeenCalledTimes(1);
   });
 
-  it('renders Proof Packs as a sortable proof-first grid', () => {
+  it('renders proof records as a sortable proof-first grid', () => {
     render(
       <ImpactTab
         impactStories={[]}
@@ -236,7 +236,7 @@ describe('profile launch IA', () => {
             id: 'older-private',
             title: 'Private archive proof',
             verificationStatus: 'unverified',
-            verificationSummary: 'No scoped verification is recorded for this Proof Pack yet.',
+            verificationSummary: 'No scoped verification is recorded for this proof record yet.',
             visibility: 'owner_only',
             proofQualityScore: 0.3,
             createdAt: '2026-04-01T10:00:00.000Z',

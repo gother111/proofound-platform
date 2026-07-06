@@ -67,7 +67,7 @@ function resolveProofPackBlockers(completionState: IndividualProfileCompletionSt
   }
 
   if (!completionState.checks.hasStructuredProofPack) {
-    blockers.push('Structure one anchored Proof Pack before you publish.');
+    blockers.push('Structure one anchored proof record before you publish.');
   }
 
   if (!completionState.checks.hasPublishedPortfolio) {
@@ -305,7 +305,7 @@ export function ImpactTab({
               <PackageOpen className="h-5 w-5" />
             </div>
             <div className="min-w-0 space-y-1">
-              <h3 className="text-lg font-semibold text-foreground">Proof Packs</h3>
+              <h3 className="text-lg font-semibold text-foreground">Proof records</h3>
               <p className="max-w-2xl text-sm text-muted-foreground">
                 Browse anchored proof by artifact, context, outcomes, skills, verification, and
                 visibility without turning proof into a popularity feed.
@@ -478,7 +478,7 @@ export function ImpactTab({
         </div>
       ) : (
         <div className="rounded-lg border border-dashed border-proofound-stone/70 bg-white p-6">
-          <p className="text-sm font-semibold text-foreground">No browsable Proof Packs yet</p>
+          <p className="text-sm font-semibold text-foreground">No browsable proof records yet</p>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
             Add a real proof artifact and anchor it to context. Once the canonical pack exists, it
             will appear here as a reviewable card.

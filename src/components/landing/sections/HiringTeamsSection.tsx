@@ -11,7 +11,7 @@ const points = [
   },
   {
     title: 'Faster downstream decisions',
-    body: 'Interview fewer people and use the same corridor again on the next role.',
+    body: 'Interview fewer people and use the same hiring flow again on the next role.',
   },
 ];
 
