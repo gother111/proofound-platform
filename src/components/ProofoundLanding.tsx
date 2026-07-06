@@ -4,8 +4,12 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { useReducedMotion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
-import { ScrollytellingSection } from './landing/sections/ScrollytellingSection';
+import { HeroSection } from './landing/sections/HeroSection';
+import { ThreeStepCorridorSection } from './landing/sections/ThreeStepCorridorSection';
+import { ComparisonSection } from './landing/sections/ComparisonSection';
+import { PracticalTrustSection } from './landing/sections/PracticalTrustSection';
 import { FinalCTASection } from './landing/sections/FinalCTASection';
 import { FooterSection } from './landing/sections/FooterSection';
 
@@ -15,7 +19,7 @@ interface LandingActionProps {
   onOrganizationSignup?: () => void;
 }
 
-const NetworkBackground = () => {
+export const NetworkBackground = () => {
   return (
     <div
       className="absolute inset-0 z-0 pointer-events-none overflow-hidden"
@@ -52,6 +56,7 @@ export function ProofoundLanding({
   onOrganizationSignup,
 }: ProofoundLandingProps) {
   const router = useRouter();
+  const shouldReduceMotion = useReducedMotion();
 
   const handleIndividualSignup = () => {
     if (onIndividualSignup) {
@@ -78,7 +83,7 @@ export function ProofoundLanding({
   };
 
   return (
-    <div className="relative min-h-screen overflow-x-clip bg-background text-foreground">
+    <div className="landing-japandi relative min-h-screen overflow-x-clip bg-background text-foreground">
       <NetworkBackground />
 
       <header
@@ -104,22 +109,22 @@ export function ProofoundLanding({
 
           <nav className="hidden items-center gap-10 text-[1.02rem] text-foreground/66 lg:flex">
             <a
-              href="#story"
+              href="#how-it-works"
               className="rounded-full transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-[#f6f2ea]"
             >
               How it works
             </a>
             <a
-              href="#start-individuals"
+              href="#comparison"
               className="rounded-full transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-[#f6f2ea]"
             >
-              For individuals
+              Old way vs Proofound
             </a>
             <a
-              href="#start-organizations"
+              href="#trust"
               className="rounded-full transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-[#f6f2ea]"
             >
-              For organizations
+              Privacy and trust
             </a>
           </nav>
 
@@ -134,9 +139,10 @@ export function ProofoundLanding({
             <button
               type="button"
               onClick={handleOrganizationSignup}
+              data-testid="landing-header-organization-cta"
               className="inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-[#65755d] px-3.5 py-2.5 text-[0.8rem] font-medium text-white shadow-[0_16px_30px_-20px_rgba(101,117,93,0.72)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-[#5c6b54] hover:shadow-[0_20px_36px_-22px_rgba(101,117,93,0.78)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-[#f6f2ea] active:translate-y-0 sm:px-5 sm:py-3 sm:text-sm md:px-6"
             >
-              <span>Request a pilot</span>
+              <span>Start screening on proof</span>
               <ArrowRight className="hidden h-4 w-4 sm:block" aria-hidden="true" />
             </button>
           </div>
@@ -144,18 +150,26 @@ export function ProofoundLanding({
       </header>
 
       <main>
-        <ScrollytellingSection
+        <HeroSection
           onIndividualSignup={handleIndividualSignup}
           onOrganizationSignup={handleOrganizationSignup}
+          shouldReduceMotion={shouldReduceMotion}
         />
+
+        <ThreeStepCorridorSection />
+
+        <ComparisonSection shouldReduceMotion={shouldReduceMotion} />
+
+        <PracticalTrustSection shouldReduceMotion={shouldReduceMotion} />
 
         <FinalCTASection
           onGetStarted={handleGetStarted}
           onIndividualSignup={handleIndividualSignup}
           onOrganizationSignup={handleOrganizationSignup}
+          shouldReduceMotion={shouldReduceMotion}
         />
 
-        <FooterSection />
+        <FooterSection shouldReduceMotion={shouldReduceMotion} />
       </main>
     </div>
   );

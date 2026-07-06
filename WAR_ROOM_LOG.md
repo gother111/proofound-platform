@@ -14,3 +14,4 @@ P0-3 | PASS | pending-sha | publish gate = structured proof only; badges live; p
 
 - test:privacy blocked in this env (missing NEXT_PUBLIC_SUPABASE_URL/ANON_KEY/SERVICE_ROLE in .env.test) — fails identically at baseline; needs creds for P0-11 disposition
   P0-4 | PASS | pending-sha | ready-step wired as onboarding finale, copy-link + decline path tested; e2e env-blocked, component-test fallback per spec
+  P0-5 | PASS | pending-sha | new sections homepage live, /story preserved (added to middleware allowlist — Codex missed), landing e2e 10/10 locally, build OK

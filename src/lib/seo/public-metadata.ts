@@ -3,6 +3,12 @@ import type { Metadata } from 'next';
 const FALLBACK_SITE_URL = 'https://proofound.io';
 const DEFAULT_OG_IMAGE = '/hero-visual.jpg';
 
+export const PROOFOUND_HOME_TITLE = 'Proofound | Verified proof, not CV noise';
+export const PROOFOUND_HOME_DESCRIPTION =
+  'Hire and get hired through verified proof, not CV noise. Proofound helps people create proof profiles and helps organizations screen on real work.';
+export const PROOFOUND_HOME_OG_DESCRIPTION =
+  'Replace weak CV signal with proof profiles, privacy-safe evidence, and clearer screening for individuals and organizations.';
+
 export function getPublicSiteUrl(): string {
   const rawUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || FALLBACK_SITE_URL;
   const normalized = rawUrl.endsWith('/') ? rawUrl.slice(0, -1) : rawUrl;
@@ -36,7 +42,7 @@ export function buildPublicMetadata({
   ogTitle,
   ogDescription,
   imagePath = DEFAULT_OG_IMAGE,
-  imageAlt = 'Proofound public page preview',
+  imageAlt = 'Proofound verified proof hiring preview',
   ogType = 'website',
   keywords,
   robots,

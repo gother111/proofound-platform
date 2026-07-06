@@ -2,6 +2,11 @@ import { JsonLdScripts } from '@/components/seo/JsonLdScripts';
 import { ProofoundLanding } from '@/components/ProofoundLanding';
 import type { Metadata } from 'next';
 import { buildStaticPageJsonLd } from '@/lib/seo/json-ld';
+import {
+  PROOFOUND_HOME_DESCRIPTION,
+  PROOFOUND_HOME_OG_DESCRIPTION,
+  PROOFOUND_HOME_TITLE,
+} from '@/lib/seo/public-metadata';
 
 const FALLBACK_SITE_URL = 'https://proofound.io';
 
@@ -19,9 +24,8 @@ function getSiteUrl(): string {
 const siteUrl = getSiteUrl();
 
 export const metadata: Metadata = {
-  title: 'Proofound | Proof Behind the Claim',
-  description:
-    'Proofound turns a CV-like surface into a blind-safe, proof-backed, privacy-aware hiring signal built around outcomes, evidence, verification, and clearer fit.',
+  title: PROOFOUND_HOME_TITLE,
+  description: PROOFOUND_HOME_DESCRIPTION,
   keywords: [
     'Proofound',
     'evidence based hiring',
@@ -33,9 +37,8 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: '/' },
   openGraph: {
-    title: 'Proofound | Proof Behind the Claim',
-    description:
-      'Replace weak CV signal with structured outcomes, proof artifacts, verification, privacy-safe presentation, and clearer work-to-proof comparison.',
+    title: PROOFOUND_HOME_TITLE,
+    description: PROOFOUND_HOME_OG_DESCRIPTION,
     url: siteUrl,
     siteName: 'Proofound',
     type: 'website',
@@ -44,15 +47,14 @@ export const metadata: Metadata = {
         url: `${siteUrl}/hero-visual.jpg`,
         width: 1200,
         height: 630,
-        alt: 'Proofound proof-first hiring corridor landing page',
+        alt: 'Proofound verified proof hiring landing page',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Proofound | Proof Behind the Claim',
-    description:
-      'A calmer, proof-first homepage for evidence-based hiring and modern work-to-proof matching.',
+    title: PROOFOUND_HOME_TITLE,
+    description: PROOFOUND_HOME_OG_DESCRIPTION,
     images: [`${siteUrl}/hero-visual.jpg`],
   },
 };
@@ -60,12 +62,10 @@ export const metadata: Metadata = {
 export default function Home() {
   const jsonLdItems = buildStaticPageJsonLd({
     path: '/',
-    title: 'Proofound | Proof Behind the Claim',
-    description:
-      'Proofound is a proof-first hiring platform that replaces weak CV signal with structured outcomes, evidence, verification, and privacy-safe fit.',
+    title: PROOFOUND_HOME_TITLE,
+    description: PROOFOUND_HOME_DESCRIPTION,
   });
 
-  // Auth check disabled for debugging/verification of landing page
   return (
     <>
       <JsonLdScripts items={jsonLdItems} idPrefix="home-jsonld" />

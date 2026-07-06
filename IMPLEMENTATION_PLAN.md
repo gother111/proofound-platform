@@ -80,7 +80,7 @@ This plan and the audit **supersede** `Proofound_MVP_Locked_Source_of_Truth_2026
    **Acceptance:** completing individual onboarding surfaces the ready-step with working copy-link (clipboard) for a published portfolio; declining still completes onboarding. E2E individual flow passes.
    **Verify:** standard gates + `npm run test:e2e:individual:strict` (or the closest individual-onboarding e2e that runs headless locally; if e2e can't run in this environment, add/adjust a component test proving the step renders in the success path and note it).
 
-### [ ] P0-5 — Ship the real landing page
+### [x] P0-5 — Ship the real landing page
 
 **Objective:** Replace the 4,408-line scrollytelling homepage with the orphaned, clearer `landing/sections/*` composition.
 **Files:** `src/app/page.tsx` (renders `ProofoundLanding.tsx` → `ScrollytellingSection.tsx`), orphaned components in `src/components/landing/sections/` (`HeroSection`, `ThreeStepCorridorSection`, `ComparisonSection`, `PracticalTrustSection`, `FinalCTASection`, header/footer pieces).

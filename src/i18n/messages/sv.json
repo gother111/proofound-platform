@@ -18,10 +18,10 @@
   "landing": {
     "hero": {
       "title": "Proofound",
-      "tagline": "Fokusera på det som betyder något",
-      "subtitle": "En trovärdig plattform byggd för äkthet, inte algoritmer.",
+      "tagline": "Verifierade bevis, inte CV-brus",
+      "subtitle": "Gör verkligt arbete till bevisprofiler och granska kandidater genom integritetssäkra bevis istället för CV-teater.",
       "cta": {
-        "join": "Gå med i Proofound",
+        "join": "Skapa din bevisprofil gratis",
         "login": "Logga in"
       }
     },
@@ -36,35 +36,35 @@
       ]
     },
     "solution": {
-      "title": "Bevisbaserade profiler",
-      "subtitle": "Visa ditt arbete. Bygg förtroende. Anslut med syfte."
+      "title": "Bevisprofiler först",
+      "subtitle": "Strukturera verkligt arbete, publicera en lugn bevisprofil och granska genom integritetssäkra bevis."
     },
     "individuals": {
       "title": "För individer",
-      "description": "Bygg en trovärdig profil med verifierbara prestationer."
+      "description": "Gör verkligt arbete till en bevisprofil som du kan dela gratis."
     },
     "organizations": {
       "title": "För organisationer",
-      "description": "Visa ditt team, uppdrag och påverkan transparent."
+      "description": "Börja granska på bevis med tydligare underlag och integritetssäker signal."
     },
     "principles": {
       "title": "Vägledande principer",
       "privacy": "Integritet genom design",
-      "ownership": "Förvaltarstyrd styrning",
-      "antiBias": "Anti-bias skydd"
+      "ownership": "Tydliga bevis",
+      "antiBias": "Förklarbar granskning"
     },
     "faq": {
       "title": "Vanliga frågor",
       "q1": "Vad gör Proofound annorlunda?",
-      "a1": "Proofound fokuserar på verifierbart bevis över självpromotion.",
+      "a1": "Proofound fokuserar på verifierade bevis, integritetssäker granskning och starkare signal än CV:n.",
       "q2": "Är Proofound gratis?",
-      "a2": "Ja, kärnfunktioner är gratis för individer och organisationer.",
+      "a2": "Individer kan skapa en bevisprofil gratis. Organisationer kan börja granska på bevis och prata med oss för stöd vid utrullning.",
       "q3": "Hur fungerar verifiering?",
-      "a3": "Vi bygger flera verifieringsmetoder inklusive rekommendationer och externa bevis."
+      "a3": "Bekräftelse stärker förtroendesignaler runt verkligt arbete medan tidig granskning är integritetssäker som standard."
     },
     "footer": {
-      "about": "Om",
-      "contact": "Kontakt",
+      "about": "Cookies",
+      "contact": "Cookie-inställningar",
       "privacy": "Integritet",
       "terms": "Villkor"
     }

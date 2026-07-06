@@ -3,9 +3,7 @@
 import React, { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { MagneticButton } from '@/components/landing/MagneticButton';
-import { ShieldCheck, BadgeCheck, Percent, CheckCircle2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import Image from 'next/image';
+import { ShieldCheck, BadgeCheck, CheckCircle2, Mail } from 'lucide-react';
 
 interface HeroSectionProps {
   onIndividualSignup?: () => void;
@@ -81,9 +79,9 @@ export function HeroSection({
               }
               className="text-lg md:text-xl text-muted-foreground leading-relaxed font-sans max-w-[540px]"
             >
-              Proofound helps individuals turn real work into clear, shareable proof-based
-              portfolios, and helps organizations find values-aligned talent through structured
-              evidence, trust signals, and explainable matching.
+              Proofound helps people turn real work into clear proof profiles, and helps
+              organizations review candidates through structured evidence, privacy controls, and
+              transparent fit signals.
             </motion.p>
           </div>
 
@@ -101,24 +99,32 @@ export function HeroSection({
               <MagneticButton
                 onClick={onIndividualSignup}
                 size="lg"
+                data-testid="landing-hero-individual-cta"
                 containerClassName="w-full sm:w-auto"
                 className="rounded-full px-8 py-7 text-lg shadow-lg hover:shadow-xl font-sans w-full sm:w-auto bg-proofound-forest hover:bg-proofound-forest/90 text-white"
               >
-                Create your proof-based portfolio
+                Create your proof profile — free
               </MagneticButton>
-              <button
-                type="button"
-                onClick={() =>
-                  document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })
-                }
-                className="rounded-full px-8 py-4 text-lg font-medium text-foreground hover:text-proofound-forest hover:bg-muted/50 transition-colors w-full sm:w-auto"
+              <MagneticButton
+                onClick={onOrganizationSignup}
+                size="lg"
+                data-testid="landing-hero-organization-cta"
+                containerClassName="w-full sm:w-auto"
+                className="rounded-full border border-proofound-forest/20 bg-white px-8 py-7 text-lg font-sans text-proofound-forest shadow-sm hover:bg-white hover:text-proofound-forest hover:shadow-md w-full sm:w-auto"
               >
-                See how Proofound works
-              </button>
+                Start screening on proof
+              </MagneticButton>
             </div>
-            <p className="text-sm text-muted-foreground ml-2 pt-2">
-              Share a clean Public Page link today. No CV-first workflow.
-            </p>
+            <div className="flex flex-col gap-3 pt-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:gap-5">
+              <p className="ml-2">Share a clean proof profile today. Add confirmation as you go.</p>
+              <a
+                href="mailto:hello@proofound.io?subject=Proofound%20organization%20screening"
+                className="ml-2 inline-flex items-center gap-2 font-medium text-proofound-forest underline-offset-4 hover:underline sm:ml-0"
+              >
+                <Mail className="h-4 w-4" aria-hidden="true" />
+                Talk to us
+              </a>
+            </div>
           </motion.div>
         </motion.div>
 
@@ -231,20 +237,20 @@ export function HeroSection({
           >
             <div className="flex items-center gap-3 mb-3 border-b border-border/40 pb-3">
               <div className="w-9 h-9 rounded-full bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center">
-                <Percent className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                <ShieldCheck className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
               </div>
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                  Match Score
+                  Proof Fit
                 </p>
                 <p className="text-xl font-display font-semibold text-foreground leading-none mt-0.5">
-                  98% Fit
+                  Strong fit
                 </p>
               </div>
             </div>
             <div className="space-y-2">
               <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1.5">
-                Reason Codes
+                Why it fits
               </p>
               <div className="flex items-center gap-2 text-xs font-medium text-foreground/80">
                 <CheckCircle2 className="w-3.5 h-3.5 text-green-500/80 flex-shrink-0" />
@@ -256,7 +262,7 @@ export function HeroSection({
               </div>
               <div className="flex items-center gap-2 text-xs font-medium text-foreground/80">
                 <CheckCircle2 className="w-3.5 h-3.5 text-green-500/80 flex-shrink-0" />
-                Verified outcomes
+                Confirmed outcomes
               </div>
             </div>
           </motion.div>

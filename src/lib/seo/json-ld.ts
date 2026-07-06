@@ -51,7 +51,7 @@ export function buildProofoundOrganizationJsonLd(description?: string): JsonLd {
     sameAs: [],
     description:
       description ||
-      'Proofound is a proof-first hiring corridor centered on Proof Packs, privacy-safe review, and public trust surfaces derived from real work.',
+      'Proofound helps people and organizations replace CV noise with verified proof, privacy-safe review, and public trust surfaces derived from real work.',
   };
 }
 

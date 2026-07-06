@@ -587,6 +587,7 @@ const ACTIVE_PAGE_POLICIES = [
     detail: 'This public page remains inside the locked MVP corridor.',
     matches: (pathname: string) =>
       pathname === '/' ||
+      pathname === '/story' ||
       pathname === '/403' ||
       pathname === '/privacy' ||
       pathname === '/terms' ||

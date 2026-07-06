@@ -22,15 +22,16 @@ export function ComparisonSection({ shouldReduceMotion }: ComparisonSectionProps
   ];
 
   const newWayItems = [
-    'One direct-link Public Page',
-    'Portable trust signals and verification',
-    'Better matching based on evidence and alignment, not posture',
+    'One direct-link proof profile',
+    'Portable trust signals and confirmations',
+    'Better screening based on evidence and alignment, not posture',
   ];
 
   return (
     <section
       id="comparison"
       ref={ref}
+      data-testid="landing-comparison-section"
       className="py-16 md:py-24 px-6 md:px-12 relative bg-background/50 overflow-hidden scroll-mt-24"
     >
       <div className="max-w-6xl mx-auto relative z-10">

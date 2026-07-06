@@ -13,7 +13,13 @@
       "Bash(git push *)",
       "Bash(sed -i '' 's/### \\\\[ \\\\] P0-4 — Wire the \"Day-1 win\" onboarding finale/### [x] P0-4 — Wire the \"Day-1 win\" onboarding finale/' IMPLEMENTATION_PLAN.md)",
       "Bash(printf 'P0-4 | PASS | pending-sha | ready-step wired as onboarding finale, copy-link + decline path tested; e2e env-blocked, component-test fallback per spec\\\\n')",
-      "Bash(git commit --quiet -m 'P0-4: wire PublicPortfolioReadyStep as individual onboarding finale *)"
+      "Bash(git commit --quiet -m 'P0-4: wire PublicPortfolioReadyStep as individual onboarding finale *)",
+      "Bash(python3 -)",
+      "Bash(npx playwright *)",
+      "Bash(python3 -c ' *)",
+      "Bash(sed -i '' 's/### \\\\[ \\\\] P0-5 — Ship the real landing page/### [x] P0-5 — Ship the real landing page/' IMPLEMENTATION_PLAN.md)",
+      "Bash(printf 'P0-5 | PASS | pending-sha | new sections homepage live, /story preserved \\(added to middleware allowlist — Codex missed\\), landing e2e 10/10 locally, build OK\\\\n')",
+      "Bash(git commit --quiet -m 'P0-5: replace scrollytelling homepage with sections composition; keep /story *)"
     ]
   }
 }

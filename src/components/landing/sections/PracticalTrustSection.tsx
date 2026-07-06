@@ -23,12 +23,12 @@ export function PracticalTrustSection({ shouldReduceMotion }: PracticalTrustSect
     {
       icon: ShieldCheck,
       title: 'Verification & credibility',
-      desc: 'Trust signals are cryptographically verified and checked against the source, creating a high-signal environment.',
+      desc: 'Trust signals can be checked against the source or confirmed by people who know the work, creating a higher-signal review.',
     },
     {
       icon: Fingerprint,
       title: 'Explainable matching',
-      desc: 'When you are matched, you see exactly why. No black-box AI making opaque decisions about your future.',
+      desc: 'When there is a fit, the reason is visible. No hidden ranking making opaque decisions about your future.',
     },
   ];
 
@@ -45,6 +45,7 @@ export function PracticalTrustSection({ shouldReduceMotion }: PracticalTrustSect
     <section
       id="trust"
       ref={ref}
+      data-testid="landing-trust-section"
       className="py-16 md:py-24 px-6 md:px-12 relative overflow-hidden bg-muted/30 scroll-mt-24"
     >
       <div className="max-w-6xl mx-auto relative z-10">
