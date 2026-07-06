@@ -158,7 +158,7 @@ This plan and the audit **supersede** `Proofound_MVP_Locked_Source_of_Truth_2026
    **Acceptance:** rendered app/marketing surfaces contain no unexplained target terms (spot-check the 6 highest-traffic screens: home dashboards ×2, matching ×2, onboarding ×2); i18n catalogs updated symmetrically; snapshot/e2e copy assertions updated.
    **Verify:** standard gates + `npm run test -- i18n` if exists + affected e2e copy assertions.
 
-### [ ] P0-11 — Full verification pass + founder handoff notes
+### [x] P0-11 — Full verification pass + founder handoff notes
 
 **Objective:** Prove P0 holds together; hand the founder a deploy-ready checklist.
 **Steps:**

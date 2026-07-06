@@ -34,7 +34,9 @@
       "Bash(NEXT_PUBLIC_USE_MOCK_SUPABASE=true PLAYWRIGHT=true PLAYWRIGHT_PORT=33210 node ./scripts/playwright-node24.mjs test e2e/dashboard-declutter-visual.spec.ts e2e/matching-messages-empty-visual.spec.ts e2e/profile-trust-profile-visual.spec.ts --project=chromium --reporter=line --workers=1)",
       "Bash(NEXT_PUBLIC_USE_MOCK_SUPABASE=true PLAYWRIGHT=true PLAYWRIGHT_PORT=33210 node ./scripts/playwright-node24.mjs test e2e/matching-messages-empty-visual.spec.ts --project=chromium --reporter=line --workers=1)",
       "Bash(sed -i '' 's/### \\\\[ \\\\] P0-10 — Plain-language pass on user-facing vocabulary/### [x] P0-10 — Plain-language pass on user-facing vocabulary/' IMPLEMENTATION_PLAN.md)",
-      "Bash(git commit --quiet -m 'P0-10: plain-language sweep of user-facing vocabulary; add TermHint tooltips *)"
+      "Bash(git commit --quiet -m 'P0-10: plain-language sweep of user-facing vocabulary; add TermHint tooltips *)",
+      "Bash(sed -i '' 's/### \\\\[ \\\\] P0-11 — Full verification pass + founder handoff notes/### [x] P0-11 — Full verification pass + founder handoff notes/' IMPLEMENTATION_PLAN.md)",
+      "Bash(git commit --quiet -m 'P0-11: full verification pass + founder handoff doc *)"
     ]
   }
 }

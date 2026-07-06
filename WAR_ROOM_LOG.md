@@ -22,3 +22,4 @@ P0-3 | PASS | pending-sha | publish gate = structured proof only; badges live; p
   P0-9 | PASS | pending-sha | candidates route + nav live, surface-policy allowlisted, org-corridor 40/40, live smoke: 307->login matches siblings
   P0-10 | PASS | pending-sha | 161-file copy sweep, TermHint component added, i18n catalogs clean of target terms, 222 focused tests green
 - Pre-existing (verified via stash): e2e/matching-messages-empty-visual.spec.ts 2 failures ("No matches yet"/"No conversations yet" not rendered in mock mode) + profile-trust-profile-visual 1 failure — disposition at P0-11
+  P0-11 | PASS | pending-sha | full gates green (1922 tests, build, smoke 6/6, portfolio 66, org 40); privacy env-blocked dispositioned; handoff doc written
