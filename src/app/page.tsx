@@ -1,5 +1,5 @@
 import { JsonLdScripts } from '@/components/seo/JsonLdScripts';
-import { ProofoundLanding } from '@/components/ProofoundLanding';
+import { StoryLanding } from '@/components/landing/StoryLanding';
 import type { Metadata } from 'next';
 import { buildStaticPageJsonLd } from '@/lib/seo/json-ld';
 import {
@@ -70,7 +70,7 @@ export default function Home() {
   return (
     <>
       <JsonLdScripts items={jsonLdItems} idPrefix="home-jsonld" />
-      <ProofoundLanding />
+      <StoryLanding />
     </>
   );
 }

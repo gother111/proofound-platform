@@ -11,6 +11,10 @@ interface OrganizationMatchingEmptyProps {
   onCreateAssignment: () => void;
 }
 
+// Kept as a single literal so the launch-gate copy check can match the full sentence.
+const IDENTITY_PROTECTED_NOTE =
+  'Participant identity stays protected until the assignment-review flow is ready.';
+
 /**
  * Empty state for organizations who haven't created any assignments yet.
  */
@@ -57,8 +61,7 @@ export function OrganizationMatchingEmpty({
               </h2>
               <p className="max-w-xl text-base leading-relaxed text-muted-foreground">
                 Start with the role context reviewers need: skills, constraints, and proof
-                expectations. Participant identity stays protected until the assignment-review flow
-                is ready.
+                expectations. {IDENTITY_PROTECTED_NOTE}
               </p>
             </div>
 
