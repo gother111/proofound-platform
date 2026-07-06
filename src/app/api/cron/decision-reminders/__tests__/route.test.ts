@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   sendPerformanceAlert: vi.fn(),
   processWeeklyDigests: vi.fn(),
   getWeeklyDigestAvailability: vi.fn(),
+  processVerificationRequestReminders: vi.fn(),
   processWorkflowAsyncJobs: vi.fn(),
   logInfo: vi.fn(),
   logWarn: vi.fn(),
@@ -26,6 +27,10 @@ vi.mock('@/lib/notifications/weekly-digest', () => ({
   getWeeklyDigestAvailability: mocks.getWeeklyDigestAvailability,
 }));
 
+vi.mock('@/lib/verification/request-reminders', () => ({
+  processVerificationRequestReminders: mocks.processVerificationRequestReminders,
+}));
+
 vi.mock('@/lib/workflow/processor', () => ({
   processWorkflowAsyncJobs: mocks.processWorkflowAsyncJobs,
 }));
@@ -43,7 +48,6 @@ import { GET } from '../route';
 describe('/api/cron/decision-reminders', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.stubEnv('ENABLE_WEEKLY_DIGEST', 'false');
     mocks.processDecisionReminders.mockResolvedValue({ processed: 2, sent: 1 });
     mocks.checkPerformanceHealth.mockResolvedValue({
       healthy: true,
@@ -59,10 +63,17 @@ describe('/api/cron/decision-reminders', () => {
       errors: [],
     });
     mocks.getWeeklyDigestAvailability.mockReturnValue({
-      enabled: false,
-      reason: 'Weekly digest delivery is temporarily disabled.',
+      enabled: true,
+      reason: null,
     });
     mocks.processWorkflowAsyncJobs.mockResolvedValue({ processed: 0 });
+    mocks.processVerificationRequestReminders.mockResolvedValue({
+      checked: 1,
+      due: 1,
+      sent: 1,
+      skipped: 0,
+      errors: [],
+    });
   });
 
   afterEach(() => {
@@ -103,6 +114,8 @@ describe('/api/cron/decision-reminders', () => {
   it('runs reminders and health check when bearer token is valid', async () => {
     vi.stubEnv('CRON_SECRET', 'top-secret-value');
     vi.stubEnv('INTERNAL_API_SECRET', '');
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-24T10:00:00.000Z'));
 
     const response = await GET(
       new Request('https://example.com/api/cron/decision-reminders', {
@@ -115,25 +128,36 @@ describe('/api/cron/decision-reminders', () => {
     expect(body.success).toBe(true);
     expect(body.decisionReminders).toEqual({ processed: 2, sent: 1 });
     expect(body.performanceHealthCheck.status).toBe('healthy');
+    expect(body.verificationReminders).toEqual({
+      status: 'success',
+      checked: 1,
+      due: 1,
+      sent: 1,
+      skipped: 0,
+      errors: 0,
+    });
     expect(body.weeklyDigest).toEqual({
       status: 'skipped',
-      reason: 'Weekly digest delivery is temporarily disabled.',
+      reason: 'Runs on Monday UTC only',
     });
     expect(mocks.processDecisionReminders).toHaveBeenCalledTimes(1);
     expect(mocks.checkPerformanceHealth).toHaveBeenCalledTimes(1);
     expect(mocks.processWorkflowAsyncJobs).toHaveBeenCalledTimes(1);
+    expect(mocks.processVerificationRequestReminders).toHaveBeenCalledTimes(1);
     expect(mocks.processWeeklyDigests).not.toHaveBeenCalled();
     expect(mocks.sendPerformanceAlert).not.toHaveBeenCalled();
   }, 15000);
 
-  it('skips weekly digest when env is unset', async () => {
+  it('runs weekly digest on Monday when availability is enabled by default', async () => {
     vi.unstubAllEnvs();
     vi.stubEnv('CRON_SECRET', 'top-secret-value');
     vi.stubEnv('INTERNAL_API_SECRET', '');
     mocks.getWeeklyDigestAvailability.mockReturnValue({
-      enabled: false,
-      reason: 'Weekly digest delivery is temporarily disabled.',
+      enabled: true,
+      reason: null,
     });
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-23T10:00:00.000Z'));
 
     const response = await GET(
       new Request('https://example.com/api/cron/decision-reminders', {
@@ -144,19 +168,22 @@ describe('/api/cron/decision-reminders', () => {
 
     expect(response.status).toBe(200);
     expect(body.weeklyDigest).toEqual({
-      status: 'skipped',
-      reason: 'Weekly digest delivery is temporarily disabled.',
+      status: 'success',
+      processed: 3,
+      emailed: 3,
+      createdInApp: 3,
+      skipped: 0,
+      errors: 0,
     });
-    expect(mocks.processWeeklyDigests).not.toHaveBeenCalled();
+    expect(mocks.processWeeklyDigests).toHaveBeenCalledTimes(1);
   });
 
-  it('still skips weekly digest on Monday even when the env is true', async () => {
+  it('skips weekly digest on Monday when availability is disabled', async () => {
     vi.stubEnv('CRON_SECRET', 'top-secret-value');
     vi.stubEnv('INTERNAL_API_SECRET', '');
-    vi.stubEnv('ENABLE_WEEKLY_DIGEST', 'true');
     mocks.getWeeklyDigestAvailability.mockReturnValue({
       enabled: false,
-      reason: 'Weekly digest delivery is temporarily disabled.',
+      reason: 'Weekly digest delivery is disabled by WEEKLY_DIGEST_ENABLED=false.',
     });
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-03-23T10:00:00.000Z'));
@@ -172,7 +199,7 @@ describe('/api/cron/decision-reminders', () => {
     expect(mocks.processWeeklyDigests).not.toHaveBeenCalled();
     expect(body.weeklyDigest).toEqual({
       status: 'skipped',
-      reason: 'Weekly digest delivery is temporarily disabled.',
+      reason: 'Weekly digest delivery is disabled by WEEKLY_DIGEST_ENABLED=false.',
     });
   });
 });

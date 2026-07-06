@@ -26,7 +26,11 @@ vi.mock('@/lib/supabase/admin', () => ({
   createAdminClient: vi.fn(),
 }));
 
-import { getWeeklyDigestAvailability, processWeeklyDigests } from '../weekly-digest';
+import {
+  buildWeeklyDigestEmail,
+  getWeeklyDigestAvailability,
+  processWeeklyDigests,
+} from '../weekly-digest';
 
 describe('weekly digest availability', () => {
   afterEach(() => {
@@ -34,13 +38,25 @@ describe('weekly digest availability', () => {
     vi.clearAllMocks();
   });
 
-  it('defaults to disabled', async () => {
+  it('defaults to enabled', () => {
+    const availability = getWeeklyDigestAvailability();
+
+    expect(availability).toEqual({
+      enabled: true,
+      reason: null,
+    });
+    expect(mocks.sendEmail).not.toHaveBeenCalled();
+  });
+
+  it('is disabled only when WEEKLY_DIGEST_ENABLED is false', async () => {
+    vi.stubEnv('WEEKLY_DIGEST_ENABLED', 'false');
+
     const availability = getWeeklyDigestAvailability();
     const result = await processWeeklyDigests();
 
     expect(availability).toEqual({
       enabled: false,
-      reason: 'Weekly digest delivery is temporarily disabled.',
+      reason: 'Weekly digest delivery is disabled by WEEKLY_DIGEST_ENABLED=false.',
     });
     expect(result).toEqual({
       processed: 0,
@@ -52,23 +68,36 @@ describe('weekly digest availability', () => {
     expect(mocks.sendEmail).not.toHaveBeenCalled();
   });
 
-  it('stays disabled even when ENABLE_WEEKLY_DIGEST is true', async () => {
-    vi.stubEnv('ENABLE_WEEKLY_DIGEST', 'true');
-
-    const availability = getWeeklyDigestAvailability();
-    const result = await processWeeklyDigests();
-
-    expect(availability).toEqual({
-      enabled: false,
-      reason: 'Weekly digest delivery is temporarily disabled.',
+  it('builds a valid no-match digest with readiness nudges', () => {
+    const email = buildWeeklyDigestEmail({
+      userId: 'user-zero-match',
+      persona: 'individual',
+      subject: 'Proofound weekly digest',
+      summary:
+        'Market activity is currently low. Focus on readiness actions to improve match quality as volume grows.',
+      topActions: [
+        {
+          id: 'add-proof',
+          title: 'Add one fresh proof',
+          description: 'Attach a recent artifact to make your strongest skill easier to review.',
+          priority: 'high',
+          category: 'verification',
+          actionUrl: '/app/i/expertise',
+        },
+      ],
+      updates: [],
+      metrics: {
+        totalMatches: 0,
+        highQualityMatches: 0,
+        pendingVerifications: 0,
+        readinessScore: 20,
+      },
+      generatedAt: '2026-03-23T10:00:00.000Z',
     });
-    expect(result).toEqual({
-      processed: 0,
-      emailed: 0,
-      createdInApp: 0,
-      skipped: 0,
-      errors: [],
-    });
-    expect(mocks.sendEmail).not.toHaveBeenCalled();
+
+    expect(email.html).toContain('No matches yet.');
+    expect(email.html).toContain('Add one fresh proof');
+    expect(email.text).toContain('request one verification');
+    expect(email.text).toContain('- totalMatches: 0');
   });
 });

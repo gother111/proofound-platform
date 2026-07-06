@@ -25,7 +25,10 @@
       "Bash(sed -i '' 's/### \\\\[ \\\\] P0-7 — Make shared portfolio links look like the person, not the platform/### [x] P0-7 — Make shared portfolio links look like the person, not the platform/' IMPLEMENTATION_PLAN.md)",
       "Bash(printf 'P0-7 | PASS | pending-sha | dynamic OG image route live \\(clean 404 no-500 verified via local curl; no published seed user locally for visual diff — founder QA item\\), mailto CTA + build-status copy removed, 1911 tests + build green\\\\n')",
       "Bash(printf -- '- P0-7 residual: visually confirm two users OG images differ once seeded users exist \\(unit-tested only\\); org OG image follow-up logged by Codex\\\\n')",
-      "Bash(git commit --quiet -m 'P0-7: dynamic per-user OG images, personalized share metadata, drop platform mailto CTA *)"
+      "Bash(git commit --quiet -m 'P0-7: dynamic per-user OG images, personalized share metadata, drop platform mailto CTA *)",
+      "Bash(sed -i '' 's/### \\\\[ \\\\] P0-8 — Re-engagement: digest on, verification reminders on/### [x] P0-8 — Re-engagement: digest on, verification reminders on/' IMPLEMENTATION_PLAN.md)",
+      "Bash(printf 'P0-8 | PASS | pending-sha | digest default-on env-guarded, day-5+10 reminders via decision-reminders dispatcher, idempotent via last_follow_up_at+metadata, no migration, blind-safe reminder template, 1917 tests green\\\\n')",
+      "Bash(git commit --quiet -m 'P0-8: enable weekly digest by default; add day-5/10 verification reminders *)"
     ]
   }
 }

@@ -5,6 +5,10 @@ type BlindSafeVerificationEmailInput = {
   requestKind: 'generic_verification' | 'human_observed_attestation';
 };
 
+type BlindSafeVerificationReminderEmailInput = BlindSafeVerificationEmailInput & {
+  reminderNumber: number;
+};
+
 export type WorkflowEmailPrivacyStage = 'masked' | 'revealed';
 
 export type WorkflowEmailPrivacyOptions = {
@@ -114,6 +118,71 @@ ${heading}
 Hi there,
 
 Someone on Proofound asked you to review a verification request.
+
+${description}
+
+To protect privacy, request details stay inside the secure review flow.
+
+Review request: ${input.verifyUrl}
+
+This link expires in ${input.expiresInDays} days.
+    `.trim(),
+  };
+}
+
+export function buildBlindSafeVerificationReminderEmail(
+  input: BlindSafeVerificationReminderEmailInput
+) {
+  const description = verificationRequestDescription(input.requestKind);
+  const subject = 'Reminder: Proofound verification request';
+  const heading =
+    input.requestKind === 'human_observed_attestation'
+      ? 'Verification observation reminder'
+      : 'Verification request reminder';
+
+  return {
+    subject,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      </head>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #2D3330; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #1C4D3A 0%, #2D5F4A 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 24px;">${heading}</h1>
+        </div>
+        <div style="background: #F7F6F1; padding: 30px; border-radius: 0 0 12px 12px; border: 1px solid #E5E3DA; border-top: none;">
+          <p style="font-size: 16px; margin-bottom: 20px;">Hi there,</p>
+          <p style="font-size: 16px; margin-bottom: 20px;">
+            This is reminder ${input.reminderNumber} that a Proofound verification request is still waiting for review.
+          </p>
+          <p style="font-size: 16px; margin-bottom: 25px;">
+            ${description}
+          </p>
+          <p style="font-size: 16px; margin-bottom: 25px;">
+            To protect privacy, request details stay inside the secure review flow.
+          </p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${input.verifyUrl}"
+              style="display: inline-block; background: #1C4D3A; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">
+              ${input.ctaLabel}
+            </a>
+          </div>
+          <p style="font-size: 14px; color: #6B6760; margin-top: 25px;">
+            This link expires in ${input.expiresInDays} days. If you do not recognize this request, you can ignore this email.
+          </p>
+        </div>
+      </body>
+      </html>
+    `.trim(),
+    text: `
+${heading}
+
+Hi there,
+
+This is reminder ${input.reminderNumber} that a Proofound verification request is still waiting for review.
 
 ${description}
 

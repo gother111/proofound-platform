@@ -98,7 +98,8 @@ export const CRON_JOB_CLASSIFICATION_TABLE = [
     classification: 'archived_compatibility',
     owner: 'None',
     schedule: 'Not scheduled',
-    launchReason: 'Archived standalone deletion processing route; not active launch infrastructure.',
+    launchReason:
+      'Archived standalone deletion processing route; not active launch infrastructure.',
     testCoverage: 'tests/api/launch-surface-inventory.test.ts covers archived route status.',
     externalSchedulerAction: 'disable',
     title: 'Proofound - Process Deletions',
@@ -128,8 +129,10 @@ export const CRON_JOB_CLASSIFICATION_TABLE = [
     classification: 'removed_non_mvp',
     owner: 'None',
     schedule: 'Not scheduled',
-    launchReason: 'Weekly digest delivery is disabled and not active launch infrastructure.',
-    testCoverage: 'tests/scripts/cron-scheduling.test.ts verifies cron-job.org disables it if present.',
+    launchReason:
+      'Standalone weekly digest cron is disabled; digest delivery piggybacks on decision-reminders.',
+    testCoverage:
+      'tests/scripts/cron-scheduling.test.ts verifies cron-job.org disables it if present.',
     externalSchedulerAction: 'disable',
     title: 'Proofound - Weekly Digest',
   },
@@ -158,7 +161,8 @@ export const CRON_JOB_CLASSIFICATION_TABLE = [
     classification: 'removed_non_mvp',
     owner: 'None',
     schedule: 'Not scheduled',
-    launchReason: 'Legacy fairness-note generation is archived outside the locked MVP launch surface.',
+    launchReason:
+      'Legacy fairness-note generation is archived outside the locked MVP launch surface.',
     testCoverage: 'src/lib/launch/surface-policy.ts classifies it as archived.',
     externalSchedulerAction: 'disable',
     title: 'Proofound - Generate Fairness Note',

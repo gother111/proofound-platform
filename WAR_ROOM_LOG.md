@@ -18,3 +18,4 @@ P0-3 | PASS | pending-sha | publish gate = structured proof only; badges live; p
   P0-6 | PASS | pending-sha | invite gate removed, size/page/daily-limit guards intact, import step in onboarding, 51 targeted + 1909 full tests green
   P0-7 | PASS | pending-sha | dynamic OG image route live (clean 404 no-500 verified via local curl; no published seed user locally for visual diff — founder QA item), mailto CTA + build-status copy removed, 1911 tests + build green
 - P0-7 residual: visually confirm two users OG images differ once seeded users exist (unit-tested only); org OG image follow-up logged by Codex
+  P0-8 | PASS | pending-sha | digest default-on env-guarded, day-5+10 reminders via decision-reminders dispatcher, idempotent via last_follow_up_at+metadata, no migration, blind-safe reminder template, 1917 tests green

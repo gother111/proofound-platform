@@ -120,7 +120,7 @@ This plan and the audit **supersede** `Proofound_MVP_Locked_Source_of_Truth_2026
    **Acceptance:** two different seeded users produce visibly different OG images (verify by hitting the OG route locally); no build-status copy on the public page; intro CTA no longer `mailto:hello@proofound.io`.
    **Verify:** standard gates + `npm run build` + manual curl of `/portfolio/<seed>/opengraph-image`.
 
-### [ ] P0-8 — Re-engagement: digest on, verification reminders on
+### [x] P0-8 — Re-engagement: digest on, verification reminders on
 
 **Objective:** Users who don't get a match still have scheduled reasons to return; verification requests stop dying silently.
 **Files:** `src/lib/notifications/weekly-digest.ts` (lines ~11, 110-113 hardcoded disabled), cron surface (`vercel.json`, `src/app/api/cron/*` — note `VERCEL_CRON_LIMIT_WORKAROUND.md`: follow the existing consolidated-dispatcher pattern rather than adding new cron entries), `src/lib/verification/canonical-requests.ts` (14-day expiry), `emails/` (reuse `SkillVerificationRequest` or add a minimal reminder template).

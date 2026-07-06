@@ -451,7 +451,7 @@ export async function resendSkillVerificationRequest(
   let resendToken = '';
 
   if (reusedRecord) {
-    const expiresAtIso = computeExpiresAt(7);
+    const expiresAtIso = computeExpiresAt(14);
     const issued = await issueCapabilityToken({
       tokenClass: CAPABILITY_TOKEN_CLASSES.SKILL_VERIFICATION_RESPONSE,
       sourceTable: 'verification_records',

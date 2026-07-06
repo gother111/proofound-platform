@@ -301,7 +301,7 @@ export async function POST(request: NextRequest) {
         : 'Review & Verify Skill';
     const emailCopy = buildBlindSafeVerificationRequestEmail({
       verifyUrl,
-      expiresInDays: 7,
+      expiresInDays: 14,
       ctaLabel: reviewCta,
       requestKind: requestMode.requestKind,
     });

@@ -33,6 +33,7 @@ import {
 import { sendEmail } from '@/lib/email/sender';
 import {
   applyWorkflowEmailPrivacy,
+  buildBlindSafeVerificationReminderEmail,
   buildBlindSafeVerificationRequestEmail,
   buildRevealConversationUrl,
   buildRevealNotificationEmail,
@@ -77,6 +78,23 @@ describe('workflow email privacy helper', () => {
     expect(email.html).not.toContain('TypeScript');
     expect(email.text).not.toContain('Alice');
     expect(email.text).not.toContain('TypeScript');
+    expectNoHiddenLeakage(`${email.html}\n${email.text}`);
+  });
+
+  it('builds verification reminder emails without requester or artifact details', () => {
+    const email = buildBlindSafeVerificationReminderEmail({
+      verifyUrl: 'https://proofound.io/verify/token-123',
+      expiresInDays: 4,
+      ctaLabel: 'Review request',
+      requestKind: 'human_observed_attestation',
+      reminderNumber: 1,
+    });
+
+    expect(email.subject).toBe('Reminder: Proofound verification request');
+    expect(email.html).toContain('secure review flow');
+    expect(email.text).toContain('reminder 1');
+    expect(email.html).not.toContain('Alice');
+    expect(email.html).not.toContain('TypeScript');
     expectNoHiddenLeakage(`${email.html}\n${email.text}`);
   });
 

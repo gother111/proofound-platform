@@ -8,7 +8,8 @@ import type { WeeklyDigestPayload } from '@/lib/momentum/types';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-const WEEKLY_DIGEST_DISABLED_REASON = 'Weekly digest delivery is temporarily disabled.';
+const WEEKLY_DIGEST_DISABLED_REASON =
+  'Weekly digest delivery is disabled by WEEKLY_DIGEST_ENABLED=false.';
 
 function buildDigestSubject(persona: 'individual' | 'organization'): string {
   const dateLabel = new Date().toLocaleDateString('en-US', {
@@ -22,7 +23,24 @@ function buildDigestSubject(persona: 'individual' | 'organization'): string {
     : `Proofound weekly digest • ${dateLabel}`;
 }
 
-function buildDigestEmail(payload: WeeklyDigestPayload): { html: string; text: string } {
+function getNoMatchDigestCopy(payload: WeeklyDigestPayload): string | null {
+  if (payload.persona !== 'individual') {
+    return null;
+  }
+
+  const totalMatches = payload.metrics.totalMatches ?? 0;
+  if (totalMatches > 0) {
+    return null;
+  }
+
+  return 'No matches yet. Use this week to add one fresh proof, request one verification, and tighten your role preferences so your portfolio is ready when matching volume grows.';
+}
+
+export function buildWeeklyDigestEmail(payload: WeeklyDigestPayload): {
+  html: string;
+  text: string;
+} {
+  const noMatchCopy = getNoMatchDigestCopy(payload);
   const actionItemsHtml = payload.topActions
     .map(
       (action) =>
@@ -52,6 +70,7 @@ function buildDigestEmail(payload: WeeklyDigestPayload): { html: string; text: s
         <p style="margin:8px 0 0 0; opacity:0.92;">${payload.summary}</p>
       </div>
       <div style="padding:20px;">
+        ${noMatchCopy ? `<p style="margin:0 0 18px 0;">${noMatchCopy}</p>` : ''}
         <h2 style="font-size:16px; margin:0 0 8px 0;">Top actions</h2>
         <ul style="padding-left:18px; margin:0 0 18px 0;">${actionItemsHtml || '<li>No actions this week.</li>'}</ul>
 
@@ -84,6 +103,7 @@ function buildDigestEmail(payload: WeeklyDigestPayload): { html: string; text: s
     '',
     payload.summary,
     '',
+    ...(noMatchCopy ? [noMatchCopy, ''] : []),
     'Top actions:',
     actionItemsText || '- No actions this week.',
     '',
@@ -108,9 +128,11 @@ export type WeeklyDigestResult = {
 };
 
 export function getWeeklyDigestAvailability(): { enabled: boolean; reason: string | null } {
+  const disabled = process.env.WEEKLY_DIGEST_ENABLED?.trim().toLowerCase() === 'false';
+
   return {
-    enabled: false,
-    reason: WEEKLY_DIGEST_DISABLED_REASON,
+    enabled: !disabled,
+    reason: disabled ? WEEKLY_DIGEST_DISABLED_REASON : null,
   };
 }
 
@@ -158,8 +180,8 @@ export async function processWeeklyDigests(force = false): Promise<WeeklyDigestR
   };
 
   for (const row of users) {
-    const digestEnabled = row.emailWeeklyDigest ?? false;
-    const digestFrequency = row.digestFrequency ?? 'disabled';
+    const digestEnabled = row.emailWeeklyDigest ?? true;
+    const digestFrequency = row.digestFrequency ?? 'weekly';
 
     if (!digestEnabled || digestFrequency === 'disabled') {
       result.skipped += 1;
@@ -200,7 +222,7 @@ export async function processWeeklyDigests(force = false): Promise<WeeklyDigestR
         continue;
       }
 
-      const emailBody = buildDigestEmail(payload);
+      const emailBody = buildWeeklyDigestEmail(payload);
       const sendResult = await sendEmail({
         to: recipient,
         subject: payload.subject,

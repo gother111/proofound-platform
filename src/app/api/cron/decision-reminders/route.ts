@@ -3,9 +3,10 @@
  *
  * Schedule: Daily at 10:00 AM UTC
  *
- * This job performs two tasks in sequence:
+ * This job performs launch-critical tasks in sequence:
  * 1. Process decision reminders for pending interviews
  * 2. Run performance health check and alert if SLA breached (PRD Part 8, lines 1813-1817)
+ * 3. Dispatch low-frequency re-engagement work piggybacked on this cron slot
  *
  * Combined to optimize Vercel cron job usage (2 cron limit on current plan)
  */
@@ -18,6 +19,7 @@ import {
   getWeeklyDigestAvailability,
   processWeeklyDigests,
 } from '@/lib/notifications/weekly-digest';
+import { processVerificationRequestReminders } from '@/lib/verification/request-reminders';
 import { log } from '@/lib/log';
 import { sanitizeErrorForLog } from '@/lib/privacy/log-redaction';
 import { processWorkflowAsyncJobs } from '@/lib/workflow/processor';
@@ -46,6 +48,36 @@ export async function GET(req: NextRequest) {
     log.info('decision.reminders.cron.complete', decisionResult);
 
     const workflowResult = await processWorkflowAsyncJobs(100);
+
+    let verificationReminders: {
+      status: 'success' | 'error';
+      checked?: number;
+      due?: number;
+      sent?: number;
+      skipped?: number;
+      errors?: number;
+      reason?: string;
+    };
+
+    try {
+      const reminderResult = await processVerificationRequestReminders();
+      verificationReminders = {
+        status: 'success',
+        checked: reminderResult.checked,
+        due: reminderResult.due,
+        sent: reminderResult.sent,
+        skipped: reminderResult.skipped,
+        errors: reminderResult.errors.length,
+      };
+    } catch (error) {
+      log.error('verification_request_reminders.cron.failed', {
+        error: sanitizeErrorForLog(error),
+      });
+      verificationReminders = {
+        status: 'error',
+        reason: 'Verification request reminder processing failed',
+      };
+    }
 
     // ========================================
     // STEP 2: Performance Health Check
@@ -134,6 +166,7 @@ export async function GET(req: NextRequest) {
         breaches: healthStatus?.breaches.length ?? 0,
         metrics: healthStatus?.metrics ?? null,
       },
+      verificationReminders,
       weeklyDigest,
     });
   } catch (error) {
