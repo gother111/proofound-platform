@@ -28,7 +28,9 @@
       "Bash(git commit --quiet -m 'P0-7: dynamic per-user OG images, personalized share metadata, drop platform mailto CTA *)",
       "Bash(sed -i '' 's/### \\\\[ \\\\] P0-8 — Re-engagement: digest on, verification reminders on/### [x] P0-8 — Re-engagement: digest on, verification reminders on/' IMPLEMENTATION_PLAN.md)",
       "Bash(printf 'P0-8 | PASS | pending-sha | digest default-on env-guarded, day-5+10 reminders via decision-reminders dispatcher, idempotent via last_follow_up_at+metadata, no migration, blind-safe reminder template, 1917 tests green\\\\n')",
-      "Bash(git commit --quiet -m 'P0-8: enable weekly digest by default; add day-5/10 verification reminders *)"
+      "Bash(git commit --quiet -m 'P0-8: enable weekly digest by default; add day-5/10 verification reminders *)",
+      "Bash(sed -i '' 's/### \\\\[ \\\\] P0-9 — Surface the org candidate-review workspace/### [x] P0-9 — Surface the org candidate-review workspace/' IMPLEMENTATION_PLAN.md)",
+      "Bash(git commit --quiet -m 'P0-9: surface org candidates workspace with nav entry and route *)"
     ]
   }
 }

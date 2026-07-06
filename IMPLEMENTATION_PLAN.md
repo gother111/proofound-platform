@@ -132,7 +132,7 @@ This plan and the audit **supersede** `Proofound_MVP_Locked_Source_of_Truth_2026
    **Acceptance:** digest availability function returns enabled by default; dry-run digest for a zero-match seed user produces valid email; reminder job selects correct pending requests (unit test with time travel), idempotency proven; no new top-level Vercel cron beyond the workaround pattern.
    **Verify:** standard gates + targeted digest/reminder unit tests + `npm run cron:sync` dry equivalent if applicable.
 
-### [ ] P0-9 — Surface the org candidate-review workspace
+### [x] P0-9 — Surface the org candidate-review workspace
 
 **Objective:** The fully-built private review loop (org invites own applicants) becomes reachable — the seed of the Screening Room.
 **Files:** `src/components/organization/OrgCandidatesWorkspace.tsx` (zero importers today), org shell nav (`src/lib/org/mvp-surface-policy.ts` — `ORG_MVP_NAV_ITEMS` + gated list), org routes under `src/app/app/o/[slug]/`.

@@ -62,7 +62,6 @@ describe('middleware launch archive behavior', () => {
     const archivedPaths = [
       'http://localhost/app/i/notifications',
       'http://localhost/app/i/settings/notifications',
-      'http://localhost/app/o/acme/candidates',
       'http://localhost/app/o/acme/projects',
       'http://localhost/app/o/acme/goals',
       'http://localhost/app/o/acme/culture',
@@ -140,6 +139,7 @@ describe('middleware launch archive behavior', () => {
       'http://localhost/api/verification/requests/skill',
       'http://localhost/app/i/home',
       'http://localhost/app/i/messages',
+      'http://localhost/app/o/acme/candidates',
       'http://localhost/app/o/acme/matching',
       'http://localhost/app/o/acme/shortlist',
       'http://localhost/auth/callback?type=email&token_hash=test-token',

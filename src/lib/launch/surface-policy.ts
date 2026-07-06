@@ -638,6 +638,7 @@ const ACTIVE_PAGE_POLICIES = [
       /^\/app\/o\/[^/]+\/assignments$/.test(pathname) ||
       /^\/app\/o\/[^/]+\/assignments\/new$/.test(pathname) ||
       /^\/app\/o\/[^/]+\/assignments\/[^/]+\/review$/.test(pathname) ||
+      /^\/app\/o\/[^/]+\/candidates$/.test(pathname) ||
       /^\/app\/o\/[^/]+\/shortlist$/.test(pathname) ||
       /^\/app\/o\/[^/]+\/communications$/.test(pathname) ||
       /^\/app\/o\/[^/]+\/messages$/.test(pathname) ||
@@ -712,7 +713,7 @@ const ARCHIVED_PAGE_POLICIES = [
     detail: 'This organization page is archived outside the locked launch MVP corridor.',
     matches: (pathname: string) =>
       /^\/app\/o\/[^/]+\/analytics(?:\/.*)?$/.test(pathname) ||
-      /^\/app\/o\/[^/]+\/(?:candidates|culture|goals|impact|members|opportunities|partnerships|projects|structure)$/.test(
+      /^\/app\/o\/[^/]+\/(?:culture|goals|impact|members|opportunities|partnerships|projects|structure)$/.test(
         pathname
       ) ||
       /^\/app\/o\/[^/]+\/settings\/(?:goals|integrations|profile)(?:\/.*)?$/.test(pathname) ||

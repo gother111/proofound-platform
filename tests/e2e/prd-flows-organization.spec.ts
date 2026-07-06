@@ -48,9 +48,7 @@ test.describe('Organization Flows - Unauthenticated Contract Onboarding (O-01 to
 });
 
 test.describe('Organization Flows - Unauthenticated Contract Team & Profile (O-08 to O-12)', () => {
-  test('O-08: Team management page is hard-gated outside the launch corridor', async ({
-    page,
-  }) => {
+  test('O-08: Team management page is hard-gated outside the launch corridor', async ({ page }) => {
     await expectLaunchNotFound(page, '/app/o/test-org/team');
   });
 
@@ -64,8 +62,8 @@ test.describe('Organization Flows - Unauthenticated Contract Assignments (O-13 t
     await expectAuthRedirect(page, '/app/o/test-org/assignments');
   });
 
-  test('O-15: Archived candidates page is not reachable in launch flow', async ({ page }) => {
-    await expectLaunchNotFound(page, '/app/o/test-org/candidates');
+  test('O-15: Candidates page is protected inside the launch corridor', async ({ page }) => {
+    await expectAuthRedirect(page, '/app/o/test-org/candidates');
   });
 });
 

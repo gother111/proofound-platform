@@ -8,7 +8,7 @@ export const ORG_SURFACE_STATUS = {
   profile: 'mvp',
   portfolio: 'mvp',
   shortlist: 'mvp',
-  candidates: 'gated_non_mvp',
+  candidates: 'mvp',
   projects: 'gated_non_mvp',
   team: 'gated_non_mvp',
   members: 'gated_non_mvp',
@@ -27,6 +27,11 @@ export const ORG_MVP_NAV_ITEMS = [
     hrefSuffix: '/assignments',
     label: 'Assignments',
     icon: 'briefcase',
+  },
+  {
+    hrefSuffix: '/candidates',
+    label: 'Candidates',
+    icon: 'users',
   },
   {
     hrefSuffix: '/communications',
@@ -54,7 +59,6 @@ export function getOrgSurfaceStatus(surface: string): OrgSurfaceStatus {
 
 export function getOrgSurfaceFallbackHref(slug: string, surface: string): string {
   switch (surface) {
-    case 'candidates':
     case 'opportunities':
       return `/app/o/${slug}/assignments`;
     case 'projects':

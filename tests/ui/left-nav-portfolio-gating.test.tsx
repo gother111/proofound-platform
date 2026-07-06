@@ -143,6 +143,10 @@ describe('LeftNav portfolio gating', () => {
       'href',
       '/app/o/acme/assignments'
     );
+    expect(screen.getAllByRole('link', { name: /candidates/i })[0]).toHaveAttribute(
+      'href',
+      '/app/o/acme/candidates'
+    );
     expect(screen.getAllByRole('link', { name: /communications/i })[0]).toHaveAttribute(
       'href',
       '/app/o/acme/communications'
@@ -155,7 +159,6 @@ describe('LeftNav portfolio gating', () => {
       'href',
       '/app/o/acme/portfolio'
     );
-    expect(screen.queryByRole('link', { name: /candidates/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /shortlist/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /team/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /^settings$/i })).not.toBeInTheDocument();

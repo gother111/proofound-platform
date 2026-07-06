@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -46,6 +46,7 @@ export function OrgCandidateInvitesPanel({ orgId }: OrgCandidateInvitesPanelProp
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [canManage, setCanManage] = useState(false);
+  const inviteEmailsInputRef = useRef<HTMLTextAreaElement | null>(null);
 
   const loadInvites = useCallback(async () => {
     setIsLoading(true);
@@ -153,6 +154,13 @@ export function OrgCandidateInvitesPanel({ orgId }: OrgCandidateInvitesPanelProp
     }
   };
 
+  const focusInviteForm = () => {
+    setFilter('all');
+    inviteEmailsInputRef.current?.focus();
+  };
+
+  const isFirstInviteEmptyState = !isLoading && invites.length === 0 && filter === 'all';
+
   return (
     <div className="space-y-4">
       <header className="space-y-1">
@@ -170,6 +178,7 @@ export function OrgCandidateInvitesPanel({ orgId }: OrgCandidateInvitesPanelProp
           <div className="space-y-2">
             <Label htmlFor="candidate-invite-emails">Invite candidate emails</Label>
             <textarea
+              ref={inviteEmailsInputRef}
               id="candidate-invite-emails"
               value={emailsInput}
               onChange={(event) => setEmailsInput(event.target.value)}
@@ -210,6 +219,32 @@ export function OrgCandidateInvitesPanel({ orgId }: OrgCandidateInvitesPanelProp
       {isLoading ? (
         <Card className="p-6">
           <p className="text-sm text-neutral-dark-600">Loading invited candidates...</p>
+        </Card>
+      ) : isFirstInviteEmptyState ? (
+        <Card className="p-12 flex flex-col items-center justify-center text-center space-y-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex max-w-xl flex-col items-center justify-center space-y-3"
+          >
+            <div className="space-y-1">
+              <p className="text-lg font-semibold text-primary-500">No applicants invited yet</p>
+              <p className="text-sm text-muted-foreground">
+                Candidate submissions will appear here after an invited applicant claims the link
+                and submits a proof card.
+              </p>
+            </div>
+            {canManage ? (
+              <Button onClick={focusInviteForm} disabled={isSubmitting}>
+                Invite your first applicant — they&apos;ll answer with structured proof instead of a
+                CV
+              </Button>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Ask an owner or manager to invite the first applicant.
+              </p>
+            )}
+          </motion.div>
         </Card>
       ) : filteredInvites.length === 0 ? (
         <Card className="p-12 flex flex-col items-center justify-center text-center space-y-4">

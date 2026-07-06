@@ -184,6 +184,7 @@ describe('launch surface policy', () => {
     expect(classifyLaunchPagePath('/auth/logout')).toBe('active_launch_path');
     expect(classifyLaunchPagePath('/app/i/home')).toBe('active_launch_path');
     expect(classifyLaunchPagePath('/app/i/matching/preferences')).toBe('active_launch_path');
+    expect(classifyLaunchPagePath('/app/o/acme/candidates')).toBe('active_launch_path');
     expect(classifyLaunchPagePath('/app/o/acme/shortlist')).toBe('active_launch_path');
     expect(classifyLaunchPagePath('/admin')).toBe('internal_only_launch_ops');
 
@@ -194,7 +195,6 @@ describe('launch surface policy', () => {
 
     expect(classifyLaunchPagePath('/app/i/notifications')).toBe('archived');
     expect(classifyLaunchPagePath('/app/i/settings/notifications')).toBe('archived');
-    expect(classifyLaunchPagePath('/app/o/acme/candidates')).toBe('archived');
     expect(classifyLaunchPagePath('/app/o/acme/projects')).toBe('archived');
     expect(classifyLaunchPagePath('/app/o/acme/goals')).toBe('archived');
     expect(classifyLaunchPagePath('/app/o/acme/culture')).toBe('archived');

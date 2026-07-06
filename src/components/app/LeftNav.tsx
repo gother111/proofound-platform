@@ -94,6 +94,7 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
     building: Building,
     clipboard: ClipboardList,
     messageCircle: MessageCircle,
+    users: Users,
   } as const;
 
   const orgNavItems: NavItem[] = ORG_MVP_NAV_ITEMS.map((item) => ({
@@ -105,9 +106,11 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
         ? 'home-link'
         : item.hrefSuffix === '/assignments'
           ? 'assignments-link'
-          : item.hrefSuffix === '/profile'
-            ? 'org-profile'
-            : 'portfolio-link',
+          : item.hrefSuffix === '/candidates'
+            ? 'candidates-link'
+            : item.hrefSuffix === '/profile'
+              ? 'org-profile'
+              : 'portfolio-link',
   }));
 
   const navItems = isOrg ? orgNavItems : individualNavItems;
