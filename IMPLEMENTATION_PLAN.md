@@ -107,7 +107,7 @@ This plan and the audit **supersede** `Proofound_MVP_Locked_Source_of_Truth_2026
    **Acceptance:** non-allow-listed test user can run CV import end-to-end locally (or, if external services unavailable in env, the gate is provably removed: unit test on the access-check function + degradation path verified); onboarding shows the import option.
    **Verify:** standard gates + targeted tests on start-from-cv access logic.
 
-### [ ] P0-7 — Make shared portfolio links look like the person, not the platform
+### [x] P0-7 — Make shared portfolio links look like the person, not the platform
 
 **Objective:** Every shared portfolio link becomes an ad for the candidate (and Proofound).
 **Files:** `src/lib/seo/public-metadata.ts` (line 4: `DEFAULT_OG_IMAGE = '/hero-visual.jpg'`), `src/app/portfolio/[handle]/page.tsx` (metadata + ~line 493 `mailto:hello@proofound.io`), new `src/app/portfolio/[handle]/opengraph-image.tsx`.

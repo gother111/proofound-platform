@@ -368,8 +368,13 @@ describe('Public individual portfolio page', () => {
     expect(
       screen.getByText(/skills are not shared publicly on this public page/i)
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /request introduction/i })).toBeInTheDocument();
+    const introLink = screen.getByRole('link', { name: /join to request introduction/i });
+    expect(introLink).toHaveAttribute(
+      'href',
+      '/signup/individual?next=%2Fportfolio%2Fjane&intent=contact-request'
+    );
     expect(screen.getByRole('button', { name: /copy recruiter summary/i })).toBeInTheDocument();
+    expect(screen.queryByText(/search engines are off for the MVP/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/my next challenge/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/mission & vision/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/stockholm, sweden/i)).not.toBeInTheDocument();
@@ -408,12 +413,33 @@ describe('Public individual portfolio page', () => {
       'href',
       expect.stringContaining('summaryRefresh=traceable-profile-summary')
     );
-    expect(screen.getByText(/search engines are off for the MVP/i)).toBeInTheDocument();
+    expect(screen.getByText(/public-safe proof selected by the owner/i)).toBeInTheDocument();
+    expect(screen.queryByText(/search engines are off for the MVP/i)).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: /manage visibility/i })).toHaveAttribute(
       'href',
       '/app/i/profile?profileView=full&tab=visibility'
     );
     expect(screen.getByText(/work email/i)).toBeInTheDocument();
+  });
+
+  it('uses the owner-selected public contact instead of a platform mailbox', async () => {
+    vi.mocked(resolvePublicIndividualPortfolioAccessByHandle).mockResolvedValue({
+      status: 'accessible',
+      projection: buildProjection() as any,
+    });
+
+    const element = await PortfolioPage({
+      params: Promise.resolve({ handle: 'jane' }),
+      searchParams: Promise.resolve({}),
+    });
+
+    const { container } = render(element);
+
+    expect(screen.getAllByRole('link', { name: /email public contact/i })[0]).toHaveAttribute(
+      'href',
+      'mailto:jane@example.com'
+    );
+    expect(container.querySelector('[href*="hello@proofound.io"]')).toBeNull();
   });
 
   it('does not widen visibility when a public proof has no safe evidence URL', async () => {
@@ -466,7 +492,7 @@ describe('Public individual portfolio page', () => {
     expect(screen.queryByRole('link', { name: /open evidence/i })).not.toBeInTheDocument();
   });
 
-  it('returns generic noindex metadata by default', async () => {
+  it('returns candidate-specific noindex metadata by default', async () => {
     vi.mocked(resolvePublicIndividualPortfolioAccessByHandle).mockResolvedValue({
       status: 'accessible',
       projection: buildProjection() as any,
@@ -480,11 +506,16 @@ describe('Public individual portfolio page', () => {
       index: false,
       follow: false,
     });
-    expect(metadata.title).toBe('Proofound Public Page');
+    expect(metadata.title).toBe('Jane Doe — Proof Portfolio | Proofound');
+    expect(metadata.description).toBe('Impact builder');
+    expect(metadata.openGraph?.title).toBe('Jane Doe — Proof Portfolio | Proofound');
+    expect((metadata.openGraph?.images as any)?.[0]?.url).toContain(
+      '/portfolio/jane/opengraph-image'
+    );
     expect(metadata.alternates?.canonical).toContain('/portfolio/jane');
   });
 
-  it('returns safe generic metadata even when stale projection data requested indexing', async () => {
+  it('keeps noindex behavior even when stale projection data requested indexing', async () => {
     vi.mocked(resolvePublicIndividualPortfolioAccessByHandle).mockResolvedValue({
       status: 'accessible',
       projection: buildProjection({
@@ -508,8 +539,8 @@ describe('Public individual portfolio page', () => {
       index: false,
       follow: false,
     });
-    expect(metadata.title).toBe('Proofound Public Page');
-    expect(metadata.openGraph?.title).toBe('Proofound Public Page');
+    expect(metadata.title).toBe('Jane Doe — Proof Portfolio | Proofound');
+    expect(metadata.openGraph?.title).toBe('Jane Doe — Proof Portfolio | Proofound');
   });
 
   it('renders the existing unavailable state when the portfolio is not publicly accessible', async () => {

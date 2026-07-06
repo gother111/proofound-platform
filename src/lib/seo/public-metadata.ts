@@ -20,6 +20,22 @@ export function getPublicSiteUrl(): string {
   }
 }
 
+export function buildIndividualProofPortfolioTitle(displayName: string): string {
+  return `${displayName} — Proof Portfolio | Proofound`;
+}
+
+export function buildIndividualProofPortfolioDescription(input: {
+  displayName: string;
+  headline?: string | null;
+}): string {
+  const headline = input.headline?.trim();
+  return headline || `${input.displayName}'s proof portfolio on Proofound.`;
+}
+
+export function buildIndividualProofPortfolioOgImagePath(handle: string): string {
+  return `/portfolio/${encodeURIComponent(handle)}/opengraph-image`;
+}
+
 type PublicMetadataOptions = {
   title: string;
   description: string;

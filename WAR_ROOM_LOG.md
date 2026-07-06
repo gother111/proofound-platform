@@ -16,3 +16,5 @@ P0-3 | PASS | pending-sha | publish gate = structured proof only; badges live; p
   P0-4 | PASS | pending-sha | ready-step wired as onboarding finale, copy-link + decline path tested; e2e env-blocked, component-test fallback per spec
   P0-5 | PASS | pending-sha | new sections homepage live, /story preserved (added to middleware allowlist — Codex missed), landing e2e 10/10 locally, build OK
   P0-6 | PASS | pending-sha | invite gate removed, size/page/daily-limit guards intact, import step in onboarding, 51 targeted + 1909 full tests green
+  P0-7 | PASS | pending-sha | dynamic OG image route live (clean 404 no-500 verified via local curl; no published seed user locally for visual diff — founder QA item), mailto CTA + build-status copy removed, 1911 tests + build green
+- P0-7 residual: visually confirm two users OG images differ once seeded users exist (unit-tested only); org OG image follow-up logged by Codex

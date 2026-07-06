@@ -23,6 +23,11 @@ import {
   buildUnavailablePublicProfileMetadata,
 } from '@/lib/seo/public-profile-metadata';
 import {
+  buildIndividualProofPortfolioDescription,
+  buildIndividualProofPortfolioOgImagePath,
+  buildIndividualProofPortfolioTitle,
+} from '@/lib/seo/public-metadata';
+import {
   buildBreadcrumbJsonLd,
   buildProofoundWebsiteJsonLd,
   buildWebPageJsonLd,
@@ -64,14 +69,21 @@ export async function generateMetadata({
   }
 
   const data = access.projection;
+  const title = buildIndividualProofPortfolioTitle(data.publicDisplayName);
+  const description = buildIndividualProofPortfolioDescription({
+    displayName: data.publicDisplayName,
+    headline: data.publicHeadline,
+  });
 
   return buildPublicProfileMetadata({
-    title: 'Proofound Public Page',
-    description: 'A proof snapshot shared by direct link on Proofound.',
+    title,
+    description,
     path: data.metadata.path,
-    ogTitle: 'Proofound Public Page',
-    ogDescription: 'A proof snapshot shared by direct link on Proofound.',
-    ogType: 'website',
+    ogTitle: title,
+    ogDescription: description,
+    imagePath: buildIndividualProofPortfolioOgImagePath(data.handle),
+    imageAlt: `${data.publicDisplayName}'s Proofound proof portfolio preview`,
+    ogType: 'profile',
     robots: buildPortfolioRobots('public_link_only'),
   });
 }
@@ -126,26 +138,32 @@ export default async function PortfolioPage({
   const displayName = data.publicDisplayName;
   const headline = data.publicHeadline || 'Proof-first Public Page';
   const publicBio = data.publicBio;
-
-  const collaborationHref = collaborationMailto({
-    subject: `Request introduction to ${displayName}`,
-    body: `Hi Proofound team, I would like to request an introduction to ${displayName}. Public Page: ${data.shareUrl}`,
+  const pagePath = `/portfolio/${encodeURIComponent(data.handle)}`;
+  const pageTitle = buildIndividualProofPortfolioTitle(displayName);
+  const publicContactHref = getPublicContactHref(data);
+  const fallbackContactHref = buildPortfolioContactRequestHref({
+    pagePath,
+    viewerSignedIn: Boolean(user?.id),
   });
-
-  const requestContactHref = collaborationMailto({
-    subject: `Request contact for ${displayName}`,
-    body: `Hi Proofound team, please help me connect with ${displayName}. Public Page: ${data.shareUrl}`,
-  });
-
+  const requestContactHref = publicContactHref ?? fallbackContactHref;
+  const introCtaLabel = publicContactHref
+    ? 'Email public contact'
+    : user?.id
+      ? 'Open Proofound'
+      : 'Join to request introduction';
+  const requestContactLabel = publicContactHref
+    ? 'Email public contact'
+    : user?.id
+      ? 'Open Proofound'
+      : 'Join to request contact';
   const publicSummaryEndpoint = `/api/portfolio/public/${encodeURIComponent(data.handle)}/summary`;
   const publicExportEndpoint = `/api/portfolio/public/${encodeURIComponent(data.handle)}/export`;
-  const pagePath = `/portfolio/${encodeURIComponent(data.handle)}`;
   const pageTrustTier = getTrustTier(data.verifiedPublicProofPackCount > 0);
   const jsonLdItems = [
     buildProofoundWebsiteJsonLd(),
     buildWebPageJsonLd({
       path: pagePath,
-      title: `${displayName} | Proofound Public Page`,
+      title: pageTitle,
       description: data.jsonLd.description,
     }),
     buildBreadcrumbJsonLd([
@@ -177,7 +195,7 @@ export default async function PortfolioPage({
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-2.5 text-sm text-foreground">
               <Logo size="sm" />
-              <span className="font-medium">Proofound Public Page</span>
+              <span className="font-medium">Proof Portfolio</span>
               <Badge variant="outline" className="border-[#D9D5CC] text-muted-foreground">
                 Direct-link proof snapshot
               </Badge>
@@ -221,7 +239,7 @@ export default async function PortfolioPage({
                   </h1>
                   <p className="text-sm text-foreground">{headline}</p>
                   <p className="text-sm text-muted-foreground">
-                    Direct link is live. Search engines are off for the MVP.
+                    Public-safe proof selected by the owner.
                   </p>
                 </div>
               </div>
@@ -260,10 +278,10 @@ export default async function PortfolioPage({
             {!viewerIsOwner ? (
               <div className="flex w-full flex-col gap-2 lg:w-auto lg:min-w-[220px]">
                 <Button asChild className="bg-proofound-forest text-white hover:bg-[#163d2f]">
-                  <Link href={collaborationHref}>Request introduction</Link>
+                  <Link href={requestContactHref}>{introCtaLabel}</Link>
                 </Button>
                 <Button variant="outline" asChild>
-                  <Link href={requestContactHref}>Request contact</Link>
+                  <Link href={requestContactHref}>{requestContactLabel}</Link>
                 </Button>
                 <p className="text-xs text-muted-foreground">
                   Private details stay hidden unless the owner explicitly reveals them.
@@ -390,7 +408,7 @@ export default async function PortfolioPage({
                       : 'No selected Proof Packs are available yet.'
                   }
                   actions={
-                    !viewerIsOwner ? [{ label: 'Request contact', href: requestContactHref }] : []
+                    !viewerIsOwner ? [{ label: requestContactLabel, href: requestContactHref }] : []
                   }
                 />
               )}
@@ -461,8 +479,9 @@ export default async function PortfolioPage({
               <div className="space-y-2 text-sm">
                 {data.visibility.contact &&
                 data.visibility.workEmail &&
-                data.individual.work_email ? (
-                  <ContactPill href={`mailto:${data.individual.work_email}`} label="Work email" />
+                data.individual.work_email &&
+                publicContactHref ? (
+                  <ContactPill href={publicContactHref} label="Work email" />
                 ) : (
                   <p className="rounded-xl border border-white/40 bg-white/40 px-3 py-2 text-muted-foreground shadow-sm">
                     Contact hidden
@@ -476,7 +495,7 @@ export default async function PortfolioPage({
                 {!viewerIsOwner ? (
                   <ContactPill
                     href={requestContactHref}
-                    label="Request contact"
+                    label={requestContactLabel}
                     icon={<Mail className="h-4 w-4" />}
                   />
                 ) : null}
@@ -489,8 +508,32 @@ export default async function PortfolioPage({
   );
 }
 
-function collaborationMailto({ subject, body }: { subject: string; body: string }): string {
-  return `mailto:hello@proofound.io?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+function getPublicContactHref(data: {
+  visibility: { contact: boolean; workEmail: boolean };
+  individual: { work_email: string | null };
+}) {
+  if (!data.visibility.contact || !data.visibility.workEmail || !data.individual.work_email) {
+    return null;
+  }
+
+  const email = data.individual.work_email.trim();
+  if (!email || /[\r\n]/.test(email)) {
+    return null;
+  }
+
+  return email ? `mailto:${email}` : null;
+}
+
+function buildPortfolioContactRequestHref({
+  pagePath,
+  viewerSignedIn,
+}: {
+  pagePath: string;
+  viewerSignedIn: boolean;
+}) {
+  return viewerSignedIn
+    ? `/app/i/home?portfolioContact=${encodeURIComponent(pagePath)}`
+    : `/signup/individual?next=${encodeURIComponent(pagePath)}&intent=contact-request`;
 }
 
 function TagPill({ label }: { label: string }) {
