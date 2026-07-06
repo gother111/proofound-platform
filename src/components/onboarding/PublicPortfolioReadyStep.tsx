@@ -166,9 +166,7 @@ export function PublicPortfolioReadyStep({
               </p>
               <h2 className="mt-1 font-['Crimson_Pro'] text-xl font-semibold">
                 {previewTitle ||
-                  (persona === 'organization'
-                    ? 'Organization trust page'
-                    : 'First proof record')}
+                  (persona === 'organization' ? 'Organization trust page' : 'First proof record')}
               </h2>
             </div>
             <span className="inline-flex items-center gap-1 rounded-full border border-proofound-stone bg-proofound-parchment px-3 py-1 text-xs font-medium text-proofound-charcoal dark:border-border dark:bg-muted dark:text-foreground">

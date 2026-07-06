@@ -114,7 +114,8 @@ function ProfileReadinessPreview({ profile }: { profile: ProfileData }) {
               </h1>
               <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
                 Build only the parts that make the first proof credible: safe shell, one real
-                context, one structured proof record, then decide what verification check comes next.
+                context, one structured proof record, then decide what verification check comes
+                next.
               </p>
             </div>
           </div>

@@ -174,9 +174,7 @@ describe('organization interviews page actions', () => {
     expect(
       await screen.findByRole('heading', { name: /no active interview workflow yet/i })
     ).toBeInTheDocument();
-    expect(
-      screen.getByText(/once you shortlist a proof submission/i)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/once you shortlist a proof submission/i)).toBeInTheDocument();
     const assignmentQueueLink = screen.getByRole('link', { name: /review assignment queue/i });
     expect(assignmentQueueLink).toHaveAttribute('href', '/app/o/acme/assignments');
     expect(assignmentQueueLink).toHaveClass('min-h-[44px]');

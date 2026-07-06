@@ -524,8 +524,7 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
               <p className="font-medium">Publication makes the assignment discoverable.</p>
               <p>
                 Reviewers will use this brief, its proof expectations, and its required skills to
-                assess fit. You can still manage the flow from the assignment list after
-                publishing.
+                assess fit. You can still manage the flow from the assignment list after publishing.
               </p>
             </div>
 

@@ -852,7 +852,6 @@ function detectStartFromCvMimeType(bytes: Uint8Array): string | null {
 }
 
 async function extractReadablePdfText(bytes: Uint8Array, maxPages: number): Promise<string> {
-
   try {
     const extracted = await extractPdfTextFromBytes(bytes, {
       maxPages,

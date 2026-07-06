@@ -368,9 +368,7 @@ describe('Public individual portfolio page', () => {
     });
     expect(screen.queryByText('Industry: Proof-first hiring')).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /proof snapshot/i })).toBeInTheDocument();
-    expect(
-      screen.getByText(/no selected proof records are available yet/i)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/no selected proof records are available yet/i)).toBeInTheDocument();
     expect(screen.getByText(/contact hidden/i)).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /selected outcomes/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /skills snapshot/i })).toBeInTheDocument();
@@ -500,7 +498,9 @@ describe('Public individual portfolio page', () => {
 
     render(element);
 
-    const emptyState = screen.getByText(/no selected proof records are available yet/i).parentElement;
+    const emptyState = screen.getByText(
+      /no selected proof records are available yet/i
+    ).parentElement;
     expect(emptyState).not.toBeNull();
 
     const requestIntroductionLink = within(emptyState as HTMLElement).getByRole('link', {

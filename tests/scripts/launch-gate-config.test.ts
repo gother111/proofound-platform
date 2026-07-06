@@ -231,12 +231,7 @@ describe('launch gate package configuration', () => {
     );
     const authorityDocs = [
       ['AGENTS.md', 'repo+live', '2026-05-27', '2026-05-27'],
-      [
-        'Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md',
-        'repo',
-        '2026-05-21',
-        '2026-05-04',
-      ],
+      ['Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md', 'repo', '2026-05-21', '2026-05-04'],
       [
         'PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md',
         'repo+live',

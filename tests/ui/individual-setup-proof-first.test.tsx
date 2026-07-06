@@ -693,9 +693,7 @@ describe('IndividualSetup first-proof flow', () => {
     expect(body.artifacts).toEqual([
       { type: 'experience', id: '11111111-1111-4111-8111-111111111111' },
     ]);
-    expect(
-      screen.getByText(/verification request sent to 1 confirmer/i)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/verification request sent to 1 confirmer/i)).toBeInTheDocument();
   });
 
   it('keeps partial verification request delivery honest after saving first proof', async () => {
@@ -736,9 +734,7 @@ describe('IndividualSetup first-proof flow', () => {
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
     expect(
-      screen.getByText(
-        /First proof record saved\. 1 of 2 verification request emails sent\./i
-      )
+      screen.getByText(/First proof record saved\. 1 of 2 verification request emails sent\./i)
     ).toBeInTheDocument();
   });
 });

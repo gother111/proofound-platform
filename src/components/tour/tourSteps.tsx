@@ -139,7 +139,8 @@ export const individualTourSteps: Step[] = [
         <h2 className="text-lg font-semibold text-foreground">You're all set</h2>
         <p className="text-sm text-muted-foreground">
           Start with your <strong>proof records</strong> in Profile, then publish only the
-          public-safe proof items you choose. Assignment review comes after proof and privacy are ready.
+          public-safe proof items you choose. Assignment review comes after proof and privacy are
+          ready.
         </p>
         <div className="pt-3 border-t border-proofound-stone">
           <p className="text-xs text-muted-foreground">

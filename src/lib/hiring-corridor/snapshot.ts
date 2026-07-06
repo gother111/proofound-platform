@@ -305,7 +305,8 @@ export function buildHiringCorridorSnapshot(params: {
         nextAction = {
           id: 'respond_to_intro',
           label: 'Respond to intro',
-          description: 'Accept or decline the intro request to keep the assignment-review flow moving.',
+          description:
+            'Accept or decline the intro request to keep the assignment-review flow moving.',
         };
         summary = 'An intro has been requested and is waiting for your response.';
       } else {
@@ -419,7 +420,8 @@ export function buildHiringCorridorSnapshot(params: {
           label: 'Record decision',
           description: 'Complete the decision step now that the interview has finished.',
         };
-        summary = 'The interview round is complete and the assignment-review flow is waiting for a decision.';
+        summary =
+          'The interview round is complete and the assignment-review flow is waiting for a decision.';
       } else {
         nextAction = {
           id: 'wait_for_decision',
@@ -436,7 +438,8 @@ export function buildHiringCorridorSnapshot(params: {
         description:
           'The interview round is scheduled and coordination details are now visible to both sides.',
       };
-      summary = 'The interview stage is active and the assignment-review flow is in coordination mode.';
+      summary =
+        'The interview stage is active and the assignment-review flow is in coordination mode.';
     }
   } else if (currentStep === 'decision') {
     if (source.decisionState === 'hire') {

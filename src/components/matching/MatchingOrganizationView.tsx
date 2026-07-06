@@ -1237,9 +1237,9 @@ export function MatchingOrganizationView({
                           <ShieldCheck className="h-4 w-4 text-proofound-forest shrink-0 mt-0.5" />
                           <span>
                             Identity stays protected in this review queue. The summary uses scoped
-                            Proof record signals, reason codes, and verification status that are safe
-                            for this assignment stage. Full identity and private context stay locked
-                            until the intro and reveal flow allows access.
+                            Proof record signals, reason codes, and verification status that are
+                            safe for this assignment stage. Full identity and private context stay
+                            locked until the intro and reveal flow allows access.
                           </span>
                         </div>
 

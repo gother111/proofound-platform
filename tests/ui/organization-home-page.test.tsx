@@ -121,7 +121,9 @@ describe('OrganizationHomePage', () => {
 
     expect(screen.getByText('Current review workspace')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Review queue' })).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'Evidence operations lead' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'Evidence operations lead' })
+    ).not.toBeInTheDocument();
     expect(screen.queryByText('Launch date pending')).not.toBeInTheDocument();
     expect(screen.queryByText('N/A')).not.toBeInTheDocument();
   });
@@ -155,9 +157,7 @@ describe('OrganizationHomePage', () => {
 
     expect(screen.getByRole('heading', { name: 'Launch Summary' })).toBeInTheDocument();
     expect(
-      screen.getByText(
-        /Trust essentials are ready\. The next useful move is assignment drafting\./
-      )
+      screen.getByText(/Trust essentials are ready\. The next useful move is assignment drafting\./)
     ).toBeInTheDocument();
     expect(screen.getByText('3')).toBeInTheDocument();
     expect(screen.getByText('trust essentials ready')).toBeInTheDocument();

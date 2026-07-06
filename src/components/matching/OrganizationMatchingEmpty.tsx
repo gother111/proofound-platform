@@ -57,7 +57,8 @@ export function OrganizationMatchingEmpty({
               </h2>
               <p className="max-w-xl text-base leading-relaxed text-muted-foreground">
                 Start with the role context reviewers need: skills, constraints, and proof
-                expectations. Participant identity stays protected until the assignment-review flow is ready.
+                expectations. Participant identity stays protected until the assignment-review flow
+                is ready.
               </p>
             </div>
 
